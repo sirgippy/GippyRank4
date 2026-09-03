@@ -30,3 +30,14 @@ GippyRank4 is a research project for probabilistic college-football ranking.
 - Prefer typed data models and deterministic scripts.
 - Add tests for parsers, normalization, and inference invariants.
 - Use ruff for linting/formatting.
+
+## Python environment
+
+- This project uses `uv`.
+- Use the Python version pinned by `.python-version`.
+- Run Python commands through `uv run`, for example:
+  - `uv run python ...`
+  - `uv run pytest`
+  - `uv run ruff check .`
+- Add dependencies with `uv add`, not `pip install`.
+- Do not rely on Debian's system `python3` except for environment diagnostics.
