@@ -13,11 +13,14 @@
       "scale": 1.8638881223587818
     },
     "transition_model": {
-      "conditioning": "equal-weight deterministic quadrature over lag-1 constituent ranks",
+      "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+      "degrees_of_freedom": null,
+      "family": "normal",
       "feature_names": [],
+      "lag_count": 1,
       "location_coefficients": [
-        0.26180780059583286,
-        1.9309136474992319
+        0.2618078005958331,
+        1.9309136474992323
       ],
       "log_scale_coefficients": [
         0.42225697739530516
@@ -27,7 +30,7 @@
         "function_evaluations": 14,
         "iterations": 13,
         "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
-        "objective": 1.9950117207339428,
+        "objective": 1.995011720733943,
         "status": 0,
         "success": true
       },

@@ -9,15 +9,17 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict, dataclass
+from itertools import product
 from typing import Any
 
 import numpy as np
 from scipy.optimize import minimize
 from scipy.special import logsumexp
-from scipy.stats import norm
+from scipy.stats import norm, t
 
 EPSILON = 1e-6
 QUADRATURE_POINTS = 12
+MULTI_LAG_QUADRATURE_POINTS = 2
 
 
 def deterministic_quadrature(
@@ -34,6 +36,49 @@ def deterministic_quadrature(
     if len(values) <= points:
         return values
     return values[np.linspace(0, len(values) - 1, points, dtype=int)]
+
+
+def product_quadrature(
+    distributions: tuple[np.ndarray, ...],
+    points: int = MULTI_LAG_QUADRATURE_POINTS,
+) -> np.ndarray:
+    """Equal-weight deterministic product quadrature for lag distributions.
+
+    Each input is reduced independently by permutation-invariant empirical
+    order statistics, then the Cartesian product marginalizes their joint
+    conditioning uncertainty.  Consequently each retained product point has
+    equal mass and every team-season retains total weight one.
+    """
+    if not distributions:
+        raise ValueError("at least one lag distribution is required")
+    supports = [deterministic_quadrature(values, points) for values in distributions]
+    if any(not len(values) for values in supports):
+        raise ValueError("lag distributions must be non-empty")
+    return np.asarray(list(product(*supports)), dtype=float)
+
+
+def historical_rank_features(
+    lag1_z: np.ndarray, history: tuple[np.ndarray, ...]
+) -> dict[str, float | None]:
+    """Descriptive preseason features from already-observed rank distributions.
+
+    ``history`` is supplied by the caller as seasons strictly before its target;
+    this pure helper deliberately has no target or future-season argument.
+    """
+    season_means = np.asarray([np.mean(values) for values in history if len(values)])
+    lag1_mean = float(np.mean(lag1_z))
+    lag2_mean = float(np.mean(history[-2])) if len(history) >= 2 else None
+    previous_means = season_means[:-1]
+    return {
+        "long_run_z_mean": float(np.mean(season_means)) if len(season_means) else None,
+        "history_z_std": float(np.std(season_means)) if len(season_means) > 1 else None,
+        "history_seasons": float(len(season_means)),
+        "lag1_disagreement": float(np.std(lag1_z)),
+        "trajectory_z": lag1_mean - lag2_mean if lag2_mean is not None else None,
+        "recent_shock_z": lag1_mean - float(np.mean(previous_means))
+        if len(previous_means)
+        else None,
+    }
 
 
 def clean_name(value: str) -> str:
@@ -162,6 +207,7 @@ class TeamSeason:
     target_z: np.ndarray
     target_ranks: np.ndarray
     features: dict[str, float | None]
+    lag_zs: tuple[np.ndarray, ...] = ()
 
 
 @dataclass
@@ -175,6 +221,9 @@ class DirectRankModel:
     minimum_scale: float = 0.10
     penalty: float = 0.25
     optimizer: dict[str, object] | None = None
+    lag_count: int = 1
+    family: str = "normal"
+    degrees_of_freedom: float | None = None
 
     @classmethod
     def fit(
@@ -184,6 +233,9 @@ class DirectRankModel:
         penalty: float = 0.25,
         minimum_scale: float = 0.10,
         optimizer_options: dict[str, float | int] | None = None,
+        lag_count: int = 1,
+        family: str = "normal",
+        degrees_of_freedom: float | None = None,
     ) -> DirectRankModel:
         if not rows:
             raise ValueError("cannot fit without rows")
@@ -191,11 +243,27 @@ class DirectRankModel:
         x = np.column_stack(
             [np.ones(len(rows)), preprocessor.transform([r.features for r in rows])]
         )
-        lag_samples = [deterministic_quadrature(row.lag1_z) for row in rows]
+        if family not in {"normal", "student_t"}:
+            raise ValueError(f"unsupported distribution family: {family}")
+        if family == "student_t" and (
+            degrees_of_freedom is None or degrees_of_freedom <= 2
+        ):
+            raise ValueError("Student-t degrees of freedom must exceed 2")
+        if lag_count < 1:
+            raise ValueError("lag_count must be positive")
+        lag_samples = []
+        for row in rows:
+            distributions = (row.lag1_z, *row.lag_zs[: lag_count - 1])
+            if len(distributions) != lag_count:
+                raise ValueError("row lacks required lag distributions")
+            points = (
+                QUADRATURE_POINTS if lag_count == 1 else MULTI_LAG_QUADRATURE_POINTS
+            )
+            lag_samples.append(product_quadrature(distributions, points))
         target_samples = [deterministic_quadrature(row.target_z) for row in rows]
         max_lag = max(map(len, lag_samples))
         max_target = max(map(len, target_samples))
-        lags = np.zeros((len(rows), max_lag))
+        lags = np.zeros((len(rows), max_lag, lag_count))
         targets = np.zeros((len(rows), max_target))
         lag_mask = np.zeros((len(rows), max_lag), dtype=bool)
         target_mask = np.zeros((len(rows), max_target), dtype=bool)
@@ -210,15 +278,25 @@ class DirectRankModel:
         target_counts = target_mask.sum(axis=1)
 
         def objective_gradient(theta: np.ndarray) -> tuple[float, np.ndarray]:
-            beta, gamma = theta[: x.shape[1] + 1], theta[x.shape[1] + 1 :]
-            base_locations = x @ beta[1:]
+            beta, gamma = (
+                theta[: x.shape[1] + lag_count],
+                theta[x.shape[1] + lag_count :],
+            )
+            base_locations = x @ beta[lag_count:]
             eta = x @ gamma
             exp_eta = np.exp(np.clip(eta, -5, 4))
             scales = minimum_scale + exp_eta
-            locations = base_locations[:, None] + beta[0] * lags
-            densities = norm.logpdf(
-                targets[:, :, None], locations[:, None, :], scales[:, None, None]
-            )
+            locations = base_locations[:, None] + lags @ beta[:lag_count]
+            if family == "normal":
+                densities = norm.logpdf(
+                    targets[:, :, None], locations[:, None, :], scales[:, None, None]
+                )
+            else:
+                densities = t.logpdf(
+                    (targets[:, :, None] - locations[:, None, :])
+                    / scales[:, None, None],
+                    degrees_of_freedom,
+                ) - np.log(scales[:, None, None])
             densities = np.where(lag_mask[:, None, :], densities, -np.inf)
             log_mixture = logsumexp(densities, axis=2)
             target_log_probability = log_mixture - np.log(lag_counts[:, None])
@@ -233,12 +311,43 @@ class DirectRankModel:
             location_score = responsibilities * residual / scales[:, None, None] ** 2
             weighted_location_score = location_score * target_weight
             beta_gradient = np.empty_like(beta)
-            beta_gradient[0] = -np.sum(weighted_location_score * lags[:, None, :])
-            base_gradient = -np.sum(weighted_location_score, axis=(1, 2))
-            beta_gradient[1:] = x.T @ base_gradient
-            scale_score = responsibilities * (
-                -1 / scales[:, None, None] + residual**2 / scales[:, None, None] ** 3
+            beta_gradient[:lag_count] = -np.einsum(
+                "rtq,rqk->k", weighted_location_score, lags
             )
+            base_gradient = -np.sum(weighted_location_score, axis=(1, 2))
+            beta_gradient[lag_count:] = x.T @ base_gradient
+            if family == "normal":
+                scale_score = responsibilities * (
+                    -1 / scales[:, None, None]
+                    + residual**2 / scales[:, None, None] ** 3
+                )
+                location_score = (
+                    responsibilities * residual / scales[:, None, None] ** 2
+                )
+            else:
+                denominator = (
+                    degrees_of_freedom * scales[:, None, None] ** 2 + residual**2
+                )
+                location_score = responsibilities * (
+                    (degrees_of_freedom + 1) * residual / denominator
+                )
+                standardized_squared = residual**2 / scales[:, None, None] ** 2
+                scale_score = (
+                    responsibilities
+                    * (
+                        -1
+                        + (degrees_of_freedom + 1)
+                        * standardized_squared
+                        / (degrees_of_freedom + standardized_squared)
+                    )
+                    / scales[:, None, None]
+                )
+                weighted_location_score = location_score * target_weight
+                beta_gradient[:lag_count] = -np.einsum(
+                    "rtq,rqk->k", weighted_location_score, lags
+                )
+                base_gradient = -np.sum(weighted_location_score, axis=(1, 2))
+                beta_gradient[lag_count:] = x.T @ base_gradient
             gamma_gradient = x.T @ (
                 -np.sum(
                     scale_score * exp_eta[:, None, None] * target_weight, axis=(1, 2)
@@ -254,7 +363,7 @@ class DirectRankModel:
         def gradient(theta: np.ndarray) -> np.ndarray:
             return objective_gradient(theta)[1]
 
-        initial_beta = np.zeros(x.shape[1] + 1)
+        initial_beta = np.zeros(x.shape[1] + lag_count)
         initial_beta[0] = 0.55
         initial_gamma = np.zeros(x.shape[1])
         initial_gamma[0] = np.log(0.7)
@@ -282,36 +391,54 @@ class DirectRankModel:
         return cls(
             feature_names,
             preprocessor,
-            result.x[: x.shape[1] + 1],
-            result.x[x.shape[1] + 1 :],
+            result.x[: x.shape[1] + lag_count],
+            result.x[x.shape[1] + lag_count :],
             minimum_scale,
             penalty,
             diagnostics,
+            lag_count,
+            family,
+            degrees_of_freedom,
         )
 
     def _matrix(self, features: dict[str, float | None]) -> np.ndarray:
         return np.r_[1.0, self.preprocessor.transform([features])[0]]
 
     def conditional_parameters(
-        self, features: dict[str, float | None], lag1_z: np.ndarray
+        self,
+        features: dict[str, float | None],
+        lag1_z: np.ndarray,
+        lag_zs: tuple[np.ndarray, ...] = (),
     ) -> tuple[np.ndarray, float]:
         x = self._matrix(features)
-        base_location = float(x @ self.beta[1:])
-        locations = base_location + self.beta[0] * np.asarray(lag1_z)
+        distributions = (lag1_z, *lag_zs[: self.lag_count - 1])
+        if len(distributions) != self.lag_count:
+            raise ValueError("prediction lacks required lag distributions")
+        points = (
+            QUADRATURE_POINTS if self.lag_count == 1 else MULTI_LAG_QUADRATURE_POINTS
+        )
+        lags = product_quadrature(distributions, points)
+        base_location = float(x @ self.beta[self.lag_count :])
+        locations = base_location + lags @ self.beta[: self.lag_count]
         scale = float(self.minimum_scale + np.exp(np.clip(x @ self.gamma, -5, 4)))
         return locations, scale
 
     def pmf(
-        self, features: dict[str, float | None], lag1_z: np.ndarray, population: int
+        self,
+        features: dict[str, float | None],
+        lag1_z: np.ndarray,
+        population: int,
+        lag_zs: tuple[np.ndarray, ...] = (),
     ) -> np.ndarray:
-        locations, scale = self.conditional_parameters(
-            features, deterministic_quadrature(lag1_z)
-        )
+        locations, scale = self.conditional_parameters(features, lag1_z, lag_zs)
         edges = rank_bin_edges(population)
-        masses = np.maximum(
-            np.diff(norm.cdf((edges[None, :] - locations[:, None]) / scale), axis=1),
-            0.0,
+        standardized_edges = (edges[None, :] - locations[:, None]) / scale
+        cdf = (
+            norm.cdf(standardized_edges)
+            if self.family == "normal"
+            else t.cdf(standardized_edges, self.degrees_of_freedom)
         )
+        masses = np.maximum(np.diff(cdf, axis=1), 0.0)
         pmf = np.mean(masses, axis=0)
         return pmf / pmf.sum()
 
@@ -324,8 +451,13 @@ class DirectRankModel:
             "minimum_scale": self.minimum_scale,
             "penalty": self.penalty,
             "optimizer": self.optimizer,
-            "conditioning": "equal-weight deterministic quadrature over lag-1 constituent ranks",
-            "quadrature_points": QUADRATURE_POINTS,
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "lag_count": self.lag_count,
+            "family": self.family,
+            "degrees_of_freedom": self.degrees_of_freedom,
+            "quadrature_points": QUADRATURE_POINTS
+            if self.lag_count == 1
+            else MULTI_LAG_QUADRATURE_POINTS,
             "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
             "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
         }
