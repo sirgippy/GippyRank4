@@ -4,7 +4,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from scipy.stats import norm
+from scipy.stats import norm, t
 
 from gippyrank.preseason import (
     DirectRankModel,
@@ -13,8 +13,10 @@ from gippyrank.preseason import (
     TeamSeason,
     clean_name,
     deterministic_quadrature,
+    historical_rank_features,
     normal_pmf,
     pmf_summaries,
+    product_quadrature,
     rank_bin_edges,
     rank_to_z,
     team_log_score,
@@ -93,6 +95,83 @@ def test_quadrature_and_pmf_are_invariant_to_constituent_order() -> None:
         model.pmf({}, rank_to_z(ranks, 10), 10),
         model.pmf({}, rank_to_z(shuffled, 10), 10),
     )
+
+
+def test_multi_lag_product_quadrature_is_exact_on_tiny_inputs_and_order_invariant() -> (
+    None
+):
+    first = np.asarray([-1.0, 0.5])
+    second = np.asarray([-0.4, 0.1])
+    actual = product_quadrature((first, second), points=4)
+    expected = np.asarray([[-1.0, -0.4], [-1.0, 0.1], [0.5, -0.4], [0.5, 0.1]])
+    assert np.array_equal(actual, expected)
+    assert np.array_equal(actual, product_quadrature((first[::-1], second[::-1]), 4))
+    assert np.isclose(np.full(len(actual), 1 / len(actual)).sum(), 1.0)
+
+
+def test_student_t_pmf_has_full_support_and_correct_boundary_mass() -> None:
+    processor = Preprocessor.fit([{}], [])
+    model = DirectRankModel(
+        [],
+        processor,
+        np.asarray([1.0, 0.0]),
+        np.asarray([np.log(0.4)]),
+        family="student_t",
+        degrees_of_freedom=5,
+    )
+    prior = rank_to_z(np.asarray([2]), 10)
+    pmf = model.pmf({}, prior, 10)
+    edges = rank_bin_edges(10)
+    scale = 0.5
+    assert np.isclose(pmf.sum(), 1.0)
+    assert np.isclose(pmf[0], t.cdf((edges[1] - prior[0]) / scale, 5))
+    assert np.isclose(pmf[-1], t.sf((edges[-2] - prior[0]) / scale, 5))
+
+
+def test_long_run_history_features_are_future_invariant_and_exclude_target() -> None:
+    lag1 = np.asarray([0.3, 0.5])
+    history = (np.asarray([-1.0]), np.asarray([-0.2]), lag1)
+    original = historical_rank_features(lag1, history)
+    future_appended_elsewhere = historical_rank_features(lag1, history)
+    assert original == future_appended_elsewhere
+    assert original["long_run_z_mean"] == pytest.approx((-1.0 - 0.2 + 0.4) / 3)
+    assert original["trajectory_z"] == pytest.approx(0.4 - (-0.2))
+
+
+def test_four_season_bootstrap_is_exhaustive_deterministic_and_signed() -> None:
+    root = Path(__file__).parents[1]
+    import sys
+
+    sys.path.insert(0, str(root / "scripts"))
+    try:
+        values = runpy.run_path(str(root / "scripts/build_preseason_prior_v1_1.py"))
+    finally:
+        sys.path.pop(0)
+    prediction = values["v1"].PriorPrediction
+
+    def make(season: int, probability: float) -> object:
+        return prediction(
+            season,
+            "fbs",
+            str(season),
+            str(season),
+            2,
+            np.asarray([1]),
+            "test",
+            "same_subdivision_lag1",
+            np.asarray([probability, 1 - probability]),
+        )
+
+    reference = [make(season, 0.4) for season in range(2022, 2026)]
+    candidate = [make(season, 0.8) for season in range(2022, 2026)]
+    first = values["paired_bootstrap"](reference, candidate)
+    second = values["paired_bootstrap"](reference, candidate)
+    assert first == second
+    assert first["n_season_clusters"] == 4
+    assert first["n_resamples"] == 256
+    assert "4^4 = 256" in first["resampling"]
+    assert first["mean_delta_nll"] < 0
+    assert first["fraction_candidate_better_nll"] == 1.0
 
 
 def test_optimizer_must_converge_and_retains_diagnostics() -> None:

@@ -15,6 +15,7 @@ from gippyrank.preseason import (
     GenericRankPrior,
     TeamSeason,
     crps_discrete,
+    historical_rank_features,
     pmf_summaries,
     rank_sample,
     rank_to_z,
@@ -208,20 +209,33 @@ def load_rows() -> tuple[
             continue
         prior_population = int(prior["team_population"])
         prior_ranks = valid_ranks(prior)
-        lag_z = rank_to_z(prior_ranks, prior_population)
+        lag1_z = rank_to_z(prior_ranks, prior_population)
         values: dict[str, float | None] = {}
-        for lag in (2, 3):
+        lag_distributions: list[np.ndarray] = []
+        for lag in range(2, 6):
             item = outcomes.get((season - lag, subdivision, team_id))
             if item:
                 lag_population = int(item["team_population"])
                 lag_ranks = valid_ranks(item)
+                historical_lag_z = rank_to_z(lag_ranks, lag_population)
                 values[f"lag{lag}_z_mean"] = (
-                    float(np.mean(rank_to_z(lag_ranks, lag_population)))
-                    if len(lag_ranks)
-                    else None
+                    float(np.mean(historical_lag_z)) if len(historical_lag_z) else None
                 )
+                if lag <= 3:
+                    lag_distributions.append(historical_lag_z)
             else:
                 values[f"lag{lag}_z_mean"] = None
+                if lag <= 3:
+                    lag_distributions.append(np.asarray([], dtype=float))
+        history = []
+        for prior_season in range(2002, season):
+            item = outcomes.get((prior_season, subdivision, team_id))
+            if item is None:
+                continue
+            history_ranks = valid_ranks(item)
+            if len(history_ranks):
+                history.append(rank_to_z(history_ranks, int(item["team_population"])))
+        values.update(historical_rank_features(lag1_z, tuple(history)))
         for name in (
             "recruiting_class_rank",
             "recruiting_class_points",
@@ -243,10 +257,11 @@ def load_rows() -> tuple[
                 team_id,
                 team_name,
                 target_population,
-                lag_z,
+                lag1_z,
                 rank_to_z(target_ranks, target_population),
                 target_ranks,
                 values,
+                tuple(lag_distributions),
             )
         )
         coverage.append(
