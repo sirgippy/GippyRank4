@@ -1,131 +1,1148 @@
 {
-  "acquisition": {
-    "status": "skipped"
+  "best_statistical_model": "See model-specific untouched FBS NLL; exploratory C is not eligible for production.",
+  "feature_safety": {
+    "coach_change": "exploratory but timing uncertain",
+    "rank_history": "production-safe",
+    "recruiting_class_points": "exploratory but timing uncertain",
+    "recruiting_class_rank": "exploratory but timing uncertain",
+    "returning_pct_passing_ppa": "exploratory but timing uncertain",
+    "returning_pct_ppa": "exploratory but timing uncertain",
+    "talent_composite": "exploratory but timing uncertain",
+    "transfer_portal": "rejected for leakage/timing"
   },
-  "safety": {
-    "2026": "Not generated: current CFBD responses are not historical preseason snapshots, and 2026 has already started; no 2026 game outcomes were read.",
-    "baseline": "Leakage-safe historical inputs are prior final-season Massey distributions only.",
-    "richer_features": "Retrospective/final API values are retained for audit and exploratory validation, not approved for production until archived preseason snapshots exist."
-  },
-  "validation": {
-    "baseline": {
-      "by_subdivision": {
+  "models": {
+    "A2_t1_t2": {
+      "availability": "production-safe",
+      "features": [
+        "lag2_z_mean"
+      ],
+      "fit_metadata": {
         "fbs": {
-          "crps": 0.11982959855102863,
-          "features": [
-            "lag1_mean",
-            "lag1_sd",
-            "lag2_mean",
-            "lag3_mean"
+          "conditioning": "equal-weight deterministic quadrature over lag-1 constituent ranks",
+          "feature_names": [
+            "lag2_z_mean"
           ],
-          "n_team_seasons": 528,
-          "nll": 4.747707239789903
+          "location_coefficients": [
+            0.6209047943887347,
+            -0.012612058210148725,
+            0.16245959157055093,
+            0.002664274749466784
+          ],
+          "log_scale_coefficients": [
+            0.1396458748376324,
+            -0.013608946308428061,
+            0.020448193327492883
+          ],
+          "minimum_scale": 0.1,
+          "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+          "penalty": 0.25,
+          "preprocessing": {
+            "feature_names": [
+              "lag2_z_mean"
+            ],
+            "means": {
+              "lag2_z_mean": -0.010523403108951135
+            },
+            "medians": {
+              "lag2_z_mean": 0.0018831090697629563
+            },
+            "scales": {
+              "lag2_z_mean": 1.6829540379091563
+            }
+          },
+          "quadrature_points": 12
         },
         "fcs": {
-          "crps": 0.11606830329385494,
-          "features": [
-            "lag1_mean",
-            "lag1_sd",
-            "lag2_mean",
-            "lag3_mean"
+          "conditioning": "equal-weight deterministic quadrature over lag-1 constituent ranks",
+          "feature_names": [
+            "lag2_z_mean"
           ],
-          "n_team_seasons": 509,
-          "nll": 4.696826338894326
+          "location_coefficients": [
+            0.6560819271012507,
+            -0.013502179193617608,
+            0.1782909031141794,
+            0.00602555098323218
+          ],
+          "log_scale_coefficients": [
+            0.06286411975007627,
+            -0.00010742017729110237,
+            0.03646189410920302
+          ],
+          "minimum_scale": 0.1,
+          "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+          "penalty": 0.25,
+          "preprocessing": {
+            "feature_names": [
+              "lag2_z_mean"
+            ],
+            "means": {
+              "lag2_z_mean": -0.0112358973356506
+            },
+            "medians": {
+              "lag2_z_mean": -0.007607362739385425
+            },
+            "scales": {
+              "lag2_z_mean": 1.6498363839888766
+            }
+          },
+          "quadrature_points": 12
         }
       },
-      "model": "baseline",
-      "test_seasons": [
-        2022,
-        2023,
-        2024,
-        2025
-      ]
-    },
-    "long_history": {
-      "by_subdivision": {
+      "selection": {
         "fbs": {
-          "crps": 0.11442599222050064,
-          "features": [
-            "lag1_mean",
-            "lag1_sd",
-            "lag2_mean",
-            "lag3_mean",
-            "recruiting_class_rank",
-            "recruiting_class_points",
-            "coach_change"
+          "development_train_seasons": [
+            2004,
+            2017
           ],
-          "n_team_seasons": 528,
-          "nll": 4.714774724082596
+          "development_validation_metrics": {
+            "crps": 0.11979989761268874,
+            "expected_rank_mae": 21.02987788572491,
+            "interval_80_average_width": 75.49707602339181,
+            "interval_80_coverage": 0.8172562281772808,
+            "median_rank_mae": 21.541910331384017,
+            "n_team_seasons": 513,
+            "nll": 4.544863021931844,
+            "top10": {
+              "calibration_gap": 0.001862386659689158,
+              "empirical_frequency": 0.07813655016662535,
+              "mean_predicted_probability": 0.07999893682631451
+            },
+            "top25": {
+              "calibration_gap": 0.012186393090345832,
+              "empirical_frequency": 0.19500794109816666,
+              "mean_predicted_probability": 0.2071943341885125
+            },
+            "top5": {
+              "calibration_gap": -0.00300083978588548,
+              "empirical_frequency": 0.03898635477582846,
+              "mean_predicted_probability": 0.03598551498994298
+            }
+          },
+          "development_validation_seasons": [
+            2018,
+            2021
+          ],
+          "pre_specified_penalty": 0.25,
+          "untouched_test_seasons": [
+            2022,
+            2023,
+            2024,
+            2025
+          ]
         },
         "fcs": {
-          "crps": 0.11611616294232902,
-          "features": [
-            "lag1_mean",
-            "lag1_sd",
-            "lag2_mean",
-            "lag3_mean",
-            "recruiting_class_rank",
-            "recruiting_class_points",
-            "coach_change"
+          "development_train_seasons": [
+            2004,
+            2017
           ],
-          "n_team_seasons": 509,
-          "nll": 4.696429873158338
+          "development_validation_metrics": {
+            "crps": 0.10478841457093324,
+            "expected_rank_mae": 17.686225468029473,
+            "interval_80_average_width": 69.01271186440678,
+            "interval_80_coverage": 0.848931425343964,
+            "median_rank_mae": 17.314618644067796,
+            "n_team_seasons": 472,
+            "nll": 4.402250777556476,
+            "top10": {
+              "calibration_gap": 0.000955082929048251,
+              "empirical_frequency": 0.07965822925958965,
+              "mean_predicted_probability": 0.0806133121886379
+            },
+            "top25": {
+              "calibration_gap": 0.009569969245561027,
+              "empirical_frequency": 0.19864559586348166,
+              "mean_predicted_probability": 0.20821556510904268
+            },
+            "top5": {
+              "calibration_gap": -0.004514286173543686,
+              "empirical_frequency": 0.0413135593220339,
+              "mean_predicted_probability": 0.036799273148490214
+            }
+          },
+          "development_validation_seasons": [
+            2018,
+            2021
+          ],
+          "pre_specified_penalty": 0.25,
+          "untouched_test_seasons": [
+            2022,
+            2023,
+            2024,
+            2025
+          ]
         }
       },
-      "model": "long_history",
-      "test_seasons": [
-        2022,
-        2023,
-        2024,
-        2025
-      ]
-    },
-    "modern_enriched": {
-      "by_subdivision": {
+      "test": {
         "fbs": {
-          "crps": 0.11528607974636412,
-          "features": [
-            "lag1_mean",
-            "lag1_sd",
-            "lag2_mean",
-            "lag3_mean",
+          "crps": 0.11907054810349571,
+          "expected_rank_mae": 22.21451282421386,
+          "interval_80_average_width": 77.38636363636364,
+          "interval_80_coverage": 0.8172827664195876,
+          "median_rank_mae": 22.50378787878788,
+          "n_team_seasons": 528,
+          "nll": 4.583922400748975,
+          "top10": {
+            "calibration_gap": 0.00010279114662209432,
+            "empirical_frequency": 0.07580321285140562,
+            "mean_predicted_probability": 0.07590600399802772
+          },
+          "top25": {
+            "calibration_gap": 0.008886212274659605,
+            "empirical_frequency": 0.18963843498482055,
+            "mean_predicted_probability": 0.19852464725948016
+          },
+          "top5": {
+            "calibration_gap": -0.00410063050368302,
+            "empirical_frequency": 0.03795279397689036,
+            "mean_predicted_probability": 0.03385216347320734
+          }
+        },
+        "fcs": {
+          "crps": 0.1153025955800162,
+          "expected_rank_mae": 20.640990770741386,
+          "interval_80_average_width": 70.4950884086444,
+          "interval_80_coverage": 0.7963818750181463,
+          "median_rank_mae": 20.661100196463654,
+          "n_team_seasons": 509,
+          "nll": 4.513763345120678,
+          "top10": {
+            "calibration_gap": -0.002401826960128736,
+            "empirical_frequency": 0.07858546168958742,
+            "mean_predicted_probability": 0.07618363472945869
+          },
+          "top25": {
+            "calibration_gap": 0.004771499303355159,
+            "empirical_frequency": 0.19618299186079147,
+            "mean_predicted_probability": 0.20095449116414663
+          },
+          "top5": {
+            "calibration_gap": -0.005255281210724494,
+            "empirical_frequency": 0.03929273084479371,
+            "mean_predicted_probability": 0.03403744963406922
+          }
+        }
+      },
+      "uncertainty_diagnostics": {
+        "fbs": {
+          "mean_scale_coach_change": 1.2480985585243334,
+          "mean_scale_no_coach_change": 1.2510276368026036,
+          "scale_vs_next_season_disagreement_correlation": -0.11066144586163193,
+          "scale_vs_prior_disagreement_correlation": -0.18837795146529487
+        },
+        "fcs": {
+          "mean_scale_coach_change": null,
+          "mean_scale_no_coach_change": 1.1654999481984623,
+          "scale_vs_next_season_disagreement_correlation": 0.15270199428784972,
+          "scale_vs_prior_disagreement_correlation": 0.08854080331061687
+        }
+      }
+    },
+    "A2_t1_t2_t3": {
+      "availability": "production-safe",
+      "features": [
+        "lag2_z_mean",
+        "lag3_z_mean"
+      ],
+      "fit_metadata": {
+        "fbs": {
+          "conditioning": "equal-weight deterministic quadrature over lag-1 constituent ranks",
+          "feature_names": [
+            "lag2_z_mean",
+            "lag3_z_mean"
+          ],
+          "location_coefficients": [
+            0.632977910550001,
+            -0.047025686024501835,
+            0.09711733502767425,
+            0.16271736548892776,
+            0.002418090668026073,
+            -0.0008079512821810473
+          ],
+          "log_scale_coefficients": [
+            0.19275627464020828,
+            0.009200524593992197,
+            -0.015578924731609607,
+            0.017509837857830012,
+            0.041601847431093325
+          ],
+          "minimum_scale": 0.1,
+          "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+          "penalty": 0.25,
+          "preprocessing": {
+            "feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean"
+            ],
+            "means": {
+              "lag2_z_mean": -0.010523403108951135,
+              "lag3_z_mean": -0.009897629260148099
+            },
+            "medians": {
+              "lag2_z_mean": 0.0018831090697629563,
+              "lag3_z_mean": -0.00040840480776854326
+            },
+            "scales": {
+              "lag2_z_mean": 1.6829540379091563,
+              "lag3_z_mean": 1.631087187512554
+            }
+          },
+          "quadrature_points": 12
+        },
+        "fcs": {
+          "conditioning": "equal-weight deterministic quadrature over lag-1 constituent ranks",
+          "feature_names": [
+            "lag2_z_mean",
+            "lag3_z_mean"
+          ],
+          "location_coefficients": [
+            0.6468580680677424,
+            -0.011267510220599809,
+            0.14920681370325134,
+            0.13879609081570982,
+            0.005081210810260487,
+            0.0029448685986282735
+          ],
+          "log_scale_coefficients": [
+            0.06525417215003831,
+            -0.019793887289353967,
+            0.03380700192455888,
+            0.034757287640510476,
+            0.058983881592448814
+          ],
+          "minimum_scale": 0.1,
+          "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+          "penalty": 0.25,
+          "preprocessing": {
+            "feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean"
+            ],
+            "means": {
+              "lag2_z_mean": -0.0112358973356506,
+              "lag3_z_mean": -0.011768789078758883
+            },
+            "medians": {
+              "lag2_z_mean": -0.007607362739385425,
+              "lag3_z_mean": -0.0013991504741515388
+            },
+            "scales": {
+              "lag2_z_mean": 1.6498363839888766,
+              "lag3_z_mean": 1.5893980349545553
+            }
+          },
+          "quadrature_points": 12
+        }
+      },
+      "selection": {
+        "fbs": {
+          "development_train_seasons": [
+            2004,
+            2017
+          ],
+          "development_validation_metrics": {
+            "crps": 0.11908879350684759,
+            "expected_rank_mae": 20.80342881422503,
+            "interval_80_average_width": 76.76803118908381,
+            "interval_80_coverage": 0.8369961304359801,
+            "median_rank_mae": 21.502923976608187,
+            "n_team_seasons": 513,
+            "nll": 4.541951932059488,
+            "top10": {
+              "calibration_gap": 0.017222639475031,
+              "empirical_frequency": 0.07813655016662535,
+              "mean_predicted_probability": 0.09535918964165635
+            },
+            "top25": {
+              "calibration_gap": 0.030463243771731596,
+              "empirical_frequency": 0.19500794109816666,
+              "mean_predicted_probability": 0.22547118486989826
+            },
+            "top5": {
+              "calibration_gap": 0.007719731637875753,
+              "empirical_frequency": 0.03898635477582846,
+              "mean_predicted_probability": 0.04670608641370421
+            }
+          },
+          "development_validation_seasons": [
+            2018,
+            2021
+          ],
+          "pre_specified_penalty": 0.25,
+          "untouched_test_seasons": [
+            2022,
+            2023,
+            2024,
+            2025
+          ]
+        },
+        "fcs": {
+          "development_train_seasons": [
+            2004,
+            2017
+          ],
+          "development_validation_metrics": {
+            "crps": 0.10407615815789849,
+            "expected_rank_mae": 17.420799773911412,
+            "interval_80_average_width": 69.51483050847457,
+            "interval_80_coverage": 0.8591604569434238,
+            "median_rank_mae": 17.047669491525422,
+            "n_team_seasons": 472,
+            "nll": 4.396945843783519,
+            "top10": {
+              "calibration_gap": 0.0031819467749267527,
+              "empirical_frequency": 0.07965822925958965,
+              "mean_predicted_probability": 0.0828401760345164
+            },
+            "top25": {
+              "calibration_gap": 0.012336931982013605,
+              "empirical_frequency": 0.19864559586348166,
+              "mean_predicted_probability": 0.21098252784549526
+            },
+            "top5": {
+              "calibration_gap": -0.002993724895094828,
+              "empirical_frequency": 0.0413135593220339,
+              "mean_predicted_probability": 0.03831983442693907
+            }
+          },
+          "development_validation_seasons": [
+            2018,
+            2021
+          ],
+          "pre_specified_penalty": 0.25,
+          "untouched_test_seasons": [
+            2022,
+            2023,
+            2024,
+            2025
+          ]
+        }
+      },
+      "test": {
+        "fbs": {
+          "crps": 0.1178103971931256,
+          "expected_rank_mae": 21.837431667236796,
+          "interval_80_average_width": 78.9905303030303,
+          "interval_80_coverage": 0.8392297847443086,
+          "median_rank_mae": 22.21780303030303,
+          "n_team_seasons": 528,
+          "nll": 4.573111312862125,
+          "top10": {
+            "calibration_gap": 0.013900381216960578,
+            "empirical_frequency": 0.07580321285140562,
+            "mean_predicted_probability": 0.0897035940683662
+          },
+          "top25": {
+            "calibration_gap": 0.026908787206884582,
+            "empirical_frequency": 0.18963843498482055,
+            "mean_predicted_probability": 0.21654722219170514
+          },
+          "top5": {
+            "calibration_gap": 0.004907530100015954,
+            "empirical_frequency": 0.03795279397689036,
+            "mean_predicted_probability": 0.04286032407690631
+          }
+        },
+        "fcs": {
+          "crps": 0.11467655473828015,
+          "expected_rank_mae": 20.349075451838903,
+          "interval_80_average_width": 69.65422396856582,
+          "interval_80_coverage": 0.800676493075382,
+          "median_rank_mae": 20.45088408644401,
+          "n_team_seasons": 509,
+          "nll": 4.508625817408482,
+          "top10": {
+            "calibration_gap": 0.0022527605685877666,
+            "empirical_frequency": 0.07858546168958742,
+            "mean_predicted_probability": 0.08083822225817519
+          },
+          "top25": {
+            "calibration_gap": 0.009824835306488144,
+            "empirical_frequency": 0.19618299186079147,
+            "mean_predicted_probability": 0.2060078271672796
+          },
+          "top5": {
+            "calibration_gap": -0.001850535060345708,
+            "empirical_frequency": 0.03929273084479371,
+            "mean_predicted_probability": 0.037442195784448004
+          }
+        }
+      },
+      "uncertainty_diagnostics": {
+        "fbs": {
+          "mean_scale_coach_change": 1.3137995441498949,
+          "mean_scale_no_coach_change": 1.3139496736995546,
+          "scale_vs_next_season_disagreement_correlation": 0.04660446485722286,
+          "scale_vs_prior_disagreement_correlation": 0.04663019835238659
+        },
+        "fcs": {
+          "mean_scale_coach_change": null,
+          "mean_scale_no_coach_change": 1.1709539330918162,
+          "scale_vs_next_season_disagreement_correlation": 0.15135572427162508,
+          "scale_vs_prior_disagreement_correlation": 0.1822375817479212
+        }
+      }
+    },
+    "A_t1": {
+      "availability": "production-safe",
+      "features": [],
+      "fit_metadata": {
+        "fbs": {
+          "conditioning": "equal-weight deterministic quadrature over lag-1 constituent ranks",
+          "feature_names": [],
+          "location_coefficients": [
+            0.6922712126541971,
+            -0.014610381295153895
+          ],
+          "log_scale_coefficients": [
+            0.14719484752290846
+          ],
+          "minimum_scale": 0.1,
+          "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+          "penalty": 0.25,
+          "preprocessing": {
+            "feature_names": [],
+            "means": {},
+            "medians": {},
+            "scales": {}
+          },
+          "quadrature_points": 12
+        },
+        "fcs": {
+          "conditioning": "equal-weight deterministic quadrature over lag-1 constituent ranks",
+          "feature_names": [],
+          "location_coefficients": [
+            0.7319594049246503,
+            -0.012292719362873832
+          ],
+          "log_scale_coefficients": [
+            0.0628483636135337
+          ],
+          "minimum_scale": 0.1,
+          "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+          "penalty": 0.25,
+          "preprocessing": {
+            "feature_names": [],
+            "means": {},
+            "medians": {},
+            "scales": {}
+          },
+          "quadrature_points": 12
+        }
+      },
+      "selection": {
+        "fbs": {
+          "development_train_seasons": [
+            2004,
+            2017
+          ],
+          "development_validation_metrics": {
+            "crps": 0.1211360983968454,
+            "expected_rank_mae": 21.22535642201694,
+            "interval_80_average_width": 76.1150097465887,
+            "interval_80_coverage": 0.8171135332225559,
+            "median_rank_mae": 21.750487329434698,
+            "n_team_seasons": 513,
+            "nll": 4.556681186332134,
+            "top10": {
+              "calibration_gap": 0.0029204170939791108,
+              "empirical_frequency": 0.07813655016662535,
+              "mean_predicted_probability": 0.08105696726060446
+            },
+            "top25": {
+              "calibration_gap": 0.014800497142610669,
+              "empirical_frequency": 0.19500794109816666,
+              "mean_predicted_probability": 0.20980843824077733
+            },
+            "top5": {
+              "calibration_gap": -0.002814517185457395,
+              "empirical_frequency": 0.03898635477582846,
+              "mean_predicted_probability": 0.03617183759037106
+            }
+          },
+          "development_validation_seasons": [
+            2018,
+            2021
+          ],
+          "pre_specified_penalty": 0.25,
+          "untouched_test_seasons": [
+            2022,
+            2023,
+            2024,
+            2025
+          ]
+        },
+        "fcs": {
+          "development_train_seasons": [
+            2004,
+            2017
+          ],
+          "development_validation_metrics": {
+            "crps": 0.10661483667460604,
+            "expected_rank_mae": 18.187635124000426,
+            "interval_80_average_width": 70.5042372881356,
+            "interval_80_coverage": 0.8542616647843729,
+            "median_rank_mae": 17.861228813559322,
+            "n_team_seasons": 472,
+            "nll": 4.418271630038122,
+            "top10": {
+              "calibration_gap": -7.82204957947008e-05,
+              "empirical_frequency": 0.07965822925958965,
+              "mean_predicted_probability": 0.07958000876379495
+            },
+            "top25": {
+              "calibration_gap": 0.009209145841301197,
+              "empirical_frequency": 0.19864559586348166,
+              "mean_predicted_probability": 0.20785474170478285
+            },
+            "top5": {
+              "calibration_gap": -0.0056277640208824906,
+              "empirical_frequency": 0.0413135593220339,
+              "mean_predicted_probability": 0.03568579530115141
+            }
+          },
+          "development_validation_seasons": [
+            2018,
+            2021
+          ],
+          "pre_specified_penalty": 0.25,
+          "untouched_test_seasons": [
+            2022,
+            2023,
+            2024,
+            2025
+          ]
+        }
+      },
+      "test": {
+        "fbs": {
+          "crps": 0.11995757084546498,
+          "expected_rank_mae": 22.39736054483487,
+          "interval_80_average_width": 77.93371212121212,
+          "interval_80_coverage": 0.820179853066468,
+          "median_rank_mae": 22.698863636363637,
+          "n_team_seasons": 528,
+          "nll": 4.589634998873618,
+          "top10": {
+            "calibration_gap": 0.001621725290944273,
+            "empirical_frequency": 0.07580321285140562,
+            "mean_predicted_probability": 0.0774249381423499
+          },
+          "top25": {
+            "calibration_gap": 0.011718236474233451,
+            "empirical_frequency": 0.18963843498482055,
+            "mean_predicted_probability": 0.201356671459054
+          },
+          "top5": {
+            "calibration_gap": -0.003538260472816669,
+            "empirical_frequency": 0.03795279397689036,
+            "mean_predicted_probability": 0.03441453350407369
+          }
+        },
+        "fcs": {
+          "crps": 0.11664798755589804,
+          "expected_rank_mae": 20.931854943228323,
+          "interval_80_average_width": 70.98821218074656,
+          "interval_80_coverage": 0.7957068336446427,
+          "median_rank_mae": 20.957760314341847,
+          "n_team_seasons": 509,
+          "nll": 4.52545183792279,
+          "top10": {
+            "calibration_gap": -0.0022659533276925825,
+            "empirical_frequency": 0.07858546168958742,
+            "mean_predicted_probability": 0.07631950836189484
+          },
+          "top25": {
+            "calibration_gap": 0.005371467243263428,
+            "empirical_frequency": 0.19618299186079147,
+            "mean_predicted_probability": 0.2015544591040549
+          },
+          "top5": {
+            "calibration_gap": -0.005401574873399692,
+            "empirical_frequency": 0.03929273084479371,
+            "mean_predicted_probability": 0.03389115597139402
+          }
+        }
+      },
+      "uncertainty_diagnostics": {
+        "fbs": {
+          "mean_scale_coach_change": 1.258579687420408,
+          "mean_scale_no_coach_change": 1.2585796874204078,
+          "scale_vs_next_season_disagreement_correlation": null,
+          "scale_vs_prior_disagreement_correlation": null
+        },
+        "fcs": {
+          "mean_scale_coach_change": null,
+          "mean_scale_no_coach_change": 1.1648653546536933,
+          "scale_vs_next_season_disagreement_correlation": 2.0485715307057344e-16,
+          "scale_vs_prior_disagreement_correlation": -2.3251209807957435e-16
+        }
+      }
+    },
+    "B_safe_long_history": {
+      "availability": "production-safe",
+      "features": [
+        "lag2_z_mean",
+        "lag3_z_mean"
+      ],
+      "fit_metadata": {
+        "fbs": {
+          "conditioning": "equal-weight deterministic quadrature over lag-1 constituent ranks",
+          "feature_names": [
+            "lag2_z_mean",
+            "lag3_z_mean"
+          ],
+          "location_coefficients": [
+            0.632977910550001,
+            -0.047025686024501835,
+            0.09711733502767425,
+            0.16271736548892776,
+            0.002418090668026073,
+            -0.0008079512821810473
+          ],
+          "log_scale_coefficients": [
+            0.19275627464020828,
+            0.009200524593992197,
+            -0.015578924731609607,
+            0.017509837857830012,
+            0.041601847431093325
+          ],
+          "minimum_scale": 0.1,
+          "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+          "penalty": 0.25,
+          "preprocessing": {
+            "feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean"
+            ],
+            "means": {
+              "lag2_z_mean": -0.010523403108951135,
+              "lag3_z_mean": -0.009897629260148099
+            },
+            "medians": {
+              "lag2_z_mean": 0.0018831090697629563,
+              "lag3_z_mean": -0.00040840480776854326
+            },
+            "scales": {
+              "lag2_z_mean": 1.6829540379091563,
+              "lag3_z_mean": 1.631087187512554
+            }
+          },
+          "quadrature_points": 12
+        },
+        "fcs": {
+          "conditioning": "equal-weight deterministic quadrature over lag-1 constituent ranks",
+          "feature_names": [
+            "lag2_z_mean",
+            "lag3_z_mean"
+          ],
+          "location_coefficients": [
+            0.6468580680677424,
+            -0.011267510220599809,
+            0.14920681370325134,
+            0.13879609081570982,
+            0.005081210810260487,
+            0.0029448685986282735
+          ],
+          "log_scale_coefficients": [
+            0.06525417215003831,
+            -0.019793887289353967,
+            0.03380700192455888,
+            0.034757287640510476,
+            0.058983881592448814
+          ],
+          "minimum_scale": 0.1,
+          "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+          "penalty": 0.25,
+          "preprocessing": {
+            "feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean"
+            ],
+            "means": {
+              "lag2_z_mean": -0.0112358973356506,
+              "lag3_z_mean": -0.011768789078758883
+            },
+            "medians": {
+              "lag2_z_mean": -0.007607362739385425,
+              "lag3_z_mean": -0.0013991504741515388
+            },
+            "scales": {
+              "lag2_z_mean": 1.6498363839888766,
+              "lag3_z_mean": 1.5893980349545553
+            }
+          },
+          "quadrature_points": 12
+        }
+      },
+      "selection": {
+        "fbs": {
+          "development_train_seasons": [
+            2004,
+            2017
+          ],
+          "development_validation_metrics": {
+            "crps": 0.11908879350684759,
+            "expected_rank_mae": 20.80342881422503,
+            "interval_80_average_width": 76.76803118908381,
+            "interval_80_coverage": 0.8369961304359801,
+            "median_rank_mae": 21.502923976608187,
+            "n_team_seasons": 513,
+            "nll": 4.541951932059488,
+            "top10": {
+              "calibration_gap": 0.017222639475031,
+              "empirical_frequency": 0.07813655016662535,
+              "mean_predicted_probability": 0.09535918964165635
+            },
+            "top25": {
+              "calibration_gap": 0.030463243771731596,
+              "empirical_frequency": 0.19500794109816666,
+              "mean_predicted_probability": 0.22547118486989826
+            },
+            "top5": {
+              "calibration_gap": 0.007719731637875753,
+              "empirical_frequency": 0.03898635477582846,
+              "mean_predicted_probability": 0.04670608641370421
+            }
+          },
+          "development_validation_seasons": [
+            2018,
+            2021
+          ],
+          "pre_specified_penalty": 0.25,
+          "untouched_test_seasons": [
+            2022,
+            2023,
+            2024,
+            2025
+          ]
+        },
+        "fcs": {
+          "development_train_seasons": [
+            2004,
+            2017
+          ],
+          "development_validation_metrics": {
+            "crps": 0.10407615815789849,
+            "expected_rank_mae": 17.420799773911412,
+            "interval_80_average_width": 69.51483050847457,
+            "interval_80_coverage": 0.8591604569434238,
+            "median_rank_mae": 17.047669491525422,
+            "n_team_seasons": 472,
+            "nll": 4.396945843783519,
+            "top10": {
+              "calibration_gap": 0.0031819467749267527,
+              "empirical_frequency": 0.07965822925958965,
+              "mean_predicted_probability": 0.0828401760345164
+            },
+            "top25": {
+              "calibration_gap": 0.012336931982013605,
+              "empirical_frequency": 0.19864559586348166,
+              "mean_predicted_probability": 0.21098252784549526
+            },
+            "top5": {
+              "calibration_gap": -0.002993724895094828,
+              "empirical_frequency": 0.0413135593220339,
+              "mean_predicted_probability": 0.03831983442693907
+            }
+          },
+          "development_validation_seasons": [
+            2018,
+            2021
+          ],
+          "pre_specified_penalty": 0.25,
+          "untouched_test_seasons": [
+            2022,
+            2023,
+            2024,
+            2025
+          ]
+        }
+      },
+      "test": {
+        "fbs": {
+          "crps": 0.1178103971931256,
+          "expected_rank_mae": 21.837431667236796,
+          "interval_80_average_width": 78.9905303030303,
+          "interval_80_coverage": 0.8392297847443086,
+          "median_rank_mae": 22.21780303030303,
+          "n_team_seasons": 528,
+          "nll": 4.573111312862125,
+          "top10": {
+            "calibration_gap": 0.013900381216960578,
+            "empirical_frequency": 0.07580321285140562,
+            "mean_predicted_probability": 0.0897035940683662
+          },
+          "top25": {
+            "calibration_gap": 0.026908787206884582,
+            "empirical_frequency": 0.18963843498482055,
+            "mean_predicted_probability": 0.21654722219170514
+          },
+          "top5": {
+            "calibration_gap": 0.004907530100015954,
+            "empirical_frequency": 0.03795279397689036,
+            "mean_predicted_probability": 0.04286032407690631
+          }
+        },
+        "fcs": {
+          "crps": 0.11467655473828015,
+          "expected_rank_mae": 20.349075451838903,
+          "interval_80_average_width": 69.65422396856582,
+          "interval_80_coverage": 0.800676493075382,
+          "median_rank_mae": 20.45088408644401,
+          "n_team_seasons": 509,
+          "nll": 4.508625817408482,
+          "top10": {
+            "calibration_gap": 0.0022527605685877666,
+            "empirical_frequency": 0.07858546168958742,
+            "mean_predicted_probability": 0.08083822225817519
+          },
+          "top25": {
+            "calibration_gap": 0.009824835306488144,
+            "empirical_frequency": 0.19618299186079147,
+            "mean_predicted_probability": 0.2060078271672796
+          },
+          "top5": {
+            "calibration_gap": -0.001850535060345708,
+            "empirical_frequency": 0.03929273084479371,
+            "mean_predicted_probability": 0.037442195784448004
+          }
+        }
+      },
+      "uncertainty_diagnostics": {
+        "fbs": {
+          "mean_scale_coach_change": 1.3137995441498949,
+          "mean_scale_no_coach_change": 1.3139496736995546,
+          "scale_vs_next_season_disagreement_correlation": 0.04660446485722286,
+          "scale_vs_prior_disagreement_correlation": 0.04663019835238659
+        },
+        "fcs": {
+          "mean_scale_coach_change": null,
+          "mean_scale_no_coach_change": 1.1709539330918162,
+          "scale_vs_next_season_disagreement_correlation": 0.15135572427162508,
+          "scale_vs_prior_disagreement_correlation": 0.1822375817479212
+        }
+      }
+    },
+    "C_exploratory_modern": {
+      "availability": "exploratory timing-uncertain",
+      "features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "coach_change",
+        "talent_composite",
+        "returning_pct_ppa",
+        "returning_pct_passing_ppa"
+      ],
+      "fit_metadata": {
+        "fbs": {
+          "conditioning": "equal-weight deterministic quadrature over lag-1 constituent ranks",
+          "feature_names": [
+            "lag2_z_mean",
+            "lag3_z_mean",
             "recruiting_class_rank",
             "recruiting_class_points",
             "coach_change",
             "talent_composite",
             "returning_pct_ppa",
-            "returning_pct_passing_ppa",
-            "returning_usage"
+            "returning_pct_passing_ppa"
           ],
-          "n_team_seasons": 528,
-          "nll": 4.72424707996142
-        },
-        "fcs": {
-          "crps": 0.11609455971212022,
-          "features": [
-            "lag1_mean",
-            "lag1_sd",
-            "lag2_mean",
-            "lag3_mean",
-            "recruiting_class_rank",
-            "recruiting_class_points",
-            "coach_change",
-            "talent_composite",
-            "returning_pct_ppa",
-            "returning_pct_passing_ppa",
-            "returning_usage"
+          "location_coefficients": [
+            0.5433787803785767,
+            -0.02118247627981297,
+            0.038347477425796306,
+            0.07972034711689502,
+            0.10649577311787227,
+            -0.11724517432139506,
+            0.10065020212796609,
+            -0.11018591540200158,
+            -0.22563930049486836,
+            -0.017800826573433355,
+            -0.003864246582674802,
+            -0.005897889528196864,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
           ],
-          "n_team_seasons": 509,
-          "nll": 4.697062395825685
+          "log_scale_coefficients": [
+            0.11067244604392693,
+            -0.014491969512318657,
+            -0.03385333870726737,
+            0.05627295804952215,
+            0.011024992906342346,
+            0.02193162820296601,
+            -0.03557135374666344,
+            -0.05067169684074233,
+            0.04055940438723347,
+            -0.0011675352788276193,
+            0.005963962206789884,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "minimum_scale": 0.1,
+          "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+          "penalty": 0.25,
+          "preprocessing": {
+            "feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "recruiting_class_rank",
+              "recruiting_class_points",
+              "coach_change",
+              "talent_composite",
+              "returning_pct_ppa",
+              "returning_pct_passing_ppa"
+            ],
+            "means": {
+              "coach_change": 0.20758928571428573,
+              "lag2_z_mean": -0.02754538070892356,
+              "lag3_z_mean": -0.025926307767021785,
+              "recruiting_class_points": 176.1621316964286,
+              "recruiting_class_rank": 64.95535714285714,
+              "returning_pct_passing_ppa": 0.3655658482142857,
+              "returning_pct_ppa": 0.6220089285714285,
+              "talent_composite": 549.0658705357143
+            },
+            "medians": {
+              "coach_change": 0.0,
+              "lag2_z_mean": 0.010109351801756317,
+              "lag3_z_mean": 0.0004124088371041401,
+              "recruiting_class_points": 167.715,
+              "recruiting_class_rank": 64.5,
+              "returning_pct_passing_ppa": 0.803,
+              "returning_pct_ppa": 0.642,
+              "talent_composite": 544.23
+            },
+            "scales": {
+              "coach_change": 0.4055810328046892,
+              "lag2_z_mean": 1.7203593891673807,
+              "lag3_z_mean": 1.7171183931780962,
+              "recruiting_class_points": 52.96263219651709,
+              "recruiting_class_rank": 37.646562021190014,
+              "returning_pct_passing_ppa": 5.345049504702232,
+              "returning_pct_ppa": 0.2532675258544282,
+              "talent_composite": 188.6967881649052
+            }
+          },
+          "quadrature_points": 12
         }
       },
-      "model": "modern_enriched",
-      "test_seasons": [
-        2022,
-        2023,
-        2024,
-        2025
-      ]
+      "selection": {
+        "fbs": {
+          "development_train_seasons": [
+            2004,
+            2017
+          ],
+          "development_validation_metrics": {
+            "crps": 0.11288557830679759,
+            "expected_rank_mae": 19.66812197963149,
+            "interval_80_average_width": 71.10136452241716,
+            "interval_80_coverage": 0.8212766348104694,
+            "median_rank_mae": 20.196881091617932,
+            "n_team_seasons": 513,
+            "nll": 4.499380727355819,
+            "top10": {
+              "calibration_gap": 0.008378546531356557,
+              "empirical_frequency": 0.07813655016662535,
+              "mean_predicted_probability": 0.08651509669798191
+            },
+            "top25": {
+              "calibration_gap": 0.027148330038543278,
+              "empirical_frequency": 0.19500794109816666,
+              "mean_predicted_probability": 0.22215627113670994
+            },
+            "top5": {
+              "calibration_gap": -0.00015336286601509708,
+              "empirical_frequency": 0.03898635477582846,
+              "mean_predicted_probability": 0.03883299190981336
+            }
+          },
+          "development_validation_seasons": [
+            2018,
+            2021
+          ],
+          "pre_specified_penalty": 0.25,
+          "untouched_test_seasons": [
+            2022,
+            2023,
+            2024,
+            2025
+          ]
+        }
+      },
+      "test": {
+        "fbs": {
+          "crps": 0.11127715740827399,
+          "expected_rank_mae": 20.346864942153967,
+          "interval_80_average_width": 74.20152091254752,
+          "interval_80_coverage": 0.8353375119537702,
+          "median_rank_mae": 20.53041825095057,
+          "n_team_seasons": 526,
+          "nll": 4.527529934320025,
+          "top10": {
+            "calibration_gap": 0.00018780685374641948,
+            "empirical_frequency": 0.0760914379953273,
+            "mean_predicted_probability": 0.07627924484907372
+          },
+          "top25": {
+            "calibration_gap": 0.00784736875362299,
+            "empirical_frequency": 0.18963028902690043,
+            "mean_predicted_probability": 0.19747765778052342
+          },
+          "top5": {
+            "calibration_gap": -0.004332066212379783,
+            "empirical_frequency": 0.038097101178323406,
+            "mean_predicted_probability": 0.03376503496594362
+          }
+        },
+        "fcs": {
+          "status": "not fitted; FCS uses the simpler rank-history prior"
+        }
+      },
+      "uncertainty_diagnostics": {
+        "fbs": {
+          "mean_scale_coach_change": 1.326299427335769,
+          "mean_scale_no_coach_change": 1.217071238683101,
+          "scale_vs_next_season_disagreement_correlation": 0.06519376448938063,
+          "scale_vs_prior_disagreement_correlation": 0.062191640489356846
+        }
+      }
     }
+  },
+  "production_candidate": "A2_t1_t2_t3",
+  "safety": {
+    "2026": "Not generated; current-season endpoints are not preserved preseason snapshots and no 2026 outcomes were read."
+  },
+  "target": {
+    "excluded": [
+      "CMP"
+    ],
+    "included_note": "MAS is ordinary",
+    "source": "cleaned historical Massey constituent outcomes",
+    "team_season_weight": 1.0
+  },
+  "validation_design": {
+    "development_training": [
+      2004,
+      2017
+    ],
+    "development_validation": [
+      2018,
+      2021
+    ],
+    "untouched_test": [
+      2022,
+      2023,
+      2024,
+      2025
+    ]
   }
 }
