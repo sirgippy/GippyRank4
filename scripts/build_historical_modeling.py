@@ -1,23 +1,25 @@
-"""Build historical rank outcomes, joined games, and validate margin likelihoods."""
+"""Build and evaluate the historical score-margin likelihood."""
 
 from __future__ import annotations
 
 import argparse
 import json
 from collections import Counter, defaultdict
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
-from scipy.stats import t as student_t
 
 from gippyrank.modeling import (
     PAIRINGS,
     build_distributions,
     coverage_table,
     design_matrix,
+    fit_marginalized,
     fit_robust_surface,
+    game_log_scores,
+    mixture_central_interval,
     read_csv,
-    student_t_nll,
     write_csv,
 )
 
@@ -25,76 +27,172 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "data/processed/modeling"
 
 
+def _as_bool(value) -> bool:
+    return str(value).strip().lower() in {"true", "1", "yes"}
+
+
 def build_joined(games, distributions, rank_pairs, stats):
-    d = {(int(r["season"]), r["subdivision"], r["team_id"]): r for r in distributions}
+    dist = {
+        (int(r["season"]), r["subdivision"], r["team_id"]): r for r in distributions
+    }
     stat = defaultdict(dict)
     for row in stats:
         stat[int(row["game_id"])][int(row["team_id"])] = row.get("yards_per_play")
     joined, missing = [], Counter()
     for game in games:
-        if game["homeClassification"] not in {"fbs", "fcs"} or game["awayClassification"] not in {"fbs", "fcs"}:
-            continue
-        if game["homePoints"] in (None, "") or game["awayPoints"] in (None, ""):
+        hc, ac = game["homeClassification"], game["awayClassification"]
+        if (
+            hc not in {"fbs", "fcs"}
+            or ac not in {"fbs", "fcs"}
+            or game["homePoints"] in (None, "")
+            or game["awayPoints"] in (None, "")
+        ):
             continue
         season = int(game["season"])
-        hkey = (season, game["homeClassification"], game["homeId"])
-        akey = (season, game["awayClassification"], game["awayId"])
-        hr, ar = d.get(hkey), d.get(akey)
+        hk = (season, hc, game["homeId"])
+        ak = (season, ac, game["awayId"])
+        hr, ar = dist.get(hk), dist.get(ak)
         if hr is None or ar is None:
             missing["home" if hr is None else "away"] += 1
             continue
-        pairs = rank_pairs.get((int(game["id"]), hkey, akey), [])
+        pairs = rank_pairs.get((int(game["id"]), hk, ak), [])
         if not pairs:
-            rng = np.random.default_rng(int(game["id"]) % (2**32))
-            hp = json.loads(hr["rank_observations"]); ap = json.loads(ar["rank_observations"])
-            pairs = [(int(rng.choice(hp)), int(rng.choice(ap))) for _ in range(min(12, max(len(hp), len(ap))))]
-            pairing_method = "marginal_fallback"
+            rng = np.random.default_rng(int(game["id"]) % 2**32)
+            hp = json.loads(hr["rank_observations"])
+            ap = json.loads(ar["rank_observations"])
+            pairs = [
+                (int(rng.choice(hp)), int(rng.choice(ap)))
+                for _ in range(min(12, max(len(hp), len(ap))))
+            ]
+            method = "marginal_fallback"
         else:
-            pairing_method = "same_system"
+            method = "same_system"
         ys = stat[int(game["id"])]
-        ypp_h, ypp_a = ys.get(int(game["homeId"])), ys.get(int(game["awayId"]))
-        joined.append({
-            "game_id": game["id"], "season": season, "week": game["week"], "start_date": game["startDate"],
-            "home_team_id": game["homeId"], "away_team_id": game["awayId"],
-            "home_subdivision": game["homeClassification"], "away_subdivision": game["awayClassification"],
-            "home_team_population": hr["team_population"], "away_team_population": ar["team_population"],
-            "home_points": game["homePoints"], "away_points": game["awayPoints"],
-            "margin": int(game["homePoints"]) - int(game["awayPoints"]),
-            "neutral_site": game["neutralSite"], "pairing": "fbs-fcs" if {game["homeClassification"], game["awayClassification"]} == {"fbs", "fcs"} else f'{game["homeClassification"]}-{game["awayClassification"]}',
-            "rank_pairs": json.dumps(pairs, separators=(",", ":")), "pairing_method": pairing_method,
-            "home_rank_observations": hr["rank_observations"], "away_rank_observations": ar["rank_observations"],
-            "home_ypp": ypp_h or "", "away_ypp": ypp_a or "",
-        })
+        joined.append(
+            {
+                "game_id": game["id"],
+                "season": season,
+                "week": game["week"],
+                "start_date": game["startDate"],
+                "home_team_id": game["homeId"],
+                "away_team_id": game["awayId"],
+                "home_subdivision": hc,
+                "away_subdivision": ac,
+                "home_team_population": hr["team_population"],
+                "away_team_population": ar["team_population"],
+                "home_points": game["homePoints"],
+                "away_points": game["awayPoints"],
+                "margin": (
+                    int(game["homePoints"]) - int(game["awayPoints"])
+                    if hc == ac
+                    else (
+                        (
+                            int(game["homePoints"])
+                            if hc == "fbs"
+                            else int(game["awayPoints"])
+                        )
+                        - (
+                            int(game["awayPoints"])
+                            if hc == "fbs"
+                            else int(game["homePoints"])
+                        )
+                    )
+                ),
+                "neutral_site": game["neutralSite"],
+                "pairing": "fbs-fcs" if {hc, ac} == {"fbs", "fcs"} else f"{hc}-{ac}",
+                "rank_pairs": json.dumps(pairs, separators=(",", ":")),
+                "pairing_method": method,
+                "home_rank_observations": hr["rank_observations"],
+                "away_rank_observations": ar["rank_observations"],
+                "home_ypp": ys.get(int(game["homeId"]), "") or "",
+                "away_ypp": ys.get(int(game["awayId"]), "") or "",
+            }
+        )
     return joined, missing
 
 
-def pseudo_data(rows, seed=20260903):
-    del seed  # Pair observations are already deterministic; fallback sampling is seeded upstream.
-    x, y, z, pairing, home, neutral, weights, game_ids, ypp = [], [], [], [], [], [], [], [], []
+@dataclass(frozen=True)
+class PseudoData:
+    x: np.ndarray
+    y: np.ndarray
+    margin: np.ndarray
+    pairing: np.ndarray
+    home: np.ndarray
+    neutral: np.ndarray
+    weight: np.ndarray
+    game_id: np.ndarray
+    fbs_home: np.ndarray
+    season: np.ndarray
+
+
+def pseudo_data(rows) -> PseudoData:
+    values = [[] for _ in range(10)]
     for row in rows:
         pairs = json.loads(row["rank_pairs"])
         n = len(pairs)
+        cross = row["pairing"] == "fbs-fcs"
+        neutral = _as_bool(row["neutral_site"])
         for a, b in pairs:
-            x.append((a - .5) / int(row["home_team_population"]))
-            y.append((b - .5) / int(row["away_team_population"]))
-            z.append(float(row["margin"])); pairing.append(row["pairing"]); home.append(1.0 - bool(row["neutral_site"])); neutral.append(bool(row["neutral_site"])); weights.append(1/n); game_ids.append(int(row["game_id"]))
-            yh, ya = row["home_ypp"], row["away_ypp"]
-            ypp.append(float(yh) - float(ya) if yh and ya else np.nan)
-    return (np.array(x), np.array(y), np.array(z), np.array(pairing), np.array(home), np.array(neutral), np.array(weights), np.array(game_ids), np.array(ypp))
+            hp = (a - 0.5) / int(row["home_team_population"])
+            ap = (b - 0.5) / int(row["away_team_population"])
+            if cross and row["home_subdivision"] == "fcs":
+                hp, ap = ap, hp
+            vals = [
+                hp,
+                ap,
+                float(row["margin"]),
+                row["pairing"],
+                1.0 - neutral,
+                neutral,
+                1 / n,
+                int(row["game_id"]),
+                float(row["home_subdivision"] == "fbs")
+                if cross and not neutral
+                else 0.0,
+                float(row["season"]),
+            ]
+            for out, val in zip(values, vals):
+                out.append(val)
+    arrays = tuple(np.asarray(v) for v in values)
+    return PseudoData(*arrays)
 
 
-def evaluate(model, X, y, group, rows):
-    location = X @ model["beta"]
-    interval = student_t.ppf(.90, model["df"]) * model["scale"]
-    out = {"n": len(y), "nll": student_t_nll(y, location, model["scale"], model["df"]), "mae": float(np.mean(np.abs(y-location))), "central_80pct_coverage": float(np.mean(np.abs(y-location) <= interval))}
+def _evaluate_subset(model, X, y, game_ids, include_interval=True):
+    loc = X @ model["beta"]
+    scores = game_log_scores(y, loc, game_ids, model["scale"], model["df"])
+    _, inverse = np.unique(game_ids, return_inverse=True)
+    counts = np.bincount(inverse)
+    actual = np.bincount(inverse, weights=y) / counts
+    pred = np.bincount(inverse, weights=loc) / counts
+    covered = []
+    for indexes in np.split(np.argsort(inverse), np.cumsum(counts)[:-1]):
+        if include_interval:
+            lower, upper = mixture_central_interval(
+                loc[indexes], model["scale"], model["df"]
+            )
+            covered.append(lower <= actual[len(covered)] <= upper)
+    out = {
+        **scores,
+        "n_pseudo_observations": len(y),
+        "mae_expected_margin": float(np.mean(np.abs(actual - pred))),
+        "central_80pct_coverage": float(np.mean(covered)) if include_interval else None,
+    }
+    return out
+
+
+def evaluate(model, X, y, pairing, game_ids, include_interval=True):
+    out = _evaluate_subset(model, X, y, game_ids, include_interval)
     for p in PAIRINGS:
-        m = group == p
-        if m.any(): out[p] = {"n": int(m.sum()), "nll": student_t_nll(y[m], location[m], model["scale"], model["df"]), "mae": float(np.mean(np.abs(y[m]-location[m])))}
+        m = pairing == p
+        if m.any():
+            out[p] = _evaluate_subset(model, X[m], y[m], game_ids[m], include_interval)
     return out
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(); parser.add_argument("--threshold", type=float, default=.90); args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--threshold", type=float, default=0.90)
+    args = parser.parse_args()
     observations = read_csv(ROOT / "data/processed/massey/final_observations.csv")
     games = read_csv(ROOT / "data/processed/cfbd/games.csv")
     stats = read_csv(ROOT / "data/processed/cfbd/team_game_stats.csv")
@@ -102,51 +200,184 @@ def main() -> None:
     distributions, by_team = build_distributions(observations, depth, args.threshold)
     OUT.mkdir(parents=True, exist_ok=True)
     write_csv(OUT / "system_depth.csv", list(depth[0]), depth)
-    write_csv(OUT / "team_season_rank_distributions.csv", list(distributions[0]), distributions)
-    rank_pairs = {}
-    selected_codes = defaultdict(set)
+    write_csv(
+        OUT / "team_season_rank_distributions.csv",
+        list(distributions[0]),
+        distributions,
+    )
+    selected = defaultdict(set)
     for item in depth:
         if float(item["coverage_ratio"]) >= args.threshold:
-            selected_codes[(int(item["season"]), item["subdivision"])].add(item["system_code"])
-    cross_overlap = {str(season): len(selected_codes[(season, "fbs")] & selected_codes[(season, "fcs")]) for season in range(2003, 2026)}
+            selected[(int(item["season"]), item["subdivision"])].add(
+                item["system_code"]
+            )
+    rank_pairs = {}
     for g in games:
-        if g["homeClassification"] not in {"fbs", "fcs"} or g["awayClassification"] not in {"fbs", "fcs"}: continue
-        hk=(int(g["season"]),g["homeClassification"],g["homeId"]); ak=(int(g["season"]),g["awayClassification"],g["awayId"])
-        h = dict(by_team.get(hk, [])); a = dict(by_team.get(ak, [])); common = sorted(set(h) & set(a))
-        if common: rank_pairs[(int(g["id"]),hk,ak)] = [(h[c],a[c]) for c in common]
+        if g["homeClassification"] not in {"fbs", "fcs"} or g[
+            "awayClassification"
+        ] not in {"fbs", "fcs"}:
+            continue
+        hk = (int(g["season"]), g["homeClassification"], g["homeId"])
+        ak = (int(g["season"]), g["awayClassification"], g["awayId"])
+        h = dict(by_team.get(hk, []))
+        a = dict(by_team.get(ak, []))
+        common = sorted(set(h) & set(a))
+        if common:
+            rank_pairs[(int(g["id"]), hk, ak)] = [(h[c], a[c]) for c in common]
     joined, missing = build_joined(games, distributions, rank_pairs, stats)
-    fields = list(joined[0])
-    write_csv(OUT / "historical_modeling_games.csv", fields, joined)
-    x,y,z,pair,home,neutral,w,game_ids,_ypp = pseudo_data(joined)
+    write_csv(OUT / "historical_modeling_games.csv", list(joined[0]), joined)
+    data = pseudo_data(joined)
     seasons = {int(r["game_id"]): int(r["season"]) for r in joined}
-    train = np.array([seasons[gid] < 2022 for gid in game_ids])
-    X = design_matrix(x,y,pair,home,neutral,True); B = design_matrix(x,y,pair,home,neutral,False)
-    surface = fit_robust_surface(X[train],z[train],w[train]); benchmark = fit_robust_surface(B[train],z[train],w[train])
-    ypp_model = None
-    ypp_eval = {"available_games": 0}
-    raw_ypp = _ypp
-    ypp_train = train & np.isfinite(raw_ypp) & (pair != "fcs-fcs")
-    ypp_test = ~train & np.isfinite(raw_ypp) & (pair != "fcs-fcs")
-    if ypp_train.any() and ypp_test.any():
-        ypp_model = fit_robust_surface(np.column_stack([X[ypp_train], raw_ypp[ypp_train]]), z[ypp_train], w[ypp_train])
-        ypp_eval = {"available_games": len(set(game_ids[ypp_test])), "margin_surface": evaluate(surface, X[ypp_test], z[ypp_test], pair[ypp_test], joined), "margin_plus_ypp": evaluate(ypp_model, np.column_stack([X[ypp_test], raw_ypp[ypp_test]]), z[ypp_test], pair[ypp_test], joined)}
-    result = {"specification": {"criterion": f"coverage >= {args.threshold:.2f}", "student_t_df": 5, "seed": 20260903, "pseudo_weight_per_game": 1.0, "surface": "tensor hinge basis with pairing-specific surfaces and home/neutral context"}, "coverage": {"usable_games": len(joined), "missing_rank_distribution_games": dict(missing), "by_pairing": dict(Counter(r["pairing"] for r in joined)), "same_system_games": sum(r["pairing_method"]=="same_system" for r in joined), "cross_subdivision_system_overlap_by_season": cross_overlap}, "validation": {"modern_holdout": {"n_games": len(set(game_ids[~train])), "surface": evaluate(surface,X[~train],z[~train],pair[~train],joined), "linear_benchmark": evaluate(benchmark,B[~train],z[~train],pair[~train],joined)}, "training": evaluate(surface,X[train],z[train],pair[train],joined)}, "ypp_exploration": ypp_eval, "model": {"scale": surface["scale"], "df": surface["df"], "beta": surface["beta"].tolist()}}
-    (OUT / "margin_model_results.json").write_text(json.dumps(result, indent=2)+"\n")
-    expected_team_seasons = len({(int(row["season"]), row["subdivision"], row["team_id"]) for row in observations if row["is_composite"] == "True"})
-    excluded = [d for d in depth if float(d["coverage_ratio"]) < args.threshold]
-    report = {"chosen_threshold": args.threshold, "criterion": "A constituent system is usable when it ranks at least 90% of the CMP team population for that season and subdivision. CMP is always excluded.", "sensitivity": {}, "systems": len(depth), "surviving_system_groups": sum(float(d["coverage_ratio"])>=args.threshold for d in depth), "team_seasons": len(distributions), "expected_team_seasons": expected_team_seasons, "missing_team_seasons": expected_team_seasons - len(distributions), "representative_excluded_systems": sorted(excluded, key=lambda d: float(d["coverage_ratio"]))[:20], "selected_systems_with_rank_gaps": [d for d in depth if float(d["coverage_ratio"]) >= args.threshold and d["has_rank_gaps"]][:20]}
-    for threshold in (.90,.95):
-        ds,_ = build_distributions(observations,depth,threshold); report["sensitivity"][str(threshold)] = {"team_seasons":len(ds), "usable_system_groups":sum(float(d["coverage_ratio"])>=threshold for d in depth)}
-    (OUT / "historical_modeling_report.json").write_text(json.dumps(report, indent=2)+"\n")
-    hold = result["validation"]["modern_holdout"]
-    ypp_result = result["ypp_exploration"]
+    train = data.season < 2022
+    X = design_matrix(
+        data.x, data.y, data.pairing, data.home, data.neutral, True, data.fbs_home
+    )
+    B = design_matrix(
+        data.x, data.y, data.pairing, data.home, data.neutral, False, data.fbs_home
+    )
+    df_grid = (3.0, 5.0, 8.0, 15.0)
+    df_selection_train = train & (data.season < 2018)
+    df_selection_validation = train & (data.season >= 2018)
+    df_selection_fits = {
+        df: fit_robust_surface(
+            X[df_selection_train],
+            data.margin[df_selection_train],
+            data.weight[df_selection_train],
+            df=df,
+        )
+        for df in df_grid
+    }
+    df_scores = {
+        str(df): game_log_scores(
+            data.margin[df_selection_validation],
+            X[df_selection_validation] @ fit["beta"],
+            data.game_id[df_selection_validation],
+            fit["scale"],
+            fit["df"],
+        )["marginalized_nll"]
+        for df, fit in df_selection_fits.items()
+    }
+    selected_df = min(df_grid, key=lambda df: df_scores[str(df)])
+    pseudo = fit_robust_surface(
+        X[train], data.margin[train], data.weight[train], df=selected_df
+    )
+    marginal = fit_marginalized(
+        X[train], data.margin[train], data.game_id[train], df=selected_df
+    )
+    if not marginal["optimizer_success"]:
+        raise RuntimeError(
+            f"marginalized optimizer did not converge: {marginal['optimizer_message']}"
+        )
+    benchmark = fit_robust_surface(
+        B[train], data.margin[train], data.weight[train], df=selected_df
+    )
+
+    def all_metrics(model, mask, matrix=X, include_interval=True):
+        return evaluate(
+            model,
+            matrix[mask],
+            data.margin[mask],
+            data.pairing[mask],
+            data.game_id[mask],
+            include_interval,
+        )
+
+    validation = {
+        "modern_holdout_2022_2025": {
+            "weighted_pseudo_fit": all_metrics(pseudo, ~train),
+            "marginalized_fit": all_metrics(marginal, ~train),
+            "linear_benchmark": all_metrics(benchmark, ~train, B),
+        }
+    }
+    cross = data.pairing == "fbs-fcs"
+    site_masks = {
+        "fbs_home": ~train & cross & (data.fbs_home == 1),
+        "fcs_home": ~train & cross & (data.fbs_home == 0) & ~data.neutral,
+        "neutral": ~train & cross & data.neutral,
+    }
+    validation["modern_holdout_2022_2025"]["fbs_fcs_site_context"] = {
+        name: all_metrics(pseudo, mask)
+        for name, mask in site_masks.items()
+        if mask.any()
+    }
+    for season in sorted(set(seasons.values())):
+        mask = np.array([seasons[g] == season for g in data.game_id])
+        validation.setdefault("season_in_sample_diagnostics", {})[str(season)] = {
+            "weighted_pseudo_fit": all_metrics(pseudo, mask, include_interval=False),
+            "marginalized_fit": all_metrics(marginal, mask, include_interval=False),
+            "linear_benchmark": all_metrics(benchmark, mask, B, include_interval=False),
+        }
+    result = {
+        "specification": {
+            "criterion": f"coverage >= {args.threshold:.2f}",
+            "student_t_df": selected_df,
+            "student_t_df_sensitivity": df_scores,
+            "student_t_df_selection": "fit on 2003-2017 and select by marginalized game NLL on 2018-2021; final models refit on all 2003-2021",
+            "pseudo_weight_per_game": 1.0,
+            "training_objectives": ["weighted_pseudo", "marginalized"],
+            "surface": "same-subdivision odd smooth rank-difference basis; cross-subdivision FBS/FCS-oriented hinge surface; site indicators",
+            "basis_features": int(X.shape[1]),
+            "design_rank": int(np.linalg.matrix_rank(X[train].T @ X[train])),
+            "design_condition_number": float(
+                np.sqrt(np.linalg.cond(X[train].T @ X[train]))
+            ),
+        },
+        "coverage": {
+            "usable_games": len(joined),
+            "missing_rank_distribution_games": dict(missing),
+            "by_pairing": dict(Counter(r["pairing"] for r in joined)),
+            "same_system_games": sum(
+                r["pairing_method"] == "same_system" for r in joined
+            ),
+        },
+        "validation": validation,
+        "models": {
+            "weighted_pseudo": {"scale": pseudo["scale"], "df": pseudo["df"]},
+            "marginalized": {
+                "scale": marginal["scale"],
+                "df": marginal["df"],
+                "optimizer_success": marginal["optimizer_success"],
+                "optimizer_message": marginal["optimizer_message"],
+                "optimizer_status": marginal["optimizer_status"],
+                "optimizer_nit": marginal["optimizer_nit"],
+                "optimizer_nfev": marginal["optimizer_nfev"],
+            },
+        },
+    }
+    (OUT / "margin_model_results.json").write_text(json.dumps(result, indent=2) + "\n")
+    report = {
+        "chosen_threshold": args.threshold,
+        "systems": len(depth),
+        "surviving_system_groups": sum(
+            float(d["coverage_ratio"]) >= args.threshold for d in depth
+        ),
+        "team_seasons": len(distributions),
+        "usable_games": len(joined),
+        "pseudo_observations": len(data.margin),
+        "validation_definition": "equal-weight whole-game metrics; no season is split",
+        "results_file": "margin_model_results.json",
+    }
+    (OUT / "historical_modeling_report.json").write_text(
+        json.dumps(report, indent=2) + "\n"
+    )
+    h = validation["modern_holdout_2022_2025"]
     (OUT / "historical_modeling_report.md").write_text(
-        "# Historical modeling report\n\n"
-        f"The baseline uses constituent systems with coverage >= {args.threshold:.0%} of the final CMP population. `CMP` is excluded; `MAS` is treated like every other constituent. Coverage has a natural separation between near-complete systems and censored top-N systems. A 95% sensitivity run is included below.\n\n"
-        f"## Rank distributions\n\n- Team-seasons represented: {len(distributions)} / {expected_team_seasons}\n- Missing team-seasons: {expected_team_seasons-len(distributions)}\n- Usable system groups: {report['surviving_system_groups']} / {len(depth)}\n\n## Game join\n\n- Usable games: {len(joined)}\n- Pairings: {dict(Counter(r['pairing'] for r in joined))}\n- Same-system rank pairs: {sum(r['pairing_method']=='same_system' for r in joined)}\n- Marginal fallback games: {sum(r['pairing_method']=='marginal_fallback' for r in joined)}\n- Missing distributions: {dict(missing)}\n- Cross-subdivision usable system overlap by season is stored in `margin_model_results.json`.\n\n## Margin likelihood\n\nThe likelihood is a Student-t regression (df=5) over a tensor-product hinge surface of the two within-subdivision rank-percentile coordinates, with pairing-specific surfaces and home/neutral context. Rank-pair pseudo-observations are weighted so each game contributes one total unit. This is an observation model, not a scalar team-strength model.\n\nModern holdout (2022-2025) surface NLL: {hold['surface']['nll']:.3f}; linear benchmark NLL: {hold['linear_benchmark']['nll']:.3f}. Surface MAE: {hold['surface']['mae']:.3f}; benchmark MAE: {hold['linear_benchmark']['mae']:.3f}. Central 80% interval coverage: {hold['surface']['central_80pct_coverage']:.3f}.\n\n## YPP exploration\n\nYPP is used only where both teams have observed YPP, focusing on FBS-FBS and FBS-FCS. It is not part of the production margin model. Holdout comparison: {ypp_result}.\n\n## Sensitivity and limitations\n\n" + "\n".join(f"- {k}: {v}" for k,v in report["sensitivity"].items()) + "\n\nThis first model uses final-season ranks as historical outcome observations, so it is appropriate for learning the observation likelihood but not for current-season inference. Future work should improve rank-coordinate scaling by actual season population, quantify uncertainty in prediction intervals, and revisit calendar/season-specific effects before fitting a posterior ranking model.\n",
+        f"# Historical modeling report\n\nThis report was regenerated with per-game scoring. CMP is excluded and MAS is treated as a constituent.\n\n- Usable games: {len(joined)}\n- Rank-pair pseudo-observations: {len(data.margin)} (descriptive, not independent games)\n- Weighted pseudo fit marginalized NLL: {h['weighted_pseudo_fit']['marginalized_nll']:.3f}\n- Direct marginalized fit NLL: {h['marginalized_fit']['marginalized_nll']:.3f}\n- Linear benchmark marginalized NLL: {h['linear_benchmark']['marginalized_nll']:.3f}\n- Pseudo fit expected conditional NLL: {h['weighted_pseudo_fit']['expected_conditional_nll']:.3f}\n- Pseudo fit MAE: {h['weighted_pseudo_fit']['mae_expected_margin']:.3f}\n- Central 80% mixture coverage: {h['weighted_pseudo_fit']['central_80pct_coverage']:.3f}\n- Basis: {X.shape[1]} pairing-block features, rank {np.linalg.matrix_rank(X[train].T @ X[train])}, condition number {np.sqrt(np.linalg.cond(X[train].T @ X[train])):.2g}\n- Student-t df sensitivity: {df_scores}; selected df={selected_df}; scale={pseudo['scale']:.3f}\n- Marginal optimizer: success={marginal['optimizer_success']}, status={marginal['optimizer_status']}, iterations={marginal['optimizer_nit']}, evaluations={marginal['optimizer_nfev']}\n\nThe rich model and simple benchmark use the same oriented coordinates and equal-game scoring. Training-era season values are in-sample diagnostics, not holdouts. See `margin_model_results.json` for pairing and season breakdowns.\n",
         encoding="utf-8",
     )
-    print(json.dumps({"team_seasons":len(distributions),"usable_games":len(joined),"holdout_nll":result["validation"]["modern_holdout"]["surface"]["nll"]}, indent=2))
+    print(
+        json.dumps(
+            {
+                "team_seasons": len(distributions),
+                "usable_games": len(joined),
+                "holdout_marginalized_nll": h["weighted_pseudo_fit"][
+                    "marginalized_nll"
+                ],
+            },
+            indent=2,
+        )
+    )
 
 
-if __name__ == "__main__": main()
+if __name__ == "__main__":
+    main()
