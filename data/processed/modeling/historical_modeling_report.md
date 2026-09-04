@@ -11,7 +11,7 @@ This report was regenerated with per-game scoring. CMP is excluded and MAS is tr
 - Pseudo fit MAE: 10.623
 - Central 80% mixture coverage: 0.831
 - Basis: 34 pairing-block features, rank 34, condition number 2.4e+03
-- Student-t df sensitivity: {'3.0': 4.0515380986177165, '5.0': 4.035213495448964, '8.0': 4.02930261294009, '15.0': 4.027269210493007}; selected df=15.0; scale=13.234
+- Student-t df sensitivity: {'3.0': 4.0971582705706115, '5.0': 4.0784686141739375, '8.0': 4.070929881561285, '15.0': 4.067402364287233}; selected df=15.0; scale=13.234
 - Marginal optimizer: success=True, status=0, iterations=405, evaluations=490
 
 The rich model and simple benchmark use the same oriented coordinates and equal-game scoring. Training-era season values are in-sample diagnostics, not holdouts. See `margin_model_results.json` for pairing and season breakdowns.

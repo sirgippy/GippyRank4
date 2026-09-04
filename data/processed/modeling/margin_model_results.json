@@ -3,11 +3,12 @@
     "criterion": "coverage >= 0.90",
     "student_t_df": 15.0,
     "student_t_df_sensitivity": {
-      "3.0": 4.0515380986177165,
-      "5.0": 4.035213495448964,
-      "8.0": 4.02930261294009,
-      "15.0": 4.027269210493007
+      "3.0": 4.0971582705706115,
+      "5.0": 4.0784686141739375,
+      "8.0": 4.070929881561285,
+      "15.0": 4.067402364287233
     },
+    "student_t_df_selection": "fit on 2003-2017 and select by marginalized game NLL on 2018-2021; final models refit on all 2003-2021",
     "pseudo_weight_per_game": 1.0,
     "training_objectives": [
       "weighted_pseudo",

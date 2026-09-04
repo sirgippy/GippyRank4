@@ -236,22 +236,31 @@ def main() -> None:
         data.x, data.y, data.pairing, data.home, data.neutral, False, data.fbs_home
     )
     df_grid = (3.0, 5.0, 8.0, 15.0)
-    df_fits = {
-        df: fit_robust_surface(X[train], data.margin[train], data.weight[train], df=df)
+    df_selection_train = train & (data.season < 2018)
+    df_selection_validation = train & (data.season >= 2018)
+    df_selection_fits = {
+        df: fit_robust_surface(
+            X[df_selection_train],
+            data.margin[df_selection_train],
+            data.weight[df_selection_train],
+            df=df,
+        )
         for df in df_grid
     }
     df_scores = {
         str(df): game_log_scores(
-            data.margin[~train],
-            X[~train] @ fit["beta"],
-            data.game_id[~train],
+            data.margin[df_selection_validation],
+            X[df_selection_validation] @ fit["beta"],
+            data.game_id[df_selection_validation],
             fit["scale"],
             fit["df"],
         )["marginalized_nll"]
-        for df, fit in df_fits.items()
+        for df, fit in df_selection_fits.items()
     }
     selected_df = min(df_grid, key=lambda df: df_scores[str(df)])
-    pseudo = df_fits[selected_df]
+    pseudo = fit_robust_surface(
+        X[train], data.margin[train], data.weight[train], df=selected_df
+    )
     marginal = fit_marginalized(
         X[train], data.margin[train], data.game_id[train], df=selected_df
     )
@@ -303,6 +312,7 @@ def main() -> None:
             "criterion": f"coverage >= {args.threshold:.2f}",
             "student_t_df": selected_df,
             "student_t_df_sensitivity": df_scores,
+            "student_t_df_selection": "fit on 2003-2017 and select by marginalized game NLL on 2018-2021; final models refit on all 2003-2021",
             "pseudo_weight_per_game": 1.0,
             "training_objectives": ["weighted_pseudo", "marginalized"],
             "surface": "same-subdivision odd smooth rank-difference basis; cross-subdivision FBS/FCS-oriented hinge surface; site indicators",
