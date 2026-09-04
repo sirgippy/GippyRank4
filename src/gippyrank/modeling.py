@@ -10,10 +10,30 @@ from pathlib import Path
 
 import numpy as np
 from scipy.optimize import minimize
-from scipy.special import gammaln, logsumexp
+from scipy.special import gammaln
+from scipy.stats import t as student_t
 
 PAIRINGS = ("fbs-fbs", "fbs-fcs", "fcs-fcs")
 _KNOTS = np.array([0.2, 0.4, 0.6, 0.8])
+
+
+def mixture_central_interval(
+    locations: np.ndarray, scale: float, df: float, level: float = 0.8
+) -> tuple[float, float]:
+    """Central interval of an equally weighted Student-t location mixture."""
+    from scipy.optimize import brentq
+
+    locations = np.asarray(locations, dtype=float)
+    low = float(np.min(locations) - 20 * scale)
+    high = float(np.max(locations) + 20 * scale)
+
+    def cdf(value: float) -> float:
+        return float(np.mean(student_t.cdf((value - locations) / scale, df)))
+
+    return (
+        brentq(lambda value: cdf(value) - (1 - level) / 2, low, high),
+        brentq(lambda value: cdf(value) - (1 + level) / 2, low, high),
+    )
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
@@ -250,7 +270,7 @@ def fit_marginalized(
     target: np.ndarray,
     groups: np.ndarray,
     df: float = 5.0,
-    maxiter: int = 250,
+    maxiter: int = 1000,
 ) -> dict[str, object]:
     """Fit equal-game -log(mean density), with stable log-sum-exp."""
     beta, scale = _initial_fit(X, target, np.ones(len(target)))
@@ -302,6 +322,9 @@ def fit_marginalized(
         "objective": "marginalized",
         "optimizer_success": bool(result.success),
         "optimizer_message": result.message,
+        "optimizer_status": int(result.status),
+        "optimizer_nit": int(result.nit),
+        "optimizer_nfev": int(result.nfev),
     }
 
 
@@ -313,17 +336,16 @@ def game_log_scores(
     df: float,
 ) -> dict[str, float]:
     """Return equal-game expected conditional and marginalized NLLs."""
-    values = []
-    for group in np.unique(groups):
-        logs = _log_student_t(
-            target[groups == group], locations[groups == group], scale, df
-        )
-        values.append(
-            (float(-np.mean(logs)), float(-(logsumexp(logs) - np.log(len(logs)))))
-        )
-    values = np.asarray(values)
+    _, inverse = np.unique(groups, return_inverse=True)
+    counts = np.bincount(inverse)
+    logs = _log_student_t(target, locations, scale, df)
+    expected = np.bincount(inverse, weights=logs) / counts
+    maxima = np.full(len(counts), -np.inf)
+    np.maximum.at(maxima, inverse, logs)
+    sums = np.bincount(inverse, weights=np.exp(logs - maxima[inverse]))
+    marginalized = maxima + np.log(sums) - np.log(counts)
     return {
-        "expected_conditional_nll": float(np.mean(values[:, 0])),
-        "marginalized_nll": float(np.mean(values[:, 1])),
-        "n_games": len(values),
+        "expected_conditional_nll": float(-np.mean(expected)),
+        "marginalized_nll": float(-np.mean(marginalized)),
+        "n_games": len(counts),
     }

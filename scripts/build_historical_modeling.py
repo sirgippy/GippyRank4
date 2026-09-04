@@ -5,10 +5,10 @@ from __future__ import annotations
 import argparse
 import json
 from collections import Counter, defaultdict
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
-from scipy.stats import t as student_t
 
 from gippyrank.modeling import (
     PAIRINGS,
@@ -18,12 +18,17 @@ from gippyrank.modeling import (
     fit_marginalized,
     fit_robust_surface,
     game_log_scores,
+    mixture_central_interval,
     read_csv,
     write_csv,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "data/processed/modeling"
+
+
+def _as_bool(value) -> bool:
+    return str(value).strip().lower() in {"true", "1", "yes"}
 
 
 def build_joined(games, distributions, rank_pairs, stats):
@@ -77,7 +82,22 @@ def build_joined(games, distributions, rank_pairs, stats):
                 "away_team_population": ar["team_population"],
                 "home_points": game["homePoints"],
                 "away_points": game["awayPoints"],
-                "margin": int(game["homePoints"]) - int(game["awayPoints"]),
+                "margin": (
+                    int(game["homePoints"]) - int(game["awayPoints"])
+                    if hc == ac
+                    else (
+                        (
+                            int(game["homePoints"])
+                            if hc == "fbs"
+                            else int(game["awayPoints"])
+                        )
+                        - (
+                            int(game["awayPoints"])
+                            if hc == "fbs"
+                            else int(game["homePoints"])
+                        )
+                    )
+                ),
                 "neutral_site": game["neutralSite"],
                 "pairing": "fbs-fcs" if {hc, ac} == {"fbs", "fcs"} else f"{hc}-{ac}",
                 "rank_pairs": json.dumps(pairs, separators=(",", ":")),
@@ -91,12 +111,27 @@ def build_joined(games, distributions, rank_pairs, stats):
     return joined, missing
 
 
-def pseudo_data(rows):
+@dataclass(frozen=True)
+class PseudoData:
+    x: np.ndarray
+    y: np.ndarray
+    margin: np.ndarray
+    pairing: np.ndarray
+    home: np.ndarray
+    neutral: np.ndarray
+    weight: np.ndarray
+    game_id: np.ndarray
+    fbs_home: np.ndarray
+    season: np.ndarray
+
+
+def pseudo_data(rows) -> PseudoData:
     values = [[] for _ in range(10)]
     for row in rows:
         pairs = json.loads(row["rank_pairs"])
         n = len(pairs)
         cross = row["pairing"] == "fbs-fcs"
+        neutral = _as_bool(row["neutral_site"])
         for a, b in pairs:
             hp = (a - 0.5) / int(row["home_team_population"])
             ap = (b - 0.5) / int(row["away_team_population"])
@@ -107,36 +142,50 @@ def pseudo_data(rows):
                 ap,
                 float(row["margin"]),
                 row["pairing"],
-                1.0 - bool(row["neutral_site"]),
-                bool(row["neutral_site"]),
+                1.0 - neutral,
+                neutral,
                 1 / n,
                 int(row["game_id"]),
                 float(row["home_subdivision"] == "fbs")
-                if cross and not bool(row["neutral_site"])
+                if cross and not neutral
                 else 0.0,
                 float(row["season"]),
             ]
             for out, val in zip(values, vals):
                 out.append(val)
-    return tuple(np.asarray(v) for v in values)
+    arrays = tuple(np.asarray(v) for v in values)
+    return PseudoData(*arrays)
 
 
-def evaluate(model, X, y, pairing, game_ids):
+def _evaluate_subset(model, X, y, game_ids, include_interval=True):
     loc = X @ model["beta"]
     scores = game_log_scores(y, loc, game_ids, model["scale"], model["df"])
-    actual = np.array([y[game_ids == g][0] for g in np.unique(game_ids)])
-    pred = np.array([np.mean(loc[game_ids == g]) for g in np.unique(game_ids)])
-    interval = student_t.ppf(0.90, model["df"]) * model["scale"]
+    _, inverse = np.unique(game_ids, return_inverse=True)
+    counts = np.bincount(inverse)
+    actual = np.bincount(inverse, weights=y) / counts
+    pred = np.bincount(inverse, weights=loc) / counts
+    covered = []
+    for indexes in np.split(np.argsort(inverse), np.cumsum(counts)[:-1]):
+        if include_interval:
+            lower, upper = mixture_central_interval(
+                loc[indexes], model["scale"], model["df"]
+            )
+            covered.append(lower <= actual[len(covered)] <= upper)
     out = {
         **scores,
         "n_pseudo_observations": len(y),
         "mae_expected_margin": float(np.mean(np.abs(actual - pred))),
-        "central_80pct_coverage": float(np.mean(np.abs(actual - pred) <= interval)),
+        "central_80pct_coverage": float(np.mean(covered)) if include_interval else None,
     }
+    return out
+
+
+def evaluate(model, X, y, pairing, game_ids, include_interval=True):
+    out = _evaluate_subset(model, X, y, game_ids, include_interval)
     for p in PAIRINGS:
         m = pairing == p
         if m.any():
-            out[p] = evaluate(model, X[m], y[m], pairing[m], game_ids[m])
+            out[p] = _evaluate_subset(model, X[m], y[m], game_ids[m], include_interval)
     return out
 
 
@@ -177,19 +226,52 @@ def main() -> None:
             rank_pairs[(int(g["id"]), hk, ak)] = [(h[c], a[c]) for c in common]
     joined, missing = build_joined(games, distributions, rank_pairs, stats)
     write_csv(OUT / "historical_modeling_games.csv", list(joined[0]), joined)
-    x, y, z, pair, home, neutral, weights, game_ids, _ypp, fbs_home = pseudo_data(
-        joined
-    )
+    data = pseudo_data(joined)
     seasons = {int(r["game_id"]): int(r["season"]) for r in joined}
-    train = np.array([seasons[g] < 2022 for g in game_ids])
-    X = design_matrix(x, y, pair, home, neutral, True, fbs_home)
-    B = design_matrix(x, y, pair, home, neutral, False, fbs_home)
-    pseudo = fit_robust_surface(X[train], z[train], weights[train])
-    marginal = fit_marginalized(X[train], z[train], game_ids[train], maxiter=12)
-    benchmark = fit_robust_surface(B[train], z[train], weights[train])
+    train = data.season < 2022
+    X = design_matrix(
+        data.x, data.y, data.pairing, data.home, data.neutral, True, data.fbs_home
+    )
+    B = design_matrix(
+        data.x, data.y, data.pairing, data.home, data.neutral, False, data.fbs_home
+    )
+    df_grid = (3.0, 5.0, 8.0, 15.0)
+    df_fits = {
+        df: fit_robust_surface(X[train], data.margin[train], data.weight[train], df=df)
+        for df in df_grid
+    }
+    df_scores = {
+        str(df): game_log_scores(
+            data.margin[~train],
+            X[~train] @ fit["beta"],
+            data.game_id[~train],
+            fit["scale"],
+            fit["df"],
+        )["marginalized_nll"]
+        for df, fit in df_fits.items()
+    }
+    selected_df = min(df_grid, key=lambda df: df_scores[str(df)])
+    pseudo = df_fits[selected_df]
+    marginal = fit_marginalized(
+        X[train], data.margin[train], data.game_id[train], df=selected_df
+    )
+    if not marginal["optimizer_success"]:
+        raise RuntimeError(
+            f"marginalized optimizer did not converge: {marginal['optimizer_message']}"
+        )
+    benchmark = fit_robust_surface(
+        B[train], data.margin[train], data.weight[train], df=selected_df
+    )
 
-    def all_metrics(model, mask, matrix=X):
-        return evaluate(model, matrix[mask], z[mask], pair[mask], game_ids[mask])
+    def all_metrics(model, mask, matrix=X, include_interval=True):
+        return evaluate(
+            model,
+            matrix[mask],
+            data.margin[mask],
+            data.pairing[mask],
+            data.game_id[mask],
+            include_interval,
+        )
 
     validation = {
         "modern_holdout_2022_2025": {
@@ -198,23 +280,37 @@ def main() -> None:
             "linear_benchmark": all_metrics(benchmark, ~train, B),
         }
     }
+    cross = data.pairing == "fbs-fcs"
+    site_masks = {
+        "fbs_home": ~train & cross & (data.fbs_home == 1),
+        "fcs_home": ~train & cross & (data.fbs_home == 0) & ~data.neutral,
+        "neutral": ~train & cross & data.neutral,
+    }
+    validation["modern_holdout_2022_2025"]["fbs_fcs_site_context"] = {
+        name: all_metrics(pseudo, mask)
+        for name, mask in site_masks.items()
+        if mask.any()
+    }
     for season in sorted(set(seasons.values())):
-        mask = np.array([seasons[g] == season for g in game_ids])
-        validation.setdefault("season_holdouts", {})[str(season)] = {
-            "weighted_pseudo_fit": all_metrics(pseudo, mask),
-            "marginalized_fit": all_metrics(marginal, mask),
-            "linear_benchmark": all_metrics(benchmark, mask, B),
+        mask = np.array([seasons[g] == season for g in data.game_id])
+        validation.setdefault("season_in_sample_diagnostics", {})[str(season)] = {
+            "weighted_pseudo_fit": all_metrics(pseudo, mask, include_interval=False),
+            "marginalized_fit": all_metrics(marginal, mask, include_interval=False),
+            "linear_benchmark": all_metrics(benchmark, mask, B, include_interval=False),
         }
     result = {
         "specification": {
             "criterion": f"coverage >= {args.threshold:.2f}",
-            "student_t_df": 5,
+            "student_t_df": selected_df,
+            "student_t_df_sensitivity": df_scores,
             "pseudo_weight_per_game": 1.0,
             "training_objectives": ["weighted_pseudo", "marginalized"],
             "surface": "same-subdivision odd smooth rank-difference basis; cross-subdivision FBS/FCS-oriented hinge surface; site indicators",
             "basis_features": int(X.shape[1]),
             "design_rank": int(np.linalg.matrix_rank(X[train].T @ X[train])),
-            "design_condition_number": float(np.sqrt(np.linalg.cond(X[train].T @ X[train]))),
+            "design_condition_number": float(
+                np.sqrt(np.linalg.cond(X[train].T @ X[train]))
+            ),
         },
         "coverage": {
             "usable_games": len(joined),
@@ -227,7 +323,15 @@ def main() -> None:
         "validation": validation,
         "models": {
             "weighted_pseudo": {"scale": pseudo["scale"], "df": pseudo["df"]},
-            "marginalized": {"scale": marginal["scale"], "df": marginal["df"]},
+            "marginalized": {
+                "scale": marginal["scale"],
+                "df": marginal["df"],
+                "optimizer_success": marginal["optimizer_success"],
+                "optimizer_message": marginal["optimizer_message"],
+                "optimizer_status": marginal["optimizer_status"],
+                "optimizer_nit": marginal["optimizer_nit"],
+                "optimizer_nfev": marginal["optimizer_nfev"],
+            },
         },
     }
     (OUT / "margin_model_results.json").write_text(json.dumps(result, indent=2) + "\n")
@@ -239,7 +343,7 @@ def main() -> None:
         ),
         "team_seasons": len(distributions),
         "usable_games": len(joined),
-        "pseudo_observations": len(z),
+        "pseudo_observations": len(data.margin),
         "validation_definition": "equal-weight whole-game metrics; no season is split",
         "results_file": "margin_model_results.json",
     }
@@ -248,7 +352,7 @@ def main() -> None:
     )
     h = validation["modern_holdout_2022_2025"]
     (OUT / "historical_modeling_report.md").write_text(
-        f"# Historical modeling report\n\nThis report was regenerated with per-game scoring. CMP is excluded and MAS is treated as a constituent.\n\n- Usable games: {len(joined)}\n- Rank-pair pseudo-observations: {len(z)} (descriptive, not independent games)\n- Weighted pseudo fit marginalized NLL: {h['weighted_pseudo_fit']['marginalized_nll']:.3f}\n- Direct marginalized fit NLL: {h['marginalized_fit']['marginalized_nll']:.3f}\n- Linear benchmark marginalized NLL: {h['linear_benchmark']['marginalized_nll']:.3f}\n- Pseudo fit expected conditional NLL: {h['weighted_pseudo_fit']['expected_conditional_nll']:.3f}\n- Pseudo fit MAE: {h['weighted_pseudo_fit']['mae_expected_margin']:.3f}\n- Central 80% coverage: {h['weighted_pseudo_fit']['central_80pct_coverage']:.3f}\n- Basis: {X.shape[1]} pairing-block features, rank {np.linalg.matrix_rank(X[train].T @ X[train])}, condition number {np.sqrt(np.linalg.cond(X[train].T @ X[train])):.2g}\n- Student-t: df=5, scale={pseudo['scale']:.3f}; retained as a heavy-tailed baseline\n\nThe rich model and simple benchmark use the same oriented coordinates and equal-game scoring. See `margin_model_results.json` for pairing and season breakdowns, both training objectives, and fit diagnostics.\n",
+        f"# Historical modeling report\n\nThis report was regenerated with per-game scoring. CMP is excluded and MAS is treated as a constituent.\n\n- Usable games: {len(joined)}\n- Rank-pair pseudo-observations: {len(data.margin)} (descriptive, not independent games)\n- Weighted pseudo fit marginalized NLL: {h['weighted_pseudo_fit']['marginalized_nll']:.3f}\n- Direct marginalized fit NLL: {h['marginalized_fit']['marginalized_nll']:.3f}\n- Linear benchmark marginalized NLL: {h['linear_benchmark']['marginalized_nll']:.3f}\n- Pseudo fit expected conditional NLL: {h['weighted_pseudo_fit']['expected_conditional_nll']:.3f}\n- Pseudo fit MAE: {h['weighted_pseudo_fit']['mae_expected_margin']:.3f}\n- Central 80% mixture coverage: {h['weighted_pseudo_fit']['central_80pct_coverage']:.3f}\n- Basis: {X.shape[1]} pairing-block features, rank {np.linalg.matrix_rank(X[train].T @ X[train])}, condition number {np.sqrt(np.linalg.cond(X[train].T @ X[train])):.2g}\n- Student-t df sensitivity: {df_scores}; selected df={selected_df}; scale={pseudo['scale']:.3f}\n- Marginal optimizer: success={marginal['optimizer_success']}, status={marginal['optimizer_status']}, iterations={marginal['optimizer_nit']}, evaluations={marginal['optimizer_nfev']}\n\nThe rich model and simple benchmark use the same oriented coordinates and equal-game scoring. Training-era season values are in-sample diagnostics, not holdouts. See `margin_model_results.json` for pairing and season breakdowns.\n",
         encoding="utf-8",
     )
     print(
