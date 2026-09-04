@@ -1,0 +1,1243 @@
+{
+  "cold_start_fit": {
+    "fbs_test_cold_starts": 6,
+    "fbs_test_fcs_to_fbs_transitions": 6,
+    "fbs_test_generic_cold_starts": 0,
+    "fbs_training_fcs_to_fbs_transitions": 11,
+    "fbs_training_generic_cold_starts": 124,
+    "generic_model": {
+      "fit_method": "analytical equal-team empirical moments",
+      "location": 0.1454900180362117,
+      "n_team_seasons": 124,
+      "optimizer": null,
+      "scale": 1.8638881223587818
+    },
+    "transition_model": {
+      "conditioning": "equal-weight deterministic quadrature over lag-1 constituent ranks",
+      "feature_names": [],
+      "location_coefficients": [
+        0.26180780059583286,
+        1.9309136474992319
+      ],
+      "log_scale_coefficients": [
+        0.42225697739530516
+      ],
+      "minimum_scale": 0.1,
+      "optimizer": {
+        "function_evaluations": 14,
+        "iterations": 13,
+        "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+        "objective": 1.9950117207339428,
+        "status": 0,
+        "success": true
+      },
+      "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+      "penalty": 0.25,
+      "preprocessing": {
+        "feature_names": [],
+        "means": {},
+        "medians": {},
+        "scales": {}
+      },
+      "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+      "quadrature_points": 12
+    }
+  },
+  "method": {
+    "fbs_fcs_transition": "learned direct FCS-to-FBS rank-distribution model when cross-subdivision lag exists",
+    "fbs_generic": "analytical broad FBS prior fit to historical no-prior FBS target distributions",
+    "fcs": "no-prior FCS teams remain explicitly omitted; FCS cold start is outside V1 production scope"
+  },
+  "per_season": [
+    {
+      "omitted": [],
+      "season": 2003,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 117,
+      "total_teams": 117
+    },
+    {
+      "omitted": [
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "107",
+          "team_name": "Holy Cross"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "108",
+          "team_name": "Harvard"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "111",
+          "team_name": "Northeastern"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "113",
+          "team_name": "Massachusetts"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "119",
+          "team_name": "Towson"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "13",
+          "team_name": "Cal Poly"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "147",
+          "team_name": "Montana State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "149",
+          "team_name": "Montana"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "159",
+          "team_name": "Dartmouth"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "16",
+          "team_name": "Sacramento State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "160",
+          "team_name": "New Hampshire"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "163",
+          "team_name": "Princeton"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "171",
+          "team_name": "Columbia"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "172",
+          "team_name": "Cornell"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2010",
+          "team_name": "Alabama A&M"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2011",
+          "team_name": "Alabama State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2016",
+          "team_name": "Alcorn State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2026",
+          "team_name": "App State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2029",
+          "team_name": "Arkansas-Pine Bluff"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2046",
+          "team_name": "Austin Peay"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2065",
+          "team_name": "Bethune-Cookman"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2083",
+          "team_name": "Bucknell"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2086",
+          "team_name": "Butler"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2115",
+          "team_name": "Central Connecticut"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2127",
+          "team_name": "Charleston Southern"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2142",
+          "team_name": "Colgate"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2166",
+          "team_name": "Davidson"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2168",
+          "team_name": "Dayton"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2169",
+          "team_name": "Delaware State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2181",
+          "team_name": "Drake"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2184",
+          "team_name": "Duquesne"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "219",
+          "team_name": "Pennsylvania"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2193",
+          "team_name": "East Tennessee State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2197",
+          "team_name": "Eastern Illinois"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2198",
+          "team_name": "Eastern Kentucky"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2210",
+          "team_name": "Elon"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "222",
+          "team_name": "Villanova"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2226",
+          "team_name": "Florida Atlantic"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2229",
+          "team_name": "Florida International"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2230",
+          "team_name": "Fordham"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2241",
+          "team_name": "Gardner-Webb"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "225",
+          "team_name": "Brown"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2261",
+          "team_name": "Hampton"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "227",
+          "team_name": "Rhode Island"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2275",
+          "team_name": "Hofstra"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2287",
+          "team_name": "Illinois State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2296",
+          "team_name": "Jackson State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "231",
+          "team_name": "Furman"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2325",
+          "team_name": "La Salle"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2329",
+          "team_name": "Lehigh"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2335",
+          "team_name": "Liberty"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "236",
+          "team_name": "Chattanooga"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2368",
+          "team_name": "Marist"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2377",
+          "team_name": "McNeese"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2400",
+          "team_name": "Mississippi Valley State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2405",
+          "team_name": "Monmouth"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2413",
+          "team_name": "Morehead State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2415",
+          "team_name": "Morgan State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2447",
+          "team_name": "Nicholls"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2448",
+          "team_name": "North Carolina A&T"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2450",
+          "team_name": "Norfolk State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2458",
+          "team_name": "Northern Colorado"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2460",
+          "team_name": "Northern Iowa"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2464",
+          "team_name": "Northern Arizona"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2466",
+          "team_name": "Northwestern State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2502",
+          "team_name": "Portland State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2504",
+          "team_name": "Prairie View A&M"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2523",
+          "team_name": "Robert Morris"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2529",
+          "team_name": "Sacred Heart"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "253",
+          "team_name": "Southern Utah"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2534",
+          "team_name": "Sam Houston"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2535",
+          "team_name": "Samford"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2542",
+          "team_name": "Savannah State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2545",
+          "team_name": "SE Louisiana"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2546",
+          "team_name": "Southeast Missouri State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "256",
+          "team_name": "James Madison"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2561",
+          "team_name": "Siena"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2569",
+          "team_name": "South Carolina State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "257",
+          "team_name": "Richmond"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2582",
+          "team_name": "Southern"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2598",
+          "team_name": "Saint Francis"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2608",
+          "team_name": "St. Mary's (CA)"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2612",
+          "team_name": "St. Peter's"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2617",
+          "team_name": "Stephen F. Austin"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2619",
+          "team_name": "Stony Brook"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2623",
+          "team_name": "Missouri State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2630",
+          "team_name": "UT Martin"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2634",
+          "team_name": "Tennessee State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2635",
+          "team_name": "Tennessee Tech"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2640",
+          "team_name": "Texas Southern"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2643",
+          "team_name": "The Citadel"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2674",
+          "team_name": "Valparaiso"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2678",
+          "team_name": "VMI"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2681",
+          "team_name": "Wagner"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2692",
+          "team_name": "Weber State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2710",
+          "team_name": "Western Illinois"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2717",
+          "team_name": "Western Carolina"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2729",
+          "team_name": "William & Mary"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2747",
+          "team_name": "Wofford"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2754",
+          "team_name": "Youngstown State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2755",
+          "team_name": "Grambling"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "282",
+          "team_name": "Indiana State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "290",
+          "team_name": "Georgia Southern"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "294",
+          "team_name": "Jacksonville"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "301",
+          "team_name": "San Diego"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "302",
+          "team_name": "UC Davis"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "304",
+          "team_name": "Idaho State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "311",
+          "team_name": "Maine"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "314",
+          "team_name": "Iona"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "322",
+          "team_name": "Lafayette"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "324",
+          "team_name": "Coastal Carolina"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "326",
+          "team_name": "Texas State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "331",
+          "team_name": "Eastern Washington"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "399",
+          "team_name": "UAlbany"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "43",
+          "team_name": "Yale"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "46",
+          "team_name": "Georgetown"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "47",
+          "team_name": "Howard"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "48",
+          "team_name": "Delaware"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "50",
+          "team_name": "Florida A&M"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "55",
+          "team_name": "Jacksonville State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "79",
+          "team_name": "Southern Illinois"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "93",
+          "team_name": "Murray State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "98",
+          "team_name": "Western Kentucky"
+        }
+      ],
+      "season": 2003,
+      "subdivision": "fcs",
+      "teams_omitted": 123,
+      "teams_with_generated_prior": 0,
+      "total_teams": 123
+    },
+    {
+      "omitted": [],
+      "season": 2004,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 117,
+      "total_teams": 117
+    },
+    {
+      "omitted": [
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2449",
+          "team_name": "North Dakota State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2571",
+          "team_name": "South Dakota State"
+        }
+      ],
+      "season": 2004,
+      "subdivision": "fcs",
+      "teams_omitted": 2,
+      "teams_with_generated_prior": 117,
+      "total_teams": 119
+    },
+    {
+      "omitted": [],
+      "season": 2005,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 119,
+      "total_teams": 119
+    },
+    {
+      "omitted": [
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "50",
+          "team_name": "Florida A&M"
+        }
+      ],
+      "season": 2005,
+      "subdivision": "fcs",
+      "teams_omitted": 1,
+      "teams_with_generated_prior": 119,
+      "total_teams": 120
+    },
+    {
+      "omitted": [],
+      "season": 2006,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 119,
+      "total_teams": 119
+    },
+    {
+      "omitted": [
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2110",
+          "team_name": "Central Arkansas"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2736",
+          "team_name": "Winston-Salem State"
+        }
+      ],
+      "season": 2006,
+      "subdivision": "fcs",
+      "teams_omitted": 2,
+      "teams_with_generated_prior": 120,
+      "total_teams": 122
+    },
+    {
+      "omitted": [],
+      "season": 2007,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 119,
+      "total_teams": 119
+    },
+    {
+      "omitted": [
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2428",
+          "team_name": "North Carolina Central"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2506",
+          "team_name": "Presbyterian"
+        }
+      ],
+      "season": 2007,
+      "subdivision": "fcs",
+      "teams_omitted": 2,
+      "teams_with_generated_prior": 120,
+      "total_teams": 122
+    },
+    {
+      "omitted": [],
+      "season": 2008,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 120,
+      "total_teams": 120
+    },
+    {
+      "omitted": [
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "155",
+          "team_name": "North Dakota"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2097",
+          "team_name": "Campbell"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "233",
+          "team_name": "South Dakota"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2803",
+          "team_name": "Bryant"
+        }
+      ],
+      "season": 2008,
+      "subdivision": "fcs",
+      "teams_omitted": 4,
+      "teams_with_generated_prior": 121,
+      "total_teams": 125
+    },
+    {
+      "omitted": [],
+      "season": 2009,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 120,
+      "total_teams": 120
+    },
+    {
+      "omitted": [
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "295",
+          "team_name": "Old Dominion"
+        }
+      ],
+      "season": 2009,
+      "subdivision": "fcs",
+      "teams_omitted": 1,
+      "teams_with_generated_prior": 124,
+      "total_teams": 125
+    },
+    {
+      "omitted": [],
+      "season": 2010,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 120,
+      "total_teams": 120
+    },
+    {
+      "omitted": [
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2247",
+          "team_name": "Georgia State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2320",
+          "team_name": "Lamar"
+        }
+      ],
+      "season": 2010,
+      "subdivision": "fcs",
+      "teams_omitted": 2,
+      "teams_with_generated_prior": 122,
+      "total_teams": 124
+    },
+    {
+      "omitted": [],
+      "season": 2011,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 120,
+      "total_teams": 120
+    },
+    {
+      "omitted": [
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2636",
+          "team_name": "UTSA"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "6",
+          "team_name": "South Alabama"
+        }
+      ],
+      "season": 2011,
+      "subdivision": "fcs",
+      "teams_omitted": 2,
+      "teams_with_generated_prior": 124,
+      "total_teams": 126
+    },
+    {
+      "omitted": [],
+      "season": 2012,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 124,
+      "total_teams": 124
+    },
+    {
+      "omitted": [],
+      "season": 2012,
+      "subdivision": "fcs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 122,
+      "total_teams": 122
+    },
+    {
+      "omitted": [],
+      "season": 2013,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 125,
+      "total_teams": 125
+    },
+    {
+      "omitted": [
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2000",
+          "team_name": "Abilene Christian"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2277",
+          "team_name": "Houston Christian"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2382",
+          "team_name": "Mercer"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2429",
+          "team_name": "Charlotte"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2916",
+          "team_name": "Incarnate Word"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "56",
+          "team_name": "Stetson"
+        }
+      ],
+      "season": 2013,
+      "subdivision": "fcs",
+      "teams_omitted": 6,
+      "teams_with_generated_prior": 121,
+      "total_teams": 127
+    },
+    {
+      "omitted": [],
+      "season": 2014,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 128,
+      "total_teams": 128
+    },
+    {
+      "omitted": [],
+      "season": 2014,
+      "subdivision": "fcs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 124,
+      "total_teams": 124
+    },
+    {
+      "omitted": [],
+      "season": 2015,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 128,
+      "total_teams": 128
+    },
+    {
+      "omitted": [
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2193",
+          "team_name": "East Tennessee State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "338",
+          "team_name": "Kennesaw State"
+        }
+      ],
+      "season": 2015,
+      "subdivision": "fcs",
+      "teams_omitted": 2,
+      "teams_with_generated_prior": 123,
+      "total_teams": 125
+    },
+    {
+      "omitted": [],
+      "season": 2016,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 128,
+      "total_teams": 128
+    },
+    {
+      "omitted": [],
+      "season": 2016,
+      "subdivision": "fcs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 125,
+      "total_teams": 125
+    },
+    {
+      "omitted": [],
+      "season": 2017,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 130,
+      "total_teams": 130
+    },
+    {
+      "omitted": [],
+      "season": 2017,
+      "subdivision": "fcs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 124,
+      "total_teams": 124
+    },
+    {
+      "omitted": [],
+      "season": 2018,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 130,
+      "total_teams": 130
+    },
+    {
+      "omitted": [
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2453",
+          "team_name": "North Alabama"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "70",
+          "team_name": "Idaho"
+        }
+      ],
+      "season": 2018,
+      "subdivision": "fcs",
+      "teams_omitted": 2,
+      "teams_with_generated_prior": 123,
+      "total_teams": 125
+    },
+    {
+      "omitted": [],
+      "season": 2019,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 130,
+      "total_teams": 130
+    },
+    {
+      "omitted": [
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2341",
+          "team_name": "Long Island University"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2771",
+          "team_name": "Merrimack"
+        }
+      ],
+      "season": 2019,
+      "subdivision": "fcs",
+      "teams_omitted": 2,
+      "teams_with_generated_prior": 124,
+      "total_teams": 126
+    },
+    {
+      "omitted": [],
+      "season": 2020,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 127,
+      "total_teams": 127
+    },
+    {
+      "omitted": [],
+      "season": 2020,
+      "subdivision": "fcs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 125,
+      "total_teams": 125
+    },
+    {
+      "omitted": [],
+      "season": 2021,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 130,
+      "total_teams": 130
+    },
+    {
+      "omitted": [
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2627",
+          "team_name": "Tarleton State"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2900",
+          "team_name": "St. Thomas (MN)"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "3101",
+          "team_name": "Utah Tech"
+        }
+      ],
+      "season": 2021,
+      "subdivision": "fcs",
+      "teams_omitted": 3,
+      "teams_with_generated_prior": 125,
+      "total_teams": 128
+    },
+    {
+      "omitted": [],
+      "season": 2022,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 131,
+      "total_teams": 131
+    },
+    {
+      "omitted": [
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2815",
+          "team_name": "Lindenwood"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2837",
+          "team_name": "East Texas A&M"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "284",
+          "team_name": "Stonehill"
+        }
+      ],
+      "season": 2022,
+      "subdivision": "fcs",
+      "teams_omitted": 3,
+      "teams_with_generated_prior": 127,
+      "total_teams": 130
+    },
+    {
+      "omitted": [],
+      "season": 2023,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 133,
+      "total_teams": 133
+    },
+    {
+      "omitted": [],
+      "season": 2023,
+      "subdivision": "fcs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 128,
+      "total_teams": 128
+    },
+    {
+      "omitted": [],
+      "season": 2024,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 134,
+      "total_teams": 134
+    },
+    {
+      "omitted": [
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2385",
+          "team_name": "Mercyhurst"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2698",
+          "team_name": "West Georgia"
+        }
+      ],
+      "season": 2024,
+      "subdivision": "fcs",
+      "teams_omitted": 2,
+      "teams_with_generated_prior": 127,
+      "total_teams": 129
+    },
+    {
+      "omitted": [],
+      "season": 2025,
+      "subdivision": "fbs",
+      "teams_omitted": 0,
+      "teams_with_generated_prior": 136,
+      "total_teams": 136
+    },
+    {
+      "omitted": [
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "2441",
+          "team_name": "New Haven"
+        },
+        {
+          "reason": "no_prior_rank_distribution",
+          "team_id": "292",
+          "team_name": "UT Rio Grande Valley"
+        }
+      ],
+      "season": 2025,
+      "subdivision": "fcs",
+      "teams_omitted": 2,
+      "teams_with_generated_prior": 127,
+      "total_teams": 129
+    }
+  ]
+}
