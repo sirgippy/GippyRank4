@@ -75,6 +75,43 @@ class ColdStartSeason:
     reason: str
 
 
+@dataclass(frozen=True)
+class PriorPrediction:
+    """One scored preseason PMF and its empirical final-rank target."""
+
+    season: int
+    subdivision: str
+    team_id: str
+    team_name: str
+    population: int
+    target_ranks: np.ndarray
+    model: str
+    prior_method: str
+    pmf: np.ndarray
+    conditional_location_mean: float | None = None
+    predictive_scale: float | None = None
+
+    @property
+    def key(self) -> tuple[int, str, str]:
+        return (self.season, self.subdivision, self.team_id)
+
+    def csv_row(self) -> dict[str, object]:
+        return {
+            "season": self.season,
+            "subdivision": self.subdivision,
+            "team_id": self.team_id,
+            "team_name": self.team_name,
+            "model": self.model,
+            "pmf": json.dumps(
+                [round(float(value), 12) for value in self.pmf], separators=(",", ":")
+            ),
+            "conditional_location_mean": self.conditional_location_mean,
+            "predictive_scale": self.predictive_scale,
+            "prior_method": self.prior_method,
+            **pmf_summaries(self.pmf),
+        }
+
+
 def valid_ranks(row: dict[str, str]) -> np.ndarray:
     population = int(row["team_population"])
     ranks = rank_sample(row).astype(int)
@@ -293,10 +330,11 @@ def reliability_bins(
     }
 
 
-def evaluate(
-    model: DirectRankModel, rows: list[TeamSeason]
+def score_predictions(
+    predictions: list[PriorPrediction],
 ) -> dict[str, float | int | None]:
-    if not rows:
+    """Score any production or exploratory PMF with equal team-season weight."""
+    if not predictions:
         return {
             "n_team_seasons": 0,
             "nll": None,
@@ -311,33 +349,33 @@ def evaluate(
         }
     nll, crps, expected_error, median_error, covered, widths = [], [], [], [], [], []
     top = {5: [[], []], 10: [[], []], 25: [[], []]}
-    for row in rows:
-        pmf = model.pmf(row.features, row.lag1_z, row.population)
+    for prediction in predictions:
+        pmf, target_ranks = prediction.pmf, prediction.target_ranks
         summary = pmf_summaries(pmf)
-        nll.append(team_log_score(pmf, row.target_ranks))
+        nll.append(team_log_score(pmf, target_ranks))
         crps.append(
-            float(np.mean([crps_discrete(pmf, int(rank)) for rank in row.target_ranks]))
+            float(np.mean([crps_discrete(pmf, int(rank)) for rank in target_ranks]))
         )
         actual_mean, actual_median = (
-            float(np.mean(row.target_ranks)),
-            float(np.median(row.target_ranks)),
+            float(np.mean(target_ranks)),
+            float(np.median(target_ranks)),
         )
         expected_error.append(abs(summary["expected_rank"] - actual_mean))
         median_error.append(abs(summary["median_rank"] - actual_median))
         covered.append(
             float(
                 np.mean(
-                    (row.target_ranks >= summary["interval_80_low"])
-                    & (row.target_ranks <= summary["interval_80_high"])
+                    (target_ranks >= summary["interval_80_low"])
+                    & (target_ranks <= summary["interval_80_high"])
                 )
             )
         )
         widths.append(summary["interval_80_high"] - summary["interval_80_low"] + 1)
         for cutoff in top:
             top[cutoff][0].append(summary[f"top{cutoff}_probability"])
-            top[cutoff][1].append(float(np.mean(row.target_ranks <= cutoff)))
+            top[cutoff][1].append(float(np.mean(target_ranks <= cutoff)))
     result: dict[str, float | int | None] = {
-        "n_team_seasons": len(rows),
+        "n_team_seasons": len(predictions),
         "nll": float(np.mean(nll)),
         "crps": float(np.mean(crps)),
         "expected_rank_mae": float(np.mean(expected_error)),
@@ -357,28 +395,33 @@ def evaluate(
 
 def predictions(
     model: DirectRankModel, rows: list[TeamSeason], spec: str
-) -> list[dict[str, object]]:
+) -> list[PriorPrediction]:
     output = []
     for row in rows:
         pmf = model.pmf(row.features, row.lag1_z, row.population)
         locations, scale = model.conditional_parameters(row.features, row.lag1_z)
         output.append(
-            {
-                "season": row.season,
-                "subdivision": row.subdivision,
-                "team_id": row.team_id,
-                "team_name": row.team_name,
-                "model": spec,
-                "pmf": json.dumps(
-                    [round(float(v), 12) for v in pmf], separators=(",", ":")
-                ),
-                "conditional_location_mean": float(np.mean(locations)),
-                "predictive_scale": scale,
-                "prior_method": "same_subdivision_lag1",
-                **pmf_summaries(pmf),
-            }
+            PriorPrediction(
+                row.season,
+                row.subdivision,
+                row.team_id,
+                row.team_name,
+                row.population,
+                row.target_ranks,
+                spec,
+                "same_subdivision_lag1",
+                pmf,
+                float(np.mean(locations)),
+                scale,
+            )
         )
     return output
+
+
+def evaluate(
+    model: DirectRankModel, rows: list[TeamSeason]
+) -> dict[str, float | int | None]:
+    return score_predictions(predictions(model, rows, "evaluation"))
 
 
 def cold_start_teams(cold_starts: list[ColdStartSeason]) -> list[TeamSeason]:
@@ -457,6 +500,21 @@ def team_season_keys(rows: list[TeamSeason]) -> set[tuple[int, str, str]]:
     return {(row.season, row.subdivision, row.team_id) for row in rows}
 
 
+def validate_production_coverage(
+    predictions: list[PriorPrediction], expected_keys: set[tuple[int, str, str]]
+) -> None:
+    """Require exactly one production PMF for every target team-season."""
+    keys = [prediction.key for prediction in predictions]
+    if len(keys) != len(set(keys)):
+        raise ValueError("duplicate production FBS prediction key")
+    if set(keys) != expected_keys:
+        missing = sorted(expected_keys - set(keys))
+        extra = sorted(set(keys) - expected_keys)
+        raise ValueError(
+            f"production FBS prediction coverage mismatch: missing={missing}, extra={extra}"
+        )
+
+
 def uncertainty_diagnostics(
     model: DirectRankModel, rows: list[TeamSeason]
 ) -> dict[str, object]:
@@ -490,19 +548,30 @@ def uncertainty_diagnostics(
 
 def write_report(report: dict[str, object]) -> None:
     models = report["models"]
-    production_fbs = models["A2_t1_t2_t3"]["test"]["fbs"]
+    production_fbs = report["production_evaluation"]["combined_all_fbs"]
     reliability_lines = [
         f"- Top {cutoff}: Brier={production_fbs[f'top{cutoff}']['reliability']['brier_score']:.4f}; full coarse reliability bins are in `preseason_model_report.json`."
         for cutoff in (5, 10, 25)
     ]
     same_population = report["same_population_exploratory_comparison"]
     cold = report["coverage_and_cold_start"]["cold_start_fit"]
+    production = report["production_evaluation"]
+    production_breakdowns = [
+        f"- {label}: N={metrics['n_team_seasons']}, NLL={metrics['nll']:.3f}, CRPS={metrics['crps']:.4f}, expected-rank MAE={metrics['expected_rank_mae']:.1f}, 80% coverage={metrics['interval_80_coverage']:.3f}."
+        for label, metrics in (
+            ("Standard A2", production["standard_a2"]),
+            ("FCS-to-FBS transition", production["fcs_to_fbs_transition"]),
+            ("Generic FBS cold start", production["generic_fbs_cold_start"]),
+            ("Combined production", production["combined_all_fbs"]),
+        )
+        if metrics["n_team_seasons"]
+    ]
     metric_lines = []
     for name, item in models.items():
         fbs = item["test"].get("fbs", {})
         if "nll" in fbs:
             metric_lines.append(
-                f"- {name}: FBS N={fbs['n_team_seasons']}, NLL={fbs['nll']:.3f}, CRPS={fbs['crps']:.4f}, expected-rank MAE={fbs['expected_rank_mae']:.1f}, 80% coverage={fbs['interval_80_coverage']:.3f}."
+                f"- {name}: standard-lag FBS N={fbs['n_team_seasons']}, NLL={fbs['nll']:.3f}, CRPS={fbs['crps']:.4f}, expected-rank MAE={fbs['expected_rank_mae']:.1f}, 80% coverage={fbs['interval_80_coverage']:.3f}."
             )
     lines = [
         "# GippyRank4 Preseason Prior V1",
@@ -525,6 +594,8 @@ def write_report(report: dict[str, object]) -> None:
         "",
         *metric_lines,
         "",
+        f"The production A2 headline combines all {production['total_fbs_test_team_seasons']} FBS target team-seasons: NLL={production_fbs['nll']:.3f}, CRPS={production_fbs['crps']:.4f}, expected-rank MAE={production_fbs['expected_rank_mae']:.1f}, and 80% coverage={production_fbs['interval_80_coverage']:.3f}. The standard-lag A2 row above is a diagnostic subset, not the production headline.",
+        "",
         "Model A2 is the explicit lag ablation (t-1+t-2 and t-1+t-2+t-3); B has no currently qualified safe covariate beyond rank history. Model C is evaluated only on its high-coverage FBS modern subset and remains exploratory, so its score is not a production-selection comparison. The machine-readable report records all FBS/FCS breakdowns, feature coverage, Top-5/10/25 calibration gaps, and scale diagnostics.",
         "",
         "## Conditional Top-N calibration",
@@ -535,7 +606,9 @@ def write_report(report: dict[str, object]) -> None:
         "",
         "## Cold starts and fair exploratory comparison",
         "",
-        f"Every FBS target team-season now receives a prior. The learned FCS-to-FBS transition fit uses {cold['promotion_training_team_seasons']} pre-2022 transitions and has {cold['promotion_test_team_seasons']} untouched-test cold starts; programs without any prior distribution use a broad analytical FBS no-prior fallback. FCS cold starts remain explicitly reported as omitted ({sum(item['teams_omitted'] for item in report['coverage_and_cold_start']['per_season'] if item['subdivision'] == 'fcs')} historical team-seasons).",
+        f"Every FBS target team-season now receives a prior. The learned FCS-to-FBS transition fit uses {cold['fbs_training_fcs_to_fbs_transitions']} pre-2022 transitions. The untouched test population has {cold['fbs_test_cold_starts']} cold starts: {cold['fbs_test_fcs_to_fbs_transitions']} transition and {cold['fbs_test_generic_cold_starts']} generic. Programs without any prior distribution use a broad analytical FBS no-prior fallback. FCS cold starts remain explicitly reported as omitted ({sum(item['teams_omitted'] for item in report['coverage_and_cold_start']['per_season'] if item['subdivision'] == 'fcs')} historical team-seasons).",
+        "",
+        *production_breakdowns,
         "",
         f"On the exact {same_population['population']['n_team_seasons']}-team-season modern FBS subset, A2 t-1+t-2+t-3 has NLL={same_population['metrics']['A2_t1_t2_t3']['nll']:.3f}; exploratory Model C has NLL={same_population['metrics']['C_exploratory_modern']['nll']:.3f}. This is incremental signal only: C remains timing-uncertain and is not promoted.",
         "",
@@ -568,7 +641,8 @@ def main() -> None:
             "2026": "Not generated; current-season endpoints are not preserved preseason snapshots and no 2026 outcomes were read."
         },
     }
-    all_predictions: list[dict[str, object]] = []
+    all_predictions: list[PriorPrediction] = []
+    production_standard: list[PriorPrediction] = []
     model_refs: dict[str, dict[str, DirectRankModel]] = {}
     fitted: dict[
         tuple[str, tuple[str, ...]], tuple[DirectRankModel, dict[str, object]]
@@ -619,7 +693,10 @@ def main() -> None:
             item["uncertainty_diagnostics"][subdivision] = uncertainty_diagnostics(
                 model, test
             )
-            all_predictions.extend(predictions(model, test, name))
+            generated = predictions(model, test, name)
+            all_predictions.extend(generated)
+            if name == "A2_t1_t2_t3" and subdivision == "fbs":
+                production_standard = generated
         report["models"][name] = item
     modern_test = [
         row
@@ -667,6 +744,7 @@ def main() -> None:
         for row in cold_starts
         if row.subdivision == "fbs" and row.season in TEST_SEASONS
     ]
+    production_cold: list[PriorPrediction] = []
     for row in cold_test:
         if row.cross_subdivision_lag_z is not None:
             pmf = transition_model.pmf({}, row.cross_subdivision_lag_z, row.population)
@@ -674,37 +752,72 @@ def main() -> None:
         else:
             pmf = generic_model.pmf(row.population)
             method = "generic_fbs_cold_start"
-        all_predictions.append(
-            {
-                "season": row.season,
-                "subdivision": row.subdivision,
-                "team_id": row.team_id,
-                "team_name": row.team_name,
-                "model": "A2_t1_t2_t3",
-                "pmf": json.dumps(
-                    [round(float(value), 12) for value in pmf], separators=(",", ":")
-                ),
-                "conditional_location_mean": None,
-                "predictive_scale": None,
-                **pmf_summaries(pmf),
-                "prior_method": method,
-            }
+        production_cold.append(
+            PriorPrediction(
+                row.season,
+                row.subdivision,
+                row.team_id,
+                row.team_name,
+                row.population,
+                row.target_ranks,
+                "A2_t1_t2_t3",
+                method,
+                pmf,
+            )
         )
+    all_predictions.extend(production_cold)
+    production_fbs = production_standard + production_cold
+    expected_fbs_keys = team_season_keys(
+        [row for row in rows if row.subdivision == "fbs" and row.season in TEST_SEASONS]
+    ) | {
+        (row.season, row.subdivision, row.team_id)
+        for row in cold_starts
+        if row.subdivision == "fbs" and row.season in TEST_SEASONS
+    }
+    validate_production_coverage(production_fbs, expected_fbs_keys)
+    report["production_evaluation"] = {
+        "total_fbs_test_team_seasons": len(expected_fbs_keys),
+        "standard_a2": score_predictions(production_standard),
+        "fcs_to_fbs_transition": score_predictions(
+            [
+                prediction
+                for prediction in production_cold
+                if prediction.prior_method == "learned_fcs_to_fbs_transition"
+            ]
+        ),
+        "generic_fbs_cold_start": score_predictions(
+            [
+                prediction
+                for prediction in production_cold
+                if prediction.prior_method == "generic_fbs_cold_start"
+            ]
+        ),
+        "combined_all_fbs": score_predictions(production_fbs),
+    }
     apply_fbs_cold_start_coverage(coverage)
     coverage_result = coverage_audit(coverage)
     coverage_result["cold_start_fit"] = {
-        "promotion_training_team_seasons": len(promotion_train),
-        "promotion_test_team_seasons": len(cold_test),
+        "fbs_training_fcs_to_fbs_transitions": len(promotion_train),
+        "fbs_training_generic_cold_starts": len(generic_rows),
+        "fbs_test_cold_starts": len(production_cold),
+        "fbs_test_fcs_to_fbs_transitions": sum(
+            prediction.prior_method == "learned_fcs_to_fbs_transition"
+            for prediction in production_cold
+        ),
+        "fbs_test_generic_cold_starts": sum(
+            prediction.prior_method == "generic_fbs_cold_start"
+            for prediction in production_cold
+        ),
         "transition_model": transition_model.metadata(),
         "generic_model": generic_model.metadata(),
     }
-    fields = list(all_predictions[0])
+    fields = list(all_predictions[0].csv_row())
     with (OUT / "rank_prior_predictions.csv").open(
         "w", newline="", encoding="utf-8"
     ) as handle:
         writer = csv.DictWriter(handle, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
-        writer.writerows(all_predictions)
+        writer.writerows(prediction.csv_row() for prediction in all_predictions)
     report["production_candidate"] = "A2_t1_t2_t3"
     report["coverage_and_cold_start"] = coverage_result
     report["best_statistical_model"] = (

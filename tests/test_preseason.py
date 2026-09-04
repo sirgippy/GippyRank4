@@ -1,3 +1,4 @@
+import csv
 import runpy
 from pathlib import Path
 
@@ -295,3 +296,87 @@ def test_model_fitting_weights_each_team_season_not_constituent_count() -> None:
     first = DirectRankModel.fit(rows, [], penalty=0.1)
     second = DirectRankModel.fit(duplicated, [], penalty=0.1)
     assert np.allclose(first.beta, second.beta, atol=1e-5)
+
+
+def test_combined_production_scoring_uses_standard_and_cold_start_union() -> None:
+    values = runpy.run_path(
+        str(Path(__file__).parents[1] / "scripts/build_preseason_prior.py")
+    )
+    prediction = values["PriorPrediction"]
+    score = values["score_predictions"]
+    standard = prediction(
+        2022,
+        "fbs",
+        "a",
+        "A",
+        2,
+        np.asarray([1]),
+        "A2",
+        "same_subdivision_lag1",
+        np.asarray([0.8, 0.2]),
+    )
+    cold = prediction(
+        2022,
+        "fbs",
+        "b",
+        "B",
+        2,
+        np.asarray([2]),
+        "A2",
+        "generic_fbs_cold_start",
+        np.asarray([0.3, 0.7]),
+    )
+    combined = score([standard, cold])
+    assert combined["n_team_seasons"] == 2
+    assert combined["nll"] == pytest.approx((-np.log(0.8) - np.log(0.7)) / 2)
+    assert combined["top5"]["reliability"]["brier_score"] == pytest.approx(0.0)
+
+
+def test_production_coverage_rejects_duplicate_and_missing_keys() -> None:
+    values = runpy.run_path(
+        str(Path(__file__).parents[1] / "scripts/build_preseason_prior.py")
+    )
+    prediction = values["PriorPrediction"]
+    validate = values["validate_production_coverage"]
+    first = prediction(
+        2022,
+        "fbs",
+        "a",
+        "A",
+        2,
+        np.asarray([1]),
+        "A2",
+        "same_subdivision_lag1",
+        np.asarray([0.8, 0.2]),
+    )
+    duplicate = prediction(
+        2022,
+        "fbs",
+        "a",
+        "A",
+        2,
+        np.asarray([1]),
+        "A2",
+        "generic_fbs_cold_start",
+        np.asarray([0.5, 0.5]),
+    )
+    with pytest.raises(ValueError, match="duplicate"):
+        validate([first, duplicate], {first.key})
+    with pytest.raises(ValueError, match="missing"):
+        validate([first], {first.key, (2022, "fbs", "b")})
+
+
+def test_rebuilt_artifact_has_one_production_pmf_for_every_fbs_test_target() -> None:
+    root = Path(__file__).parents[1]
+    with (root / "data/processed/preseason/rank_prior_predictions.csv").open(
+        newline="", encoding="utf-8"
+    ) as handle:
+        rows = [
+            row
+            for row in csv.DictReader(handle)
+            if row["model"] == "A2_t1_t2_t3"
+            and row["subdivision"] == "fbs"
+            and int(row["season"]) in {2022, 2023, 2024, 2025}
+        ]
+    keys = {(row["season"], row["subdivision"], row["team_id"]) for row in rows}
+    assert len(rows) == len(keys) == 534

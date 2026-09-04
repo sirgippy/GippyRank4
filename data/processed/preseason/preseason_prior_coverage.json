@@ -1,5 +1,10 @@
 {
   "cold_start_fit": {
+    "fbs_test_cold_starts": 6,
+    "fbs_test_fcs_to_fbs_transitions": 6,
+    "fbs_test_generic_cold_starts": 0,
+    "fbs_training_fcs_to_fbs_transitions": 11,
+    "fbs_training_generic_cold_starts": 124,
     "generic_model": {
       "fit_method": "analytical equal-team empirical moments",
       "location": 0.1454900180362117,
@@ -7,8 +12,6 @@
       "optimizer": null,
       "scale": 1.8638881223587818
     },
-    "promotion_test_team_seasons": 6,
-    "promotion_training_team_seasons": 11,
     "transition_model": {
       "conditioning": "equal-weight deterministic quadrature over lag-1 constituent ranks",
       "feature_names": [],
