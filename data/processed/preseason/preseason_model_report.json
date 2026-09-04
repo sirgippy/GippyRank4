@@ -1,5 +1,1245 @@
 {
   "best_statistical_model": "See model-specific untouched FBS NLL; exploratory C is not eligible for production.",
+  "coverage_and_cold_start": {
+    "cold_start_fit": {
+      "generic_model": {
+        "fit_method": "analytical equal-team empirical moments",
+        "location": 0.1454900180362117,
+        "n_team_seasons": 124,
+        "optimizer": null,
+        "scale": 1.8638881223587818
+      },
+      "promotion_test_team_seasons": 6,
+      "promotion_training_team_seasons": 11,
+      "transition_model": {
+        "conditioning": "equal-weight deterministic quadrature over lag-1 constituent ranks",
+        "feature_names": [],
+        "location_coefficients": [
+          0.26180780059583286,
+          1.9309136474992319
+        ],
+        "log_scale_coefficients": [
+          0.42225697739530516
+        ],
+        "minimum_scale": 0.1,
+        "optimizer": {
+          "function_evaluations": 14,
+          "iterations": 13,
+          "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+          "objective": 1.9950117207339428,
+          "status": 0,
+          "success": true
+        },
+        "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+        "penalty": 0.25,
+        "preprocessing": {
+          "feature_names": [],
+          "means": {},
+          "medians": {},
+          "scales": {}
+        },
+        "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+        "quadrature_points": 12
+      }
+    },
+    "method": {
+      "fbs_fcs_transition": "learned direct FCS-to-FBS rank-distribution model when cross-subdivision lag exists",
+      "fbs_generic": "analytical broad FBS prior fit to historical no-prior FBS target distributions",
+      "fcs": "no-prior FCS teams remain explicitly omitted; FCS cold start is outside V1 production scope"
+    },
+    "per_season": [
+      {
+        "omitted": [],
+        "season": 2003,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 117,
+        "total_teams": 117
+      },
+      {
+        "omitted": [
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "107",
+            "team_name": "Holy Cross"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "108",
+            "team_name": "Harvard"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "111",
+            "team_name": "Northeastern"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "113",
+            "team_name": "Massachusetts"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "119",
+            "team_name": "Towson"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "13",
+            "team_name": "Cal Poly"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "147",
+            "team_name": "Montana State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "149",
+            "team_name": "Montana"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "159",
+            "team_name": "Dartmouth"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "16",
+            "team_name": "Sacramento State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "160",
+            "team_name": "New Hampshire"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "163",
+            "team_name": "Princeton"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "171",
+            "team_name": "Columbia"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "172",
+            "team_name": "Cornell"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2010",
+            "team_name": "Alabama A&M"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2011",
+            "team_name": "Alabama State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2016",
+            "team_name": "Alcorn State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2026",
+            "team_name": "App State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2029",
+            "team_name": "Arkansas-Pine Bluff"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2046",
+            "team_name": "Austin Peay"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2065",
+            "team_name": "Bethune-Cookman"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2083",
+            "team_name": "Bucknell"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2086",
+            "team_name": "Butler"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2115",
+            "team_name": "Central Connecticut"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2127",
+            "team_name": "Charleston Southern"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2142",
+            "team_name": "Colgate"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2166",
+            "team_name": "Davidson"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2168",
+            "team_name": "Dayton"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2169",
+            "team_name": "Delaware State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2181",
+            "team_name": "Drake"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2184",
+            "team_name": "Duquesne"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "219",
+            "team_name": "Pennsylvania"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2193",
+            "team_name": "East Tennessee State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2197",
+            "team_name": "Eastern Illinois"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2198",
+            "team_name": "Eastern Kentucky"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2210",
+            "team_name": "Elon"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "222",
+            "team_name": "Villanova"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2226",
+            "team_name": "Florida Atlantic"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2229",
+            "team_name": "Florida International"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2230",
+            "team_name": "Fordham"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2241",
+            "team_name": "Gardner-Webb"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "225",
+            "team_name": "Brown"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2261",
+            "team_name": "Hampton"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "227",
+            "team_name": "Rhode Island"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2275",
+            "team_name": "Hofstra"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2287",
+            "team_name": "Illinois State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2296",
+            "team_name": "Jackson State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "231",
+            "team_name": "Furman"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2325",
+            "team_name": "La Salle"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2329",
+            "team_name": "Lehigh"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2335",
+            "team_name": "Liberty"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "236",
+            "team_name": "Chattanooga"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2368",
+            "team_name": "Marist"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2377",
+            "team_name": "McNeese"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2400",
+            "team_name": "Mississippi Valley State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2405",
+            "team_name": "Monmouth"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2413",
+            "team_name": "Morehead State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2415",
+            "team_name": "Morgan State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2447",
+            "team_name": "Nicholls"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2448",
+            "team_name": "North Carolina A&T"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2450",
+            "team_name": "Norfolk State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2458",
+            "team_name": "Northern Colorado"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2460",
+            "team_name": "Northern Iowa"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2464",
+            "team_name": "Northern Arizona"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2466",
+            "team_name": "Northwestern State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2502",
+            "team_name": "Portland State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2504",
+            "team_name": "Prairie View A&M"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2523",
+            "team_name": "Robert Morris"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2529",
+            "team_name": "Sacred Heart"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "253",
+            "team_name": "Southern Utah"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2534",
+            "team_name": "Sam Houston"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2535",
+            "team_name": "Samford"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2542",
+            "team_name": "Savannah State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2545",
+            "team_name": "SE Louisiana"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2546",
+            "team_name": "Southeast Missouri State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "256",
+            "team_name": "James Madison"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2561",
+            "team_name": "Siena"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2569",
+            "team_name": "South Carolina State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "257",
+            "team_name": "Richmond"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2582",
+            "team_name": "Southern"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2598",
+            "team_name": "Saint Francis"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2608",
+            "team_name": "St. Mary's (CA)"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2612",
+            "team_name": "St. Peter's"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2617",
+            "team_name": "Stephen F. Austin"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2619",
+            "team_name": "Stony Brook"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2623",
+            "team_name": "Missouri State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2630",
+            "team_name": "UT Martin"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2634",
+            "team_name": "Tennessee State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2635",
+            "team_name": "Tennessee Tech"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2640",
+            "team_name": "Texas Southern"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2643",
+            "team_name": "The Citadel"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2674",
+            "team_name": "Valparaiso"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2678",
+            "team_name": "VMI"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2681",
+            "team_name": "Wagner"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2692",
+            "team_name": "Weber State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2710",
+            "team_name": "Western Illinois"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2717",
+            "team_name": "Western Carolina"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2729",
+            "team_name": "William & Mary"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2747",
+            "team_name": "Wofford"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2754",
+            "team_name": "Youngstown State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2755",
+            "team_name": "Grambling"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "282",
+            "team_name": "Indiana State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "290",
+            "team_name": "Georgia Southern"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "294",
+            "team_name": "Jacksonville"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "301",
+            "team_name": "San Diego"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "302",
+            "team_name": "UC Davis"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "304",
+            "team_name": "Idaho State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "311",
+            "team_name": "Maine"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "314",
+            "team_name": "Iona"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "322",
+            "team_name": "Lafayette"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "324",
+            "team_name": "Coastal Carolina"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "326",
+            "team_name": "Texas State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "331",
+            "team_name": "Eastern Washington"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "399",
+            "team_name": "UAlbany"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "43",
+            "team_name": "Yale"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "46",
+            "team_name": "Georgetown"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "47",
+            "team_name": "Howard"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "48",
+            "team_name": "Delaware"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "50",
+            "team_name": "Florida A&M"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "55",
+            "team_name": "Jacksonville State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "79",
+            "team_name": "Southern Illinois"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "93",
+            "team_name": "Murray State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "98",
+            "team_name": "Western Kentucky"
+          }
+        ],
+        "season": 2003,
+        "subdivision": "fcs",
+        "teams_omitted": 123,
+        "teams_with_generated_prior": 0,
+        "total_teams": 123
+      },
+      {
+        "omitted": [],
+        "season": 2004,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 117,
+        "total_teams": 117
+      },
+      {
+        "omitted": [
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2449",
+            "team_name": "North Dakota State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2571",
+            "team_name": "South Dakota State"
+          }
+        ],
+        "season": 2004,
+        "subdivision": "fcs",
+        "teams_omitted": 2,
+        "teams_with_generated_prior": 117,
+        "total_teams": 119
+      },
+      {
+        "omitted": [],
+        "season": 2005,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 119,
+        "total_teams": 119
+      },
+      {
+        "omitted": [
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "50",
+            "team_name": "Florida A&M"
+          }
+        ],
+        "season": 2005,
+        "subdivision": "fcs",
+        "teams_omitted": 1,
+        "teams_with_generated_prior": 119,
+        "total_teams": 120
+      },
+      {
+        "omitted": [],
+        "season": 2006,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 119,
+        "total_teams": 119
+      },
+      {
+        "omitted": [
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2110",
+            "team_name": "Central Arkansas"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2736",
+            "team_name": "Winston-Salem State"
+          }
+        ],
+        "season": 2006,
+        "subdivision": "fcs",
+        "teams_omitted": 2,
+        "teams_with_generated_prior": 120,
+        "total_teams": 122
+      },
+      {
+        "omitted": [],
+        "season": 2007,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 119,
+        "total_teams": 119
+      },
+      {
+        "omitted": [
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2428",
+            "team_name": "North Carolina Central"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2506",
+            "team_name": "Presbyterian"
+          }
+        ],
+        "season": 2007,
+        "subdivision": "fcs",
+        "teams_omitted": 2,
+        "teams_with_generated_prior": 120,
+        "total_teams": 122
+      },
+      {
+        "omitted": [],
+        "season": 2008,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 120,
+        "total_teams": 120
+      },
+      {
+        "omitted": [
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "155",
+            "team_name": "North Dakota"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2097",
+            "team_name": "Campbell"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "233",
+            "team_name": "South Dakota"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2803",
+            "team_name": "Bryant"
+          }
+        ],
+        "season": 2008,
+        "subdivision": "fcs",
+        "teams_omitted": 4,
+        "teams_with_generated_prior": 121,
+        "total_teams": 125
+      },
+      {
+        "omitted": [],
+        "season": 2009,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 120,
+        "total_teams": 120
+      },
+      {
+        "omitted": [
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "295",
+            "team_name": "Old Dominion"
+          }
+        ],
+        "season": 2009,
+        "subdivision": "fcs",
+        "teams_omitted": 1,
+        "teams_with_generated_prior": 124,
+        "total_teams": 125
+      },
+      {
+        "omitted": [],
+        "season": 2010,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 120,
+        "total_teams": 120
+      },
+      {
+        "omitted": [
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2247",
+            "team_name": "Georgia State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2320",
+            "team_name": "Lamar"
+          }
+        ],
+        "season": 2010,
+        "subdivision": "fcs",
+        "teams_omitted": 2,
+        "teams_with_generated_prior": 122,
+        "total_teams": 124
+      },
+      {
+        "omitted": [],
+        "season": 2011,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 120,
+        "total_teams": 120
+      },
+      {
+        "omitted": [
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2636",
+            "team_name": "UTSA"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "6",
+            "team_name": "South Alabama"
+          }
+        ],
+        "season": 2011,
+        "subdivision": "fcs",
+        "teams_omitted": 2,
+        "teams_with_generated_prior": 124,
+        "total_teams": 126
+      },
+      {
+        "omitted": [],
+        "season": 2012,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 124,
+        "total_teams": 124
+      },
+      {
+        "omitted": [],
+        "season": 2012,
+        "subdivision": "fcs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 122,
+        "total_teams": 122
+      },
+      {
+        "omitted": [],
+        "season": 2013,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 125,
+        "total_teams": 125
+      },
+      {
+        "omitted": [
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2000",
+            "team_name": "Abilene Christian"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2277",
+            "team_name": "Houston Christian"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2382",
+            "team_name": "Mercer"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2429",
+            "team_name": "Charlotte"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2916",
+            "team_name": "Incarnate Word"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "56",
+            "team_name": "Stetson"
+          }
+        ],
+        "season": 2013,
+        "subdivision": "fcs",
+        "teams_omitted": 6,
+        "teams_with_generated_prior": 121,
+        "total_teams": 127
+      },
+      {
+        "omitted": [],
+        "season": 2014,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 128,
+        "total_teams": 128
+      },
+      {
+        "omitted": [],
+        "season": 2014,
+        "subdivision": "fcs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 124,
+        "total_teams": 124
+      },
+      {
+        "omitted": [],
+        "season": 2015,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 128,
+        "total_teams": 128
+      },
+      {
+        "omitted": [
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2193",
+            "team_name": "East Tennessee State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "338",
+            "team_name": "Kennesaw State"
+          }
+        ],
+        "season": 2015,
+        "subdivision": "fcs",
+        "teams_omitted": 2,
+        "teams_with_generated_prior": 123,
+        "total_teams": 125
+      },
+      {
+        "omitted": [],
+        "season": 2016,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 128,
+        "total_teams": 128
+      },
+      {
+        "omitted": [],
+        "season": 2016,
+        "subdivision": "fcs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 125,
+        "total_teams": 125
+      },
+      {
+        "omitted": [],
+        "season": 2017,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 130,
+        "total_teams": 130
+      },
+      {
+        "omitted": [],
+        "season": 2017,
+        "subdivision": "fcs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 124,
+        "total_teams": 124
+      },
+      {
+        "omitted": [],
+        "season": 2018,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 130,
+        "total_teams": 130
+      },
+      {
+        "omitted": [
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2453",
+            "team_name": "North Alabama"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "70",
+            "team_name": "Idaho"
+          }
+        ],
+        "season": 2018,
+        "subdivision": "fcs",
+        "teams_omitted": 2,
+        "teams_with_generated_prior": 123,
+        "total_teams": 125
+      },
+      {
+        "omitted": [],
+        "season": 2019,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 130,
+        "total_teams": 130
+      },
+      {
+        "omitted": [
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2341",
+            "team_name": "Long Island University"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2771",
+            "team_name": "Merrimack"
+          }
+        ],
+        "season": 2019,
+        "subdivision": "fcs",
+        "teams_omitted": 2,
+        "teams_with_generated_prior": 124,
+        "total_teams": 126
+      },
+      {
+        "omitted": [],
+        "season": 2020,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 127,
+        "total_teams": 127
+      },
+      {
+        "omitted": [],
+        "season": 2020,
+        "subdivision": "fcs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 125,
+        "total_teams": 125
+      },
+      {
+        "omitted": [],
+        "season": 2021,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 130,
+        "total_teams": 130
+      },
+      {
+        "omitted": [
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2627",
+            "team_name": "Tarleton State"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2900",
+            "team_name": "St. Thomas (MN)"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "3101",
+            "team_name": "Utah Tech"
+          }
+        ],
+        "season": 2021,
+        "subdivision": "fcs",
+        "teams_omitted": 3,
+        "teams_with_generated_prior": 125,
+        "total_teams": 128
+      },
+      {
+        "omitted": [],
+        "season": 2022,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 131,
+        "total_teams": 131
+      },
+      {
+        "omitted": [
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2815",
+            "team_name": "Lindenwood"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2837",
+            "team_name": "East Texas A&M"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "284",
+            "team_name": "Stonehill"
+          }
+        ],
+        "season": 2022,
+        "subdivision": "fcs",
+        "teams_omitted": 3,
+        "teams_with_generated_prior": 127,
+        "total_teams": 130
+      },
+      {
+        "omitted": [],
+        "season": 2023,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 133,
+        "total_teams": 133
+      },
+      {
+        "omitted": [],
+        "season": 2023,
+        "subdivision": "fcs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 128,
+        "total_teams": 128
+      },
+      {
+        "omitted": [],
+        "season": 2024,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 134,
+        "total_teams": 134
+      },
+      {
+        "omitted": [
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2385",
+            "team_name": "Mercyhurst"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2698",
+            "team_name": "West Georgia"
+          }
+        ],
+        "season": 2024,
+        "subdivision": "fcs",
+        "teams_omitted": 2,
+        "teams_with_generated_prior": 127,
+        "total_teams": 129
+      },
+      {
+        "omitted": [],
+        "season": 2025,
+        "subdivision": "fbs",
+        "teams_omitted": 0,
+        "teams_with_generated_prior": 136,
+        "total_teams": 136
+      },
+      {
+        "omitted": [
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "2441",
+            "team_name": "New Haven"
+          },
+          {
+            "reason": "no_prior_rank_distribution",
+            "team_id": "292",
+            "team_name": "UT Rio Grande Valley"
+          }
+        ],
+        "season": 2025,
+        "subdivision": "fcs",
+        "teams_omitted": 2,
+        "teams_with_generated_prior": 127,
+        "total_teams": 129
+      }
+    ]
+  },
   "feature_safety": {
     "coach_change": "exploratory but timing uncertain",
     "rank_history": "production-safe",
@@ -23,17 +1263,25 @@
             "lag2_z_mean"
           ],
           "location_coefficients": [
-            0.6209047943887347,
-            -0.012612058210148725,
-            0.16245959157055093,
-            0.002664274749466784
+            0.6092307446584709,
+            -0.018038529477321086,
+            0.2581928692566834,
+            0.05123585370127517
           ],
           "log_scale_coefficients": [
-            0.1396458748376324,
-            -0.013608946308428061,
-            0.020448193327492883
+            0.1728898550297554,
+            -0.004690140706996952,
+            0.017247001418978888
           ],
           "minimum_scale": 0.1,
+          "optimizer": {
+            "function_evaluations": 19,
+            "iterations": 17,
+            "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+            "objective": 1.7127222749670628,
+            "status": 0,
+            "success": true
+          },
           "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
           "penalty": 0.25,
           "preprocessing": {
@@ -50,41 +1298,7 @@
               "lag2_z_mean": 1.6829540379091563
             }
           },
-          "quadrature_points": 12
-        },
-        "fcs": {
-          "conditioning": "equal-weight deterministic quadrature over lag-1 constituent ranks",
-          "feature_names": [
-            "lag2_z_mean"
-          ],
-          "location_coefficients": [
-            0.6560819271012507,
-            -0.013502179193617608,
-            0.1782909031141794,
-            0.00602555098323218
-          ],
-          "log_scale_coefficients": [
-            0.06286411975007627,
-            -0.00010742017729110237,
-            0.03646189410920302
-          ],
-          "minimum_scale": 0.1,
-          "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
-          "penalty": 0.25,
-          "preprocessing": {
-            "feature_names": [
-              "lag2_z_mean"
-            ],
-            "means": {
-              "lag2_z_mean": -0.0112358973356506
-            },
-            "medians": {
-              "lag2_z_mean": -0.007607362739385425
-            },
-            "scales": {
-              "lag2_z_mean": 1.6498363839888766
-            }
-          },
+          "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
           "quadrature_points": 12
         }
       },
@@ -95,68 +1309,144 @@
             2017
           ],
           "development_validation_metrics": {
-            "crps": 0.11979989761268874,
-            "expected_rank_mae": 21.02987788572491,
-            "interval_80_average_width": 75.49707602339181,
-            "interval_80_coverage": 0.8172562281772808,
-            "median_rank_mae": 21.541910331384017,
+            "crps": 0.11975295592564002,
+            "expected_rank_mae": 20.961103968491674,
+            "interval_80_average_width": 77.26315789473684,
+            "interval_80_coverage": 0.8350010098506339,
+            "median_rank_mae": 21.571150097465885,
             "n_team_seasons": 513,
-            "nll": 4.544863021931844,
+            "nll": 4.543697072455587,
             "top10": {
-              "calibration_gap": 0.001862386659689158,
+              "calibration_gap": 0.011724152589920392,
               "empirical_frequency": 0.07813655016662535,
-              "mean_predicted_probability": 0.07999893682631451
+              "mean_predicted_probability": 0.08986070275654574,
+              "reliability": {
+                "bins": [
+                  {
+                    "empirical_frequency": 0.013953075312965421,
+                    "mean_predicted_probability": 0.016763608016209092,
+                    "n_team_seasons": 312,
+                    "range": "[0.00, 0.05)"
+                  },
+                  {
+                    "empirical_frequency": 0.04280271615177276,
+                    "mean_predicted_probability": 0.0887113911220855,
+                    "n_team_seasons": 106,
+                    "range": "[0.05, 0.15)"
+                  },
+                  {
+                    "empirical_frequency": 0.13940074703621502,
+                    "mean_predicted_probability": 0.21048620394603107,
+                    "n_team_seasons": 58,
+                    "range": "[0.15, 0.30)"
+                  },
+                  {
+                    "empirical_frequency": 0.46020718003800715,
+                    "mean_predicted_probability": 0.3903705788841686,
+                    "n_team_seasons": 19,
+                    "range": "[0.30, 0.50)"
+                  },
+                  {
+                    "empirical_frequency": 0.7715678963893249,
+                    "mean_predicted_probability": 0.5538914947005215,
+                    "n_team_seasons": 10,
+                    "range": "[0.50, 0.70)"
+                  },
+                  {
+                    "empirical_frequency": 0.8310930141287285,
+                    "mean_predicted_probability": 0.787591447429431,
+                    "n_team_seasons": 8,
+                    "range": "[0.70, 1.00]"
+                  }
+                ],
+                "brier_score": 0.029693849310656717
+              }
             },
             "top25": {
-              "calibration_gap": 0.012186393090345832,
+              "calibration_gap": 0.024135801670981977,
               "empirical_frequency": 0.19500794109816666,
-              "mean_predicted_probability": 0.2071943341885125
+              "mean_predicted_probability": 0.21914374276914864,
+              "reliability": {
+                "bins": [
+                  {
+                    "empirical_frequency": 0.02280428880253236,
+                    "mean_predicted_probability": 0.02034811750928087,
+                    "n_team_seasons": 122,
+                    "range": "[0.00, 0.05)"
+                  },
+                  {
+                    "empirical_frequency": 0.08314542866515148,
+                    "mean_predicted_probability": 0.09861287645901062,
+                    "n_team_seasons": 134,
+                    "range": "[0.05, 0.15)"
+                  },
+                  {
+                    "empirical_frequency": 0.19078882183390378,
+                    "mean_predicted_probability": 0.21093731376413863,
+                    "n_team_seasons": 122,
+                    "range": "[0.15, 0.30)"
+                  },
+                  {
+                    "empirical_frequency": 0.2980274725274725,
+                    "mean_predicted_probability": 0.3958049640917734,
+                    "n_team_seasons": 75,
+                    "range": "[0.30, 0.50)"
+                  },
+                  {
+                    "empirical_frequency": 0.5020295181009466,
+                    "mean_predicted_probability": 0.5745654646708853,
+                    "n_team_seasons": 33,
+                    "range": "[0.50, 0.70)"
+                  },
+                  {
+                    "empirical_frequency": 0.8859330484330484,
+                    "mean_predicted_probability": 0.8275466421735708,
+                    "n_team_seasons": 27,
+                    "range": "[0.70, 1.00]"
+                  }
+                ],
+                "brier_score": 0.08021914534219081
+              }
             },
             "top5": {
-              "calibration_gap": -0.00300083978588548,
+              "calibration_gap": 0.003552167269000303,
               "empirical_frequency": 0.03898635477582846,
-              "mean_predicted_probability": 0.03598551498994298
-            }
-          },
-          "development_validation_seasons": [
-            2018,
-            2021
-          ],
-          "pre_specified_penalty": 0.25,
-          "untouched_test_seasons": [
-            2022,
-            2023,
-            2024,
-            2025
-          ]
-        },
-        "fcs": {
-          "development_train_seasons": [
-            2004,
-            2017
-          ],
-          "development_validation_metrics": {
-            "crps": 0.10478841457093324,
-            "expected_rank_mae": 17.686225468029473,
-            "interval_80_average_width": 69.01271186440678,
-            "interval_80_coverage": 0.848931425343964,
-            "median_rank_mae": 17.314618644067796,
-            "n_team_seasons": 472,
-            "nll": 4.402250777556476,
-            "top10": {
-              "calibration_gap": 0.000955082929048251,
-              "empirical_frequency": 0.07965822925958965,
-              "mean_predicted_probability": 0.0806133121886379
-            },
-            "top25": {
-              "calibration_gap": 0.009569969245561027,
-              "empirical_frequency": 0.19864559586348166,
-              "mean_predicted_probability": 0.20821556510904268
-            },
-            "top5": {
-              "calibration_gap": -0.004514286173543686,
-              "empirical_frequency": 0.0413135593220339,
-              "mean_predicted_probability": 0.036799273148490214
+              "mean_predicted_probability": 0.04253852204482876,
+              "reliability": {
+                "bins": [
+                  {
+                    "empirical_frequency": 0.005755316984796552,
+                    "mean_predicted_probability": 0.009569549348754449,
+                    "n_team_seasons": 409,
+                    "range": "[0.00, 0.05)"
+                  },
+                  {
+                    "empirical_frequency": 0.040130354339538016,
+                    "mean_predicted_probability": 0.08725904458883108,
+                    "n_team_seasons": 70,
+                    "range": "[0.05, 0.15)"
+                  },
+                  {
+                    "empirical_frequency": 0.23002845368916797,
+                    "mean_predicted_probability": 0.2202310529484871,
+                    "n_team_seasons": 16,
+                    "range": "[0.15, 0.30)"
+                  },
+                  {
+                    "empirical_frequency": 0.5452119309262166,
+                    "mean_predicted_probability": 0.3437251834047903,
+                    "n_team_seasons": 10,
+                    "range": "[0.30, 0.50)"
+                  },
+                  {
+                    "empirical_frequency": 0.7130469976452118,
+                    "mean_predicted_probability": 0.6049042903643391,
+                    "n_team_seasons": 8,
+                    "range": "[0.50, 0.70)"
+                  }
+                ],
+                "brier_score": 0.014786752099878701
+              }
             }
           },
           "development_validation_seasons": [
@@ -174,66 +1464,162 @@
       },
       "test": {
         "fbs": {
-          "crps": 0.11907054810349571,
-          "expected_rank_mae": 22.21451282421386,
-          "interval_80_average_width": 77.38636363636364,
-          "interval_80_coverage": 0.8172827664195876,
-          "median_rank_mae": 22.50378787878788,
+          "crps": 0.1193362886472689,
+          "expected_rank_mae": 22.147954173369776,
+          "interval_80_average_width": 78.71780303030303,
+          "interval_80_coverage": 0.8328985081947616,
+          "median_rank_mae": 22.59469696969697,
           "n_team_seasons": 528,
-          "nll": 4.583922400748975,
+          "nll": 4.5839676461733125,
           "top10": {
-            "calibration_gap": 0.00010279114662209432,
+            "calibration_gap": 0.008653213918240935,
             "empirical_frequency": 0.07580321285140562,
-            "mean_predicted_probability": 0.07590600399802772
+            "mean_predicted_probability": 0.08445642676964656,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.015835702359476445,
+                  "mean_predicted_probability": 0.01422017955105793,
+                  "n_team_seasons": 318,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.04728297792428507,
+                  "mean_predicted_probability": 0.08926180168357599,
+                  "n_team_seasons": 125,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.1947193699656388,
+                  "mean_predicted_probability": 0.20850758351786342,
+                  "n_team_seasons": 49,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.37220402880447534,
+                  "mean_predicted_probability": 0.39143486399225386,
+                  "n_team_seasons": 19,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.6689253138568207,
+                  "mean_predicted_probability": 0.5727957833221231,
+                  "n_team_seasons": 11,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.851111111111111,
+                  "mean_predicted_probability": 0.8263939003197461,
+                  "n_team_seasons": 6,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.03437728369422377
+            }
           },
           "top25": {
-            "calibration_gap": 0.008886212274659605,
+            "calibration_gap": 0.019594609643101363,
             "empirical_frequency": 0.18963843498482055,
-            "mean_predicted_probability": 0.19852464725948016
+            "mean_predicted_probability": 0.20923304462792192,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.016959181100343723,
+                  "mean_predicted_probability": 0.01879595609206184,
+                  "n_team_seasons": 138,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.09739193534122348,
+                  "mean_predicted_probability": 0.09276694070291983,
+                  "n_team_seasons": 133,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.17812079268573738,
+                  "mean_predicted_probability": 0.2131133033732606,
+                  "n_team_seasons": 120,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.29014466541220524,
+                  "mean_predicted_probability": 0.3864723907822665,
+                  "n_team_seasons": 83,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.6430718227717733,
+                  "mean_predicted_probability": 0.5923462382747632,
+                  "n_team_seasons": 30,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.8369559268791815,
+                  "mean_predicted_probability": 0.8384171050578174,
+                  "n_team_seasons": 24,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.08227192945405537
+            }
           },
           "top5": {
-            "calibration_gap": -0.00410063050368302,
+            "calibration_gap": 0.001514826026577272,
             "empirical_frequency": 0.03795279397689036,
-            "mean_predicted_probability": 0.03385216347320734
+            "mean_predicted_probability": 0.03946762000346763,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.004637260048405293,
+                  "mean_predicted_probability": 0.009848393781162704,
+                  "n_team_seasons": 434,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.0819119256242544,
+                  "mean_predicted_probability": 0.08348196799087283,
+                  "n_team_seasons": 60,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.26729038956347617,
+                  "mean_predicted_probability": 0.2226532770677997,
+                  "n_team_seasons": 19,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.4697827816263202,
+                  "mean_predicted_probability": 0.37632546649990833,
+                  "n_team_seasons": 9,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.6979732629146724,
+                  "mean_predicted_probability": 0.6123216186948732,
+                  "n_team_seasons": 4,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.5066666666666667,
+                  "mean_predicted_probability": 0.7445772218935305,
+                  "n_team_seasons": 2,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.017006866376188014
+            }
           }
         },
         "fcs": {
-          "crps": 0.1153025955800162,
-          "expected_rank_mae": 20.640990770741386,
-          "interval_80_average_width": 70.4950884086444,
-          "interval_80_coverage": 0.7963818750181463,
-          "median_rank_mae": 20.661100196463654,
-          "n_team_seasons": 509,
-          "nll": 4.513763345120678,
-          "top10": {
-            "calibration_gap": -0.002401826960128736,
-            "empirical_frequency": 0.07858546168958742,
-            "mean_predicted_probability": 0.07618363472945869
-          },
-          "top25": {
-            "calibration_gap": 0.004771499303355159,
-            "empirical_frequency": 0.19618299186079147,
-            "mean_predicted_probability": 0.20095449116414663
-          },
-          "top5": {
-            "calibration_gap": -0.005255281210724494,
-            "empirical_frequency": 0.03929273084479371,
-            "mean_predicted_probability": 0.03403744963406922
-          }
+          "status": "not fitted; FCS production uses the selected A2 rank-history prior"
         }
       },
       "uncertainty_diagnostics": {
         "fbs": {
-          "mean_scale_coach_change": 1.2480985585243334,
-          "mean_scale_no_coach_change": 1.2510276368026036,
-          "scale_vs_next_season_disagreement_correlation": -0.11066144586163193,
-          "scale_vs_prior_disagreement_correlation": -0.18837795146529487
-        },
-        "fcs": {
-          "mean_scale_coach_change": null,
-          "mean_scale_no_coach_change": 1.1654999481984623,
-          "scale_vs_next_season_disagreement_correlation": 0.15270199428784972,
-          "scale_vs_prior_disagreement_correlation": 0.08854080331061687
+          "mean_scale_coach_change": 1.2884111156267977,
+          "mean_scale_no_coach_change": 1.2892193040734152,
+          "scale_vs_next_season_disagreement_correlation": -0.0776270002728568,
+          "scale_vs_prior_disagreement_correlation": -0.1697359369048998
         }
       }
     },
@@ -251,21 +1637,29 @@
             "lag3_z_mean"
           ],
           "location_coefficients": [
-            0.632977910550001,
-            -0.047025686024501835,
-            0.09711733502767425,
-            0.16271736548892776,
-            0.002418090668026073,
-            -0.0008079512821810473
+            0.5860485987810625,
+            -0.01755833762336682,
+            0.1176358973859544,
+            0.24637964848470453,
+            0.07838658772473182,
+            -0.0224196511085228
           ],
           "log_scale_coefficients": [
-            0.19275627464020828,
-            0.009200524593992197,
-            -0.015578924731609607,
-            0.017509837857830012,
-            0.041601847431093325
+            0.16399217742831765,
+            0.006868981919063465,
+            -0.008739402744949833,
+            0.026393079865694825,
+            0.010268407588336846
           ],
           "minimum_scale": 0.1,
+          "optimizer": {
+            "function_evaluations": 34,
+            "iterations": 32,
+            "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+            "objective": 1.7036242446121839,
+            "status": 0,
+            "success": true
+          },
           "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
           "penalty": 0.25,
           "preprocessing": {
@@ -286,6 +1680,7 @@
               "lag3_z_mean": 1.631087187512554
             }
           },
+          "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
           "quadrature_points": 12
         },
         "fcs": {
@@ -295,21 +1690,29 @@
             "lag3_z_mean"
           ],
           "location_coefficients": [
-            0.6468580680677424,
-            -0.011267510220599809,
-            0.14920681370325134,
-            0.13879609081570982,
-            0.005081210810260487,
-            0.0029448685986282735
+            0.5998093968735193,
+            -0.019969719997215175,
+            0.2365188901377596,
+            0.16033616910809037,
+            0.09225569447195349,
+            7.424781466509356e-05
           ],
           "log_scale_coefficients": [
-            0.06525417215003831,
-            -0.019793887289353967,
-            0.03380700192455888,
-            0.034757287640510476,
-            0.058983881592448814
+            0.07328823061280666,
+            -0.02422050438150987,
+            0.04536649754107726,
+            0.03942868916811544,
+            0.09411164365088275
           ],
           "minimum_scale": 0.1,
+          "optimizer": {
+            "function_evaluations": 38,
+            "iterations": 32,
+            "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+            "objective": 1.6377877997563421,
+            "status": 0,
+            "success": true
+          },
           "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
           "penalty": 0.25,
           "preprocessing": {
@@ -318,18 +1721,19 @@
               "lag3_z_mean"
             ],
             "means": {
-              "lag2_z_mean": -0.0112358973356506,
-              "lag3_z_mean": -0.011768789078758883
+              "lag2_z_mean": -0.013543407898839437,
+              "lag3_z_mean": -0.009802090144780935
             },
             "medians": {
-              "lag2_z_mean": -0.007607362739385425,
-              "lag3_z_mean": -0.0013991504741515388
+              "lag2_z_mean": -0.0055171373275400785,
+              "lag3_z_mean": -0.001629369807235461
             },
             "scales": {
-              "lag2_z_mean": 1.6498363839888766,
-              "lag3_z_mean": 1.5893980349545553
+              "lag2_z_mean": 1.648223674874927,
+              "lag3_z_mean": 1.5868960540905999
             }
           },
+          "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
           "quadrature_points": 12
         }
       },
@@ -340,27 +1744,150 @@
             2017
           ],
           "development_validation_metrics": {
-            "crps": 0.11908879350684759,
-            "expected_rank_mae": 20.80342881422503,
-            "interval_80_average_width": 76.76803118908381,
-            "interval_80_coverage": 0.8369961304359801,
-            "median_rank_mae": 21.502923976608187,
+            "crps": 0.11868779616284188,
+            "expected_rank_mae": 20.803597730313463,
+            "interval_80_average_width": 76.17348927875244,
+            "interval_80_coverage": 0.8319478718162929,
+            "median_rank_mae": 21.4541910331384,
             "n_team_seasons": 513,
-            "nll": 4.541951932059488,
+            "nll": 4.53799271521557,
             "top10": {
-              "calibration_gap": 0.017222639475031,
+              "calibration_gap": 0.012817473588876083,
               "empirical_frequency": 0.07813655016662535,
-              "mean_predicted_probability": 0.09535918964165635
+              "mean_predicted_probability": 0.09095402375550143,
+              "reliability": {
+                "bins": [
+                  {
+                    "empirical_frequency": 0.015084310049635983,
+                    "mean_predicted_probability": 0.015318147571447773,
+                    "n_team_seasons": 309,
+                    "range": "[0.00, 0.05)"
+                  },
+                  {
+                    "empirical_frequency": 0.04747445536919222,
+                    "mean_predicted_probability": 0.0884076379882068,
+                    "n_team_seasons": 114,
+                    "range": "[0.05, 0.15)"
+                  },
+                  {
+                    "empirical_frequency": 0.11632577587247916,
+                    "mean_predicted_probability": 0.21752901221213422,
+                    "n_team_seasons": 52,
+                    "range": "[0.15, 0.30)"
+                  },
+                  {
+                    "empirical_frequency": 0.4422401011686726,
+                    "mean_predicted_probability": 0.3864507996061536,
+                    "n_team_seasons": 18,
+                    "range": "[0.30, 0.50)"
+                  },
+                  {
+                    "empirical_frequency": 0.7794086865515437,
+                    "mean_predicted_probability": 0.5872580520512652,
+                    "n_team_seasons": 12,
+                    "range": "[0.50, 0.70)"
+                  },
+                  {
+                    "empirical_frequency": 0.8310930141287285,
+                    "mean_predicted_probability": 0.8166145254727963,
+                    "n_team_seasons": 8,
+                    "range": "[0.70, 1.00]"
+                  }
+                ],
+                "brier_score": 0.028985526668813804
+              }
             },
             "top25": {
-              "calibration_gap": 0.030463243771731596,
+              "calibration_gap": 0.023779595248922147,
               "empirical_frequency": 0.19500794109816666,
-              "mean_predicted_probability": 0.22547118486989826
+              "mean_predicted_probability": 0.2187875363470888,
+              "reliability": {
+                "bins": [
+                  {
+                    "empirical_frequency": 0.028556825234566097,
+                    "mean_predicted_probability": 0.019950622450758182,
+                    "n_team_seasons": 129,
+                    "range": "[0.00, 0.05)"
+                  },
+                  {
+                    "empirical_frequency": 0.10703443503061824,
+                    "mean_predicted_probability": 0.0971905805026087,
+                    "n_team_seasons": 131,
+                    "range": "[0.05, 0.15)"
+                  },
+                  {
+                    "empirical_frequency": 0.1594778624395349,
+                    "mean_predicted_probability": 0.21614694955273153,
+                    "n_team_seasons": 123,
+                    "range": "[0.15, 0.30)"
+                  },
+                  {
+                    "empirical_frequency": 0.3152873523991536,
+                    "mean_predicted_probability": 0.39751309560982095,
+                    "n_team_seasons": 69,
+                    "range": "[0.30, 0.50)"
+                  },
+                  {
+                    "empirical_frequency": 0.48614956472099324,
+                    "mean_predicted_probability": 0.5859922088837263,
+                    "n_team_seasons": 33,
+                    "range": "[0.50, 0.70)"
+                  },
+                  {
+                    "empirical_frequency": 0.8900068681318681,
+                    "mean_predicted_probability": 0.8421495899585867,
+                    "n_team_seasons": 28,
+                    "range": "[0.70, 1.00]"
+                  }
+                ],
+                "brier_score": 0.07945576062633568
+              }
             },
             "top5": {
-              "calibration_gap": 0.007719731637875753,
+              "calibration_gap": 0.005087714765798647,
               "empirical_frequency": 0.03898635477582846,
-              "mean_predicted_probability": 0.04670608641370421
+              "mean_predicted_probability": 0.044074069541627105,
+              "reliability": {
+                "bins": [
+                  {
+                    "empirical_frequency": 0.006872237946273398,
+                    "mean_predicted_probability": 0.009232837300530301,
+                    "n_team_seasons": 411,
+                    "range": "[0.00, 0.05)"
+                  },
+                  {
+                    "empirical_frequency": 0.02414038520115279,
+                    "mean_predicted_probability": 0.08784632428134932,
+                    "n_team_seasons": 67,
+                    "range": "[0.05, 0.15)"
+                  },
+                  {
+                    "empirical_frequency": 0.2289233385661957,
+                    "mean_predicted_probability": 0.21463788843000722,
+                    "n_team_seasons": 15,
+                    "range": "[0.15, 0.30)"
+                  },
+                  {
+                    "empirical_frequency": 0.534989861329147,
+                    "mean_predicted_probability": 0.3775667810057591,
+                    "n_team_seasons": 12,
+                    "range": "[0.30, 0.50)"
+                  },
+                  {
+                    "empirical_frequency": 0.5408751962323392,
+                    "mean_predicted_probability": 0.581866296866753,
+                    "n_team_seasons": 5,
+                    "range": "[0.50, 0.70)"
+                  },
+                  {
+                    "empirical_frequency": 1.0,
+                    "mean_predicted_probability": 0.7566322115444546,
+                    "n_team_seasons": 3,
+                    "range": "[0.70, 1.00]"
+                  }
+                ],
+                "brier_score": 0.013858657207737924
+              }
             }
           },
           "development_validation_seasons": [
@@ -381,28 +1908,7 @@
             2017
           ],
           "development_validation_metrics": {
-            "crps": 0.10407615815789849,
-            "expected_rank_mae": 17.420799773911412,
-            "interval_80_average_width": 69.51483050847457,
-            "interval_80_coverage": 0.8591604569434238,
-            "median_rank_mae": 17.047669491525422,
-            "n_team_seasons": 472,
-            "nll": 4.396945843783519,
-            "top10": {
-              "calibration_gap": 0.0031819467749267527,
-              "empirical_frequency": 0.07965822925958965,
-              "mean_predicted_probability": 0.0828401760345164
-            },
-            "top25": {
-              "calibration_gap": 0.012336931982013605,
-              "empirical_frequency": 0.19864559586348166,
-              "mean_predicted_probability": 0.21098252784549526
-            },
-            "top5": {
-              "calibration_gap": -0.002993724895094828,
-              "empirical_frequency": 0.0413135593220339,
-              "mean_predicted_probability": 0.03831983442693907
-            }
+            "status": "not used for FBS model selection"
           },
           "development_validation_seasons": [
             2018,
@@ -419,66 +1925,312 @@
       },
       "test": {
         "fbs": {
-          "crps": 0.1178103971931256,
-          "expected_rank_mae": 21.837431667236796,
-          "interval_80_average_width": 78.9905303030303,
-          "interval_80_coverage": 0.8392297847443086,
-          "median_rank_mae": 22.21780303030303,
+          "crps": 0.11740701123952496,
+          "expected_rank_mae": 21.75507712484611,
+          "interval_80_average_width": 77.8219696969697,
+          "interval_80_coverage": 0.8322718555327072,
+          "median_rank_mae": 22.09090909090909,
           "n_team_seasons": 528,
-          "nll": 4.573111312862125,
+          "nll": 4.569403969078601,
           "top10": {
-            "calibration_gap": 0.013900381216960578,
+            "calibration_gap": 0.009014339852617514,
             "empirical_frequency": 0.07580321285140562,
-            "mean_predicted_probability": 0.0897035940683662
+            "mean_predicted_probability": 0.08481755270402314,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.013925971823974793,
+                  "mean_predicted_probability": 0.014955671481727,
+                  "n_team_seasons": 330,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.05811145565795852,
+                  "mean_predicted_probability": 0.09146682113531891,
+                  "n_team_seasons": 115,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.16790340629455996,
+                  "mean_predicted_probability": 0.2081807681910216,
+                  "n_team_seasons": 45,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.3678845322581913,
+                  "mean_predicted_probability": 0.39164753947027764,
+                  "n_team_seasons": 21,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.7371326669134889,
+                  "mean_predicted_probability": 0.5948449111009831,
+                  "n_team_seasons": 10,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.8704504504504503,
+                  "mean_predicted_probability": 0.8269185428158558,
+                  "n_team_seasons": 7,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.03334987916455964
+            }
           },
           "top25": {
-            "calibration_gap": 0.026908787206884582,
+            "calibration_gap": 0.019560003996150932,
             "empirical_frequency": 0.18963843498482055,
-            "mean_predicted_probability": 0.21654722219170514
+            "mean_predicted_probability": 0.20919843898097149,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.018477146755740585,
+                  "mean_predicted_probability": 0.018697178542294465,
+                  "n_team_seasons": 143,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.09080691540415367,
+                  "mean_predicted_probability": 0.09763522156016685,
+                  "n_team_seasons": 135,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.15486885970262082,
+                  "mean_predicted_probability": 0.2135719937510123,
+                  "n_team_seasons": 116,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.3412464349384633,
+                  "mean_predicted_probability": 0.3852893968035219,
+                  "n_team_seasons": 77,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.635440633441794,
+                  "mean_predicted_probability": 0.5930982744596214,
+                  "n_team_seasons": 31,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.8187886636112416,
+                  "mean_predicted_probability": 0.8374862693286709,
+                  "n_team_seasons": 26,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.07918584953246366
+            }
           },
           "top5": {
-            "calibration_gap": 0.004907530100015954,
+            "calibration_gap": 0.002039973957167207,
             "empirical_frequency": 0.03795279397689036,
-            "mean_predicted_probability": 0.04286032407690631
+            "mean_predicted_probability": 0.039992767934057566,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.004936506596118119,
+                  "mean_predicted_probability": 0.009371901907367959,
+                  "n_team_seasons": 435,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.06749832194913892,
+                  "mean_predicted_probability": 0.08073212286681405,
+                  "n_team_seasons": 56,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.24502176049626123,
+                  "mean_predicted_probability": 0.2078677892773449,
+                  "n_team_seasons": 20,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.4784505604796082,
+                  "mean_predicted_probability": 0.37728403118315257,
+                  "n_team_seasons": 10,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.634200586128297,
+                  "mean_predicted_probability": 0.5954277601534368,
+                  "n_team_seasons": 4,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.6300152207001523,
+                  "mean_predicted_probability": 0.7354993736478576,
+                  "n_team_seasons": 3,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.017338996218429895
+            }
           }
         },
         "fcs": {
-          "crps": 0.11467655473828015,
-          "expected_rank_mae": 20.349075451838903,
-          "interval_80_average_width": 69.65422396856582,
-          "interval_80_coverage": 0.800676493075382,
-          "median_rank_mae": 20.45088408644401,
+          "crps": 0.11466270021488757,
+          "expected_rank_mae": 20.356300286155708,
+          "interval_80_average_width": 70.13948919449902,
+          "interval_80_coverage": 0.8071897955035954,
+          "median_rank_mae": 20.478388998035363,
           "n_team_seasons": 509,
-          "nll": 4.508625817408482,
+          "nll": 4.507849568886015,
           "top10": {
-            "calibration_gap": 0.0022527605685877666,
+            "calibration_gap": 0.005248689354921357,
             "empirical_frequency": 0.07858546168958742,
-            "mean_predicted_probability": 0.08083822225817519
+            "mean_predicted_probability": 0.08383415104450878,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.00943160287987874,
+                  "mean_predicted_probability": 0.011113016789023548,
+                  "n_team_seasons": 325,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.10101010101010101,
+                  "mean_predicted_probability": 0.08649532763999157,
+                  "n_team_seasons": 99,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.17392754515599343,
+                  "mean_predicted_probability": 0.21031757031407725,
+                  "n_team_seasons": 48,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.2770935960591133,
+                  "mean_predicted_probability": 0.3876289558768919,
+                  "n_team_seasons": 21,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.6477832512315271,
+                  "mean_predicted_probability": 0.6169075333949322,
+                  "n_team_seasons": 6,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.8880541871921184,
+                  "mean_predicted_probability": 0.8559918340003122,
+                  "n_team_seasons": 10,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.03452762172747008
+            }
           },
           "top25": {
-            "calibration_gap": 0.009824835306488144,
+            "calibration_gap": 0.014743651790096207,
             "empirical_frequency": 0.19618299186079147,
-            "mean_predicted_probability": 0.2060078271672796
+            "mean_predicted_probability": 0.21092664365088767,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.010341767891564421,
+                  "mean_predicted_probability": 0.01911667018045701,
+                  "n_team_seasons": 161,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.04624283291609464,
+                  "mean_predicted_probability": 0.0866768577263633,
+                  "n_team_seasons": 122,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.24743898343036275,
+                  "mean_predicted_probability": 0.2239379132383414,
+                  "n_team_seasons": 88,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.4413136288998357,
+                  "mean_predicted_probability": 0.3862455698278914,
+                  "n_team_seasons": 75,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.4392681210415201,
+                  "mean_predicted_probability": 0.5980435829793274,
+                  "n_team_seasons": 35,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.7965341308937369,
+                  "mean_predicted_probability": 0.8608150560817707,
+                  "n_team_seasons": 28,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.07335787675289798
+            }
           },
           "top5": {
-            "calibration_gap": -0.001850535060345708,
+            "calibration_gap": -0.00011596159681830781,
             "empirical_frequency": 0.03929273084479371,
-            "mean_predicted_probability": 0.037442195784448004
+            "mean_predicted_probability": 0.039176769247975404,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.006180817154447986,
+                  "mean_predicted_probability": 0.007622503485323281,
+                  "n_team_seasons": 425,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.07219537131703689,
+                  "mean_predicted_probability": 0.08721489709243872,
+                  "n_team_seasons": 53,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.2114121510673235,
+                  "mean_predicted_probability": 0.2005606601630903,
+                  "n_team_seasons": 15,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.4350369458128079,
+                  "mean_predicted_probability": 0.40189588765814027,
+                  "n_team_seasons": 8,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.9770114942528735,
+                  "mean_predicted_probability": 0.611337055150099,
+                  "n_team_seasons": 3,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.7928571428571429,
+                  "mean_predicted_probability": 0.8042867701792126,
+                  "n_team_seasons": 5,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.016315504963276984
+            }
           }
         }
       },
       "uncertainty_diagnostics": {
         "fbs": {
-          "mean_scale_coach_change": 1.3137995441498949,
-          "mean_scale_no_coach_change": 1.3139496736995546,
-          "scale_vs_next_season_disagreement_correlation": 0.04660446485722286,
-          "scale_vs_prior_disagreement_correlation": 0.04663019835238659
+          "mean_scale_coach_change": 1.279157070175055,
+          "mean_scale_no_coach_change": 1.2787605992362672,
+          "scale_vs_next_season_disagreement_correlation": 0.08896937772192567,
+          "scale_vs_prior_disagreement_correlation": 0.07639201708244649
         },
         "fcs": {
           "mean_scale_coach_change": null,
-          "mean_scale_no_coach_change": 1.1709539330918162,
-          "scale_vs_next_season_disagreement_correlation": 0.15135572427162508,
-          "scale_vs_prior_disagreement_correlation": 0.1822375817479212
+          "mean_scale_no_coach_change": 1.181359129812403,
+          "scale_vs_next_season_disagreement_correlation": 0.16297838201599918,
+          "scale_vs_prior_disagreement_correlation": 0.20184576055961548
         }
       }
     },
@@ -490,13 +2242,21 @@
           "conditioning": "equal-weight deterministic quadrature over lag-1 constituent ranks",
           "feature_names": [],
           "location_coefficients": [
-            0.6922712126541971,
-            -0.014610381295153895
+            0.7148578744078095,
+            -0.013591169388778721
           ],
           "log_scale_coefficients": [
-            0.14719484752290846
+            0.16932686011750742
           ],
           "minimum_scale": 0.1,
+          "optimizer": {
+            "function_evaluations": 11,
+            "iterations": 9,
+            "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+            "objective": 1.7224187366851251,
+            "status": 0,
+            "success": true
+          },
           "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
           "penalty": 0.25,
           "preprocessing": {
@@ -505,27 +2265,7 @@
             "medians": {},
             "scales": {}
           },
-          "quadrature_points": 12
-        },
-        "fcs": {
-          "conditioning": "equal-weight deterministic quadrature over lag-1 constituent ranks",
-          "feature_names": [],
-          "location_coefficients": [
-            0.7319594049246503,
-            -0.012292719362873832
-          ],
-          "log_scale_coefficients": [
-            0.0628483636135337
-          ],
-          "minimum_scale": 0.1,
-          "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
-          "penalty": 0.25,
-          "preprocessing": {
-            "feature_names": [],
-            "means": {},
-            "medians": {},
-            "scales": {}
-          },
+          "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
           "quadrature_points": 12
         }
       },
@@ -536,68 +2276,150 @@
             2017
           ],
           "development_validation_metrics": {
-            "crps": 0.1211360983968454,
-            "expected_rank_mae": 21.22535642201694,
-            "interval_80_average_width": 76.1150097465887,
-            "interval_80_coverage": 0.8171135332225559,
-            "median_rank_mae": 21.750487329434698,
+            "crps": 0.12134584770875449,
+            "expected_rank_mae": 21.227281061054725,
+            "interval_80_average_width": 77.97076023391813,
+            "interval_80_coverage": 0.8354456118929803,
+            "median_rank_mae": 21.82456140350877,
             "n_team_seasons": 513,
-            "nll": 4.556681186332134,
+            "nll": 4.558111794478307,
             "top10": {
-              "calibration_gap": 0.0029204170939791108,
+              "calibration_gap": 0.010438835695464152,
               "empirical_frequency": 0.07813655016662535,
-              "mean_predicted_probability": 0.08105696726060446
+              "mean_predicted_probability": 0.0885753858620895,
+              "reliability": {
+                "bins": [
+                  {
+                    "empirical_frequency": 0.016988908047456057,
+                    "mean_predicted_probability": 0.016291545088534372,
+                    "n_team_seasons": 305,
+                    "range": "[0.00, 0.05)"
+                  },
+                  {
+                    "empirical_frequency": 0.04842443880905419,
+                    "mean_predicted_probability": 0.08890858442860523,
+                    "n_team_seasons": 117,
+                    "range": "[0.05, 0.15)"
+                  },
+                  {
+                    "empirical_frequency": 0.0891883830455259,
+                    "mean_predicted_probability": 0.2094795996532962,
+                    "n_team_seasons": 50,
+                    "range": "[0.15, 0.30)"
+                  },
+                  {
+                    "empirical_frequency": 0.5143698138596098,
+                    "mean_predicted_probability": 0.3849443420919192,
+                    "n_team_seasons": 28,
+                    "range": "[0.30, 0.50)"
+                  },
+                  {
+                    "empirical_frequency": 0.7960585333034312,
+                    "mean_predicted_probability": 0.5774187055509435,
+                    "n_team_seasons": 7,
+                    "range": "[0.50, 0.70)"
+                  },
+                  {
+                    "empirical_frequency": 0.8004317111459969,
+                    "mean_predicted_probability": 0.79559913616783,
+                    "n_team_seasons": 6,
+                    "range": "[0.70, 1.00]"
+                  }
+                ],
+                "brier_score": 0.031719337219517425
+              }
             },
             "top25": {
-              "calibration_gap": 0.014800497142610669,
+              "calibration_gap": 0.023393790373831436,
               "empirical_frequency": 0.19500794109816666,
-              "mean_predicted_probability": 0.20980843824077733
+              "mean_predicted_probability": 0.2184017314719981,
+              "reliability": {
+                "bins": [
+                  {
+                    "empirical_frequency": 0.020372409067929646,
+                    "mean_predicted_probability": 0.0205064475959891,
+                    "n_team_seasons": 118,
+                    "range": "[0.00, 0.05)"
+                  },
+                  {
+                    "empirical_frequency": 0.10556300588975362,
+                    "mean_predicted_probability": 0.09807764408693923,
+                    "n_team_seasons": 141,
+                    "range": "[0.05, 0.15)"
+                  },
+                  {
+                    "empirical_frequency": 0.1677573637016736,
+                    "mean_predicted_probability": 0.21381724363048973,
+                    "n_team_seasons": 118,
+                    "range": "[0.15, 0.30)"
+                  },
+                  {
+                    "empirical_frequency": 0.3148808627771446,
+                    "mean_predicted_probability": 0.38880584754217684,
+                    "n_team_seasons": 73,
+                    "range": "[0.30, 0.50)"
+                  },
+                  {
+                    "empirical_frequency": 0.461300330943188,
+                    "mean_predicted_probability": 0.569313815535415,
+                    "n_team_seasons": 37,
+                    "range": "[0.50, 0.70)"
+                  },
+                  {
+                    "empirical_frequency": 0.8808062130177514,
+                    "mean_predicted_probability": 0.8120579545678009,
+                    "n_team_seasons": 26,
+                    "range": "[0.70, 1.00]"
+                  }
+                ],
+                "brier_score": 0.08293545123728159
+              }
             },
             "top5": {
-              "calibration_gap": -0.002814517185457395,
+              "calibration_gap": 0.0022533528423144336,
               "empirical_frequency": 0.03898635477582846,
-              "mean_predicted_probability": 0.03617183759037106
-            }
-          },
-          "development_validation_seasons": [
-            2018,
-            2021
-          ],
-          "pre_specified_penalty": 0.25,
-          "untouched_test_seasons": [
-            2022,
-            2023,
-            2024,
-            2025
-          ]
-        },
-        "fcs": {
-          "development_train_seasons": [
-            2004,
-            2017
-          ],
-          "development_validation_metrics": {
-            "crps": 0.10661483667460604,
-            "expected_rank_mae": 18.187635124000426,
-            "interval_80_average_width": 70.5042372881356,
-            "interval_80_coverage": 0.8542616647843729,
-            "median_rank_mae": 17.861228813559322,
-            "n_team_seasons": 472,
-            "nll": 4.418271630038122,
-            "top10": {
-              "calibration_gap": -7.82204957947008e-05,
-              "empirical_frequency": 0.07965822925958965,
-              "mean_predicted_probability": 0.07958000876379495
-            },
-            "top25": {
-              "calibration_gap": 0.009209145841301197,
-              "empirical_frequency": 0.19864559586348166,
-              "mean_predicted_probability": 0.20785474170478285
-            },
-            "top5": {
-              "calibration_gap": -0.0056277640208824906,
-              "empirical_frequency": 0.0413135593220339,
-              "mean_predicted_probability": 0.03568579530115141
+              "mean_predicted_probability": 0.04123970761814289,
+              "reliability": {
+                "bins": [
+                  {
+                    "empirical_frequency": 0.007199471851934304,
+                    "mean_predicted_probability": 0.009736891543696963,
+                    "n_team_seasons": 409,
+                    "range": "[0.00, 0.05)"
+                  },
+                  {
+                    "empirical_frequency": 0.03215167337838146,
+                    "mean_predicted_probability": 0.08750826582224548,
+                    "n_team_seasons": 69,
+                    "range": "[0.05, 0.15)"
+                  },
+                  {
+                    "empirical_frequency": 0.3534108748394463,
+                    "mean_predicted_probability": 0.22065947793885404,
+                    "n_team_seasons": 22,
+                    "range": "[0.15, 0.30)"
+                  },
+                  {
+                    "empirical_frequency": 0.38995045133437994,
+                    "mean_predicted_probability": 0.3847373070885562,
+                    "n_team_seasons": 8,
+                    "range": "[0.30, 0.50)"
+                  },
+                  {
+                    "empirical_frequency": 0.6474358974358975,
+                    "mean_predicted_probability": 0.5984366140861391,
+                    "n_team_seasons": 3,
+                    "range": "[0.50, 0.70)"
+                  },
+                  {
+                    "empirical_frequency": 1.0,
+                    "mean_predicted_probability": 0.703897105689324,
+                    "n_team_seasons": 2,
+                    "range": "[0.70, 1.00]"
+                  }
+                ],
+                "brier_score": 0.016081075053613184
+              }
             }
           },
           "development_validation_seasons": [
@@ -615,66 +2437,162 @@
       },
       "test": {
         "fbs": {
-          "crps": 0.11995757084546498,
-          "expected_rank_mae": 22.39736054483487,
-          "interval_80_average_width": 77.93371212121212,
-          "interval_80_coverage": 0.820179853066468,
-          "median_rank_mae": 22.698863636363637,
+          "crps": 0.12019921296067787,
+          "expected_rank_mae": 22.369467263875,
+          "interval_80_average_width": 79.19507575757575,
+          "interval_80_coverage": 0.8315423903212729,
+          "median_rank_mae": 22.799242424242426,
           "n_team_seasons": 528,
-          "nll": 4.589634998873618,
+          "nll": 4.590370736775821,
           "top10": {
-            "calibration_gap": 0.001621725290944273,
+            "calibration_gap": 0.008438502807243398,
             "empirical_frequency": 0.07580321285140562,
-            "mean_predicted_probability": 0.0774249381423499
+            "mean_predicted_probability": 0.08424171565864902,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.015909162246727906,
+                  "mean_predicted_probability": 0.014509033658321253,
+                  "n_team_seasons": 319,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.05034694799012343,
+                  "mean_predicted_probability": 0.09011604792242602,
+                  "n_team_seasons": 126,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.17773482068721735,
+                  "mean_predicted_probability": 0.22184580297778647,
+                  "n_team_seasons": 49,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.4066022025248456,
+                  "mean_predicted_probability": 0.400276466477832,
+                  "n_team_seasons": 17,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.7587780404218759,
+                  "mean_predicted_probability": 0.567358961968906,
+                  "n_team_seasons": 13,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.78,
+                  "mean_predicted_probability": 0.8614528277265147,
+                  "n_team_seasons": 4,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.03493267863796525
+            }
           },
           "top25": {
-            "calibration_gap": 0.011718236474233451,
+            "calibration_gap": 0.01966203235680064,
             "empirical_frequency": 0.18963843498482055,
-            "mean_predicted_probability": 0.201356671459054
+            "mean_predicted_probability": 0.2093004673416212,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.013074255748844516,
+                  "mean_predicted_probability": 0.019804404640922205,
+                  "n_team_seasons": 135,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.1035535592704962,
+                  "mean_predicted_probability": 0.09240672564657822,
+                  "n_team_seasons": 139,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.18083010572740352,
+                  "mean_predicted_probability": 0.21467867759595874,
+                  "n_team_seasons": 121,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.26882599663558726,
+                  "mean_predicted_probability": 0.3826939970428946,
+                  "n_team_seasons": 71,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.6351787643395169,
+                  "mean_predicted_probability": 0.5715783907673861,
+                  "n_team_seasons": 36,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.774484628343351,
+                  "mean_predicted_probability": 0.8180115930074882,
+                  "n_team_seasons": 26,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.08381272462978075
+            }
           },
           "top5": {
-            "calibration_gap": -0.003538260472816669,
+            "calibration_gap": 0.0010474073621427882,
             "empirical_frequency": 0.03795279397689036,
-            "mean_predicted_probability": 0.03441453350407369
+            "mean_predicted_probability": 0.03900020133903315,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.004459652650189887,
+                  "mean_predicted_probability": 0.009491046498085489,
+                  "n_team_seasons": 430,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.06205741760651811,
+                  "mean_predicted_probability": 0.08585402595752782,
+                  "n_team_seasons": 65,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.26665432555843516,
+                  "mean_predicted_probability": 0.21727140639970394,
+                  "n_team_seasons": 16,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.5331675049813357,
+                  "mean_predicted_probability": 0.3573666478904008,
+                  "n_team_seasons": 13,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.9383561643835616,
+                  "mean_predicted_probability": 0.6934219333989907,
+                  "n_team_seasons": 2,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.5066666666666667,
+                  "mean_predicted_probability": 0.7107459169124888,
+                  "n_team_seasons": 2,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.016834546084595482
+            }
           }
         },
         "fcs": {
-          "crps": 0.11664798755589804,
-          "expected_rank_mae": 20.931854943228323,
-          "interval_80_average_width": 70.98821218074656,
-          "interval_80_coverage": 0.7957068336446427,
-          "median_rank_mae": 20.957760314341847,
-          "n_team_seasons": 509,
-          "nll": 4.52545183792279,
-          "top10": {
-            "calibration_gap": -0.0022659533276925825,
-            "empirical_frequency": 0.07858546168958742,
-            "mean_predicted_probability": 0.07631950836189484
-          },
-          "top25": {
-            "calibration_gap": 0.005371467243263428,
-            "empirical_frequency": 0.19618299186079147,
-            "mean_predicted_probability": 0.2015544591040549
-          },
-          "top5": {
-            "calibration_gap": -0.005401574873399692,
-            "empirical_frequency": 0.03929273084479371,
-            "mean_predicted_probability": 0.03389115597139402
-          }
+          "status": "not fitted; FCS production uses the selected A2 rank-history prior"
         }
       },
       "uncertainty_diagnostics": {
         "fbs": {
-          "mean_scale_coach_change": 1.258579687420408,
-          "mean_scale_no_coach_change": 1.2585796874204078,
-          "scale_vs_next_season_disagreement_correlation": null,
-          "scale_vs_prior_disagreement_correlation": null
-        },
-        "fcs": {
-          "mean_scale_coach_change": null,
-          "mean_scale_no_coach_change": 1.1648653546536933,
-          "scale_vs_next_season_disagreement_correlation": 2.0485715307057344e-16,
-          "scale_vs_prior_disagreement_correlation": -2.3251209807957435e-16
+          "mean_scale_coach_change": 1.2845072438328524,
+          "mean_scale_no_coach_change": 1.2845072438328522,
+          "scale_vs_next_season_disagreement_correlation": -1.5104941385284253e-16,
+          "scale_vs_prior_disagreement_correlation": -3.910491788215719e-16
         }
       }
     },
@@ -692,21 +2610,29 @@
             "lag3_z_mean"
           ],
           "location_coefficients": [
-            0.632977910550001,
-            -0.047025686024501835,
-            0.09711733502767425,
-            0.16271736548892776,
-            0.002418090668026073,
-            -0.0008079512821810473
+            0.5860485987810625,
+            -0.01755833762336682,
+            0.1176358973859544,
+            0.24637964848470453,
+            0.07838658772473182,
+            -0.0224196511085228
           ],
           "log_scale_coefficients": [
-            0.19275627464020828,
-            0.009200524593992197,
-            -0.015578924731609607,
-            0.017509837857830012,
-            0.041601847431093325
+            0.16399217742831765,
+            0.006868981919063465,
+            -0.008739402744949833,
+            0.026393079865694825,
+            0.010268407588336846
           ],
           "minimum_scale": 0.1,
+          "optimizer": {
+            "function_evaluations": 34,
+            "iterations": 32,
+            "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+            "objective": 1.7036242446121839,
+            "status": 0,
+            "success": true
+          },
           "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
           "penalty": 0.25,
           "preprocessing": {
@@ -727,6 +2653,7 @@
               "lag3_z_mean": 1.631087187512554
             }
           },
+          "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
           "quadrature_points": 12
         },
         "fcs": {
@@ -736,21 +2663,29 @@
             "lag3_z_mean"
           ],
           "location_coefficients": [
-            0.6468580680677424,
-            -0.011267510220599809,
-            0.14920681370325134,
-            0.13879609081570982,
-            0.005081210810260487,
-            0.0029448685986282735
+            0.5998093968735193,
+            -0.019969719997215175,
+            0.2365188901377596,
+            0.16033616910809037,
+            0.09225569447195349,
+            7.424781466509356e-05
           ],
           "log_scale_coefficients": [
-            0.06525417215003831,
-            -0.019793887289353967,
-            0.03380700192455888,
-            0.034757287640510476,
-            0.058983881592448814
+            0.07328823061280666,
+            -0.02422050438150987,
+            0.04536649754107726,
+            0.03942868916811544,
+            0.09411164365088275
           ],
           "minimum_scale": 0.1,
+          "optimizer": {
+            "function_evaluations": 38,
+            "iterations": 32,
+            "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+            "objective": 1.6377877997563421,
+            "status": 0,
+            "success": true
+          },
           "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
           "penalty": 0.25,
           "preprocessing": {
@@ -759,18 +2694,19 @@
               "lag3_z_mean"
             ],
             "means": {
-              "lag2_z_mean": -0.0112358973356506,
-              "lag3_z_mean": -0.011768789078758883
+              "lag2_z_mean": -0.013543407898839437,
+              "lag3_z_mean": -0.009802090144780935
             },
             "medians": {
-              "lag2_z_mean": -0.007607362739385425,
-              "lag3_z_mean": -0.0013991504741515388
+              "lag2_z_mean": -0.0055171373275400785,
+              "lag3_z_mean": -0.001629369807235461
             },
             "scales": {
-              "lag2_z_mean": 1.6498363839888766,
-              "lag3_z_mean": 1.5893980349545553
+              "lag2_z_mean": 1.648223674874927,
+              "lag3_z_mean": 1.5868960540905999
             }
           },
+          "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
           "quadrature_points": 12
         }
       },
@@ -781,27 +2717,150 @@
             2017
           ],
           "development_validation_metrics": {
-            "crps": 0.11908879350684759,
-            "expected_rank_mae": 20.80342881422503,
-            "interval_80_average_width": 76.76803118908381,
-            "interval_80_coverage": 0.8369961304359801,
-            "median_rank_mae": 21.502923976608187,
+            "crps": 0.11868779616284188,
+            "expected_rank_mae": 20.803597730313463,
+            "interval_80_average_width": 76.17348927875244,
+            "interval_80_coverage": 0.8319478718162929,
+            "median_rank_mae": 21.4541910331384,
             "n_team_seasons": 513,
-            "nll": 4.541951932059488,
+            "nll": 4.53799271521557,
             "top10": {
-              "calibration_gap": 0.017222639475031,
+              "calibration_gap": 0.012817473588876083,
               "empirical_frequency": 0.07813655016662535,
-              "mean_predicted_probability": 0.09535918964165635
+              "mean_predicted_probability": 0.09095402375550143,
+              "reliability": {
+                "bins": [
+                  {
+                    "empirical_frequency": 0.015084310049635983,
+                    "mean_predicted_probability": 0.015318147571447773,
+                    "n_team_seasons": 309,
+                    "range": "[0.00, 0.05)"
+                  },
+                  {
+                    "empirical_frequency": 0.04747445536919222,
+                    "mean_predicted_probability": 0.0884076379882068,
+                    "n_team_seasons": 114,
+                    "range": "[0.05, 0.15)"
+                  },
+                  {
+                    "empirical_frequency": 0.11632577587247916,
+                    "mean_predicted_probability": 0.21752901221213422,
+                    "n_team_seasons": 52,
+                    "range": "[0.15, 0.30)"
+                  },
+                  {
+                    "empirical_frequency": 0.4422401011686726,
+                    "mean_predicted_probability": 0.3864507996061536,
+                    "n_team_seasons": 18,
+                    "range": "[0.30, 0.50)"
+                  },
+                  {
+                    "empirical_frequency": 0.7794086865515437,
+                    "mean_predicted_probability": 0.5872580520512652,
+                    "n_team_seasons": 12,
+                    "range": "[0.50, 0.70)"
+                  },
+                  {
+                    "empirical_frequency": 0.8310930141287285,
+                    "mean_predicted_probability": 0.8166145254727963,
+                    "n_team_seasons": 8,
+                    "range": "[0.70, 1.00]"
+                  }
+                ],
+                "brier_score": 0.028985526668813804
+              }
             },
             "top25": {
-              "calibration_gap": 0.030463243771731596,
+              "calibration_gap": 0.023779595248922147,
               "empirical_frequency": 0.19500794109816666,
-              "mean_predicted_probability": 0.22547118486989826
+              "mean_predicted_probability": 0.2187875363470888,
+              "reliability": {
+                "bins": [
+                  {
+                    "empirical_frequency": 0.028556825234566097,
+                    "mean_predicted_probability": 0.019950622450758182,
+                    "n_team_seasons": 129,
+                    "range": "[0.00, 0.05)"
+                  },
+                  {
+                    "empirical_frequency": 0.10703443503061824,
+                    "mean_predicted_probability": 0.0971905805026087,
+                    "n_team_seasons": 131,
+                    "range": "[0.05, 0.15)"
+                  },
+                  {
+                    "empirical_frequency": 0.1594778624395349,
+                    "mean_predicted_probability": 0.21614694955273153,
+                    "n_team_seasons": 123,
+                    "range": "[0.15, 0.30)"
+                  },
+                  {
+                    "empirical_frequency": 0.3152873523991536,
+                    "mean_predicted_probability": 0.39751309560982095,
+                    "n_team_seasons": 69,
+                    "range": "[0.30, 0.50)"
+                  },
+                  {
+                    "empirical_frequency": 0.48614956472099324,
+                    "mean_predicted_probability": 0.5859922088837263,
+                    "n_team_seasons": 33,
+                    "range": "[0.50, 0.70)"
+                  },
+                  {
+                    "empirical_frequency": 0.8900068681318681,
+                    "mean_predicted_probability": 0.8421495899585867,
+                    "n_team_seasons": 28,
+                    "range": "[0.70, 1.00]"
+                  }
+                ],
+                "brier_score": 0.07945576062633568
+              }
             },
             "top5": {
-              "calibration_gap": 0.007719731637875753,
+              "calibration_gap": 0.005087714765798647,
               "empirical_frequency": 0.03898635477582846,
-              "mean_predicted_probability": 0.04670608641370421
+              "mean_predicted_probability": 0.044074069541627105,
+              "reliability": {
+                "bins": [
+                  {
+                    "empirical_frequency": 0.006872237946273398,
+                    "mean_predicted_probability": 0.009232837300530301,
+                    "n_team_seasons": 411,
+                    "range": "[0.00, 0.05)"
+                  },
+                  {
+                    "empirical_frequency": 0.02414038520115279,
+                    "mean_predicted_probability": 0.08784632428134932,
+                    "n_team_seasons": 67,
+                    "range": "[0.05, 0.15)"
+                  },
+                  {
+                    "empirical_frequency": 0.2289233385661957,
+                    "mean_predicted_probability": 0.21463788843000722,
+                    "n_team_seasons": 15,
+                    "range": "[0.15, 0.30)"
+                  },
+                  {
+                    "empirical_frequency": 0.534989861329147,
+                    "mean_predicted_probability": 0.3775667810057591,
+                    "n_team_seasons": 12,
+                    "range": "[0.30, 0.50)"
+                  },
+                  {
+                    "empirical_frequency": 0.5408751962323392,
+                    "mean_predicted_probability": 0.581866296866753,
+                    "n_team_seasons": 5,
+                    "range": "[0.50, 0.70)"
+                  },
+                  {
+                    "empirical_frequency": 1.0,
+                    "mean_predicted_probability": 0.7566322115444546,
+                    "n_team_seasons": 3,
+                    "range": "[0.70, 1.00]"
+                  }
+                ],
+                "brier_score": 0.013858657207737924
+              }
             }
           },
           "development_validation_seasons": [
@@ -822,28 +2881,7 @@
             2017
           ],
           "development_validation_metrics": {
-            "crps": 0.10407615815789849,
-            "expected_rank_mae": 17.420799773911412,
-            "interval_80_average_width": 69.51483050847457,
-            "interval_80_coverage": 0.8591604569434238,
-            "median_rank_mae": 17.047669491525422,
-            "n_team_seasons": 472,
-            "nll": 4.396945843783519,
-            "top10": {
-              "calibration_gap": 0.0031819467749267527,
-              "empirical_frequency": 0.07965822925958965,
-              "mean_predicted_probability": 0.0828401760345164
-            },
-            "top25": {
-              "calibration_gap": 0.012336931982013605,
-              "empirical_frequency": 0.19864559586348166,
-              "mean_predicted_probability": 0.21098252784549526
-            },
-            "top5": {
-              "calibration_gap": -0.002993724895094828,
-              "empirical_frequency": 0.0413135593220339,
-              "mean_predicted_probability": 0.03831983442693907
-            }
+            "status": "not used for FBS model selection"
           },
           "development_validation_seasons": [
             2018,
@@ -860,66 +2898,312 @@
       },
       "test": {
         "fbs": {
-          "crps": 0.1178103971931256,
-          "expected_rank_mae": 21.837431667236796,
-          "interval_80_average_width": 78.9905303030303,
-          "interval_80_coverage": 0.8392297847443086,
-          "median_rank_mae": 22.21780303030303,
+          "crps": 0.11740701123952496,
+          "expected_rank_mae": 21.75507712484611,
+          "interval_80_average_width": 77.8219696969697,
+          "interval_80_coverage": 0.8322718555327072,
+          "median_rank_mae": 22.09090909090909,
           "n_team_seasons": 528,
-          "nll": 4.573111312862125,
+          "nll": 4.569403969078601,
           "top10": {
-            "calibration_gap": 0.013900381216960578,
+            "calibration_gap": 0.009014339852617514,
             "empirical_frequency": 0.07580321285140562,
-            "mean_predicted_probability": 0.0897035940683662
+            "mean_predicted_probability": 0.08481755270402314,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.013925971823974793,
+                  "mean_predicted_probability": 0.014955671481727,
+                  "n_team_seasons": 330,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.05811145565795852,
+                  "mean_predicted_probability": 0.09146682113531891,
+                  "n_team_seasons": 115,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.16790340629455996,
+                  "mean_predicted_probability": 0.2081807681910216,
+                  "n_team_seasons": 45,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.3678845322581913,
+                  "mean_predicted_probability": 0.39164753947027764,
+                  "n_team_seasons": 21,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.7371326669134889,
+                  "mean_predicted_probability": 0.5948449111009831,
+                  "n_team_seasons": 10,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.8704504504504503,
+                  "mean_predicted_probability": 0.8269185428158558,
+                  "n_team_seasons": 7,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.03334987916455964
+            }
           },
           "top25": {
-            "calibration_gap": 0.026908787206884582,
+            "calibration_gap": 0.019560003996150932,
             "empirical_frequency": 0.18963843498482055,
-            "mean_predicted_probability": 0.21654722219170514
+            "mean_predicted_probability": 0.20919843898097149,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.018477146755740585,
+                  "mean_predicted_probability": 0.018697178542294465,
+                  "n_team_seasons": 143,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.09080691540415367,
+                  "mean_predicted_probability": 0.09763522156016685,
+                  "n_team_seasons": 135,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.15486885970262082,
+                  "mean_predicted_probability": 0.2135719937510123,
+                  "n_team_seasons": 116,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.3412464349384633,
+                  "mean_predicted_probability": 0.3852893968035219,
+                  "n_team_seasons": 77,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.635440633441794,
+                  "mean_predicted_probability": 0.5930982744596214,
+                  "n_team_seasons": 31,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.8187886636112416,
+                  "mean_predicted_probability": 0.8374862693286709,
+                  "n_team_seasons": 26,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.07918584953246366
+            }
           },
           "top5": {
-            "calibration_gap": 0.004907530100015954,
+            "calibration_gap": 0.002039973957167207,
             "empirical_frequency": 0.03795279397689036,
-            "mean_predicted_probability": 0.04286032407690631
+            "mean_predicted_probability": 0.039992767934057566,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.004936506596118119,
+                  "mean_predicted_probability": 0.009371901907367959,
+                  "n_team_seasons": 435,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.06749832194913892,
+                  "mean_predicted_probability": 0.08073212286681405,
+                  "n_team_seasons": 56,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.24502176049626123,
+                  "mean_predicted_probability": 0.2078677892773449,
+                  "n_team_seasons": 20,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.4784505604796082,
+                  "mean_predicted_probability": 0.37728403118315257,
+                  "n_team_seasons": 10,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.634200586128297,
+                  "mean_predicted_probability": 0.5954277601534368,
+                  "n_team_seasons": 4,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.6300152207001523,
+                  "mean_predicted_probability": 0.7354993736478576,
+                  "n_team_seasons": 3,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.017338996218429895
+            }
           }
         },
         "fcs": {
-          "crps": 0.11467655473828015,
-          "expected_rank_mae": 20.349075451838903,
-          "interval_80_average_width": 69.65422396856582,
-          "interval_80_coverage": 0.800676493075382,
-          "median_rank_mae": 20.45088408644401,
+          "crps": 0.11466270021488757,
+          "expected_rank_mae": 20.356300286155708,
+          "interval_80_average_width": 70.13948919449902,
+          "interval_80_coverage": 0.8071897955035954,
+          "median_rank_mae": 20.478388998035363,
           "n_team_seasons": 509,
-          "nll": 4.508625817408482,
+          "nll": 4.507849568886015,
           "top10": {
-            "calibration_gap": 0.0022527605685877666,
+            "calibration_gap": 0.005248689354921357,
             "empirical_frequency": 0.07858546168958742,
-            "mean_predicted_probability": 0.08083822225817519
+            "mean_predicted_probability": 0.08383415104450878,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.00943160287987874,
+                  "mean_predicted_probability": 0.011113016789023548,
+                  "n_team_seasons": 325,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.10101010101010101,
+                  "mean_predicted_probability": 0.08649532763999157,
+                  "n_team_seasons": 99,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.17392754515599343,
+                  "mean_predicted_probability": 0.21031757031407725,
+                  "n_team_seasons": 48,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.2770935960591133,
+                  "mean_predicted_probability": 0.3876289558768919,
+                  "n_team_seasons": 21,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.6477832512315271,
+                  "mean_predicted_probability": 0.6169075333949322,
+                  "n_team_seasons": 6,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.8880541871921184,
+                  "mean_predicted_probability": 0.8559918340003122,
+                  "n_team_seasons": 10,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.03452762172747008
+            }
           },
           "top25": {
-            "calibration_gap": 0.009824835306488144,
+            "calibration_gap": 0.014743651790096207,
             "empirical_frequency": 0.19618299186079147,
-            "mean_predicted_probability": 0.2060078271672796
+            "mean_predicted_probability": 0.21092664365088767,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.010341767891564421,
+                  "mean_predicted_probability": 0.01911667018045701,
+                  "n_team_seasons": 161,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.04624283291609464,
+                  "mean_predicted_probability": 0.0866768577263633,
+                  "n_team_seasons": 122,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.24743898343036275,
+                  "mean_predicted_probability": 0.2239379132383414,
+                  "n_team_seasons": 88,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.4413136288998357,
+                  "mean_predicted_probability": 0.3862455698278914,
+                  "n_team_seasons": 75,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.4392681210415201,
+                  "mean_predicted_probability": 0.5980435829793274,
+                  "n_team_seasons": 35,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.7965341308937369,
+                  "mean_predicted_probability": 0.8608150560817707,
+                  "n_team_seasons": 28,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.07335787675289798
+            }
           },
           "top5": {
-            "calibration_gap": -0.001850535060345708,
+            "calibration_gap": -0.00011596159681830781,
             "empirical_frequency": 0.03929273084479371,
-            "mean_predicted_probability": 0.037442195784448004
+            "mean_predicted_probability": 0.039176769247975404,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.006180817154447986,
+                  "mean_predicted_probability": 0.007622503485323281,
+                  "n_team_seasons": 425,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.07219537131703689,
+                  "mean_predicted_probability": 0.08721489709243872,
+                  "n_team_seasons": 53,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.2114121510673235,
+                  "mean_predicted_probability": 0.2005606601630903,
+                  "n_team_seasons": 15,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.4350369458128079,
+                  "mean_predicted_probability": 0.40189588765814027,
+                  "n_team_seasons": 8,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.9770114942528735,
+                  "mean_predicted_probability": 0.611337055150099,
+                  "n_team_seasons": 3,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.7928571428571429,
+                  "mean_predicted_probability": 0.8042867701792126,
+                  "n_team_seasons": 5,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.016315504963276984
+            }
           }
         }
       },
       "uncertainty_diagnostics": {
         "fbs": {
-          "mean_scale_coach_change": 1.3137995441498949,
-          "mean_scale_no_coach_change": 1.3139496736995546,
-          "scale_vs_next_season_disagreement_correlation": 0.04660446485722286,
-          "scale_vs_prior_disagreement_correlation": 0.04663019835238659
+          "mean_scale_coach_change": 1.279157070175055,
+          "mean_scale_no_coach_change": 1.2787605992362672,
+          "scale_vs_next_season_disagreement_correlation": 0.08896937772192567,
+          "scale_vs_prior_disagreement_correlation": 0.07639201708244649
         },
         "fcs": {
           "mean_scale_coach_change": null,
-          "mean_scale_no_coach_change": 1.1709539330918162,
-          "scale_vs_next_season_disagreement_correlation": 0.15135572427162508,
-          "scale_vs_prior_disagreement_correlation": 0.1822375817479212
+          "mean_scale_no_coach_change": 1.181359129812403,
+          "scale_vs_next_season_disagreement_correlation": 0.16297838201599918,
+          "scale_vs_prior_disagreement_correlation": 0.20184576055961548
         }
       }
     },
@@ -949,18 +3233,18 @@
             "returning_pct_passing_ppa"
           ],
           "location_coefficients": [
-            0.5433787803785767,
-            -0.02118247627981297,
-            0.038347477425796306,
-            0.07972034711689502,
-            0.10649577311787227,
-            -0.11724517432139506,
-            0.10065020212796609,
-            -0.11018591540200158,
-            -0.22563930049486836,
-            -0.017800826573433355,
-            -0.003864246582674802,
-            -0.005897889528196864,
+            0.47200321298821085,
+            -0.004098972332974618,
+            0.06061006361163444,
+            0.11227821463238005,
+            -0.005264544095847782,
+            -0.25928827677010335,
+            0.1562342383692428,
+            -0.19058584215316315,
+            -0.33410882765272465,
+            -0.03135995198731162,
+            -0.1346411850790605,
+            -0.288660212701087,
             0.0,
             0.0,
             0.0,
@@ -969,17 +3253,17 @@
             0.0
           ],
           "log_scale_coefficients": [
-            0.11067244604392693,
-            -0.014491969512318657,
-            -0.03385333870726737,
-            0.05627295804952215,
-            0.011024992906342346,
-            0.02193162820296601,
-            -0.03557135374666344,
-            -0.05067169684074233,
-            0.04055940438723347,
-            -0.0011675352788276193,
-            0.005963962206789884,
+            0.10900537736809265,
+            -0.009395101981365719,
+            -0.027126754789072487,
+            0.2118382095052917,
+            0.19978362302023123,
+            0.020084988657064543,
+            -0.06371917717864138,
+            -0.031111634140339305,
+            0.042735870420074575,
+            -0.4856795850027665,
+            0.049608088653062606,
             0.0,
             0.0,
             0.0,
@@ -988,6 +3272,14 @@
             0.0
           ],
           "minimum_scale": 0.1,
+          "optimizer": {
+            "function_evaluations": 98,
+            "iterations": 88,
+            "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+            "objective": 1.6387330063237036,
+            "status": 0,
+            "success": true
+          },
           "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
           "penalty": 0.25,
           "preprocessing": {
@@ -1032,6 +3324,7 @@
               "talent_composite": 188.6967881649052
             }
           },
+          "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
           "quadrature_points": 12
         }
       },
@@ -1042,28 +3335,7 @@
             2017
           ],
           "development_validation_metrics": {
-            "crps": 0.11288557830679759,
-            "expected_rank_mae": 19.66812197963149,
-            "interval_80_average_width": 71.10136452241716,
-            "interval_80_coverage": 0.8212766348104694,
-            "median_rank_mae": 20.196881091617932,
-            "n_team_seasons": 513,
-            "nll": 4.499380727355819,
-            "top10": {
-              "calibration_gap": 0.008378546531356557,
-              "empirical_frequency": 0.07813655016662535,
-              "mean_predicted_probability": 0.08651509669798191
-            },
-            "top25": {
-              "calibration_gap": 0.027148330038543278,
-              "empirical_frequency": 0.19500794109816666,
-              "mean_predicted_probability": 0.22215627113670994
-            },
-            "top5": {
-              "calibration_gap": -0.00015336286601509708,
-              "empirical_frequency": 0.03898635477582846,
-              "mean_predicted_probability": 0.03883299190981336
-            }
+            "status": "not used for FBS model selection"
           },
           "development_validation_seasons": [
             2018,
@@ -1080,27 +3352,150 @@
       },
       "test": {
         "fbs": {
-          "crps": 0.11127715740827399,
-          "expected_rank_mae": 20.346864942153967,
-          "interval_80_average_width": 74.20152091254752,
-          "interval_80_coverage": 0.8353375119537702,
-          "median_rank_mae": 20.53041825095057,
+          "crps": 0.11139396108020297,
+          "expected_rank_mae": 20.153119676135674,
+          "interval_80_average_width": 72.8022813688213,
+          "interval_80_coverage": 0.8343969878921624,
+          "median_rank_mae": 20.454372623574145,
           "n_team_seasons": 526,
-          "nll": 4.527529934320025,
+          "nll": 4.542543701964035,
           "top10": {
-            "calibration_gap": 0.00018780685374641948,
+            "calibration_gap": 0.0007085222243234796,
             "empirical_frequency": 0.0760914379953273,
-            "mean_predicted_probability": 0.07627924484907372
+            "mean_predicted_probability": 0.07679996021965078,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.014745544506231088,
+                  "mean_predicted_probability": 0.011962915401267463,
+                  "n_team_seasons": 363,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.07470263982889828,
+                  "mean_predicted_probability": 0.08994274534521653,
+                  "n_team_seasons": 91,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.11648208675909402,
+                  "mean_predicted_probability": 0.21897622668805708,
+                  "n_team_seasons": 31,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.46244813324414635,
+                  "mean_predicted_probability": 0.3937890475486301,
+                  "n_team_seasons": 23,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.6048289634591005,
+                  "mean_predicted_probability": 0.5826011381203642,
+                  "n_team_seasons": 11,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.996164736164736,
+                  "mean_predicted_probability": 0.8022039025984655,
+                  "n_team_seasons": 7,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.029719948949310727
+            }
           },
           "top25": {
-            "calibration_gap": 0.00784736875362299,
+            "calibration_gap": 0.0044829293029535755,
             "empirical_frequency": 0.18963028902690043,
-            "mean_predicted_probability": 0.19747765778052342
+            "mean_predicted_probability": 0.194113218329854,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.02990462230281602,
+                  "mean_predicted_probability": 0.01843721637150416,
+                  "n_team_seasons": 183,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.08407932122032359,
+                  "mean_predicted_probability": 0.09270691233623604,
+                  "n_team_seasons": 135,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.21717439517247158,
+                  "mean_predicted_probability": 0.2204197239927146,
+                  "n_team_seasons": 87,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.3274884126015794,
+                  "mean_predicted_probability": 0.3849945331632523,
+                  "n_team_seasons": 59,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.49664892074778194,
+                  "mean_predicted_probability": 0.585074704915206,
+                  "n_team_seasons": 28,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.9058858611045442,
+                  "mean_predicted_probability": 0.8217889381912433,
+                  "n_team_seasons": 34,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.07271997974277578
+            }
           },
           "top5": {
-            "calibration_gap": -0.004332066212379783,
+            "calibration_gap": -0.002625361113901506,
             "empirical_frequency": 0.038097101178323406,
-            "mean_predicted_probability": 0.03376503496594362
+            "mean_predicted_probability": 0.0354717400644219,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.008267108101184617,
+                  "mean_predicted_probability": 0.0072047807272979,
+                  "n_team_seasons": 454,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.03652329916977549,
+                  "mean_predicted_probability": 0.09128617866699655,
+                  "n_team_seasons": 36,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.2885831976554868,
+                  "mean_predicted_probability": 0.2180359755514505,
+                  "n_team_seasons": 20,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.43938504935039013,
+                  "mean_predicted_probability": 0.37482136467007754,
+                  "n_team_seasons": 9,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.7074733290808551,
+                  "mean_predicted_probability": 0.6014425802834271,
+                  "n_team_seasons": 6,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.7580951169205261,
+                  "n_team_seasons": 1,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.01568643177205539
+            }
           }
         },
         "fcs": {
@@ -1109,10 +3504,10 @@
       },
       "uncertainty_diagnostics": {
         "fbs": {
-          "mean_scale_coach_change": 1.326299427335769,
-          "mean_scale_no_coach_change": 1.217071238683101,
-          "scale_vs_next_season_disagreement_correlation": 0.06519376448938063,
-          "scale_vs_prior_disagreement_correlation": 0.062191640489356846
+          "mean_scale_coach_change": 1.291615126344201,
+          "mean_scale_no_coach_change": 1.2158973048669799,
+          "scale_vs_next_season_disagreement_correlation": 0.007091789071354845,
+          "scale_vs_prior_disagreement_correlation": 0.06803224582512395
         }
       }
     }
@@ -1120,6 +3515,1129 @@
   "production_candidate": "A2_t1_t2_t3",
   "safety": {
     "2026": "Not generated; current-season endpoints are not preserved preseason snapshots and no 2026 outcomes were read."
+  },
+  "same_population_exploratory_comparison": {
+    "metrics": {
+      "A2_t1_t2": {
+        "crps": 0.11942267879380301,
+        "expected_rank_mae": 22.157009320458076,
+        "interval_80_average_width": 78.67110266159696,
+        "interval_80_coverage": 0.8322891843288426,
+        "median_rank_mae": 22.606463878326995,
+        "n_team_seasons": 526,
+        "nll": 4.584131023179259,
+        "top10": {
+          "calibration_gap": 0.008566845780995147,
+          "empirical_frequency": 0.0760914379953273,
+          "mean_predicted_probability": 0.08465828377632245,
+          "reliability": {
+            "bins": [
+              {
+                "empirical_frequency": 0.015885657256509495,
+                "mean_predicted_probability": 0.014243223013927301,
+                "n_team_seasons": 317,
+                "range": "[0.00, 0.05)"
+              },
+              {
+                "empirical_frequency": 0.047664292262384146,
+                "mean_predicted_probability": 0.08953148826000559,
+                "n_team_seasons": 124,
+                "range": "[0.05, 0.15)"
+              },
+              {
+                "empirical_frequency": 0.1947193699656388,
+                "mean_predicted_probability": 0.20850758351786342,
+                "n_team_seasons": 49,
+                "range": "[0.15, 0.30)"
+              },
+              {
+                "empirical_frequency": 0.37220402880447534,
+                "mean_predicted_probability": 0.39143486399225386,
+                "n_team_seasons": 19,
+                "range": "[0.30, 0.50)"
+              },
+              {
+                "empirical_frequency": 0.6689253138568207,
+                "mean_predicted_probability": 0.5727957833221231,
+                "n_team_seasons": 11,
+                "range": "[0.50, 0.70)"
+              },
+              {
+                "empirical_frequency": 0.851111111111111,
+                "mean_predicted_probability": 0.8263939003197461,
+                "n_team_seasons": 6,
+                "range": "[0.70, 1.00]"
+              }
+            ],
+            "brier_score": 0.03450198102850205
+          }
+        },
+        "top25": {
+          "calibration_gap": 0.0199069444797893,
+          "empirical_frequency": 0.18963028902690043,
+          "mean_predicted_probability": 0.20953723350668974,
+          "reliability": {
+            "bins": [
+              {
+                "empirical_frequency": 0.01708297074341193,
+                "mean_predicted_probability": 0.018582620503517066,
+                "n_team_seasons": 137,
+                "range": "[0.00, 0.05)"
+              },
+              {
+                "empirical_frequency": 0.09739193534122348,
+                "mean_predicted_probability": 0.09276694070291983,
+                "n_team_seasons": 133,
+                "range": "[0.05, 0.15)"
+              },
+              {
+                "empirical_frequency": 0.17639439897859557,
+                "mean_predicted_probability": 0.2131357697268067,
+                "n_team_seasons": 119,
+                "range": "[0.15, 0.30)"
+              },
+              {
+                "empirical_frequency": 0.29014466541220524,
+                "mean_predicted_probability": 0.3864723907822665,
+                "n_team_seasons": 83,
+                "range": "[0.30, 0.50)"
+              },
+              {
+                "empirical_frequency": 0.6430718227717733,
+                "mean_predicted_probability": 0.5923462382747632,
+                "n_team_seasons": 30,
+                "range": "[0.50, 0.70)"
+              },
+              {
+                "empirical_frequency": 0.8369559268791815,
+                "mean_predicted_probability": 0.8384171050578174,
+                "n_team_seasons": 24,
+                "range": "[0.70, 1.00]"
+              }
+            ],
+            "brier_score": 0.08252338665301323
+          }
+        },
+        "top5": {
+          "calibration_gap": 0.0014876932214326344,
+          "empirical_frequency": 0.038097101178323406,
+          "mean_predicted_probability": 0.03958479439975604,
+          "reliability": {
+            "bins": [
+              {
+                "empirical_frequency": 0.004658728844925688,
+                "mean_predicted_probability": 0.009853938410799493,
+                "n_team_seasons": 432,
+                "range": "[0.00, 0.05)"
+              },
+              {
+                "empirical_frequency": 0.0819119256242544,
+                "mean_predicted_probability": 0.08348196799087283,
+                "n_team_seasons": 60,
+                "range": "[0.05, 0.15)"
+              },
+              {
+                "empirical_frequency": 0.26729038956347617,
+                "mean_predicted_probability": 0.2226532770677997,
+                "n_team_seasons": 19,
+                "range": "[0.15, 0.30)"
+              },
+              {
+                "empirical_frequency": 0.4697827816263202,
+                "mean_predicted_probability": 0.37632546649990833,
+                "n_team_seasons": 9,
+                "range": "[0.30, 0.50)"
+              },
+              {
+                "empirical_frequency": 0.6979732629146724,
+                "mean_predicted_probability": 0.6123216186948732,
+                "n_team_seasons": 4,
+                "range": "[0.50, 0.70)"
+              },
+              {
+                "empirical_frequency": 0.5066666666666667,
+                "mean_predicted_probability": 0.7445772218935305,
+                "n_team_seasons": 2,
+                "range": "[0.70, 1.00]"
+              }
+            ],
+            "brier_score": 0.017071039080789965
+          }
+        }
+      },
+      "A2_t1_t2_t3": {
+        "crps": 0.11747058211287251,
+        "expected_rank_mae": 21.75753967181519,
+        "interval_80_average_width": 77.76996197718631,
+        "interval_80_coverage": 0.8316601489570463,
+        "median_rank_mae": 22.09315589353612,
+        "n_team_seasons": 526,
+        "nll": 4.569461076898814,
+        "top10": {
+          "calibration_gap": 0.00893276881739749,
+          "empirical_frequency": 0.0760914379953273,
+          "mean_predicted_probability": 0.0850242068127248,
+          "reliability": {
+            "bins": [
+              {
+                "empirical_frequency": 0.013968300005810584,
+                "mean_predicted_probability": 0.014977085182374221,
+                "n_team_seasons": 329,
+                "range": "[0.00, 0.05)"
+              },
+              {
+                "empirical_frequency": 0.05862120526899325,
+                "mean_predicted_probability": 0.09180403465174997,
+                "n_team_seasons": 114,
+                "range": "[0.05, 0.15)"
+              },
+              {
+                "empirical_frequency": 0.16790340629455996,
+                "mean_predicted_probability": 0.2081807681910216,
+                "n_team_seasons": 45,
+                "range": "[0.15, 0.30)"
+              },
+              {
+                "empirical_frequency": 0.3678845322581913,
+                "mean_predicted_probability": 0.39164753947027764,
+                "n_team_seasons": 21,
+                "range": "[0.30, 0.50)"
+              },
+              {
+                "empirical_frequency": 0.7371326669134889,
+                "mean_predicted_probability": 0.5948449111009831,
+                "n_team_seasons": 10,
+                "range": "[0.50, 0.70)"
+              },
+              {
+                "empirical_frequency": 0.8704504504504503,
+                "mean_predicted_probability": 0.8269185428158558,
+                "n_team_seasons": 7,
+                "range": "[0.70, 1.00]"
+              }
+            ],
+            "brier_score": 0.03347122058242987
+          }
+        },
+        "top25": {
+          "calibration_gap": 0.019872547762094572,
+          "empirical_frequency": 0.18963028902690043,
+          "mean_predicted_probability": 0.209502836788995,
+          "reliability": {
+            "bins": [
+              {
+                "empirical_frequency": 0.018477146755740585,
+                "mean_predicted_probability": 0.018697178542294465,
+                "n_team_seasons": 143,
+                "range": "[0.00, 0.05)"
+              },
+              {
+                "empirical_frequency": 0.09148457895194585,
+                "mean_predicted_probability": 0.09796192284498763,
+                "n_team_seasons": 134,
+                "range": "[0.05, 0.15)"
+              },
+              {
+                "empirical_frequency": 0.1528802267971165,
+                "mean_predicted_probability": 0.2136515208136525,
+                "n_team_seasons": 115,
+                "range": "[0.15, 0.30)"
+              },
+              {
+                "empirical_frequency": 0.3412464349384633,
+                "mean_predicted_probability": 0.3852893968035219,
+                "n_team_seasons": 77,
+                "range": "[0.30, 0.50)"
+              },
+              {
+                "empirical_frequency": 0.635440633441794,
+                "mean_predicted_probability": 0.5930982744596214,
+                "n_team_seasons": 31,
+                "range": "[0.50, 0.70)"
+              },
+              {
+                "empirical_frequency": 0.8187886636112416,
+                "mean_predicted_probability": 0.8374862693286709,
+                "n_team_seasons": 26,
+                "range": "[0.70, 1.00]"
+              }
+            ],
+            "brier_score": 0.07942041541375176
+          }
+        },
+        "top5": {
+          "calibration_gap": 0.002016564535394144,
+          "empirical_frequency": 0.038097101178323406,
+          "mean_predicted_probability": 0.04011366571371755,
+          "reliability": {
+            "bins": [
+              {
+                "empirical_frequency": 0.00495930801226647,
+                "mean_predicted_probability": 0.009377330313944813,
+                "n_team_seasons": 433,
+                "range": "[0.00, 0.05)"
+              },
+              {
+                "empirical_frequency": 0.06749832194913892,
+                "mean_predicted_probability": 0.08073212286681405,
+                "n_team_seasons": 56,
+                "range": "[0.05, 0.15)"
+              },
+              {
+                "empirical_frequency": 0.24502176049626123,
+                "mean_predicted_probability": 0.2078677892773449,
+                "n_team_seasons": 20,
+                "range": "[0.15, 0.30)"
+              },
+              {
+                "empirical_frequency": 0.4784505604796082,
+                "mean_predicted_probability": 0.37728403118315257,
+                "n_team_seasons": 10,
+                "range": "[0.30, 0.50)"
+              },
+              {
+                "empirical_frequency": 0.634200586128297,
+                "mean_predicted_probability": 0.5954277601534368,
+                "n_team_seasons": 4,
+                "range": "[0.50, 0.70)"
+              },
+              {
+                "empirical_frequency": 0.6300152207001523,
+                "mean_predicted_probability": 0.7354993736478576,
+                "n_team_seasons": 3,
+                "range": "[0.70, 1.00]"
+              }
+            ],
+            "brier_score": 0.017404495673193715
+          }
+        }
+      },
+      "A_t1": {
+        "crps": 0.12035185996259756,
+        "expected_rank_mae": 22.403062424031557,
+        "interval_80_average_width": 79.16349809885932,
+        "interval_80_coverage": 0.8309018670905555,
+        "median_rank_mae": 22.840304182509506,
+        "n_team_seasons": 526,
+        "nll": 4.590816039957136,
+        "top10": {
+          "calibration_gap": 0.008292555314946007,
+          "empirical_frequency": 0.0760914379953273,
+          "mean_predicted_probability": 0.08438399331027331,
+          "reliability": {
+            "bins": [
+              {
+                "empirical_frequency": 0.015959191058824537,
+                "mean_predicted_probability": 0.014541078526736235,
+                "n_team_seasons": 318,
+                "range": "[0.00, 0.05)"
+              },
+              {
+                "empirical_frequency": 0.05074972357404442,
+                "mean_predicted_probability": 0.09012236333732092,
+                "n_team_seasons": 125,
+                "range": "[0.05, 0.15)"
+              },
+              {
+                "empirical_frequency": 0.17773482068721735,
+                "mean_predicted_probability": 0.22184580297778647,
+                "n_team_seasons": 49,
+                "range": "[0.15, 0.30)"
+              },
+              {
+                "empirical_frequency": 0.4066022025248456,
+                "mean_predicted_probability": 0.400276466477832,
+                "n_team_seasons": 17,
+                "range": "[0.30, 0.50)"
+              },
+              {
+                "empirical_frequency": 0.7587780404218759,
+                "mean_predicted_probability": 0.567358961968906,
+                "n_team_seasons": 13,
+                "range": "[0.50, 0.70)"
+              },
+              {
+                "empirical_frequency": 0.78,
+                "mean_predicted_probability": 0.8614528277265147,
+                "n_team_seasons": 4,
+                "range": "[0.70, 1.00]"
+              }
+            ],
+            "brier_score": 0.035050297383802456
+          }
+        },
+        "top25": {
+          "calibration_gap": 0.019860531212475385,
+          "empirical_frequency": 0.18963028902690043,
+          "mean_predicted_probability": 0.20949082023937582,
+          "reliability": {
+            "bins": [
+              {
+                "empirical_frequency": 0.013171824821597086,
+                "mean_predicted_probability": 0.019701332141408758,
+                "n_team_seasons": 134,
+                "range": "[0.00, 0.05)"
+              },
+              {
+                "empirical_frequency": 0.1035535592704962,
+                "mean_predicted_probability": 0.09240672564657822,
+                "n_team_seasons": 139,
+                "range": "[0.05, 0.15)"
+              },
+              {
+                "empirical_frequency": 0.1791406762431684,
+                "mean_predicted_probability": 0.21409383998518697,
+                "n_team_seasons": 120,
+                "range": "[0.15, 0.30)"
+              },
+              {
+                "empirical_frequency": 0.26882599663558726,
+                "mean_predicted_probability": 0.3826939970428946,
+                "n_team_seasons": 71,
+                "range": "[0.30, 0.50)"
+              },
+              {
+                "empirical_frequency": 0.6351787643395169,
+                "mean_predicted_probability": 0.5715783907673861,
+                "n_team_seasons": 36,
+                "range": "[0.50, 0.70)"
+              },
+              {
+                "empirical_frequency": 0.774484628343351,
+                "mean_predicted_probability": 0.8180115930074882,
+                "n_team_seasons": 26,
+                "range": "[0.70, 1.00]"
+              }
+            ],
+            "brier_score": 0.08411073457568657
+          }
+        },
+        "top5": {
+          "calibration_gap": 0.0009943145548649487,
+          "empirical_frequency": 0.038097101178323406,
+          "mean_predicted_probability": 0.039091415733188355,
+          "reliability": {
+            "bins": [
+              {
+                "empirical_frequency": 0.00448049214855526,
+                "mean_predicted_probability": 0.00946525318416901,
+                "n_team_seasons": 428,
+                "range": "[0.00, 0.05)"
+              },
+              {
+                "empirical_frequency": 0.06205741760651811,
+                "mean_predicted_probability": 0.08585402595752782,
+                "n_team_seasons": 65,
+                "range": "[0.05, 0.15)"
+              },
+              {
+                "empirical_frequency": 0.26665432555843516,
+                "mean_predicted_probability": 0.21727140639970394,
+                "n_team_seasons": 16,
+                "range": "[0.15, 0.30)"
+              },
+              {
+                "empirical_frequency": 0.5331675049813357,
+                "mean_predicted_probability": 0.3573666478904008,
+                "n_team_seasons": 13,
+                "range": "[0.30, 0.50)"
+              },
+              {
+                "empirical_frequency": 0.9383561643835616,
+                "mean_predicted_probability": 0.6934219333989907,
+                "n_team_seasons": 2,
+                "range": "[0.50, 0.70)"
+              },
+              {
+                "empirical_frequency": 0.5066666666666667,
+                "mean_predicted_probability": 0.7107459169124888,
+                "n_team_seasons": 2,
+                "range": "[0.70, 1.00]"
+              }
+            ],
+            "brier_score": 0.01689692318813818
+          }
+        }
+      },
+      "C_exploratory_modern": {
+        "crps": 0.11139396108020297,
+        "expected_rank_mae": 20.153119676135674,
+        "interval_80_average_width": 72.8022813688213,
+        "interval_80_coverage": 0.8343969878921624,
+        "median_rank_mae": 20.454372623574145,
+        "n_team_seasons": 526,
+        "nll": 4.542543701964035,
+        "top10": {
+          "calibration_gap": 0.0007085222243234796,
+          "empirical_frequency": 0.0760914379953273,
+          "mean_predicted_probability": 0.07679996021965078,
+          "reliability": {
+            "bins": [
+              {
+                "empirical_frequency": 0.014745544506231088,
+                "mean_predicted_probability": 0.011962915401267463,
+                "n_team_seasons": 363,
+                "range": "[0.00, 0.05)"
+              },
+              {
+                "empirical_frequency": 0.07470263982889828,
+                "mean_predicted_probability": 0.08994274534521653,
+                "n_team_seasons": 91,
+                "range": "[0.05, 0.15)"
+              },
+              {
+                "empirical_frequency": 0.11648208675909402,
+                "mean_predicted_probability": 0.21897622668805708,
+                "n_team_seasons": 31,
+                "range": "[0.15, 0.30)"
+              },
+              {
+                "empirical_frequency": 0.46244813324414635,
+                "mean_predicted_probability": 0.3937890475486301,
+                "n_team_seasons": 23,
+                "range": "[0.30, 0.50)"
+              },
+              {
+                "empirical_frequency": 0.6048289634591005,
+                "mean_predicted_probability": 0.5826011381203642,
+                "n_team_seasons": 11,
+                "range": "[0.50, 0.70)"
+              },
+              {
+                "empirical_frequency": 0.996164736164736,
+                "mean_predicted_probability": 0.8022039025984655,
+                "n_team_seasons": 7,
+                "range": "[0.70, 1.00]"
+              }
+            ],
+            "brier_score": 0.029719948949310727
+          }
+        },
+        "top25": {
+          "calibration_gap": 0.0044829293029535755,
+          "empirical_frequency": 0.18963028902690043,
+          "mean_predicted_probability": 0.194113218329854,
+          "reliability": {
+            "bins": [
+              {
+                "empirical_frequency": 0.02990462230281602,
+                "mean_predicted_probability": 0.01843721637150416,
+                "n_team_seasons": 183,
+                "range": "[0.00, 0.05)"
+              },
+              {
+                "empirical_frequency": 0.08407932122032359,
+                "mean_predicted_probability": 0.09270691233623604,
+                "n_team_seasons": 135,
+                "range": "[0.05, 0.15)"
+              },
+              {
+                "empirical_frequency": 0.21717439517247158,
+                "mean_predicted_probability": 0.2204197239927146,
+                "n_team_seasons": 87,
+                "range": "[0.15, 0.30)"
+              },
+              {
+                "empirical_frequency": 0.3274884126015794,
+                "mean_predicted_probability": 0.3849945331632523,
+                "n_team_seasons": 59,
+                "range": "[0.30, 0.50)"
+              },
+              {
+                "empirical_frequency": 0.49664892074778194,
+                "mean_predicted_probability": 0.585074704915206,
+                "n_team_seasons": 28,
+                "range": "[0.50, 0.70)"
+              },
+              {
+                "empirical_frequency": 0.9058858611045442,
+                "mean_predicted_probability": 0.8217889381912433,
+                "n_team_seasons": 34,
+                "range": "[0.70, 1.00]"
+              }
+            ],
+            "brier_score": 0.07271997974277578
+          }
+        },
+        "top5": {
+          "calibration_gap": -0.002625361113901506,
+          "empirical_frequency": 0.038097101178323406,
+          "mean_predicted_probability": 0.0354717400644219,
+          "reliability": {
+            "bins": [
+              {
+                "empirical_frequency": 0.008267108101184617,
+                "mean_predicted_probability": 0.0072047807272979,
+                "n_team_seasons": 454,
+                "range": "[0.00, 0.05)"
+              },
+              {
+                "empirical_frequency": 0.03652329916977549,
+                "mean_predicted_probability": 0.09128617866699655,
+                "n_team_seasons": 36,
+                "range": "[0.05, 0.15)"
+              },
+              {
+                "empirical_frequency": 0.2885831976554868,
+                "mean_predicted_probability": 0.2180359755514505,
+                "n_team_seasons": 20,
+                "range": "[0.15, 0.30)"
+              },
+              {
+                "empirical_frequency": 0.43938504935039013,
+                "mean_predicted_probability": 0.37482136467007754,
+                "n_team_seasons": 9,
+                "range": "[0.30, 0.50)"
+              },
+              {
+                "empirical_frequency": 0.7074733290808551,
+                "mean_predicted_probability": 0.6014425802834271,
+                "n_team_seasons": 6,
+                "range": "[0.50, 0.70)"
+              },
+              {
+                "empirical_frequency": 1.0,
+                "mean_predicted_probability": 0.7580951169205261,
+                "n_team_seasons": 1,
+                "range": "[0.70, 1.00]"
+              }
+            ],
+            "brier_score": 0.01568643177205539
+          }
+        }
+      }
+    },
+    "population": {
+      "keys": [
+        "2022:fbs:103",
+        "2022:fbs:113",
+        "2022:fbs:12",
+        "2022:fbs:120",
+        "2022:fbs:127",
+        "2022:fbs:130",
+        "2022:fbs:135",
+        "2022:fbs:142",
+        "2022:fbs:145",
+        "2022:fbs:150",
+        "2022:fbs:151",
+        "2022:fbs:152",
+        "2022:fbs:153",
+        "2022:fbs:154",
+        "2022:fbs:158",
+        "2022:fbs:164",
+        "2022:fbs:166",
+        "2022:fbs:167",
+        "2022:fbs:183",
+        "2022:fbs:189",
+        "2022:fbs:193",
+        "2022:fbs:194",
+        "2022:fbs:195",
+        "2022:fbs:197",
+        "2022:fbs:2",
+        "2022:fbs:2005",
+        "2022:fbs:2006",
+        "2022:fbs:201",
+        "2022:fbs:202",
+        "2022:fbs:2026",
+        "2022:fbs:2032",
+        "2022:fbs:204",
+        "2022:fbs:2050",
+        "2022:fbs:2084",
+        "2022:fbs:21",
+        "2022:fbs:2116",
+        "2022:fbs:2117",
+        "2022:fbs:213",
+        "2022:fbs:2132",
+        "2022:fbs:218",
+        "2022:fbs:2199",
+        "2022:fbs:221",
+        "2022:fbs:2226",
+        "2022:fbs:2229",
+        "2022:fbs:2247",
+        "2022:fbs:228",
+        "2022:fbs:2294",
+        "2022:fbs:23",
+        "2022:fbs:2305",
+        "2022:fbs:2306",
+        "2022:fbs:2309",
+        "2022:fbs:2335",
+        "2022:fbs:2348",
+        "2022:fbs:235",
+        "2022:fbs:238",
+        "2022:fbs:239",
+        "2022:fbs:2390",
+        "2022:fbs:2393",
+        "2022:fbs:24",
+        "2022:fbs:242",
+        "2022:fbs:2426",
+        "2022:fbs:2429",
+        "2022:fbs:2433",
+        "2022:fbs:2439",
+        "2022:fbs:2440",
+        "2022:fbs:245",
+        "2022:fbs:2459",
+        "2022:fbs:248",
+        "2022:fbs:2483",
+        "2022:fbs:249",
+        "2022:fbs:25",
+        "2022:fbs:2509",
+        "2022:fbs:251",
+        "2022:fbs:252",
+        "2022:fbs:254",
+        "2022:fbs:2567",
+        "2022:fbs:2572",
+        "2022:fbs:2579",
+        "2022:fbs:258",
+        "2022:fbs:259",
+        "2022:fbs:26",
+        "2022:fbs:2628",
+        "2022:fbs:2633",
+        "2022:fbs:2636",
+        "2022:fbs:2638",
+        "2022:fbs:264",
+        "2022:fbs:2641",
+        "2022:fbs:2649",
+        "2022:fbs:265",
+        "2022:fbs:2653",
+        "2022:fbs:2655",
+        "2022:fbs:2711",
+        "2022:fbs:275",
+        "2022:fbs:2751",
+        "2022:fbs:276",
+        "2022:fbs:277",
+        "2022:fbs:278",
+        "2022:fbs:290",
+        "2022:fbs:295",
+        "2022:fbs:30",
+        "2022:fbs:309",
+        "2022:fbs:324",
+        "2022:fbs:326",
+        "2022:fbs:328",
+        "2022:fbs:333",
+        "2022:fbs:344",
+        "2022:fbs:349",
+        "2022:fbs:356",
+        "2022:fbs:36",
+        "2022:fbs:38",
+        "2022:fbs:41",
+        "2022:fbs:5",
+        "2022:fbs:52",
+        "2022:fbs:57",
+        "2022:fbs:58",
+        "2022:fbs:59",
+        "2022:fbs:6",
+        "2022:fbs:61",
+        "2022:fbs:62",
+        "2022:fbs:66",
+        "2022:fbs:68",
+        "2022:fbs:77",
+        "2022:fbs:8",
+        "2022:fbs:84",
+        "2022:fbs:87",
+        "2022:fbs:9",
+        "2022:fbs:96",
+        "2022:fbs:97",
+        "2022:fbs:98",
+        "2022:fbs:99",
+        "2023:fbs:103",
+        "2023:fbs:113",
+        "2023:fbs:12",
+        "2023:fbs:120",
+        "2023:fbs:127",
+        "2023:fbs:130",
+        "2023:fbs:135",
+        "2023:fbs:142",
+        "2023:fbs:145",
+        "2023:fbs:150",
+        "2023:fbs:151",
+        "2023:fbs:152",
+        "2023:fbs:153",
+        "2023:fbs:154",
+        "2023:fbs:158",
+        "2023:fbs:164",
+        "2023:fbs:166",
+        "2023:fbs:167",
+        "2023:fbs:183",
+        "2023:fbs:189",
+        "2023:fbs:193",
+        "2023:fbs:194",
+        "2023:fbs:195",
+        "2023:fbs:197",
+        "2023:fbs:2",
+        "2023:fbs:2005",
+        "2023:fbs:2006",
+        "2023:fbs:201",
+        "2023:fbs:202",
+        "2023:fbs:2026",
+        "2023:fbs:2032",
+        "2023:fbs:204",
+        "2023:fbs:2050",
+        "2023:fbs:2084",
+        "2023:fbs:21",
+        "2023:fbs:2116",
+        "2023:fbs:2117",
+        "2023:fbs:213",
+        "2023:fbs:2132",
+        "2023:fbs:218",
+        "2023:fbs:2199",
+        "2023:fbs:221",
+        "2023:fbs:2226",
+        "2023:fbs:2229",
+        "2023:fbs:2247",
+        "2023:fbs:228",
+        "2023:fbs:2294",
+        "2023:fbs:23",
+        "2023:fbs:2305",
+        "2023:fbs:2306",
+        "2023:fbs:2309",
+        "2023:fbs:2335",
+        "2023:fbs:2348",
+        "2023:fbs:235",
+        "2023:fbs:238",
+        "2023:fbs:239",
+        "2023:fbs:2390",
+        "2023:fbs:2393",
+        "2023:fbs:24",
+        "2023:fbs:242",
+        "2023:fbs:2426",
+        "2023:fbs:2429",
+        "2023:fbs:2433",
+        "2023:fbs:2439",
+        "2023:fbs:2440",
+        "2023:fbs:245",
+        "2023:fbs:2459",
+        "2023:fbs:248",
+        "2023:fbs:2483",
+        "2023:fbs:249",
+        "2023:fbs:25",
+        "2023:fbs:2509",
+        "2023:fbs:251",
+        "2023:fbs:252",
+        "2023:fbs:254",
+        "2023:fbs:256",
+        "2023:fbs:2567",
+        "2023:fbs:2572",
+        "2023:fbs:2579",
+        "2023:fbs:258",
+        "2023:fbs:259",
+        "2023:fbs:26",
+        "2023:fbs:2628",
+        "2023:fbs:2633",
+        "2023:fbs:2636",
+        "2023:fbs:2638",
+        "2023:fbs:264",
+        "2023:fbs:2641",
+        "2023:fbs:2649",
+        "2023:fbs:265",
+        "2023:fbs:2653",
+        "2023:fbs:2655",
+        "2023:fbs:2711",
+        "2023:fbs:275",
+        "2023:fbs:2751",
+        "2023:fbs:276",
+        "2023:fbs:277",
+        "2023:fbs:278",
+        "2023:fbs:290",
+        "2023:fbs:295",
+        "2023:fbs:30",
+        "2023:fbs:309",
+        "2023:fbs:324",
+        "2023:fbs:326",
+        "2023:fbs:328",
+        "2023:fbs:333",
+        "2023:fbs:344",
+        "2023:fbs:349",
+        "2023:fbs:356",
+        "2023:fbs:36",
+        "2023:fbs:38",
+        "2023:fbs:41",
+        "2023:fbs:5",
+        "2023:fbs:52",
+        "2023:fbs:57",
+        "2023:fbs:58",
+        "2023:fbs:59",
+        "2023:fbs:6",
+        "2023:fbs:61",
+        "2023:fbs:62",
+        "2023:fbs:66",
+        "2023:fbs:68",
+        "2023:fbs:77",
+        "2023:fbs:8",
+        "2023:fbs:84",
+        "2023:fbs:87",
+        "2023:fbs:9",
+        "2023:fbs:96",
+        "2023:fbs:97",
+        "2023:fbs:98",
+        "2023:fbs:99",
+        "2024:fbs:103",
+        "2024:fbs:113",
+        "2024:fbs:12",
+        "2024:fbs:120",
+        "2024:fbs:127",
+        "2024:fbs:130",
+        "2024:fbs:135",
+        "2024:fbs:142",
+        "2024:fbs:145",
+        "2024:fbs:150",
+        "2024:fbs:151",
+        "2024:fbs:152",
+        "2024:fbs:153",
+        "2024:fbs:154",
+        "2024:fbs:158",
+        "2024:fbs:164",
+        "2024:fbs:166",
+        "2024:fbs:167",
+        "2024:fbs:183",
+        "2024:fbs:189",
+        "2024:fbs:193",
+        "2024:fbs:194",
+        "2024:fbs:195",
+        "2024:fbs:197",
+        "2024:fbs:2",
+        "2024:fbs:2005",
+        "2024:fbs:2006",
+        "2024:fbs:201",
+        "2024:fbs:202",
+        "2024:fbs:2026",
+        "2024:fbs:2032",
+        "2024:fbs:204",
+        "2024:fbs:2050",
+        "2024:fbs:2084",
+        "2024:fbs:21",
+        "2024:fbs:2116",
+        "2024:fbs:2117",
+        "2024:fbs:213",
+        "2024:fbs:2132",
+        "2024:fbs:218",
+        "2024:fbs:2199",
+        "2024:fbs:221",
+        "2024:fbs:2226",
+        "2024:fbs:2229",
+        "2024:fbs:2247",
+        "2024:fbs:228",
+        "2024:fbs:2294",
+        "2024:fbs:23",
+        "2024:fbs:2305",
+        "2024:fbs:2306",
+        "2024:fbs:2309",
+        "2024:fbs:2335",
+        "2024:fbs:2348",
+        "2024:fbs:235",
+        "2024:fbs:238",
+        "2024:fbs:239",
+        "2024:fbs:2390",
+        "2024:fbs:2393",
+        "2024:fbs:24",
+        "2024:fbs:242",
+        "2024:fbs:2426",
+        "2024:fbs:2429",
+        "2024:fbs:2433",
+        "2024:fbs:2439",
+        "2024:fbs:2440",
+        "2024:fbs:245",
+        "2024:fbs:2459",
+        "2024:fbs:248",
+        "2024:fbs:2483",
+        "2024:fbs:249",
+        "2024:fbs:25",
+        "2024:fbs:2509",
+        "2024:fbs:251",
+        "2024:fbs:252",
+        "2024:fbs:2534",
+        "2024:fbs:254",
+        "2024:fbs:256",
+        "2024:fbs:2567",
+        "2024:fbs:2572",
+        "2024:fbs:2579",
+        "2024:fbs:258",
+        "2024:fbs:259",
+        "2024:fbs:26",
+        "2024:fbs:2628",
+        "2024:fbs:2633",
+        "2024:fbs:2636",
+        "2024:fbs:2638",
+        "2024:fbs:264",
+        "2024:fbs:2641",
+        "2024:fbs:2649",
+        "2024:fbs:265",
+        "2024:fbs:2653",
+        "2024:fbs:2655",
+        "2024:fbs:2711",
+        "2024:fbs:275",
+        "2024:fbs:2751",
+        "2024:fbs:276",
+        "2024:fbs:277",
+        "2024:fbs:278",
+        "2024:fbs:290",
+        "2024:fbs:295",
+        "2024:fbs:30",
+        "2024:fbs:309",
+        "2024:fbs:324",
+        "2024:fbs:326",
+        "2024:fbs:328",
+        "2024:fbs:333",
+        "2024:fbs:344",
+        "2024:fbs:349",
+        "2024:fbs:356",
+        "2024:fbs:36",
+        "2024:fbs:38",
+        "2024:fbs:41",
+        "2024:fbs:5",
+        "2024:fbs:52",
+        "2024:fbs:55",
+        "2024:fbs:57",
+        "2024:fbs:58",
+        "2024:fbs:59",
+        "2024:fbs:6",
+        "2024:fbs:61",
+        "2024:fbs:62",
+        "2024:fbs:66",
+        "2024:fbs:68",
+        "2024:fbs:77",
+        "2024:fbs:8",
+        "2024:fbs:84",
+        "2024:fbs:87",
+        "2024:fbs:9",
+        "2024:fbs:96",
+        "2024:fbs:97",
+        "2024:fbs:98",
+        "2024:fbs:99",
+        "2025:fbs:103",
+        "2025:fbs:113",
+        "2025:fbs:12",
+        "2025:fbs:120",
+        "2025:fbs:127",
+        "2025:fbs:130",
+        "2025:fbs:135",
+        "2025:fbs:142",
+        "2025:fbs:145",
+        "2025:fbs:150",
+        "2025:fbs:151",
+        "2025:fbs:152",
+        "2025:fbs:153",
+        "2025:fbs:154",
+        "2025:fbs:158",
+        "2025:fbs:164",
+        "2025:fbs:166",
+        "2025:fbs:167",
+        "2025:fbs:183",
+        "2025:fbs:189",
+        "2025:fbs:193",
+        "2025:fbs:194",
+        "2025:fbs:195",
+        "2025:fbs:197",
+        "2025:fbs:2",
+        "2025:fbs:2006",
+        "2025:fbs:201",
+        "2025:fbs:202",
+        "2025:fbs:2026",
+        "2025:fbs:2032",
+        "2025:fbs:204",
+        "2025:fbs:2050",
+        "2025:fbs:2084",
+        "2025:fbs:21",
+        "2025:fbs:2116",
+        "2025:fbs:2117",
+        "2025:fbs:213",
+        "2025:fbs:2132",
+        "2025:fbs:218",
+        "2025:fbs:2199",
+        "2025:fbs:221",
+        "2025:fbs:2226",
+        "2025:fbs:2229",
+        "2025:fbs:2247",
+        "2025:fbs:228",
+        "2025:fbs:2294",
+        "2025:fbs:23",
+        "2025:fbs:2305",
+        "2025:fbs:2306",
+        "2025:fbs:2309",
+        "2025:fbs:2335",
+        "2025:fbs:2348",
+        "2025:fbs:235",
+        "2025:fbs:238",
+        "2025:fbs:239",
+        "2025:fbs:2390",
+        "2025:fbs:2393",
+        "2025:fbs:24",
+        "2025:fbs:242",
+        "2025:fbs:2429",
+        "2025:fbs:2433",
+        "2025:fbs:2439",
+        "2025:fbs:2440",
+        "2025:fbs:245",
+        "2025:fbs:2459",
+        "2025:fbs:248",
+        "2025:fbs:2483",
+        "2025:fbs:249",
+        "2025:fbs:25",
+        "2025:fbs:2509",
+        "2025:fbs:251",
+        "2025:fbs:252",
+        "2025:fbs:2534",
+        "2025:fbs:254",
+        "2025:fbs:256",
+        "2025:fbs:2567",
+        "2025:fbs:2572",
+        "2025:fbs:2579",
+        "2025:fbs:258",
+        "2025:fbs:259",
+        "2025:fbs:26",
+        "2025:fbs:2628",
+        "2025:fbs:2633",
+        "2025:fbs:2636",
+        "2025:fbs:2638",
+        "2025:fbs:264",
+        "2025:fbs:2641",
+        "2025:fbs:2649",
+        "2025:fbs:265",
+        "2025:fbs:2653",
+        "2025:fbs:2655",
+        "2025:fbs:2711",
+        "2025:fbs:275",
+        "2025:fbs:2751",
+        "2025:fbs:276",
+        "2025:fbs:277",
+        "2025:fbs:278",
+        "2025:fbs:290",
+        "2025:fbs:295",
+        "2025:fbs:30",
+        "2025:fbs:309",
+        "2025:fbs:324",
+        "2025:fbs:326",
+        "2025:fbs:328",
+        "2025:fbs:333",
+        "2025:fbs:338",
+        "2025:fbs:344",
+        "2025:fbs:349",
+        "2025:fbs:356",
+        "2025:fbs:36",
+        "2025:fbs:38",
+        "2025:fbs:41",
+        "2025:fbs:5",
+        "2025:fbs:52",
+        "2025:fbs:55",
+        "2025:fbs:57",
+        "2025:fbs:58",
+        "2025:fbs:59",
+        "2025:fbs:6",
+        "2025:fbs:61",
+        "2025:fbs:62",
+        "2025:fbs:66",
+        "2025:fbs:68",
+        "2025:fbs:77",
+        "2025:fbs:8",
+        "2025:fbs:84",
+        "2025:fbs:87",
+        "2025:fbs:9",
+        "2025:fbs:96",
+        "2025:fbs:97",
+        "2025:fbs:98",
+        "2025:fbs:99"
+      ],
+      "n_team_seasons": 526
+    }
   },
   "target": {
     "excluded": [

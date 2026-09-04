@@ -16,13 +16,27 @@ Rank history is production-safe. CFBD recruiting final values, Team Talent Compo
 
 All development choices use 2004–2017 training and 2018–2021 season holdouts. 2022–2025 is untouched until final fitting and evaluation. FBS and FCS rank universes are always fit and scored separately. `preseason_model_report.json` contains team-season NLL, CRPS, rank MAE, interval coverage and width, Top-5/10/25 calibration, ablations, preprocessing, and diagnostics; `rank_prior_predictions.csv` contains the full integrated PMFs.
 
-- A_t1: FBS N=528, NLL=4.590, CRPS=0.1200, expected-rank MAE=22.4, 80% coverage=0.820.
-- A2_t1_t2: FBS N=528, NLL=4.584, CRPS=0.1191, expected-rank MAE=22.2, 80% coverage=0.817.
-- A2_t1_t2_t3: FBS N=528, NLL=4.573, CRPS=0.1178, expected-rank MAE=21.8, 80% coverage=0.839.
-- B_safe_long_history: FBS N=528, NLL=4.573, CRPS=0.1178, expected-rank MAE=21.8, 80% coverage=0.839.
-- C_exploratory_modern: FBS N=526, NLL=4.528, CRPS=0.1113, expected-rank MAE=20.3, 80% coverage=0.835.
+- A_t1: FBS N=528, NLL=4.590, CRPS=0.1202, expected-rank MAE=22.4, 80% coverage=0.832.
+- A2_t1_t2: FBS N=528, NLL=4.584, CRPS=0.1193, expected-rank MAE=22.1, 80% coverage=0.833.
+- A2_t1_t2_t3: FBS N=528, NLL=4.569, CRPS=0.1174, expected-rank MAE=21.8, 80% coverage=0.832.
+- B_safe_long_history: FBS N=528, NLL=4.569, CRPS=0.1174, expected-rank MAE=21.8, 80% coverage=0.832.
+- C_exploratory_modern: FBS N=526, NLL=4.543, CRPS=0.1114, expected-rank MAE=20.2, 80% coverage=0.834.
 
 Model A2 is the explicit lag ablation (t-1+t-2 and t-1+t-2+t-3); B has no currently qualified safe covariate beyond rank history. Model C is evaluated only on its high-coverage FBS modern subset and remains exploratory, so its score is not a production-selection comparison. The machine-readable report records all FBS/FCS breakdowns, feature coverage, Top-5/10/25 calibration gaps, and scale diagnostics.
+
+## Conditional Top-N calibration
+
+Top-N diagnostics now include coarse probability reliability bins with fractional empirical constituent outcome frequencies, in addition to aggregate gaps. Brier scores for the production FBS A2 model are:
+
+- Top 5: Brier=0.0173; full coarse reliability bins are in `preseason_model_report.json`.
+- Top 10: Brier=0.0333; full coarse reliability bins are in `preseason_model_report.json`.
+- Top 25: Brier=0.0792; full coarse reliability bins are in `preseason_model_report.json`.
+
+## Cold starts and fair exploratory comparison
+
+Every FBS target team-season now receives a prior. The learned FCS-to-FBS transition fit uses 11 pre-2022 transitions and has 6 untouched-test cold starts; programs without any prior distribution use a broad analytical FBS no-prior fallback. FCS cold starts remain explicitly reported as omitted (161 historical team-seasons).
+
+On the exact 526-team-season modern FBS subset, A2 t-1+t-2+t-3 has NLL=4.569; exploratory Model C has NLL=4.543. This is incremental signal only: C remains timing-uncertain and is not promoted.
 
 ## Discrete probabilities and 2026
 

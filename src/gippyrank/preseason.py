@@ -30,6 +30,7 @@ def deterministic_quadrature(
     constituent observations.
     """
     values = np.asarray(values, dtype=float)
+    values = np.sort(values)
     if len(values) <= points:
         return values
     return values[np.linspace(0, len(values) - 1, points, dtype=int)]
@@ -173,6 +174,7 @@ class DirectRankModel:
     gamma: np.ndarray
     minimum_scale: float = 0.10
     penalty: float = 0.25
+    optimizer: dict[str, object] | None = None
 
     @classmethod
     def fit(
@@ -181,6 +183,7 @@ class DirectRankModel:
         feature_names: list[str],
         penalty: float = 0.25,
         minimum_scale: float = 0.10,
+        optimizer_options: dict[str, float | int] | None = None,
     ) -> DirectRankModel:
         if not rows:
             raise ValueError("cannot fit without rows")
@@ -206,33 +209,75 @@ class DirectRankModel:
         lag_counts = lag_mask.sum(axis=1)
         target_counts = target_mask.sum(axis=1)
 
-        def objective(theta: np.ndarray) -> float:
+        def objective_gradient(theta: np.ndarray) -> tuple[float, np.ndarray]:
             beta, gamma = theta[: x.shape[1] + 1], theta[x.shape[1] + 1 :]
             base_locations = x @ beta[1:]
-            scales = minimum_scale + np.exp(np.clip(x @ gamma, -5, 4))
+            eta = x @ gamma
+            exp_eta = np.exp(np.clip(eta, -5, 4))
+            scales = minimum_scale + exp_eta
             locations = base_locations[:, None] + beta[0] * lags
             densities = norm.logpdf(
                 targets[:, :, None], locations[:, None, :], scales[:, None, None]
             )
             densities = np.where(lag_mask[:, None, :], densities, -np.inf)
-            target_log_probability = logsumexp(densities, axis=2) - np.log(
-                lag_counts[:, None]
-            )
+            log_mixture = logsumexp(densities, axis=2)
+            target_log_probability = log_mixture - np.log(lag_counts[:, None])
             losses = -(target_log_probability * target_mask).sum(axis=1) / target_counts
             regularizer = penalty * (np.sum(beta**2) + 0.25 * np.sum(gamma[1:] ** 2))
-            return float(np.mean(losses) + regularizer / len(rows))
+            objective = float(np.mean(losses) + regularizer / len(rows))
+            responsibilities = np.exp(densities - log_mixture[:, :, None])
+            residual = targets[:, :, None] - locations[:, None, :]
+            target_weight = (
+                target_mask[:, :, None] / target_counts[:, None, None] / len(rows)
+            )
+            location_score = responsibilities * residual / scales[:, None, None] ** 2
+            weighted_location_score = location_score * target_weight
+            beta_gradient = np.empty_like(beta)
+            beta_gradient[0] = -np.sum(weighted_location_score * lags[:, None, :])
+            base_gradient = -np.sum(weighted_location_score, axis=(1, 2))
+            beta_gradient[1:] = x.T @ base_gradient
+            scale_score = responsibilities * (
+                -1 / scales[:, None, None] + residual**2 / scales[:, None, None] ** 3
+            )
+            gamma_gradient = x.T @ (
+                -np.sum(
+                    scale_score * exp_eta[:, None, None] * target_weight, axis=(1, 2)
+                )
+            )
+            beta_gradient += 2 * penalty * beta / len(rows)
+            gamma_gradient[1:] += 0.5 * penalty * gamma[1:] / len(rows)
+            return objective, np.r_[beta_gradient, gamma_gradient]
+
+        def objective(theta: np.ndarray) -> float:
+            return objective_gradient(theta)[0]
+
+        def gradient(theta: np.ndarray) -> np.ndarray:
+            return objective_gradient(theta)[1]
 
         initial_beta = np.zeros(x.shape[1] + 1)
         initial_beta[0] = 0.55
         initial_gamma = np.zeros(x.shape[1])
         initial_gamma[0] = np.log(0.7)
+        options = {"maxiter": 500, "ftol": 1e-10, "gtol": 1e-6}
+        options.update(optimizer_options or {})
         result = minimize(
             objective,
             np.r_[initial_beta, initial_gamma],
             method="L-BFGS-B",
-            options={"maxiter": 4, "ftol": 1e-7},
+            jac=gradient,
+            bounds=[(None, None)] * len(initial_beta)
+            + [(-5.0, 4.0)] * len(initial_gamma),
+            options=options,
         )
-        if not result.success and result.status != 1:
+        diagnostics = {
+            "success": bool(result.success),
+            "status": int(result.status),
+            "message": str(result.message),
+            "iterations": int(result.nit),
+            "function_evaluations": int(result.nfev),
+            "objective": float(result.fun),
+        }
+        if not result.success:
             raise RuntimeError(f"preseason optimizer failed: {result.message}")
         return cls(
             feature_names,
@@ -241,6 +286,7 @@ class DirectRankModel:
             result.x[x.shape[1] + 1 :],
             minimum_scale,
             penalty,
+            diagnostics,
         )
 
     def _matrix(self, features: dict[str, float | None]) -> np.ndarray:
@@ -258,7 +304,9 @@ class DirectRankModel:
     def pmf(
         self, features: dict[str, float | None], lag1_z: np.ndarray, population: int
     ) -> np.ndarray:
-        locations, scale = self.conditional_parameters(features, lag1_z)
+        locations, scale = self.conditional_parameters(
+            features, deterministic_quadrature(lag1_z)
+        )
         edges = rank_bin_edges(population)
         masses = np.maximum(
             np.diff(norm.cdf((edges[None, :] - locations[:, None]) / scale), axis=1),
@@ -275,7 +323,45 @@ class DirectRankModel:
             "log_scale_coefficients": self.gamma.tolist(),
             "minimum_scale": self.minimum_scale,
             "penalty": self.penalty,
+            "optimizer": self.optimizer,
             "conditioning": "equal-weight deterministic quadrature over lag-1 constituent ranks",
             "quadrature_points": QUADRATURE_POINTS,
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
             "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+        }
+
+
+@dataclass(frozen=True)
+class GenericRankPrior:
+    """Broad analytical fallback for teams lacking any prior rank observation."""
+
+    location: float
+    scale: float
+    n_team_seasons: int
+
+    @classmethod
+    def fit(
+        cls, rows: list[TeamSeason], minimum_scale: float = 0.10
+    ) -> GenericRankPrior:
+        if not rows:
+            raise ValueError("cannot fit cold-start prior without historical rows")
+        # Equal team-season weight: every team's empirical constituent outcomes
+        # are averaged before pooling its contribution to the moments.
+        means = np.asarray([np.mean(row.target_z) for row in rows], dtype=float)
+        location = float(np.mean(means))
+        variance = float(
+            np.mean([np.mean((row.target_z - location) ** 2) for row in rows])
+        )
+        return cls(location, max(float(np.sqrt(variance)), minimum_scale), len(rows))
+
+    def pmf(self, population: int) -> np.ndarray:
+        return normal_pmf(self.location, self.scale, population)
+
+    def metadata(self) -> dict[str, object]:
+        return {
+            "fit_method": "analytical equal-team empirical moments",
+            "location": self.location,
+            "scale": self.scale,
+            "n_team_seasons": self.n_team_seasons,
+            "optimizer": None,
         }

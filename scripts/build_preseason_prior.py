@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import csv
 import json
+from dataclasses import dataclass
+from itertools import pairwise
 from pathlib import Path
 
 import numpy as np
 
 from gippyrank.preseason import (
     DirectRankModel,
+    GenericRankPrior,
     TeamSeason,
     crps_discrete,
     pmf_summaries,
@@ -57,6 +60,27 @@ SPECS = {
 }
 
 
+@dataclass(frozen=True)
+class ColdStartSeason:
+    """Historical target missing a same-subdivision lag-1 distribution."""
+
+    season: int
+    subdivision: str
+    team_id: str
+    team_name: str
+    population: int
+    target_z: np.ndarray
+    target_ranks: np.ndarray
+    cross_subdivision_lag_z: np.ndarray | None
+    reason: str
+
+
+def valid_ranks(row: dict[str, str]) -> np.ndarray:
+    population = int(row["team_population"])
+    ranks = rank_sample(row).astype(int)
+    return ranks[(ranks >= 1) & (ranks <= population)]
+
+
 def read_csv(path: Path) -> list[dict[str, str]]:
     with path.open(newline="", encoding="utf-8") as handle:
         return list(csv.DictReader(handle))
@@ -68,8 +92,19 @@ def maybe_float(value: str | None) -> float | None:
     return float(value)
 
 
-def load_rows() -> list[TeamSeason]:
-    """Join processed outcomes to cached normalized features without raw edits."""
+def coach_change_value(
+    current_coach: str | None, prior_coach: str | None
+) -> float | None:
+    """Unknown coaching history remains unknown, not a no-change observation."""
+    if not current_coach or not prior_coach:
+        return None
+    return float(current_coach != prior_coach)
+
+
+def load_rows() -> tuple[
+    list[TeamSeason], list[ColdStartSeason], list[dict[str, object]]
+]:
+    """Join all target outcomes, retaining explicit cold-start records."""
     outcomes = {
         (int(r["season"]), r["subdivision"], r["team_id"]): r
         for r in read_csv(
@@ -80,35 +115,69 @@ def load_rows() -> list[TeamSeason]:
     feature_index = {
         (int(r["season"]), r["subdivision"], r["team_id"]): r for r in features
     }
-    result = []
+    result: list[TeamSeason] = []
+    cold_starts: list[ColdStartSeason] = []
+    coverage: list[dict[str, object]] = []
     for (season, subdivision, team_id), target in outcomes.items():
         prior = outcomes.get((season - 1, subdivision, team_id))
         current = feature_index.get((season, subdivision, team_id))
-        if prior is None or current is None or season > 2025:
+        if season > 2025:
             continue
-        prior_population = int(prior["team_population"])
         target_population = int(target["team_population"])
-        prior_ranks = rank_sample(prior).astype(int)
-        target_ranks = rank_sample(target).astype(int)
+        target_ranks = valid_ranks(target)
         # A small number of constituent rows extend beyond the composite
         # subdivision roster. They cannot be outcomes in a PMF with support
         # 1..N, so exclude those malformed measurements rather than clip them.
-        prior_ranks = prior_ranks[
-            (prior_ranks >= 1) & (prior_ranks <= prior_population)
-        ]
-        target_ranks = target_ranks[
-            (target_ranks >= 1) & (target_ranks <= target_population)
-        ]
-        if not len(prior_ranks) or not len(target_ranks):
+        if not len(target_ranks):
             continue
+        team_name = current["team_name"] if current else target["team_name"]
+        if prior is None or not len(valid_ranks(prior)):
+            cross = (
+                outcomes.get((season - 1, "fcs", team_id))
+                if subdivision == "fbs"
+                else None
+            )
+            cross_ranks = valid_ranks(cross) if cross else np.asarray([], dtype=int)
+            reason = (
+                "fcs_to_fbs_transition"
+                if len(cross_ranks)
+                else "no_prior_rank_distribution"
+            )
+            cold_starts.append(
+                ColdStartSeason(
+                    season,
+                    subdivision,
+                    team_id,
+                    team_name,
+                    target_population,
+                    rank_to_z(target_ranks, target_population),
+                    target_ranks,
+                    rank_to_z(cross_ranks, int(cross["team_population"]))
+                    if len(cross_ranks)
+                    else None,
+                    reason,
+                )
+            )
+            coverage.append(
+                {
+                    "season": season,
+                    "subdivision": subdivision,
+                    "team_id": team_id,
+                    "team_name": team_name,
+                    "generated": False,
+                    "reason": reason,
+                }
+            )
+            continue
+        prior_population = int(prior["team_population"])
+        prior_ranks = valid_ranks(prior)
         lag_z = rank_to_z(prior_ranks, prior_population)
         values: dict[str, float | None] = {}
         for lag in (2, 3):
             item = outcomes.get((season - lag, subdivision, team_id))
             if item:
                 lag_population = int(item["team_population"])
-                lag_ranks = rank_sample(item).astype(int)
-                lag_ranks = lag_ranks[(lag_ranks >= 1) & (lag_ranks <= lag_population)]
+                lag_ranks = valid_ranks(item)
                 values[f"lag{lag}_z_mean"] = (
                     float(np.mean(rank_to_z(lag_ranks, lag_population)))
                     if len(lag_ranks)
@@ -123,21 +192,19 @@ def load_rows() -> list[TeamSeason]:
             "returning_pct_ppa",
             "returning_pct_passing_ppa",
         ):
-            values[name] = maybe_float(current.get(name))
+            values[name] = maybe_float(current.get(name)) if current else None
         previous_feature = feature_index.get((season - 1, subdivision, team_id))
         coach, prior_coach = (
-            current.get("head_coach"),
+            current.get("head_coach") if current else None,
             previous_feature.get("head_coach") if previous_feature else None,
         )
-        values["coach_change"] = float(
-            bool(coach and prior_coach and coach != prior_coach)
-        )
+        values["coach_change"] = coach_change_value(coach, prior_coach)
         result.append(
             TeamSeason(
                 season,
                 subdivision,
                 team_id,
-                current["team_name"],
+                team_name,
                 target_population,
                 lag_z,
                 rank_to_z(target_ranks, target_population),
@@ -145,7 +212,17 @@ def load_rows() -> list[TeamSeason]:
                 values,
             )
         )
-    return result
+        coverage.append(
+            {
+                "season": season,
+                "subdivision": subdivision,
+                "team_id": team_id,
+                "team_name": team_name,
+                "generated": True,
+                "reason": "same_subdivision_lag1",
+            }
+        )
+    return result, cold_starts, coverage
 
 
 def eligible_for_spec(rows: list[TeamSeason], spec: str) -> list[TeamSeason]:
@@ -160,23 +237,59 @@ def eligible_for_spec(rows: list[TeamSeason], spec: str) -> list[TeamSeason]:
 
 
 def fit_selected(
-    rows: list[TeamSeason], features: list[str]
+    rows: list[TeamSeason], features: list[str], include_development: bool = True
 ) -> tuple[DirectRankModel, dict[str, object]]:
     """Use a conservative pre-specified penalty; report only pre-2022 validation."""
     train = [r for r in rows if r.season in DEVELOPMENT_TRAIN]
     validation = [r for r in rows if r.season in DEVELOPMENT_VALIDATION]
     chosen = 0.25
-    development_model = DirectRankModel.fit(train, features, penalty=chosen)
     final_train = [r for r in rows if r.season < 2022]
-    return DirectRankModel.fit(final_train, features, penalty=chosen), {
+    selection: dict[str, object] = {
         "development_train_seasons": [min(DEVELOPMENT_TRAIN), max(DEVELOPMENT_TRAIN)],
         "development_validation_seasons": [
             min(DEVELOPMENT_VALIDATION),
             max(DEVELOPMENT_VALIDATION),
         ],
         "pre_specified_penalty": chosen,
-        "development_validation_metrics": evaluate(development_model, validation),
         "untouched_test_seasons": sorted(TEST_SEASONS),
+    }
+    if include_development:
+        development_model = DirectRankModel.fit(train, features, penalty=chosen)
+        selection["development_validation_metrics"] = evaluate(
+            development_model, validation
+        )
+    else:
+        selection["development_validation_metrics"] = {
+            "status": "not used for FBS model selection"
+        }
+    return DirectRankModel.fit(final_train, features, penalty=chosen), selection
+
+
+def reliability_bins(
+    predicted: list[float],
+    observed: list[float],
+    edges: tuple[float, ...] = (0.0, 0.05, 0.15, 0.3, 0.5, 0.7, 1.0),
+) -> dict[str, object]:
+    """Coarse conditional-calibration table for fractional team outcomes."""
+    probabilities = np.asarray(predicted, dtype=float)
+    outcomes = np.asarray(observed, dtype=float)
+    bins = []
+    for index, (low, high) in enumerate(pairwise(edges)):
+        mask = (probabilities >= low) & (
+            probabilities < high if index < len(edges) - 2 else probabilities <= high
+        )
+        if mask.any():
+            bins.append(
+                {
+                    "range": f"[{low:.2f}, {high:.2f}{']' if index == len(edges) - 2 else ')'}",
+                    "n_team_seasons": int(mask.sum()),
+                    "mean_predicted_probability": float(probabilities[mask].mean()),
+                    "empirical_frequency": float(outcomes[mask].mean()),
+                }
+            )
+    return {
+        "brier_score": float(np.mean((probabilities - outcomes) ** 2)),
+        "bins": bins,
     }
 
 
@@ -237,6 +350,7 @@ def evaluate(
             "mean_predicted_probability": float(np.mean(predicted)),
             "empirical_frequency": float(np.mean(observed)),
             "calibration_gap": float(np.mean(predicted) - np.mean(observed)),
+            "reliability": reliability_bins(predicted, observed),
         }
     return result
 
@@ -260,10 +374,87 @@ def predictions(
                 ),
                 "conditional_location_mean": float(np.mean(locations)),
                 "predictive_scale": scale,
+                "prior_method": "same_subdivision_lag1",
                 **pmf_summaries(pmf),
             }
         )
     return output
+
+
+def cold_start_teams(cold_starts: list[ColdStartSeason]) -> list[TeamSeason]:
+    """Adapt FCS-to-FBS observations to the direct rank-distribution model."""
+    return [
+        TeamSeason(
+            row.season,
+            row.subdivision,
+            row.team_id,
+            row.team_name,
+            row.population,
+            row.cross_subdivision_lag_z,
+            row.target_z,
+            row.target_ranks,
+            {},
+        )
+        for row in cold_starts
+        if row.subdivision == "fbs" and row.cross_subdivision_lag_z is not None
+    ]
+
+
+def coverage_audit(coverage: list[dict[str, object]]) -> dict[str, object]:
+    """Make every target team-season's prior availability explicit."""
+    per_season = []
+    for season in sorted({int(row["season"]) for row in coverage}):
+        for subdivision in ("fbs", "fcs"):
+            group = [
+                row
+                for row in coverage
+                if row["season"] == season and row["subdivision"] == subdivision
+            ]
+            if not group:
+                continue
+            omitted = [row for row in group if not row["generated"]]
+            per_season.append(
+                {
+                    "season": season,
+                    "subdivision": subdivision,
+                    "total_teams": len(group),
+                    "teams_with_generated_prior": len(group) - len(omitted),
+                    "teams_omitted": len(omitted),
+                    "omitted": [
+                        {
+                            "team_id": row["team_id"],
+                            "team_name": row["team_name"],
+                            "reason": row["reason"],
+                        }
+                        for row in omitted
+                    ],
+                }
+            )
+    return {
+        "per_season": per_season,
+        "method": {
+            "fbs_fcs_transition": "learned direct FCS-to-FBS rank-distribution model when cross-subdivision lag exists",
+            "fbs_generic": "analytical broad FBS prior fit to historical no-prior FBS target distributions",
+            "fcs": "no-prior FCS teams remain explicitly omitted; FCS cold start is outside V1 production scope",
+        },
+    }
+
+
+def apply_fbs_cold_start_coverage(coverage: list[dict[str, object]]) -> None:
+    """Mark every FBS target as covered by its learned or generic fallback."""
+    for item in coverage:
+        if item["subdivision"] == "fbs" and not item["generated"]:
+            item["generated"] = True
+            item["reason"] = (
+                "learned_fcs_to_fbs_transition"
+                if item["reason"] == "fcs_to_fbs_transition"
+                else "generic_fbs_cold_start"
+            )
+
+
+def team_season_keys(rows: list[TeamSeason]) -> set[tuple[int, str, str]]:
+    """Canonical keys used for a fair same-population model comparison."""
+    return {(row.season, row.subdivision, row.team_id) for row in rows}
 
 
 def uncertainty_diagnostics(
@@ -299,6 +490,13 @@ def uncertainty_diagnostics(
 
 def write_report(report: dict[str, object]) -> None:
     models = report["models"]
+    production_fbs = models["A2_t1_t2_t3"]["test"]["fbs"]
+    reliability_lines = [
+        f"- Top {cutoff}: Brier={production_fbs[f'top{cutoff}']['reliability']['brier_score']:.4f}; full coarse reliability bins are in `preseason_model_report.json`."
+        for cutoff in (5, 10, 25)
+    ]
+    same_population = report["same_population_exploratory_comparison"]
+    cold = report["coverage_and_cold_start"]["cold_start_fit"]
     metric_lines = []
     for name, item in models.items():
         fbs = item["test"].get("fbs", {})
@@ -329,6 +527,18 @@ def write_report(report: dict[str, object]) -> None:
         "",
         "Model A2 is the explicit lag ablation (t-1+t-2 and t-1+t-2+t-3); B has no currently qualified safe covariate beyond rank history. Model C is evaluated only on its high-coverage FBS modern subset and remains exploratory, so its score is not a production-selection comparison. The machine-readable report records all FBS/FCS breakdowns, feature coverage, Top-5/10/25 calibration gaps, and scale diagnostics.",
         "",
+        "## Conditional Top-N calibration",
+        "",
+        "Top-N diagnostics now include coarse probability reliability bins with fractional empirical constituent outcome frequencies, in addition to aggregate gaps. Brier scores for the production FBS A2 model are:",
+        "",
+        *reliability_lines,
+        "",
+        "## Cold starts and fair exploratory comparison",
+        "",
+        f"Every FBS target team-season now receives a prior. The learned FCS-to-FBS transition fit uses {cold['promotion_training_team_seasons']} pre-2022 transitions and has {cold['promotion_test_team_seasons']} untouched-test cold starts; programs without any prior distribution use a broad analytical FBS no-prior fallback. FCS cold starts remain explicitly reported as omitted ({sum(item['teams_omitted'] for item in report['coverage_and_cold_start']['per_season'] if item['subdivision'] == 'fcs')} historical team-seasons).",
+        "",
+        f"On the exact {same_population['population']['n_team_seasons']}-team-season modern FBS subset, A2 t-1+t-2+t-3 has NLL={same_population['metrics']['A2_t1_t2_t3']['nll']:.3f}; exploratory Model C has NLL={same_population['metrics']['C_exploratory_modern']['nll']:.3f}. This is incremental signal only: C remains timing-uncertain and is not promoted.",
+        "",
         "## Discrete probabilities and 2026",
         "",
         "PMFs integrate continuous Normal mass across transformed rank bins. The first and last bins have infinite exterior boundaries, preserving uncertainty at ranks 1 and N. No 2026 prior is created: the season has begun and the repository has no independently archived 2026 preseason snapshot. A valid reconstruction requires dated, pre-kickoff snapshots for every promoted feature and a roster of the eligible subdivision population.",
@@ -339,7 +549,7 @@ def write_report(report: dict[str, object]) -> None:
 
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
-    rows = load_rows()
+    rows, cold_starts, coverage = load_rows()
     report: dict[str, object] = {
         "target": {
             "source": "cleaned historical Massey constituent outcomes",
@@ -359,6 +569,7 @@ def main() -> None:
         },
     }
     all_predictions: list[dict[str, object]] = []
+    model_refs: dict[str, dict[str, DirectRankModel]] = {}
     fitted: dict[
         tuple[str, tuple[str, ...]], tuple[DirectRankModel, dict[str, object]]
     ] = {}
@@ -374,17 +585,33 @@ def main() -> None:
         item["test"] = {}
         item["fit_metadata"] = {}
         item["uncertainty_diagnostics"] = {}
+        model_refs[name] = {}
         for subdivision in ("fbs", "fcs"):
             if name == "C_exploratory_modern" and subdivision == "fcs":
                 item["test"][subdivision] = {
                     "status": "not fitted; FCS uses the simpler rank-history prior"
                 }
                 continue
+            if subdivision == "fcs" and name not in {
+                "A2_t1_t2_t3",
+                "B_safe_long_history",
+            }:
+                item["test"][subdivision] = {
+                    "status": "not fitted; FCS production uses the selected A2 rank-history prior"
+                }
+                continue
             local = [r for r in spec_rows if r.subdivision == subdivision]
             key = (subdivision, tuple(feature_names))
             if key not in fitted:
-                fitted[key] = fit_selected(local, feature_names)
+                fitted[key] = fit_selected(
+                    local,
+                    feature_names,
+                    include_development=(
+                        subdivision == "fbs" and name != "C_exploratory_modern"
+                    ),
+                )
             model, selection = fitted[key]
+            model_refs[name][subdivision] = model
             test = [r for r in local if r.season in TEST_SEASONS]
             item["selection"][subdivision] = selection
             item["test"][subdivision] = evaluate(model, test)
@@ -394,6 +621,83 @@ def main() -> None:
             )
             all_predictions.extend(predictions(model, test, name))
         report["models"][name] = item
+    modern_test = [
+        row
+        for row in eligible_for_spec(rows, "C_exploratory_modern")
+        if row.subdivision == "fbs" and row.season in TEST_SEASONS
+    ]
+    report["same_population_exploratory_comparison"] = {
+        "population": {
+            "n_team_seasons": len(modern_test),
+            "keys": [
+                f"{season}:{subdivision}:{team_id}"
+                for season, subdivision, team_id in sorted(
+                    team_season_keys(modern_test)
+                )
+            ],
+        },
+        "metrics": {
+            name: evaluate(model_refs[name]["fbs"], modern_test)
+            for name in ("A_t1", "A2_t1_t2", "A2_t1_t2_t3", "C_exploratory_modern")
+        },
+    }
+    promotion_rows = cold_start_teams(cold_starts)
+    promotion_train = [row for row in promotion_rows if row.season < 2022]
+    transition_model = DirectRankModel.fit(promotion_train, [], penalty=0.25)
+    generic_rows = [
+        TeamSeason(
+            row.season,
+            row.subdivision,
+            row.team_id,
+            row.team_name,
+            row.population,
+            np.asarray([0.0]),
+            row.target_z,
+            row.target_ranks,
+            {},
+        )
+        for row in cold_starts
+        if row.subdivision == "fbs"
+        and row.cross_subdivision_lag_z is None
+        and row.season < 2022
+    ]
+    generic_model = GenericRankPrior.fit(generic_rows)
+    cold_test = [
+        row
+        for row in cold_starts
+        if row.subdivision == "fbs" and row.season in TEST_SEASONS
+    ]
+    for row in cold_test:
+        if row.cross_subdivision_lag_z is not None:
+            pmf = transition_model.pmf({}, row.cross_subdivision_lag_z, row.population)
+            method = "learned_fcs_to_fbs_transition"
+        else:
+            pmf = generic_model.pmf(row.population)
+            method = "generic_fbs_cold_start"
+        all_predictions.append(
+            {
+                "season": row.season,
+                "subdivision": row.subdivision,
+                "team_id": row.team_id,
+                "team_name": row.team_name,
+                "model": "A2_t1_t2_t3",
+                "pmf": json.dumps(
+                    [round(float(value), 12) for value in pmf], separators=(",", ":")
+                ),
+                "conditional_location_mean": None,
+                "predictive_scale": None,
+                **pmf_summaries(pmf),
+                "prior_method": method,
+            }
+        )
+    apply_fbs_cold_start_coverage(coverage)
+    coverage_result = coverage_audit(coverage)
+    coverage_result["cold_start_fit"] = {
+        "promotion_training_team_seasons": len(promotion_train),
+        "promotion_test_team_seasons": len(cold_test),
+        "transition_model": transition_model.metadata(),
+        "generic_model": generic_model.metadata(),
+    }
     fields = list(all_predictions[0])
     with (OUT / "rank_prior_predictions.csv").open(
         "w", newline="", encoding="utf-8"
@@ -402,11 +706,15 @@ def main() -> None:
         writer.writeheader()
         writer.writerows(all_predictions)
     report["production_candidate"] = "A2_t1_t2_t3"
+    report["coverage_and_cold_start"] = coverage_result
     report["best_statistical_model"] = (
         "See model-specific untouched FBS NLL; exploratory C is not eligible for production."
     )
     (OUT / "preseason_model_report.json").write_text(
         json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    (OUT / "preseason_prior_coverage.json").write_text(
+        json.dumps(coverage_result, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     write_report(report)
     print(
