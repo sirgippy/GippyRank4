@@ -1,0 +1,3233 @@
+{
+  "era_summary": {
+    "long_history": "prior outcome only (2004+)",
+    "modern_enriched": "Talent 2015+; returning endpoint coverage as observed",
+    "portal": "excluded: no season-wide historical transfer endpoint with reconstructable preseason timing",
+    "recruiting": "recruiting endpoint availability as observed; final class values are retrospective"
+  },
+  "feature_definitions": {
+    "head_coach": "CFBD coaching record identity; coach change is derived from adjacent season identities",
+    "recruiting_class_points": "final CFBD team recruiting-class points; same timing limitation",
+    "recruiting_class_rank": "final CFBD team recruiting-class rank; retrospective final value, not a historical preseason snapshot",
+    "returning_*": "CFBD returning-production PPA/usage fields; endpoint semantics are preseason-oriented but historical publication snapshots are unavailable",
+    "talent_composite": "CFBD team talent composite; coverage starts 2015 and current values are not a 2026 preseason snapshot"
+  },
+  "season_coverage": [
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 64,
+          "coverage_pct": 54.7
+        },
+        "head_coach": {
+          "count": 116,
+          "coverage_pct": 99.15
+        },
+        "recruiting_class_points": {
+          "count": 117,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_rank": {
+          "count": 117,
+          "coverage_pct": 100.0
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2003,
+      "subdivision": "fbs",
+      "team_count": 117
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "head_coach": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_points": {
+          "count": 1,
+          "coverage_pct": 0.81
+        },
+        "recruiting_class_rank": {
+          "count": 1,
+          "coverage_pct": 0.81
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2003,
+      "subdivision": "fcs",
+      "team_count": 124
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 71,
+          "coverage_pct": 59.66
+        },
+        "head_coach": {
+          "count": 118,
+          "coverage_pct": 99.16
+        },
+        "recruiting_class_points": {
+          "count": 117,
+          "coverage_pct": 98.32
+        },
+        "recruiting_class_rank": {
+          "count": 117,
+          "coverage_pct": 98.32
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2004,
+      "subdivision": "fbs",
+      "team_count": 119
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 1,
+          "coverage_pct": 0.83
+        },
+        "head_coach": {
+          "count": 1,
+          "coverage_pct": 0.83
+        },
+        "recruiting_class_points": {
+          "count": 3,
+          "coverage_pct": 2.48
+        },
+        "recruiting_class_rank": {
+          "count": 3,
+          "coverage_pct": 2.48
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2004,
+      "subdivision": "fcs",
+      "team_count": 121
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 82,
+          "coverage_pct": 68.91
+        },
+        "head_coach": {
+          "count": 119,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_points": {
+          "count": 118,
+          "coverage_pct": 99.16
+        },
+        "recruiting_class_rank": {
+          "count": 118,
+          "coverage_pct": 99.16
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2005,
+      "subdivision": "fbs",
+      "team_count": 119
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "head_coach": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_points": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_rank": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2005,
+      "subdivision": "fcs",
+      "team_count": 121
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 89,
+          "coverage_pct": 74.79
+        },
+        "head_coach": {
+          "count": 119,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_points": {
+          "count": 119,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_rank": {
+          "count": 119,
+          "coverage_pct": 100.0
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2006,
+      "subdivision": "fbs",
+      "team_count": 119
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "head_coach": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_points": {
+          "count": 2,
+          "coverage_pct": 1.64
+        },
+        "recruiting_class_rank": {
+          "count": 2,
+          "coverage_pct": 1.64
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2006,
+      "subdivision": "fcs",
+      "team_count": 122
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 96,
+          "coverage_pct": 80.67
+        },
+        "head_coach": {
+          "count": 118,
+          "coverage_pct": 99.16
+        },
+        "recruiting_class_points": {
+          "count": 116,
+          "coverage_pct": 97.48
+        },
+        "recruiting_class_rank": {
+          "count": 116,
+          "coverage_pct": 97.48
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2007,
+      "subdivision": "fbs",
+      "team_count": 119
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 1,
+          "coverage_pct": 0.81
+        },
+        "head_coach": {
+          "count": 1,
+          "coverage_pct": 0.81
+        },
+        "recruiting_class_points": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_rank": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2007,
+      "subdivision": "fcs",
+      "team_count": 123
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 104,
+          "coverage_pct": 86.67
+        },
+        "head_coach": {
+          "count": 119,
+          "coverage_pct": 99.17
+        },
+        "recruiting_class_points": {
+          "count": 117,
+          "coverage_pct": 97.5
+        },
+        "recruiting_class_rank": {
+          "count": 117,
+          "coverage_pct": 97.5
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2008,
+      "subdivision": "fbs",
+      "team_count": 120
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "head_coach": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_points": {
+          "count": 1,
+          "coverage_pct": 0.8
+        },
+        "recruiting_class_rank": {
+          "count": 1,
+          "coverage_pct": 0.8
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2008,
+      "subdivision": "fcs",
+      "team_count": 125
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 107,
+          "coverage_pct": 89.17
+        },
+        "head_coach": {
+          "count": 119,
+          "coverage_pct": 99.17
+        },
+        "recruiting_class_points": {
+          "count": 116,
+          "coverage_pct": 96.67
+        },
+        "recruiting_class_rank": {
+          "count": 116,
+          "coverage_pct": 96.67
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2009,
+      "subdivision": "fbs",
+      "team_count": 120
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "head_coach": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_points": {
+          "count": 2,
+          "coverage_pct": 1.6
+        },
+        "recruiting_class_rank": {
+          "count": 2,
+          "coverage_pct": 1.6
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2009,
+      "subdivision": "fcs",
+      "team_count": 125
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 108,
+          "coverage_pct": 90.0
+        },
+        "head_coach": {
+          "count": 119,
+          "coverage_pct": 99.17
+        },
+        "recruiting_class_points": {
+          "count": 120,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_rank": {
+          "count": 120,
+          "coverage_pct": 100.0
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2010,
+      "subdivision": "fbs",
+      "team_count": 120
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "head_coach": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_points": {
+          "count": 4,
+          "coverage_pct": 3.23
+        },
+        "recruiting_class_rank": {
+          "count": 4,
+          "coverage_pct": 3.23
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2010,
+      "subdivision": "fcs",
+      "team_count": 124
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 110,
+          "coverage_pct": 91.67
+        },
+        "head_coach": {
+          "count": 119,
+          "coverage_pct": 99.17
+        },
+        "recruiting_class_points": {
+          "count": 120,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_rank": {
+          "count": 120,
+          "coverage_pct": 100.0
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2011,
+      "subdivision": "fbs",
+      "team_count": 120
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "head_coach": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_points": {
+          "count": 17,
+          "coverage_pct": 13.49
+        },
+        "recruiting_class_rank": {
+          "count": 17,
+          "coverage_pct": 13.49
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2011,
+      "subdivision": "fcs",
+      "team_count": 126
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 117,
+          "coverage_pct": 94.35
+        },
+        "head_coach": {
+          "count": 123,
+          "coverage_pct": 99.19
+        },
+        "recruiting_class_points": {
+          "count": 124,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_rank": {
+          "count": 124,
+          "coverage_pct": 100.0
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2012,
+      "subdivision": "fbs",
+      "team_count": 124
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "head_coach": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_points": {
+          "count": 58,
+          "coverage_pct": 47.54
+        },
+        "recruiting_class_rank": {
+          "count": 58,
+          "coverage_pct": 47.54
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2012,
+      "subdivision": "fcs",
+      "team_count": 122
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 120,
+          "coverage_pct": 96.0
+        },
+        "head_coach": {
+          "count": 125,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_points": {
+          "count": 125,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_rank": {
+          "count": 125,
+          "coverage_pct": 100.0
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2013,
+      "subdivision": "fbs",
+      "team_count": 125
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "head_coach": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_points": {
+          "count": 84,
+          "coverage_pct": 66.14
+        },
+        "recruiting_class_rank": {
+          "count": 84,
+          "coverage_pct": 66.14
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2013,
+      "subdivision": "fcs",
+      "team_count": 127
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 124,
+          "coverage_pct": 96.88
+        },
+        "head_coach": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_points": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_rank": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "returning_passing_ppa": {
+          "count": 125,
+          "coverage_pct": 97.66
+        },
+        "returning_passing_usage": {
+          "count": 125,
+          "coverage_pct": 97.66
+        },
+        "returning_pct_passing_ppa": {
+          "count": 125,
+          "coverage_pct": 97.66
+        },
+        "returning_pct_ppa": {
+          "count": 125,
+          "coverage_pct": 97.66
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 125,
+          "coverage_pct": 97.66
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 125,
+          "coverage_pct": 97.66
+        },
+        "returning_receiving_ppa": {
+          "count": 125,
+          "coverage_pct": 97.66
+        },
+        "returning_rushing_ppa": {
+          "count": 125,
+          "coverage_pct": 97.66
+        },
+        "returning_total_ppa": {
+          "count": 125,
+          "coverage_pct": 97.66
+        },
+        "returning_usage": {
+          "count": 125,
+          "coverage_pct": 97.66
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2014,
+      "subdivision": "fbs",
+      "team_count": 128
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "head_coach": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_points": {
+          "count": 101,
+          "coverage_pct": 81.45
+        },
+        "recruiting_class_rank": {
+          "count": 101,
+          "coverage_pct": 81.45
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2014,
+      "subdivision": "fcs",
+      "team_count": 124
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 125,
+          "coverage_pct": 97.66
+        },
+        "head_coach": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_points": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_rank": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "returning_passing_ppa": {
+          "count": 127,
+          "coverage_pct": 99.22
+        },
+        "returning_passing_usage": {
+          "count": 127,
+          "coverage_pct": 99.22
+        },
+        "returning_pct_passing_ppa": {
+          "count": 127,
+          "coverage_pct": 99.22
+        },
+        "returning_pct_ppa": {
+          "count": 127,
+          "coverage_pct": 99.22
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 127,
+          "coverage_pct": 99.22
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 127,
+          "coverage_pct": 99.22
+        },
+        "returning_receiving_ppa": {
+          "count": 127,
+          "coverage_pct": 99.22
+        },
+        "returning_rushing_ppa": {
+          "count": 127,
+          "coverage_pct": 99.22
+        },
+        "returning_total_ppa": {
+          "count": 127,
+          "coverage_pct": 99.22
+        },
+        "returning_usage": {
+          "count": 127,
+          "coverage_pct": 99.22
+        },
+        "talent_composite": {
+          "count": 128,
+          "coverage_pct": 100.0
+        }
+      },
+      "season": 2015,
+      "subdivision": "fbs",
+      "team_count": 128
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "head_coach": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_points": {
+          "count": 101,
+          "coverage_pct": 80.8
+        },
+        "recruiting_class_rank": {
+          "count": 101,
+          "coverage_pct": 80.8
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 103,
+          "coverage_pct": 82.4
+        }
+      },
+      "season": 2015,
+      "subdivision": "fcs",
+      "team_count": 125
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 126,
+          "coverage_pct": 98.44
+        },
+        "head_coach": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_points": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_rank": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "returning_passing_ppa": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "returning_passing_usage": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "returning_pct_ppa": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "returning_receiving_ppa": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "returning_rushing_ppa": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "returning_total_ppa": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "returning_usage": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "talent_composite": {
+          "count": 128,
+          "coverage_pct": 100.0
+        }
+      },
+      "season": 2016,
+      "subdivision": "fbs",
+      "team_count": 128
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "head_coach": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_points": {
+          "count": 108,
+          "coverage_pct": 86.4
+        },
+        "recruiting_class_rank": {
+          "count": 108,
+          "coverage_pct": 86.4
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 109,
+          "coverage_pct": 87.2
+        }
+      },
+      "season": 2016,
+      "subdivision": "fcs",
+      "team_count": 125
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 127,
+          "coverage_pct": 97.69
+        },
+        "head_coach": {
+          "count": 130,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_points": {
+          "count": 130,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_rank": {
+          "count": 130,
+          "coverage_pct": 100.0
+        },
+        "returning_passing_ppa": {
+          "count": 128,
+          "coverage_pct": 98.46
+        },
+        "returning_passing_usage": {
+          "count": 128,
+          "coverage_pct": 98.46
+        },
+        "returning_pct_passing_ppa": {
+          "count": 128,
+          "coverage_pct": 98.46
+        },
+        "returning_pct_ppa": {
+          "count": 128,
+          "coverage_pct": 98.46
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 128,
+          "coverage_pct": 98.46
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 128,
+          "coverage_pct": 98.46
+        },
+        "returning_receiving_ppa": {
+          "count": 128,
+          "coverage_pct": 98.46
+        },
+        "returning_rushing_ppa": {
+          "count": 128,
+          "coverage_pct": 98.46
+        },
+        "returning_total_ppa": {
+          "count": 128,
+          "coverage_pct": 98.46
+        },
+        "returning_usage": {
+          "count": 128,
+          "coverage_pct": 98.46
+        },
+        "talent_composite": {
+          "count": 130,
+          "coverage_pct": 100.0
+        }
+      },
+      "season": 2017,
+      "subdivision": "fbs",
+      "team_count": 130
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "head_coach": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_points": {
+          "count": 102,
+          "coverage_pct": 82.26
+        },
+        "recruiting_class_rank": {
+          "count": 102,
+          "coverage_pct": 82.26
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 27,
+          "coverage_pct": 21.77
+        }
+      },
+      "season": 2017,
+      "subdivision": "fcs",
+      "team_count": 124
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 127,
+          "coverage_pct": 97.69
+        },
+        "head_coach": {
+          "count": 130,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_points": {
+          "count": 130,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_rank": {
+          "count": 130,
+          "coverage_pct": 100.0
+        },
+        "returning_passing_ppa": {
+          "count": 129,
+          "coverage_pct": 99.23
+        },
+        "returning_passing_usage": {
+          "count": 129,
+          "coverage_pct": 99.23
+        },
+        "returning_pct_passing_ppa": {
+          "count": 129,
+          "coverage_pct": 99.23
+        },
+        "returning_pct_ppa": {
+          "count": 129,
+          "coverage_pct": 99.23
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 129,
+          "coverage_pct": 99.23
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 129,
+          "coverage_pct": 99.23
+        },
+        "returning_receiving_ppa": {
+          "count": 129,
+          "coverage_pct": 99.23
+        },
+        "returning_rushing_ppa": {
+          "count": 129,
+          "coverage_pct": 99.23
+        },
+        "returning_total_ppa": {
+          "count": 129,
+          "coverage_pct": 99.23
+        },
+        "returning_usage": {
+          "count": 129,
+          "coverage_pct": 99.23
+        },
+        "talent_composite": {
+          "count": 130,
+          "coverage_pct": 100.0
+        }
+      },
+      "season": 2018,
+      "subdivision": "fbs",
+      "team_count": 130
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "head_coach": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_points": {
+          "count": 98,
+          "coverage_pct": 78.4
+        },
+        "recruiting_class_rank": {
+          "count": 98,
+          "coverage_pct": 78.4
+        },
+        "returning_passing_ppa": {
+          "count": 1,
+          "coverage_pct": 0.8
+        },
+        "returning_passing_usage": {
+          "count": 1,
+          "coverage_pct": 0.8
+        },
+        "returning_pct_passing_ppa": {
+          "count": 1,
+          "coverage_pct": 0.8
+        },
+        "returning_pct_ppa": {
+          "count": 1,
+          "coverage_pct": 0.8
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 1,
+          "coverage_pct": 0.8
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 1,
+          "coverage_pct": 0.8
+        },
+        "returning_receiving_ppa": {
+          "count": 1,
+          "coverage_pct": 0.8
+        },
+        "returning_rushing_ppa": {
+          "count": 1,
+          "coverage_pct": 0.8
+        },
+        "returning_total_ppa": {
+          "count": 1,
+          "coverage_pct": 0.8
+        },
+        "returning_usage": {
+          "count": 1,
+          "coverage_pct": 0.8
+        },
+        "talent_composite": {
+          "count": 106,
+          "coverage_pct": 84.8
+        }
+      },
+      "season": 2018,
+      "subdivision": "fcs",
+      "team_count": 125
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 129,
+          "coverage_pct": 99.23
+        },
+        "head_coach": {
+          "count": 130,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_points": {
+          "count": 130,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_rank": {
+          "count": 130,
+          "coverage_pct": 100.0
+        },
+        "returning_passing_ppa": {
+          "count": 130,
+          "coverage_pct": 100.0
+        },
+        "returning_passing_usage": {
+          "count": 130,
+          "coverage_pct": 100.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 130,
+          "coverage_pct": 100.0
+        },
+        "returning_pct_ppa": {
+          "count": 130,
+          "coverage_pct": 100.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 130,
+          "coverage_pct": 100.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 130,
+          "coverage_pct": 100.0
+        },
+        "returning_receiving_ppa": {
+          "count": 130,
+          "coverage_pct": 100.0
+        },
+        "returning_rushing_ppa": {
+          "count": 130,
+          "coverage_pct": 100.0
+        },
+        "returning_total_ppa": {
+          "count": 130,
+          "coverage_pct": 100.0
+        },
+        "returning_usage": {
+          "count": 130,
+          "coverage_pct": 100.0
+        },
+        "talent_composite": {
+          "count": 130,
+          "coverage_pct": 100.0
+        }
+      },
+      "season": 2019,
+      "subdivision": "fbs",
+      "team_count": 130
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "head_coach": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_points": {
+          "count": 92,
+          "coverage_pct": 73.02
+        },
+        "recruiting_class_rank": {
+          "count": 92,
+          "coverage_pct": 73.02
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 101,
+          "coverage_pct": 80.16
+        }
+      },
+      "season": 2019,
+      "subdivision": "fcs",
+      "team_count": 126
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "head_coach": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_points": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_rank": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "returning_passing_ppa": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "returning_passing_usage": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "returning_pct_ppa": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "returning_receiving_ppa": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "returning_rushing_ppa": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "returning_total_ppa": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "returning_usage": {
+          "count": 128,
+          "coverage_pct": 100.0
+        },
+        "talent_composite": {
+          "count": 128,
+          "coverage_pct": 100.0
+        }
+      },
+      "season": 2020,
+      "subdivision": "fbs",
+      "team_count": 128
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "head_coach": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_points": {
+          "count": 58,
+          "coverage_pct": 56.86
+        },
+        "recruiting_class_rank": {
+          "count": 58,
+          "coverage_pct": 56.86
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 72,
+          "coverage_pct": 70.59
+        }
+      },
+      "season": 2020,
+      "subdivision": "fcs",
+      "team_count": 102
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 128,
+          "coverage_pct": 98.46
+        },
+        "head_coach": {
+          "count": 130,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_points": {
+          "count": 130,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_rank": {
+          "count": 130,
+          "coverage_pct": 100.0
+        },
+        "returning_passing_ppa": {
+          "count": 128,
+          "coverage_pct": 98.46
+        },
+        "returning_passing_usage": {
+          "count": 128,
+          "coverage_pct": 98.46
+        },
+        "returning_pct_passing_ppa": {
+          "count": 128,
+          "coverage_pct": 98.46
+        },
+        "returning_pct_ppa": {
+          "count": 128,
+          "coverage_pct": 98.46
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 128,
+          "coverage_pct": 98.46
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 128,
+          "coverage_pct": 98.46
+        },
+        "returning_receiving_ppa": {
+          "count": 128,
+          "coverage_pct": 98.46
+        },
+        "returning_rushing_ppa": {
+          "count": 128,
+          "coverage_pct": 98.46
+        },
+        "returning_total_ppa": {
+          "count": 128,
+          "coverage_pct": 98.46
+        },
+        "returning_usage": {
+          "count": 128,
+          "coverage_pct": 98.46
+        },
+        "talent_composite": {
+          "count": 130,
+          "coverage_pct": 100.0
+        }
+      },
+      "season": 2021,
+      "subdivision": "fbs",
+      "team_count": 130
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "head_coach": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_points": {
+          "count": 61,
+          "coverage_pct": 47.66
+        },
+        "recruiting_class_rank": {
+          "count": 61,
+          "coverage_pct": 47.66
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 93,
+          "coverage_pct": 72.66
+        }
+      },
+      "season": 2021,
+      "subdivision": "fcs",
+      "team_count": 128
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 131,
+          "coverage_pct": 100.0
+        },
+        "head_coach": {
+          "count": 131,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_points": {
+          "count": 130,
+          "coverage_pct": 99.24
+        },
+        "recruiting_class_rank": {
+          "count": 130,
+          "coverage_pct": 99.24
+        },
+        "returning_passing_ppa": {
+          "count": 130,
+          "coverage_pct": 99.24
+        },
+        "returning_passing_usage": {
+          "count": 130,
+          "coverage_pct": 99.24
+        },
+        "returning_pct_passing_ppa": {
+          "count": 130,
+          "coverage_pct": 99.24
+        },
+        "returning_pct_ppa": {
+          "count": 130,
+          "coverage_pct": 99.24
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 130,
+          "coverage_pct": 99.24
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 130,
+          "coverage_pct": 99.24
+        },
+        "returning_receiving_ppa": {
+          "count": 130,
+          "coverage_pct": 99.24
+        },
+        "returning_rushing_ppa": {
+          "count": 130,
+          "coverage_pct": 99.24
+        },
+        "returning_total_ppa": {
+          "count": 130,
+          "coverage_pct": 99.24
+        },
+        "returning_usage": {
+          "count": 130,
+          "coverage_pct": 99.24
+        },
+        "talent_composite": {
+          "count": 131,
+          "coverage_pct": 100.0
+        }
+      },
+      "season": 2022,
+      "subdivision": "fbs",
+      "team_count": 131
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "head_coach": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_points": {
+          "count": 53,
+          "coverage_pct": 40.77
+        },
+        "recruiting_class_rank": {
+          "count": 53,
+          "coverage_pct": 40.77
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 101,
+          "coverage_pct": 77.69
+        }
+      },
+      "season": 2022,
+      "subdivision": "fcs",
+      "team_count": 130
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 133,
+          "coverage_pct": 100.0
+        },
+        "head_coach": {
+          "count": 133,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_points": {
+          "count": 133,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_rank": {
+          "count": 133,
+          "coverage_pct": 100.0
+        },
+        "returning_passing_ppa": {
+          "count": 131,
+          "coverage_pct": 98.5
+        },
+        "returning_passing_usage": {
+          "count": 131,
+          "coverage_pct": 98.5
+        },
+        "returning_pct_passing_ppa": {
+          "count": 131,
+          "coverage_pct": 98.5
+        },
+        "returning_pct_ppa": {
+          "count": 131,
+          "coverage_pct": 98.5
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 131,
+          "coverage_pct": 98.5
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 131,
+          "coverage_pct": 98.5
+        },
+        "returning_receiving_ppa": {
+          "count": 131,
+          "coverage_pct": 98.5
+        },
+        "returning_rushing_ppa": {
+          "count": 131,
+          "coverage_pct": 98.5
+        },
+        "returning_total_ppa": {
+          "count": 131,
+          "coverage_pct": 98.5
+        },
+        "returning_usage": {
+          "count": 131,
+          "coverage_pct": 98.5
+        },
+        "talent_composite": {
+          "count": 133,
+          "coverage_pct": 100.0
+        }
+      },
+      "season": 2023,
+      "subdivision": "fbs",
+      "team_count": 133
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "head_coach": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_points": {
+          "count": 43,
+          "coverage_pct": 33.59
+        },
+        "recruiting_class_rank": {
+          "count": 43,
+          "coverage_pct": 33.59
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 104,
+          "coverage_pct": 81.25
+        }
+      },
+      "season": 2023,
+      "subdivision": "fcs",
+      "team_count": 128
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 134,
+          "coverage_pct": 100.0
+        },
+        "head_coach": {
+          "count": 134,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_points": {
+          "count": 134,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_rank": {
+          "count": 134,
+          "coverage_pct": 100.0
+        },
+        "returning_passing_ppa": {
+          "count": 133,
+          "coverage_pct": 99.25
+        },
+        "returning_passing_usage": {
+          "count": 133,
+          "coverage_pct": 99.25
+        },
+        "returning_pct_passing_ppa": {
+          "count": 133,
+          "coverage_pct": 99.25
+        },
+        "returning_pct_ppa": {
+          "count": 133,
+          "coverage_pct": 99.25
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 133,
+          "coverage_pct": 99.25
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 133,
+          "coverage_pct": 99.25
+        },
+        "returning_receiving_ppa": {
+          "count": 133,
+          "coverage_pct": 99.25
+        },
+        "returning_rushing_ppa": {
+          "count": 133,
+          "coverage_pct": 99.25
+        },
+        "returning_total_ppa": {
+          "count": 133,
+          "coverage_pct": 99.25
+        },
+        "returning_usage": {
+          "count": 133,
+          "coverage_pct": 99.25
+        },
+        "talent_composite": {
+          "count": 134,
+          "coverage_pct": 100.0
+        }
+      },
+      "season": 2024,
+      "subdivision": "fbs",
+      "team_count": 134
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "head_coach": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_points": {
+          "count": 59,
+          "coverage_pct": 45.74
+        },
+        "recruiting_class_rank": {
+          "count": 59,
+          "coverage_pct": 45.74
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2024,
+      "subdivision": "fcs",
+      "team_count": 129
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 136,
+          "coverage_pct": 100.0
+        },
+        "head_coach": {
+          "count": 136,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_points": {
+          "count": 136,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_rank": {
+          "count": 136,
+          "coverage_pct": 100.0
+        },
+        "returning_passing_ppa": {
+          "count": 134,
+          "coverage_pct": 98.53
+        },
+        "returning_passing_usage": {
+          "count": 134,
+          "coverage_pct": 98.53
+        },
+        "returning_pct_passing_ppa": {
+          "count": 134,
+          "coverage_pct": 98.53
+        },
+        "returning_pct_ppa": {
+          "count": 134,
+          "coverage_pct": 98.53
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 134,
+          "coverage_pct": 98.53
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 134,
+          "coverage_pct": 98.53
+        },
+        "returning_receiving_ppa": {
+          "count": 134,
+          "coverage_pct": 98.53
+        },
+        "returning_rushing_ppa": {
+          "count": 134,
+          "coverage_pct": 98.53
+        },
+        "returning_total_ppa": {
+          "count": 134,
+          "coverage_pct": 98.53
+        },
+        "returning_usage": {
+          "count": 134,
+          "coverage_pct": 98.53
+        },
+        "talent_composite": {
+          "count": 134,
+          "coverage_pct": 98.53
+        }
+      },
+      "season": 2025,
+      "subdivision": "fbs",
+      "team_count": 136
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "head_coach": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_points": {
+          "count": 93,
+          "coverage_pct": 72.09
+        },
+        "recruiting_class_rank": {
+          "count": 93,
+          "coverage_pct": 72.09
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2025,
+      "subdivision": "fcs",
+      "team_count": 129
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 138,
+          "coverage_pct": 100.0
+        },
+        "head_coach": {
+          "count": 138,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_points": {
+          "count": 138,
+          "coverage_pct": 100.0
+        },
+        "recruiting_class_rank": {
+          "count": 138,
+          "coverage_pct": 100.0
+        },
+        "returning_passing_ppa": {
+          "count": 136,
+          "coverage_pct": 98.55
+        },
+        "returning_passing_usage": {
+          "count": 136,
+          "coverage_pct": 98.55
+        },
+        "returning_pct_passing_ppa": {
+          "count": 136,
+          "coverage_pct": 98.55
+        },
+        "returning_pct_ppa": {
+          "count": 136,
+          "coverage_pct": 98.55
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 136,
+          "coverage_pct": 98.55
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 136,
+          "coverage_pct": 98.55
+        },
+        "returning_receiving_ppa": {
+          "count": 136,
+          "coverage_pct": 98.55
+        },
+        "returning_rushing_ppa": {
+          "count": 136,
+          "coverage_pct": 98.55
+        },
+        "returning_total_ppa": {
+          "count": 136,
+          "coverage_pct": 98.55
+        },
+        "returning_usage": {
+          "count": 136,
+          "coverage_pct": 98.55
+        },
+        "talent_composite": {
+          "count": 138,
+          "coverage_pct": 100.0
+        }
+      },
+      "season": 2026,
+      "subdivision": "fbs",
+      "team_count": 138
+    },
+    {
+      "features": {
+        "coach_hire_date": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "head_coach": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "recruiting_class_points": {
+          "count": 78,
+          "coverage_pct": 60.94
+        },
+        "recruiting_class_rank": {
+          "count": 78,
+          "coverage_pct": 60.94
+        },
+        "returning_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_passing_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_passing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_pct_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_receiving_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_rushing_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_total_ppa": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "returning_usage": {
+          "count": 0,
+          "coverage_pct": 0.0
+        },
+        "talent_composite": {
+          "count": 0,
+          "coverage_pct": 0.0
+        }
+      },
+      "season": 2026,
+      "subdivision": "fcs",
+      "team_count": 128
+    }
+  ]
+}

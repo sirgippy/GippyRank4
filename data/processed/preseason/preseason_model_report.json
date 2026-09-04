@@ -1,0 +1,131 @@
+{
+  "acquisition": {
+    "status": "skipped"
+  },
+  "safety": {
+    "2026": "Not generated: current CFBD responses are not historical preseason snapshots, and 2026 has already started; no 2026 game outcomes were read.",
+    "baseline": "Leakage-safe historical inputs are prior final-season Massey distributions only.",
+    "richer_features": "Retrospective/final API values are retained for audit and exploratory validation, not approved for production until archived preseason snapshots exist."
+  },
+  "validation": {
+    "baseline": {
+      "by_subdivision": {
+        "fbs": {
+          "crps": 0.11982959855102863,
+          "features": [
+            "lag1_mean",
+            "lag1_sd",
+            "lag2_mean",
+            "lag3_mean"
+          ],
+          "n_team_seasons": 528,
+          "nll": 4.747707239789903
+        },
+        "fcs": {
+          "crps": 0.11606830329385494,
+          "features": [
+            "lag1_mean",
+            "lag1_sd",
+            "lag2_mean",
+            "lag3_mean"
+          ],
+          "n_team_seasons": 509,
+          "nll": 4.696826338894326
+        }
+      },
+      "model": "baseline",
+      "test_seasons": [
+        2022,
+        2023,
+        2024,
+        2025
+      ]
+    },
+    "long_history": {
+      "by_subdivision": {
+        "fbs": {
+          "crps": 0.11442599222050064,
+          "features": [
+            "lag1_mean",
+            "lag1_sd",
+            "lag2_mean",
+            "lag3_mean",
+            "recruiting_class_rank",
+            "recruiting_class_points",
+            "coach_change"
+          ],
+          "n_team_seasons": 528,
+          "nll": 4.714774724082596
+        },
+        "fcs": {
+          "crps": 0.11611616294232902,
+          "features": [
+            "lag1_mean",
+            "lag1_sd",
+            "lag2_mean",
+            "lag3_mean",
+            "recruiting_class_rank",
+            "recruiting_class_points",
+            "coach_change"
+          ],
+          "n_team_seasons": 509,
+          "nll": 4.696429873158338
+        }
+      },
+      "model": "long_history",
+      "test_seasons": [
+        2022,
+        2023,
+        2024,
+        2025
+      ]
+    },
+    "modern_enriched": {
+      "by_subdivision": {
+        "fbs": {
+          "crps": 0.11528607974636412,
+          "features": [
+            "lag1_mean",
+            "lag1_sd",
+            "lag2_mean",
+            "lag3_mean",
+            "recruiting_class_rank",
+            "recruiting_class_points",
+            "coach_change",
+            "talent_composite",
+            "returning_pct_ppa",
+            "returning_pct_passing_ppa",
+            "returning_usage"
+          ],
+          "n_team_seasons": 528,
+          "nll": 4.72424707996142
+        },
+        "fcs": {
+          "crps": 0.11609455971212022,
+          "features": [
+            "lag1_mean",
+            "lag1_sd",
+            "lag2_mean",
+            "lag3_mean",
+            "recruiting_class_rank",
+            "recruiting_class_points",
+            "coach_change",
+            "talent_composite",
+            "returning_pct_ppa",
+            "returning_pct_passing_ppa",
+            "returning_usage"
+          ],
+          "n_team_seasons": 509,
+          "nll": 4.697062395825685
+        }
+      },
+      "model": "modern_enriched",
+      "test_seasons": [
+        2022,
+        2023,
+        2024,
+        2025
+      ]
+    }
+  }
+}
