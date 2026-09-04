@@ -2272,20 +2272,22 @@
     },
     "cold_start": "V1 FCS-to-FBS and generic cold-start PMFs retained unchanged",
     "paired_bootstrap": {
-      "crps_95_interval": [
-        -0.004881798709989533,
-        -0.001916001451971485
+      "crps_central_95_bootstrap_range": [
+        -0.004881798710017571,
+        -0.0019160014520222667
       ],
       "fraction_candidate_better_crps": 1.0,
       "fraction_candidate_better_nll": 1.0,
-      "mean_delta_crps": -0.0035305420849755117,
-      "mean_delta_nll": -0.02355278112341896,
+      "mean_delta_crps": -0.003540028576461474,
+      "mean_delta_nll": -0.023559153591603335,
+      "n_resamples": 256,
+      "n_season_clusters": 4,
       "n_team_seasons": 534,
-      "nll_95_interval": [
-        -0.031085134797593644,
-        -0.012607606866156919
+      "nll_central_95_bootstrap_range": [
+        -0.0310851347974788,
+        -0.012607606867373675
       ],
-      "resampling": "season bootstrap; candidate minus V1, 2,000 deterministic resamples"
+      "resampling": "exhaustive ordered season bootstrap over all 4^4 = 256 resamples; descriptive only"
     },
     "per_season": {
       "2022": {

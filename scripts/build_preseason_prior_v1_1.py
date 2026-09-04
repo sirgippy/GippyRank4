@@ -9,8 +9,10 @@ from __future__ import annotations
 
 import csv
 import json
+import sys
 import time
 from dataclasses import dataclass
+from itertools import product
 from pathlib import Path
 
 import build_preseason_prior as v1
@@ -134,9 +136,8 @@ def prediction_losses(
 def paired_bootstrap(
     reference: list[v1.PriorPrediction],
     candidate: list[v1.PriorPrediction],
-    seed: int = 7,
 ) -> dict[str, object]:
-    """Season-resampling uncertainty for candidate minus reference scores."""
+    """Descriptive season-resampling distribution for candidate minus reference."""
     ref, alt = prediction_losses(reference), prediction_losses(candidate)
     keys = sorted(set(ref) & set(alt))
     grouped: dict[int, list[tuple[float, float]]] = {}
@@ -149,19 +150,35 @@ def paired_bootstrap(
         [np.sum(grouped[int(season)], axis=0) for season in seasons]
     )
     season_counts = np.asarray([len(grouped[int(season)]) for season in seasons])
-    rng = np.random.default_rng(seed)
-    drawn = rng.integers(0, len(seasons), size=(2000, len(seasons)))
+    combinations = len(seasons) ** len(seasons)
+    if combinations <= 100_000:
+        drawn = np.asarray(
+            list(product(range(len(seasons)), repeat=len(seasons))), dtype=int
+        )
+        resampling = (
+            "exhaustive ordered season bootstrap over all "
+            f"{len(seasons)}^{len(seasons)} = {len(drawn)} resamples; descriptive only"
+        )
+    else:
+        rng = np.random.default_rng(7)
+        drawn = rng.integers(0, len(seasons), size=(2000, len(seasons)))
+        resampling = (
+            "deterministic pseudo-random ordered season bootstrap with "
+            "2,000 resamples; descriptive only"
+        )
     samples = season_sums[drawn].sum(axis=1) / season_counts[drawn].sum(axis=1)[:, None]
     return {
         "n_team_seasons": len(keys),
-        "resampling": "season bootstrap; candidate minus V1, 2,000 deterministic resamples",
+        "n_season_clusters": len(seasons),
+        "n_resamples": len(samples),
+        "resampling": resampling,
         "mean_delta_nll": float(np.mean(samples[:, 0])),
-        "nll_95_interval": [
+        "nll_central_95_bootstrap_range": [
             float(value) for value in np.quantile(samples[:, 0], [0.025, 0.975])
         ],
         "fraction_candidate_better_nll": float(np.mean(samples[:, 0] < 0)),
         "mean_delta_crps": float(np.mean(samples[:, 1])),
-        "crps_95_interval": [
+        "crps_central_95_bootstrap_range": [
             float(value) for value in np.quantile(samples[:, 1], [0.025, 0.975])
         ],
         "fraction_candidate_better_crps": float(np.mean(samples[:, 1] < 0)),
@@ -252,7 +269,7 @@ def transition_diagnostics(rows: list[TeamSeason]) -> dict[str, object]:
     }
 
 
-def read_v1_predictions() -> list[v1.PriorPrediction]:
+def read_predictions(model: str) -> list[v1.PriorPrediction]:
     with (OUT / "rank_prior_predictions.csv").open(
         newline="", encoding="utf-8"
     ) as handle:
@@ -260,7 +277,7 @@ def read_v1_predictions() -> list[v1.PriorPrediction]:
     result = []
     for row in rows:
         if (
-            row["model"] != "A2_t1_t2_t3"
+            row["model"] != model
             or row["subdivision"] != "fbs"
             or int(row["season"]) not in TEST_SEASONS
         ):
@@ -346,12 +363,37 @@ def render_report(report: dict[str, object]) -> None:
             f"| {name} | {metric['n_team_seasons']} | {metric['nll']:.4f} | {metric['crps']:.4f} | {metric['expected_rank_mae']:.2f} | {metric['interval_80_coverage']:.3f} | {metric['interval_80_average_width']:.1f} |"
         )
     paired = final["paired_bootstrap"]
+    per_season = final["per_season"]
     lines += [
         "",
+        "### Consistency across untouched seasons",
+        "",
+        "ΔNLL = V1.1 − V1; negative values favor V1.1.",
+        "",
+        "| Season | V1 NLL | V1.1 NLL | ΔNLL |",
+        "|---|---:|---:|---:|",
+    ]
+    wins = 0
+    for season in sorted(per_season, key=int):
+        reference_nll = per_season[season]["V1_A2"]["nll"]
+        candidate_nll = per_season[season]["V1_1"]["nll"]
+        delta = candidate_nll - reference_nll
+        wins += delta < 0
+        lines.append(
+            f"| {season} | {reference_nll:.4f} | {candidate_nll:.4f} | {delta:.4f} |"
+        )
+    lines += [
+        "",
+        f"V1.1 wins {wins} / {len(per_season)} untouched test seasons by NLL: strong consistency across the available seasons, not a claim of overwhelming inferential proof.",
+        "",
         (
-            "The season-bootstrap candidate-minus-V1 ΔNLL is "
-            f"{paired['mean_delta_nll']:.4f} (95% interval {paired['nll_95_interval'][0]:.4f} to {paired['nll_95_interval'][1]:.4f}); V1.1 wins {paired['fraction_candidate_better_nll']:.1%} of resamples."
+            "The descriptive season-bootstrap candidate-minus-V1 ΔNLL is "
+            f"{paired['mean_delta_nll']:.4f}; its central 95% bootstrap range is "
+            f"{paired['nll_central_95_bootstrap_range'][0]:.4f} to {paired['nll_central_95_bootstrap_range'][1]:.4f}. "
+            f"V1.1 wins {paired['fraction_candidate_better_nll']:.1%} of ordered resamples."
         ),
+        "",
+        "Because the untouched test contains only four seasons, this season-cluster bootstrap is a descriptive robustness check rather than a precise confidence interval.",
         "",
         "The JSON artifact contains tier calibration/sharpness, per-season scores, full transition and history diagnostics, quadrature approximation notes, and the final frozen model metadata.",
         "",
@@ -375,7 +417,26 @@ def render_report(report: dict[str, object]) -> None:
     )
 
 
+def update_reporting_only() -> None:
+    """Refresh descriptive resampling fields from already-frozen PMFs only."""
+    report_path = OUT / "preseason_model_report.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    selected = report["selection"]["selected"]
+    rows, cold, _ = v1.load_rows()
+    reference = join_targets(read_predictions("A2_t1_t2_t3"), rows, cold)
+    candidate = join_targets(read_predictions("V1_1_" + selected), rows, cold)
+    report["final_test"]["paired_bootstrap"] = paired_bootstrap(reference, candidate)
+    report_path.write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    render_report(report)
+    print(json.dumps({"selected": selected, "mode": "report_only"}, indent=2))
+
+
 def main() -> None:
+    if "--report-only" in sys.argv:
+        update_reporting_only()
+        return
     start = time.perf_counter()
     # The V1 script is run separately first and supplies the archived reference
     # PMFs, including its six FBS transition priors.  Keeping this pass separate
@@ -434,7 +495,7 @@ def main() -> None:
         [row for row in selected_rows if row.season in TEST_SEASONS],
         "V1_1_" + selected.name,
     )
-    v1_predictions = join_targets(read_v1_predictions(), rows, cold)
+    v1_predictions = join_targets(read_predictions("A2_t1_t2_t3"), rows, cold)
     v1_standard = [
         p for p in v1_predictions if p.prior_method == "same_subdivision_lag1"
     ]

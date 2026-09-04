@@ -138,6 +138,42 @@ def test_long_run_history_features_are_future_invariant_and_exclude_target() -> 
     assert original["trajectory_z"] == pytest.approx(0.4 - (-0.2))
 
 
+def test_four_season_bootstrap_is_exhaustive_deterministic_and_signed() -> None:
+    root = Path(__file__).parents[1]
+    import sys
+
+    sys.path.insert(0, str(root / "scripts"))
+    try:
+        values = runpy.run_path(str(root / "scripts/build_preseason_prior_v1_1.py"))
+    finally:
+        sys.path.pop(0)
+    prediction = values["v1"].PriorPrediction
+
+    def make(season: int, probability: float) -> object:
+        return prediction(
+            season,
+            "fbs",
+            str(season),
+            str(season),
+            2,
+            np.asarray([1]),
+            "test",
+            "same_subdivision_lag1",
+            np.asarray([probability, 1 - probability]),
+        )
+
+    reference = [make(season, 0.4) for season in range(2022, 2026)]
+    candidate = [make(season, 0.8) for season in range(2022, 2026)]
+    first = values["paired_bootstrap"](reference, candidate)
+    second = values["paired_bootstrap"](reference, candidate)
+    assert first == second
+    assert first["n_season_clusters"] == 4
+    assert first["n_resamples"] == 256
+    assert "4^4 = 256" in first["resampling"]
+    assert first["mean_delta_nll"] < 0
+    assert first["fraction_candidate_better_nll"] == 1.0
+
+
 def test_optimizer_must_converge_and_retains_diagnostics() -> None:
     rows = [
         TeamSeason(
