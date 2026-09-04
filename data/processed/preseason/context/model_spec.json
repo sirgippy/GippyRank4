@@ -1,0 +1,27 @@
+{
+  "approved_context_features": [],
+  "context_as_of": "2022-08-15",
+  "context_cutoff_semantics": "August 15 of each target season; target-specific date appears per PMF",
+  "final_fit_metadata": {
+    "status": "C0 selected; no context coefficients admitted"
+  },
+  "fitted_instance": {
+    "target_seasons": [
+      2022,
+      2023,
+      2024,
+      2025
+    ]
+  },
+  "historical_foundation": [
+    "lag2_z_mean",
+    "lag3_z_mean",
+    "long_run_z_mean"
+  ],
+  "missing_context_behavior": "use the frozen H PMF exactly",
+  "model_family": "context_prior",
+  "selected_candidate": "C0_history_only",
+  "spec_version": "1.2",
+  "target_season": 2022,
+  "trained_through_season": 2021
+}

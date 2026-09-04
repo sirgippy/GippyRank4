@@ -1,0 +1,116 @@
+{
+  "coach_change": {
+    "caveats": [
+      "Not used in C V1.2; unknown is never converted to no change."
+    ],
+    "effective_preseason_cutoff": "August 15 of target and prior seasons",
+    "evidence": "The current tenure corpus supplies many undated effective ends; strict filtering leaves no observed change values.",
+    "historical_coverage": "No complete cutoff-safe historical comparison in the cached tenure payloads",
+    "intended_semantics": "head-coach identity differs from the prior preseason",
+    "production_status": "exploratory-timing-uncertain",
+    "retrospective_change_risk": "high when a tenure end has no effective date",
+    "source": "CFBD /coaches/tenures"
+  },
+  "coaching_continuity": {
+    "caveats": [
+      "A target-season start without a date by cutoff is missing.",
+      "An undated target-season end is missing because it could represent an in-season change."
+    ],
+    "effective_preseason_cutoff": "August 15 of each target season",
+    "evidence": "CFBD documentation labels this endpoint continuous head-coaching tenures and exposes dated start/end fields",
+    "historical_coverage": "depends on cached team responses; CFBD exposes continuous historical tenures",
+    "intended_semantics": "head-coach identity and tenure at the target cutoff",
+    "production_status": "reconstructable-safe",
+    "retrospective_change_risk": "source can correct historical tenure records; raw payloads are cached before processing",
+    "source": "CFBD /coaches/tenures, one cached raw response per team",
+    "source_fields": [
+      "coach.id",
+      "startYear",
+      "endYear",
+      "hireDate",
+      "effectiveStart",
+      "effectiveEnd"
+    ]
+  },
+  "rank_history": {
+    "caveats": [],
+    "effective_preseason_cutoff": "target season kickoff; all inputs are earlier completed seasons",
+    "evidence": "H V1.1 feature construction excludes the target season",
+    "historical_coverage": "2003-2025 final outcomes",
+    "intended_semantics": "completed-season rank information only",
+    "production_status": "production-safe",
+    "retrospective_change_risk": "none after final-data normalization",
+    "source": "processed Massey final constituent-rank distributions"
+  },
+  "recruiting_class": {
+    "caveats": [
+      "Not admitted merely because a class ordinarily signs before kickoff."
+    ],
+    "effective_preseason_cutoff": "not demonstrated by the cached response",
+    "evidence": "endpoint documents class year and team ranks, but not historical as-of timestamps",
+    "historical_coverage": "2003-2026, incomplete across teams and years",
+    "intended_semantics": "annual class ranking and aggregate points",
+    "production_status": "exploratory-timing-uncertain",
+    "retrospective_change_risk": "unknown; endpoint has no finalization date or snapshot version",
+    "source": "CFBD /recruiting/teams cached annual rank and points",
+    "source_fields": [
+      "year",
+      "rank",
+      "points"
+    ]
+  },
+  "returning_production": {
+    "caveats": [
+      "Overall and passing/QB proxies remain exploratory."
+    ],
+    "effective_preseason_cutoff": "not demonstrated by cached response",
+    "evidence": "endpoint documents team-season metrics but no as-of date",
+    "historical_coverage": "2014-2026 FBS-oriented payloads",
+    "intended_semantics": "target-season returning PPA and usage shares",
+    "production_status": "exploratory-timing-uncertain",
+    "retrospective_change_risk": "unknown; no archived roster/cutoff snapshot",
+    "source": "CFBD /player/returning",
+    "source_fields": [
+      "percentPPA",
+      "percentPassingPPA",
+      "percentReceivingPPA",
+      "percentRushingPPA",
+      "usage"
+    ]
+  },
+  "team_talent_composite": {
+    "caveats": [
+      "Excluded from V1.2 production."
+    ],
+    "effective_preseason_cutoff": "not demonstrated by cached annual values",
+    "evidence": "CFBD documents a season rating but not a preseason snapshot or immutability guarantee",
+    "historical_coverage": "2015-2026; coverage varies materially in recent seasons",
+    "intended_semantics": "season roster talent composite",
+    "production_status": "exploratory-timing-uncertain",
+    "retrospective_change_risk": "unknown; no snapshot date/version in payload",
+    "source": "CFBD /talent (247Sports Team Talent Composite)",
+    "source_fields": [
+      "year",
+      "team",
+      "talent"
+    ]
+  },
+  "transfers": {
+    "caveats": [
+      "Cleanly omitted rather than inferred from current roster state."
+    ],
+    "effective_preseason_cutoff": "would require a dated roster/eligibility reconstruction",
+    "evidence": "the endpoint has transfer dates but no preserved target-roster snapshot in this repository",
+    "historical_coverage": "not acquired",
+    "intended_semantics": "portal movement into a target roster",
+    "production_status": "rejected",
+    "retrospective_change_risk": "high: destination, eligibility, and roster status can change",
+    "source": "CFBD /player/portal (not cached for this corpus)",
+    "source_fields": [
+      "origin",
+      "destination",
+      "transferDate",
+      "eligibility"
+    ]
+  }
+}

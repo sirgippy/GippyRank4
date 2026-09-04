@@ -1,0 +1,83 @@
+{
+  "cold_start_behavior": "V1 learned FCS-to-FBS transition, then generic FBS fallback",
+  "context_as_of": null,
+  "fitted_instance": {
+    "prediction_source_model": "V1_1_long_run_baseline",
+    "target_seasons": [
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "trained_through_season": 2021
+  },
+  "frozen_specification": {
+    "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+    "degrees_of_freedom": null,
+    "family": "normal",
+    "feature_names": [
+      "lag2_z_mean",
+      "lag3_z_mean",
+      "long_run_z_mean"
+    ],
+    "lag_count": 1,
+    "location_coefficients": [
+      0.4738610744454514,
+      -0.017303814748968336,
+      0.014510801374970897,
+      0.10750706015449478,
+      0.43241957714417195,
+      0.06404715563313321,
+      -0.02461751876932997,
+      0.0
+    ],
+    "log_scale_coefficients": [
+      0.16251155682292967,
+      -0.024824309128770462,
+      -0.03758125954771279,
+      0.06811587778128367,
+      0.0001587510554985538,
+      0.014787546370285476,
+      0.0
+    ],
+    "minimum_scale": 0.1,
+    "optimizer": {
+      "function_evaluations": 40,
+      "iterations": 38,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "objective": 1.689287965757965,
+      "status": 0,
+      "success": true
+    },
+    "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+    "penalty": 0.25,
+    "preprocessing": {
+      "feature_names": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean"
+      ],
+      "means": {
+        "lag2_z_mean": -0.010523403108951135,
+        "lag3_z_mean": -0.009897629260148099,
+        "long_run_z_mean": 0.04880498155296047
+      },
+      "medians": {
+        "lag2_z_mean": 0.0018831090697629563,
+        "lag3_z_mean": -0.00040840480776854326,
+        "long_run_z_mean": 0.06785735021257769
+      },
+      "scales": {
+        "lag2_z_mean": 1.6829540379091563,
+        "lag3_z_mean": 1.631087187512554,
+        "long_run_z_mean": 1.4407402696680938
+      }
+    },
+    "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+    "quadrature_points": 12
+  },
+  "model_family": "history_prior",
+  "spec_version": "1.1",
+  "target_season": 2022,
+  "trained_through_season": 2021
+}

@@ -1,0 +1,2915 @@
+{
+  "all_fbs": {
+    "candidate": {
+      "crps": 0.1137067480691136,
+      "expected_rank_mae": 21.261093070224195,
+      "interval_80_average_width": 78.04494382022472,
+      "interval_80_coverage": 0.83935747014866,
+      "median_rank_mae": 21.27059925093633,
+      "n_team_seasons": 534,
+      "nll": 4.544157943442582,
+      "top10": {
+        "calibration_gap": 0.004623690000171973,
+        "empirical_frequency": 0.0749514913586932,
+        "mean_predicted_probability": 0.07957518135886517,
+        "reliability": {
+          "bins": [
+            {
+              "empirical_frequency": 0.010263740989880189,
+              "mean_predicted_probability": 0.014831977732956012,
+              "n_team_seasons": 341,
+              "range": "[0.00, 0.05)"
+            },
+            {
+              "empirical_frequency": 0.06075377202358438,
+              "mean_predicted_probability": 0.08938152697459482,
+              "n_team_seasons": 116,
+              "range": "[0.05, 0.15)"
+            },
+            {
+              "empirical_frequency": 0.24827396009769337,
+              "mean_predicted_probability": 0.21335293367728206,
+              "n_team_seasons": 39,
+              "range": "[0.15, 0.30)"
+            },
+            {
+              "empirical_frequency": 0.3099644970106267,
+              "mean_predicted_probability": 0.3829951190582917,
+              "n_team_seasons": 24,
+              "range": "[0.30, 0.50)"
+            },
+            {
+              "empirical_frequency": 0.9149878645769056,
+              "mean_predicted_probability": 0.6192444159186667,
+              "n_team_seasons": 9,
+              "range": "[0.50, 0.70)"
+            },
+            {
+              "empirical_frequency": 0.8240000000000001,
+              "mean_predicted_probability": 0.7962676591123999,
+              "n_team_seasons": 5,
+              "range": "[0.70, 1.00]"
+            }
+          ],
+          "brier_score": 0.03251699107092261
+        }
+      },
+      "top25": {
+        "calibration_gap": 0.015632269453345837,
+        "empirical_frequency": 0.18753022821115417,
+        "mean_predicted_probability": 0.2031624976645,
+        "reliability": {
+          "bins": [
+            {
+              "empirical_frequency": 0.023963425070244057,
+              "mean_predicted_probability": 0.019520729583202705,
+              "n_team_seasons": 148,
+              "range": "[0.00, 0.05)"
+            },
+            {
+              "empirical_frequency": 0.06354969412681323,
+              "mean_predicted_probability": 0.09469735986080882,
+              "n_team_seasons": 136,
+              "range": "[0.05, 0.15)"
+            },
+            {
+              "empirical_frequency": 0.18337621509011925,
+              "mean_predicted_probability": 0.2105085722677686,
+              "n_team_seasons": 121,
+              "range": "[0.15, 0.30)"
+            },
+            {
+              "empirical_frequency": 0.3518954851864573,
+              "mean_predicted_probability": 0.3820716213573194,
+              "n_team_seasons": 72,
+              "range": "[0.30, 0.50)"
+            },
+            {
+              "empirical_frequency": 0.5923783712063665,
+              "mean_predicted_probability": 0.600672338119647,
+              "n_team_seasons": 34,
+              "range": "[0.50, 0.70)"
+            },
+            {
+              "empirical_frequency": 0.8819971727290341,
+              "mean_predicted_probability": 0.8398831024027826,
+              "n_team_seasons": 23,
+              "range": "[0.70, 1.00]"
+            }
+          ],
+          "brier_score": 0.07476648190341173
+        }
+      },
+      "top5": {
+        "calibration_gap": -0.0016061726482511432,
+        "empirical_frequency": 0.03752635808950957,
+        "mean_predicted_probability": 0.035920185441258426,
+        "reliability": {
+          "bins": [
+            {
+              "empirical_frequency": 0.004261445865737003,
+              "mean_predicted_probability": 0.009160319207684443,
+              "n_team_seasons": 450,
+              "range": "[0.00, 0.05)"
+            },
+            {
+              "empirical_frequency": 0.11954787637165823,
+              "mean_predicted_probability": 0.08757082238888235,
+              "n_team_seasons": 51,
+              "range": "[0.05, 0.15)"
+            },
+            {
+              "empirical_frequency": 0.20069101441327183,
+              "mean_predicted_probability": 0.20698740795310527,
+              "n_team_seasons": 19,
+              "range": "[0.15, 0.30)"
+            },
+            {
+              "empirical_frequency": 0.5029030251575226,
+              "mean_predicted_probability": 0.40276577416333337,
+              "n_team_seasons": 9,
+              "range": "[0.30, 0.50)"
+            },
+            {
+              "empirical_frequency": 0.7370452769984046,
+              "mean_predicted_probability": 0.6070941443524,
+              "n_team_seasons": 5,
+              "range": "[0.50, 0.70)"
+            }
+          ],
+          "brier_score": 0.017035478944833562
+        }
+      }
+    },
+    "delta_c_minus_h": {
+      "crps": 0.0,
+      "expected_rank_mae": 0.0,
+      "interval_80_average_width": 0.0,
+      "interval_80_coverage": 0.0,
+      "median_rank_mae": 0.0,
+      "nll": 0.0,
+      "top10_brier": 0.0,
+      "top25_brier": 0.0,
+      "top5_brier": 0.0
+    },
+    "paired_season_resampling": {
+      "crps_central_95_bootstrap_range": [
+        0.0,
+        0.0
+      ],
+      "fraction_candidate_better_crps": 0.0,
+      "fraction_candidate_better_nll": 0.0,
+      "mean_delta_crps": 0.0,
+      "mean_delta_nll": 0.0,
+      "n_resamples": 256,
+      "n_season_clusters": 4,
+      "n_team_seasons": 534,
+      "nll_central_95_bootstrap_range": [
+        0.0,
+        0.0
+      ],
+      "resampling": "exhaustive ordered season bootstrap over all 4^4 = 256 resamples; descriptive only"
+    },
+    "per_season": {
+      "2022": {
+        "c": {
+          "crps": 0.11543846241471971,
+          "expected_rank_mae": 21.195231772349153,
+          "interval_80_average_width": 76.49618320610686,
+          "interval_80_coverage": 0.8404304239860203,
+          "median_rank_mae": 21.213740458015266,
+          "n_team_seasons": 131,
+          "nll": 4.527567446799274,
+          "top10": {
+            "calibration_gap": 0.005364390875762071,
+            "empirical_frequency": 0.07651981973696312,
+            "mean_predicted_probability": 0.08188421061272519,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.01916098127449557,
+                  "mean_predicted_probability": 0.015209801734831323,
+                  "n_team_seasons": 83,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.07185886402753873,
+                  "mean_predicted_probability": 0.09207628684464285,
+                  "n_team_seasons": 28,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.19058050383351588,
+                  "mean_predicted_probability": 0.2090918913330909,
+                  "n_team_seasons": 11,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.22088353413654618,
+                  "mean_predicted_probability": 0.3985667405021667,
+                  "n_team_seasons": 6,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.653734879205,
+                  "n_team_seasons": 1,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.770567943872,
+                  "n_team_seasons": 2,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.03265919593785857
+            }
+          },
+          "top25": {
+            "calibration_gap": 0.01683688705963804,
+            "empirical_frequency": 0.19129954934240778,
+            "mean_predicted_probability": 0.20813643640204582,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.040829986613119144,
+                  "mean_predicted_probability": 0.01886094464422222,
+                  "n_team_seasons": 36,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.051581325301204815,
+                  "mean_predicted_probability": 0.097315642426625,
+                  "n_team_seasons": 32,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.2742002492729539,
+                  "mean_predicted_probability": 0.21301442951134486,
+                  "n_team_seasons": 29,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.32243258749282844,
+                  "mean_predicted_probability": 0.3829998076561905,
+                  "n_team_seasons": 21,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.4354561101549054,
+                  "mean_predicted_probability": 0.6071032278197143,
+                  "n_team_seasons": 7,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.6947791164658635,
+                  "mean_predicted_probability": 0.8337735987461666,
+                  "n_team_seasons": 6,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.09507191938551267
+            }
+          },
+          "top5": {
+            "calibration_gap": -0.0010129623069014063,
+            "empirical_frequency": 0.03825990986848156,
+            "mean_predicted_probability": 0.03724694756158015,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.011606057256549134,
+                  "mean_predicted_probability": 0.009351896516229356,
+                  "n_team_seasons": 109,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.008341056533827619,
+                  "mean_predicted_probability": 0.07998579508815386,
+                  "n_team_seasons": 13,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.1686746987951807,
+                  "mean_predicted_probability": 0.20714128637683335,
+                  "n_team_seasons": 6,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.8313253012048193,
+                  "mean_predicted_probability": 0.43632420850700004,
+                  "n_team_seasons": 1,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.8975903614457832,
+                  "mean_predicted_probability": 0.570503073692,
+                  "n_team_seasons": 2,
+                  "range": "[0.50, 0.70)"
+                }
+              ],
+              "brier_score": 0.01574803105662125
+            }
+          }
+        },
+        "delta_nll": 0.0,
+        "h": {
+          "crps": 0.11543846241471971,
+          "expected_rank_mae": 21.195231772349153,
+          "interval_80_average_width": 76.49618320610686,
+          "interval_80_coverage": 0.8404304239860203,
+          "median_rank_mae": 21.213740458015266,
+          "n_team_seasons": 131,
+          "nll": 4.527567446799274,
+          "top10": {
+            "calibration_gap": 0.005364390875762071,
+            "empirical_frequency": 0.07651981973696312,
+            "mean_predicted_probability": 0.08188421061272519,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.01916098127449557,
+                  "mean_predicted_probability": 0.015209801734831323,
+                  "n_team_seasons": 83,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.07185886402753873,
+                  "mean_predicted_probability": 0.09207628684464285,
+                  "n_team_seasons": 28,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.19058050383351588,
+                  "mean_predicted_probability": 0.2090918913330909,
+                  "n_team_seasons": 11,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.22088353413654618,
+                  "mean_predicted_probability": 0.3985667405021667,
+                  "n_team_seasons": 6,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.653734879205,
+                  "n_team_seasons": 1,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.770567943872,
+                  "n_team_seasons": 2,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.03265919593785857
+            }
+          },
+          "top25": {
+            "calibration_gap": 0.01683688705963804,
+            "empirical_frequency": 0.19129954934240778,
+            "mean_predicted_probability": 0.20813643640204582,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.040829986613119144,
+                  "mean_predicted_probability": 0.01886094464422222,
+                  "n_team_seasons": 36,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.051581325301204815,
+                  "mean_predicted_probability": 0.097315642426625,
+                  "n_team_seasons": 32,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.2742002492729539,
+                  "mean_predicted_probability": 0.21301442951134486,
+                  "n_team_seasons": 29,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.32243258749282844,
+                  "mean_predicted_probability": 0.3829998076561905,
+                  "n_team_seasons": 21,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.4354561101549054,
+                  "mean_predicted_probability": 0.6071032278197143,
+                  "n_team_seasons": 7,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.6947791164658635,
+                  "mean_predicted_probability": 0.8337735987461666,
+                  "n_team_seasons": 6,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.09507191938551267
+            }
+          },
+          "top5": {
+            "calibration_gap": -0.0010129623069014063,
+            "empirical_frequency": 0.03825990986848156,
+            "mean_predicted_probability": 0.03724694756158015,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.011606057256549134,
+                  "mean_predicted_probability": 0.009351896516229356,
+                  "n_team_seasons": 109,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.008341056533827619,
+                  "mean_predicted_probability": 0.07998579508815386,
+                  "n_team_seasons": 13,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.1686746987951807,
+                  "mean_predicted_probability": 0.20714128637683335,
+                  "n_team_seasons": 6,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.8313253012048193,
+                  "mean_predicted_probability": 0.43632420850700004,
+                  "n_team_seasons": 1,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.8975903614457832,
+                  "mean_predicted_probability": 0.570503073692,
+                  "n_team_seasons": 2,
+                  "range": "[0.50, 0.70)"
+                }
+              ],
+              "brier_score": 0.01574803105662125
+            }
+          }
+        }
+      },
+      "2023": {
+        "c": {
+          "crps": 0.10617914101561066,
+          "expected_rank_mae": 20.18881642891107,
+          "interval_80_average_width": 77.99248120300751,
+          "interval_80_coverage": 0.8730948994106889,
+          "median_rank_mae": 20.033834586466167,
+          "n_team_seasons": 133,
+          "nll": 4.490158919762566,
+          "top10": {
+            "calibration_gap": 0.0037386437270827133,
+            "empirical_frequency": 0.07518796992481203,
+            "mean_predicted_probability": 0.07892661365189474,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.000988793671720501,
+                  "mean_predicted_probability": 0.013510405492804878,
+                  "n_team_seasons": 82,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.03767403767403768,
+                  "mean_predicted_probability": 0.0871884033359697,
+                  "n_team_seasons": 33,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.5016891891891893,
+                  "mean_predicted_probability": 0.22104598341325,
+                  "n_team_seasons": 8,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.24131274131274133,
+                  "mean_predicted_probability": 0.36669279240514285,
+                  "n_team_seasons": 7,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.9864864864864865,
+                  "mean_predicted_probability": 0.6784047505270001,
+                  "n_team_seasons": 2,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.820142140009,
+                  "n_team_seasons": 1,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.02933859440423448
+            }
+          },
+          "top25": {
+            "calibration_gap": 0.014557786682544621,
+            "empirical_frequency": 0.18847795163584638,
+            "mean_predicted_probability": 0.203035738318391,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.0007304601899196494,
+                  "mean_predicted_probability": 0.021357058232810807,
+                  "n_team_seasons": 37,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.08664546899841016,
+                  "mean_predicted_probability": 0.08977753366105883,
+                  "n_team_seasons": 34,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.10298229263746503,
+                  "mean_predicted_probability": 0.21431853362758618,
+                  "n_team_seasons": 29,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.3603603603603604,
+                  "mean_predicted_probability": 0.3677917706534444,
+                  "n_team_seasons": 18,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.7837837837837838,
+                  "mean_predicted_probability": 0.6175384802952728,
+                  "n_team_seasons": 11,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.8831733167615,
+                  "n_team_seasons": 4,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.05991548657923457
+            }
+          },
+          "top5": {
+            "calibration_gap": -0.0025477552534062253,
+            "empirical_frequency": 0.03779719569193254,
+            "mean_predicted_probability": 0.03524944043852631,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.0005926979611190138,
+                  "mean_predicted_probability": 0.009776324655035088,
+                  "n_team_seasons": 114,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.1918918918918919,
+                  "mean_predicted_probability": 0.08971182810789999,
+                  "n_team_seasons": 10,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.1801801801801802,
+                  "mean_predicted_probability": 0.18570273946533336,
+                  "n_team_seasons": 6,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.4797297297297297,
+                  "mean_predicted_probability": 0.46215537731700007,
+                  "n_team_seasons": 2,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.638029095145,
+                  "n_team_seasons": 1,
+                  "range": "[0.50, 0.70)"
+                }
+              ],
+              "brier_score": 0.012040267222535617
+            }
+          }
+        },
+        "delta_nll": 0.0,
+        "h": {
+          "crps": 0.10617914101561066,
+          "expected_rank_mae": 20.18881642891107,
+          "interval_80_average_width": 77.99248120300751,
+          "interval_80_coverage": 0.8730948994106889,
+          "median_rank_mae": 20.033834586466167,
+          "n_team_seasons": 133,
+          "nll": 4.490158919762566,
+          "top10": {
+            "calibration_gap": 0.0037386437270827133,
+            "empirical_frequency": 0.07518796992481203,
+            "mean_predicted_probability": 0.07892661365189474,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.000988793671720501,
+                  "mean_predicted_probability": 0.013510405492804878,
+                  "n_team_seasons": 82,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.03767403767403768,
+                  "mean_predicted_probability": 0.0871884033359697,
+                  "n_team_seasons": 33,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.5016891891891893,
+                  "mean_predicted_probability": 0.22104598341325,
+                  "n_team_seasons": 8,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.24131274131274133,
+                  "mean_predicted_probability": 0.36669279240514285,
+                  "n_team_seasons": 7,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.9864864864864865,
+                  "mean_predicted_probability": 0.6784047505270001,
+                  "n_team_seasons": 2,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.820142140009,
+                  "n_team_seasons": 1,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.02933859440423448
+            }
+          },
+          "top25": {
+            "calibration_gap": 0.014557786682544621,
+            "empirical_frequency": 0.18847795163584638,
+            "mean_predicted_probability": 0.203035738318391,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.0007304601899196494,
+                  "mean_predicted_probability": 0.021357058232810807,
+                  "n_team_seasons": 37,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.08664546899841016,
+                  "mean_predicted_probability": 0.08977753366105883,
+                  "n_team_seasons": 34,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.10298229263746503,
+                  "mean_predicted_probability": 0.21431853362758618,
+                  "n_team_seasons": 29,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.3603603603603604,
+                  "mean_predicted_probability": 0.3677917706534444,
+                  "n_team_seasons": 18,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.7837837837837838,
+                  "mean_predicted_probability": 0.6175384802952728,
+                  "n_team_seasons": 11,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.8831733167615,
+                  "n_team_seasons": 4,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.05991548657923457
+            }
+          },
+          "top5": {
+            "calibration_gap": -0.0025477552534062253,
+            "empirical_frequency": 0.03779719569193254,
+            "mean_predicted_probability": 0.03524944043852631,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.0005926979611190138,
+                  "mean_predicted_probability": 0.009776324655035088,
+                  "n_team_seasons": 114,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.1918918918918919,
+                  "mean_predicted_probability": 0.08971182810789999,
+                  "n_team_seasons": 10,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.1801801801801802,
+                  "mean_predicted_probability": 0.18570273946533336,
+                  "n_team_seasons": 6,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.4797297297297297,
+                  "mean_predicted_probability": 0.46215537731700007,
+                  "n_team_seasons": 2,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.638029095145,
+                  "n_team_seasons": 1,
+                  "range": "[0.50, 0.70)"
+                }
+              ],
+              "brier_score": 0.012040267222535617
+            }
+          }
+        }
+      },
+      "2024": {
+        "c": {
+          "crps": 0.12123390284372393,
+          "expected_rank_mae": 22.66606456835642,
+          "interval_80_average_width": 77.88059701492537,
+          "interval_80_coverage": 0.8029971762807584,
+          "median_rank_mae": 22.746268656716417,
+          "n_team_seasons": 134,
+          "nll": 4.588168687524902,
+          "top10": {
+            "calibration_gap": 0.005427453299671647,
+            "empirical_frequency": 0.07462686567164178,
+            "mean_predicted_probability": 0.08005431897131343,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.02046511627906977,
+                  "mean_predicted_probability": 0.015066168762511633,
+                  "n_team_seasons": 86,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.02095238095238095,
+                  "mean_predicted_probability": 0.08510197379628572,
+                  "n_team_seasons": 28,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.12148148148148147,
+                  "mean_predicted_probability": 0.2108899525161111,
+                  "n_team_seasons": 9,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.5714285714285714,
+                  "mean_predicted_probability": 0.3574629650471429,
+                  "n_team_seasons": 7,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.8133333333333334,
+                  "mean_predicted_probability": 0.6305731559993334,
+                  "n_team_seasons": 3,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.12,
+                  "mean_predicted_probability": 0.756763166311,
+                  "n_team_seasons": 1,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.03343798469593649
+            }
+          },
+          "top25": {
+            "calibration_gap": 0.01705533409516169,
+            "empirical_frequency": 0.18666666666666668,
+            "mean_predicted_probability": 0.20372200076182836,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.030427350427350428,
+                  "mean_predicted_probability": 0.020244186932974355,
+                  "n_team_seasons": 39,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.09075268817204302,
+                  "mean_predicted_probability": 0.0976723207550968,
+                  "n_team_seasons": 31,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.17777777777777778,
+                  "mean_predicted_probability": 0.20836670484709094,
+                  "n_team_seasons": 33,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.2575,
+                  "mean_predicted_probability": 0.38152216734800004,
+                  "n_team_seasons": 16,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.5896296296296296,
+                  "mean_predicted_probability": 0.6082528187497778,
+                  "n_team_seasons": 9,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.9533333333333333,
+                  "mean_predicted_probability": 0.8377752603368332,
+                  "n_team_seasons": 6,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.0760301768705594
+            }
+          },
+          "top5": {
+            "calibration_gap": -0.0012511531009925317,
+            "empirical_frequency": 0.03731343283582089,
+            "mean_predicted_probability": 0.03606227973482836,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.0012979351032448379,
+                  "mean_predicted_probability": 0.008814592858442478,
+                  "n_team_seasons": 113,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.15076923076923077,
+                  "mean_predicted_probability": 0.0961644944423077,
+                  "n_team_seasons": 13,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.43,
+                  "mean_predicted_probability": 0.19600278903600002,
+                  "n_team_seasons": 4,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.3866666666666667,
+                  "mean_predicted_probability": 0.41367706156833334,
+                  "n_team_seasons": 3,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.013333333333333334,
+                  "mean_predicted_probability": 0.561115722864,
+                  "n_team_seasons": 1,
+                  "range": "[0.50, 0.70)"
+                }
+              ],
+              "brier_score": 0.0234519138102633
+            }
+          }
+        },
+        "delta_nll": 0.0,
+        "h": {
+          "crps": 0.12123390284372393,
+          "expected_rank_mae": 22.66606456835642,
+          "interval_80_average_width": 77.88059701492537,
+          "interval_80_coverage": 0.8029971762807584,
+          "median_rank_mae": 22.746268656716417,
+          "n_team_seasons": 134,
+          "nll": 4.588168687524902,
+          "top10": {
+            "calibration_gap": 0.005427453299671647,
+            "empirical_frequency": 0.07462686567164178,
+            "mean_predicted_probability": 0.08005431897131343,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.02046511627906977,
+                  "mean_predicted_probability": 0.015066168762511633,
+                  "n_team_seasons": 86,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.02095238095238095,
+                  "mean_predicted_probability": 0.08510197379628572,
+                  "n_team_seasons": 28,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.12148148148148147,
+                  "mean_predicted_probability": 0.2108899525161111,
+                  "n_team_seasons": 9,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.5714285714285714,
+                  "mean_predicted_probability": 0.3574629650471429,
+                  "n_team_seasons": 7,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.8133333333333334,
+                  "mean_predicted_probability": 0.6305731559993334,
+                  "n_team_seasons": 3,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.12,
+                  "mean_predicted_probability": 0.756763166311,
+                  "n_team_seasons": 1,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.03343798469593649
+            }
+          },
+          "top25": {
+            "calibration_gap": 0.01705533409516169,
+            "empirical_frequency": 0.18666666666666668,
+            "mean_predicted_probability": 0.20372200076182836,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.030427350427350428,
+                  "mean_predicted_probability": 0.020244186932974355,
+                  "n_team_seasons": 39,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.09075268817204302,
+                  "mean_predicted_probability": 0.0976723207550968,
+                  "n_team_seasons": 31,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.17777777777777778,
+                  "mean_predicted_probability": 0.20836670484709094,
+                  "n_team_seasons": 33,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.2575,
+                  "mean_predicted_probability": 0.38152216734800004,
+                  "n_team_seasons": 16,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.5896296296296296,
+                  "mean_predicted_probability": 0.6082528187497778,
+                  "n_team_seasons": 9,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.9533333333333333,
+                  "mean_predicted_probability": 0.8377752603368332,
+                  "n_team_seasons": 6,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.0760301768705594
+            }
+          },
+          "top5": {
+            "calibration_gap": -0.0012511531009925317,
+            "empirical_frequency": 0.03731343283582089,
+            "mean_predicted_probability": 0.03606227973482836,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.0012979351032448379,
+                  "mean_predicted_probability": 0.008814592858442478,
+                  "n_team_seasons": 113,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.15076923076923077,
+                  "mean_predicted_probability": 0.0961644944423077,
+                  "n_team_seasons": 13,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.43,
+                  "mean_predicted_probability": 0.19600278903600002,
+                  "n_team_seasons": 4,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.3866666666666667,
+                  "mean_predicted_probability": 0.41367706156833334,
+                  "n_team_seasons": 3,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.013333333333333334,
+                  "mean_predicted_probability": 0.561115722864,
+                  "n_team_seasons": 1,
+                  "range": "[0.50, 0.70)"
+                }
+              ],
+              "brier_score": 0.0234519138102633
+            }
+          }
+        }
+      },
+      "2025": {
+        "c": {
+          "crps": 0.11198379526796437,
+          "expected_rank_mae": 20.98884632439007,
+          "interval_80_average_width": 79.75,
+          "interval_80_coverage": 0.8411563255439162,
+          "median_rank_mae": 21.080882352941178,
+          "n_team_seasons": 136,
+          "nll": 4.569582836844677,
+          "top10": {
+            "calibration_gap": 0.003983800716977931,
+            "empirical_frequency": 0.07352941176470588,
+            "mean_predicted_probability": 0.07751321248168382,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.00076103500761035,
+                  "mean_predicted_probability": 0.015463856655122222,
+                  "n_team_seasons": 90,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.1187214611872146,
+                  "mean_predicted_probability": 0.09370550077851851,
+                  "n_team_seasons": 27,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.22540473225404734,
+                  "mean_predicted_probability": 0.2140341971635455,
+                  "n_team_seasons": 11,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.10616438356164383,
+                  "mean_predicted_probability": 0.432848028055,
+                  "n_team_seasons": 4,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.9406392694063926,
+                  "mean_predicted_probability": 0.5569786316703332,
+                  "n_team_seasons": 3,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.8632971014979999,
+                  "n_team_seasons": 1,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.03458084969848914
+            }
+          },
+          "top25": {
+            "calibration_gap": 0.014120582983411734,
+            "empirical_frequency": 0.18382352941176472,
+            "mean_predicted_probability": 0.19794411239517645,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.023972602739726026,
+                  "mean_predicted_probability": 0.01750943128116667,
+                  "n_team_seasons": 36,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.03161222339304531,
+                  "mean_predicted_probability": 0.09447339219317949,
+                  "n_team_seasons": 39,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.17945205479452053,
+                  "mean_predicted_probability": 0.2067593351139,
+                  "n_team_seasons": 30,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.46817082997582593,
+                  "mean_predicted_probability": 0.39656201338923536,
+                  "n_team_seasons": 17,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.4520547945205479,
+                  "mean_predicted_probability": 0.5579911784762857,
+                  "n_team_seasons": 7,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.913894324853229,
+                  "mean_predicted_probability": 0.8221892762457143,
+                  "n_team_seasons": 7,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.06848585647960698
+            }
+          },
+          "top5": {
+            "calibration_gap": -0.0016065600568088215,
+            "empirical_frequency": 0.03676470588235294,
+            "mean_predicted_probability": 0.03515814582554412,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.0038452295121365054,
+                  "mean_predicted_probability": 0.008703832627289474,
+                  "n_team_seasons": 114,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.14063926940639268,
+                  "mean_predicted_probability": 0.08526932645719999,
+                  "n_team_seasons": 15,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.0,
+                  "mean_predicted_probability": 0.2638951466373333,
+                  "n_team_seasons": 3,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.5251141552511415,
+                  "mean_predicted_probability": 0.341075273208,
+                  "n_team_seasons": 3,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.8767123287671232,
+                  "mean_predicted_probability": 0.695319756369,
+                  "n_team_seasons": 1,
+                  "range": "[0.50, 0.70)"
+                }
+              ],
+              "brier_score": 0.01683854188934719
+            }
+          }
+        },
+        "delta_nll": 0.0,
+        "h": {
+          "crps": 0.11198379526796437,
+          "expected_rank_mae": 20.98884632439007,
+          "interval_80_average_width": 79.75,
+          "interval_80_coverage": 0.8411563255439162,
+          "median_rank_mae": 21.080882352941178,
+          "n_team_seasons": 136,
+          "nll": 4.569582836844677,
+          "top10": {
+            "calibration_gap": 0.003983800716977931,
+            "empirical_frequency": 0.07352941176470588,
+            "mean_predicted_probability": 0.07751321248168382,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.00076103500761035,
+                  "mean_predicted_probability": 0.015463856655122222,
+                  "n_team_seasons": 90,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.1187214611872146,
+                  "mean_predicted_probability": 0.09370550077851851,
+                  "n_team_seasons": 27,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.22540473225404734,
+                  "mean_predicted_probability": 0.2140341971635455,
+                  "n_team_seasons": 11,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.10616438356164383,
+                  "mean_predicted_probability": 0.432848028055,
+                  "n_team_seasons": 4,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.9406392694063926,
+                  "mean_predicted_probability": 0.5569786316703332,
+                  "n_team_seasons": 3,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.8632971014979999,
+                  "n_team_seasons": 1,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.03458084969848914
+            }
+          },
+          "top25": {
+            "calibration_gap": 0.014120582983411734,
+            "empirical_frequency": 0.18382352941176472,
+            "mean_predicted_probability": 0.19794411239517645,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.023972602739726026,
+                  "mean_predicted_probability": 0.01750943128116667,
+                  "n_team_seasons": 36,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.03161222339304531,
+                  "mean_predicted_probability": 0.09447339219317949,
+                  "n_team_seasons": 39,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.17945205479452053,
+                  "mean_predicted_probability": 0.2067593351139,
+                  "n_team_seasons": 30,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.46817082997582593,
+                  "mean_predicted_probability": 0.39656201338923536,
+                  "n_team_seasons": 17,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.4520547945205479,
+                  "mean_predicted_probability": 0.5579911784762857,
+                  "n_team_seasons": 7,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.913894324853229,
+                  "mean_predicted_probability": 0.8221892762457143,
+                  "n_team_seasons": 7,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.06848585647960698
+            }
+          },
+          "top5": {
+            "calibration_gap": -0.0016065600568088215,
+            "empirical_frequency": 0.03676470588235294,
+            "mean_predicted_probability": 0.03515814582554412,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.0038452295121365054,
+                  "mean_predicted_probability": 0.008703832627289474,
+                  "n_team_seasons": 114,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.14063926940639268,
+                  "mean_predicted_probability": 0.08526932645719999,
+                  "n_team_seasons": 15,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.0,
+                  "mean_predicted_probability": 0.2638951466373333,
+                  "n_team_seasons": 3,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.5251141552511415,
+                  "mean_predicted_probability": 0.341075273208,
+                  "n_team_seasons": 3,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.8767123287671232,
+                  "mean_predicted_probability": 0.695319756369,
+                  "n_team_seasons": 1,
+                  "range": "[0.50, 0.70)"
+                }
+              ],
+              "brier_score": 0.01683854188934719
+            }
+          }
+        }
+      }
+    },
+    "reference": {
+      "crps": 0.1137067480691136,
+      "expected_rank_mae": 21.261093070224195,
+      "interval_80_average_width": 78.04494382022472,
+      "interval_80_coverage": 0.83935747014866,
+      "median_rank_mae": 21.27059925093633,
+      "n_team_seasons": 534,
+      "nll": 4.544157943442582,
+      "top10": {
+        "calibration_gap": 0.004623690000171973,
+        "empirical_frequency": 0.0749514913586932,
+        "mean_predicted_probability": 0.07957518135886517,
+        "reliability": {
+          "bins": [
+            {
+              "empirical_frequency": 0.010263740989880189,
+              "mean_predicted_probability": 0.014831977732956012,
+              "n_team_seasons": 341,
+              "range": "[0.00, 0.05)"
+            },
+            {
+              "empirical_frequency": 0.06075377202358438,
+              "mean_predicted_probability": 0.08938152697459482,
+              "n_team_seasons": 116,
+              "range": "[0.05, 0.15)"
+            },
+            {
+              "empirical_frequency": 0.24827396009769337,
+              "mean_predicted_probability": 0.21335293367728206,
+              "n_team_seasons": 39,
+              "range": "[0.15, 0.30)"
+            },
+            {
+              "empirical_frequency": 0.3099644970106267,
+              "mean_predicted_probability": 0.3829951190582917,
+              "n_team_seasons": 24,
+              "range": "[0.30, 0.50)"
+            },
+            {
+              "empirical_frequency": 0.9149878645769056,
+              "mean_predicted_probability": 0.6192444159186667,
+              "n_team_seasons": 9,
+              "range": "[0.50, 0.70)"
+            },
+            {
+              "empirical_frequency": 0.8240000000000001,
+              "mean_predicted_probability": 0.7962676591123999,
+              "n_team_seasons": 5,
+              "range": "[0.70, 1.00]"
+            }
+          ],
+          "brier_score": 0.03251699107092261
+        }
+      },
+      "top25": {
+        "calibration_gap": 0.015632269453345837,
+        "empirical_frequency": 0.18753022821115417,
+        "mean_predicted_probability": 0.2031624976645,
+        "reliability": {
+          "bins": [
+            {
+              "empirical_frequency": 0.023963425070244057,
+              "mean_predicted_probability": 0.019520729583202705,
+              "n_team_seasons": 148,
+              "range": "[0.00, 0.05)"
+            },
+            {
+              "empirical_frequency": 0.06354969412681323,
+              "mean_predicted_probability": 0.09469735986080882,
+              "n_team_seasons": 136,
+              "range": "[0.05, 0.15)"
+            },
+            {
+              "empirical_frequency": 0.18337621509011925,
+              "mean_predicted_probability": 0.2105085722677686,
+              "n_team_seasons": 121,
+              "range": "[0.15, 0.30)"
+            },
+            {
+              "empirical_frequency": 0.3518954851864573,
+              "mean_predicted_probability": 0.3820716213573194,
+              "n_team_seasons": 72,
+              "range": "[0.30, 0.50)"
+            },
+            {
+              "empirical_frequency": 0.5923783712063665,
+              "mean_predicted_probability": 0.600672338119647,
+              "n_team_seasons": 34,
+              "range": "[0.50, 0.70)"
+            },
+            {
+              "empirical_frequency": 0.8819971727290341,
+              "mean_predicted_probability": 0.8398831024027826,
+              "n_team_seasons": 23,
+              "range": "[0.70, 1.00]"
+            }
+          ],
+          "brier_score": 0.07476648190341173
+        }
+      },
+      "top5": {
+        "calibration_gap": -0.0016061726482511432,
+        "empirical_frequency": 0.03752635808950957,
+        "mean_predicted_probability": 0.035920185441258426,
+        "reliability": {
+          "bins": [
+            {
+              "empirical_frequency": 0.004261445865737003,
+              "mean_predicted_probability": 0.009160319207684443,
+              "n_team_seasons": 450,
+              "range": "[0.00, 0.05)"
+            },
+            {
+              "empirical_frequency": 0.11954787637165823,
+              "mean_predicted_probability": 0.08757082238888235,
+              "n_team_seasons": 51,
+              "range": "[0.05, 0.15)"
+            },
+            {
+              "empirical_frequency": 0.20069101441327183,
+              "mean_predicted_probability": 0.20698740795310527,
+              "n_team_seasons": 19,
+              "range": "[0.15, 0.30)"
+            },
+            {
+              "empirical_frequency": 0.5029030251575226,
+              "mean_predicted_probability": 0.40276577416333337,
+              "n_team_seasons": 9,
+              "range": "[0.30, 0.50)"
+            },
+            {
+              "empirical_frequency": 0.7370452769984046,
+              "mean_predicted_probability": 0.6070941443524,
+              "n_team_seasons": 5,
+              "range": "[0.50, 0.70)"
+            }
+          ],
+          "brier_score": 0.017035478944833562
+        }
+      }
+    }
+  },
+  "coach_observed": {
+    "candidate": {
+      "crps": 0.11392406330158218,
+      "expected_rank_mae": 21.388805893446712,
+      "interval_80_average_width": 77.5609756097561,
+      "interval_80_coverage": 0.8363861660057121,
+      "median_rank_mae": 21.371951219512194,
+      "n_team_seasons": 410,
+      "nll": 4.536962471359165,
+      "top10": {
+        "calibration_gap": 0.00032512443475569974,
+        "empirical_frequency": 0.08679847572263209,
+        "mean_predicted_probability": 0.08712360015738779,
+        "reliability": {
+          "bins": [
+            {
+              "empirical_frequency": 0.013565208998951117,
+              "mean_predicted_probability": 0.015326064144355729,
+              "n_team_seasons": 253,
+              "range": "[0.00, 0.05)"
+            },
+            {
+              "empirical_frequency": 0.0721010510427906,
+              "mean_predicted_probability": 0.09151277071404444,
+              "n_team_seasons": 90,
+              "range": "[0.05, 0.15)"
+            },
+            {
+              "empirical_frequency": 0.2319449297943128,
+              "mean_predicted_probability": 0.21014957866370587,
+              "n_team_seasons": 34,
+              "range": "[0.15, 0.30)"
+            },
+            {
+              "empirical_frequency": 0.3205875333990535,
+              "mean_predicted_probability": 0.38011000372989995,
+              "n_team_seasons": 20,
+              "range": "[0.30, 0.50)"
+            },
+            {
+              "empirical_frequency": 0.9060505368382081,
+              "mean_predicted_probability": 0.609801053377125,
+              "n_team_seasons": 8,
+              "range": "[0.50, 0.70)"
+            },
+            {
+              "empirical_frequency": 0.8240000000000001,
+              "mean_predicted_probability": 0.7962676591123999,
+              "n_team_seasons": 5,
+              "range": "[0.70, 1.00]"
+            }
+          ],
+          "brier_score": 0.03672624902532587
+        }
+      },
+      "top25": {
+        "calibration_gap": 0.00533416848088461,
+        "empirical_frequency": 0.21148054008867392,
+        "mean_predicted_probability": 0.21681470856955853,
+        "reliability": {
+          "bins": [
+            {
+              "empirical_frequency": 0.025482095948619582,
+              "mean_predicted_probability": 0.01930653590951852,
+              "n_team_seasons": 108,
+              "range": "[0.00, 0.05)"
+            },
+            {
+              "empirical_frequency": 0.07342149723730843,
+              "mean_predicted_probability": 0.09524399025105049,
+              "n_team_seasons": 99,
+              "range": "[0.05, 0.15)"
+            },
+            {
+              "empirical_frequency": 0.18277853840509237,
+              "mean_predicted_probability": 0.2118808795277204,
+              "n_team_seasons": 93,
+              "range": "[0.15, 0.30)"
+            },
+            {
+              "empirical_frequency": 0.38703172751944526,
+              "mean_predicted_probability": 0.38297329194632784,
+              "n_team_seasons": 61,
+              "range": "[0.30, 0.50)"
+            },
+            {
+              "empirical_frequency": 0.6272487137329976,
+              "mean_predicted_probability": 0.6012026939003794,
+              "n_team_seasons": 29,
+              "range": "[0.50, 0.70)"
+            },
+            {
+              "empirical_frequency": 0.8944337349397591,
+              "mean_predicted_probability": 0.8439299436260999,
+              "n_team_seasons": 20,
+              "range": "[0.70, 1.00]"
+            }
+          ],
+          "brier_score": 0.08027387938205884
+        }
+      },
+      "top5": {
+        "calibration_gap": -0.002484098843461152,
+        "empirical_frequency": 0.04250507234779774,
+        "mean_predicted_probability": 0.04002097350433659,
+        "reliability": {
+          "bins": [
+            {
+              "empirical_frequency": 0.005553032492359875,
+              "mean_predicted_probability": 0.009722623487541418,
+              "n_team_seasons": 338,
+              "range": "[0.00, 0.05)"
+            },
+            {
+              "empirical_frequency": 0.11970449805905038,
+              "mean_predicted_probability": 0.08620873448272094,
+              "n_team_seasons": 43,
+              "range": "[0.05, 0.15)"
+            },
+            {
+              "empirical_frequency": 0.17582057961576034,
+              "mean_predicted_probability": 0.2024635515010625,
+              "n_team_seasons": 16,
+              "range": "[0.15, 0.30)"
+            },
+            {
+              "empirical_frequency": 0.48806320059951025,
+              "mean_predicted_probability": 0.392561158681625,
+              "n_team_seasons": 8,
+              "range": "[0.30, 0.50)"
+            },
+            {
+              "empirical_frequency": 0.7370452769984046,
+              "mean_predicted_probability": 0.6070941443524,
+              "n_team_seasons": 5,
+              "range": "[0.50, 0.70)"
+            }
+          ],
+          "brier_score": 0.019410890011168535
+        }
+      }
+    },
+    "delta_c_minus_h": {
+      "crps": 0.0,
+      "expected_rank_mae": 0.0,
+      "interval_80_average_width": 0.0,
+      "interval_80_coverage": 0.0,
+      "median_rank_mae": 0.0,
+      "nll": 0.0,
+      "top10_brier": 0.0,
+      "top25_brier": 0.0,
+      "top5_brier": 0.0
+    },
+    "paired_season_resampling": {
+      "crps_central_95_bootstrap_range": [
+        0.0,
+        0.0
+      ],
+      "fraction_candidate_better_crps": 0.0,
+      "fraction_candidate_better_nll": 0.0,
+      "mean_delta_crps": 0.0,
+      "mean_delta_nll": 0.0,
+      "n_resamples": 256,
+      "n_season_clusters": 4,
+      "n_team_seasons": 410,
+      "nll_central_95_bootstrap_range": [
+        0.0,
+        0.0
+      ],
+      "resampling": "exhaustive ordered season bootstrap over all 4^4 = 256 resamples; descriptive only"
+    },
+    "per_season": {
+      "2022": {
+        "c": {
+          "crps": 0.11700790513556963,
+          "expected_rank_mae": 21.5873490064761,
+          "interval_80_average_width": 75.22857142857143,
+          "interval_80_coverage": 0.8245553643144006,
+          "median_rank_mae": 21.6,
+          "n_team_seasons": 105,
+          "nll": 4.511219858264254,
+          "top10": {
+            "calibration_gap": -0.00570980524227617,
+            "empirical_frequency": 0.09523809523809523,
+            "mean_predicted_probability": 0.08952828999581906,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.024849397590361446,
+                  "mean_predicted_probability": 0.015086732453093749,
+                  "n_team_seasons": 64,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.08643268727082241,
+                  "mean_predicted_probability": 0.09420754119313043,
+                  "n_team_seasons": 23,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.20963855421686745,
+                  "mean_predicted_probability": 0.20201254167879998,
+                  "n_team_seasons": 10,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.26506024096385544,
+                  "mean_predicted_probability": 0.4106299882768,
+                  "n_team_seasons": 5,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.653734879205,
+                  "n_team_seasons": 1,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.770567943872,
+                  "n_team_seasons": 2,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.03848540249403912
+            }
+          },
+          "top25": {
+            "calibration_gap": -0.00251735631011224,
+            "empirical_frequency": 0.2228341939185313,
+            "mean_predicted_probability": 0.22031683760841905,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.05068550062318239,
+                  "mean_predicted_probability": 0.017615232623275866,
+                  "n_team_seasons": 29,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.07447973713033954,
+                  "mean_predicted_probability": 0.09649451568263635,
+                  "n_team_seasons": 22,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.2660642570281125,
+                  "mean_predicted_probability": 0.21389043906150004,
+                  "n_team_seasons": 24,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.3551046290424857,
+                  "mean_predicted_probability": 0.3863305179266842,
+                  "n_team_seasons": 19,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.5975903614457831,
+                  "mean_predicted_probability": 0.6046509774461999,
+                  "n_team_seasons": 5,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.6947791164658635,
+                  "mean_predicted_probability": 0.8337735987461666,
+                  "n_team_seasons": 6,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.10090105318281455
+            }
+          },
+          "top5": {
+            "calibration_gap": -0.005971809249619847,
+            "empirical_frequency": 0.04773379231210557,
+            "mean_predicted_probability": 0.04176198306248572,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.014710002801905295,
+                  "mean_predicted_probability": 0.010142015193999999,
+                  "n_team_seasons": 86,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.009857612267250822,
+                  "mean_predicted_probability": 0.07861075108772726,
+                  "n_team_seasons": 11,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.20240963855421684,
+                  "mean_predicted_probability": 0.2141492594042,
+                  "n_team_seasons": 5,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.8313253012048193,
+                  "mean_predicted_probability": 0.43632420850700004,
+                  "n_team_seasons": 1,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.8975903614457832,
+                  "mean_predicted_probability": 0.570503073692,
+                  "n_team_seasons": 2,
+                  "range": "[0.50, 0.70)"
+                }
+              ],
+              "brier_score": 0.019174084417643913
+            }
+          }
+        },
+        "delta_nll": 0.0,
+        "h": {
+          "crps": 0.11700790513556963,
+          "expected_rank_mae": 21.5873490064761,
+          "interval_80_average_width": 75.22857142857143,
+          "interval_80_coverage": 0.8245553643144006,
+          "median_rank_mae": 21.6,
+          "n_team_seasons": 105,
+          "nll": 4.511219858264254,
+          "top10": {
+            "calibration_gap": -0.00570980524227617,
+            "empirical_frequency": 0.09523809523809523,
+            "mean_predicted_probability": 0.08952828999581906,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.024849397590361446,
+                  "mean_predicted_probability": 0.015086732453093749,
+                  "n_team_seasons": 64,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.08643268727082241,
+                  "mean_predicted_probability": 0.09420754119313043,
+                  "n_team_seasons": 23,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.20963855421686745,
+                  "mean_predicted_probability": 0.20201254167879998,
+                  "n_team_seasons": 10,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.26506024096385544,
+                  "mean_predicted_probability": 0.4106299882768,
+                  "n_team_seasons": 5,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.653734879205,
+                  "n_team_seasons": 1,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.770567943872,
+                  "n_team_seasons": 2,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.03848540249403912
+            }
+          },
+          "top25": {
+            "calibration_gap": -0.00251735631011224,
+            "empirical_frequency": 0.2228341939185313,
+            "mean_predicted_probability": 0.22031683760841905,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.05068550062318239,
+                  "mean_predicted_probability": 0.017615232623275866,
+                  "n_team_seasons": 29,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.07447973713033954,
+                  "mean_predicted_probability": 0.09649451568263635,
+                  "n_team_seasons": 22,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.2660642570281125,
+                  "mean_predicted_probability": 0.21389043906150004,
+                  "n_team_seasons": 24,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.3551046290424857,
+                  "mean_predicted_probability": 0.3863305179266842,
+                  "n_team_seasons": 19,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.5975903614457831,
+                  "mean_predicted_probability": 0.6046509774461999,
+                  "n_team_seasons": 5,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.6947791164658635,
+                  "mean_predicted_probability": 0.8337735987461666,
+                  "n_team_seasons": 6,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.10090105318281455
+            }
+          },
+          "top5": {
+            "calibration_gap": -0.005971809249619847,
+            "empirical_frequency": 0.04773379231210557,
+            "mean_predicted_probability": 0.04176198306248572,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.014710002801905295,
+                  "mean_predicted_probability": 0.010142015193999999,
+                  "n_team_seasons": 86,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.009857612267250822,
+                  "mean_predicted_probability": 0.07861075108772726,
+                  "n_team_seasons": 11,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.20240963855421684,
+                  "mean_predicted_probability": 0.2141492594042,
+                  "n_team_seasons": 5,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.8313253012048193,
+                  "mean_predicted_probability": 0.43632420850700004,
+                  "n_team_seasons": 1,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.8975903614457832,
+                  "mean_predicted_probability": 0.570503073692,
+                  "n_team_seasons": 2,
+                  "range": "[0.50, 0.70)"
+                }
+              ],
+              "brier_score": 0.019174084417643913
+            }
+          }
+        }
+      },
+      "2023": {
+        "c": {
+          "crps": 0.10614048537432531,
+          "expected_rank_mae": 20.019737820406313,
+          "interval_80_average_width": 77.87378640776699,
+          "interval_80_coverage": 0.8778535817370767,
+          "median_rank_mae": 19.859223300970875,
+          "n_team_seasons": 103,
+          "nll": 4.495740097028054,
+          "top10": {
+            "calibration_gap": 0.009910294075246392,
+            "empirical_frequency": 0.06914195749147206,
+            "mean_predicted_probability": 0.07905225156671845,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.0006435006435006436,
+                  "mean_predicted_probability": 0.013497676669428572,
+                  "n_team_seasons": 63,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.049729729729729735,
+                  "mean_predicted_probability": 0.08504967020103998,
+                  "n_team_seasons": 25,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.4517374517374518,
+                  "mean_predicted_probability": 0.22828679630599996,
+                  "n_team_seasons": 7,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.11486486486486487,
+                  "mean_predicted_probability": 0.3476031045363333,
+                  "n_team_seasons": 6,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.9864864864864865,
+                  "mean_predicted_probability": 0.6620181848030001,
+                  "n_team_seasons": 1,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.820142140009,
+                  "n_team_seasons": 1,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.029115550406786695
+            }
+          },
+          "top25": {
+            "calibration_gap": 0.02179849339339937,
+            "empirical_frequency": 0.18315402781422196,
+            "mean_predicted_probability": 0.20495252120762134,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.0009319664492078286,
+                  "mean_predicted_probability": 0.021704379839068963,
+                  "n_team_seasons": 29,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.0718918918918919,
+                  "mean_predicted_probability": 0.09026837898508001,
+                  "n_team_seasons": 25,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.06874265569917744,
+                  "mean_predicted_probability": 0.21123823649447823,
+                  "n_team_seasons": 23,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.3721413721413721,
+                  "mean_predicted_probability": 0.36343062535007686,
+                  "n_team_seasons": 13,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.7837837837837838,
+                  "mean_predicted_probability": 0.6175384802952728,
+                  "n_team_seasons": 11,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.9239861711265,
+                  "n_team_seasons": 2,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.05830553879971249
+            }
+          },
+          "top5": {
+            "calibration_gap": 0.008471983578779579,
+            "empirical_frequency": 0.026239832065074787,
+            "mean_predicted_probability": 0.034711815643854366,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.0004659832246039143,
+                  "mean_predicted_probability": 0.00935627344545977,
+                  "n_team_seasons": 87,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.13813813813813813,
+                  "mean_predicted_probability": 0.09268328083422223,
+                  "n_team_seasons": 9,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.016216216216216217,
+                  "mean_predicted_probability": 0.16984690845839998,
+                  "n_team_seasons": 5,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.33783783783783783,
+                  "mean_predicted_probability": 0.43990805661700005,
+                  "n_team_seasons": 1,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.638029095145,
+                  "n_team_seasons": 1,
+                  "range": "[0.50, 0.70)"
+                }
+              ],
+              "brier_score": 0.00638346500886003
+            }
+          }
+        },
+        "delta_nll": 0.0,
+        "h": {
+          "crps": 0.10614048537432531,
+          "expected_rank_mae": 20.019737820406313,
+          "interval_80_average_width": 77.87378640776699,
+          "interval_80_coverage": 0.8778535817370767,
+          "median_rank_mae": 19.859223300970875,
+          "n_team_seasons": 103,
+          "nll": 4.495740097028054,
+          "top10": {
+            "calibration_gap": 0.009910294075246392,
+            "empirical_frequency": 0.06914195749147206,
+            "mean_predicted_probability": 0.07905225156671845,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.0006435006435006436,
+                  "mean_predicted_probability": 0.013497676669428572,
+                  "n_team_seasons": 63,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.049729729729729735,
+                  "mean_predicted_probability": 0.08504967020103998,
+                  "n_team_seasons": 25,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.4517374517374518,
+                  "mean_predicted_probability": 0.22828679630599996,
+                  "n_team_seasons": 7,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.11486486486486487,
+                  "mean_predicted_probability": 0.3476031045363333,
+                  "n_team_seasons": 6,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.9864864864864865,
+                  "mean_predicted_probability": 0.6620181848030001,
+                  "n_team_seasons": 1,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.820142140009,
+                  "n_team_seasons": 1,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.029115550406786695
+            }
+          },
+          "top25": {
+            "calibration_gap": 0.02179849339339937,
+            "empirical_frequency": 0.18315402781422196,
+            "mean_predicted_probability": 0.20495252120762134,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.0009319664492078286,
+                  "mean_predicted_probability": 0.021704379839068963,
+                  "n_team_seasons": 29,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.0718918918918919,
+                  "mean_predicted_probability": 0.09026837898508001,
+                  "n_team_seasons": 25,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.06874265569917744,
+                  "mean_predicted_probability": 0.21123823649447823,
+                  "n_team_seasons": 23,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.3721413721413721,
+                  "mean_predicted_probability": 0.36343062535007686,
+                  "n_team_seasons": 13,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.7837837837837838,
+                  "mean_predicted_probability": 0.6175384802952728,
+                  "n_team_seasons": 11,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.9239861711265,
+                  "n_team_seasons": 2,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.05830553879971249
+            }
+          },
+          "top5": {
+            "calibration_gap": 0.008471983578779579,
+            "empirical_frequency": 0.026239832065074787,
+            "mean_predicted_probability": 0.034711815643854366,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.0004659832246039143,
+                  "mean_predicted_probability": 0.00935627344545977,
+                  "n_team_seasons": 87,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.13813813813813813,
+                  "mean_predicted_probability": 0.09268328083422223,
+                  "n_team_seasons": 9,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.016216216216216217,
+                  "mean_predicted_probability": 0.16984690845839998,
+                  "n_team_seasons": 5,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.33783783783783783,
+                  "mean_predicted_probability": 0.43990805661700005,
+                  "n_team_seasons": 1,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.638029095145,
+                  "n_team_seasons": 1,
+                  "range": "[0.50, 0.70)"
+                }
+              ],
+              "brier_score": 0.00638346500886003
+            }
+          }
+        }
+      },
+      "2024": {
+        "c": {
+          "crps": 0.12435595357786311,
+          "expected_rank_mae": 22.950654007540884,
+          "interval_80_average_width": 78.33663366336634,
+          "interval_80_coverage": 0.7908910891089108,
+          "median_rank_mae": 23.297029702970296,
+          "n_team_seasons": 101,
+          "nll": 4.6306899751638,
+          "top10": {
+            "calibration_gap": 0.0019771028549702974,
+            "empirical_frequency": 0.09900990099009901,
+            "mean_predicted_probability": 0.10098700384506931,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.031428571428571424,
+                  "mean_predicted_probability": 0.01755543210757143,
+                  "n_team_seasons": 56,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.023466666666666667,
+                  "mean_predicted_probability": 0.08671400912175999,
+                  "n_team_seasons": 25,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.12148148148148147,
+                  "mean_predicted_probability": 0.2108899525161111,
+                  "n_team_seasons": 9,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.5714285714285714,
+                  "mean_predicted_probability": 0.3574629650471429,
+                  "n_team_seasons": 7,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.8133333333333334,
+                  "mean_predicted_probability": 0.6305731559993334,
+                  "n_team_seasons": 3,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.12,
+                  "mean_predicted_probability": 0.756763166311,
+                  "n_team_seasons": 1,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.04412111268043376
+            }
+          },
+          "top25": {
+            "calibration_gap": 0.0009621246337986333,
+            "empirical_frequency": 0.2452805280528053,
+            "mean_predicted_probability": 0.24624265268660395,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.05393939393939395,
+                  "mean_predicted_probability": 0.024479660379227275,
+                  "n_team_seasons": 22,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.12380952380952381,
+                  "mean_predicted_probability": 0.10061069305785714,
+                  "n_team_seasons": 21,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.20857142857142857,
+                  "mean_predicted_probability": 0.21245362968546427,
+                  "n_team_seasons": 28,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.27466666666666667,
+                  "mean_predicted_probability": 0.38463348512179996,
+                  "n_team_seasons": 15,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.5896296296296296,
+                  "mean_predicted_probability": 0.6082528187497778,
+                  "n_team_seasons": 9,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.9533333333333333,
+                  "mean_predicted_probability": 0.8377752603368332,
+                  "n_team_seasons": 6,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.0972616522653713
+            }
+          },
+          "top5": {
+            "calibration_gap": -0.0029885414168812005,
+            "empirical_frequency": 0.04950495049504951,
+            "mean_predicted_probability": 0.04651640907816831,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.0018333333333333333,
+                  "mean_predicted_probability": 0.0107732603179,
+                  "n_team_seasons": 80,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.15076923076923077,
+                  "mean_predicted_probability": 0.0961644944423077,
+                  "n_team_seasons": 13,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.43,
+                  "mean_predicted_probability": 0.19600278903600002,
+                  "n_team_seasons": 4,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.3866666666666667,
+                  "mean_predicted_probability": 0.41367706156833334,
+                  "n_team_seasons": 3,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.013333333333333334,
+                  "mean_predicted_probability": 0.561115722864,
+                  "n_team_seasons": 1,
+                  "range": "[0.50, 0.70)"
+                }
+              ],
+              "brier_score": 0.031095578534017308
+            }
+          }
+        },
+        "delta_nll": 0.0,
+        "h": {
+          "crps": 0.12435595357786311,
+          "expected_rank_mae": 22.950654007540884,
+          "interval_80_average_width": 78.33663366336634,
+          "interval_80_coverage": 0.7908910891089108,
+          "median_rank_mae": 23.297029702970296,
+          "n_team_seasons": 101,
+          "nll": 4.6306899751638,
+          "top10": {
+            "calibration_gap": 0.0019771028549702974,
+            "empirical_frequency": 0.09900990099009901,
+            "mean_predicted_probability": 0.10098700384506931,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.031428571428571424,
+                  "mean_predicted_probability": 0.01755543210757143,
+                  "n_team_seasons": 56,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.023466666666666667,
+                  "mean_predicted_probability": 0.08671400912175999,
+                  "n_team_seasons": 25,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.12148148148148147,
+                  "mean_predicted_probability": 0.2108899525161111,
+                  "n_team_seasons": 9,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.5714285714285714,
+                  "mean_predicted_probability": 0.3574629650471429,
+                  "n_team_seasons": 7,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.8133333333333334,
+                  "mean_predicted_probability": 0.6305731559993334,
+                  "n_team_seasons": 3,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.12,
+                  "mean_predicted_probability": 0.756763166311,
+                  "n_team_seasons": 1,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.04412111268043376
+            }
+          },
+          "top25": {
+            "calibration_gap": 0.0009621246337986333,
+            "empirical_frequency": 0.2452805280528053,
+            "mean_predicted_probability": 0.24624265268660395,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.05393939393939395,
+                  "mean_predicted_probability": 0.024479660379227275,
+                  "n_team_seasons": 22,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.12380952380952381,
+                  "mean_predicted_probability": 0.10061069305785714,
+                  "n_team_seasons": 21,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.20857142857142857,
+                  "mean_predicted_probability": 0.21245362968546427,
+                  "n_team_seasons": 28,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.27466666666666667,
+                  "mean_predicted_probability": 0.38463348512179996,
+                  "n_team_seasons": 15,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.5896296296296296,
+                  "mean_predicted_probability": 0.6082528187497778,
+                  "n_team_seasons": 9,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 0.9533333333333333,
+                  "mean_predicted_probability": 0.8377752603368332,
+                  "n_team_seasons": 6,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.0972616522653713
+            }
+          },
+          "top5": {
+            "calibration_gap": -0.0029885414168812005,
+            "empirical_frequency": 0.04950495049504951,
+            "mean_predicted_probability": 0.04651640907816831,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.0018333333333333333,
+                  "mean_predicted_probability": 0.0107732603179,
+                  "n_team_seasons": 80,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.15076923076923077,
+                  "mean_predicted_probability": 0.0961644944423077,
+                  "n_team_seasons": 13,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.43,
+                  "mean_predicted_probability": 0.19600278903600002,
+                  "n_team_seasons": 4,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.3866666666666667,
+                  "mean_predicted_probability": 0.41367706156833334,
+                  "n_team_seasons": 3,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.013333333333333334,
+                  "mean_predicted_probability": 0.561115722864,
+                  "n_team_seasons": 1,
+                  "range": "[0.50, 0.70)"
+                }
+              ],
+              "brier_score": 0.031095578534017308
+            }
+          }
+        }
+      },
+      "2025": {
+        "c": {
+          "crps": 0.10822390702469517,
+          "expected_rank_mae": 21.01672990465032,
+          "interval_80_average_width": 78.89108910891089,
+          "interval_80_coverage": 0.8518920385189204,
+          "median_rank_mae": 20.752475247524753,
+          "n_team_seasons": 101,
+          "nll": 4.512035749050275,
+          "top10": {
+            "calibration_gap": -0.0048278921724112245,
+            "empirical_frequency": 0.0838193408381934,
+            "mean_predicted_probability": 0.07899144866578217,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.0005870841487279843,
+                  "mean_predicted_probability": 0.015406936047514285,
+                  "n_team_seasons": 70,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.1571313456889605,
+                  "mean_predicted_probability": 0.10442846669129413,
+                  "n_team_seasons": 17,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.1917808219178082,
+                  "mean_predicted_probability": 0.203617888873875,
+                  "n_team_seasons": 8,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.19863013698630136,
+                  "mean_predicted_probability": 0.480595375333,
+                  "n_team_seasons": 2,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.9406392694063926,
+                  "mean_predicted_probability": 0.5569786316703332,
+                  "n_team_seasons": 3,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.8632971014979999,
+                  "n_team_seasons": 1,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.035263967979075835
+            }
+          },
+          "top25": {
+            "calibration_gap": 0.0010783374474323815,
+            "empirical_frequency": 0.19476468194764682,
+            "mean_predicted_probability": 0.1958430193950792,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.002446183953033268,
+                  "mean_predicted_probability": 0.014510163874178573,
+                  "n_team_seasons": 28,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.039770216526734424,
+                  "mean_predicted_probability": 0.0947336019675484,
+                  "n_team_seasons": 31,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.17732115677321156,
+                  "mean_predicted_probability": 0.20913167711311115,
+                  "n_team_seasons": 18,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.5645792563600783,
+                  "mean_predicted_probability": 0.39478504012435717,
+                  "n_team_seasons": 14,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.3184931506849315,
+                  "mean_predicted_probability": 0.5361061459709999,
+                  "n_team_seasons": 4,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.8335555626285,
+                  "n_team_seasons": 6,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.06424537215124464
+            }
+          },
+          "top5": {
+            "calibration_gap": -0.009526853268497892,
+            "empirical_frequency": 0.0466567204665672,
+            "mean_predicted_probability": 0.03712986719806931,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.00499597099113618,
+                  "mean_predicted_probability": 0.008684433140211764,
+                  "n_team_seasons": 85,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.18356164383561643,
+                  "mean_predicted_probability": 0.0757969365534,
+                  "n_team_seasons": 10,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.0,
+                  "mean_predicted_probability": 0.26771241428000003,
+                  "n_team_seasons": 2,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.5251141552511415,
+                  "mean_predicted_probability": 0.341075273208,
+                  "n_team_seasons": 3,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.8767123287671232,
+                  "mean_predicted_probability": 0.695319756369,
+                  "n_team_seasons": 1,
+                  "range": "[0.50, 0.70)"
+                }
+              ],
+              "brier_score": 0.021257779335427305
+            }
+          }
+        },
+        "delta_nll": 0.0,
+        "h": {
+          "crps": 0.10822390702469517,
+          "expected_rank_mae": 21.01672990465032,
+          "interval_80_average_width": 78.89108910891089,
+          "interval_80_coverage": 0.8518920385189204,
+          "median_rank_mae": 20.752475247524753,
+          "n_team_seasons": 101,
+          "nll": 4.512035749050275,
+          "top10": {
+            "calibration_gap": -0.0048278921724112245,
+            "empirical_frequency": 0.0838193408381934,
+            "mean_predicted_probability": 0.07899144866578217,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.0005870841487279843,
+                  "mean_predicted_probability": 0.015406936047514285,
+                  "n_team_seasons": 70,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.1571313456889605,
+                  "mean_predicted_probability": 0.10442846669129413,
+                  "n_team_seasons": 17,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.1917808219178082,
+                  "mean_predicted_probability": 0.203617888873875,
+                  "n_team_seasons": 8,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.19863013698630136,
+                  "mean_predicted_probability": 0.480595375333,
+                  "n_team_seasons": 2,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.9406392694063926,
+                  "mean_predicted_probability": 0.5569786316703332,
+                  "n_team_seasons": 3,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.8632971014979999,
+                  "n_team_seasons": 1,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.035263967979075835
+            }
+          },
+          "top25": {
+            "calibration_gap": 0.0010783374474323815,
+            "empirical_frequency": 0.19476468194764682,
+            "mean_predicted_probability": 0.1958430193950792,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.002446183953033268,
+                  "mean_predicted_probability": 0.014510163874178573,
+                  "n_team_seasons": 28,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.039770216526734424,
+                  "mean_predicted_probability": 0.0947336019675484,
+                  "n_team_seasons": 31,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.17732115677321156,
+                  "mean_predicted_probability": 0.20913167711311115,
+                  "n_team_seasons": 18,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.5645792563600783,
+                  "mean_predicted_probability": 0.39478504012435717,
+                  "n_team_seasons": 14,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.3184931506849315,
+                  "mean_predicted_probability": 0.5361061459709999,
+                  "n_team_seasons": 4,
+                  "range": "[0.50, 0.70)"
+                },
+                {
+                  "empirical_frequency": 1.0,
+                  "mean_predicted_probability": 0.8335555626285,
+                  "n_team_seasons": 6,
+                  "range": "[0.70, 1.00]"
+                }
+              ],
+              "brier_score": 0.06424537215124464
+            }
+          },
+          "top5": {
+            "calibration_gap": -0.009526853268497892,
+            "empirical_frequency": 0.0466567204665672,
+            "mean_predicted_probability": 0.03712986719806931,
+            "reliability": {
+              "bins": [
+                {
+                  "empirical_frequency": 0.00499597099113618,
+                  "mean_predicted_probability": 0.008684433140211764,
+                  "n_team_seasons": 85,
+                  "range": "[0.00, 0.05)"
+                },
+                {
+                  "empirical_frequency": 0.18356164383561643,
+                  "mean_predicted_probability": 0.0757969365534,
+                  "n_team_seasons": 10,
+                  "range": "[0.05, 0.15)"
+                },
+                {
+                  "empirical_frequency": 0.0,
+                  "mean_predicted_probability": 0.26771241428000003,
+                  "n_team_seasons": 2,
+                  "range": "[0.15, 0.30)"
+                },
+                {
+                  "empirical_frequency": 0.5251141552511415,
+                  "mean_predicted_probability": 0.341075273208,
+                  "n_team_seasons": 3,
+                  "range": "[0.30, 0.50)"
+                },
+                {
+                  "empirical_frequency": 0.8767123287671232,
+                  "mean_predicted_probability": 0.695319756369,
+                  "n_team_seasons": 1,
+                  "range": "[0.50, 0.70)"
+                }
+              ],
+              "brier_score": 0.021257779335427305
+            }
+          }
+        }
+      }
+    },
+    "reference": {
+      "crps": 0.11392406330158218,
+      "expected_rank_mae": 21.388805893446712,
+      "interval_80_average_width": 77.5609756097561,
+      "interval_80_coverage": 0.8363861660057121,
+      "median_rank_mae": 21.371951219512194,
+      "n_team_seasons": 410,
+      "nll": 4.536962471359165,
+      "top10": {
+        "calibration_gap": 0.00032512443475569974,
+        "empirical_frequency": 0.08679847572263209,
+        "mean_predicted_probability": 0.08712360015738779,
+        "reliability": {
+          "bins": [
+            {
+              "empirical_frequency": 0.013565208998951117,
+              "mean_predicted_probability": 0.015326064144355729,
+              "n_team_seasons": 253,
+              "range": "[0.00, 0.05)"
+            },
+            {
+              "empirical_frequency": 0.0721010510427906,
+              "mean_predicted_probability": 0.09151277071404444,
+              "n_team_seasons": 90,
+              "range": "[0.05, 0.15)"
+            },
+            {
+              "empirical_frequency": 0.2319449297943128,
+              "mean_predicted_probability": 0.21014957866370587,
+              "n_team_seasons": 34,
+              "range": "[0.15, 0.30)"
+            },
+            {
+              "empirical_frequency": 0.3205875333990535,
+              "mean_predicted_probability": 0.38011000372989995,
+              "n_team_seasons": 20,
+              "range": "[0.30, 0.50)"
+            },
+            {
+              "empirical_frequency": 0.9060505368382081,
+              "mean_predicted_probability": 0.609801053377125,
+              "n_team_seasons": 8,
+              "range": "[0.50, 0.70)"
+            },
+            {
+              "empirical_frequency": 0.8240000000000001,
+              "mean_predicted_probability": 0.7962676591123999,
+              "n_team_seasons": 5,
+              "range": "[0.70, 1.00]"
+            }
+          ],
+          "brier_score": 0.03672624902532587
+        }
+      },
+      "top25": {
+        "calibration_gap": 0.00533416848088461,
+        "empirical_frequency": 0.21148054008867392,
+        "mean_predicted_probability": 0.21681470856955853,
+        "reliability": {
+          "bins": [
+            {
+              "empirical_frequency": 0.025482095948619582,
+              "mean_predicted_probability": 0.01930653590951852,
+              "n_team_seasons": 108,
+              "range": "[0.00, 0.05)"
+            },
+            {
+              "empirical_frequency": 0.07342149723730843,
+              "mean_predicted_probability": 0.09524399025105049,
+              "n_team_seasons": 99,
+              "range": "[0.05, 0.15)"
+            },
+            {
+              "empirical_frequency": 0.18277853840509237,
+              "mean_predicted_probability": 0.2118808795277204,
+              "n_team_seasons": 93,
+              "range": "[0.15, 0.30)"
+            },
+            {
+              "empirical_frequency": 0.38703172751944526,
+              "mean_predicted_probability": 0.38297329194632784,
+              "n_team_seasons": 61,
+              "range": "[0.30, 0.50)"
+            },
+            {
+              "empirical_frequency": 0.6272487137329976,
+              "mean_predicted_probability": 0.6012026939003794,
+              "n_team_seasons": 29,
+              "range": "[0.50, 0.70)"
+            },
+            {
+              "empirical_frequency": 0.8944337349397591,
+              "mean_predicted_probability": 0.8439299436260999,
+              "n_team_seasons": 20,
+              "range": "[0.70, 1.00]"
+            }
+          ],
+          "brier_score": 0.08027387938205884
+        }
+      },
+      "top5": {
+        "calibration_gap": -0.002484098843461152,
+        "empirical_frequency": 0.04250507234779774,
+        "mean_predicted_probability": 0.04002097350433659,
+        "reliability": {
+          "bins": [
+            {
+              "empirical_frequency": 0.005553032492359875,
+              "mean_predicted_probability": 0.009722623487541418,
+              "n_team_seasons": 338,
+              "range": "[0.00, 0.05)"
+            },
+            {
+              "empirical_frequency": 0.11970449805905038,
+              "mean_predicted_probability": 0.08620873448272094,
+              "n_team_seasons": 43,
+              "range": "[0.05, 0.15)"
+            },
+            {
+              "empirical_frequency": 0.17582057961576034,
+              "mean_predicted_probability": 0.2024635515010625,
+              "n_team_seasons": 16,
+              "range": "[0.15, 0.30)"
+            },
+            {
+              "empirical_frequency": 0.48806320059951025,
+              "mean_predicted_probability": 0.392561158681625,
+              "n_team_seasons": 8,
+              "range": "[0.30, 0.50)"
+            },
+            {
+              "empirical_frequency": 0.7370452769984046,
+              "mean_predicted_probability": 0.6070941443524,
+              "n_team_seasons": 5,
+              "range": "[0.50, 0.70)"
+            }
+          ],
+          "brier_score": 0.019410890011168535
+        }
+      }
+    }
+  },
+  "cold_starts": "H fallback retained unchanged for all V1.1 cold-start PMFs",
+  "n_all_fbs": 534,
+  "n_coach_observed": 410
+}
