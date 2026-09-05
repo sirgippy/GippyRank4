@@ -1,0 +1,359 @@
+{
+  "candidate": {
+    "context_features": [
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "returning_pct_ppa",
+      "returning_pct_passing_ppa",
+      "returning_pct_receiving_ppa",
+      "returning_pct_rushing_ppa"
+    ],
+    "history_features": [
+      "lag2_z_mean",
+      "lag3_z_mean",
+      "long_run_z_mean"
+    ],
+    "location_only_context": true,
+    "name": "L"
+  },
+  "comparisons": {
+    "full_fbs_production_style/H_vs_L": {
+      "aggregate_mean_annual_deltas": {
+        "crps": -0.003386231733637382,
+        "expected_rank_mae": -1.0388794862756665,
+        "interval_80_average_width": -3.8939526410741436,
+        "interval_80_coverage": 0.002112260560652742,
+        "median_rank_mae": -0.8687390527873671,
+        "nll": -0.015260812955448197,
+        "top10_brier": -0.0005261788974702907,
+        "top25_brier": -0.0026175776670125817,
+        "top5_brier": 0.00020004608462833199
+      },
+      "best_year": 2017,
+      "comparison": "L minus H",
+      "losses": 4,
+      "median_annual_delta_nll": -0.022224331539569153,
+      "n_target_seasons": 12,
+      "negative_is_better_for_scores": true,
+      "ties": 0,
+      "wins": 8,
+      "worst_year": 2015
+    },
+    "full_fbs_production_style/L_vs_C": {
+      "aggregate_mean_annual_deltas": {
+        "crps": 0.001204598130649193,
+        "expected_rank_mae": 0.3843096992608448,
+        "interval_80_average_width": 1.1568295551911305,
+        "interval_80_coverage": 0.00210735903066168,
+        "median_rank_mae": 0.35486785803410587,
+        "nll": 0.01611350605607827,
+        "top10_brier": 0.00025109110753500797,
+        "top25_brier": 0.0017032440557491664,
+        "top5_brier": 0.00027358926966850587
+      },
+      "best_year": 2023,
+      "comparison": "L minus C",
+      "losses": 10,
+      "median_annual_delta_nll": 0.015359309951970435,
+      "n_target_seasons": 12,
+      "negative_is_better_for_scores": true,
+      "ties": 0,
+      "wins": 2,
+      "worst_year": 2015
+    },
+    "observed_common/H_vs_L": {
+      "aggregate_mean_annual_deltas": {
+        "crps": -0.003591900321090491,
+        "expected_rank_mae": -1.0889810049493969,
+        "interval_80_average_width": -3.910524831203104,
+        "interval_80_coverage": 0.002546977843446735,
+        "median_rank_mae": -0.9128300420065857,
+        "nll": -0.016650185575793897,
+        "top10_brier": -0.0005314088225670876,
+        "top25_brier": -0.0027300362256969263,
+        "top5_brier": 0.00020670793167599965
+      },
+      "best_year": 2017,
+      "comparison": "L minus H",
+      "losses": 4,
+      "median_annual_delta_nll": -0.022923328775156904,
+      "n_target_seasons": 12,
+      "negative_is_better_for_scores": true,
+      "ties": 0,
+      "wins": 8,
+      "worst_year": 2015
+    },
+    "observed_common/L_vs_C": {
+      "aggregate_mean_annual_deltas": {
+        "crps": 0.0013631026037229932,
+        "expected_rank_mae": 0.41451149183965025,
+        "interval_80_average_width": 1.1346030988579325,
+        "interval_80_coverage": 0.001835662209544342,
+        "median_rank_mae": 0.3874036280873172,
+        "nll": 0.01755818865719035,
+        "top10_brier": 0.00025408514548274735,
+        "top25_brier": 0.0017168845749865186,
+        "top5_brier": 0.00027586271601582013
+      },
+      "best_year": 2023,
+      "comparison": "L minus C",
+      "losses": 11,
+      "median_annual_delta_nll": 0.016721887270687574,
+      "n_target_seasons": 12,
+      "negative_is_better_for_scores": true,
+      "ties": 0,
+      "wins": 1,
+      "worst_year": 2015
+    }
+  },
+  "coverage": {
+    "by_season": [
+      {
+        "eligible_target": false,
+        "fbs_team_seasons": 117,
+        "lean_overlap": 0,
+        "recruiting_complete": 0,
+        "returning_complete": 0,
+        "season": 2004
+      },
+      {
+        "eligible_target": false,
+        "fbs_team_seasons": 117,
+        "lean_overlap": 0,
+        "recruiting_complete": 116,
+        "returning_complete": 0,
+        "season": 2005
+      },
+      {
+        "eligible_target": false,
+        "fbs_team_seasons": 119,
+        "lean_overlap": 0,
+        "recruiting_complete": 117,
+        "returning_complete": 0,
+        "season": 2006
+      },
+      {
+        "eligible_target": false,
+        "fbs_team_seasons": 119,
+        "lean_overlap": 0,
+        "recruiting_complete": 115,
+        "returning_complete": 0,
+        "season": 2007
+      },
+      {
+        "eligible_target": false,
+        "fbs_team_seasons": 119,
+        "lean_overlap": 0,
+        "recruiting_complete": 117,
+        "returning_complete": 0,
+        "season": 2008
+      },
+      {
+        "eligible_target": false,
+        "fbs_team_seasons": 120,
+        "lean_overlap": 0,
+        "recruiting_complete": 115,
+        "returning_complete": 0,
+        "season": 2009
+      },
+      {
+        "eligible_target": false,
+        "fbs_team_seasons": 120,
+        "lean_overlap": 0,
+        "recruiting_complete": 117,
+        "returning_complete": 0,
+        "season": 2010
+      },
+      {
+        "eligible_target": false,
+        "fbs_team_seasons": 120,
+        "lean_overlap": 0,
+        "recruiting_complete": 116,
+        "returning_complete": 0,
+        "season": 2011
+      },
+      {
+        "eligible_target": false,
+        "fbs_team_seasons": 120,
+        "lean_overlap": 0,
+        "recruiting_complete": 120,
+        "returning_complete": 0,
+        "season": 2012
+      },
+      {
+        "eligible_target": false,
+        "fbs_team_seasons": 124,
+        "lean_overlap": 0,
+        "recruiting_complete": 120,
+        "returning_complete": 0,
+        "season": 2013
+      },
+      {
+        "eligible_target": true,
+        "fbs_team_seasons": 125,
+        "lean_overlap": 124,
+        "recruiting_complete": 124,
+        "returning_complete": 125,
+        "season": 2014
+      },
+      {
+        "eligible_target": true,
+        "fbs_team_seasons": 127,
+        "lean_overlap": 124,
+        "recruiting_complete": 124,
+        "returning_complete": 127,
+        "season": 2015
+      },
+      {
+        "eligible_target": true,
+        "fbs_team_seasons": 128,
+        "lean_overlap": 127,
+        "recruiting_complete": 127,
+        "returning_complete": 128,
+        "season": 2016
+      },
+      {
+        "eligible_target": true,
+        "fbs_team_seasons": 128,
+        "lean_overlap": 128,
+        "recruiting_complete": 128,
+        "returning_complete": 128,
+        "season": 2017
+      },
+      {
+        "eligible_target": true,
+        "fbs_team_seasons": 129,
+        "lean_overlap": 127,
+        "recruiting_complete": 127,
+        "returning_complete": 129,
+        "season": 2018
+      },
+      {
+        "eligible_target": true,
+        "fbs_team_seasons": 130,
+        "lean_overlap": 129,
+        "recruiting_complete": 129,
+        "returning_complete": 130,
+        "season": 2019
+      },
+      {
+        "eligible_target": true,
+        "fbs_team_seasons": 127,
+        "lean_overlap": 127,
+        "recruiting_complete": 127,
+        "returning_complete": 127,
+        "season": 2020
+      },
+      {
+        "eligible_target": true,
+        "fbs_team_seasons": 127,
+        "lean_overlap": 127,
+        "recruiting_complete": 127,
+        "returning_complete": 127,
+        "season": 2021
+      },
+      {
+        "eligible_target": true,
+        "fbs_team_seasons": 130,
+        "lean_overlap": 127,
+        "recruiting_complete": 127,
+        "returning_complete": 130,
+        "season": 2022
+      },
+      {
+        "eligible_target": true,
+        "fbs_team_seasons": 131,
+        "lean_overlap": 130,
+        "recruiting_complete": 130,
+        "returning_complete": 131,
+        "season": 2023
+      },
+      {
+        "eligible_target": true,
+        "fbs_team_seasons": 133,
+        "lean_overlap": 130,
+        "recruiting_complete": 130,
+        "returning_complete": 133,
+        "season": 2024
+      },
+      {
+        "eligible_target": true,
+        "fbs_team_seasons": 134,
+        "lean_overlap": 133,
+        "recruiting_complete": 133,
+        "returning_complete": 134,
+        "season": 2025
+      }
+    ],
+    "eligible_target_seasons": [
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "lean_features": [
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "returning_pct_ppa",
+      "returning_pct_passing_ppa",
+      "returning_pct_receiving_ppa",
+      "returning_pct_rushing_ppa"
+    ],
+    "raw_before_imputation": true
+  },
+  "disagreement": {
+    "c_vs_h": {
+      "gt10": 440,
+      "gt20": 60,
+      "gt5": 931,
+      "mean": 7.665776535649856,
+      "median": 6.580383957041704
+    },
+    "l_vs_c": {
+      "gt10": 46,
+      "gt20": 0,
+      "gt5": 352,
+      "mean": 3.204730768190265,
+      "median": 2.097691576801836
+    },
+    "l_vs_h": {
+      "gt10": 363,
+      "gt20": 34,
+      "gt5": 844,
+      "mean": 6.736666076018461,
+      "median": 5.600922746414568
+    }
+  },
+  "frozen_artifacts_untouched": true,
+  "nested_strategy": {
+    "crps": 0.10956615994347352,
+    "expected_rank_mae": 19.304618454405563,
+    "interval_80_average_width": 72.54227596170175,
+    "interval_80_coverage": 0.8407510291721682,
+    "median_rank_mae": 19.623206663866487,
+    "nll": 4.494762503232849
+  },
+  "no_2026_outcomes_read": true,
+  "no_feature_search_or_retuning": true,
+  "promotion_criteria": {
+    "clear_c_win_threshold": 0.005,
+    "outcome": "C"
+  },
+  "recommendation": "Recommendation C: L improves over H but not over C; keep C 1.2."
+}

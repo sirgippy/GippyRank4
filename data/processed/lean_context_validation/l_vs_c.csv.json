@@ -1,0 +1,22 @@
+{
+  "aggregate_mean_annual_deltas": {
+    "crps": 0.0013631026037229932,
+    "expected_rank_mae": 0.41451149183965025,
+    "interval_80_average_width": 1.1346030988579325,
+    "interval_80_coverage": 0.001835662209544342,
+    "median_rank_mae": 0.3874036280873172,
+    "nll": 0.01755818865719035,
+    "top10_brier": 0.00025408514548274735,
+    "top25_brier": 0.0017168845749865186,
+    "top5_brier": 0.00027586271601582013
+  },
+  "best_year": 2023,
+  "comparison": "L minus C",
+  "losses": 11,
+  "median_annual_delta_nll": 0.016721887270687574,
+  "n_target_seasons": 12,
+  "negative_is_better_for_scores": true,
+  "ties": 0,
+  "wins": 1,
+  "worst_year": 2015
+}
