@@ -10,6 +10,8 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import subprocess
+import sys
 from collections import defaultdict
 from pathlib import Path
 
@@ -621,7 +623,12 @@ def plots(
     )
 
 
-def render_report(summary: dict[str, object]) -> None:
+def render_report(
+    summary: dict[str, object],
+    *,
+    interaction_summary: list[dict[str, object]] | None = None,
+    component_note: str | None = None,
+) -> None:
     findings = summary["headline_results"]
     lines = [
         "# Coverage-restricted context-feature ablation",
@@ -634,6 +641,11 @@ def render_report(summary: dict[str, object]) -> None:
         "",
     ]
     lines.extend(f"- {item}" for item in findings)
+    if interaction_summary:
+        lines += ["", "## Interaction parent comparisons", ""]
+        lines.extend(report_interaction_lines(interaction_summary))
+    if component_note:
+        lines += ["", "## 2025 component disagreement", "", component_note]
     lines += [
         "",
         "## Interpretation limits",
@@ -648,6 +660,16 @@ def render_report(summary: dict[str, object]) -> None:
         "- `plots/` — raw coverage, ablations, annual effects, interactions, adjustment-risk, and 2025 diagnostics.",
     ]
     (OUT / "report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def report_interaction_lines(rows: list[dict[str, object]]) -> list[str]:
+    """Render interaction claims exclusively from parent-comparison summaries."""
+    return [
+        "- {interaction}: mean ΔNLL versus {parent} "
+        "{mean_interaction_minus_parent_nll:+.4f} "
+        "({wins} wins/{losses} losses by season).".format(**row)
+        for row in rows
+    ]
 
 
 def main() -> None:
@@ -830,10 +852,6 @@ def main() -> None:
         "same_population_comparisons.csv",
         [row for row in summary_rows if str(row["population"]).startswith("same_")],
     )
-    write_csv(
-        "interaction_results.csv",
-        [row for row in summary_rows if "interaction" in str(row["candidate"])],
-    )
     write_csv("missingness_results.csv", missing_rows)
 
     full = stored_all[("same_all_context", "same_full_c")]
@@ -907,7 +925,6 @@ def main() -> None:
         f"Current recruiting: {result('single_recruiting_current', 'single_recruiting_current')}; recruiting history: {result('single_recruiting_history', 'single_recruiting_history')}; all recruiting: {result('single_recruiting_all', 'single_recruiting_all')}.",
         f"Talent: {result('single_talent', 'single_talent')}; total/passing/skill returning production: {result('single_returning_total', 'single_returning_total')}, {result('single_returning_passing', 'single_returning_passing')}, {result('single_returning_skill', 'single_returning_skill')}.",
         f"On one exact all-context common population, recruiting+Talent+returning: {result('same_all_context', 'same_recruiting_talent_returning')}; full frozen-spec C-equivalent: {result('same_all_context', 'same_full_c')}.",
-        f"Talent×total-returning interaction: {result('interaction_interaction_talent_total', 'interaction_talent_total')}; Talent×passing-returning: {result('interaction_interaction_talent_passing', 'interaction_talent_passing')}.",
         "Interpret annual wins/losses and descriptive season-bootstrap ranges conservatively; the coverage-era target count is intentionally limited.",
         "No production H/C specification, frozen 2026 PMF, or 2026 outcome was modified or accessed.",
     ]
@@ -934,6 +951,10 @@ def main() -> None:
     write_json("summary.json", summary)
     render_report(summary)
     plots(coverage, summary_rows, annual, adjustment, full_losses)
+    subprocess.run(
+        [sys.executable, str(ROOT / "scripts/supplement_context_ablation.py")],
+        check=True,
+    )
 
 
 if __name__ == "__main__":

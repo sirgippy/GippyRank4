@@ -1,5 +1,6 @@
 import csv
 import hashlib
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -8,12 +9,16 @@ import pytest
 from gippyrank.context_ablation import (
     aggregate_difference,
     assert_same_population,
+    interaction_is_useful,
+    paired_loss_differences,
     restrict_observed,
     standardized_interaction_rows,
     training_only_impute_rows,
     training_rows,
 )
 from gippyrank.preseason import TeamSeason
+
+ROOT = Path(__file__).parents[1]
 
 
 def row(season: int, team: str, left: float | None, right: float | None) -> TeamSeason:
@@ -69,6 +74,43 @@ def test_training_only_imputation_does_not_use_target_median() -> None:
 def test_stored_per_team_difference_aggregation_is_exact() -> None:
     values = [-0.2, 0.1, 0.4]
     assert aggregate_difference(values) == pytest.approx(sum(values) / len(values))
+
+
+def test_interaction_parent_pairing_and_difference_semantics() -> None:
+    parent = {(2025, "fbs", "a"): (1.0, 0.1)}
+    interaction = {(2025, "fbs", "a"): (1.2, 0.2)}
+    difference = paired_loss_differences(parent, interaction)
+    assert difference[(2025, "fbs", "a")] == pytest.approx((0.2, 0.1))
+    with pytest.raises(ValueError, match="identical target keys"):
+        paired_loss_differences(parent, {(2025, "fbs", "b"): (1.2, 0.2)})
+
+
+def test_interaction_beating_h_but_losing_parent_is_not_useful() -> None:
+    h_nll, parent_nll, interaction_nll = 3.0, 1.0, 1.2
+    assert interaction_nll - h_nll < 0
+    assert interaction_nll - parent_nll > 0
+    assert not interaction_is_useful([interaction_nll - parent_nll])
+
+
+def test_report_interaction_claims_use_parent_summary_fields() -> None:
+    sys.path.insert(0, str(ROOT / "scripts"))
+    try:
+        from investigate_context_ablation import report_interaction_lines
+
+        line = report_interaction_lines(
+            [
+                {
+                    "interaction": "Talent × total",
+                    "parent": "H + Talent + total",
+                    "mean_interaction_minus_parent_nll": 0.0014,
+                    "wins": 2,
+                    "losses": 6,
+                }
+            ]
+        )[0]
+    finally:
+        sys.path.pop(0)
+    assert "versus H + Talent + total +0.0014" in line
 
 
 def test_production_specs_and_frozen_2026_pmfs_remain_guarded() -> None:

@@ -1,26 +1,26 @@
-interaction,target_season,same_population_keys,n_team_seasons,interaction_minus_parent_nll
-talent_x_total_returning,2018,True,129,0.0027306309061313717
-talent_x_total_returning,2019,True,130,0.00030949699714566745
-talent_x_total_returning,2020,True,127,0.0004059162614186772
-talent_x_total_returning,2021,True,127,0.002352144966860076
-talent_x_total_returning,2022,True,130,-0.0006064235624765375
-talent_x_total_returning,2023,True,131,-0.0027374929868465765
-talent_x_total_returning,2024,True,133,0.004866293156997343
-talent_x_total_returning,2025,True,132,0.004062384920818865
-talent_x_passing_returning,2018,True,129,0.23853454866094362
-talent_x_passing_returning,2019,True,130,0.0004527359482142736
-talent_x_passing_returning,2020,True,127,-0.00044606385291105023
-talent_x_passing_returning,2021,True,127,-0.0004765694030625109
-talent_x_passing_returning,2022,True,130,-0.0015185888400784087
-talent_x_passing_returning,2023,True,131,0.000663160335322051
-talent_x_passing_returning,2024,True,133,0.003962412026097843
-talent_x_passing_returning,2025,True,132,0.00012832871133376203
-coach_x_total_returning,2017,True,104,0.0025678316064011164
-coach_x_total_returning,2018,True,102,-0.0009667964502242824
-coach_x_total_returning,2019,True,106,0.0007831508299564566
-coach_x_total_returning,2020,True,110,0.0031057093466391244
-coach_x_total_returning,2021,True,98,-0.0016175767068474834
-coach_x_total_returning,2022,True,105,0.0054525712805781655
-coach_x_total_returning,2023,True,103,7.430610023929823e-05
-coach_x_total_returning,2024,True,101,-2.468450951916977e-05
-coach_x_total_returning,2025,True,101,0.00018731143502441277
+interaction,parent,target_season,same_population_keys,same_training_keys,n_team_seasons,interaction_minus_parent_nll,interaction_minus_parent_crps,interaction_minus_parent_expected_rank_mae,interaction_minus_parent_median_rank_mae
+talent_x_total_returning,H + talent_composite + returning_pct_ppa,2018,True,True,129,0.0027306309061313717,0.0002923516708947249,-0.010494640852382275,0.0
+talent_x_total_returning,H + talent_composite + returning_pct_ppa,2019,True,True,130,0.00030949699714566745,0.0001261241106018246,0.05326864243062701,-0.07692307692307665
+talent_x_total_returning,H + talent_composite + returning_pct_ppa,2020,True,True,127,0.0004059162614186772,4.3782148161364276e-05,0.01727638385600372,-0.015748031496062964
+talent_x_total_returning,H + talent_composite + returning_pct_ppa,2021,True,True,127,0.002352144966860076,-6.0169385299554956e-05,0.0051247887330632125,0.03149606299212593
+talent_x_total_returning,H + talent_composite + returning_pct_ppa,2022,True,True,130,-0.0006064235624765375,0.0002980194693943533,0.03833639836754088,0.12307692307692264
+talent_x_total_returning,H + talent_composite + returning_pct_ppa,2023,True,True,131,-0.0027374929868465765,-0.000278259676747189,-0.029920318701606163,0.007633587786259
+talent_x_total_returning,H + talent_composite + returning_pct_ppa,2024,True,True,133,0.004866293156997343,0.00040920080160507244,0.07552819604181948,0.09774436090225436
+talent_x_total_returning,H + talent_composite + returning_pct_ppa,2025,True,True,132,0.004062384920818865,0.0002864140011060029,0.08396868662592283,0.060606060606058776
+talent_x_passing_returning,H + talent_composite + returning_pct_passing_ppa,2018,True,True,129,0.23853454866094362,0.00040007011477360965,0.052254878802610705,0.0
+talent_x_passing_returning,H + talent_composite + returning_pct_passing_ppa,2019,True,True,130,0.0004527359482142736,6.40206455991138e-05,0.016628170718739455,0.03076923076923066
+talent_x_passing_returning,H + talent_composite + returning_pct_passing_ppa,2020,True,True,127,-0.00044606385291105023,-6.03871249914012e-05,-0.0012615967252465055,-0.02362204724409267
+talent_x_passing_returning,H + talent_composite + returning_pct_passing_ppa,2021,True,True,127,-0.0004765694030625109,-0.00010421777945013311,-0.018690749584933997,-0.04724409448818889
+talent_x_passing_returning,H + talent_composite + returning_pct_passing_ppa,2022,True,True,130,-0.0015185888400784087,-0.00010198643067844959,0.005574439906027351,-0.03076923076923066
+talent_x_passing_returning,H + talent_composite + returning_pct_passing_ppa,2023,True,True,131,0.000663160335322051,7.671076192483639e-05,0.016160104406107934,0.05343511450381655
+talent_x_passing_returning,H + talent_composite + returning_pct_passing_ppa,2024,True,True,133,0.003962412026097843,0.0003936677943584821,0.03767700632712234,0.02255639097744222
+talent_x_passing_returning,H + talent_composite + returning_pct_passing_ppa,2025,True,True,132,0.00012832871133376203,5.00500591014974e-06,-0.009115304047320194,-0.007575757575757791
+coach_x_total_returning,H + coach_tenure_seasons + returning_pct_ppa,2017,True,True,104,0.0025678316064011164,0.0004297285129849504,0.06604859981655409,0.0961538461538467
+coach_x_total_returning,H + coach_tenure_seasons + returning_pct_ppa,2018,True,True,102,-0.0009667964502242824,-0.00014904497745032996,-0.03426170606310208,-0.049019607843135304
+coach_x_total_returning,H + coach_tenure_seasons + returning_pct_ppa,2019,True,True,106,0.0007831508299564566,0.00017073571449578717,0.014240373747757218,0.07547169811320842
+coach_x_total_returning,H + coach_tenure_seasons + returning_pct_ppa,2020,True,True,110,0.0031057093466391244,0.0004187210294861188,0.11496942932806675,0.1363636363636367
+coach_x_total_returning,H + coach_tenure_seasons + returning_pct_ppa,2021,True,True,98,-0.0016175767068474834,-0.0002541309495524974,-0.026379607796052085,-0.03061224489795933
+coach_x_total_returning,H + coach_tenure_seasons + returning_pct_ppa,2022,True,True,105,0.0054525712805781655,0.00028396268103647593,0.04344925961101609,0.16190476190476133
+coach_x_total_returning,H + coach_tenure_seasons + returning_pct_ppa,2023,True,True,103,7.430610023929823e-05,7.59965992705447e-07,0.011671855049371516,-0.009708737864077222
+coach_x_total_returning,H + coach_tenure_seasons + returning_pct_ppa,2024,True,True,101,-2.468450951916977e-05,-2.3418808228203858e-05,-0.005788658793598245,0.019801980198021596
+coach_x_total_returning,H + coach_tenure_seasons + returning_pct_ppa,2025,True,True,101,0.00018731143502441277,2.176050394300799e-05,0.008638772923273308,0.07920792079207928

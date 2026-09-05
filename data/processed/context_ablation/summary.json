@@ -640,9 +640,106 @@
     "Current recruiting: mean \u0394NLL -0.0105; 15 wins/4 losses; recruiting history: mean \u0394NLL -0.0124; 15 wins/3 losses; all recruiting: mean \u0394NLL -0.0110; 16 wins/2 losses.",
     "Talent: mean \u0394NLL -0.0028; 4 wins/4 losses; total/passing/skill returning production: mean \u0394NLL -0.0186; 6 wins/3 losses, mean \u0394NLL -0.0001; 6 wins/3 losses, mean \u0394NLL -0.0123; 7 wins/2 losses.",
     "On one exact all-context common population, recruiting+Talent+returning: mean \u0394NLL -0.0222; 6 wins/2 losses; full frozen-spec C-equivalent: mean \u0394NLL -0.0185; 6 wins/2 losses.",
-    "Talent\u00d7total-returning interaction: mean \u0394NLL -0.0181; 5 wins/3 losses; Talent\u00d7passing-returning: mean \u0394NLL +0.0272; 3 wins/5 losses.",
     "Interpret annual wins/losses and descriptive season-bootstrap ranges conservatively; the coverage-era target count is intentionally limited.",
     "No production H/C specification, frozen 2026 PMF, or 2026 outcome was modified or accessed."
+  ],
+  "interaction_parent_comparisons": [
+    {
+      "best_season_improvement": -0.0027374929868465765,
+      "descriptive_season_bootstrap": {
+        "crps_central_95_bootstrap_range": [
+          -1.8914172988663483e-05,
+          0.00027774975410167915
+        ],
+        "fraction_candidate_better_crps": 0.042,
+        "fraction_candidate_better_nll": 0.0535,
+        "mean_delta_crps": 0.00013995383844340935,
+        "mean_delta_nll": 0.0014287346618890406,
+        "n_resamples": 2000,
+        "n_season_clusters": 8,
+        "n_team_seasons": 1039,
+        "nll_central_95_bootstrap_range": [
+          -0.0002731400615136316,
+          0.0030588239847350747
+        ],
+        "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+      },
+      "interaction": "talent_x_total_returning",
+      "losses": 6,
+      "mean_interaction_minus_parent_nll": 0.0014228688325061108,
+      "median_interaction_minus_parent_nll": 0.0013790306141393766,
+      "n_target_seasons": 8,
+      "n_team_seasons": 1039,
+      "parent": "H + talent_composite + returning_pct_ppa",
+      "target_seasons": "2018;2019;2020;2021;2022;2023;2024;2025",
+      "ties": 0,
+      "wins": 2,
+      "worst_season_regression": 0.004866293156997343
+    },
+    {
+      "best_season_improvement": -0.0015185888400784087,
+      "descriptive_season_bootstrap": {
+        "crps_central_95_bootstrap_range": [
+          -3.6661993281971315e-05,
+          0.00022473030480235604
+        ],
+        "fraction_candidate_better_crps": 0.0925,
+        "fraction_candidate_better_nll": 0.0805,
+        "mean_delta_crps": 8.588630673134544e-05,
+        "mean_delta_nll": 0.02987576772045482,
+        "n_resamples": 2000,
+        "n_season_clusters": 8,
+        "n_team_seasons": 1039,
+        "nll_central_95_bootstrap_range": [
+          -0.00034780129851064834,
+          0.08954416367031273
+        ],
+        "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+      },
+      "interaction": "talent_x_passing_returning",
+      "losses": 5,
+      "mean_interaction_minus_parent_nll": 0.03016249544823245,
+      "median_interaction_minus_parent_nll": 0.0002905323297740178,
+      "n_target_seasons": 8,
+      "n_team_seasons": 1039,
+      "parent": "H + talent_composite + returning_pct_passing_ppa",
+      "target_seasons": "2018;2019;2020;2021;2022;2023;2024;2025",
+      "ties": 0,
+      "wins": 3,
+      "worst_season_regression": 0.23853454866094362
+    },
+    {
+      "best_season_improvement": -0.0016175767068474834,
+      "descriptive_season_bootstrap": {
+        "crps_central_95_bootstrap_range": [
+          -3.215661008367101e-05,
+          0.00025324265585267706
+        ],
+        "fraction_candidate_better_crps": 0.0735,
+        "fraction_candidate_better_nll": 0.0445,
+        "mean_delta_crps": 0.00010696902576216836,
+        "mean_delta_nll": 0.0011131642037716845,
+        "n_resamples": 2000,
+        "n_season_clusters": 9,
+        "n_team_seasons": 930,
+        "nll_central_95_bootstrap_range": [
+          -0.000142675705694993,
+          0.0024839690180769
+        ],
+        "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+      },
+      "interaction": "coach_x_total_returning",
+      "losses": 6,
+      "mean_interaction_minus_parent_nll": 0.0010624247702497377,
+      "median_interaction_minus_parent_nll": 0.00018731143502441277,
+      "n_target_seasons": 9,
+      "n_team_seasons": 930,
+      "parent": "H + coach_tenure_seasons + returning_pct_ppa",
+      "target_seasons": "2017;2018;2019;2020;2021;2022;2023;2024;2025",
+      "ties": 0,
+      "wins": 3,
+      "worst_season_regression": 0.0054525712805781655
+    }
   ],
   "min_train_seasons": 3,
   "no_2026_outcomes_accessed": true,

@@ -109,3 +109,20 @@ def aggregate_difference(values: list[float]) -> float:
     if not np.all(np.isfinite(array)):
         raise ValueError("ablation loss differences must be finite")
     return float(array.mean()) if len(array) else float("nan")
+
+
+def paired_loss_differences(
+    parent: dict[Key, tuple[float, float]], candidate: dict[Key, tuple[float, float]]
+) -> dict[Key, tuple[float, float]]:
+    """Return candidate-minus-parent NLL/CRPS only for exact paired keys."""
+    if set(parent) != set(candidate):
+        raise ValueError("interaction and parent must have identical target keys")
+    return {
+        key: (candidate[key][0] - parent[key][0], candidate[key][1] - parent[key][1])
+        for key in parent
+    }
+
+
+def interaction_is_useful(parent_deltas: list[float]) -> bool:
+    """Classify an interaction only from its parent comparison, never from H."""
+    return aggregate_difference(parent_deltas) < 0

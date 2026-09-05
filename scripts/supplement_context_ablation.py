@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import build_preseason_context_prior_v1_2 as c12
@@ -16,12 +17,16 @@ from investigate_context_ablation import (
     TALENT,
     fit_context,
     fit_h,
+    metrics,
     predictions,
+    render_report,
     restrict_observed,
     standardized_interaction_rows,
     write_csv,
+    write_json,
 )
 
+from gippyrank.context_ablation import paired_loss_differences
 from gippyrank.preseason import pmf_summaries
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -33,7 +38,9 @@ def expected(prediction: v1.PriorPrediction) -> float:
     return pmf_summaries(prediction.pmf)["expected_rank"]
 
 
-def interaction_comparisons(contextual: list[object]) -> list[dict[str, object]]:
+def interaction_comparisons(
+    contextual: list[object],
+) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
     """Compare each interaction to its exact no-interaction parent by season."""
     definitions = [
         (
@@ -53,6 +60,9 @@ def interaction_comparisons(contextual: list[object]) -> list[dict[str, object]]
         ),
     ]
     records = []
+    predicted_by_interaction: dict[
+        str, list[tuple[list[v1.PriorPrediction], list[v1.PriorPrediction]]]
+    ] = {}
     for name, features, pair in definitions:
         source = restrict_observed(contextual, features)
         for target in range(2017, TARGET + 1):
@@ -64,6 +74,9 @@ def interaction_comparisons(contextual: list[object]) -> list[dict[str, object]]
             augmented_train, augmented_target, interaction = (
                 standardized_interaction_rows(train, target_rows, *pair)
             )
+            assert {(row.season, row.subdivision, row.team_id) for row in train} == {
+                (row.season, row.subdivision, row.team_id) for row in augmented_train
+            }
             child = predictions(
                 fit_context(augmented_train, [*features, interaction]),
                 augmented_target,
@@ -73,24 +86,58 @@ def interaction_comparisons(contextual: list[object]) -> list[dict[str, object]]
                 h11.prediction_losses(parent),
                 h11.prediction_losses(child),
             )
-            assert set(parent_loss) == set(child_loss)
+            differences = paired_loss_differences(parent_loss, child_loss)
+            parent_metrics, child_metrics = metrics(parent), metrics(child)
+            predicted_by_interaction.setdefault(name, []).append((parent, child))
             records.append(
                 {
                     "interaction": name,
+                    "parent": "H + " + " + ".join(features),
                     "target_season": target,
                     "same_population_keys": True,
+                    "same_training_keys": True,
                     "n_team_seasons": len(parent_loss),
                     "interaction_minus_parent_nll": float(
-                        np.mean(
-                            [
-                                child_loss[key][0] - parent_loss[key][0]
-                                for key in parent_loss
-                            ]
-                        )
+                        np.mean([differences[key][0] for key in differences])
                     ),
+                    "interaction_minus_parent_crps": child_metrics["crps"]
+                    - parent_metrics["crps"],
+                    "interaction_minus_parent_expected_rank_mae": child_metrics[
+                        "expected_rank_mae"
+                    ]
+                    - parent_metrics["expected_rank_mae"],
+                    "interaction_minus_parent_median_rank_mae": child_metrics[
+                        "median_rank_mae"
+                    ]
+                    - parent_metrics["median_rank_mae"],
                 }
             )
-    return records
+    summary = []
+    for name, pairs in predicted_by_interaction.items():
+        rows = [row for row in records if row["interaction"] == name]
+        parent = [prediction for pair in pairs for prediction in pair[0]]
+        child = [prediction for pair in pairs for prediction in pair[1]]
+        deltas = np.asarray([row["interaction_minus_parent_nll"] for row in rows])
+        summary.append(
+            {
+                "interaction": name,
+                "parent": rows[0]["parent"],
+                "target_seasons": ";".join(str(row["target_season"]) for row in rows),
+                "n_target_seasons": len(rows),
+                "n_team_seasons": sum(int(row["n_team_seasons"]) for row in rows),
+                "mean_interaction_minus_parent_nll": float(deltas.mean()),
+                "median_interaction_minus_parent_nll": float(np.median(deltas)),
+                "wins": int(np.sum(deltas < -1e-12)),
+                "losses": int(np.sum(deltas > 1e-12)),
+                "ties": int(
+                    np.sum(np.isclose(deltas, 0)),
+                ),
+                "best_season_improvement": float(deltas.min()),
+                "worst_season_regression": float(deltas.max()),
+                "descriptive_season_bootstrap": h11.paired_bootstrap(parent, child),
+            }
+        )
+    return records, summary
 
 
 def main() -> None:
@@ -152,8 +199,9 @@ def main() -> None:
             }
         )
     write_csv("component_disagreement.csv", component)
-    interaction_rows = interaction_comparisons(contextual)
+    interaction_rows, interaction_summary = interaction_comparisons(contextual)
     write_csv("interaction_results.csv", interaction_rows)
+    write_csv("interaction_summary.csv", interaction_summary)
 
     requested = ["New Mexico", "Utah", "James Madison", "North Texas"]
     best_c = sorted(c_all, key=lambda key: c_all_losses[key][0] - h_all_losses[key][0])[
@@ -216,13 +264,22 @@ def main() -> None:
             "n": len(values),
             "mean_returning_minus_h_nll": float(np.mean(values)) if values else None,
         }
-    report = OUT / "report.md"
-    report.write_text(
-        report.read_text(encoding="utf-8")
-        + "\n## 2025 component disagreement\n\n"
-        + "Component directions are calculated on the coach-free RTP observed population. "
-        + f"Returning-only ΔNLL averaged {pattern['agreement']['mean_returning_minus_h_nll']:.4f} for {pattern['agreement']['n']} agreement cases and {pattern['conflict']['mean_returning_minus_h_nll']:.4f} for {pattern['conflict']['n']} conflict cases. Team examples retain rows with unavailable coach coverage rather than silently excluding them.\n",
-        encoding="utf-8",
+    summary_path = OUT / "summary.json"
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    summary["interaction_parent_comparisons"] = interaction_summary
+    write_json("summary.json", summary)
+    render_report(
+        summary,
+        interaction_summary=interaction_summary,
+        component_note=(
+            "Component directions are calculated on the coach-free RTP observed "
+            "population. Returning-only ΔNLL averaged "
+            f"{pattern['agreement']['mean_returning_minus_h_nll']:.4f} for "
+            f"{pattern['agreement']['n']} agreement cases and "
+            f"{pattern['conflict']['mean_returning_minus_h_nll']:.4f} for "
+            f"{pattern['conflict']['n']} conflict cases. Team examples retain rows "
+            "with unavailable coach coverage rather than silently excluding them."
+        ),
     )
 
 
