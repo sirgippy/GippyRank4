@@ -1,0 +1,102 @@
+{
+  "ranking_families": [
+    {
+      "id": "predictive",
+      "label": "Predictive"
+    }
+  ],
+  "schema_version": "1.0",
+  "seasons": [
+    2026
+  ],
+  "snapshots": [
+    {
+      "data_path": "data/snapshots/2026-preseason-context.json",
+      "display_label": "Preseason",
+      "effective_cutoff": null,
+      "excluded_lower_division_games": 0,
+      "generation_timestamp": "2026-09-05T20:12:56.196105+00:00",
+      "included_game_count": 0,
+      "model_versions": {
+        "context_prior": "1.2",
+        "historical_likelihood": "V1",
+        "history_prior": "1.1"
+      },
+      "prior_family": "context",
+      "publication_slot": "2026-preseason",
+      "ranking_family": "predictive",
+      "requested_cutoff": null,
+      "season": 2026,
+      "snapshot_id": "2026-preseason-context",
+      "snapshot_type": "preseason",
+      "source_retrieved_at": null,
+      "valid": true
+    },
+    {
+      "data_path": "data/snapshots/2026-preseason-history.json",
+      "display_label": "Preseason",
+      "effective_cutoff": null,
+      "excluded_lower_division_games": 0,
+      "generation_timestamp": "2026-09-05T20:12:57.082967+00:00",
+      "included_game_count": 0,
+      "model_versions": {
+        "context_prior": "1.2",
+        "historical_likelihood": "V1",
+        "history_prior": "1.1"
+      },
+      "prior_family": "history",
+      "publication_slot": "2026-preseason",
+      "ranking_family": "predictive",
+      "requested_cutoff": null,
+      "season": 2026,
+      "snapshot_id": "2026-preseason-history",
+      "snapshot_type": "preseason",
+      "source_retrieved_at": null,
+      "valid": true
+    },
+    {
+      "data_path": "data/snapshots/2026-live-2026-09-05T23-59-59Z-context.json",
+      "display_label": "Sep. 5",
+      "effective_cutoff": "2026-09-05T20:11:12.864212+00:00",
+      "excluded_lower_division_games": 27,
+      "generation_timestamp": "2026-09-05T20:12:08.549822+00:00",
+      "included_game_count": 86,
+      "model_versions": {
+        "context_prior": "1.2",
+        "historical_likelihood": "V1",
+        "history_prior": "1.1"
+      },
+      "prior_family": "context",
+      "publication_slot": "2026-sep-05",
+      "ranking_family": "predictive",
+      "requested_cutoff": "2026-09-05T23:59:59+00:00",
+      "season": 2026,
+      "snapshot_id": "2026-live-2026-09-05T23-59-59Z-context",
+      "snapshot_type": "live",
+      "source_retrieved_at": "2026-09-05T20:11:12.864212+00:00",
+      "valid": true
+    },
+    {
+      "data_path": "data/snapshots/2026-live-2026-09-05T23-59-59Z-history.json",
+      "display_label": "Sep. 5",
+      "effective_cutoff": "2026-09-05T20:11:12.864212+00:00",
+      "excluded_lower_division_games": 27,
+      "generation_timestamp": "2026-09-05T20:12:14.410283+00:00",
+      "included_game_count": 86,
+      "model_versions": {
+        "context_prior": "1.2",
+        "historical_likelihood": "V1",
+        "history_prior": "1.1"
+      },
+      "prior_family": "history",
+      "publication_slot": "2026-sep-05",
+      "ranking_family": "predictive",
+      "requested_cutoff": "2026-09-05T23:59:59+00:00",
+      "season": 2026,
+      "snapshot_id": "2026-live-2026-09-05T23-59-59Z-history",
+      "snapshot_type": "live",
+      "source_retrieved_at": "2026-09-05T20:11:12.864212+00:00",
+      "valid": true
+    }
+  ]
+}
