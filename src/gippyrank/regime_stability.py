@@ -7,6 +7,7 @@ year; every returned training row is strictly older than that target.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from math import log
 
@@ -67,19 +68,56 @@ def training_plan(
     )
 
 
-def nested_choice(
-    candidates: list[str], prior_scores: dict[int, dict[str, float]], target: int
+def nested_family_prior_years(
+    candidates: Sequence[str],
+    prior_scores: Mapping[int, Mapping[str, float]],
+    target: int,
+) -> list[int]:
+    """Return earlier targets with scores for every member of one family."""
+    return sorted(
+        year
+        for year, scores in prior_scores.items()
+        if year < target and all(candidate in scores for candidate in candidates)
+    )
+
+
+def nested_family_choice(
+    candidates: Sequence[str],
+    prior_scores: Mapping[int, Mapping[str, float]],
+    target: int,
+    *,
+    default_candidate: str,
 ) -> str:
-    """Choose from scores of earlier targets only, with deterministic ties."""
-    available = [year for year in prior_scores if year < target]
+    """Choose prospectively within one explicit candidate family.
+
+    Scores from the target being chosen, and candidates outside ``candidates``,
+    are deliberately unavailable to this calculation.  The configured static
+    candidate is the deterministic default before any common prior target.
+    """
+    if not candidates:
+        raise ValueError("nested family choice requires at least one candidate")
+    if default_candidate not in candidates:
+        raise ValueError("nested family default must be a family candidate")
+    available = nested_family_prior_years(candidates, prior_scores, target)
     if not available:
-        return candidates[0]
+        return default_candidate
     return min(
         candidates,
         key=lambda name: (
             float(np.mean([prior_scores[year][name] for year in available])),
             candidates.index(name),
         ),
+    )
+
+
+def nested_choice(
+    candidates: list[str], prior_scores: dict[int, dict[str, float]], target: int
+) -> str:
+    """Backward-compatible generic prospective choice for a supplied family."""
+    if not candidates:
+        raise ValueError("nested choice requires at least one candidate")
+    return nested_family_choice(
+        candidates, prior_scores, target, default_candidate=candidates[0]
     )
 
 

@@ -10,6 +10,7 @@ from gippyrank.regime_stability import (
     decomposition_total,
     exponential_weights,
     nested_choice,
+    nested_family_choice,
     training_plan,
 )
 
@@ -48,6 +49,43 @@ def test_windows_exclude_old_rows_and_nested_choice_uses_only_prior_targets() ->
     assert [item.season for item in plan.rows] == [2016, 2017, 2018]
     scores = {2018: {"equal": 2.0, "fast": 1.0}, 2019: {"equal": 0.0, "fast": 5.0}}
     assert nested_choice(["equal", "fast"], scores, 2019) == "fast"
+
+
+def test_nested_selection_is_family_specific_and_excludes_target_scores() -> None:
+    """An H candidate cannot lose merely because a C score is lower."""
+    scores = {
+        2024: {
+            "H_static": 2.0,
+            "H_fast": 1.0,
+            "C_static": 0.5,
+            "C_fast": 0.7,
+        },
+        # The target's scores must not influence its own prospective choice.
+        2025: {
+            "H_static": 0.0,
+            "H_fast": 9.0,
+            "C_static": 9.0,
+            "C_fast": 0.0,
+        },
+    }
+    assert (
+        nested_family_choice(
+            ["H_static", "H_fast"], scores, 2024, default_candidate="H_static"
+        )
+        == "H_static"
+    )
+    assert (
+        nested_family_choice(
+            ["H_static", "H_fast"], scores, 2025, default_candidate="H_static"
+        )
+        == "H_fast"
+    )
+    assert (
+        nested_family_choice(
+            ["C_static", "C_fast"], scores, 2025, default_candidate="C_static"
+        )
+        == "C_static"
+    )
 
 
 def test_pairing_rejects_different_team_keys() -> None:

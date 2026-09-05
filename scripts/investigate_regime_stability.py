@@ -28,7 +28,8 @@ from gippyrank.preseason import (
 )
 from gippyrank.regime_stability import (
     assert_same_keys,
-    nested_choice,
+    nested_family_choice,
+    nested_family_prior_years,
     training_plan,
 )
 
@@ -94,6 +95,23 @@ def window_name(window: int | None) -> str:
     return "all" if window is None else f"window_{window}"
 
 
+def h_candidate_names() -> tuple[str, ...]:
+    """Return the complete, explicit H-only prospective selection family."""
+    return (
+        "H_static",
+        *(f"H_{half_life_name(value)}" for value in HALF_LIVES[1:]),
+        *(f"H_{window_name(value)}" for value in WINDOWS[1:]),
+    )
+
+
+def c_candidate_names() -> tuple[str, ...]:
+    """Return the complete, explicit C-only prospective selection family."""
+    return (
+        "C_static",
+        *(f"C_context_{half_life_name(value)}" for value in HALF_LIVES[1:]),
+    )
+
+
 def flatten_metrics(
     metrics: dict[str, object], predictions: list[v1.PriorPrediction]
 ) -> dict[str, object]:
@@ -112,6 +130,72 @@ def flatten_metrics(
             )
         )
     return result
+
+
+def nested_strategy(
+    family: str,
+    candidate_names: tuple[str, ...],
+    scores_by_year: dict[int, dict[str, float]],
+    predictions_by_candidate: dict[str, dict[int, list[v1.PriorPrediction]]],
+    years: list[int],
+) -> tuple[list[dict[str, object]], dict[str, object]]:
+    """Score the realized prospective selector against its family's static model."""
+    static_candidate = candidate_names[0]
+    selected_predictions: list[v1.PriorPrediction] = []
+    static_predictions: list[v1.PriorPrediction] = []
+    selections: list[dict[str, object]] = []
+    for target in years:
+        prior_years = nested_family_prior_years(candidate_names, scores_by_year, target)
+        selected_candidate = nested_family_choice(
+            candidate_names,
+            scores_by_year,
+            target,
+            default_candidate=static_candidate,
+        )
+        selected = predictions_by_candidate[selected_candidate][target]
+        baseline = predictions_by_candidate[static_candidate][target]
+        assert_same_keys({prediction.key for prediction in selected}, {prediction.key for prediction in baseline})
+        selected_predictions.extend(selected)
+        static_predictions.extend(baseline)
+        selected_nll = scores_by_year[target][selected_candidate]
+        static_nll = scores_by_year[target][static_candidate]
+        selections.append(
+            {
+                "target_season": target,
+                "family": family,
+                "selected_candidate": selected_candidate,
+                "selected_nll": selected_nll,
+                "static_candidate": static_candidate,
+                "static_nll": static_nll,
+                "delta_nll": selected_nll - static_nll,
+                "n_prior_targets_used": len(prior_years),
+                "adaptive_selected": selected_candidate != static_candidate,
+            }
+        )
+    selected_metrics = v1.score_predictions(selected_predictions)
+    static_metrics = v1.score_predictions(static_predictions)
+    result: dict[str, object] = {
+        "family": family,
+        "static_candidate": static_candidate,
+        "n_target_seasons": len(years),
+        "adaptive_selection_count": sum(
+            bool(selection["adaptive_selected"]) for selection in selections
+        ),
+        "adaptive_selection_fraction": float(
+            np.mean([bool(selection["adaptive_selected"]) for selection in selections])
+        ),
+        "selected_candidate_by_year": {
+            str(selection["target_season"]): selection["selected_candidate"]
+            for selection in selections
+        },
+    }
+    for metric in ("nll", "crps", "expected_rank_mae", "median_rank_mae"):
+        selected_value = float(selected_metrics[metric])
+        static_value = float(static_metrics[metric])
+        result[metric] = selected_value
+        result[f"static_{metric}"] = static_value
+        result[f"delta_{metric}_vs_static"] = selected_value - static_value
+    return selections, result
 
 
 def weighted_adjustment(
@@ -362,6 +446,9 @@ def plot_series(
 def render_report(summary: dict[str, object]) -> None:
     best_h = summary["best_h"]
     best_c = summary["best_c"]
+    nested = summary["nested_strategies"]
+    nested_h = nested["H"]
+    nested_c = nested["C"]
     lines = [
         "# Regime-stability investigation",
         "",
@@ -375,13 +462,17 @@ def render_report(summary: dict[str, object]) -> None:
         "",
         "The machine-readable tables retain the annual NLL, CRPS, expected/median-rank MAE, interval coverage and width, and Top-5/10/25 Brier scores. Plots show raw annual points; no rule-change date was fit as a breakpoint.",
         "",
-        "## Interpretation",
+        "## Prospective family-specific nested strategies",
         "",
-        "Treat the candidate rankings as descriptive, not a production selection: each target-year nested choice is calculated from earlier target forecasts only. The two-timescale experiment holds rank-history effects slow and fits a recent weighted context correction; it is intentionally simple. A future production proposal requires a separate specification and validation PR.",
+        f"The H-only selector chose an adaptive H candidate in **{nested_h['adaptive_selection_count']}/{nested_h['n_target_seasons']}** target seasons. Its realized aggregate NLL was **{nested_h['nll']:.4f}** (ΔNLL **{nested_h['delta_nll_vs_static']:.4f}** versus always H-static), with ΔCRPS **{nested_h['delta_crps_vs_static']:.4f}** and expected-rank-MAE change **{nested_h['delta_expected_rank_mae_vs_static']:.4f}**.",
+        "",
+        f"The C-only selector chose an adaptive C candidate in **{nested_c['adaptive_selection_count']}/{nested_c['n_target_seasons']}** target seasons. Its realized aggregate NLL was **{nested_c['nll']:.4f}** (ΔNLL **{nested_c['delta_nll_vs_static']:.4f}** versus always C-static), with ΔCRPS **{nested_c['delta_crps_vs_static']:.4f}** and expected-rank-MAE change **{nested_c['delta_expected_rank_mae_vs_static']:.4f}**.",
+        "",
+        "These are prospective strategy results: each target's choice uses only earlier rolling target forecasts within its own family. They are distinct from the descriptive hindsight candidate means above. The two-timescale experiment holds rank-history effects slow and fits a recent weighted context correction; it remains research-only, and a future production proposal requires a separate specification and validation PR.",
         "",
         "## Artifacts",
         "",
-        "- `annual_metrics.csv` — paired annual scores for static and adaptive candidates.\n- `candidate_results.csv` — aggregate and nested-selection summaries.\n- `coefficient_trajectories.csv` and `feature_distributions.csv` — coefficient/effect and covariate-shift diagnostics.\n- `hc_disagreement.csv` and `decomposition_2025.csv` — forecast disagreement and the 2025 C-vs-H NLL decomposition.\n- `plots/` — requested annual performance, feature/effect, interval, disagreement, and 2025 plots.",
+        "- `annual_metrics.csv` — paired annual scores for static and adaptive candidates.\n- `candidate_results.csv` — descriptive aggregate results and family-specific selection counts.\n- `nested_selection.csv` — the prospective selected candidate and realized score for every family/target.\n- `coefficient_trajectories.csv` and `feature_distributions.csv` — coefficient/effect and covariate-shift diagnostics.\n- `hc_disagreement.csv` and `decomposition_2025.csv` — forecast disagreement and the 2025 C-vs-H NLL decomposition.\n- `plots/` — requested annual performance, feature/effect, interval, disagreement, and 2025 plots.",
     ]
     findings = summary.get("findings")
     if isinstance(findings, list):
@@ -413,6 +504,9 @@ def main() -> None:
     h_static_all: list[v1.PriorPrediction] = []
     c_static_all: list[v1.PriorPrediction] = []
     config_scores: dict[str, dict[int, float]] = defaultdict(dict)
+    predictions_by_candidate: dict[str, dict[int, list[v1.PriorPrediction]]] = (
+        defaultdict(dict)
+    )
     decomposed: list[dict[str, object]] = []
 
     for target in years:
@@ -441,6 +535,7 @@ def main() -> None:
                 }
             )
             config_scores[family][target] = float(v1.score_predictions(preds)["nll"])
+            predictions_by_candidate[family][target] = preds
         coefficients.extend(coefficient_rows(h_model, target, "H_static"))
         coefficients.extend(coefficient_rows(c_model, target, "C_static"))
         h_loss, c_loss = h11.prediction_losses(h_preds), h11.prediction_losses(c_preds)
@@ -450,10 +545,10 @@ def main() -> None:
                 {
                     "season": target,
                     "team_id": key[2],
-                    "team_name": team_names[key],
                     "h_nll": h_loss[key][0],
                     "c_nll": c_loss[key][0],
                     "c_minus_h_nll": c_loss[key][0] - h_loss[key][0],
+                    "team_name": team_names[key],
                 }
             )
 
@@ -474,6 +569,7 @@ def main() -> None:
                 }
             )
             config_scores[h_name][target] = float(metrics["nll"])
+            predictions_by_candidate[h_name][target] = preds
             prep, beta = weighted_adjustment(h_model, c_plan.rows, c_plan.weights)
             c_name = f"C_context_{half_life_name(half_life)}"
             context_weighted = hybrid_predictions(h_model, prep, beta, target_c, c_name)
@@ -487,6 +583,7 @@ def main() -> None:
                 }
             )
             config_scores[c_name][target] = float(metrics["nll"])
+            predictions_by_candidate[c_name][target] = context_weighted
 
         for window in WINDOWS[1:]:
             plan = training_plan(fbs, target, window=window)
@@ -502,6 +599,7 @@ def main() -> None:
                 }
             )
             config_scores[name][target] = float(metrics["nll"])
+            predictions_by_candidate[name][target] = preds
 
         print(f"completed target {target}", flush=True)
 
@@ -523,31 +621,63 @@ def main() -> None:
         }
         for year in years
     }
-    for name, scores in sorted(config_scores.items()):
-        reference = static_h if name.startswith("H_") else static_c
-        if name in {"H_static", "C_static"}:
-            continue
-        common = sorted(set(scores) & set(reference))
-        candidates.append(
-            {
-                "candidate": name,
-                "n_target_seasons": len(common),
-                "mean_nll": float(np.mean([scores[y] for y in common])),
-                "mean_delta_nll_vs_static": float(
-                    np.mean([scores[y] - reference[y] for y in common])
-                ),
-                "nested_choice_wins": sum(
-                    nested_choice(sorted(scores_by_year[y]), scores_by_year, y) == name
-                    for y in common
-                ),
-            }
+    families = {
+        "H": h_candidate_names(),
+        "C": c_candidate_names(),
+    }
+    references = {"H": static_h, "C": static_c}
+    nested_rows: list[dict[str, object]] = []
+    nested_strategies: dict[str, dict[str, object]] = {}
+    for family, names in families.items():
+        reference = references[family]
+        for name in names:
+            scores = config_scores[name]
+            common = sorted(set(scores) & set(reference))
+            candidates.append(
+                {
+                    "family": family,
+                    "candidate": name,
+                    "n_target_seasons": len(common),
+                    "mean_nll": float(np.mean([scores[year] for year in common])),
+                    "mean_delta_nll_vs_static": float(
+                        np.mean([scores[year] - reference[year] for year in common])
+                    ),
+                    "nested_choice_wins": sum(
+                        nested_family_choice(
+                            names,
+                            scores_by_year,
+                            year,
+                            default_candidate=names[0],
+                        )
+                        == name
+                        for year in common
+                    ),
+                }
+            )
+        family_rows, family_summary = nested_strategy(
+            family,
+            names,
+            scores_by_year,
+            predictions_by_candidate,
+            years,
         )
+        nested_rows.extend(family_rows)
+        nested_strategies[family] = family_summary
     candidates.sort(key=lambda row: float(row["mean_delta_nll_vs_static"]))
-    best_h = next(row for row in candidates if str(row["candidate"]).startswith("H_"))
-    best_c = next(row for row in candidates if str(row["candidate"]).startswith("C_"))
+    best_h = next(
+        row
+        for row in candidates
+        if row["family"] == "H" and row["candidate"] != "H_static"
+    )
+    best_c = next(
+        row
+        for row in candidates
+        if row["family"] == "C" and row["candidate"] != "C_static"
+    )
     disagreements = prediction_disagreement(h_static_all, c_static_all)
     write_csv("annual_metrics.csv", annual)
     write_csv("candidate_results.csv", candidates)
+    write_csv("nested_selection.csv", nested_rows)
     write_csv("coefficient_trajectories.csv", coefficients)
     write_csv("coefficient_time_trends.csv", coefficient_time_trends(coefficients))
     write_csv("feature_distributions.csv", feature_distribution(contextual))
@@ -566,6 +696,19 @@ def main() -> None:
             "candidate": best_c["candidate"],
             "delta_nll": best_c["mean_delta_nll_vs_static"],
         },
+        "nested_strategies": nested_strategies,
+        "classification": "C. Feature-specific drift, with mild gradual weakening of rank persistence but no validated adaptive production win.",
+        "findings": [
+            "Classification: **C — feature-specific drift**. Direct lag-1-to-target percentile persistence declined gradually from 0.727 (2004–09) to 0.661 (2020–25); it is not evidence of a discrete portal/NIL breakpoint.",
+            "Long-run-history coefficients are variable and their simple linear trend is weak for H (p=0.190), while direct transition diagnostics show only modest recent weakening. A static long-run baseline remains defensible pending uncertainty-aware follow-up.",
+            f"H recency/window experiments provide no meaningful validated gain: the best descriptive result is {best_h['candidate']} at ΔNLL {best_h['mean_delta_nll_vs_static']:.5f}, while the family-specific prospective selector chose adaptive H in {nested_strategies['H']['adaptive_selection_count']}/{nested_strategies['H']['n_target_seasons']} targets and realized ΔNLL {nested_strategies['H']['delta_nll_vs_static']:.5f} versus always H-static.",
+            f"Fast context adaptation did not help: the best slow-H/fast-context half-life is {best_c['candidate']} at ΔNLL {best_c['mean_delta_nll_vs_static']:.4f} versus C-static, and the family-specific prospective C selector chose no adaptive candidate (realized ΔNLL {nested_strategies['C']['delta_nll_vs_static']:.4f}). Do not introduce a recency-weighted C production model from this evidence.",
+            "Coach-tenure effect is stable (linear coefficient-time p=0.608). Recruiting, Talent, and returning-production coefficient trajectories move substantially, but their early missingness/coverage changes make raw long-run trends descriptive rather than causal.",
+            "Returning total and passing production remain directionally useful once observed; their standardized effects do not support the hypothesized modern weakening. Recruiting/Talent effects are small and unstable conditional on the other context inputs.",
+            "Recent C performance deteriorated in 2025: C beat H by 0.0616 NLL in 2022, 0.0207 in 2023, and 0.0103 in 2024, then lost by 0.0420 in 2025. The 2025 loss sums exactly from team contributions; largest positive C-minus-H contributions were New Mexico (1.88), Utah (1.66), James Madison (1.61), North Texas (1.43).",
+            "H/C disagreement increased modestly in the recent years (mean expected-rank gap 7.76 in 2022 to 8.71 in 2025), so large context adjustments merit audit rather than stronger automatic weighting.",
+            "Recommended next step: preserve H 1.1/C 1.2 and 2026 priors; conduct a separate uncertainty-aware feature-ablation/interaction study using only years with observed context coverage before proposing any production V1.3/C1.3.",
+        ],
         "frozen_artifacts_modified": False,
         "no_2026_outcomes_accessed": True,
         "two_timescale_definition": "static H location/scale plus half-life-5 weighted ridge context correction",
