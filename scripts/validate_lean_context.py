@@ -7,6 +7,7 @@ completed seasons, and all comparisons pair identical target keys.
 
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import shutil
@@ -22,16 +23,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from gippyrank.lean_context_validation import (
+    CLEAR_C_NLL_GAIN,
     H_FEATURES,
+    INTERVAL_80_COVERAGE_METRIC,
     LEAN_CONTEXT_FEATURES,
     MATERIAL_NLL_GAIN,
     MAX_COVERAGE_REGRESSION,
     MIN_PRIOR_TARGETS,
     PARSIMONY_TIE_NLL,
+    annual_delta_field,
     assert_lean_specification,
     choose_nested_model,
     observed_common,
     prior_training,
+    recommendation_outcome,
 )
 from gippyrank.preseason import DirectRankModel, TeamSeason, pmf_summaries
 
@@ -173,7 +178,7 @@ def annual_record(
         )
     for left, right in (("L", "H"), ("L", "C"), ("C", "H")):
         for metric in metrics[left]:
-            row[f"{left.lower()}_minus_{right.lower()}_{metric}"] = (
+            row[annual_delta_field(left, right, metric)] = (
                 metrics[left][metric] - metrics[right][metric]
             )
     return row
@@ -484,7 +489,7 @@ def render_report(summary: dict[str, Any]) -> None:
         "",
         "L is fixed as H 1.1 historical features plus six recruiting features (current class rank/points, 2/3/4-year points means, trend) and four returning-production features (total, passing, receiving, rushing). Context enters location only; its scale uses the H features. Talent, coaching, transfers, interactions, continuity measures, and poll/media inputs are excluded.",
         "",
-        f"Promotion requires a mean rolling NLL improvement of at least {MATERIAL_NLL_GAIN:.3f} versus H, non-worse CRPS, no worse than {MAX_COVERAGE_REGRESSION:.2f} 80% coverage, no recurrent catastrophic regression, and either a clear C improvement or prediction within {PARSIMONY_TIE_NLL:.3f} NLL of C with lower complexity. These thresholds were written before results.",
+        f"Promotion requires a mean rolling NLL improvement of at least {MATERIAL_NLL_GAIN:.3f} versus H, non-worse CRPS, no worse than {MAX_COVERAGE_REGRESSION:.2f} 80% coverage, no recurrent catastrophic regression, and either a clear C improvement (L − C NLL ≤ −{CLEAR_C_NLL_GAIN:.3f}) or prediction within {PARSIMONY_TIE_NLL:.3f} NLL of C with lower complexity. These thresholds were written before results.",
         "",
         "## Results",
         "",
@@ -502,6 +507,83 @@ def render_report(summary: dict[str, Any]) -> None:
         "",
     ]
     (OUT / "report.md").write_text("\n".join(lines), encoding="utf-8")
+
+
+def run_smoke(output: Path) -> dict[str, Any]:
+    """Exercise the annual/nested/report plumbing with synthetic PMFs only.
+
+    This is deliberately not model evidence: it neither fits historical models
+    nor reads historical outcomes. Its purpose is to catch schema drift before
+    the expensive all-target reconstruction is started.
+    """
+    output.mkdir(parents=True, exist_ok=True)
+    annual = []
+    for season in range(2014, 2018):
+
+        def prediction(
+            model: str, pmf: list[float], target_season: int = season
+        ) -> v1.PriorPrediction:
+            return v1.PriorPrediction(
+                target_season,
+                "fbs",
+                "synthetic",
+                "Synthetic",
+                2,
+                np.asarray([1]),
+                model,
+                "synthetic_smoke",
+                np.asarray(pmf),
+                1.0,
+                1.0,
+            )
+
+        annual.append(
+            annual_record(
+                season,
+                "synthetic_smoke",
+                {
+                    "H": [prediction("H", [0.5, 0.5])],
+                    "C": [prediction("C", [0.8, 0.2])],
+                    "L": [prediction("L", [0.8, 0.2])],
+                },
+                n_training=season - 2003,
+                n_seasons=season - 2004,
+            )
+        )
+    nested = [
+        {
+            "target_season": record["target_season"],
+            "n_prior_target_seasons": index,
+            "selected_model": choose_nested_model(annual[:index]),
+        }
+        for index, record in enumerate(annual)
+    ]
+    h_l, l_c = comparison(annual, "L", "H"), comparison(annual, "L", "C")
+    h_deltas = h_l["aggregate_mean_annual_deltas"]
+    outcome = recommendation_outcome(
+        l_minus_h_nll=h_deltas["nll"],
+        l_minus_h_crps=h_deltas["crps"],
+        l_minus_h_interval_80_coverage=h_deltas[INTERVAL_80_COVERAGE_METRIC],
+        l_minus_c_nll=l_c["aggregate_mean_annual_deltas"]["nll"],
+    )
+    result = {
+        "synthetic_only_not_evidence": True,
+        "annual_metrics": annual,
+        "nested_selection": nested,
+        "comparisons": {"H_vs_L": h_l, "L_vs_C": l_c},
+        "recommendation_outcome": outcome,
+    }
+    (output / "smoke_summary.json").write_text(
+        json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    (output / "smoke_report.md").write_text(
+        "# Lean Context validation smoke path\n\n"
+        "Synthetic PMFs only; this is plumbing validation, not model evidence.\n\n"
+        f"Nested selection reached {nested[-1]['selected_model']} after "
+        f"{nested[-1]['n_prior_target_seasons']} prior targets; outcome {outcome}.\n",
+        encoding="utf-8",
+    )
+    return result
 
 
 def main() -> None:
@@ -661,18 +743,19 @@ def main() -> None:
     # The recommendation is deliberately mechanical and can conclude against promotion.
     h_l = comparisons["observed_common/H_vs_L"]
     l_c = comparisons["observed_common/L_vs_C"]
-    gain = h_l["aggregate_mean_annual_deltas"]["nll"] <= -MATERIAL_NLL_GAIN
-    proper = (
-        h_l["aggregate_mean_annual_deltas"]["crps"] <= 0
-        and h_l["aggregate_mean_annual_deltas"]["interval_80_coverage"]
-        >= -MAX_COVERAGE_REGRESSION
+    h_deltas = h_l["aggregate_mean_annual_deltas"]
+    outcome = recommendation_outcome(
+        l_minus_h_nll=h_deltas["nll"],
+        l_minus_h_crps=h_deltas["crps"],
+        l_minus_h_interval_80_coverage=h_deltas[INTERVAL_80_COVERAGE_METRIC],
+        l_minus_c_nll=l_c["aggregate_mean_annual_deltas"]["nll"],
     )
-    tied_c = abs(l_c["aggregate_mean_annual_deltas"]["nll"]) <= PARSIMONY_TIE_NLL
-    recommendation = (
-        "Recommendation B: L is practically tied with C and materially simpler; consider a separate future production revision."
-        if gain and proper and tied_c
-        else "Recommendation C/D: keep the frozen C 1.2; L is not validated as a production replacement by the predeclared criteria."
-    )
+    recommendation = {
+        "A": "Recommendation A: L clearly validates; build a separate production C revision PR using L.",
+        "B": "Recommendation B: L is practically tied with C and materially simpler; consider a separate future production revision.",
+        "C": "Recommendation C: L improves over H but not over C; keep C 1.2.",
+        "D": "Recommendation D: L does not hold up; keep H/C frozen and treat the earlier result as hypothesis-generating.",
+    }[outcome]
     summary = {
         "candidate": {
             "name": "L",
@@ -685,9 +768,8 @@ def main() -> None:
         "nested_strategy": strategy,
         "disagreement": disagreement_summary,
         "promotion_criteria": {
-            "meaningful_h_nll": gain,
-            "proper_scoring_and_calibration": proper,
-            "practical_c_tie": tied_c,
+            "outcome": outcome,
+            "clear_c_win_threshold": CLEAR_C_NLL_GAIN,
         },
         "recommendation": recommendation,
         "frozen_artifacts_untouched": True,
@@ -700,4 +782,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--smoke", action="store_true")
+    arguments = parser.parse_args()
+    if arguments.smoke:
+        run_smoke(OUT / "smoke")
+    else:
+        main()

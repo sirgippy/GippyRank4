@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -10,10 +11,12 @@ import pytest
 
 from gippyrank.lean_context_validation import (
     LEAN_CONTEXT_FEATURES,
+    annual_delta_field,
     assert_lean_specification,
     choose_nested_model,
     observed_common,
     prior_training,
+    recommendation_outcome,
 )
 from gippyrank.preseason import TeamSeason
 
@@ -48,13 +51,13 @@ def decision_row(
     c_coverage: float = 0,
 ) -> dict[str, float]:
     return {
-        "l_minus_h_nll": l_h,
-        "c_minus_h_nll": c_h,
-        "l_minus_c_nll": l_c,
-        "l_minus_h_crps": l_crps,
-        "c_minus_h_crps": c_crps,
-        "l_minus_h_coverage": l_coverage,
-        "c_minus_h_coverage": c_coverage,
+        annual_delta_field("L", "H", "nll"): l_h,
+        annual_delta_field("C", "H", "nll"): c_h,
+        annual_delta_field("L", "C", "nll"): l_c,
+        annual_delta_field("L", "H", "crps"): l_crps,
+        annual_delta_field("C", "H", "crps"): c_crps,
+        annual_delta_field("L", "H", "interval_80_coverage"): l_coverage,
+        annual_delta_field("C", "H", "interval_80_coverage"): c_coverage,
     }
 
 
@@ -89,6 +92,76 @@ def test_nested_selector_rejects_candidate_with_bad_calibration() -> None:
         decision_row(l_h=-0.02, c_h=0.0, l_c=-0.02, l_coverage=-0.06) for _ in range(3)
     ]
     assert choose_nested_model(prior) == "H"
+
+
+def test_nested_selector_consumes_actual_annual_record_schema_after_minimum_history() -> (
+    None
+):
+    prior = [decision_row(l_h=-0.01, c_h=-0.011, l_c=0.001) for _ in range(3)]
+    assert all("interval_80_coverage" in key for key in prior[0] if "coverage" in key)
+    assert choose_nested_model(prior) == "L"
+
+
+@pytest.mark.parametrize(
+    ("values", "expected"),
+    [
+        (
+            {
+                "l_minus_h_nll": -0.01,
+                "l_minus_h_crps": -0.001,
+                "l_minus_h_interval_80_coverage": 0.0,
+                "l_minus_c_nll": -0.01,
+            },
+            "A",
+        ),
+        (
+            {
+                "l_minus_h_nll": -0.01,
+                "l_minus_h_crps": -0.001,
+                "l_minus_h_interval_80_coverage": 0.0,
+                "l_minus_c_nll": 0.001,
+            },
+            "B",
+        ),
+        (
+            {
+                "l_minus_h_nll": -0.01,
+                "l_minus_h_crps": -0.001,
+                "l_minus_h_interval_80_coverage": 0.0,
+                "l_minus_c_nll": 0.01,
+            },
+            "C",
+        ),
+        (
+            {
+                "l_minus_h_nll": -0.001,
+                "l_minus_h_crps": 0.001,
+                "l_minus_h_interval_80_coverage": 0.0,
+                "l_minus_c_nll": -0.01,
+            },
+            "D",
+        ),
+    ],
+)
+def test_recommendation_outcomes_are_exhaustive(
+    values: dict[str, float], expected: str
+) -> None:
+    assert recommendation_outcome(**values) == expected
+
+
+def test_synthetic_smoke_reaches_nested_selection_and_report(tmp_path: Path) -> None:
+    sys.path.insert(0, str(ROOT / "scripts"))
+    try:
+        from validate_lean_context import run_smoke
+
+        result = run_smoke(tmp_path)
+    finally:
+        sys.path.pop(0)
+    assert result["synthetic_only_not_evidence"] is True
+    assert result["nested_selection"][-1]["n_prior_target_seasons"] == 3
+    assert result["nested_selection"][-1]["selected_model"] == "L"
+    assert result["recommendation_outcome"] == "B"
+    assert (tmp_path / "smoke_report.md").exists()
 
 
 def test_validation_runner_preserves_frozen_2026_artifacts_and_excludes_2026_outcomes() -> (
