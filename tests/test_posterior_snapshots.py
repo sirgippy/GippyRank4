@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import csv
 import json
-from datetime import date
+from datetime import UTC, date, datetime
 from pathlib import Path
 
+import numpy as np
+
+from gippyrank.posterior.engine import LikelihoodV1
 from gippyrank.posterior.snapshots import build_snapshot, snapshot_id
 
 
@@ -136,6 +139,26 @@ def _root(tmp_path: Path) -> Path:
     return tmp_path
 
 
+def _write_current_provenance(root: Path, retrieved_at: datetime) -> None:
+    directory = root / "data/raw/cfbd/games"
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / "2026.json").write_text("[]", encoding="utf-8")
+    (directory / "2026-fcs.json").write_text(
+        '[{"homeId": "3", "homeClassification": "fcs"}]', encoding="utf-8"
+    )
+    for name in ("2026.json", "2026-fcs.json"):
+        (directory / f"{name}.provenance.json").write_text(
+            json.dumps(
+                {
+                    "content_sha256": f"hash-{name}",
+                    "retrieved_at": retrieved_at.isoformat(),
+                    "source_kind": "cfbd_api",
+                }
+            ),
+            encoding="utf-8",
+        )
+
+
 def test_preseason_snapshot_is_prior_only_and_complete(tmp_path: Path) -> None:
     root = _root(tmp_path)
     snapshot = build_snapshot(
@@ -147,7 +170,10 @@ def test_preseason_snapshot_is_prior_only_and_complete(tmp_path: Path) -> None:
     )
     metadata = json.loads((snapshot.directory / "metadata.json").read_text())
     assert metadata["included_game_count"] == 0
-    assert metadata["canonical_public_model"] is True
+    assert "canonical_public_model" not in metadata
+    assert metadata["prior_family"] == "context"
+    assert metadata["source_mode"] == "preseason_prior_only"
+    assert metadata["source_retrieved_at"] is None
     assert metadata["prior_artifact_sha256"]
     assert {path.name for path in snapshot.directory.iterdir()} >= {
         "metadata.json",
@@ -173,7 +199,82 @@ def test_cutoff_and_lower_division_policy_are_explicit(tmp_path: Path) -> None:
     )
     assert snapshot.metadata["included_game_count"] == 0
     assert snapshot.metadata["excluded_lower_division_games"] == 1
-    assert snapshot.metadata["canonical_public_model"] is False
+    assert snapshot.metadata["source_mode"] == "historical_frozen"
+    assert snapshot.metadata["requested_cutoff"] == snapshot.metadata["effective_cutoff"]
+
+
+def test_prior_families_have_equivalent_neutral_snapshot_schema(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    context = build_snapshot(
+        season=2026,
+        cutoff=None,
+        prior_family="context",
+        snapshot_type="preseason",
+        root=root,
+    )
+    history = build_snapshot(
+        season=2026,
+        cutoff=None,
+        prior_family="history",
+        snapshot_type="preseason",
+        root=root,
+    )
+    assert context.metadata.keys() == history.metadata.keys()
+    assert context.metadata["prior_family"] == "context"
+    assert history.metadata["prior_family"] == "history"
+    assert "canonical_public_model" not in context.metadata
+
+
+def test_live_snapshot_clamps_stale_cache_to_explicit_effective_cutoff(
+    tmp_path: Path,
+) -> None:
+    root = _root(tmp_path)
+    retrieved_at = datetime(2026, 8, 30, 12, tzinfo=UTC)
+    _write_current_provenance(root, retrieved_at)
+    snapshot = build_snapshot(
+        season=2026,
+        cutoff=datetime(2026, 9, 11, 23, 59, tzinfo=UTC),
+        prior_family="context",
+        snapshot_type="live",
+        root=root,
+        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
+    )
+    metadata = snapshot.metadata
+    assert metadata["source_mode"] == "current_cached_cfbd"
+    assert metadata["requested_cutoff"] == "2026-09-11T23:59:00+00:00"
+    assert metadata["source_retrieved_at"] == "2026-08-30T12:00:00+00:00"
+    assert metadata["effective_cutoff"] == metadata["source_retrieved_at"]
+    assert metadata["effective_cutoff"] < metadata["requested_cutoff"]
+    assert metadata["source_response_hashes"] == {
+        "2026-fcs.json.provenance.json": "hash-2026-fcs.json",
+        "2026.json.provenance.json": "hash-2026.json",
+    }
+    assert metadata["included_game_ids"] == ["early"]
+
+
+def test_identical_eligible_inputs_produce_identical_ranking_rows(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    retrieved_at = datetime(2026, 8, 30, 12, tzinfo=UTC)
+    _write_current_provenance(root, retrieved_at)
+    common = {
+        "season": 2026,
+        "cutoff": datetime(2026, 9, 11, 23, 59, tzinfo=UTC),
+        "prior_family": "history",
+        "snapshot_type": "live",
+        "root": root,
+        "likelihood": LikelihoodV1(np.zeros(34), 1.0, 15.0),
+    }
+    first = build_snapshot(**common, output_root=tmp_path / "one")
+    second = build_snapshot(**common, output_root=tmp_path / "two")
+    assert (first.directory / "rankings.json").read_bytes() == (
+        second.directory / "rankings.json"
+    ).read_bytes()
+
+
+def test_posterior_docs_name_the_80_percent_interval() -> None:
+    text = Path("docs/posterior_v1.md").read_text(encoding="utf-8")
+    assert "80% interval coverage" in text
+    assert "90%" not in text
 
 
 def test_snapshot_ids_are_stable_and_human_readable() -> None:

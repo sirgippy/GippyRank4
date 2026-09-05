@@ -1,7 +1,6 @@
 {
-  "canonical_public_model": false,
-  "cutoff": "2026-09-05T23:59:59+00:00",
   "display_statistic": "expected_rank",
+  "effective_cutoff": "2026-09-05T20:11:12.864212+00:00",
   "excluded_lower_division_games": 27,
   "fcs_fallback_count": 94,
   "fcs_fallback_kind": "uniform_full_subdivision_rank",
@@ -105,7 +104,7 @@
   "fcs_population_size": 128,
   "fcs_population_source": "cfbd_full_season_schedule",
   "game_corpus_sha256": "17fd499a8f37220c556b733653032d3d353f02e10bc79d157861ccb66edae0ed",
-  "generation_timestamp": "2026-09-05T19:56:16.697141+00:00",
+  "generation_timestamp": "2026-09-05T20:12:14.410283+00:00",
   "historical_likelihood_version": "V1",
   "included_game_count": 86,
   "included_game_ids": [
@@ -205,9 +204,17 @@
   "prior_family": "history",
   "prior_model_version": "1.1",
   "ranking_family": "predictive",
+  "requested_cutoff": "2026-09-05T23:59:59+00:00",
   "schema_version": "1.0",
   "season": 2026,
   "snapshot_id": "2026-live-2026-09-05T23-59-59Z-history",
   "snapshot_type": "live",
+  "source_kind": "cfbd_api_schedule",
+  "source_mode": "current_cached_cfbd",
+  "source_response_hashes": {
+    "2026-fcs.json.provenance.json": "defa19fe251f34b98a1205a1c637b9c9cc67258004d3553aba05539ca793f5b6",
+    "2026.json.provenance.json": "0f1b590e14b07f8a294325d2de2145560b556cfdcffa24eb03dcee7a2c1e9e11"
+  },
+  "source_retrieved_at": "2026-09-05T20:11:12.864212+00:00",
   "valid": true
 }

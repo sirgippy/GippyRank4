@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import os
 import time
 from collections import Counter, defaultdict
+from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
@@ -63,18 +65,35 @@ def request_json(
 
 
 def fetch_raw(
-    client: httpx.Client, path: str, params: dict[str, object], destination: Path
+    client: httpx.Client,
+    path: str,
+    params: dict[str, object],
+    destination: Path,
+    *,
+    refresh: bool = False,
 ) -> list[dict]:
-    if destination.exists():
+    if destination.exists() and not refresh:
         with destination.open(encoding="utf-8") as handle:
             return json.load(handle)
     response = request_json(client, path, params)
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_bytes(response.content)
+    provenance = {
+        "content_sha256": hashlib.sha256(response.content).hexdigest(),
+        "endpoint": path,
+        "parameters": params,
+        "retrieved_at": datetime.now(UTC).isoformat(),
+        "source_kind": "cfbd_api",
+    }
+    destination.with_name(f"{destination.name}.provenance.json").write_text(
+        json.dumps(provenance, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     return response.json()
 
 
-def fetch_all() -> dict[tuple[int, str], list[dict]]:
+def fetch_all(
+    refresh_seasons: frozenset[int] = frozenset(),
+) -> dict[tuple[int, str], list[dict]]:
     api_key = os.environ.get("CFBD_API_KEY")
     if not api_key:
         raise RuntimeError("CFBD_API_KEY is not configured")
@@ -92,6 +111,7 @@ def fetch_all() -> dict[tuple[int, str], list[dict]]:
                     "/games",
                     {"year": season, "classification": classification},
                     RAW_GAMES / name,
+                    refresh=season in refresh_seasons,
                 )
                 time.sleep(0.1)
 
@@ -116,6 +136,7 @@ def fetch_all() -> dict[tuple[int, str], list[dict]]:
                             "classification": classification,
                         },
                         RAW_STATS / name,
+                        refresh=season in refresh_seasons,
                     )
                     time.sleep(0.1)
     return schedules
@@ -342,7 +363,18 @@ def coverage(
 
 
 def main() -> None:
-    fetch_all()
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--refresh-season",
+        action="append",
+        type=int,
+        default=[],
+        help="Re-acquire a season and write fresh raw-response provenance.",
+    )
+    args = parser.parse_args()
+    fetch_all(frozenset(args.refresh_season))
     schedules = load_schedules()
     games, game_validation = build_games(schedules)
     stats, stat_conflicts, stat_duplicates = build_stats(schedules)

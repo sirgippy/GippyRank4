@@ -12,6 +12,11 @@ It is exact for trees, and the explicit convergence gate prevents an invalid
 cyclic approximation from being marked valid. Marginal PMFs stay discrete and
 are serialized directly; display order is expected rank within FBS only.
 
+Posterior V1 is the shared predictive inference engine. H 1.1 and C 1.2 are
+alternative prior families consumed by that engine; it makes no publication or
+public-primary policy decision. A future publication layer chooses which
+snapshot, if any, is featured.
+
 ## Historical Likelihood V1 contract
 
 The existing frozen implementation in `scripts/build_historical_modeling.py`
@@ -46,17 +51,20 @@ artifact. It neither edits nor refits an upstream preseason artifact.
 Schema `1.0` bundles live under
 `data/processed/snapshots/<season>/<snapshot-id>/predictive/<prior-family>/`:
 
-- `metadata.json`: provenance, input hashes, cutoff, included IDs, versions,
-  validity, and lower-division audit count.
+- `metadata.json`: requested/effective cutoff, source acquisition provenance,
+  input hashes, included IDs, versions, validity, and lower-division audit
+  count.
 - `rankings.json` and `rankings.csv`: small static-client display rows.
 - `posterior_pmfs.csv`: normalized per-team discrete PMFs.
 - `included_games.csv`: exact game-source audit trail.
 - `diagnostics.json`: convergence and runtime data.
 
-`context` is the canonical public family; `history` is explicitly an alternate
-shadow/control family. A preseason snapshot is the same contract with zero
-games. Weekly and live snapshots differ only by explicit timestamp cutoff.
-Snapshot construction has no publishing, website, polling, or ballot code.
+`context` and `history` are equal first-class prior-family values. A preseason
+snapshot is the same contract with zero games. Historical snapshots use
+`historical_frozen` source mode. A live current-season snapshot records its
+requested cutoff, the explicit CFBD retrieval time, and an effective cutoff no
+later than either; game filtering uses the effective cutoff. Snapshot
+construction has no publishing, website, polling, or ballot code.
 
 Only final FBS/FCS-vs-FBS/FCS games at or before the cutoff are factors. Every
 game involving another subdivision is excluded and counted. The current frozen
@@ -94,10 +102,11 @@ and plots are retained in `data/processed/posterior_backtest/`. Both H- and
 C-started posteriors materially improve their own prior NLL by season end in
 all four seasons. Interval widths fall from about 70 ranks early to 28–29 late.
 
-Late C interval coverage is near nominal in 2022 (0.797) and 2024 (0.793), but
-is below nominal in 2023 (0.740) and 2025 (0.726). H is better calibrated in
-those latter seasons. This is evidence of a possible late-season C
-overconfidence/calibration issue; no variance inflation, clipping, or recency
-discount was added here. H-vs-C remains diagnostic: the posterior is judged by
-improvement against its own prior and calibration, not by requiring C to beat H
-in every season.
+Late C 80% interval coverage is near nominal in 2022 (0.797) and 2024 (0.793),
+but is below nominal in 2023 (0.740) and 2025 (0.726). H is better calibrated in
+those latter seasons, and H-started posterior NLL beats C-started posterior NLL
+at the late cutoff in all four seasons. This is evidence of a possible
+late-season C overconfidence/calibration issue; no variance inflation,
+clipping, recency discount, H/C switching, or ensemble was added here.
+H-vs-C remains diagnostic: the posterior is judged by improvement against its
+own prior and calibration, not by requiring C to beat H in every season.

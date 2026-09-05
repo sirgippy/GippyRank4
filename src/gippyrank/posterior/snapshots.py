@@ -18,7 +18,6 @@ from gippyrank.preseason import pmf_summaries
 
 SCHEMA_VERSION = "1.0"
 RANKING_FAMILY = "predictive"
-CANONICAL_PRIOR_FAMILY = "context"
 PriorFamily = Literal["context", "history"]
 SnapshotType = Literal["preseason", "weekly", "live"]
 
@@ -28,6 +27,14 @@ class Snapshot:
     snapshot_id: str
     directory: Path
     metadata: dict[str, object]
+
+
+@dataclass(frozen=True)
+class CorpusProvenance:
+    source_mode: str
+    source_kind: str
+    source_retrieved_at: datetime | None
+    source_response_hashes: dict[str, str]
 
 
 def sha256(path: Path) -> str:
@@ -102,6 +109,37 @@ def _parse_completed(value: str) -> bool:
     return value.strip().casefold() in {"true", "1", "yes"}
 
 
+def _as_utc_datetime(cutoff: datetime | date) -> datetime:
+    result = (
+        datetime.combine(cutoff, datetime.max.time(), tzinfo=UTC)
+        if isinstance(cutoff, date) and not isinstance(cutoff, datetime)
+        else cutoff
+    )
+    return result if result.tzinfo is not None else result.replace(tzinfo=UTC)
+
+
+def corpus_provenance(root: Path, season: int) -> CorpusProvenance:
+    """Read an explicit current-season CFBD acquisition manifest when present."""
+    directory = root / "data/raw/cfbd/games"
+    manifests = [
+        directory / f"{season}{suffix}.json.provenance.json"
+        for suffix in ("", "-fcs")
+    ]
+    if not all(path.exists() for path in manifests):
+        return CorpusProvenance("historical_frozen", "frozen_game_corpus", None, {})
+    values = [json.loads(path.read_text(encoding="utf-8")) for path in manifests]
+    retrieved = [
+        datetime.fromisoformat(value["retrieved_at"]).astimezone(UTC)
+        for value in values
+    ]
+    return CorpusProvenance(
+        "current_cached_cfbd",
+        "cfbd_api_schedule",
+        max(retrieved),
+        {path.name: value["content_sha256"] for path, value in zip(manifests, values)},
+    )
+
+
 def filter_games(
     root: Path, season: int, cutoff: datetime | date | None, snapshot_type: SnapshotType
 ) -> tuple[list[Game], list[dict[str, str]], int, Path]:
@@ -111,15 +149,7 @@ def filter_games(
     games: list[Game] = []
     included_rows: list[dict[str, str]] = []
     lower_division = 0
-    cutoff_dt = None
-    if cutoff is not None:
-        cutoff_dt = (
-            datetime.combine(cutoff, datetime.max.time(), tzinfo=UTC)
-            if isinstance(cutoff, date) and not isinstance(cutoff, datetime)
-            else cutoff
-        )
-        if cutoff_dt.tzinfo is None:
-            cutoff_dt = cutoff_dt.replace(tzinfo=UTC)
+    cutoff_dt = _as_utc_datetime(cutoff) if cutoff is not None else None
     with path.open(newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
             if int(row["season"]) != season or not _parse_completed(row["completed"]):
@@ -304,8 +334,17 @@ def build_snapshot(
         root / "data/processed/snapshots" if output_root is None else output_root
     )
     teams, team_rows, prior_path = load_teams(root, season, prior_family)
+    requested_cutoff = _as_utc_datetime(cutoff) if cutoff is not None else None
+    provenance = (
+        CorpusProvenance("preseason_prior_only", "none", None, {})
+        if snapshot_type == "preseason"
+        else corpus_provenance(root, season)
+    )
+    effective_cutoff = requested_cutoff
+    if provenance.source_retrieved_at is not None and requested_cutoff is not None:
+        effective_cutoff = min(requested_cutoff, provenance.source_retrieved_at)
     games, included, excluded_lower, corpus_path = filter_games(
-        root, season, cutoff, snapshot_type
+        root, season, effective_cutoff, snapshot_type
     )
     has_included_fcs = any(
         row[f"{side}Classification"].lower() == "fcs"
@@ -390,11 +429,19 @@ def build_snapshot(
         "snapshot_type": snapshot_type,
         "ranking_family": RANKING_FAMILY,
         "prior_family": prior_family,
-        "canonical_public_model": prior_family == CANONICAL_PRIOR_FAMILY,
         "prior_model_version": "1.2" if prior_family == "context" else "1.1",
         "prior_artifact_sha256": sha256(prior_path),
         "historical_likelihood_version": "V1",
-        "cutoff": cutoff.isoformat() if cutoff else None,
+        "requested_cutoff": requested_cutoff.isoformat() if requested_cutoff else None,
+        "effective_cutoff": effective_cutoff.isoformat() if effective_cutoff else None,
+        "source_mode": provenance.source_mode,
+        "source_kind": provenance.source_kind,
+        "source_retrieved_at": (
+            provenance.source_retrieved_at.isoformat()
+            if provenance.source_retrieved_at
+            else None
+        ),
+        "source_response_hashes": provenance.source_response_hashes,
         "generation_timestamp": datetime.now(UTC).isoformat(),
         "game_corpus_sha256": sha256(corpus_path),
         "included_game_count": len(included),
