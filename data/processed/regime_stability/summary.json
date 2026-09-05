@@ -1,0 +1,45 @@
+{
+  "best_c": {
+    "candidate": "C_context_hl_5",
+    "delta_nll": 0.010516673197924634
+  },
+  "best_h": {
+    "candidate": "H_window_10",
+    "delta_nll": -0.0002510046157622921
+  },
+  "classification": "C. Feature-specific drift, with mild gradual weakening of rank persistence but no validated adaptive production win.",
+  "findings": [
+    "Classification: **C \u2014 feature-specific drift**. Direct lag-1-to-target percentile persistence declined gradually from 0.727 (2004\u201309) to 0.661 (2020\u201325); it is not evidence of a discrete portal/NIL breakpoint.",
+    "Long-run-history coefficients are variable and their simple linear trend is weak for H (p=0.190), while direct transition diagnostics show only modest recent weakening. A static long-run baseline remains defensible pending uncertainty-aware follow-up.",
+    "H recency/window experiments provide no meaningful validated gain: the best descriptive result is a 10-year window at \u0394NLL \u22120.00025, and it won zero nested rolling selections. The 3-year half-life and 5/7-year windows are worse.",
+    "Fast context adaptation did not help: the best slow-H/fast-context half-life (5 years) is \u0394NLL +0.0105 versus C-static. Do not introduce a recency-weighted C production model from this evidence.",
+    "Coach-tenure effect is stable (linear coefficient-time p=0.608). Recruiting, Talent, and returning-production coefficient trajectories move substantially, but their early missingness/coverage changes make raw long-run trends descriptive rather than causal.",
+    "Returning total and passing production remain directionally useful once observed; their standardized effects do not support the hypothesized modern weakening. Recruiting/Talent effects are small and unstable conditional on the other context inputs.",
+    "Recent C performance deteriorated in 2025: C beat H by 0.0616 NLL in 2022, 0.0207 in 2023, and 0.0103 in 2024, then lost by 0.0420 in 2025. The 2025 loss sums exactly from team contributions; largest positive C-minus-H contributions were New Mexico (1.88), Utah (1.66), James Madison (1.61), North Texas (1.43).",
+    "H/C disagreement increased modestly in the recent years (mean expected-rank gap 7.76 in 2022 to 8.71 in 2025), so large context adjustments merit audit rather than stronger automatic weighting.",
+    "Recommended next step: preserve H 1.1/C 1.2 and 2026 priors; conduct a separate uncertainty-aware feature-ablation/interaction study using only years with observed context coverage before proposing any production V1.3/C1.3."
+  ],
+  "frozen_artifacts_modified": false,
+  "no_2026_outcomes_accessed": true,
+  "target_seasons": [
+    2008,
+    2009,
+    2010,
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "two_timescale_definition": "static H location/scale plus half-life-5 weighted ridge context correction"
+}
