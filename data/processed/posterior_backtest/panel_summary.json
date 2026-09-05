@@ -1,0 +1,255 @@
+{
+  "seasons": [
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "cutoffs_per_season": 7,
+  "season_end": {
+    "2022": {
+      "context": {
+        "matched_fbs_teams": 131,
+        "nll": 3.8087244710694166,
+        "crps": 0.019460797308947106,
+        "expected_rank_mae": 7.456664400662723,
+        "median_rank_mae": 7.763358778625954,
+        "interval_80_coverage": 0.7965602869493239,
+        "interval_80_width": 29.022900763358777,
+        "top5_brier": 0.0031060157379985878,
+        "top10_brier": 0.005865819905911004,
+        "top25_brier": 0.022990687606741396
+      },
+      "history": {
+        "matched_fbs_teams": 131,
+        "nll": 3.8010388363437015,
+        "crps": 0.018913069261854275,
+        "expected_rank_mae": 7.473271174855443,
+        "median_rank_mae": 7.7251908396946565,
+        "interval_80_coverage": 0.8005150372482296,
+        "interval_80_width": 29.480916030534353,
+        "top5_brier": 0.003554627528259873,
+        "top10_brier": 0.0056402580929156235,
+        "top25_brier": 0.01999916322966728
+      },
+      "context_posterior_minus_prior": {
+        "nll": -0.6581512547041029,
+        "crps": -0.05472252389099069,
+        "expected_rank_mae": -11.223533440643926,
+        "median_rank_mae": -11.091603053435115,
+        "interval_80_coverage": -0.029246758024464303,
+        "interval_80_width": -42.07633587786259,
+        "top5_brier": -0.009976507487176912,
+        "top10_brier": -0.022604792072875808,
+        "top25_brier": -0.06549292942681706
+      },
+      "history_posterior_minus_prior": {
+        "nll": -0.7265286104558561,
+        "crps": -0.06362818488151205,
+        "expected_rank_mae": -13.721960597500308,
+        "median_rank_mae": -13.48854961832061,
+        "interval_80_coverage": -0.039915386737790826,
+        "interval_80_width": -46.01526717557251,
+        "top5_brier": -0.012193403528355165,
+        "top10_brier": -0.027018937844956292,
+        "top25_brier": -0.07507275615591588
+      },
+      "context_minus_history_posterior": {
+        "nll": 0.00768563472571504,
+        "crps": 0.0005477280470928304,
+        "expected_rank_mae": -0.016606774192719165,
+        "median_rank_mae": 0.03816793893129766,
+        "interval_80_coverage": -0.003954750298905685,
+        "interval_80_width": -0.4580152671755755,
+        "top5_brier": -0.00044861179026128503,
+        "top10_brier": 0.0002255618129953802,
+        "top25_brier": 0.0029915243770741173
+      },
+      "context_width_change": -41.328244274809165,
+      "context_coverage_change": -0.03016646739630291
+    },
+    "2023": {
+      "context": {
+        "matched_fbs_teams": 133,
+        "nll": 3.9666752746079594,
+        "crps": 0.02898931232468462,
+        "expected_rank_mae": 9.61527869436614,
+        "median_rank_mae": 10.24812030075188,
+        "interval_80_coverage": 0.7404998983946353,
+        "interval_80_width": 28.593984962406015,
+        "top5_brier": 0.007572589157003973,
+        "top10_brier": 0.012494033548647546,
+        "top25_brier": 0.018504360097399485
+      },
+      "history": {
+        "matched_fbs_teams": 133,
+        "nll": 3.835745524002297,
+        "crps": 0.02153838957614468,
+        "expected_rank_mae": 8.058586663152706,
+        "median_rank_mae": 8.481203007518797,
+        "interval_80_coverage": 0.7943507417191629,
+        "interval_80_width": 29.330827067669173,
+        "top5_brier": 0.007433739372366695,
+        "top10_brier": 0.013417627749325357,
+        "top25_brier": 0.016305368955274527
+      },
+      "context_posterior_minus_prior": {
+        "nll": -0.5055305275034949,
+        "crps": -0.0431962392916838,
+        "expected_rank_mae": -9.66394880283504,
+        "median_rank_mae": -9.293233082706765,
+        "interval_80_coverage": -0.12649867913025803,
+        "interval_80_width": -42.526315789473685,
+        "top5_brier": -0.005147931107333265,
+        "top10_brier": -0.01530720439965803,
+        "top25_brier": -0.03914285626133912
+      },
+      "history_posterior_minus_prior": {
+        "nll": -0.6544133957599829,
+        "crps": -0.05239392171887197,
+        "expected_rank_mae": -12.130229765774764,
+        "median_rank_mae": -11.511278195488721,
+        "interval_80_coverage": -0.0787441576915261,
+        "interval_80_width": -47.66165413533834,
+        "top5_brier": -0.004606527850161971,
+        "top10_brier": -0.015920966654841922,
+        "top25_brier": -0.043610117623920835
+      },
+      "context_minus_history_posterior": {
+        "nll": 0.1309297506056626,
+        "crps": 0.0074509227485399405,
+        "expected_rank_mae": 1.5566920312134336,
+        "median_rank_mae": 1.7669172932330834,
+        "interval_80_coverage": -0.05385084332452761,
+        "interval_80_width": -0.7368421052631575,
+        "top5_brier": 0.00013884978463727868,
+        "top10_brier": -0.000923594200677811,
+        "top25_brier": 0.0021989911421249585
+      },
+      "context_width_change": -41.63909774436091,
+      "context_coverage_change": -0.11847185531396054
+    },
+    "2024": {
+      "context": {
+        "matched_fbs_teams": 134,
+        "nll": 3.8776307819139357,
+        "crps": 0.02076167769113051,
+        "expected_rank_mae": 7.793414416488385,
+        "median_rank_mae": 7.858208955223881,
+        "interval_80_coverage": 0.7928358208955223,
+        "interval_80_width": 28.70149253731343,
+        "top5_brier": 0.011828736074078776,
+        "top10_brier": 0.01025701769690198,
+        "top25_brier": 0.017687155256607887
+      },
+      "history": {
+        "matched_fbs_teams": 134,
+        "nll": 3.796198582619808,
+        "crps": 0.01701006113239398,
+        "expected_rank_mae": 7.146852359105537,
+        "median_rank_mae": 7.022388059701493,
+        "interval_80_coverage": 0.8218905472636816,
+        "interval_80_width": 29.67910447761194,
+        "top5_brier": 0.010504221727862442,
+        "top10_brier": 0.010170727218364426,
+        "top25_brier": 0.016757407934450658
+      },
+      "context_posterior_minus_prior": {
+        "nll": -0.7063843411424284,
+        "crps": -0.06354500232791738,
+        "expected_rank_mae": -13.224648953056462,
+        "median_rank_mae": -13.850746268656717,
+        "interval_80_coverage": -0.011741293532338437,
+        "interval_80_width": -41.17164179104478,
+        "top5_brier": -0.01131002094383361,
+        "top10_brier": -0.020822460966798278,
+        "top25_brier": -0.05191678559966509
+      },
+      "history_posterior_minus_prior": {
+        "nll": -0.7919701049052286,
+        "crps": -0.07024780232975636,
+        "expected_rank_mae": -15.519212209235715,
+        "median_rank_mae": -15.723880597014924,
+        "interval_80_coverage": 0.018893370982923208,
+        "interval_80_width": -47.20149253731343,
+        "top5_brier": -0.012947692082428335,
+        "top10_brier": -0.023267257477631635,
+        "top25_brier": -0.05927276893609036
+      },
+      "context_minus_history_posterior": {
+        "nll": 0.08143219929412782,
+        "crps": 0.0037516165587365286,
+        "expected_rank_mae": 0.6465620573828481,
+        "median_rank_mae": 0.8358208955223878,
+        "interval_80_coverage": -0.02905472636815931,
+        "interval_80_width": -0.9776119402985088,
+        "top5_brier": 0.001324514346216334,
+        "top10_brier": 8.629047853755435e-05,
+        "top25_brier": 0.0009297473221572296
+      },
+      "context_width_change": -41.007462686567166,
+      "context_coverage_change": -0.007761194029850871
+    },
+    "2025": {
+      "context": {
+        "matched_fbs_teams": 136,
+        "nll": 4.048180095031463,
+        "crps": 0.029499070378401684,
+        "expected_rank_mae": 9.768567795941147,
+        "median_rank_mae": 10.441176470588236,
+        "interval_80_coverage": 0.7255237711522965,
+        "interval_80_width": 28.198529411764707,
+        "top5_brier": 0.005517324111418575,
+        "top10_brier": 0.008667532067165433,
+        "top25_brier": 0.01982067533790781
+      },
+      "history": {
+        "matched_fbs_teams": 136,
+        "nll": 3.858423492129302,
+        "crps": 0.019826592238844937,
+        "expected_rank_mae": 7.886665489472087,
+        "median_rank_mae": 8.426470588235293,
+        "interval_80_coverage": 0.7929089443996776,
+        "interval_80_width": 29.066176470588236,
+        "top5_brier": 0.0056259090372934835,
+        "top10_brier": 0.008138298938971847,
+        "top25_brier": 0.022147889321040882
+      },
+      "context_posterior_minus_prior": {
+        "nll": -0.5943016068327722,
+        "crps": -0.05464347935211335,
+        "expected_rank_mae": -11.84455280611576,
+        "median_rank_mae": -11.757352941176471,
+        "interval_80_coverage": -0.0776591458501209,
+        "interval_80_width": -43.382352941176464,
+        "top5_brier": -0.012530199918572831,
+        "top10_brier": -0.028354079846392287,
+        "top25_brier": -0.05064884211605042
+      },
+      "history_posterior_minus_prior": {
+        "nll": -0.7111593447156821,
+        "crps": -0.05857577127329079,
+        "expected_rank_mae": -13.102180834909905,
+        "median_rank_mae": -12.654411764705884,
+        "interval_80_coverage": -0.048247381144238544,
+        "interval_80_width": -49.68382352941177,
+        "top5_brier": -0.011212632852071924,
+        "top10_brier": -0.026442550759512948,
+        "top25_brier": -0.04633796715845229
+      },
+      "context_minus_history_posterior": {
+        "nll": 0.18975660290216112,
+        "crps": 0.009672478139556746,
+        "expected_rank_mae": 1.88190230646906,
+        "median_rank_mae": 2.014705882352942,
+        "interval_80_coverage": -0.06738517324738114,
+        "interval_80_width": -0.867647058823529,
+        "top5_brier": -0.0001085849258749081,
+        "top10_brier": 0.0005292331281935864,
+        "top25_brier": -0.002327213983133073
+      },
+      "context_width_change": -42.63970588235294,
+      "context_coverage_change": -0.07010475423045925
+    }
+  }
+}
