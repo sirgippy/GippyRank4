@@ -157,6 +157,7 @@ def add_fcs_fallbacks(
     teams: list[Team],
     team_rows: dict[str, dict[str, str]],
     included: list[dict[str, str]],
+    fcs_population_size: int | None,
 ) -> tuple[list[Team], tuple[str, ...]]:
     """Add weak FCS PMFs when the frozen upstream prior has no FCS rows.
 
@@ -171,15 +172,90 @@ def add_fcs_fallbacks(
         for side in ("home", "away"):
             if row[f"{side}Classification"].lower() == "fcs":
                 fcs_rows[row[f"{side}Id"]] = (row[f"{side}Team"], row)
-    population = max(len(fcs_rows), 1)
+    if fcs_rows and fcs_population_size is None:
+        raise ValueError(
+            "Cannot create an FCS fallback without an authoritative full-season "
+            "FCS population size. Add durable season/subdivision coverage first."
+        )
     fallbacks = []
     for team_id, (name, row) in sorted(fcs_rows.items()):
         if team_id in known:
             continue
-        teams.append(Team(team_id, name, "fcs", np.full(population, 1 / population)))
+        teams.append(
+            Team(
+                team_id,
+                name,
+                "fcs",
+                np.full(fcs_population_size, 1 / fcs_population_size),
+            )
+        )
         team_rows[team_id] = {"conference": row.get("homeConference", "")}
         fallbacks.append(team_id)
     return teams, tuple(fallbacks)
+
+
+def subdivision_population_size(
+    root: Path, season: int, subdivision: str
+) -> int | None:
+    """Read a full ordinal universe size without depending on the cutoff.
+
+    Historical seasons use the durable Massey team-season population.  For a
+    current season not yet represented there, the cached CFBD full-season
+    schedule is the authoritative enumeration: it includes scheduled teams
+    that have not appeared by a particular snapshot's cutoff.
+    """
+    path = root / "data/processed/modeling/team_season_rank_distributions.csv"
+    populations = set()
+    if path.exists():
+        with path.open(newline="", encoding="utf-8") as handle:
+            for row in csv.DictReader(handle):
+                if (
+                    int(row["season"]) == season
+                    and row["subdivision"] == subdivision
+                ):
+                    populations.add(int(row["team_population"]))
+    if populations:
+        if len(populations) != 1:
+            raise ValueError(
+                f"Inconsistent {subdivision} population values for {season}: {populations}"
+            )
+        return populations.pop()
+
+    participants: set[str] = set()
+    games_directory = root / "data/raw/cfbd/games"
+    for suffix in ("", "-fcs"):
+        schedule_path = games_directory / f"{season}{suffix}.json"
+        if not schedule_path.exists():
+            continue
+        with schedule_path.open(encoding="utf-8") as handle:
+            for game in json.load(handle):
+                for side in ("home", "away"):
+                    if game.get(f"{side}Classification") == subdivision:
+                        team_id = game.get(f"{side}Id")
+                        if team_id is not None:
+                            participants.add(str(team_id))
+    return len(participants) or None
+
+
+def subdivision_population_source(
+    root: Path, season: int, subdivision: str
+) -> str | None:
+    """Name the durable source used for a season/subdivision universe."""
+    path = root / "data/processed/modeling/team_season_rank_distributions.csv"
+    if path.exists():
+        with path.open(newline="", encoding="utf-8") as handle:
+            if any(
+                int(row["season"]) == season and row["subdivision"] == subdivision
+                for row in csv.DictReader(handle)
+            ):
+                return "massey_team_season_rank_distributions"
+    games_directory = root / "data/raw/cfbd/games"
+    if any(
+        (games_directory / f"{season}{suffix}.json").exists()
+        for suffix in ("", "-fcs")
+    ):
+        return "cfbd_full_season_schedule"
+    return None
 
 
 def load_likelihood(path: Path) -> LikelihoodV1:
@@ -217,6 +293,9 @@ def build_snapshot(
     root: Path | None = None,
     output_root: Path | None = None,
     likelihood: LikelihoodV1 | None = None,
+    inference_max_iterations: int = 500,
+    inference_tolerance: float = 1e-9,
+    inference_damping: float = 0.35,
 ) -> Snapshot:
     """Build an atomic-on-success schema-v1 bundle without any publishing logic."""
     started = time.perf_counter()
@@ -228,12 +307,30 @@ def build_snapshot(
     games, included, excluded_lower, corpus_path = filter_games(
         root, season, cutoff, snapshot_type
     )
-    teams, fcs_fallbacks = add_fcs_fallbacks(teams, team_rows, included)
+    has_included_fcs = any(
+        row[f"{side}Classification"].lower() == "fcs"
+        for row in included
+        for side in ("home", "away")
+    )
+    fcs_population = (
+        subdivision_population_size(root, season, "fcs") if has_included_fcs else None
+    )
+    fcs_population_source = (
+        subdivision_population_source(root, season, "fcs") if has_included_fcs else None
+    )
+    teams, fcs_fallbacks = add_fcs_fallbacks(teams, team_rows, included, fcs_population)
     if games:
         likelihood = likelihood or load_likelihood(
             root / "data/processed/posterior/historical_likelihood_v1.json"
         )
-        result = infer_posterior(teams, games, likelihood)
+        result = infer_posterior(
+            teams,
+            games,
+            likelihood,
+            max_iterations=inference_max_iterations,
+            tolerance=inference_tolerance,
+            damping=inference_damping,
+        )
     else:
         result = infer_posterior(teams, [], LikelihoodV1(np.zeros(34), 1.0, 1.0))
     sid = snapshot_id(season, snapshot_type, prior_family, cutoff)
@@ -277,6 +374,10 @@ def build_snapshot(
         "max_message_delta": result.max_message_delta,
         "objective_surrogate": result.objective,
         "warnings": list(result.warnings),
+        "team_variable_count": len(teams),
+        "raw_game_likelihood_count": result.raw_game_factor_count,
+        "unique_pairwise_factor_count": result.unique_pair_factor_count,
+        "maximum_team_degree": result.max_team_degree,
         "runtime_seconds": time.perf_counter() - started,
         "inference": "deterministic_damped_loopy_sum_product"
         if games
@@ -300,6 +401,13 @@ def build_snapshot(
         "included_game_ids": [row["id"] for row in included],
         "excluded_lower_division_games": excluded_lower,
         "fcs_fallback_team_ids": list(fcs_fallbacks),
+        "fcs_fallback_count": len(fcs_fallbacks),
+        "fcs_fallback_kind": "uniform_full_subdivision_rank" if fcs_fallbacks else None,
+        "fcs_fallback_pmf_semantics": "uniform ranks 1..N_FCS"
+        if fcs_fallbacks
+        else None,
+        "fcs_population_size": fcs_population,
+        "fcs_population_source": fcs_population_source,
         "display_statistic": "expected_rank",
         "valid": result.converged,
         "model_versions": {

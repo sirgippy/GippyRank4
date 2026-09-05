@@ -111,6 +111,26 @@ def test_cross_subdivision_game_is_a_real_factor() -> None:
     assert result.pmfs["fbs"][0] > 0.5
 
 
+def test_repeated_pair_games_are_consolidated_without_changing_posterior() -> None:
+    teams = [
+        Team("a", "A", "fbs", np.array([0.6, 0.4])),
+        Team("b", "B", "fbs", np.array([0.4, 0.6])),
+    ]
+    games = [
+        Game("first", "a", "b", "fbs", "fbs", 28, 14),
+        Game("second", "b", "a", "fbs", "fbs", 7, 24),
+    ]
+    first = game_factor(games[0], *teams, likelihood())
+    second = game_factor(games[1], teams[1], teams[0], likelihood()).T
+    exact = first * second * teams[0].prior[:, None] * teams[1].prior[None, :]
+    exact /= exact.sum()
+    result = infer_posterior(teams, games, likelihood(), tolerance=1e-12)
+    assert result.raw_game_factor_count == 2
+    assert result.unique_pair_factor_count == 1
+    assert np.allclose(result.pmfs["a"], exact.sum(axis=1), atol=1e-10)
+    assert np.allclose(result.pmfs["b"], exact.sum(axis=0), atol=1e-10)
+
+
 def test_invalid_factor_references_are_rejected() -> None:
     with pytest.raises(ValueError, match="without a prior"):
         infer_posterior(

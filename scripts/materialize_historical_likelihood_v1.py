@@ -8,6 +8,7 @@ generation can hash and audit.
 
 from __future__ import annotations
 
+import argparse
 import importlib.util
 import json
 from pathlib import Path
@@ -28,7 +29,7 @@ def _load_builder():
     return module
 
 
-def main() -> None:
+def materialize(output: Path) -> None:
     builder = _load_builder()
     rows = read_csv(ROOT / "data/processed/modeling/historical_modeling_games.csv")
     data = builder.pseudo_data(rows)
@@ -48,15 +49,28 @@ def main() -> None:
     artifact = {
         "artifact_kind": "historical_likelihood_v1_coefficients",
         "fit_kind": "weighted_pseudo",
+        "training_seasons": "2003-2021",
+        "excluded_evaluation_seasons": "2022-2025",
+        "student_t_df": 15.0,
         "semantics": "Exact frozen V1 design matrix, same-system rank pairing, 2003-2021 training subset, eight IRLS iterations.",
         "beta": model["beta"].tolist(),
         "scale": model["scale"],
         "degrees_of_freedom": model["df"],
     }
-    output = ROOT / "data/processed/posterior/historical_likelihood_v1.json"
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(artifact, indent=2, sort_keys=True) + "\n")
-    print(output)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=ROOT / "data/processed/posterior/historical_likelihood_v1.json",
+    )
+    args = parser.parse_args()
+    materialize(args.output)
+    print(args.output)
 
 
 if __name__ == "__main__":

@@ -17,6 +17,7 @@ from scipy.special import gammaln
 from gippyrank.modeling import design_matrix
 
 Subdivision = Literal["fbs", "fcs"]
+_GAME_FACTOR_CACHE: dict[tuple[object, ...], np.ndarray] = {}
 
 
 @dataclass(frozen=True)
@@ -76,7 +77,20 @@ class PosteriorResult:
     iterations: int
     max_message_delta: float
     objective: float
+    raw_game_factor_count: int
+    unique_pair_factor_count: int
+    max_team_degree: int
     warnings: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class PairFactor:
+    """A numerically stabilized product of games between one pair of teams."""
+
+    first_id: str
+    second_id: str
+    values: np.ndarray
+    game_ids: tuple[str, ...]
 
 
 def _student_t_logpdf(
@@ -169,45 +183,85 @@ def infer_posterior(
     by_id = {team.team_id: team for team in teams}
     if len(by_id) != len(teams):
         raise ValueError("team IDs must be unique")
-    factors: list[tuple[Game, np.ndarray]] = []
-    adjacency: dict[str, list[int]] = {team.team_id: [] for team in teams}
+    grouped: dict[tuple[str, str], tuple[np.ndarray, list[str]]] = {}
+    # Canonical orientation means rematches do not introduce a trivial
+    # two-variable cycle. Individual IDs remain available for provenance.
     for game in games:
         if game.home_id not in by_id or game.away_id not in by_id:
             raise ValueError(f"game {game.game_id} references a team without a prior")
         if game.home_id == game.away_id:
             raise ValueError("a game cannot have the same team twice")
-        factors.append(
-            (
-                game,
-                game_factor(game, by_id[game.home_id], by_id[game.away_id], likelihood),
-            )
+        key = tuple(sorted((game.home_id, game.away_id)))
+        home, away = by_id[game.home_id], by_id[game.away_id]
+        cache_key = (
+            likelihood.beta.tobytes(),
+            likelihood.scale,
+            likelihood.degrees_of_freedom,
+            home.subdivision,
+            away.subdivision,
+            len(home.prior),
+            len(away.prior),
+            game.home_points,
+            game.away_points,
+            game.neutral_site,
         )
-        adjacency[game.home_id].append(len(factors) - 1)
-        adjacency[game.away_id].append(len(factors) - 1)
+        values = _GAME_FACTOR_CACHE.get(cache_key)
+        if values is None:
+            values = game_factor(game, home, away, likelihood)
+            _GAME_FACTOR_CACHE[cache_key] = values
+        if (game.home_id, game.away_id) != key:
+            values = values.T
+        log_values = np.log(np.maximum(values, np.finfo(float).tiny))
+        if key in grouped:
+            prior_log_values, game_ids = grouped[key]
+            grouped[key] = (prior_log_values + log_values, [*game_ids, game.game_id])
+        else:
+            grouped[key] = (log_values, [game.game_id])
+    factors = [
+        PairFactor(
+            first, second, np.exp(log_values - log_values.max()), tuple(game_ids)
+        )
+        for (first, second), (log_values, game_ids) in sorted(grouped.items())
+    ]
+    adjacency: dict[str, list[int]] = {team.team_id: [] for team in teams}
+    for index, factor in enumerate(factors):
+        adjacency[factor.first_id].append(index)
+        adjacency[factor.second_id].append(index)
     messages: dict[tuple[int, str], np.ndarray] = {}
-    for index, (game, _) in enumerate(factors):
-        messages[index, game.home_id] = np.ones(len(by_id[game.home_id].prior))
-        messages[index, game.away_id] = np.ones(len(by_id[game.away_id].prior))
+    for index, factor in enumerate(factors):
+        messages[index, factor.first_id] = np.ones(len(by_id[factor.first_id].prior))
+        messages[index, factor.second_id] = np.ones(len(by_id[factor.second_id].prior))
     if not factors:
         return PosteriorResult(
-            {team.team_id: team.prior.copy() for team in teams}, True, 0, 0.0, 0.0
+            {team.team_id: team.prior.copy() for team in teams},
+            True,
+            0,
+            0.0,
+            0.0,
+            0,
+            0,
+            0,
         )
 
     max_delta = np.inf
     for iteration in range(1, max_iterations + 1):
         updates: dict[tuple[int, str], np.ndarray] = {}
         max_delta = 0.0
-        for index, (game, factor) in enumerate(factors):
+        for index, factor in enumerate(factors):
             for target, other, transpose in (
-                (game.home_id, game.away_id, False),
-                (game.away_id, game.home_id, True),
+                (factor.first_id, factor.second_id, False),
+                (factor.second_id, factor.first_id, True),
             ):
                 belief = by_id[other].prior.copy()
                 for neighbor in adjacency[other]:
                     if neighbor != index:
                         belief *= messages[neighbor, other]
                 belief = _normalise(belief)
-                raw = (factor.T @ belief) if transpose else (factor @ belief)
+                raw = (
+                    (factor.values.T @ belief)
+                    if transpose
+                    else (factor.values @ belief)
+                )
                 proposal = _normalise(raw)
                 old = messages[index, target]
                 update = _normalise(damping * old + (1.0 - damping) * proposal)
@@ -225,5 +279,12 @@ def infer_posterior(
     # A finite surrogate objective useful for diagnostics, not a Bethe free energy.
     objective = float(sum(np.log(pmf.max()) for pmf in pmfs.values()))
     return PosteriorResult(
-        pmfs, max_delta <= tolerance, iteration, max_delta, objective
+        pmfs,
+        max_delta <= tolerance,
+        iteration,
+        max_delta,
+        objective,
+        len(games),
+        len(factors),
+        max(map(len, adjacency.values()), default=0),
     )

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -75,60 +76,136 @@ def _metrics(
     }
 
 
+def _difference(
+    left: dict[str, float | int], right: dict[str, float | int]
+) -> dict[str, float]:
+    """Return posterior-minus-prior (or C-minus-H) metric differences."""
+    return {
+        key: float(left[key]) - float(right[key])
+        for key in left
+        if key != "matched_fbs_teams"
+    }
+
+
+def standard_cutoffs(season: int) -> list[datetime]:
+    """Seven actual-date, regular-season depths from early through final week."""
+    dates = set()
+    with (ROOT / "data/processed/cfbd/games.csv").open(
+        newline="", encoding="utf-8"
+    ) as handle:
+        for row in csv.DictReader(handle):
+            if int(row["season"]) == season and row["seasonType"] == "regular":
+                dates.add(row["startDate"][:10])
+    if len(dates) < 7:
+        raise ValueError(f"Not enough regular-season dates for {season}")
+    ordered = sorted(dates)
+    indexes = [
+        round(value * (len(ordered) - 1))
+        for value in (0, 0.2, 0.35, 0.55, 0.72, 0.87, 1)
+    ]
+    return [
+        datetime.fromisoformat(f"{ordered[index]}T23:59:59+00:00") for index in indexes
+    ]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--season", type=int, required=True)
     parser.add_argument(
         "--cutoff",
         action="append",
-        required=True,
         help="ISO-8601 timestamp; repeat for rolling cutoffs",
     )
+    parser.add_argument(
+        "--standard-panel",
+        action="store_true",
+        help="Use seven actual regular-season dates from early through late season",
+    )
+    parser.add_argument(
+        "--append",
+        action="store_true",
+        help="Merge these cutoffs into an existing season summary",
+    )
+    parser.add_argument("--inference-max-iterations", type=int, default=100)
+    parser.add_argument("--inference-tolerance", type=float, default=1e-6)
+    parser.add_argument("--inference-damping", type=float, default=0.35)
     args = parser.parse_args()
+    if bool(args.cutoff) == args.standard_panel:
+        parser.error("provide --cutoff at least once or use --standard-panel")
     targets = _targets(args.season)
+    cutoffs = (
+        standard_cutoffs(args.season)
+        if args.standard_panel
+        else [datetime.fromisoformat(value) for value in args.cutoff]
+    )
     rows = []
-    for cutoff_value in args.cutoff:
-        cutoff = datetime.fromisoformat(cutoff_value)
-        variants = {}
-        for family in ("context", "history"):
-            snapshot = build_snapshot(
-                season=args.season,
-                cutoff=cutoff,
-                prior_family=family,
-                snapshot_type="weekly",
-            )
-            teams, _, _ = load_teams(ROOT, args.season, family)
-            prior = {
-                team.team_id: team.prior for team in teams if team.subdivision == "fbs"
-            }
-            pmfs = {}
-            with (snapshot.directory / "posterior_pmfs.csv").open(
-                newline="", encoding="utf-8"
-            ) as handle:
-                for item in csv.DictReader(handle):
-                    pmfs.setdefault(item["team_id"], []).append(
-                        float(item["probability"])
+    with tempfile.TemporaryDirectory(prefix="gippyrank-backtest-") as temp:
+        output_root = Path(temp) / "snapshots"
+        for cutoff in cutoffs:
+            variants = {}
+            for family in ("context", "history"):
+                snapshot = build_snapshot(
+                    season=args.season,
+                    cutoff=cutoff,
+                    prior_family=family,
+                    snapshot_type="weekly",
+                    output_root=output_root,
+                    inference_max_iterations=args.inference_max_iterations,
+                    inference_tolerance=args.inference_tolerance,
+                    inference_damping=args.inference_damping,
+                )
+                if not snapshot.metadata["valid"]:
+                    raise RuntimeError(
+                        f"invalid posterior at {cutoff.isoformat()} for {family}; "
+                        "backtest metrics would not be trustworthy"
                     )
-            posterior = {key: np.asarray(value) for key, value in pmfs.items()}
-            variants[family] = {
-                "prior": _metrics(prior, targets),
-                "posterior": _metrics(posterior, targets),
-                "snapshot_id": snapshot.snapshot_id,
-                "runtime_seconds": json.loads(
-                    (snapshot.directory / "diagnostics.json").read_text()
-                )["runtime_seconds"],
-            }
-        rows.append(
-            {
-                "cutoff": cutoff.isoformat(),
-                **variants,
-                "context_minus_history_posterior_nll": variants["context"]["posterior"][
-                    "nll"
-                ]
-                - variants["history"]["posterior"]["nll"],
-            }
-        )
+                teams, _, _ = load_teams(ROOT, args.season, family)
+                prior = {
+                    team.team_id: team.prior
+                    for team in teams
+                    if team.subdivision == "fbs"
+                }
+                pmfs = {}
+                with (snapshot.directory / "posterior_pmfs.csv").open(
+                    newline="", encoding="utf-8"
+                ) as handle:
+                    for item in csv.DictReader(handle):
+                        pmfs.setdefault(item["team_id"], []).append(
+                            float(item["probability"])
+                        )
+                posterior = {key: np.asarray(value) for key, value in pmfs.items()}
+                prior_metrics, posterior_metrics = (
+                    _metrics(prior, targets),
+                    _metrics(posterior, targets),
+                )
+                variants[family] = {
+                    "prior": prior_metrics,
+                    "posterior": posterior_metrics,
+                    "posterior_minus_prior": _difference(
+                        posterior_metrics, prior_metrics
+                    ),
+                    "snapshot_id": snapshot.snapshot_id,
+                    "runtime_seconds": json.loads(
+                        (snapshot.directory / "diagnostics.json").read_text()
+                    )["runtime_seconds"],
+                }
+            rows.append(
+                {
+                    "cutoff": cutoff.isoformat(),
+                    **variants,
+                    "context_minus_history_posterior": _difference(
+                        variants["context"]["posterior"],
+                        variants["history"]["posterior"],
+                    ),
+                }
+            )
     output = ROOT / f"data/processed/posterior_backtest/{args.season}_rolling.json"
+    if args.append and output.exists():
+        existing = json.loads(output.read_text())
+        rows.extend(existing["cutoffs"])
+        rows = sorted(
+            {row["cutoff"]: row for row in rows}.values(), key=lambda row: row["cutoff"]
+        )
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(
         json.dumps(

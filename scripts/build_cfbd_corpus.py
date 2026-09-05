@@ -17,7 +17,7 @@ RAW_GAMES = RAW / "games"
 RAW_STATS = RAW / "game_stats"
 PROCESSED = ROOT / "data/processed/cfbd"
 API = "https://api.collegefootballdata.com"
-SEASONS = range(2003, 2026)
+SEASONS = range(2003, 2027)
 CLASSIFICATIONS = ("fbs", "fcs")
 GAME_FIELDS = (
     "id",

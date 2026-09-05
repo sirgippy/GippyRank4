@@ -61,9 +61,15 @@ Snapshot construction has no publishing, website, polling, or ballot code.
 Only final FBS/FCS-vs-FBS/FCS games at or before the cutoff are factors. Every
 game involving another subdivision is excluded and counted. The current frozen
 H/C artifacts have FBS rows only; when an FCS team appears before a cutoff the
-engine adds a conservative uniform FCS PMF as a real graph variable and records
-its team ID in metadata. This is a temporary upstream-data limitation, not a
-lower-division placeholder.
+engine obtains that season's full FCS population from the durable Massey
+team-season distribution corpus. For a current season not yet represented
+there, it instead enumerates the full cached CFBD season schedule—not games
+through the cutoff—then adds a uniform PMF over ranks `1..N_FCS`. It fails
+rather than inventing a support if neither full-season source is available.
+The population, fallback IDs, kind, and PMF semantics are recorded in metadata.
+The population source is also explicit (`massey_team_season_rank_distributions`
+or `cfbd_full_season_schedule`).
+This is a temporary upstream-data limitation, not a lower-division placeholder.
 
 ## Validation threshold
 
@@ -72,3 +78,26 @@ three-team cyclic approximation. The two-team one-game posterior is compared
 to exact enumeration at numerical tolerance. It also tests a round robin,
 cross-subdivision factor, multi-hop propagation, and disconnected-team prior
 preservation.
+
+The broader deterministic audit is [bp_exact_validation.json](../data/processed/posterior_validation/bp_exact_validation.json): 72 varied 2–5 team cases, including mixed FBS/FCS and repeated pairings. Before execution it required p95 marginal TV ≤ 0.05 and worst TV ≤ 0.15. The recorded result passes both thresholds. Rematches are consolidated by multiplying their likelihood matrices in canonical pair orientation; individual game IDs remain in the snapshot provenance.
+
+Its observed convergence rate is 100%; median/p95/worst marginal TV are
+0.000114/0.00607/0.02521, and median/worst expected-rank error are
+0.000108/0.04993. This supports the approximation for this deliberately small
+stress population, not as a proof for every full-season graph.
+
+## Rolling historical evidence
+
+The compact 2022–2025 panel uses seven actual-date regular-season cutoffs per
+season; individual bundles are temporary during evaluation and only summaries
+and plots are retained in `data/processed/posterior_backtest/`. Both H- and
+C-started posteriors materially improve their own prior NLL by season end in
+all four seasons. Interval widths fall from about 70 ranks early to 28–29 late.
+
+Late C interval coverage is near nominal in 2022 (0.797) and 2024 (0.793), but
+is below nominal in 2023 (0.740) and 2025 (0.726). H is better calibrated in
+those latter seasons. This is evidence of a possible late-season C
+overconfidence/calibration issue; no variance inflation, clipping, or recency
+discount was added here. H-vs-C remains diagnostic: the posterior is judged by
+improvement against its own prior and calibration, not by requiring C to beat H
+in every season.
