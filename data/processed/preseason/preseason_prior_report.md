@@ -9,20 +9,20 @@ The frozen rank-history-only production specification is **long_run_baseline**. 
 | Candidate | N | NLL | CRPS | 80% coverage | Notes |
 |---|---:|---:|---:|---:|---|
 | V1_A2_reference | 513 | 4.5380 | 0.1187 | 0.832 | same complete lag-1 population; missing deeper summaries are training-only imputed with indicators |
-| full_t1_t2_t3_quadrature | 507 | 4.5448 | 0.1192 | 0.835 | strict three-lag eligible population |
-| historical_volatility | 513 | 4.5215 | 0.1161 | 0.839 | same complete lag-1 population; missing deeper summaries are training-only imputed with indicators |
 | lag_depth_4 | 513 | 4.5302 | 0.1177 | 0.834 | same complete lag-1 population; missing deeper summaries are training-only imputed with indicators |
 | lag_depth_5 | 513 | 4.5282 | 0.1174 | 0.835 | same complete lag-1 population; missing deeper summaries are training-only imputed with indicators |
 | long_run_baseline | 513 | 4.5197 | 0.1160 | 0.836 | same complete lag-1 population; missing deeper summaries are training-only imputed with indicators |
-| student_t_df_5 | 513 | 4.5373 | 0.1186 | 0.807 | same complete lag-1 population; missing deeper summaries are training-only imputed with indicators |
 | trajectory_and_reversion | 513 | 4.5204 | 0.1162 | 0.837 | same complete lag-1 population; missing deeper summaries are training-only imputed with indicators |
+| historical_volatility | 513 | 4.5215 | 0.1161 | 0.839 | same complete lag-1 population; missing deeper summaries are training-only imputed with indicators |
+| student_t_df_5 | 513 | 4.5373 | 0.1186 | 0.807 | same complete lag-1 population; missing deeper summaries are training-only imputed with indicators |
+| full_t1_t2_t3_quadrature | 507 | 4.5448 | 0.1192 | 0.835 | strict three-lag eligible population |
 
 ## Untouched 2022–2025 FBS production comparison
 
 | Model | N | NLL | CRPS | Expected-rank MAE | 80% coverage | 80% width |
 |---|---:|---:|---:|---:|---:|---:|
-| V1_1 | 534 | 4.5442 | 0.1137 | 21.26 | 0.839 | 78.0 |
 | V1_A2 | 534 | 4.5677 | 0.1172 | 21.71 | 0.834 | 77.9 |
+| V1_1 | 534 | 4.5442 | 0.1137 | 21.26 | 0.839 | 78.0 |
 
 ### Consistency across untouched seasons
 

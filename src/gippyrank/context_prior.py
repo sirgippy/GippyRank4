@@ -13,15 +13,31 @@ from dataclasses import asdict, dataclass
 from datetime import date
 from typing import Any
 
-PRODUCTION_SAFE = "production-safe"
-RECONSTRUCTABLE_SAFE = "reconstructable-safe"
-EXPLORATORY = "exploratory-timing-uncertain"
+PRODUCTION_SAFE_BY_CONSTRUCTION = "production-safe-by-construction"
+PRODUCTION_SAFE_BY_SEMANTICS = "production-safe-by-semantic-definition"
+PRODUCTION_SAFE_WITH_CAVEAT = "production-safe-with-retrospective-stability-caveat"
+EXPLORATORY = "exploratory-unresolved"
 REJECTED = "rejected"
 
 
 @dataclass(frozen=True)
-class ModelIdentity:
-    """The immutable specification identity and a particular annual fit."""
+class ModelSpecification:
+    """Durable methodology, deliberately independent of one annual fit."""
+
+    model_family: str
+    spec_version: str
+    features: tuple[str, ...]
+    distribution_family: str
+    penalty: float
+    quadrature: str
+
+    def metadata(self) -> dict[str, object]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class AnnualFittedInstance:
+    """One refit of a specification for a named preseason target."""
 
     model_family: str
     spec_version: str
@@ -31,6 +47,29 @@ class ModelIdentity:
 
     def metadata(self) -> dict[str, object]:
         return asdict(self)
+
+
+@dataclass(frozen=True)
+class InferenceRow:
+    """A target-season input deliberately incapable of carrying an outcome."""
+
+    season: int
+    subdivision: str
+    team_id: str
+    team_name: str
+    population: int
+    lag1_z: tuple[float, ...] | None
+    lag_zs: tuple[tuple[float, ...], ...]
+    features: dict[str, float | None]
+    cold_start_reason: str | None = None
+
+    def require_no_target(self) -> None:
+        """Make the no-outcome contract explicit at the inference boundary."""
+        forbidden = {"target_z", "target_ranks", "outcome", "final_rank"}
+        if forbidden & set(self.features):
+            raise ValueError(
+                "inference features must not contain a target-season outcome"
+            )
 
 
 @dataclass(frozen=True)
@@ -87,10 +126,7 @@ def coach_at_cutoff(
         for tenure in tenures
         if (tenure.get("team") or {}).get("school") == team
         and int(tenure.get("startYear") or 10**9) <= target_season
-        and (
-            tenure.get("endYear") is None
-            or int(tenure["endYear"]) >= target_season
-        )
+        and (tenure.get("endYear") is None or int(tenure["endYear"]) >= target_season)
     ]
     if not candidates:
         return CoachContext(None, None, None, False, "no_matching_tenure")
@@ -105,10 +141,16 @@ def coach_at_cutoff(
     effective_end = _as_date(tenure.get("effectiveEnd"))
     if effective_end is not None and effective_end <= cutoff:
         return CoachContext(None, None, None, False, "tenure_ended_by_cutoff")
-    if end_year is not None and int(end_year) == target_season and effective_end is None:
+    if (
+        end_year is not None
+        and int(end_year) == target_season
+        and effective_end is None
+    ):
         return CoachContext(None, None, None, False, "target_season_end_is_undated")
     if start_year == target_season and (hire_date is None or hire_date > cutoff):
-        return CoachContext(None, None, None, False, "target_season_start_not_dated_by_cutoff")
+        return CoachContext(
+            None, None, None, False, "target_season_start_not_dated_by_cutoff"
+        )
     coach = tenure.get("coach") or {}
     coach_id = coach.get("id")
     if coach_id is None:
@@ -125,7 +167,9 @@ def coach_at_cutoff(
     )
 
 
-def only_approved(features: dict[str, float | None], approved: set[str]) -> dict[str, float | None]:
+def only_approved(
+    features: dict[str, float | None], approved: set[str]
+) -> dict[str, float | None]:
     """Fail closed: an unapproved feature never reaches a production fit."""
     unknown = set(features) - approved
     if unknown:

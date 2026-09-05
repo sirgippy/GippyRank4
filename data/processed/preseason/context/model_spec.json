@@ -1,27 +1,24 @@
 {
-  "approved_context_features": [],
-  "context_as_of": "2022-08-15",
-  "context_cutoff_semantics": "August 15 of each target season; target-specific date appears per PMF",
-  "final_fit_metadata": {
-    "status": "C0 selected; no context coefficients admitted"
-  },
-  "fitted_instance": {
-    "target_seasons": [
-      2022,
-      2023,
-      2024,
-      2025
-    ]
-  },
-  "historical_foundation": [
+  "distribution_family": "normal",
+  "features": [
     "lag2_z_mean",
     "lag3_z_mean",
-    "long_run_z_mean"
+    "long_run_z_mean",
+    "coach_tenure_seasons",
+    "recruiting_class_rank",
+    "recruiting_class_points",
+    "recruiting_points_2y_mean",
+    "recruiting_points_3y_mean",
+    "recruiting_points_4y_mean",
+    "recruiting_points_trend",
+    "talent_composite",
+    "returning_pct_ppa",
+    "returning_pct_passing_ppa",
+    "returning_pct_receiving_ppa",
+    "returning_pct_rushing_ppa"
   ],
-  "missing_context_behavior": "use the frozen H PMF exactly",
   "model_family": "context_prior",
-  "selected_candidate": "C0_history_only",
-  "spec_version": "1.2",
-  "target_season": 2022,
-  "trained_through_season": 2021
+  "penalty": 0.25,
+  "quadrature": "full t-1 empirical quadrature; t-2/t-3 summaries",
+  "spec_version": "1.2"
 }

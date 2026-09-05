@@ -224,6 +224,8 @@ class DirectRankModel:
     lag_count: int = 1
     family: str = "normal"
     degrees_of_freedom: float | None = None
+    location_feature_names: list[str] | None = None
+    scale_feature_names: list[str] | None = None
 
     @classmethod
     def fit(
@@ -236,6 +238,8 @@ class DirectRankModel:
         lag_count: int = 1,
         family: str = "normal",
         degrees_of_freedom: float | None = None,
+        location_feature_names: list[str] | None = None,
+        scale_feature_names: list[str] | None = None,
     ) -> DirectRankModel:
         if not rows:
             raise ValueError("cannot fit without rows")
@@ -251,6 +255,11 @@ class DirectRankModel:
             raise ValueError("Student-t degrees of freedom must exceed 2")
         if lag_count < 1:
             raise ValueError("lag_count must be positive")
+        known_features = set(feature_names)
+        location_features = set(location_feature_names or feature_names)
+        scale_features = set(scale_feature_names or feature_names)
+        if location_features - known_features or scale_features - known_features:
+            raise ValueError("location/scale feature names must be model features")
         lag_samples = []
         for row in rows:
             distributions = (row.lag1_z, *row.lag_zs[: lag_count - 1])
@@ -369,13 +378,30 @@ class DirectRankModel:
         initial_gamma[0] = np.log(0.7)
         options = {"maxiter": 500, "ftol": 1e-10, "gtol": 1e-6}
         options.update(optimizer_options or {})
+        beta_bounds: list[tuple[float | None, float | None]] = [(None, None)] * len(
+            initial_beta
+        )
+        gamma_bounds: list[tuple[float | None, float | None]] = [(-5.0, 4.0)] * len(
+            initial_gamma
+        )
+        # The design matrix is intercept, numeric features, then their missingness
+        # indicators.  Fixed zero coefficients provide a deterministic way to
+        # compare location-only and scale-only context extensions without changing
+        # H's established default (all fitted features enter both equations).
+        for feature_index, feature_name in enumerate(feature_names):
+            columns = (1 + feature_index, 1 + len(feature_names) + feature_index)
+            if feature_name not in location_features:
+                for column in columns:
+                    beta_bounds[lag_count + column] = (0.0, 0.0)
+            if feature_name not in scale_features:
+                for column in columns:
+                    gamma_bounds[column] = (0.0, 0.0)
         result = minimize(
             objective,
             np.r_[initial_beta, initial_gamma],
             method="L-BFGS-B",
             jac=gradient,
-            bounds=[(None, None)] * len(initial_beta)
-            + [(-5.0, 4.0)] * len(initial_gamma),
+            bounds=beta_bounds + gamma_bounds,
             options=options,
         )
         diagnostics = {
@@ -399,6 +425,10 @@ class DirectRankModel:
             lag_count,
             family,
             degrees_of_freedom,
+            list(location_feature_names)
+            if location_feature_names is not None
+            else None,
+            list(scale_feature_names) if scale_feature_names is not None else None,
         )
 
     def _matrix(self, features: dict[str, float | None]) -> np.ndarray:
@@ -443,7 +473,7 @@ class DirectRankModel:
         return pmf / pmf.sum()
 
     def metadata(self) -> dict[str, object]:
-        return {
+        metadata = {
             "feature_names": self.feature_names,
             "preprocessing": self.preprocessor.metadata(),
             "location_coefficients": self.beta.tolist(),
@@ -461,6 +491,11 @@ class DirectRankModel:
             "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
             "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
         }
+        if self.location_feature_names is not None:
+            metadata["location_feature_names"] = self.location_feature_names
+        if self.scale_feature_names is not None:
+            metadata["scale_feature_names"] = self.scale_feature_names
+        return metadata
 
 
 @dataclass(frozen=True)

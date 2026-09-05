@@ -387,20 +387,22 @@
       "natural_population": 507,
       "notes": "strict three-lag eligible population",
       "paired_bootstrap_vs_v1": {
-        "crps_95_interval": [
+        "crps_central_95_bootstrap_range": [
           -0.0012107620013235587,
           0.0024126181070300294
         ],
-        "fraction_candidate_better_crps": 0.3245,
-        "fraction_candidate_better_nll": 0.077,
-        "mean_delta_crps": 0.0005595043532620043,
-        "mean_delta_nll": 0.00855158874790958,
+        "fraction_candidate_better_crps": 0.3125,
+        "fraction_candidate_better_nll": 0.07421875,
+        "mean_delta_crps": 0.000597950678474568,
+        "mean_delta_nll": 0.008781756653910545,
+        "n_resamples": 256,
+        "n_season_clusters": 4,
         "n_team_seasons": 507,
-        "nll_95_interval": [
+        "nll_central_95_bootstrap_range": [
           -0.0015954228900444522,
           0.022973713555573226
         ],
-        "resampling": "season bootstrap; candidate minus V1, 2,000 deterministic resamples"
+        "resampling": "exhaustive ordered season bootstrap over all 4^4 = 256 resamples; descriptive only"
       },
       "same_population_reference": {
         "crps": 0.11863230525767783,
@@ -784,20 +786,22 @@
       "natural_population": 513,
       "notes": "same complete lag-1 population; missing deeper summaries are training-only imputed with indicators",
       "paired_bootstrap_vs_v1": {
-        "crps_95_interval": [
+        "crps_central_95_bootstrap_range": [
           -0.0034927220582784075,
-          -0.0016895351004353677
+          -0.0016895351004353675
         ],
         "fraction_candidate_better_crps": 1.0,
         "fraction_candidate_better_nll": 1.0,
-        "mean_delta_crps": -0.002612967088122325,
-        "mean_delta_nll": -0.016755701537581307,
+        "mean_delta_crps": -0.002591877745029692,
+        "mean_delta_nll": -0.01653615554289438,
+        "n_resamples": 256,
+        "n_season_clusters": 4,
         "n_team_seasons": 513,
-        "nll_95_interval": [
+        "nll_central_95_bootstrap_range": [
           -0.026208620246823588,
-          -0.006034976128342885
+          -0.006034976128342886
         ],
-        "resampling": "season bootstrap; candidate minus V1, 2,000 deterministic resamples"
+        "resampling": "exhaustive ordered season bootstrap over all 4^4 = 256 resamples; descriptive only"
       }
     },
     "lag_depth_4": {
@@ -1016,20 +1020,22 @@
       "natural_population": 513,
       "notes": "same complete lag-1 population; missing deeper summaries are training-only imputed with indicators",
       "paired_bootstrap_vs_v1": {
-        "crps_95_interval": [
+        "crps_central_95_bootstrap_range": [
           -0.0013434397855183462,
           -0.000735529726908322
         ],
         "fraction_candidate_better_crps": 1.0,
         "fraction_candidate_better_nll": 1.0,
-        "mean_delta_crps": -0.0010322383340640783,
-        "mean_delta_nll": -0.007778567978654016,
+        "mean_delta_crps": -0.0010317056704276695,
+        "mean_delta_nll": -0.007796280886444481,
+        "n_resamples": 256,
+        "n_season_clusters": 4,
         "n_team_seasons": 513,
-        "nll_95_interval": [
+        "nll_central_95_bootstrap_range": [
           -0.010440347483591583,
           -0.005699963930073073
         ],
-        "resampling": "season bootstrap; candidate minus V1, 2,000 deterministic resamples"
+        "resampling": "exhaustive ordered season bootstrap over all 4^4 = 256 resamples; descriptive only"
       }
     },
     "lag_depth_5": {
@@ -1257,20 +1263,22 @@
       "natural_population": 513,
       "notes": "same complete lag-1 population; missing deeper summaries are training-only imputed with indicators",
       "paired_bootstrap_vs_v1": {
-        "crps_95_interval": [
+        "crps_central_95_bootstrap_range": [
           -0.0015171207374375351,
           -0.0010439637992312226
         ],
         "fraction_candidate_better_crps": 1.0,
         "fraction_candidate_better_nll": 1.0,
-        "mean_delta_crps": -0.001283117882468245,
-        "mean_delta_nll": -0.009794749028447769,
+        "mean_delta_crps": -0.0012823125897014885,
+        "mean_delta_nll": -0.009816249400234152,
+        "n_resamples": 256,
+        "n_season_clusters": 4,
         "n_team_seasons": 513,
-        "nll_95_interval": [
+        "nll_central_95_bootstrap_range": [
           -0.012321350316993888,
           -0.006908379906178329
         ],
-        "resampling": "season bootstrap; candidate minus V1, 2,000 deterministic resamples"
+        "resampling": "exhaustive ordered season bootstrap over all 4^4 = 256 resamples; descriptive only"
       }
     },
     "long_run_baseline": {
@@ -1489,20 +1497,22 @@
       "natural_population": 513,
       "notes": "same complete lag-1 population; missing deeper summaries are training-only imputed with indicators",
       "paired_bootstrap_vs_v1": {
-        "crps_95_interval": [
+        "crps_central_95_bootstrap_range": [
           -0.003480091364492891,
           -0.0018759662281039899
         ],
         "fraction_candidate_better_crps": 1.0,
         "fraction_candidate_better_nll": 1.0,
-        "mean_delta_crps": -0.002696502285565696,
-        "mean_delta_nll": -0.018546049587384764,
+        "mean_delta_crps": -0.0026795272669584216,
+        "mean_delta_nll": -0.018335218644139107,
+        "n_resamples": 256,
+        "n_season_clusters": 4,
         "n_team_seasons": 513,
-        "nll_95_interval": [
+        "nll_central_95_bootstrap_range": [
           -0.028060072708543767,
           -0.006860389745569918
         ],
-        "resampling": "season bootstrap; candidate minus V1, 2,000 deterministic resamples"
+        "resampling": "exhaustive ordered season bootstrap over all 4^4 = 256 resamples; descriptive only"
       }
     },
     "student_t_df_5": {
@@ -1712,20 +1722,22 @@
       "natural_population": 513,
       "notes": "same complete lag-1 population; missing deeper summaries are training-only imputed with indicators",
       "paired_bootstrap_vs_v1": {
-        "crps_95_interval": [
+        "crps_central_95_bootstrap_range": [
           -0.00029566056007653213,
           0.00015956335962951328
         ],
-        "fraction_candidate_better_crps": 0.7705,
-        "fraction_candidate_better_nll": 0.705,
-        "mean_delta_crps": -0.00012324054935033117,
-        "mean_delta_nll": -0.0007428010878308801,
+        "fraction_candidate_better_crps": 0.76171875,
+        "fraction_candidate_better_nll": 0.703125,
+        "mean_delta_crps": -0.00011959046227932249,
+        "mean_delta_nll": -0.0007250493663595392,
+        "n_resamples": 256,
+        "n_season_clusters": 4,
         "n_team_seasons": 513,
-        "nll_95_interval": [
+        "nll_central_95_bootstrap_range": [
           -0.0033601840953789994,
           0.001914706837853255
         ],
-        "resampling": "season bootstrap; candidate minus V1, 2,000 deterministic resamples"
+        "resampling": "exhaustive ordered season bootstrap over all 4^4 = 256 resamples; descriptive only"
       }
     },
     "trajectory_and_reversion": {
@@ -1962,20 +1974,22 @@
       "natural_population": 513,
       "notes": "same complete lag-1 population; missing deeper summaries are training-only imputed with indicators",
       "paired_bootstrap_vs_v1": {
-        "crps_95_interval": [
+        "crps_central_95_bootstrap_range": [
           -0.0030447643631182,
           -0.0019506389872738284
         ],
         "fraction_candidate_better_crps": 1.0,
         "fraction_candidate_better_nll": 1.0,
-        "mean_delta_crps": -0.0024948359650187354,
-        "mean_delta_nll": -0.017755192456420852,
+        "mean_delta_crps": -0.002484610374269742,
+        "mean_delta_nll": -0.017552241046954478,
+        "n_resamples": 256,
+        "n_season_clusters": 4,
         "n_team_seasons": 513,
-        "nll_95_interval": [
+        "nll_central_95_bootstrap_range": [
           -0.02691432073129452,
           -0.008059848879982021
         ],
-        "resampling": "season bootstrap; candidate minus V1, 2,000 deterministic resamples"
+        "resampling": "exhaustive ordered season bootstrap over all 4^4 = 256 resamples; descriptive only"
       }
     }
   },
@@ -2273,19 +2287,19 @@
     "cold_start": "V1 FCS-to-FBS and generic cold-start PMFs retained unchanged",
     "paired_bootstrap": {
       "crps_central_95_bootstrap_range": [
-        -0.004881798710017571,
-        -0.0019160014520222667
+        -0.004881798709989533,
+        -0.001916001451971485
       ],
       "fraction_candidate_better_crps": 1.0,
       "fraction_candidate_better_nll": 1.0,
-      "mean_delta_crps": -0.003540028576461474,
-      "mean_delta_nll": -0.023559153591603335,
+      "mean_delta_crps": -0.003540028576436519,
+      "mean_delta_nll": -0.023559153591383726,
       "n_resamples": 256,
       "n_season_clusters": 4,
       "n_team_seasons": 534,
       "nll_central_95_bootstrap_range": [
-        -0.0310851347974788,
-        -0.012607606867373675
+        -0.031085134797593644,
+        -0.012607606866156919
       ],
       "resampling": "exhaustive ordered season bootstrap over all 4^4 = 256 resamples; descriptive only"
     },
@@ -3588,7 +3602,7 @@
     "points_per_lag": 2
   },
   "input_safety": "Only target-season-prior final rank distributions; all features are constructed in load_rows from seasons < target.",
-  "runtime_seconds": 41.98569446899637,
+  "runtime_seconds": 39.81088370300131,
   "selection": {
     "development_train": [
       2004,
