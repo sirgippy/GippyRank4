@@ -1,0 +1,752 @@
+{
+  "descriptive_season_bootstrap": {
+    "full_fbs_imputed/missingness_recruiting_with_indicators": {
+      "crps_central_95_bootstrap_range": [
+        -0.0020681650406818228,
+        -5.550935690487852e-06
+      ],
+      "fraction_candidate_better_crps": 0.9755,
+      "fraction_candidate_better_nll": 0.996,
+      "mean_delta_crps": -0.0010670403344262315,
+      "mean_delta_nll": -0.009920748059064871,
+      "n_resamples": 2000,
+      "n_season_clusters": 19,
+      "n_team_seasons": 2391,
+      "nll_central_95_bootstrap_range": [
+        -0.0170756334966951,
+        -0.0022515277253665595
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "full_fbs_imputed/missingness_recruiting_without_indicators": {
+      "crps_central_95_bootstrap_range": [
+        -0.002189431570895333,
+        -0.00015602866089606832
+      ],
+      "fraction_candidate_better_crps": 0.987,
+      "fraction_candidate_better_nll": 0.9975,
+      "mean_delta_crps": -0.0011965192027676998,
+      "mean_delta_nll": -0.01062199491432504,
+      "n_resamples": 2000,
+      "n_season_clusters": 19,
+      "n_team_seasons": 2391,
+      "nll_central_95_bootstrap_range": [
+        -0.01741790060313663,
+        -0.0031019593205394587
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "full_fbs_imputed/missingness_returning_with_indicators": {
+      "crps_central_95_bootstrap_range": [
+        -0.0025835471881091375,
+        -6.144036304593333e-05
+      ],
+      "fraction_candidate_better_crps": 0.9795,
+      "fraction_candidate_better_nll": 0.869,
+      "mean_delta_crps": -0.0013260536443324106,
+      "mean_delta_nll": -0.006569569166945789,
+      "n_resamples": 2000,
+      "n_season_clusters": 19,
+      "n_team_seasons": 2391,
+      "nll_central_95_bootstrap_range": [
+        -0.018408818136373007,
+        0.005809270615172006
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "full_fbs_imputed/missingness_returning_without_indicators": {
+      "crps_central_95_bootstrap_range": [
+        -0.0025665899446709424,
+        -1.3341218266740656e-05
+      ],
+      "fraction_candidate_better_crps": 0.9765,
+      "fraction_candidate_better_nll": 0.8155,
+      "mean_delta_crps": -0.001294208805189252,
+      "mean_delta_nll": -0.005530571970771021,
+      "n_resamples": 2000,
+      "n_season_clusters": 19,
+      "n_team_seasons": 2391,
+      "nll_central_95_bootstrap_range": [
+        -0.017620806280587906,
+        0.007593912110581637
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "full_fbs_imputed/missingness_talent_with_indicators": {
+      "crps_central_95_bootstrap_range": [
+        -0.0006917025672104449,
+        0.00012267737191625836
+      ],
+      "fraction_candidate_better_crps": 0.904,
+      "fraction_candidate_better_nll": 0.965,
+      "mean_delta_crps": -0.00026785257653309834,
+      "mean_delta_nll": -0.0028226343922121595,
+      "n_resamples": 2000,
+      "n_season_clusters": 19,
+      "n_team_seasons": 2391,
+      "nll_central_95_bootstrap_range": [
+        -0.005974138730484108,
+        0.0001575755787523275
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "full_fbs_imputed/missingness_talent_without_indicators": {
+      "crps_central_95_bootstrap_range": [
+        -0.0006892700612898339,
+        0.0001245078933975745
+      ],
+      "fraction_candidate_better_crps": 0.901,
+      "fraction_candidate_better_nll": 0.964,
+      "mean_delta_crps": -0.00026621502248240817,
+      "mean_delta_nll": -0.002817388920484356,
+      "n_resamples": 2000,
+      "n_season_clusters": 19,
+      "n_team_seasons": 2391,
+      "nll_central_95_bootstrap_range": [
+        -0.005950904994023003,
+        0.00016264243084296954
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "interaction_interaction_coach_total/interaction_coach_total": {
+      "crps_central_95_bootstrap_range": [
+        -0.004439841089909638,
+        -0.0012409173542856208
+      ],
+      "fraction_candidate_better_crps": 0.9995,
+      "fraction_candidate_better_nll": 0.9815,
+      "mean_delta_crps": -0.0028211136327879883,
+      "mean_delta_nll": -0.01902209819461018,
+      "n_resamples": 2000,
+      "n_season_clusters": 9,
+      "n_team_seasons": 930,
+      "nll_central_95_bootstrap_range": [
+        -0.034681930634339345,
+        -0.0011067535663651252
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "interaction_interaction_talent_passing/interaction_talent_passing": {
+      "crps_central_95_bootstrap_range": [
+        -0.0013986046286317854,
+        0.0012065337905907952
+      ],
+      "fraction_candidate_better_crps": 0.548,
+      "fraction_candidate_better_nll": 0.189,
+      "mean_delta_crps": -7.725244587818001e-05,
+      "mean_delta_nll": 0.02691859544950504,
+      "n_resamples": 2000,
+      "n_season_clusters": 8,
+      "n_team_seasons": 1039,
+      "nll_central_95_bootstrap_range": [
+        -0.007020877183944239,
+        0.08497370391616633
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "interaction_interaction_talent_total/interaction_talent_total": {
+      "crps_central_95_bootstrap_range": [
+        -0.004321891335632758,
+        -0.0006530640163421284
+      ],
+      "fraction_candidate_better_crps": 0.9975,
+      "fraction_candidate_better_nll": 0.9585,
+      "mean_delta_crps": -0.002541898649021362,
+      "mean_delta_nll": -0.018101703394420868,
+      "n_resamples": 2000,
+      "n_season_clusters": 8,
+      "n_team_seasons": 1039,
+      "nll_central_95_bootstrap_range": [
+        -0.03829053686205254,
+        0.0023612825882161443
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "same_all_context/same_coach": {
+      "crps_central_95_bootstrap_range": [
+        -0.0005413348982926574,
+        0.000247914504795838
+      ],
+      "fraction_candidate_better_crps": 0.7695,
+      "fraction_candidate_better_nll": 0.3245,
+      "mean_delta_crps": -0.00015726416730367008,
+      "mean_delta_nll": 0.0008896891761689846,
+      "n_resamples": 2000,
+      "n_season_clusters": 8,
+      "n_team_seasons": 818,
+      "nll_central_95_bootstrap_range": [
+        -0.002505775795652109,
+        0.004769371447913286
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "same_all_context/same_coach_returning": {
+      "crps_central_95_bootstrap_range": [
+        -0.0036905201843546384,
+        -0.00010771226618102113
+      ],
+      "fraction_candidate_better_crps": 0.98,
+      "fraction_candidate_better_nll": 0.8865,
+      "mean_delta_crps": -0.001982424818427954,
+      "mean_delta_nll": -0.012263798593084727,
+      "n_resamples": 2000,
+      "n_season_clusters": 8,
+      "n_team_seasons": 818,
+      "nll_central_95_bootstrap_range": [
+        -0.03025724193169975,
+        0.007908791380285182
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "same_all_context/same_full_c": {
+      "crps_central_95_bootstrap_range": [
+        -0.0050966329515896875,
+        -0.0010323863968533613
+      ],
+      "fraction_candidate_better_crps": 0.9985,
+      "fraction_candidate_better_nll": 0.9795,
+      "mean_delta_crps": -0.0030536496639849415,
+      "mean_delta_nll": -0.018762650650561825,
+      "n_resamples": 2000,
+      "n_season_clusters": 8,
+      "n_team_seasons": 818,
+      "nll_central_95_bootstrap_range": [
+        -0.0375869021297449,
+        -0.000567489133517363
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "same_all_context/same_h": {
+      "crps_central_95_bootstrap_range": [
+        0.0,
+        0.0
+      ],
+      "fraction_candidate_better_crps": 0.0,
+      "fraction_candidate_better_nll": 0.0,
+      "mean_delta_crps": 0.0,
+      "mean_delta_nll": 0.0,
+      "n_resamples": 2000,
+      "n_season_clusters": 8,
+      "n_team_seasons": 818,
+      "nll_central_95_bootstrap_range": [
+        0.0,
+        0.0
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "same_all_context/same_recruiting": {
+      "crps_central_95_bootstrap_range": [
+        -0.0025970605401394193,
+        0.0001395207466354657
+      ],
+      "fraction_candidate_better_crps": 0.962,
+      "fraction_candidate_better_nll": 0.9555,
+      "mean_delta_crps": -0.001240061314008871,
+      "mean_delta_nll": -0.007870643223672848,
+      "n_resamples": 2000,
+      "n_season_clusters": 8,
+      "n_team_seasons": 818,
+      "nll_central_95_bootstrap_range": [
+        -0.01719125939601762,
+        0.0012947104164293852
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "same_all_context/same_recruiting_returning": {
+      "crps_central_95_bootstrap_range": [
+        -0.004877283839447697,
+        -0.0011212850430473596
+      ],
+      "fraction_candidate_better_crps": 0.999,
+      "fraction_candidate_better_nll": 0.998,
+      "mean_delta_crps": -0.0029704614730876734,
+      "mean_delta_nll": -0.023139049153093175,
+      "n_resamples": 2000,
+      "n_season_clusters": 8,
+      "n_team_seasons": 818,
+      "nll_central_95_bootstrap_range": [
+        -0.039943111679397195,
+        -0.006928386380863673
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "same_all_context/same_recruiting_talent": {
+      "crps_central_95_bootstrap_range": [
+        -0.002458568259550473,
+        8.03803934035363e-05
+      ],
+      "fraction_candidate_better_crps": 0.964,
+      "fraction_candidate_better_nll": 0.956,
+      "mean_delta_crps": -0.0012039527615711916,
+      "mean_delta_nll": -0.007543038615420015,
+      "n_resamples": 2000,
+      "n_season_clusters": 8,
+      "n_team_seasons": 818,
+      "nll_central_95_bootstrap_range": [
+        -0.016316957525143203,
+        0.0010275248758358421
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "same_all_context/same_recruiting_talent_returning": {
+      "crps_central_95_bootstrap_range": [
+        -0.004759707033580242,
+        -0.001108955121433315
+      ],
+      "fraction_candidate_better_crps": 0.999,
+      "fraction_candidate_better_nll": 0.998,
+      "mean_delta_crps": -0.0029147534856821373,
+      "mean_delta_nll": -0.02239254755521373,
+      "n_resamples": 2000,
+      "n_season_clusters": 8,
+      "n_team_seasons": 818,
+      "nll_central_95_bootstrap_range": [
+        -0.03804693741228973,
+        -0.007070584500028752
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "same_all_context/same_returning": {
+      "crps_central_95_bootstrap_range": [
+        -0.0035182960835760655,
+        -0.00027418892040052036
+      ],
+      "fraction_candidate_better_crps": 0.9875,
+      "fraction_candidate_better_nll": 0.9445,
+      "mean_delta_crps": -0.001978455076064878,
+      "mean_delta_nll": -0.01464851014414965,
+      "n_resamples": 2000,
+      "n_season_clusters": 8,
+      "n_team_seasons": 818,
+      "nll_central_95_bootstrap_range": [
+        -0.030943927226493886,
+        0.003838712460452362
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "same_all_context/same_talent": {
+      "crps_central_95_bootstrap_range": [
+        -0.002095189930100213,
+        0.0013548779521366785
+      ],
+      "fraction_candidate_better_crps": 0.6125,
+      "fraction_candidate_better_nll": 0.568,
+      "mean_delta_crps": -0.00028262082475542495,
+      "mean_delta_nll": -0.0013433125520232615,
+      "n_resamples": 2000,
+      "n_season_clusters": 8,
+      "n_team_seasons": 818,
+      "nll_central_95_bootstrap_range": [
+        -0.013886027529044982,
+        0.009972661181901493
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "same_all_context/same_talent_returning": {
+      "crps_central_95_bootstrap_range": [
+        -0.005057780095836067,
+        -0.0008419672929394133
+      ],
+      "fraction_candidate_better_crps": 0.999,
+      "fraction_candidate_better_nll": 0.993,
+      "mean_delta_crps": -0.0029195465190175107,
+      "mean_delta_nll": -0.022565608114364928,
+      "n_resamples": 2000,
+      "n_season_clusters": 8,
+      "n_team_seasons": 818,
+      "nll_central_95_bootstrap_range": [
+        -0.04207330978984614,
+        -0.0034428713968004286
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "same_rtp/rtp_h": {
+      "crps_central_95_bootstrap_range": [
+        0.0,
+        0.0
+      ],
+      "fraction_candidate_better_crps": 0.0,
+      "fraction_candidate_better_nll": 0.0,
+      "mean_delta_crps": 0.0,
+      "mean_delta_nll": 0.0,
+      "n_resamples": 2000,
+      "n_season_clusters": 8,
+      "n_team_seasons": 1028,
+      "nll_central_95_bootstrap_range": [
+        0.0,
+        0.0
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "same_rtp/rtp_recruiting": {
+      "crps_central_95_bootstrap_range": [
+        -0.001990052182701166,
+        0.00046807781097091164
+      ],
+      "fraction_candidate_better_crps": 0.874,
+      "fraction_candidate_better_nll": 0.904,
+      "mean_delta_crps": -0.000758368228143492,
+      "mean_delta_nll": -0.006607475403134083,
+      "n_resamples": 2000,
+      "n_season_clusters": 8,
+      "n_team_seasons": 1028,
+      "nll_central_95_bootstrap_range": [
+        -0.015617386547511825,
+        0.0031575110762550795
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "same_rtp/rtp_recruiting_talent": {
+      "crps_central_95_bootstrap_range": [
+        -0.0019018339246681154,
+        0.0003726855601861192
+      ],
+      "fraction_candidate_better_crps": 0.898,
+      "fraction_candidate_better_nll": 0.9125,
+      "mean_delta_crps": -0.0007610004625093554,
+      "mean_delta_nll": -0.0065338950589930245,
+      "n_resamples": 2000,
+      "n_season_clusters": 8,
+      "n_team_seasons": 1028,
+      "nll_central_95_bootstrap_range": [
+        -0.01504527016501333,
+        0.0028004824027406793
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "same_rtp/rtp_recruiting_talent_returning": {
+      "crps_central_95_bootstrap_range": [
+        -0.004524862802129118,
+        -0.0005035020442494015
+      ],
+      "fraction_candidate_better_crps": 0.9905,
+      "fraction_candidate_better_nll": 0.9645,
+      "mean_delta_crps": -0.0026107872071459157,
+      "mean_delta_nll": -0.020253144583227807,
+      "n_resamples": 2000,
+      "n_season_clusters": 8,
+      "n_team_seasons": 1028,
+      "nll_central_95_bootstrap_range": [
+        -0.04110113888026055,
+        0.0015150232358956378
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "same_rtp/rtp_returning": {
+      "crps_central_95_bootstrap_range": [
+        -0.004065323843455277,
+        0.0005630593802811296
+      ],
+      "fraction_candidate_better_crps": 0.9355,
+      "fraction_candidate_better_nll": 0.834,
+      "mean_delta_crps": -0.0019121298836403712,
+      "mean_delta_nll": -0.0117685232979779,
+      "n_resamples": 2000,
+      "n_season_clusters": 8,
+      "n_team_seasons": 1028,
+      "nll_central_95_bootstrap_range": [
+        -0.032582447451984325,
+        0.012556629364666512
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "same_rtp/rtp_talent": {
+      "crps_central_95_bootstrap_range": [
+        -0.0014774830430785498,
+        0.001246847971442672
+      ],
+      "fraction_candidate_better_crps": 0.551,
+      "fraction_candidate_better_nll": 0.6835,
+      "mean_delta_crps": -8.094507483308593e-05,
+      "mean_delta_nll": -0.0022297277618470415,
+      "n_resamples": 2000,
+      "n_season_clusters": 8,
+      "n_team_seasons": 1028,
+      "nll_central_95_bootstrap_range": [
+        -0.011496102241676113,
+        0.007324835022388639
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "single_coach/single_coach": {
+      "crps_central_95_bootstrap_range": [
+        -0.0003956689543696077,
+        5.032357467556881e-05
+      ],
+      "fraction_candidate_better_crps": 0.928,
+      "fraction_candidate_better_nll": 0.79,
+      "mean_delta_crps": -0.00017351023930615,
+      "mean_delta_nll": -0.0006877485269914525,
+      "n_resamples": 2000,
+      "n_season_clusters": 19,
+      "n_team_seasons": 1907,
+      "nll_central_95_bootstrap_range": [
+        -0.0024366128569440477,
+        0.0010435891141864773
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "single_recruiting_all/single_recruiting_all": {
+      "crps_central_95_bootstrap_range": [
+        -0.0025249145061102263,
+        -0.00024173900853222173
+      ],
+      "fraction_candidate_better_crps": 0.9885,
+      "fraction_candidate_better_nll": 0.9905,
+      "mean_delta_crps": -0.0014222473530493898,
+      "mean_delta_nll": -0.011081138369552376,
+      "n_resamples": 2000,
+      "n_season_clusters": 18,
+      "n_team_seasons": 2238,
+      "nll_central_95_bootstrap_range": [
+        -0.018996688799343204,
+        -0.00236117451078495
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "single_recruiting_current/single_recruiting_current": {
+      "crps_central_95_bootstrap_range": [
+        -0.0022230240771339864,
+        -0.00024361069400235714
+      ],
+      "fraction_candidate_better_crps": 0.9905,
+      "fraction_candidate_better_nll": 0.996,
+      "mean_delta_crps": -0.0012748740739556314,
+      "mean_delta_nll": -0.010437008378492424,
+      "n_resamples": 2000,
+      "n_season_clusters": 19,
+      "n_team_seasons": 2381,
+      "nll_central_95_bootstrap_range": [
+        -0.017079788970154813,
+        -0.0031210810416194353
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "single_recruiting_history/single_recruiting_history": {
+      "crps_central_95_bootstrap_range": [
+        -0.002320543104894382,
+        -0.0007228242274550696
+      ],
+      "fraction_candidate_better_crps": 1.0,
+      "fraction_candidate_better_nll": 1.0,
+      "mean_delta_crps": -0.0015292328952949841,
+      "mean_delta_nll": -0.012295189694136448,
+      "n_resamples": 2000,
+      "n_season_clusters": 18,
+      "n_team_seasons": 2238,
+      "nll_central_95_bootstrap_range": [
+        -0.017974622507411765,
+        -0.0065961920410663715
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "single_returning_all/single_returning_all": {
+      "crps_central_95_bootstrap_range": [
+        -0.004673730488368483,
+        2.860319549676519e-05
+      ],
+      "fraction_candidate_better_crps": 0.974,
+      "fraction_candidate_better_nll": 0.917,
+      "mean_delta_crps": -0.0024994923784297687,
+      "mean_delta_nll": -0.01762944579567769,
+      "n_resamples": 2000,
+      "n_season_clusters": 9,
+      "n_team_seasons": 1169,
+      "nll_central_95_bootstrap_range": [
+        -0.03929923543653167,
+        0.0070771894580255856
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "single_returning_passing/single_returning_passing": {
+      "crps_central_95_bootstrap_range": [
+        -5.8157707634411936e-05,
+        1.0678195876001857e-06
+      ],
+      "fraction_candidate_better_crps": 0.9715,
+      "fraction_candidate_better_nll": 0.8675,
+      "mean_delta_crps": -2.9468930602700636e-05,
+      "mean_delta_nll": -0.0001322176442191961,
+      "n_resamples": 2000,
+      "n_season_clusters": 9,
+      "n_team_seasons": 1169,
+      "nll_central_95_bootstrap_range": [
+        -0.00036962247997829626,
+        9.441899587044942e-05
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "single_returning_skill/single_returning_skill": {
+      "crps_central_95_bootstrap_range": [
+        -0.003209851545214644,
+        0.0005256812513957702
+      ],
+      "fraction_candidate_better_crps": 0.938,
+      "fraction_candidate_better_nll": 0.9025,
+      "mean_delta_crps": -0.0015405926830276413,
+      "mean_delta_nll": -0.012001049087628755,
+      "n_resamples": 2000,
+      "n_season_clusters": 9,
+      "n_team_seasons": 1169,
+      "nll_central_95_bootstrap_range": [
+        -0.027587730072951653,
+        0.006552249072006994
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "single_returning_total/single_returning_total": {
+      "crps_central_95_bootstrap_range": [
+        -0.004740380936922591,
+        -0.000645537492133398
+      ],
+      "fraction_candidate_better_crps": 0.994,
+      "fraction_candidate_better_nll": 0.952,
+      "mean_delta_crps": -0.0027576348239060685,
+      "mean_delta_nll": -0.01866420988236515,
+      "n_resamples": 2000,
+      "n_season_clusters": 9,
+      "n_team_seasons": 1169,
+      "nll_central_95_bootstrap_range": [
+        -0.03828876754393256,
+        0.0032110627180928285
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    },
+    "single_talent/single_talent": {
+      "crps_central_95_bootstrap_range": [
+        -0.0014689640402839946,
+        0.0012100309941993712
+      ],
+      "fraction_candidate_better_crps": 0.5765,
+      "fraction_candidate_better_nll": 0.7215,
+      "mean_delta_crps": -0.00012792524709066128,
+      "mean_delta_nll": -0.002773301805669193,
+      "n_resamples": 2000,
+      "n_season_clusters": 8,
+      "n_team_seasons": 1039,
+      "nll_central_95_bootstrap_range": [
+        -0.011475042605303541,
+        0.006688194282310313
+      ],
+      "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+    }
+  },
+  "frozen_2026_pmf_hashes": {
+    "data/processed/preseason/context/annual/2026/predictions.csv": "641182890ec88ea8bc6150cc97047ddc688d0c680486d9fcc63a58d7bfae9132",
+    "data/processed/preseason/history/annual/2026/predictions.csv": "0b3454a09288019e17739869c42aed3123fdda2163694f52f63bca65baf37f90"
+  },
+  "headline_results": [
+    "Coach tenure on its natural raw-coverage population: mean \u0394NLL -0.0006; 10 wins/9 losses.",
+    "Current recruiting: mean \u0394NLL -0.0105; 15 wins/4 losses; recruiting history: mean \u0394NLL -0.0124; 15 wins/3 losses; all recruiting: mean \u0394NLL -0.0110; 16 wins/2 losses.",
+    "Talent: mean \u0394NLL -0.0028; 4 wins/4 losses; total/passing/skill returning production: mean \u0394NLL -0.0186; 6 wins/3 losses, mean \u0394NLL -0.0001; 6 wins/3 losses, mean \u0394NLL -0.0123; 7 wins/2 losses.",
+    "On one exact all-context common population, recruiting+Talent+returning: mean \u0394NLL -0.0222; 6 wins/2 losses; full frozen-spec C-equivalent: mean \u0394NLL -0.0185; 6 wins/2 losses.",
+    "Interpret annual wins/losses and descriptive season-bootstrap ranges conservatively; the coverage-era target count is intentionally limited.",
+    "No production H/C specification, frozen 2026 PMF, or 2026 outcome was modified or accessed."
+  ],
+  "interaction_parent_comparisons": [
+    {
+      "best_season_improvement": -0.0027374929868465765,
+      "descriptive_season_bootstrap": {
+        "crps_central_95_bootstrap_range": [
+          -1.8914172988663483e-05,
+          0.00027774975410167915
+        ],
+        "fraction_candidate_better_crps": 0.042,
+        "fraction_candidate_better_nll": 0.0535,
+        "mean_delta_crps": 0.00013995383844340935,
+        "mean_delta_nll": 0.0014287346618890406,
+        "n_resamples": 2000,
+        "n_season_clusters": 8,
+        "n_team_seasons": 1039,
+        "nll_central_95_bootstrap_range": [
+          -0.0002731400615136316,
+          0.0030588239847350747
+        ],
+        "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+      },
+      "interaction": "talent_x_total_returning",
+      "losses": 6,
+      "mean_interaction_minus_parent_nll": 0.0014228688325061108,
+      "median_interaction_minus_parent_nll": 0.0013790306141393766,
+      "n_target_seasons": 8,
+      "n_team_seasons": 1039,
+      "parent": "H + talent_composite + returning_pct_ppa",
+      "target_seasons": "2018;2019;2020;2021;2022;2023;2024;2025",
+      "ties": 0,
+      "wins": 2,
+      "worst_season_regression": 0.004866293156997343
+    },
+    {
+      "best_season_improvement": -0.0015185888400784087,
+      "descriptive_season_bootstrap": {
+        "crps_central_95_bootstrap_range": [
+          -3.6661993281971315e-05,
+          0.00022473030480235604
+        ],
+        "fraction_candidate_better_crps": 0.0925,
+        "fraction_candidate_better_nll": 0.0805,
+        "mean_delta_crps": 8.588630673134544e-05,
+        "mean_delta_nll": 0.02987576772045482,
+        "n_resamples": 2000,
+        "n_season_clusters": 8,
+        "n_team_seasons": 1039,
+        "nll_central_95_bootstrap_range": [
+          -0.00034780129851064834,
+          0.08954416367031273
+        ],
+        "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+      },
+      "interaction": "talent_x_passing_returning",
+      "losses": 5,
+      "mean_interaction_minus_parent_nll": 0.03016249544823245,
+      "median_interaction_minus_parent_nll": 0.0002905323297740178,
+      "n_target_seasons": 8,
+      "n_team_seasons": 1039,
+      "parent": "H + talent_composite + returning_pct_passing_ppa",
+      "target_seasons": "2018;2019;2020;2021;2022;2023;2024;2025",
+      "ties": 0,
+      "wins": 3,
+      "worst_season_regression": 0.23853454866094362
+    },
+    {
+      "best_season_improvement": -0.0016175767068474834,
+      "descriptive_season_bootstrap": {
+        "crps_central_95_bootstrap_range": [
+          -3.215661008367101e-05,
+          0.00025324265585267706
+        ],
+        "fraction_candidate_better_crps": 0.0735,
+        "fraction_candidate_better_nll": 0.0445,
+        "mean_delta_crps": 0.00010696902576216836,
+        "mean_delta_nll": 0.0011131642037716845,
+        "n_resamples": 2000,
+        "n_season_clusters": 9,
+        "n_team_seasons": 930,
+        "nll_central_95_bootstrap_range": [
+          -0.000142675705694993,
+          0.0024839690180769
+        ],
+        "resampling": "deterministic pseudo-random ordered season bootstrap with 2,000 resamples; descriptive only"
+      },
+      "interaction": "coach_x_total_returning",
+      "losses": 6,
+      "mean_interaction_minus_parent_nll": 0.0010624247702497377,
+      "median_interaction_minus_parent_nll": 0.00018731143502441277,
+      "n_target_seasons": 9,
+      "n_team_seasons": 930,
+      "parent": "H + coach_tenure_seasons + returning_pct_ppa",
+      "target_seasons": "2017;2018;2019;2020;2021;2022;2023;2024;2025",
+      "ties": 0,
+      "wins": 3,
+      "worst_season_regression": 0.0054525712805781655
+    }
+  ],
+  "min_train_seasons": 3,
+  "no_2026_outcomes_accessed": true,
+  "production_models_modified": false,
+  "raw_coverage_before_imputation": true,
+  "same_population_keys_required": true,
+  "study": "coverage-restricted context feature ablation",
+  "target_max": 2025,
+  "team_examples_2025_count": 5
+}
