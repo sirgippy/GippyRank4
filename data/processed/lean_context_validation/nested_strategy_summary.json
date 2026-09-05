@@ -1,0 +1,21 @@
+{
+  "aggregate": {
+    "crps": 0.10956615994347352,
+    "expected_rank_mae": 19.304618454405563,
+    "interval_80_average_width": 72.54227596170175,
+    "interval_80_coverage": 0.8407510291721682,
+    "median_rank_mae": 19.623206663866487,
+    "nll": 4.494762503232849
+  },
+  "decision_rule": {
+    "material_nll_gain": 0.005,
+    "max_coverage_regression": 0.05,
+    "min_prior_targets": 3,
+    "parsimony_tie_nll": 0.002
+  },
+  "selected_counts": {
+    "C": 9,
+    "H": 3,
+    "L": 0
+  }
+}
