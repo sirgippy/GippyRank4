@@ -240,9 +240,19 @@ class DirectRankModel:
         degrees_of_freedom: float | None = None,
         location_feature_names: list[str] | None = None,
         scale_feature_names: list[str] | None = None,
+        row_weights: np.ndarray | None = None,
     ) -> DirectRankModel:
         if not rows:
             raise ValueError("cannot fit without rows")
+        if row_weights is None:
+            weights = np.ones(len(rows), dtype=float)
+        else:
+            weights = np.asarray(row_weights, dtype=float)
+            if weights.shape != (len(rows),):
+                raise ValueError("row_weights must have one value per training row")
+            if not np.all(np.isfinite(weights)) or np.any(weights <= 0):
+                raise ValueError("row_weights must be finite and strictly positive")
+        weight_total = float(weights.sum())
         preprocessor = Preprocessor.fit([r.features for r in rows], feature_names)
         x = np.column_stack(
             [np.ones(len(rows)), preprocessor.transform([r.features for r in rows])]
@@ -311,11 +321,16 @@ class DirectRankModel:
             target_log_probability = log_mixture - np.log(lag_counts[:, None])
             losses = -(target_log_probability * target_mask).sum(axis=1) / target_counts
             regularizer = penalty * (np.sum(beta**2) + 0.25 * np.sum(gamma[1:] ** 2))
-            objective = float(np.mean(losses) + regularizer / len(rows))
+            objective = float(
+                np.dot(weights, losses) / weight_total + regularizer / len(rows)
+            )
             responsibilities = np.exp(densities - log_mixture[:, :, None])
             residual = targets[:, :, None] - locations[:, None, :]
             target_weight = (
-                target_mask[:, :, None] / target_counts[:, None, None] / len(rows)
+                target_mask[:, :, None]
+                / target_counts[:, None, None]
+                * weights[:, None, None]
+                / weight_total
             )
             location_score = responsibilities * residual / scales[:, None, None] ** 2
             weighted_location_score = location_score * target_weight
