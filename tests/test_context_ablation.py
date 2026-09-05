@@ -179,3 +179,29 @@ def test_missingness_control_records_raw_absence_separately() -> None:
     for family in ("recruiting", "talent", "returning"):
         forms = {row["formulation"] for row in rows if row["family"] == family}
         assert forms == {"with_indicators", "without_indicators"}
+
+
+def test_generated_interaction_artifacts_remain_parent_relative() -> None:
+    artifact = ROOT / "data/processed/context_ablation"
+    annual = list(csv.DictReader((artifact / "annual_ablation_metrics.csv").open()))
+    interactions = list(csv.DictReader((artifact / "interaction_results.csv").open()))
+    summaries = list(csv.DictReader((artifact / "interaction_summary.csv").open()))
+    assert interactions and summaries
+    assert all(row["same_population_keys"] == "True" for row in interactions)
+    assert all(row["same_training_keys"] == "True" for row in interactions)
+    assert all("interaction_minus_parent_nll" in row for row in interactions)
+    # This guards against restoring the generic candidate-vs-H CSV writer.
+    assert "candidate" not in interactions[0]
+    for summary in summaries:
+        rows = [
+            float(row["interaction_minus_parent_nll"])
+            for row in interactions
+            if row["interaction"] == summary["interaction"]
+        ]
+        assert float(summary["mean_interaction_minus_parent_nll"]) == pytest.approx(
+            np.mean(rows)
+        )
+    report = (artifact / "report.md").read_text()
+    assert "## Interaction parent comparisons" in report
+    assert "mean ΔNLL versus H + talent_composite" in report
+    assert any("interaction_talent_total" in row["candidate"] for row in annual)
