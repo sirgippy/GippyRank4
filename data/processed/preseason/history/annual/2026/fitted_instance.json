@@ -1,0 +1,76 @@
+{
+  "artifact_created_at": "2026-09-05T01:34:44.346410+00:00",
+  "artifact_kind": "frozen_preseason_forecast",
+  "context_effective_cutoff": null,
+  "input_cutoff_semantics": "completed final-rank history through trained_through_season; target-season outcomes forbidden",
+  "model": {
+    "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+    "degrees_of_freedom": null,
+    "family": "normal",
+    "feature_names": [
+      "lag2_z_mean",
+      "lag3_z_mean",
+      "long_run_z_mean"
+    ],
+    "lag_count": 1,
+    "location_coefficients": [
+      0.4733646788321144,
+      -0.016950964626913048,
+      -0.002514316443719131,
+      0.11773413783447001,
+      0.4486162561360253,
+      -0.018466553902660197,
+      0.015087429164341406,
+      0.0
+    ],
+    "log_scale_coefficients": [
+      0.15845231613081198,
+      -0.020149129048068273,
+      -0.02059071601255413,
+      0.058773135042192,
+      -0.010770648157277409,
+      0.03978548882874692,
+      0.0
+    ],
+    "minimum_scale": 0.1,
+    "optimizer": {
+      "function_evaluations": 44,
+      "iterations": 41,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "objective": 1.6856135430834271,
+      "status": 0,
+      "success": true
+    },
+    "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+    "penalty": 0.25,
+    "preprocessing": {
+      "feature_names": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean"
+      ],
+      "means": {
+        "lag2_z_mean": -0.009616792493215927,
+        "lag3_z_mean": -0.00977271484250412,
+        "long_run_z_mean": 0.050046560031638494
+      },
+      "medians": {
+        "lag2_z_mean": -0.013102631423265176,
+        "lag3_z_mean": -0.014730061081235014,
+        "long_run_z_mean": 0.07143865205272867
+      },
+      "scales": {
+        "lag2_z_mean": 1.6901055873855484,
+        "lag3_z_mean": 1.6476247503847545,
+        "long_run_z_mean": 1.412840849653694
+      }
+    },
+    "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+    "quadrature_points": 12
+  },
+  "model_family": "history_prior",
+  "pmf_count": 138,
+  "spec_version": "1.1",
+  "target_season": 2026,
+  "trained_through_season": 2025
+}

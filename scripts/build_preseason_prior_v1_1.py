@@ -353,7 +353,7 @@ def render_report(report: dict[str, object]) -> None:
     final = report["final_test"]
     lines += [
         "",
-        "## Untouched 2022–2025 FBS production comparison",
+        "## Temporally held-out 2022–2025 FBS production comparison",
         "",
         "| Model | N | NLL | CRPS | Expected-rank MAE | 80% coverage | 80% width |",
         "|---|---:|---:|---:|---:|---:|---:|",
@@ -366,7 +366,7 @@ def render_report(report: dict[str, object]) -> None:
     per_season = final["per_season"]
     lines += [
         "",
-        "### Consistency across untouched seasons",
+        "### Consistency across temporally held-out seasons",
         "",
         "ΔNLL = V1.1 − V1; negative values favor V1.1.",
         "",
@@ -384,7 +384,7 @@ def render_report(report: dict[str, object]) -> None:
         )
     lines += [
         "",
-        f"V1.1 wins {wins} / {len(per_season)} untouched test seasons by NLL: strong consistency across the available seasons, not a claim of overwhelming inferential proof.",
+        f"V1.1 wins {wins} / {len(per_season)} temporally held-out backtest seasons by NLL: strong consistency across the available seasons, not a claim of overwhelming inferential proof.",
         "",
         (
             "The descriptive season-bootstrap candidate-minus-V1 ΔNLL is "
@@ -393,7 +393,7 @@ def render_report(report: dict[str, object]) -> None:
             f"V1.1 wins {paired['fraction_candidate_better_nll']:.1%} of ordered resamples."
         ),
         "",
-        "Because the untouched test contains only four seasons, this season-cluster bootstrap is a descriptive robustness check rather than a precise confidence interval.",
+        "Because the temporally held-out backtest contains only four seasons, this season-cluster bootstrap is a descriptive robustness check rather than a precise confidence interval.",
         "",
         "The JSON artifact contains tier calibration/sharpness, per-season scores, full transition and history diagnostics, quadrature approximation notes, and the final frozen model metadata.",
         "",
@@ -422,7 +422,7 @@ def update_reporting_only() -> None:
     report_path = OUT / "preseason_model_report.json"
     report = json.loads(report_path.read_text(encoding="utf-8"))
     selected = report["selection"]["selected"]
-    rows, cold, _ = v1.load_rows()
+    rows, cold, _ = v1.load_rows(max_season=max(TEST_SEASONS))
     reference = join_targets(read_predictions("A2_t1_t2_t3"), rows, cold)
     candidate = join_targets(read_predictions("V1_1_" + selected), rows, cold)
     report["final_test"]["paired_bootstrap"] = paired_bootstrap(reference, candidate)
@@ -441,7 +441,7 @@ def main() -> None:
     # The V1 script is run separately first and supplies the archived reference
     # PMFs, including its six FBS transition priors.  Keeping this pass separate
     # makes the V1.1 experiment runner practical on modest local hardware.
-    rows, cold, _ = v1.load_rows()
+    rows, cold, _ = v1.load_rows(max_season=max(TEST_SEASONS))
     fbs = [row for row in rows if row.subdivision == "fbs"]
     train = [row for row in fbs if row.season in DEV_TRAIN]
     validation = [row for row in fbs if row.season in DEV_VALIDATION]
@@ -547,7 +547,7 @@ def main() -> None:
         "selection": {
             "development_train": [2004, 2017],
             "development_validation": [2018, 2021],
-            "untouched_final_test": sorted(TEST_SEASONS),
+            "temporally_held_out_backtest": sorted(TEST_SEASONS),
             "rule": "first ordered candidate with development ΔNLL <= -0.01 and season-bootstrap win rate >= 0.80; otherwise preserve V1",
             "selected": selected.name,
         },

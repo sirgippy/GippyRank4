@@ -1,0 +1,12 @@
+{
+  "distribution_family": "normal",
+  "features": [
+    "lag2_z_mean",
+    "lag3_z_mean",
+    "long_run_z_mean"
+  ],
+  "model_family": "history_prior",
+  "penalty": 0.25,
+  "quadrature": "full t-1 empirical quadrature; t-2/t-3 summaries",
+  "spec_version": "1.1"
+}

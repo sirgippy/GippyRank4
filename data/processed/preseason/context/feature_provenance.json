@@ -1,0 +1,79 @@
+{
+  "coach_change": {
+    "caveats": [
+      "Not used in C 1.2."
+    ],
+    "evidence": "An undated target-year end can be in-season, so a safe historical comparison is not available.",
+    "historical_coverage": "many ends lack effective dates",
+    "production_status": "exploratory-unresolved",
+    "source": "CFBD /coaches/tenures"
+  },
+  "coaching_continuity": {
+    "caveats": [
+      "Coach change remains unresolved when either cutoff cannot be reconstructed; unknown is never no-change."
+    ],
+    "evidence": "A continuous tenure must prove the coach active by the August 15 cutoff.",
+    "historical_coverage": "dated cached tenure corpus",
+    "production_status": "production-safe-by-construction",
+    "source": "CFBD /coaches/tenures"
+  },
+  "rank_history": {
+    "caveats": [],
+    "evidence": "Each H target uses rank distributions from seasons strictly before the target.",
+    "historical_coverage": "2003-2025",
+    "production_status": "production-safe-by-construction",
+    "source": "processed Massey final constituent-rank distributions"
+  },
+  "recruiting_class": {
+    "caveats": [
+      "No archival as-of field is supplied. The absence is not leakage: this is a preseason-semantic class fact, with ordinary source corrections treated as a retrospective-stability caveat."
+    ],
+    "evidence": "CFBD defines year as recruiting class year. Rank and points evaluate a signed class, not later college performance; that class is finalized before its football season.",
+    "historical_coverage": "2003-2026; indicators preserve rows with gaps",
+    "production_status": "production-safe-by-semantic-definition",
+    "source": "CFBD /recruiting/teams",
+    "source_fields": [
+      "year",
+      "rank",
+      "points"
+    ]
+  },
+  "returning_production": {
+    "caveats": [
+      "Roster-return corrections may revise old values, but no evidence says revisions incorporate target-season outcomes."
+    ],
+    "evidence": "It is previous-season player production filtered by return status into the named season. Target-season games cannot change its previous-production component.",
+    "historical_coverage": "2014-2026; indicators preserve gaps",
+    "production_status": "production-safe-with-retrospective-stability-caveat",
+    "source": "CFBD /player/returning",
+    "source_fields": [
+      "percentPPA",
+      "percentPassingPPA",
+      "percentReceivingPPA",
+      "percentRushingPPA"
+    ]
+  },
+  "team_talent_composite": {
+    "caveats": [
+      "Old roster/rating records may be corrected; no endpoint-semantic evidence says target-season games enter the metric."
+    ],
+    "evidence": "CFBD describes a season's 247Sports roster recruiting-talent composite, not a target-season performance statistic.",
+    "historical_coverage": "2015-2026; indicators preserve gaps",
+    "production_status": "production-safe-with-retrospective-stability-caveat",
+    "source": "CFBD /talent (247Sports Team Talent Composite)",
+    "source_fields": [
+      "year",
+      "team",
+      "talent"
+    ]
+  },
+  "transfers": {
+    "caveats": [
+      "Not used in C 1.2."
+    ],
+    "evidence": "Portal entry, destination, enrollment, eligibility, and late moves are genuinely time-varying; no frozen cutoff roster reconstruction exists here.",
+    "historical_coverage": "not used",
+    "production_status": "rejected",
+    "source": "CFBD /player/portal"
+  }
+}
