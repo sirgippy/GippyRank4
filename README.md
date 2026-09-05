@@ -20,6 +20,17 @@ snapshots, copies display-level summaries only, and derives records solely from
 each snapshot's `included_games.csv`. Raw posterior PMFs remain research
 artifacts and are not sent to the browser.
 
+Each approved item has a deterministic `publication_slot`. Context and History
+entries in the same slot represent the same logical publication, so changing
+views preserves (for example) Sep. 5 rather than jumping to Preseason. The
+visible **Modeled record** likewise includes only FBS/FCS games eligible for the
+ranking model, not a conventional all-games standings record.
+
+Publication families are registered in `RANKING_FAMILIES` in
+`src/gippyrank/site_data.py`. To publish a future family, add its label to that
+registry and add compatible, explicitly approved bundles to the configuration;
+unknown families are rejected.
+
 ### Regenerate public data
 
 After manually building and reviewing a new snapshot, add it to

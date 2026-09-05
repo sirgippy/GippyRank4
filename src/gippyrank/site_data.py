@@ -16,6 +16,9 @@ from typing import Any
 
 SITE_SCHEMA_VERSION = "1.0"
 SUPPORTED_SNAPSHOT_SCHEMA_VERSIONS = {"1.0"}
+RANKING_FAMILIES: dict[str, dict[str, str]] = {
+    "predictive": {"label": "Predictive"},
+}
 
 
 class SiteDataValidationError(ValueError):
@@ -26,6 +29,7 @@ class SiteDataValidationError(ValueError):
 class PublishedSnapshot:
     source: Path
     display_label: str
+    publication_slot: str
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -52,12 +56,15 @@ def load_publish_config(path: Path, root: Path) -> list[PublishedSnapshot]:
             raise SiteDataValidationError("Each publish configuration entry must be an object")
         source = entry.get("source")
         label = entry.get("display_label")
-        if not isinstance(source, str) or not isinstance(label, str) or not label:
-            raise SiteDataValidationError("Each entry needs source and display_label strings")
+        slot = entry.get("publication_slot")
+        if not all(isinstance(value, str) and value for value in (source, label, slot)):
+            raise SiteDataValidationError(
+                "Each entry needs source, display_label, and publication_slot strings"
+            )
         source_path = root / source
         if not source_path.is_dir():
             raise SiteDataValidationError(f"Selected snapshot directory does not exist: {source}")
-        selected.append(PublishedSnapshot(source_path, label))
+        selected.append(PublishedSnapshot(source_path, label, slot))
     return selected
 
 
@@ -85,6 +92,12 @@ def _records(included_games: Path) -> dict[str, str]:
         for game in csv.DictReader(handle):
             home_id, away_id = game["homeId"], game["awayId"]
             home_points, away_points = int(game["homePoints"]), int(game["awayPoints"])
+            classifications = {
+                game["homeClassification"].casefold(),
+                game["awayClassification"].casefold(),
+            }
+            if not classifications <= {"fbs", "fcs"}:
+                continue
             for team_id, classification, won in (
                 (home_id, game["homeClassification"], home_points > away_points),
                 (away_id, game["awayClassification"], away_points > home_points),
@@ -170,7 +183,7 @@ def _validate_metadata(metadata: dict[str, Any], source: Path) -> None:
         raise SiteDataValidationError(f"{metadata['snapshot_id']}: season must be an integer")
     if metadata["snapshot_type"] not in {"preseason", "weekly", "live"}:
         raise SiteDataValidationError(f"{metadata['snapshot_id']}: unsupported snapshot type")
-    if metadata["ranking_family"] != "predictive":
+    if metadata["ranking_family"] not in RANKING_FAMILIES:
         raise SiteDataValidationError(f"{metadata['snapshot_id']}: unsupported ranking family")
     if metadata["prior_family"] not in {"context", "history"}:
         raise SiteDataValidationError(f"{metadata['snapshot_id']}: unsupported prior family")
@@ -186,6 +199,7 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
     selected = load_publish_config(config_path, root)
     manifest_entries: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
+    seen_publications: set[tuple[int, str, str, str]] = set()
     for selected_snapshot in selected:
         source = selected_snapshot.source
         metadata = _read_json(source / "metadata.json")
@@ -194,6 +208,17 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
         if snapshot_id in seen_ids:
             raise SiteDataValidationError(f"Duplicate published snapshot ID: {snapshot_id}")
         seen_ids.add(snapshot_id)
+        publication = (
+            metadata["season"],
+            metadata["ranking_family"],
+            metadata["prior_family"],
+            selected_snapshot.publication_slot,
+        )
+        if publication in seen_publications:
+            raise SiteDataValidationError(
+                f"Duplicate published logical snapshot: {selected_snapshot.publication_slot}"
+            )
+        seen_publications.add(publication)
         rankings = _ranking_rows(source / "rankings.csv", metadata)
         records = _records(source / "included_games.csv")
         for row in rankings:
@@ -206,6 +231,7 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             "snapshot_type": metadata["snapshot_type"],
             "ranking_family": metadata["ranking_family"],
             "prior_family": metadata["prior_family"],
+            "publication_slot": selected_snapshot.publication_slot,
             "requested_cutoff": metadata.get("requested_cutoff"),
             "effective_cutoff": metadata.get("effective_cutoff"),
             "generation_timestamp": metadata["generation_timestamp"],
@@ -223,6 +249,7 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
                 "snapshot_type": metadata["snapshot_type"],
                 "ranking_family": metadata["ranking_family"],
                 "prior_family": metadata["prior_family"],
+                "publication_slot": selected_snapshot.publication_slot,
                 "requested_cutoff": metadata.get("requested_cutoff"),
                 "effective_cutoff": metadata.get("effective_cutoff"),
                 "generation_timestamp": metadata["generation_timestamp"],
@@ -237,10 +264,15 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
                 "valid": True,
             }
         )
+    published_families = {entry["ranking_family"] for entry in manifest_entries}
     manifest = {
         "schema_version": SITE_SCHEMA_VERSION,
         "seasons": sorted({entry["season"] for entry in manifest_entries}, reverse=True),
-        "ranking_families": [{"id": "predictive", "label": "Predictive"}],
+        "ranking_families": [
+            {"id": family, "label": definition["label"]}
+            for family, definition in RANKING_FAMILIES.items()
+            if family in published_families
+        ],
         "snapshots": manifest_entries,
     }
     _write_json(output_directory / "manifest.json", manifest)
