@@ -1,5 +1,10 @@
 {
-  "context_as_of": "2026-08-15",
+  "artifact_created_at": "2026-09-05T01:34:44.346410+00:00",
+  "artifact_kind": "frozen_preseason_forecast",
+  "context_effective_cutoff": "2026-08-15",
+  "context_reconstruction_basis": "historical endpoint fields reconstructed after the effective cutoff under the adopted preseason-semantic provenance assumptions",
+  "context_snapshot_mode": "retrospective_reconstruction",
+  "input_cutoff_semantics": "completed final-rank history through trained_through_season; target-season outcomes forbidden",
   "model": {
     "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
     "degrees_of_freedom": null,
@@ -196,6 +201,7 @@
     ]
   },
   "model_family": "context_prior",
+  "pmf_count": 138,
   "spec_version": "1.2",
   "target_season": 2026,
   "trained_through_season": 2025

@@ -1,4 +1,5 @@
 import csv
+import inspect
 import json
 import runpy
 import sys
@@ -141,12 +142,12 @@ def test_development_report_is_same_population_and_algebraically_consistent() ->
     assert "| C0_history_only | exact H |" in markdown
 
 
-def test_model_selection_is_frozen_before_the_untouched_test() -> None:
+def test_model_selection_is_frozen_before_the_temporally_held_out_backtest() -> None:
     report = json.loads((PRESEASON / "context/model_report.json").read_text())
     selection = report["selection"]
     assert selection["development_train"] == [2004, 2017]
     assert selection["development_validation"] == [2018, 2021]
-    assert selection["untouched_test"] == [2022, 2023, 2024, 2025]
+    assert selection["temporally_held_out_backtest"] == [2022, 2023, 2024, 2025]
     assert "2022" not in selection["rule"]
 
 
@@ -173,6 +174,7 @@ def test_future_season_rows_have_no_target_and_both_families_emit_normalized_pmf
 ):
     report = json.loads((PRESEASON / "context/model_report.json").read_text())
     assert report["annual_inference"]["no_2026_game_outcomes_used"] is True
+    assert report["annual_inference"]["target_season_outcomes_forbidden"] is True
     assert report["annual_inference"]["n_fbs"] == 138
     for family in ("history", "context"):
         rows = read_csv(PRESEASON / family / "annual/2026/predictions.csv")
@@ -182,6 +184,13 @@ def test_future_season_rows_have_no_target_and_both_families_emit_normalized_pmf
             pmf = np.asarray(json.loads(row["pmf"]), dtype=float)
             assert np.isclose(pmf.sum(), 1.0)
             assert np.all(pmf >= 0)
+    context_fit = report["annual_inference"]["context_fit"]
+    assert context_fit["context_effective_cutoff"] == "2026-08-15"
+    assert context_fit["context_snapshot_mode"] == "retrospective_reconstruction"
+    assert context_fit["pmf_count"] == 138
+    history_fit = report["annual_inference"]["history_fit"]
+    assert history_fit["artifact_kind"] == "frozen_preseason_forecast"
+    assert history_fit["pmf_count"] == 138
 
 
 def test_synthetic_future_inference_needs_no_target_outcome() -> None:
@@ -229,3 +238,92 @@ def test_context_artifact_is_a_distinct_sibling_family() -> None:
     rows = read_csv(PRESEASON / "context/predictions.csv")
     assert {row["model_family"] for row in rows} == {"context_prior"}
     assert {row["spec_version"] for row in rows} == {"1.2"}
+
+
+def _rank_row(season: int, subdivision: str, team_id: str, rank: int) -> dict[str, str]:
+    return {
+        "season": str(season),
+        "subdivision": subdivision,
+        "team_id": team_id,
+        "team_name": team_id,
+        "team_population": "2",
+        "rank_observations": json.dumps([rank]),
+    }
+
+
+def test_row_builder_ceiling_is_explicit_and_allows_completed_2026(monkeypatch) -> None:
+    values = script_values()
+    legacy = values["v1"]
+    outcomes = [
+        _rank_row(2025, "fbs", "a", 1),
+        _rank_row(2026, "fbs", "a", 2),
+        _rank_row(2027, "fbs", "a", 1),
+    ]
+    features = [
+        {"season": str(year), "subdivision": "fbs", "team_id": "a", "team_name": "a"}
+        for year in (2025, 2026, 2027)
+    ]
+
+    def fake_read_csv(path: Path) -> list[dict[str, str]]:
+        return features if path.name == "team_season_features.csv" else outcomes
+
+    monkeypatch.setattr(legacy, "read_csv", fake_read_csv)
+    rows, _, _ = legacy.load_rows(max_season=2026)
+    assert {row.season for row in rows} == {2026}
+    assert all(row.season != 2027 for row in rows)
+
+
+def test_synthetic_2027_rows_use_2026_history_and_exclude_2027_outcome(monkeypatch) -> None:
+    values = script_values()
+    outcomes = [
+        _rank_row(2024, "fbs", "a", 1),
+        _rank_row(2025, "fbs", "a", 2),
+        _rank_row(2026, "fbs", "a", 1),
+        _rank_row(2027, "fbs", "a", 2),
+    ]
+    index = {(2027, "fbs", "a"): {"season": "2027", "subdivision": "fbs", "team_id": "a", "team_name": "a"}}
+    monkeypatch.setitem(values["inference_rows"].__globals__, "read_csv", lambda _: outcomes)
+    future = values["inference_rows"](2027, 2026, index, {})
+    assert len(future) == 1
+    assert future[0].season == 2027
+    assert future[0].lag1_z is not None
+    assert not hasattr(future[0], "target_ranks")
+    assert np.isclose(future[0].lag1_z[0], -np.log(3))
+
+
+def test_synthetic_2027_fcs_promotion_uses_2026_fcs_history(monkeypatch) -> None:
+    values = script_values()
+    legacy = values["v1"]
+    cold = [
+        legacy.ColdStartSeason(2026, "fbs", "old", "old", 2, np.asarray([0.0]), np.asarray([1]), np.asarray([0.0]), "fcs_to_fbs_transition"),
+        legacy.ColdStartSeason(2026, "fbs", "generic", "generic", 2, np.asarray([0.0]), np.asarray([1]), None, "no_prior_rank_distribution"),
+        legacy.ColdStartSeason(2027, "fbs", "later", "later", 2, np.asarray([0.0]), np.asarray([1]), None, "no_prior_rank_distribution"),
+    ]
+    promotion, generic = values["annual_cold_start_models"](cold, trained_through_season=2026)
+    assert generic.n_team_seasons == 1
+    monkeypatch.setitem(
+        values["future_predictions"].__globals__,
+        "read_csv",
+        lambda _: [_rank_row(2026, "fcs", "promo", 1)],
+    )
+    future = InferenceRow(2027, "fbs", "promo", "promo", 2, None, (), {}, "fcs_to_fbs_transition")
+    history, context = values["future_predictions"](future=[future], h_model=None, c_model=None, trained_through_season=2026, promotion_model=promotion, generic_prior=generic)
+    assert history[0]["prior_method"] == "learned_fcs_to_fbs_transition"
+    assert history[0]["trained_through_season"] == 2026
+    assert context[0]["fallback_reason"] == "history_cold_start"
+
+
+def test_annual_helpers_have_no_fixed_2025_or_2026_dependency() -> None:
+    values = script_values()
+    for name in ("inference_rows", "annual_cold_start_models", "future_predictions"):
+        source = inspect.getsource(values[name])
+        assert "2025" not in source
+        assert "2026" not in source
+
+
+def test_c6_record_and_backtest_metrics_remain_frozen() -> None:
+    report = json.loads((PRESEASON / "context/model_report.json").read_text())
+    assert report["selection"]["selected"] == "C6_roster_context_with_coaching_location"
+    result = report["final_test"]["all_fbs"]
+    assert np.isclose(result["delta_c_minus_h"]["nll"], -0.0018365395100659043)
+    assert "untouched" not in (PRESEASON / "context/context_prior_report.md").read_text().casefold()

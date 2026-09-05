@@ -17,14 +17,14 @@ The frozen rank-history-only production specification is **long_run_baseline**. 
 | student_t_df_5 | 513 | 4.5373 | 0.1186 | 0.807 | same complete lag-1 population; missing deeper summaries are training-only imputed with indicators |
 | full_t1_t2_t3_quadrature | 507 | 4.5448 | 0.1192 | 0.835 | strict three-lag eligible population |
 
-## Untouched 2022–2025 FBS production comparison
+## Temporally held-out 2022–2025 FBS production comparison
 
 | Model | N | NLL | CRPS | Expected-rank MAE | 80% coverage | 80% width |
 |---|---:|---:|---:|---:|---:|---:|
 | V1_A2 | 534 | 4.5677 | 0.1172 | 21.71 | 0.834 | 77.9 |
 | V1_1 | 534 | 4.5442 | 0.1137 | 21.26 | 0.839 | 78.0 |
 
-### Consistency across untouched seasons
+### Consistency across temporally held-out seasons
 
 ΔNLL = V1.1 − V1; negative values favor V1.1.
 
@@ -35,11 +35,11 @@ The frozen rank-history-only production specification is **long_run_baseline**. 
 | 2024 | 4.6152 | 4.5882 | -0.0271 |
 | 2025 | 4.5774 | 4.5696 | -0.0079 |
 
-V1.1 wins 4 / 4 untouched test seasons by NLL: strong consistency across the available seasons, not a claim of overwhelming inferential proof.
+V1.1 wins 4 / 4 temporally held-out backtest seasons by NLL: strong consistency across the available seasons, not a claim of overwhelming inferential proof.
 
 The descriptive season-bootstrap candidate-minus-V1 ΔNLL is -0.0236; its central 95% bootstrap range is -0.0311 to -0.0126. V1.1 wins 100.0% of ordered resamples.
 
-Because the untouched test contains only four seasons, this season-cluster bootstrap is a descriptive robustness check rather than a precise confidence interval.
+Because the temporally held-out backtest contains only four seasons, this season-cluster bootstrap is a descriptive robustness check rather than a precise confidence interval.
 
 The JSON artifact contains tier calibration/sharpness, per-season scores, full transition and history diagnostics, quadrature approximation notes, and the final frozen model metadata.
 

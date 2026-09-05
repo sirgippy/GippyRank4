@@ -43,7 +43,7 @@ class AnnualFittedInstance:
     spec_version: str
     trained_through_season: int
     target_season: int
-    context_as_of: str | None = None
+    context_effective_cutoff: str | None = None
 
     def metadata(self) -> dict[str, object]:
         return asdict(self)

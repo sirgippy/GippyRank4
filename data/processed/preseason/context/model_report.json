@@ -1,7 +1,12 @@
 {
   "annual_inference": {
     "context_fit": {
-      "context_as_of": "2026-08-15",
+      "artifact_created_at": "2026-09-05T01:34:44.346410+00:00",
+      "artifact_kind": "frozen_preseason_forecast",
+      "context_effective_cutoff": "2026-08-15",
+      "context_reconstruction_basis": "historical endpoint fields reconstructed after the effective cutoff under the adopted preseason-semantic provenance assumptions",
+      "context_snapshot_mode": "retrospective_reconstruction",
+      "input_cutoff_semantics": "completed final-rank history through trained_through_season; target-season outcomes forbidden",
       "model": {
         "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
         "degrees_of_freedom": null,
@@ -198,12 +203,16 @@
         ]
       },
       "model_family": "context_prior",
+      "pmf_count": 138,
       "spec_version": "1.2",
       "target_season": 2026,
       "trained_through_season": 2025
     },
     "history_fit": {
-      "context_as_of": null,
+      "artifact_created_at": "2026-09-05T01:34:44.346410+00:00",
+      "artifact_kind": "frozen_preseason_forecast",
+      "context_effective_cutoff": null,
+      "input_cutoff_semantics": "completed final-rank history through trained_through_season; target-season outcomes forbidden",
       "model": {
         "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
         "degrees_of_freedom": null,
@@ -270,12 +279,14 @@
         "quadrature_points": 12
       },
       "model_family": "history_prior",
+      "pmf_count": 138,
       "spec_version": "1.1",
       "target_season": 2026,
       "trained_through_season": 2025
     },
     "n_fbs": 138,
     "no_2026_game_outcomes_used": true,
+    "target_season_outcomes_forbidden": true,
     "target_universe": 2026
   },
   "context_coverage": {
@@ -8457,7 +8468,7 @@
           "coach_tenure_seasons"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -12588,7 +12599,7 @@
           "coach_tenure_seasons"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -16724,7 +16735,7 @@
           "coach_tenure_seasons"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -20853,7 +20864,7 @@
           "recruiting_points_trend"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -25044,7 +25055,7 @@
           "recruiting_points_trend"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -29223,7 +29234,7 @@
           "recruiting_points_trend"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -33415,7 +33426,7 @@
           "talent_composite"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -37558,7 +37569,7 @@
           "talent_composite"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -41688,7 +41699,7 @@
           "talent_composite"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -45825,7 +45836,7 @@
           "returning_pct_rushing_ppa"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -49974,7 +49985,7 @@
           "returning_pct_rushing_ppa"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -54121,7 +54132,7 @@
           "returning_pct_rushing_ppa"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -58261,7 +58272,7 @@
           "returning_pct_passing_ppa"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -62392,7 +62403,7 @@
           "returning_pct_passing_ppa"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -66522,7 +66533,7 @@
           "returning_pct_passing_ppa"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -70658,7 +70669,7 @@
           "returning_pct_ppa"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -74795,7 +74806,7 @@
           "returning_pct_ppa"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -78919,7 +78930,7 @@
           "returning_pct_ppa"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -83064,7 +83075,7 @@
           "returning_pct_rushing_ppa"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -87309,7 +87320,7 @@
           "returning_pct_rushing_ppa"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -91532,7 +91543,7 @@
           "returning_pct_rushing_ppa"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -95774,7 +95785,7 @@
           "returning_pct_rushing_ppa"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -100037,7 +100048,7 @@
           "returning_pct_rushing_ppa"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -104271,7 +104282,7 @@
           "returning_pct_rushing_ppa"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -108512,7 +108523,7 @@
           "returning_pct_rushing_ppa"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -112775,7 +112786,7 @@
           "returning_pct_rushing_ppa"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -117020,7 +117031,7 @@
           "returning_pct_rushing_ppa"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -121270,7 +121281,7 @@
           "returning_pct_rushing_ppa"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -125455,7 +125466,7 @@
           "returning_pct_rushing_ppa"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -129635,7 +129646,7 @@
           "returning_pct_rushing_ppa"
         ],
         "fit": {
-          "context_as_of": "2022-08-15",
+          "context_effective_cutoff": "2022-08-15",
           "model_family": "context_prior",
           "spec_version": "1.2",
           "target_season": 2022,
@@ -133909,7 +133920,7 @@
       ]
     },
     "annual_fit": {
-      "context_as_of": "target-specific August 15 date carried by each PMF",
+      "context_effective_cutoff": "target-specific August 15 date carried by each PMF",
       "kind": "evaluation/backtest",
       "model": {
         "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
@@ -134218,7 +134229,7 @@
     ],
     "rule": "\u0394NLL <= -0.005, \u0394CRPS <= 0, bootstrap NLL win rate >= .75; choose lowest qualifying \u0394NLL else C0",
     "selected": "C6_roster_context_with_coaching_location",
-    "untouched_test": [
+    "temporally_held_out_backtest": [
       2022,
       2023,
       2024,

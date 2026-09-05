@@ -3602,7 +3602,7 @@
     "points_per_lag": 2
   },
   "input_safety": "Only target-season-prior final rank distributions; all features are constructed in load_rows from seasons < target.",
-  "runtime_seconds": 39.81088370300131,
+  "runtime_seconds": 40.10437810800795,
   "selection": {
     "development_train": [
       2004,
@@ -3614,7 +3614,7 @@
     ],
     "rule": "first ordered candidate with development \u0394NLL <= -0.01 and season-bootstrap win rate >= 0.80; otherwise preserve V1",
     "selected": "long_run_baseline",
-    "untouched_final_test": [
+    "temporally_held_out_backtest": [
       2022,
       2023,
       2024,

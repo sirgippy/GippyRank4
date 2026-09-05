@@ -11,6 +11,7 @@ import json
 from collections import Counter
 from collections.abc import Iterable
 from dataclasses import replace
+from datetime import UTC, datetime
 from pathlib import Path
 
 import build_preseason_prior as v1
@@ -258,7 +259,7 @@ def attach_context(
                 "subdivision": row.subdivision,
                 "team_id": row.team_id,
                 "team_name": row.team_name,
-                "context_as_of": cutoff_for(row.season),
+                "context_effective_cutoff": cutoff_for(row.season),
                 "coach_tenure_available": coach.known_by_cutoff,
                 "coach_reason": coach.unavailable_reason,
                 **{
@@ -445,8 +446,8 @@ def context_rows(
             {
                 "model_family": "context_prior",
                 "spec_version": "1.2",
-                "context_as_of": coverage.get(baseline.key, {}).get(
-                    "context_as_of", cutoff_for(baseline.season)
+                "context_effective_cutoff": coverage.get(baseline.key, {}).get(
+                    "context_effective_cutoff", cutoff_for(baseline.season)
                 ),
                 "context_applied": baseline.key in update,
                 "fallback_reason": None
@@ -465,6 +466,8 @@ def inference_rows(
     tenures: dict[str, list[dict[str, object]]],
 ) -> list[InferenceRow]:
     """Use an FBS universe plus completed outcomes only; target outcomes are never read."""
+    if trained_through_season != target_season - 1:
+        raise ValueError("annual priors require training through the prior season")
     outcomes = {
         (int(x["season"]), x["subdivision"], x["team_id"]): x
         for x in read_csv(MODELING / "team_season_rank_distributions.csv")
@@ -532,20 +535,22 @@ def inference_rows(
     return result
 
 
-def future_predictions(
+def annual_cold_start_models(
     cold: list[v1.ColdStartSeason],
-    future: list[InferenceRow],
-    h_model: DirectRankModel,
-    c_model: DirectRankModel | None,
-) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
-    promotion_rows = [x for x in v1.cold_start_teams(cold) if x.season <= 2025]
+    *,
+    trained_through_season: int,
+) -> tuple[DirectRankModel, GenericRankPrior]:
+    """Fit annual FBS cold-start fallbacks from completed seasons only."""
+    promotion_rows = [
+        x for x in v1.cold_start_teams(cold) if x.season <= trained_through_season
+    ]
     promotion = DirectRankModel.fit(promotion_rows, [], penalty=0.25)
     generic_source = [
         x
         for x in cold
         if x.subdivision == "fbs"
         and x.reason == "no_prior_rank_distribution"
-        and x.season <= 2025
+        and x.season <= trained_through_season
     ]
     generic = GenericRankPrior.fit(
         [
@@ -563,10 +568,23 @@ def future_predictions(
             for x in generic_source
         ]
     )
+    return promotion, generic
+
+
+def future_predictions(
+    future: list[InferenceRow],
+    h_model: DirectRankModel,
+    c_model: DirectRankModel | None,
+    *,
+    trained_through_season: int,
+    promotion_model: DirectRankModel,
+    generic_prior: GenericRankPrior,
+) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
+    """Emit annual PMFs from outcome-free rows and completed history only."""
     outcomes = {
         (int(x["season"]), x["subdivision"], x["team_id"]): x
         for x in read_csv(MODELING / "team_season_rank_distributions.csv")
-        if int(x["season"]) <= 2025
+        if int(x["season"]) <= trained_through_season
     }
     h_out, c_out = [], []
     for row in future:
@@ -578,19 +596,19 @@ def future_predictions(
                 "same_subdivision_lag1",
             )
         elif row.cold_start_reason == "fcs_to_fbs_transition":
-            old = outcomes[(2025, "fcs", row.team_id)]
+            old = outcomes[(trained_through_season, "fcs", row.team_id)]
             cross = rank_to_z(v1.valid_ranks(old), int(old["team_population"]))
             pmf, location, scale, method = (
-                promotion.pmf({}, cross, row.population),
-                promotion.conditional_parameters({}, cross)[0],
-                promotion.conditional_parameters({}, cross)[1],
+                promotion_model.pmf({}, cross, row.population),
+                promotion_model.conditional_parameters({}, cross)[0],
+                promotion_model.conditional_parameters({}, cross)[1],
                 "learned_fcs_to_fbs_transition",
             )
         else:
             pmf, location, scale, method = (
-                generic.pmf(row.population),
-                np.asarray([generic.location]),
-                generic.scale,
+                generic_prior.pmf(row.population),
+                np.asarray([generic_prior.location]),
+                generic_prior.scale,
                 "generic_fbs_cold_start",
             )
         h_row = {
@@ -600,7 +618,7 @@ def future_predictions(
             "team_name": row.team_name,
             "model_family": "history_prior",
             "spec_version": "1.1",
-            "trained_through_season": 2025,
+            "trained_through_season": trained_through_season,
             "pmf": json.dumps(
                 [round(float(x), 12) for x in pmf], separators=(",", ":")
             ),
@@ -619,7 +637,8 @@ def future_predictions(
                     **h_row,
                     "model_family": "context_prior",
                     "spec_version": "1.2",
-                    "context_as_of": cutoff_for(row.season),
+                    "context_effective_cutoff": cutoff_for(row.season),
+                    "context_snapshot_mode": "retrospective_reconstruction",
                     "pmf": json.dumps(
                         [round(float(x), 12) for x in c_pmf], separators=(",", ":")
                     ),
@@ -635,7 +654,8 @@ def future_predictions(
                     **h_row,
                     "model_family": "context_prior",
                     "spec_version": "1.2",
-                    "context_as_of": cutoff_for(row.season),
+                    "context_effective_cutoff": cutoff_for(row.season),
+                    "context_snapshot_mode": "retrospective_reconstruction",
                     "context_applied": False,
                     "fallback_reason": "history_cold_start",
                 }
@@ -647,7 +667,7 @@ def render_report(report: dict[str, object]) -> None:
     lines = [
         "# GippyRank4 Preseason Context Prior V1.2",
         "",
-        "H (`history_prior` 1.1) remains the unchanged rank-history-only sibling. C (`context_prior` 1.2) adds only approved preseason context. 2022--2025 is a backtest, not a single annual fit.",
+        "H (`history_prior` 1.1) remains the unchanged rank-history-only sibling. C (`context_prior` 1.2) adds only approved preseason context. 2022--2025 is the temporally held-out post-selection backtest, not a single annual fit.",
         "",
         "## Provenance",
         "",
@@ -682,7 +702,7 @@ def render_report(report: dict[str, object]) -> None:
         "",
         f"Selected C: **{report['selection']['selected']}**. Before test data, the rule required ΔNLL ≤ -0.005, non-worse CRPS, and ≥75% favorable season-bootstrap resamples.",
         "",
-        "## Untouched 2022--2025 H vs C",
+        "## Temporally held-out 2022--2025 H vs C",
         "",
         f"N={final['reference']['n_team_seasons']}; H NLL {final['reference']['nll']:.4f}, C NLL {final['candidate']['nll']:.4f}, ΔNLL {final['delta_c_minus_h']['nll']:.4f}; H CRPS {final['reference']['crps']:.4f}, C CRPS {final['candidate']['crps']:.4f}.",
         "",
@@ -697,14 +717,14 @@ def render_report(report: dict[str, object]) -> None:
         "",
         "## Annual inference",
         "",
-        "Annual 2026 inputs are outcome-free rows: completed history through 2025, the frozen 2026 FBS universe, and approved preseason context only. Missing context is handled with training-only imputation and indicators; rank-history cold starts retain exact H fallback.",
+        "Annual 2026 inputs are outcome-free rows: completed history through 2025, the frozen 2026 FBS universe, and approved preseason context only. The context effective cutoff is August 15, 2026; this artifact is a retrospective reconstruction from preseason-semantic historical fields, not a contemporaneous August 15 payload capture. Missing context is handled with training-only imputation and indicators; rank-history cold starts retain exact H fallback.",
         "",
     ]
     (CONTEXT / "context_prior_report.md").write_text("\n".join(lines), encoding="utf-8")
 
 
 def main() -> None:
-    rows, cold, _ = v1.load_rows()
+    rows, cold, _ = v1.load_rows(max_season=max(TEST_SEASONS))
     fbs = [row for row in rows if row.subdivision == "fbs"]
     index, tenures = feature_index(), cached_tenures()
     contextual, coverage = attach_context(fbs, index, tenures)
@@ -762,7 +782,7 @@ def main() -> None:
                 "kind": "evaluation/backtest",
                 "trained_through_season": 2021,
                 "target_seasons": sorted(TEST_SEASONS),
-                "context_as_of": "target-specific August 15 date carried by each PMF",
+                "context_effective_cutoff": "target-specific August 15 date carried by each PMF",
                 "model": c_model.metadata(),
             },
         )
@@ -784,25 +804,40 @@ def main() -> None:
         0.25,
         "full t-1 empirical quadrature; t-2/t-3 summaries",
     ).metadata()
-    future = inference_rows(2026, 2025, index, tenures)
+    annual_target_season = 2026  # Current frozen artifact invocation.
+    annual_trained_through_season = annual_target_season - 1
+    future = inference_rows(
+        annual_target_season, annual_trained_through_season, index, tenures
+    )
     future_h_model, future_h_instance = build_history_prior(
-        fbs, target_season=2026, trained_through_season=2025
+        fbs,
+        target_season=annual_target_season,
+        trained_through_season=annual_trained_through_season,
     )
     future_c_model, future_c_fit = None, {"status": "C0 exact H selected"}
     if selected != "C0_history_only":
         future_c_model, instance = build_context_prior(
             contextual,
-            target_season=2026,
-            trained_through_season=2025,
+            target_season=annual_target_season,
+            trained_through_season=annual_trained_through_season,
             context_features=selected_features,
             mode=selected_mode,
         )
         future_c_fit = {**instance.metadata(), "model": future_c_model.metadata()}
+    promotion_model, generic_prior = annual_cold_start_models(
+        cold, trained_through_season=annual_trained_through_season
+    )
     future_h, future_c = future_predictions(
-        cold, future, future_h_model, future_c_model
+        future,
+        future_h_model,
+        future_c_model,
+        trained_through_season=annual_trained_through_season,
+        promotion_model=promotion_model,
+        generic_prior=generic_prior,
     )
     if len(future_h) != len(future) or len(future_c) != len(future):
         raise ValueError("annual inference lacks FBS coverage")
+    artifact_created_at = datetime.now(UTC).isoformat()
     report = {
         "history_specification": h_spec,
         "context_specification": {
@@ -823,7 +858,7 @@ def main() -> None:
             "rule": "ΔNLL <= -0.005, ΔCRPS <= 0, bootstrap NLL win rate >= .75; choose lowest qualifying ΔNLL else C0",
             "development_train": [2004, 2017],
             "development_validation": [2018, 2021],
-            "untouched_test": sorted(TEST_SEASONS),
+            "temporally_held_out_backtest": sorted(TEST_SEASONS),
         },
         "final_test": {
             "all_fbs": evaluate_delta(history, all_context),
@@ -834,10 +869,24 @@ def main() -> None:
             "history_fit": {
                 **future_h_instance.metadata(),
                 "model": future_h_model.metadata(),
+                "artifact_kind": "frozen_preseason_forecast",
+                "artifact_created_at": artifact_created_at,
+                "input_cutoff_semantics": "completed final-rank history through trained_through_season; target-season outcomes forbidden",
+                "pmf_count": len(future),
             },
-            "context_fit": future_c_fit,
-            "target_universe": 2026,
+            "context_fit": {
+                **future_c_fit,
+                "artifact_kind": "frozen_preseason_forecast",
+                "artifact_created_at": artifact_created_at,
+                "input_cutoff_semantics": "completed final-rank history through trained_through_season; target-season outcomes forbidden",
+                "context_effective_cutoff": cutoff_for(annual_target_season),
+                "context_snapshot_mode": "retrospective_reconstruction",
+                "context_reconstruction_basis": "historical endpoint fields reconstructed after the effective cutoff under the adopted preseason-semantic provenance assumptions",
+                "pmf_count": len(future),
+            },
+            "target_universe": annual_target_season,
             "n_fbs": len(future),
+            "target_season_outcomes_forbidden": True,
             "no_2026_game_outcomes_used": True,
         },
         "context_coverage": {

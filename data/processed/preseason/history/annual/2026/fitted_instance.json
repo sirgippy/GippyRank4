@@ -1,5 +1,8 @@
 {
-  "context_as_of": null,
+  "artifact_created_at": "2026-09-05T01:34:44.346410+00:00",
+  "artifact_kind": "frozen_preseason_forecast",
+  "context_effective_cutoff": null,
+  "input_cutoff_semantics": "completed final-rank history through trained_through_season; target-season outcomes forbidden",
   "model": {
     "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
     "degrees_of_freedom": null,
@@ -66,6 +69,7 @@
     "quadrature_points": 12
   },
   "model_family": "history_prior",
+  "pmf_count": 138,
   "spec_version": "1.1",
   "target_season": 2026,
   "trained_through_season": 2025

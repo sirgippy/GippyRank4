@@ -139,10 +139,17 @@ def coach_change_value(
     return float(current_coach != prior_coach)
 
 
-def load_rows() -> tuple[
+def load_rows(
+    *, max_season: int | None = None
+) -> tuple[
     list[TeamSeason], list[ColdStartSeason], list[dict[str, object]]
 ]:
-    """Join all target outcomes, retaining explicit cold-start records."""
+    """Join outcomes through an explicit ceiling, retaining cold-start records.
+
+    ``max_season`` is a caller-owned historical cutoff.  Leaving it unset is
+    useful for annual refits after new completed seasons are added; the legacy
+    2022--2025 backtest passes its own fixed evaluation ceiling.
+    """
     outcomes = {
         (int(r["season"]), r["subdivision"], r["team_id"]): r
         for r in read_csv(
@@ -159,7 +166,7 @@ def load_rows() -> tuple[
     for (season, subdivision, team_id), target in outcomes.items():
         prior = outcomes.get((season - 1, subdivision, team_id))
         current = feature_index.get((season, subdivision, team_id))
-        if season > 2025:
+        if max_season is not None and season > max_season:
             continue
         target_population = int(target["team_population"])
         target_ranks = valid_ranks(target)
@@ -303,7 +310,7 @@ def fit_selected(
             max(DEVELOPMENT_VALIDATION),
         ],
         "pre_specified_penalty": chosen,
-        "untouched_test_seasons": sorted(TEST_SEASONS),
+        "temporally_held_out_backtest_seasons": sorted(TEST_SEASONS),
     }
     if include_development:
         development_model = DirectRankModel.fit(train, features, penalty=chosen)
@@ -593,7 +600,7 @@ def write_report(report: dict[str, object]) -> None:
         "",
         "## Recommendation",
         "",
-        "The leakage-safe production candidate is Model A2 (t-1+t-2+t-3): a direct heteroscedastic Normal distribution over the logit within-subdivision final-rank percentile. Its t-1 input is the full empirical constituent-rank distribution; additional lags improve untouched FBS scoring and remain rank-history-only. It does not infer a scalar team-strength state. Model B has no additional qualified feature in the current cached sources, so it is intentionally identical to the selected rank-history candidate rather than promoting retrospective fields.",
+        "The leakage-safe production candidate is Model A2 (t-1+t-2+t-3): a direct heteroscedastic Normal distribution over the logit within-subdivision final-rank percentile. Its t-1 input is the full empirical constituent-rank distribution; additional lags improve temporally held-out FBS backtest scoring and remain rank-history-only. It does not infer a scalar team-strength state. Model B has no additional qualified feature in the current cached sources, so it is intentionally identical to the selected rank-history candidate rather than promoting retrospective fields.",
         "",
         "## Target and uncertainty semantics",
         "",
@@ -605,7 +612,7 @@ def write_report(report: dict[str, object]) -> None:
         "",
         "## Validation",
         "",
-        "All development choices use 2004–2017 training and 2018–2021 season holdouts. 2022–2025 is untouched until final fitting and evaluation. FBS and FCS rank universes are always fit and scored separately. `preseason_model_report.json` contains team-season NLL, CRPS, rank MAE, interval coverage and width, Top-5/10/25 calibration, ablations, preprocessing, and diagnostics; `rank_prior_predictions.csv` contains the full integrated PMFs.",
+        "All development choices use 2004–2017 training and 2018–2021 season holdouts. 2022–2025 is the temporally held-out evaluation period used after selection and final fitting, not a claim of a globally uninspected test set. FBS and FCS rank universes are always fit and scored separately. `preseason_model_report.json` contains team-season NLL, CRPS, rank MAE, interval coverage and width, Top-5/10/25 calibration, ablations, preprocessing, and diagnostics; `rank_prior_predictions.csv` contains the full integrated PMFs.",
         "",
         *metric_lines,
         "",
@@ -621,7 +628,7 @@ def write_report(report: dict[str, object]) -> None:
         "",
         "## Cold starts and fair exploratory comparison",
         "",
-        f"Every FBS target team-season now receives a prior. The learned FCS-to-FBS transition fit uses {cold['fbs_training_fcs_to_fbs_transitions']} pre-2022 transitions. The untouched test population has {cold['fbs_test_cold_starts']} cold starts: {cold['fbs_test_fcs_to_fbs_transitions']} transition and {cold['fbs_test_generic_cold_starts']} generic. Programs without any prior distribution use a broad analytical FBS no-prior fallback. FCS cold starts remain explicitly reported as omitted ({sum(item['teams_omitted'] for item in report['coverage_and_cold_start']['per_season'] if item['subdivision'] == 'fcs')} historical team-seasons).",
+        f"Every FBS target team-season now receives a prior. The learned FCS-to-FBS transition fit uses {cold['fbs_training_fcs_to_fbs_transitions']} pre-2022 transitions. The temporally held-out backtest population has {cold['fbs_test_cold_starts']} cold starts: {cold['fbs_test_fcs_to_fbs_transitions']} transition and {cold['fbs_test_generic_cold_starts']} generic. Programs without any prior distribution use a broad analytical FBS no-prior fallback. FCS cold starts remain explicitly reported as omitted ({sum(item['teams_omitted'] for item in report['coverage_and_cold_start']['per_season'] if item['subdivision'] == 'fcs')} historical team-seasons).",
         "",
         *production_breakdowns,
         "",
@@ -637,7 +644,7 @@ def write_report(report: dict[str, object]) -> None:
 
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
-    rows, cold_starts, coverage = load_rows()
+    rows, cold_starts, coverage = load_rows(max_season=max(TEST_SEASONS))
     report: dict[str, object] = {
         "target": {
             "source": "cleaned historical Massey constituent outcomes",
@@ -649,7 +656,7 @@ def main() -> None:
         "validation_design": {
             "development_training": [2004, 2017],
             "development_validation": [2018, 2021],
-            "untouched_test": sorted(TEST_SEASONS),
+            "temporally_held_out_backtest": sorted(TEST_SEASONS),
         },
         "models": {},
         "safety": {
@@ -836,7 +843,7 @@ def main() -> None:
     report["production_candidate"] = "A2_t1_t2_t3"
     report["coverage_and_cold_start"] = coverage_result
     report["best_statistical_model"] = (
-        "See model-specific untouched FBS NLL; exploratory C is not eligible for production."
+        "See model-specific temporally held-out FBS backtest NLL; exploratory C is not eligible for production."
     )
     (OUT / "preseason_model_report.json").write_text(
         json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
