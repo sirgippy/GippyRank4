@@ -10,7 +10,13 @@ Promotion requires a mean rolling NLL improvement of at least 0.005 versus H, no
 
 Observed-common targets: [2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]. L − H mean annual NLL is -0.01665 (8 wins, 4 losses); L − C is +0.01756 (1 wins, 11 losses). Negative favors L.
 
+The full-FBS production-style population agrees directionally: L − H mean annual NLL is -0.01526; L − C is +0.01611. Thus L adds real signal beyond H, but full C materially outperforms L in both populations.
+
 Raw annual values, paired team losses, calibration, complexity, disagreement, and the nested prospective simulation are retained in the companion CSV/JSON artifacts. Bootstrap-style inference is deliberately omitted: the small number of seasonal clusters makes raw annual results the primary evidence.
+
+## Interpretation
+
+PR #6 showed strong recruiting and returning-production signal, while Talent and coach tenure looked weak or redundant in isolated/common-population ablations. This fixed-candidate validation shows that removing Talent and coach tenure from the complete contextual model still degrades predictive performance materially. It does not establish that either feature is individually powerful: weak or redundant variables can retain conditional information, and a regularized correlated model can distribute signal across feature families. Ablation results can generate simplification hypotheses, but complete candidate validation is required before production changes.
 
 ## Independence and status
 

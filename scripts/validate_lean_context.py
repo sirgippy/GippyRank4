@@ -482,6 +482,10 @@ def render_report(summary: dict[str, Any]) -> None:
         summary["comparisons"]["observed_common/H_vs_L"],
         summary["comparisons"]["observed_common/L_vs_C"],
     )
+    full_h_l, full_l_c = (
+        summary["comparisons"]["full_fbs_production_style/H_vs_L"],
+        summary["comparisons"]["full_fbs_production_style/L_vs_C"],
+    )
     lines = [
         "# Lean Context Candidate L validation",
         "",
@@ -495,7 +499,13 @@ def render_report(summary: dict[str, Any]) -> None:
         "",
         f"Observed-common targets: {summary['coverage']['eligible_target_seasons']}. L − H mean annual NLL is {h_l['aggregate_mean_annual_deltas']['nll']:+.5f} ({h_l['wins']} wins, {h_l['losses']} losses); L − C is {l_c['aggregate_mean_annual_deltas']['nll']:+.5f} ({l_c['wins']} wins, {l_c['losses']} losses). Negative favors L.",
         "",
+        f"The full-FBS production-style population agrees directionally: L − H mean annual NLL is {full_h_l['aggregate_mean_annual_deltas']['nll']:+.5f}; L − C is {full_l_c['aggregate_mean_annual_deltas']['nll']:+.5f}. Thus L adds real signal beyond H, but full C materially outperforms L in both populations.",
+        "",
         "Raw annual values, paired team losses, calibration, complexity, disagreement, and the nested prospective simulation are retained in the companion CSV/JSON artifacts. Bootstrap-style inference is deliberately omitted: the small number of seasonal clusters makes raw annual results the primary evidence.",
+        "",
+        "## Interpretation",
+        "",
+        "PR #6 showed strong recruiting and returning-production signal, while Talent and coach tenure looked weak or redundant in isolated/common-population ablations. This fixed-candidate validation shows that removing Talent and coach tenure from the complete contextual model still degrades predictive performance materially. It does not establish that either feature is individually powerful: weak or redundant variables can retain conditional information, and a regularized correlated model can distribute signal across feature families. Ablation results can generate simplification hypotheses, but complete candidate validation is required before production changes.",
         "",
         "## Independence and status",
         "",
