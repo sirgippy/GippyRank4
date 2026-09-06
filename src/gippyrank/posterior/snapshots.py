@@ -326,6 +326,7 @@ def build_snapshot(
     inference_max_iterations: int = 500,
     inference_tolerance: float = 1e-9,
     inference_damping: float = 0.35,
+    generation_timestamp: datetime | None = None,
 ) -> Snapshot:
     """Build an atomic-on-success schema-v1 bundle without any publishing logic."""
     started = time.perf_counter()
@@ -442,7 +443,11 @@ def build_snapshot(
             else None
         ),
         "source_response_hashes": provenance.source_response_hashes,
-        "generation_timestamp": datetime.now(UTC).isoformat(),
+        "generation_timestamp": (
+            _as_utc_datetime(generation_timestamp).isoformat()
+            if generation_timestamp is not None
+            else datetime.now(UTC).isoformat()
+        ),
         "game_corpus_sha256": sha256(corpus_path),
         "included_game_count": len(included),
         "included_game_ids": [row["id"] for row in included],

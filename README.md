@@ -61,3 +61,45 @@ secrets beyond GitHub Pages' standard permissions.
 
 For the posterior snapshot contract and math, see
 [Posterior Snapshot V1](docs/posterior_v1.md).
+
+## Weekly ranking update
+
+The reviewed publication path is deliberately separate from Pages deployment:
+
+```text
+Actions → Update GippyRank rankings → Run workflow → inspect summary/PR → merge PR → Pages deploys
+```
+
+Set the repository Actions secret at **Settings → Secrets and variables →
+Actions → New repository secret → `CFBD_API_KEY`**. The update workflow calls
+only `GET /games?year=<season>&classification=fbs` and
+`GET /games?year=<season>&classification=fcs`; it never calls `/games/teams`.
+It writes each raw response under `data/raw/cfbd/games/` with an adjacent,
+durable provenance file (endpoint, parameters, retrieval time, source kind, and
+SHA-256).
+
+The normal form needs only a season. The acquisition timestamp supplies the
+requested/effective evidence boundary and a stable date publication slot; label
+and slot are optional overrides. Both Context and History are built as `weekly`
+snapshots from that exact corpus and must agree on cutoffs, source hashes, and
+eligible game IDs before any site data is prepared. An invalid or nonconverged
+snapshot fails closed.
+
+The Action creates or updates `automation/rankings-<publication-slot>` and its
+review PR; it never pushes to `main`, merges, or enables auto-merge. If your
+repository restricts workflow-created PRs, enable **Settings → Actions →
+General → Workflow permissions → Allow GitHub Actions to create and approve
+pull requests**. Merging the candidate PR is the explicit publication decision.
+
+For a local fallback (which prepares artifacts but deliberately does not do any
+Git/PR operation), run:
+
+```bash
+CFBD_API_KEY=... uv run python scripts/update_rankings.py --season 2026
+```
+
+Repeated candidates use the same logical slot and replace that slot's Context/
+History configuration entries while preserving older approved slots and
+Preseason. The site opens its explicit `default_publication_slot` (normally the
+newest weekly candidate). A repeat with identical rankings and eligible games
+reports no publishable change rather than opening a timestamp-only PR.

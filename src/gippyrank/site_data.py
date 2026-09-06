@@ -42,7 +42,7 @@ def _read_json(path: Path) -> dict[str, Any]:
     return value
 
 
-def load_publish_config(path: Path, root: Path) -> list[PublishedSnapshot]:
+def load_publish_config(path: Path, root: Path) -> tuple[list[PublishedSnapshot], str | None]:
     """Load an explicit, ordered list of snapshot directories to publish."""
     config = _read_json(path)
     if config.get("schema_version") != SITE_SCHEMA_VERSION:
@@ -65,7 +65,13 @@ def load_publish_config(path: Path, root: Path) -> list[PublishedSnapshot]:
         if not source_path.is_dir():
             raise SiteDataValidationError(f"Selected snapshot directory does not exist: {source}")
         selected.append(PublishedSnapshot(source_path, label, slot))
-    return selected
+    default_slot = config.get("default_publication_slot")
+    if default_slot is not None:
+        if not isinstance(default_slot, str) or not default_slot:
+            raise SiteDataValidationError("default_publication_slot must be a non-empty string")
+        if default_slot not in {item.publication_slot for item in selected}:
+            raise SiteDataValidationError("default_publication_slot is not a published slot")
+    return selected, default_slot
 
 
 def _finite_number(value: str, field: str, snapshot_id: str) -> float:
@@ -196,7 +202,7 @@ def _write_json(path: Path, value: Any) -> None:
 
 def build_site_data(*, root: Path, config_path: Path, output_directory: Path) -> dict[str, Any]:
     """Validate configured artifacts and write deterministic consumer JSON."""
-    selected = load_publish_config(config_path, root)
+    selected, default_slot = load_publish_config(config_path, root)
     manifest_entries: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
     seen_publications: set[tuple[int, str, str, str]] = set()
@@ -274,6 +280,7 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             if family in published_families
         ],
         "snapshots": manifest_entries,
+        "default_publication_slot": default_slot,
     }
     _write_json(output_directory / "manifest.json", manifest)
     return manifest

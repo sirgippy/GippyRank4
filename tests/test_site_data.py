@@ -78,6 +78,7 @@ def test_site_data_publishes_all_initial_h_c_preseason_and_current_snapshots(
         root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
     )
     assert manifest["seasons"] == [2026]
+    assert manifest["default_publication_slot"] == "2026-sep-05"
     assert {(entry["snapshot_type"], entry["prior_family"]) for entry in manifest["snapshots"]} == {
         ("preseason", "context"),
         ("preseason", "history"),

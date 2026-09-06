@@ -10,7 +10,11 @@ function percentage(value) { return `${Math.round(value * 100)}%`; }
 
 function chooseDefault() {
   const available = choices();
-  const entry = available.find((item) => item.prior_family === state.prior) ?? available[0];
+  const preferred = state.manifest.default_publication_slot;
+  const entry = available.find((item) => item.publication_slot === preferred && item.prior_family === state.prior)
+    ?? available.find((item) => item.publication_slot === preferred)
+    ?? available.find((item) => item.prior_family === state.prior)
+    ?? available[0];
   if (!entry) return null;
   state.slot = entry.publication_slot;
   state.prior = entry.prior_family;
