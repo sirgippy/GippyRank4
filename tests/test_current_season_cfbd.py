@@ -28,22 +28,28 @@ def _game(game_id: int, *, completed: bool = True, away_class: str = "fcs") -> d
     }
 
 
-def test_current_acquisition_requests_only_fbs_and_fcs_games_with_provenance(tmp_path: Path) -> None:
+def test_current_acquisition_requests_only_fbs_and_fcs_games_with_provenance(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     requests: list[httpx.Request] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
         requests.append(request)
         return httpx.Response(200, json=[_game(100 if request.url.params["classification"] == "fbs" else 101)])
 
-    timestamp = datetime(2026, 9, 12, 15, tzinfo=UTC)
+    fbs_time = datetime(2026, 9, 12, 15, tzinfo=UTC)
+    fcs_time = datetime(2026, 9, 12, 15, 8, tzinfo=UTC)
+    retrieval_times = iter((fbs_time, fcs_time))
+    monkeypatch.setattr("gippyrank.data.cfbd._utc", lambda _: next(retrieval_times))
     with httpx.Client(transport=httpx.MockTransport(handler), headers={"Authorization": "Bearer test-secret"}) as client:
-        acquisition = fetch_current_season(season=2026, root=tmp_path, retrieved_at=timestamp, client=client)
+        acquisition = fetch_current_season(season=2026, root=tmp_path, client=client)
 
     assert [request.url.path for request in requests] == ["/games", "/games"]
     assert [request.url.params["classification"] for request in requests] == ["fbs", "fcs"]
     assert all(request.headers["Authorization"] == "Bearer test-secret" for request in requests)
-    assert acquisition.retrieved_at == timestamp
-    for filename, classification in (("2026.json", "fbs"), ("2026-fcs.json", "fcs")):
+    assert acquisition.retrieved_at == fbs_time
+    assert acquisition.source_retrieval_times == {"fbs": fbs_time, "fcs": fcs_time}
+    for filename, classification, timestamp in (("2026.json", "fbs", fbs_time), ("2026-fcs.json", "fcs", fcs_time)):
         provenance = json.loads((tmp_path / f"data/raw/cfbd/games/{filename}.provenance.json").read_text())
         assert provenance == {
             "content_sha256": acquisition.response_hashes[filename],
@@ -75,5 +81,6 @@ def test_overlap_deduplicates_conflicts_fail_and_historical_rows_are_retained(tm
 
 
 def test_acquisition_object_is_simple_to_mock_for_weekly_orchestration() -> None:
-    value = CurrentSeasonAcquisition(2026, datetime(2026, 9, 1, tzinfo=UTC), {"fbs": [], "fcs": []}, {})
+    timestamp = datetime(2026, 9, 1, tzinfo=UTC)
+    value = CurrentSeasonAcquisition(2026, timestamp, {"fbs": timestamp, "fcs": timestamp}, {"fbs": [], "fcs": []}, {})
     assert value.season == 2026

@@ -31,7 +31,10 @@ GAME_FIELDS = (
 @dataclass(frozen=True)
 class CurrentSeasonAcquisition:
     season: int
+    # The earliest required-source retrieval time is the defensible combined
+    # evidence boundary. Individual source times remain available below.
     retrieved_at: datetime
+    source_retrieval_times: dict[str, datetime]
     schedules: dict[str, list[dict[str, Any]]]
     response_hashes: dict[str, str]
 
@@ -73,7 +76,7 @@ def fetch_current_season(
     raw = root / "data/raw/cfbd/games"
     schedules: dict[str, list[dict[str, Any]]] = {}
     hashes: dict[str, str] = {}
-    retrieval_times: list[datetime] = []
+    retrieval_times: dict[str, datetime] = {}
     try:
         for classification in CLASSIFICATIONS:
             params = {"year": season, "classification": classification}
@@ -100,11 +103,17 @@ def fetch_current_season(
             )
             schedules[classification] = payload
             hashes[filename] = digest
-            retrieval_times.append(response_retrieved_at)
+            retrieval_times[classification] = response_retrieved_at
     finally:
         if owns_client:
             client.close()
-    return CurrentSeasonAcquisition(season, max(retrieval_times), schedules, hashes)
+    return CurrentSeasonAcquisition(
+        season,
+        min(retrieval_times.values()),
+        retrieval_times,
+        schedules,
+        hashes,
+    )
 
 
 def deduplicate_schedule_queries(

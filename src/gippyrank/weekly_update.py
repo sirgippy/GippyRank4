@@ -65,7 +65,8 @@ def _tree_hash(directory: Path) -> str:
 def _same_evidence(context: Snapshot, history: Snapshot) -> None:
     fields = (
         "requested_cutoff", "effective_cutoff", "source_retrieved_at",
-        "source_response_hashes", "game_corpus_sha256", "included_game_ids",
+        "source_retrieval_times", "source_response_hashes", "game_corpus_sha256",
+        "included_game_ids",
     )
     for field in fields:
         if context.metadata[field] != history.metadata[field]:
@@ -146,6 +147,7 @@ def _report(context: Snapshot, history: Snapshot, *, slot: str, label: str, corp
         "season": metadata["season"], "publication_slot": slot, "display_label": label,
         "requested_cutoff": metadata["requested_cutoff"], "effective_cutoff": metadata["effective_cutoff"],
         "source_retrieved_at": metadata["source_retrieved_at"],
+        "source_retrieval_times": metadata["source_retrieval_times"],
         "eligible_game_count": metadata["included_game_count"],
         "excluded_lower_division_games": metadata["excluded_lower_division_games"],
         "fcs_population_size": metadata["fcs_population_size"], "fcs_fallback_count": metadata["fcs_fallback_count"],
@@ -195,6 +197,7 @@ def render_review_markdown(report: dict[str, Any]) -> str:
         "# GippyRank weekly publication candidate\n\n"
         f"- Publication slot: `{report['publication_slot']}` ({report['display_label']})\n"
         f"- Acquisition/effective cutoff: `{report['source_retrieved_at']}` / `{report['effective_cutoff']}`\n"
+        f"- Source retrieval times: FBS `{report['source_retrieval_times'].get('fbs')}`; FCS `{report['source_retrieval_times'].get('fcs')}`\n"
         f"- Eligible games: `{report['eligible_game_count']}`; lower-division excluded: `{report['excluded_lower_division_games']}`\n"
         f"- Newly eligible games since previous publication: `{report['new_eligible_game_count']}`\n"
         f"- FCS population/fallbacks: `{report['fcs_population_size']}` / `{report['fcs_fallback_count']}`\n"

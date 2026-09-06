@@ -49,14 +49,15 @@ def _root(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def _acquisition(root: Path, timestamp: datetime) -> CurrentSeasonAcquisition:
+def _acquisition(root: Path, timestamp: datetime, fcs_timestamp: datetime | None = None) -> CurrentSeasonAcquisition:
     schedules = {"fbs": [_game("100"), _game("101", completed=False)], "fcs": [_game("100")]}
     raw = root / "data/raw/cfbd/games"
     raw.mkdir(parents=True, exist_ok=True)
-    for name, payload in (("2026.json", schedules["fbs"]), ("2026-fcs.json", schedules["fcs"])):
+    fcs_timestamp = timestamp if fcs_timestamp is None else fcs_timestamp
+    for name, payload, retrieval_time in (("2026.json", schedules["fbs"], timestamp), ("2026-fcs.json", schedules["fcs"], fcs_timestamp)):
         (raw / name).write_text(json.dumps(payload))
-        (raw / f"{name}.provenance.json").write_text(json.dumps({"content_sha256": name, "retrieved_at": timestamp.isoformat(), "endpoint": "/games", "parameters": {}, "source_kind": "cfbd_api_schedule"}))
-    return CurrentSeasonAcquisition(2026, timestamp, schedules, {"2026.json": "2026.json", "2026-fcs.json": "2026-fcs.json"})
+        (raw / f"{name}.provenance.json").write_text(json.dumps({"content_sha256": name, "retrieved_at": retrieval_time.isoformat(), "endpoint": "/games", "parameters": {}, "source_kind": "cfbd_api_schedule"}))
+    return CurrentSeasonAcquisition(2026, min(timestamp, fcs_timestamp), {"fbs": timestamp, "fcs": fcs_timestamp}, schedules, {"2026.json": "2026.json", "2026-fcs.json": "2026-fcs.json"})
 
 
 def test_weekly_update_pairs_h_c_preserves_preseason_and_is_idempotent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -66,7 +67,7 @@ def test_weekly_update_pairs_h_c_preserves_preseason_and_is_idempotent(tmp_path:
     first = prepare_weekly_update(season=2026, root=root)
     assert first.published and first.publication_slot == "2026-09-12"
     assert first.context.metadata["snapshot_type"] == first.history.metadata["snapshot_type"] == "weekly"
-    for field in ("included_game_ids", "effective_cutoff", "requested_cutoff", "source_response_hashes", "game_corpus_sha256"):
+    for field in ("included_game_ids", "effective_cutoff", "requested_cutoff", "source_retrieval_times", "source_response_hashes", "game_corpus_sha256"):
         assert first.context.metadata[field] == first.history.metadata[field]
     assert first.context.metadata["included_game_ids"] == ["100"]  # future game cannot enter inference
     config = json.loads((root / "site/publish_config.json").read_text())
@@ -78,6 +79,18 @@ def test_weekly_update_pairs_h_c_preserves_preseason_and_is_idempotent(tmp_path:
     assert manifest["default_publication_slot"] == "2026-09-12"
     second = prepare_weekly_update(season=2026, root=root)
     assert not second.published
+
+
+def test_weekly_h_c_effective_cutoff_uses_earliest_required_source(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    root = _root(tmp_path)
+    fbs_time = datetime(2026, 9, 12, 15, tzinfo=UTC)
+    fcs_time = datetime(2026, 9, 12, 15, 8, tzinfo=UTC)
+    monkeypatch.setattr("gippyrank.weekly_update.fetch_current_season", lambda **_: _acquisition(root, fbs_time, fcs_time))
+    update = prepare_weekly_update(season=2026, root=root)
+    assert update.requested_cutoff == update.effective_cutoff == fbs_time
+    assert update.context.metadata["source_retrieval_times"] == {
+        "fbs": fbs_time.isoformat(), "fcs": fcs_time.isoformat()
+    }
 
 
 def test_snapshot_failure_never_reaches_publication_configuration(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -115,4 +128,7 @@ def test_update_workflow_is_manual_and_pages_stays_model_and_cfbd_free() -> None
     assert "CFBD_API_KEY" in workflow and "/games/teams" not in workflow
     assert "pull-requests: write" in workflow and "base: main" in workflow
     assert "merge" not in workflow.casefold()
+    run_block = workflow.split("        run: |", 1)[1].split("      - name: Report", 1)[0]
+    assert "${{ inputs." not in run_block
+    assert 'args=(--season "$INPUT_SEASON"' in run_block
     assert "CFBD_API_KEY" not in pages and "build_snapshot" not in pages and "cfbd" not in pages.casefold()

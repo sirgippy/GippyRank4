@@ -6,9 +6,10 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from gippyrank.posterior.engine import LikelihoodV1
-from gippyrank.posterior.snapshots import build_snapshot, snapshot_id
+from gippyrank.posterior.snapshots import build_snapshot, corpus_provenance, snapshot_id
 
 
 def _write(path: Path, fields: list[str], rows: list[dict[str, str]]) -> None:
@@ -139,14 +140,20 @@ def _root(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def _write_current_provenance(root: Path, retrieved_at: datetime) -> None:
+def _write_current_provenance(
+    root: Path, fbs_retrieved_at: datetime, fcs_retrieved_at: datetime | None = None
+) -> None:
     directory = root / "data/raw/cfbd/games"
     directory.mkdir(parents=True, exist_ok=True)
     (directory / "2026.json").write_text("[]", encoding="utf-8")
     (directory / "2026-fcs.json").write_text(
         '[{"homeId": "3", "homeClassification": "fcs"}]', encoding="utf-8"
     )
-    for name in ("2026.json", "2026-fcs.json"):
+    fcs_retrieved_at = fbs_retrieved_at if fcs_retrieved_at is None else fcs_retrieved_at
+    for name, retrieved_at in (
+        ("2026.json", fbs_retrieved_at),
+        ("2026-fcs.json", fcs_retrieved_at),
+    ):
         (directory / f"{name}.provenance.json").write_text(
             json.dumps(
                 {
@@ -174,6 +181,7 @@ def test_preseason_snapshot_is_prior_only_and_complete(tmp_path: Path) -> None:
     assert metadata["prior_family"] == "context"
     assert metadata["source_mode"] == "preseason_prior_only"
     assert metadata["source_retrieved_at"] is None
+    assert metadata["source_retrieval_times"] == {}
     assert metadata["prior_artifact_sha256"]
     assert {path.name for path in snapshot.directory.iterdir()} >= {
         "metadata.json",
@@ -201,6 +209,7 @@ def test_cutoff_and_lower_division_policy_are_explicit(tmp_path: Path) -> None:
     assert snapshot.metadata["excluded_lower_division_games"] == 1
     assert snapshot.metadata["source_mode"] == "historical_frozen"
     assert snapshot.metadata["requested_cutoff"] == snapshot.metadata["effective_cutoff"]
+    assert snapshot.metadata["source_retrieval_times"] == {}
 
 
 def test_prior_families_have_equivalent_neutral_snapshot_schema(tmp_path: Path) -> None:
@@ -243,6 +252,10 @@ def test_live_snapshot_clamps_stale_cache_to_explicit_effective_cutoff(
     assert metadata["source_mode"] == "current_cached_cfbd"
     assert metadata["requested_cutoff"] == "2026-09-11T23:59:00+00:00"
     assert metadata["source_retrieved_at"] == "2026-08-30T12:00:00+00:00"
+    assert metadata["source_retrieval_times"] == {
+        "fbs": "2026-08-30T12:00:00+00:00",
+        "fcs": "2026-08-30T12:00:00+00:00",
+    }
     assert metadata["effective_cutoff"] == metadata["source_retrieved_at"]
     assert metadata["effective_cutoff"] < metadata["requested_cutoff"]
     assert metadata["source_response_hashes"] == {
@@ -250,6 +263,35 @@ def test_live_snapshot_clamps_stale_cache_to_explicit_effective_cutoff(
         "2026.json.provenance.json": "hash-2026.json",
     }
     assert metadata["included_game_ids"] == ["early"]
+
+
+@pytest.mark.parametrize(
+    ("fbs_time", "fcs_time", "expected"),
+    [
+        (datetime(2026, 8, 30, 12, tzinfo=UTC), datetime(2026, 8, 30, 12, 8, tzinfo=UTC), datetime(2026, 8, 30, 12, tzinfo=UTC)),
+        (datetime(2026, 8, 30, 12, 8, tzinfo=UTC), datetime(2026, 8, 30, 12, tzinfo=UTC), datetime(2026, 8, 30, 12, tzinfo=UTC)),
+    ],
+)
+def test_combined_current_source_boundary_is_earliest_required_response(
+    tmp_path: Path, fbs_time: datetime, fcs_time: datetime, expected: datetime
+) -> None:
+    root = _root(tmp_path)
+    _write_current_provenance(root, fbs_time, fcs_time)
+    provenance = corpus_provenance(root, 2026)
+    assert provenance.source_retrieved_at == expected
+    assert provenance.source_retrieval_times == {"fbs": fbs_time, "fcs": fcs_time}
+    snapshot = build_snapshot(
+        season=2026,
+        cutoff=datetime(2026, 9, 11, 23, 59, tzinfo=UTC),
+        prior_family="context",
+        snapshot_type="weekly",
+        root=root,
+        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
+    )
+    assert snapshot.metadata["effective_cutoff"] == expected.isoformat()
+    assert snapshot.metadata["effective_cutoff"] <= fbs_time.isoformat()
+    assert snapshot.metadata["effective_cutoff"] <= fcs_time.isoformat()
+    assert snapshot.metadata["effective_cutoff"] < snapshot.metadata["requested_cutoff"]
 
 
 def test_identical_eligible_inputs_produce_identical_ranking_rows(tmp_path: Path) -> None:

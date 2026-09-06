@@ -34,6 +34,7 @@ class CorpusProvenance:
     source_mode: str
     source_kind: str
     source_retrieved_at: datetime | None
+    source_retrieval_times: dict[str, datetime]
     source_response_hashes: dict[str, str]
 
 
@@ -126,16 +127,17 @@ def corpus_provenance(root: Path, season: int) -> CorpusProvenance:
         for suffix in ("", "-fcs")
     ]
     if not all(path.exists() for path in manifests):
-        return CorpusProvenance("historical_frozen", "frozen_game_corpus", None, {})
+        return CorpusProvenance("historical_frozen", "frozen_game_corpus", None, {}, {})
     values = [json.loads(path.read_text(encoding="utf-8")) for path in manifests]
-    retrieved = [
-        datetime.fromisoformat(value["retrieved_at"]).astimezone(UTC)
-        for value in values
-    ]
+    retrieval_times = {
+        classification: datetime.fromisoformat(value["retrieved_at"]).astimezone(UTC)
+        for classification, value in zip(("fbs", "fcs"), values)
+    }
     return CorpusProvenance(
         "current_cached_cfbd",
         "cfbd_api_schedule",
-        max(retrieved),
+        min(retrieval_times.values()),
+        retrieval_times,
         {path.name: value["content_sha256"] for path, value in zip(manifests, values)},
     )
 
@@ -337,7 +339,7 @@ def build_snapshot(
     teams, team_rows, prior_path = load_teams(root, season, prior_family)
     requested_cutoff = _as_utc_datetime(cutoff) if cutoff is not None else None
     provenance = (
-        CorpusProvenance("preseason_prior_only", "none", None, {})
+        CorpusProvenance("preseason_prior_only", "none", None, {}, {})
         if snapshot_type == "preseason"
         else corpus_provenance(root, season)
     )
@@ -442,6 +444,10 @@ def build_snapshot(
             if provenance.source_retrieved_at
             else None
         ),
+        "source_retrieval_times": {
+            source: retrieved_at.isoformat()
+            for source, retrieved_at in provenance.source_retrieval_times.items()
+        },
         "source_response_hashes": provenance.source_response_hashes,
         "generation_timestamp": (
             _as_utc_datetime(generation_timestamp).isoformat()
