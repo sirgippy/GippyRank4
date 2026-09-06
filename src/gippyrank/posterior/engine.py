@@ -157,6 +157,81 @@ def game_factor(
     return factor.reshape(len(home_rank), len(away_rank))
 
 
+def game_margin_parameters(
+    game: Game, home: Team, away: Team, likelihood: LikelihoodV1
+) -> tuple[np.ndarray, float]:
+    """Return raw V1 Student-t locations and the observed oriented margin.
+
+    The factor used by BP is intentionally rescaled by a common positive
+    multiplier.  Research-side predictive scoring needs the unscaled density,
+    so this helper exposes the same design semantics without changing the BP
+    factor contract.  The returned matrix is always indexed as home rank by
+    away rank, even for a cross-subdivision game whose model coordinates are
+    always FBS first and FCS second.
+    """
+    home_rank = np.arange(1, len(home.prior) + 1, dtype=float)
+    away_rank = np.arange(1, len(away.prior) + 1, dtype=float)
+    hp = (home_rank - 0.5) / len(home_rank)
+    ap = (away_rank - 0.5) / len(away_rank)
+    cross = home.subdivision != away.subdivision
+    if cross and home.subdivision == "fcs":
+        x, y = np.meshgrid(ap, hp, indexing="ij")
+        margin = float(game.away_points - game.home_points)
+    else:
+        x, y = np.meshgrid(hp, ap, indexing="ij")
+        margin = float(game.home_points - game.away_points)
+    pairing = "fbs-fcs" if cross else f"{home.subdivision}-{away.subdivision}"
+    neutral = float(game.neutral_site)
+    fbs_home = float(cross and home.subdivision == "fbs" and not game.neutral_site)
+    matrix = design_matrix(
+        x.ravel(),
+        y.ravel(),
+        np.full(x.size, pairing),
+        np.full(x.size, 1.0 - neutral),
+        np.full(x.size, neutral),
+        surface=True,
+        fbs_home=np.full(x.size, fbs_home),
+    )
+    if len(likelihood.beta) != matrix.shape[1]:
+        raise ValueError(
+            f"Likelihood V1 beta has {len(likelihood.beta)} coefficients; "
+            f"surface requires {matrix.shape[1]}"
+        )
+    locations = matrix @ likelihood.beta
+    if cross and home.subdivision == "fcs":
+        locations = locations.reshape(len(away_rank), len(home_rank)).T
+    else:
+        locations = locations.reshape(len(home_rank), len(away_rank))
+    return locations, margin
+
+
+def game_margin_density(
+    game: Game, home: Team, away: Team, likelihood: LikelihoodV1
+) -> tuple[np.ndarray, float]:
+    """Return the unscaled frozen V1 density at the observed oriented margin."""
+    _locations, density, margin = game_margin_surface(game, home, away, likelihood)
+    return density, margin
+
+
+def game_margin_surface(
+    game: Game, home: Team, away: Team, likelihood: LikelihoodV1
+) -> tuple[np.ndarray, np.ndarray, float]:
+    """Return V1 locations, observed margin, and raw density in one pass."""
+    locations, margin = game_margin_parameters(game, home, away, likelihood)
+    return (
+        locations,
+        np.exp(
+            _student_t_logpdf(
+                margin,
+                locations,
+                likelihood.scale,
+                likelihood.degrees_of_freedom,
+            )
+        ),
+        margin,
+    )
+
+
 def _normalise(values: np.ndarray) -> np.ndarray:
     values = np.maximum(values, 0.0)
     total = values.sum()
