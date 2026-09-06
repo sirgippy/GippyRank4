@@ -36,7 +36,19 @@ class WeeklyUpdate:
 
 
 def _root() -> Path:
-    return Path(__file__).resolve().parents[3]
+    """Locate the repository from this module's checked-in project markers.
+
+    The CLI is installed/imported from ``src/gippyrank`` in both local and
+    GitHub Actions environments, so searching upward is less brittle than a
+    fixed ``parents[n]`` index.  A valid root owns both the Python project and
+    the explicit site publication configuration.
+    """
+    for candidate in Path(__file__).resolve().parents:
+        if (candidate / "pyproject.toml").is_file() and (
+            candidate / "site/publish_config.json"
+        ).is_file():
+            return candidate
+    raise RuntimeError("Cannot locate repository root from weekly_update.py")
 
 
 def _label(value: datetime) -> str:

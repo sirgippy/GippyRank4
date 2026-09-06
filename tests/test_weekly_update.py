@@ -2,14 +2,19 @@ from __future__ import annotations
 
 import csv
 import json
+import runpy
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
+from gippyrank import weekly_update
 from gippyrank.data.cfbd import GAME_FIELDS, CurrentSeasonAcquisition
 from gippyrank.posterior.snapshots import Snapshot
 from gippyrank.weekly_update import _upsert_publication, prepare_weekly_update
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def _write_csv(path: Path, fields: tuple[str, ...] | list[str], rows: list[dict]) -> None:
@@ -132,3 +137,43 @@ def test_update_workflow_is_manual_and_pages_stays_model_and_cfbd_free() -> None
     assert "${{ inputs." not in run_block
     assert 'args=(--season "$INPUT_SEASON"' in run_block
     assert "CFBD_API_KEY" not in pages and "build_snapshot" not in pages and "cfbd" not in pages.casefold()
+
+
+def test_default_weekly_root_is_repository_with_project_and_publication_markers() -> None:
+    assert weekly_update._root() == ROOT
+    assert (weekly_update._root() / "pyproject.toml").is_file()
+    assert (weekly_update._root() / "site/publish_config.json").is_file()
+
+
+def test_update_rankings_script_reaches_publish_config_with_default_root(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Exercise the real CLI entry point without fetching or mutating data."""
+    timestamp = datetime(2026, 9, 12, 15, tzinfo=UTC)
+
+    class StopAfterConfigLoad(Exception):
+        pass
+
+    monkeypatch.setattr(
+        weekly_update,
+        "fetch_current_season",
+        lambda **_: CurrentSeasonAcquisition(
+            2026,
+            timestamp,
+            {"fbs": timestamp, "fcs": timestamp},
+            {"fbs": [], "fcs": []},
+            {},
+        ),
+    )
+    monkeypatch.setattr(weekly_update, "update_processed_game_corpus", lambda **_: {})
+    original_load = weekly_update._load_json
+
+    def load_then_stop(path: Path) -> dict:
+        original_load(path)
+        assert path == ROOT / "site/publish_config.json"
+        raise StopAfterConfigLoad
+
+    monkeypatch.setattr(weekly_update, "_load_json", load_then_stop)
+    monkeypatch.setattr(sys, "argv", ["scripts/update_rankings.py", "--season", "2026"])
+    with pytest.raises(StopAfterConfigLoad):
+        runpy.run_path(str(ROOT / "scripts/update_rankings.py"), run_name="__main__")
