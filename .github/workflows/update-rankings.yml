@@ -1,0 +1,87 @@
+name: Update GippyRank rankings
+
+on:
+  workflow_dispatch:
+    inputs:
+      season:
+        description: Season to refresh
+        required: true
+        default: "2026"
+        type: string
+      display_label:
+        description: Optional website label (normally derived from acquisition time)
+        required: false
+        type: string
+      publication_slot:
+        description: Optional ISO publication date (normally derived from acquisition time)
+        required: false
+        type: string
+      dry_run:
+        description: Fetch, infer, validate, and summarize without creating a PR
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build validated ranking candidate
+        id: candidate
+        env:
+          CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
+          INPUT_SEASON: ${{ inputs.season }}
+          INPUT_DISPLAY_LABEL: ${{ inputs.display_label }}
+          INPUT_PUBLICATION_SLOT: ${{ inputs.publication_slot }}
+        run: |
+          if [ -z "$CFBD_API_KEY" ]; then
+            echo "CFBD_API_KEY Actions secret is required." >&2
+            exit 1
+          fi
+          args=(--season "$INPUT_SEASON" --github-output "$GITHUB_OUTPUT" --github-summary "$RUNNER_TEMP/gippyrank-summary.md")
+          if [ -n "$INPUT_DISPLAY_LABEL" ]; then args+=(--display-label "$INPUT_DISPLAY_LABEL"); fi
+          if [ -n "$INPUT_PUBLICATION_SLOT" ]; then args+=(--publication-slot "$INPUT_PUBLICATION_SLOT"); fi
+          uv run python scripts/update_rankings.py "${args[@]}" > "$RUNNER_TEMP/gippyrank-result.json"
+          cat "$RUNNER_TEMP/gippyrank-summary.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Report no publishable change
+        if: steps.candidate.outputs.published != 'true'
+        run: echo "No publishable ranking changes; no pull request created." >> "$GITHUB_STEP_SUMMARY"
+      - name: Create or update review pull request
+        id: pr
+        if: inputs.dry_run != true && steps.candidate.outputs.published == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ github.token }}
+          branch: ${{ steps.candidate.outputs.branch }}
+          base: main
+          title: Publish GippyRank rankings through ${{ steps.candidate.outputs.slot }}
+          body-path: ${{ steps.candidate.outputs.report_path }}
+          commit-message: Publish GippyRank weekly rankings for ${{ steps.candidate.outputs.slot }}
+          add-paths: |
+            data/raw/cfbd/games/${{ inputs.season }}.json
+            data/raw/cfbd/games/${{ inputs.season }}.json.provenance.json
+            data/raw/cfbd/games/${{ inputs.season }}-fcs.json
+            data/raw/cfbd/games/${{ inputs.season }}-fcs.json.provenance.json
+            data/processed/cfbd/games.csv
+            data/processed/snapshots/${{ inputs.season }}/
+            data/processed/weekly_updates/${{ steps.candidate.outputs.slot }}.*
+            site/publish_config.json
+            site/data/
+          delete-branch: false
+      - name: Link candidate pull request
+        if: steps.pr.outputs.pull-request-url != ''
+        run: |
+          echo "## Candidate PR" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Branch: \`${{ steps.candidate.outputs.branch }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- PR: ${{ steps.pr.outputs.pull-request-url }}" >> "$GITHUB_STEP_SUMMARY"
