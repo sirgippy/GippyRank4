@@ -51,11 +51,19 @@
         </div>
         <div class="table-wrap" tabindex="0">
           <table>
-            <thead><tr><th>Rank</th><th>Team</th><th><abbr title="Includes only FBS/FCS games eligible for the ranking model.">Modeled record</abbr></th><th>Expected</th><th>Median</th><th>80% interval</th><th>Top 25</th><th class="sr-only">Details</th></tr></thead>
+            <thead><tr><th>Rank</th><th>Team</th><th class="record-column"><abbr title="Includes only FBS/FCS games eligible for the ranking model.">Modeled record</abbr></th><th>Expected</th><th class="median-column">Median</th><th>80% interval</th><th class="uncertainty-column">Uncertainty<span class="sr-only"> (80% interval on a shared rank scale; dot is expected rank)</span></th><th class="top25-column">Top 25</th><th>Details</th></tr></thead>
             <tbody id="rankings-body"></tbody>
           </table>
         </div>
       </section>
+
+      <dialog id="team-detail" class="team-detail" aria-labelledby="detail-team-name">
+        <div class="detail-header">
+          <div><p class="eyebrow">TEAM DETAIL</p><h2 id="detail-team-name">Rank uncertainty</h2><p id="detail-team-meta" class="detail-meta"></p></div>
+          <button type="button" id="detail-close" class="close-button" aria-label="Close team detail">Close</button>
+        </div>
+        <div id="detail-content" class="detail-content" aria-live="polite"></div>
+      </dialog>
 
       <section class="explain-grid">
         <article><p class="eyebrow">CONTEXT &amp; HISTORY</p><h2>Two useful starting points.</h2><p>Context starts from history plus offseason roster and recruiting information. History starts from prior program performance only. Both use the same in-season game-updating engine.</p></article>
