@@ -451,3 +451,23 @@ def test_site_uses_base_safe_relative_paths() -> None:
     assert "selectedEntry()?.snapshot_id !== entry.snapshot_id" in app
     assert "publication_slot" in app
     assert "staying on" in app
+
+
+def test_uncertainty_copy_uses_central_interval_language() -> None:
+    app = (ROOT / "site/assets/app.js").read_text(encoding="utf-8")
+    assert "The central 50% interval spans" in app
+    assert "The central 80% interval spans" in app
+    assert "The central 95% interval spans" in app
+    assert "Half of the posterior lies between" not in app
+    assert "80% lies between" not in app
+    assert "95% lies between" not in app
+
+
+def test_percentage_formatter_preserves_nonzero_and_noncertainty_distinctions() -> None:
+    """Keep lightweight static coverage because this dependency-free site has no JS runner."""
+    app = (ROOT / "site/assets/app.js").read_text(encoding="utf-8")
+    assert 'if (value === 1) return "100%";' in app
+    assert 'if (valueAsPercent < 0.01) return "<0.01%";' in app
+    assert 'if (valueAsPercent >= 99.95) return "<100%";' in app
+    assert 'if (valueAsPercent >= 95) return `${valueAsPercent.toFixed(1)}%`;' in app
+    assert 'return `${Math.round(valueAsPercent)}%`;' in app

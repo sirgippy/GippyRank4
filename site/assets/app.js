@@ -36,9 +36,13 @@ function formatDate(value) { return new Intl.DateTimeFormat("en-US", { month: "s
 function formatTimestamp(value) { return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC", timeZoneName: "short" }).format(new Date(value)); }
 function percentage(value) {
   const valueAsPercent = value * 100;
+  if (value === 1) return "100%";
   if (valueAsPercent === 0) return "0%";
+  if (valueAsPercent < 0.01) return "<0.01%";
   if (valueAsPercent < 1) return `${valueAsPercent.toFixed(valueAsPercent < 0.1 ? 2 : 1)}%`;
   if (valueAsPercent < 10) return `${valueAsPercent.toFixed(1)}%`;
+  if (valueAsPercent >= 99.95) return "<100%";
+  if (valueAsPercent >= 95) return `${valueAsPercent.toFixed(1)}%`;
   return `${Math.round(valueAsPercent)}%`;
 }
 function ordinal(rank) {
@@ -153,7 +157,7 @@ function renderRankings(snapshot) {
 }
 
 function summaryText(row, summary) {
-  return `Expected rank: ${summary.expected_rank.toFixed(1)}. Median: ${ordinal(summary.median_rank)}. Most likely rank: ${ordinal(summary.modal_rank)}. Half of the posterior lies between ${ordinal(summary.interval_50[0])} and ${ordinal(summary.interval_50[1])}; 80% lies between ${ordinal(summary.interval_80[0])} and ${ordinal(summary.interval_80[1])}; 95% lies between ${ordinal(summary.interval_95[0])} and ${ordinal(summary.interval_95[1])}. The model gives ${row.team_name} a ${percentage(summary.top10_probability)} chance of finishing in the Top 10 and a ${percentage(summary.top25_probability)} chance of finishing in the Top 25.`;
+  return `Expected rank: ${summary.expected_rank.toFixed(1)}. Median: ${ordinal(summary.median_rank)}. Most likely rank: ${ordinal(summary.modal_rank)}. The central 50% interval spans ${ordinal(summary.interval_50[0])}–${ordinal(summary.interval_50[1])}. The central 80% interval spans ${ordinal(summary.interval_80[0])}–${ordinal(summary.interval_80[1])}. The central 95% interval spans ${ordinal(summary.interval_95[0])}–${ordinal(summary.interval_95[1])}. The model gives ${row.team_name} a ${percentage(summary.top10_probability)} chance of finishing in the Top 10 and a ${percentage(summary.top25_probability)} chance of finishing in the Top 25.`;
 }
 
 function rankX(rank, rankCount, left, width) { return left + ((rank - 0.5) / rankCount) * width; }
