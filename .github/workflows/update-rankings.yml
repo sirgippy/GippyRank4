@@ -57,6 +57,26 @@ jobs:
       - name: Report no publishable change
         if: steps.candidate.outputs.published != 'true'
         run: echo "No publishable ranking changes; no pull request created." >> "$GITHUB_STEP_SUMMARY"
+      - name: Commit approved publication candidate
+        if: inputs.dry_run != true && steps.candidate.outputs.published == 'true'
+        env:
+          FBS_SCHEDULE_PATH: ${{ steps.candidate.outputs.fbs_schedule_path }}
+          FBS_PROVENANCE_PATH: ${{ steps.candidate.outputs.fbs_provenance_path }}
+          FCS_SCHEDULE_PATH: ${{ steps.candidate.outputs.fcs_schedule_path }}
+          FCS_PROVENANCE_PATH: ${{ steps.candidate.outputs.fcs_provenance_path }}
+          PROCESSED_GAMES_PATH: ${{ steps.candidate.outputs.processed_games_path }}
+          CONTEXT_SNAPSHOT_PATH: ${{ steps.candidate.outputs.context_snapshot_path }}
+          HISTORY_SNAPSHOT_PATH: ${{ steps.candidate.outputs.history_snapshot_path }}
+          REPORT_MD_PATH: ${{ steps.candidate.outputs.report_md_path }}
+          REPORT_JSON_PATH: ${{ steps.candidate.outputs.report_json_path }}
+          PUBLISH_CONFIG_PATH: ${{ steps.candidate.outputs.publish_config_path }}
+          SITE_DATA_PATH: ${{ steps.candidate.outputs.site_data_path }}
+          CANDIDATE_COMMIT_MESSAGE: Publish GippyRank weekly rankings for ${{ steps.candidate.outputs.slot }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          bash scripts/stage_weekly_publication_candidate.sh
+          git commit -m "$CANDIDATE_COMMIT_MESSAGE"
       - name: Create or update review pull request
         id: pr
         if: inputs.dry_run != true && steps.candidate.outputs.published == 'true'
@@ -68,16 +88,6 @@ jobs:
           title: Publish GippyRank rankings through ${{ steps.candidate.outputs.slot }}
           body-path: ${{ steps.candidate.outputs.report_path }}
           commit-message: Publish GippyRank weekly rankings for ${{ steps.candidate.outputs.slot }}
-          add-paths: |
-            data/raw/cfbd/games/${{ inputs.season }}.json
-            data/raw/cfbd/games/${{ inputs.season }}.json.provenance.json
-            data/raw/cfbd/games/${{ inputs.season }}-fcs.json
-            data/raw/cfbd/games/${{ inputs.season }}-fcs.json.provenance.json
-            data/processed/cfbd/games.csv
-            data/processed/snapshots/${{ inputs.season }}/
-            data/processed/weekly_updates/${{ steps.candidate.outputs.slot }}.*
-            site/publish_config.json
-            site/data/
           delete-branch: false
       - name: Link candidate pull request
         if: steps.pr.outputs.pull-request-url != ''

@@ -33,6 +33,24 @@ class WeeklyUpdate:
     corpus: dict[str, int]
     published: bool
     report: dict[str, Any]
+    candidate_paths: PublicationCandidatePaths | None = None
+
+
+@dataclass(frozen=True)
+class PublicationCandidatePaths:
+    """Exact durable files and directories produced for a publishable update."""
+
+    fbs_schedule: Path
+    fbs_provenance: Path
+    fcs_schedule: Path
+    fcs_provenance: Path
+    processed_games: Path
+    context_snapshot: Path
+    history_snapshot: Path
+    report_md: Path
+    report_json: Path
+    publish_config: Path
+    site_data: Path
 
 
 def _root() -> Path:
@@ -72,6 +90,41 @@ def _tree_hash(directory: Path) -> str:
             digest.update(path.relative_to(directory).as_posix().encode())
             digest.update(path.read_bytes())
     return digest.hexdigest()
+
+
+def _github_output_lines(update: WeeklyUpdate, *, root: Path) -> list[str]:
+    """Return Action outputs, including exact paths only for a real candidate.
+
+    Snapshot names contain the actual successful generation timestamp.  Keeping
+    those values here avoids a workflow independently re-creating a path that
+    can diverge from the snapshot directory produced by the orchestration.
+    """
+    lines = [
+        f"published={'true' if update.published else 'false'}",
+        f"slot={update.publication_slot}",
+        f"branch=automation/rankings-{update.publication_slot}",
+        # Kept for existing callers that use the Markdown report as the PR body.
+        f"report_path=data/processed/weekly_updates/{update.publication_slot}.md",
+    ]
+    if not update.published:
+        return lines
+    if update.candidate_paths is None:
+        raise ValueError("A publishable weekly update must include candidate paths")
+    for name, path in (
+        ("fbs_schedule_path", update.candidate_paths.fbs_schedule),
+        ("fbs_provenance_path", update.candidate_paths.fbs_provenance),
+        ("fcs_schedule_path", update.candidate_paths.fcs_schedule),
+        ("fcs_provenance_path", update.candidate_paths.fcs_provenance),
+        ("processed_games_path", update.candidate_paths.processed_games),
+        ("context_snapshot_path", update.candidate_paths.context_snapshot),
+        ("history_snapshot_path", update.candidate_paths.history_snapshot),
+        ("report_md_path", update.candidate_paths.report_md),
+        ("report_json_path", update.candidate_paths.report_json),
+        ("publish_config_path", update.candidate_paths.publish_config),
+        ("site_data_path", update.candidate_paths.site_data),
+    ):
+        lines.append(f"{name}={path.relative_to(root).as_posix()}")
+    return lines
 
 
 def _same_evidence(context: Snapshot, history: Snapshot) -> None:
@@ -294,7 +347,23 @@ def prepare_weekly_update(
     (report_dir / f"{slot}.json").write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     (report_dir / f"{slot}.md").write_text(render_review_markdown(report), encoding="utf-8")
     effective = datetime.fromisoformat(str(context.metadata["effective_cutoff"]))
-    return WeeklyUpdate(season, slot, label, requested, effective, context, history, corpus, True, report)
+    candidate_paths = PublicationCandidatePaths(
+        fbs_schedule=root / "data/raw/cfbd/games" / f"{season}.json",
+        fbs_provenance=root / "data/raw/cfbd/games" / f"{season}.json.provenance.json",
+        fcs_schedule=root / "data/raw/cfbd/games" / f"{season}-fcs.json",
+        fcs_provenance=root / "data/raw/cfbd/games" / f"{season}-fcs.json.provenance.json",
+        processed_games=root / "data/processed/cfbd/games.csv",
+        context_snapshot=context.directory,
+        history_snapshot=history.directory,
+        report_md=report_dir / f"{slot}.md",
+        report_json=report_dir / f"{slot}.json",
+        publish_config=config_path,
+        site_data=root / "site/data",
+    )
+    return WeeklyUpdate(
+        season, slot, label, requested, effective, context, history, corpus, True, report,
+        candidate_paths,
+    )
 
 
 def main() -> None:
@@ -305,16 +374,16 @@ def main() -> None:
     parser.add_argument("--github-output", type=Path)
     parser.add_argument("--github-summary", type=Path)
     args = parser.parse_args()
-    update = prepare_weekly_update(season=args.season, display_label=args.display_label, publication_slot=args.publication_slot)
+    root = _root()
+    update = prepare_weekly_update(
+        season=args.season,
+        root=root,
+        display_label=args.display_label,
+        publication_slot=args.publication_slot,
+    )
     result = {"published": update.published, "publication_slot": update.publication_slot, "report": update.report}
     if args.github_output:
-        args.github_output.write_text(
-            f"published={'true' if update.published else 'false'}\n"
-            f"slot={update.publication_slot}\n"
-            f"branch=automation/rankings-{update.publication_slot}\n"
-            f"report_path=data/processed/weekly_updates/{update.publication_slot}.md\n",
-            encoding="utf-8",
-        )
+        args.github_output.write_text("\n".join(_github_output_lines(update, root=root)) + "\n", encoding="utf-8")
     if args.github_summary:
         args.github_summary.write_text(render_review_markdown(update.report), encoding="utf-8")
     print(json.dumps(result, indent=2))
