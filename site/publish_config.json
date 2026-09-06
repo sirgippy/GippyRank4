@@ -1,26 +1,36 @@
 {
-  "default_publication_slot": "2026-sep-05",
+  "default_publication_slot": "2026-09-06",
   "schema_version": "1.0",
   "snapshots": [
     {
-      "source": "data/processed/snapshots/2026/2026-preseason-context/predictive/context",
       "display_label": "Preseason",
-      "publication_slot": "2026-preseason"
+      "publication_slot": "2026-preseason",
+      "source": "data/processed/snapshots/2026/2026-preseason-context/predictive/context"
     },
     {
-      "source": "data/processed/snapshots/2026/2026-preseason-history/predictive/history",
       "display_label": "Preseason",
-      "publication_slot": "2026-preseason"
+      "publication_slot": "2026-preseason",
+      "source": "data/processed/snapshots/2026/2026-preseason-history/predictive/history"
     },
     {
-      "source": "data/processed/snapshots/2026/2026-live-2026-09-05T23-59-59Z-context/predictive/context",
       "display_label": "Sep. 5",
-      "publication_slot": "2026-sep-05"
+      "publication_slot": "2026-sep-05",
+      "source": "data/processed/snapshots/2026/2026-live-2026-09-05T23-59-59Z-context/predictive/context"
     },
     {
-      "source": "data/processed/snapshots/2026/2026-live-2026-09-05T23-59-59Z-history/predictive/history",
       "display_label": "Sep. 5",
-      "publication_slot": "2026-sep-05"
+      "publication_slot": "2026-sep-05",
+      "source": "data/processed/snapshots/2026/2026-live-2026-09-05T23-59-59Z-history/predictive/history"
+    },
+    {
+      "display_label": "20260906",
+      "publication_slot": "2026-09-06",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-06T17-34-56.895103Z-context/predictive/context"
+    },
+    {
+      "display_label": "20260906",
+      "publication_slot": "2026-09-06",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-06T17-34-56.895103Z-history/predictive/history"
     }
   ]
 }
