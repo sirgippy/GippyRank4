@@ -16,6 +16,8 @@ from typing import Any
 
 SITE_SCHEMA_VERSION = "1.0"
 SUPPORTED_SNAPSHOT_SCHEMA_VERSIONS = {"1.0"}
+PMF_SUM_TOLERANCE = 1e-9
+SUMMARY_TOLERANCE = 1e-8
 RANKING_FAMILIES: dict[str, dict[str, str]] = {
     "predictive": {"label": "Predictive"},
 }
@@ -170,7 +172,122 @@ def _ranking_rows(path: Path, metadata: dict[str, Any]) -> list[dict[str, Any]]:
                 "top25_probability": _probability(row["top25_probability"], "top25_probability", snapshot_id),
             }
         )
+    expected_ranks = set(range(1, len(normalized) + 1))
+    if ranks != expected_ranks:
+        raise SiteDataValidationError(
+            f"{snapshot_id}: FBS display ranks must be contiguous from 1 through "
+            f"{len(normalized)}"
+        )
     return sorted(normalized, key=lambda row: row["display_rank"])
+
+
+def _rank(value: str, field: str, snapshot_id: str) -> int:
+    number = _finite_number(value, field, snapshot_id)
+    if not number.is_integer() or number < 1:
+        raise SiteDataValidationError(f"{snapshot_id}: {field} must be a positive integer")
+    return int(number)
+
+
+def _pmf_summary(pmf: list[float]) -> dict[str, Any]:
+    """Summarize a discrete PMF with the established left-CDF quantiles."""
+    ranks = range(1, len(pmf) + 1)
+    cumulative = 0.0
+
+    def quantile(probability: float) -> int:
+        nonlocal cumulative
+        cumulative = 0.0
+        for rank, value in zip(ranks, pmf, strict=True):
+            cumulative += value
+            if cumulative >= probability:
+                return rank
+        return len(pmf)  # The validated sum can only leave a rounding-sized tail.
+
+    interval_50 = [quantile(0.25), quantile(0.75)]
+    interval_80 = [quantile(0.10), quantile(0.90)]
+    interval_95 = [quantile(0.025), quantile(0.975)]
+    modal_rank = max(range(len(pmf)), key=lambda index: pmf[index]) + 1
+    return {
+        "expected_rank": math.fsum(rank * value for rank, value in zip(ranks, pmf, strict=True)),
+        "median_rank": quantile(0.50),
+        "modal_rank": modal_rank,
+        "interval_50": interval_50,
+        "interval_80": interval_80,
+        "interval_95": interval_95,
+        "interval_widths": {
+            "50": interval_50[1] - interval_50[0] + 1,
+            "80": interval_80[1] - interval_80[0] + 1,
+            "95": interval_95[1] - interval_95[0] + 1,
+        },
+        "rank_1_probability": pmf[0],
+        "top5_probability": math.fsum(pmf[:5]),
+        "top10_probability": math.fsum(pmf[:10]),
+        "top25_probability": math.fsum(pmf[:25]),
+    }
+
+
+def _distribution_artifact(
+    path: Path, metadata: dict[str, Any], rankings: list[dict[str, Any]]
+) -> dict[str, Any]:
+    """Validate FBS PMFs and convert them to a lazy browser artifact.
+
+    This is intentionally a presentation/export transform: the posterior CSV is
+    authoritative and is never recomputed or normalized here.
+    """
+    snapshot_id = str(metadata["snapshot_id"])
+    ranking_by_team = {str(row["team_id"]): row for row in rankings}
+    rank_count = len(rankings)
+    pmfs: dict[str, dict[int, float]] = {}
+    with path.open(newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle)
+        required = {"team_id", "rank", "probability"}
+        missing = required - set(reader.fieldnames or [])
+        if missing:
+            raise SiteDataValidationError(f"{snapshot_id}: PMFs missing {sorted(missing)}")
+        for row in reader:
+            team_id = row["team_id"]
+            if team_id not in ranking_by_team:
+                # Source artifacts can also contain FCS PMFs.  Only published FBS
+                # rankings belong in this consumer artifact.
+                continue
+            rank = _rank(row["rank"], "PMF rank", snapshot_id)
+            probability = _probability(row["probability"], "PMF probability", snapshot_id)
+            team_pmf = pmfs.setdefault(team_id, {})
+            if rank in team_pmf:
+                raise SiteDataValidationError(f"{snapshot_id}: duplicate PMF rank for team {team_id}")
+            team_pmf[rank] = probability
+
+    expected_ranks = set(range(1, rank_count + 1))
+    teams: dict[str, Any] = {}
+    for team_id, ranking in ranking_by_team.items():
+        team_pmf = pmfs.get(team_id)
+        if team_pmf is None:
+            raise SiteDataValidationError(f"{snapshot_id}: missing PMF for FBS team {team_id}")
+        if set(team_pmf) != expected_ranks:
+            raise SiteDataValidationError(
+                f"{snapshot_id}: PMF ranks for team {team_id} must be contiguous from "
+                f"1 through {rank_count} (missing or unexpected ranks)"
+            )
+        pmf = [team_pmf[rank] for rank in range(1, rank_count + 1)]
+        total = math.fsum(pmf)
+        if abs(total - 1.0) > PMF_SUM_TOLERANCE:
+            raise SiteDataValidationError(
+                f"{snapshot_id}: PMF probabilities for team {team_id} sum to {total}, not 1"
+            )
+        summary = _pmf_summary(pmf)
+        if abs(summary["expected_rank"] - ranking["expected_rank"]) > SUMMARY_TOLERANCE:
+            raise SiteDataValidationError(f"{snapshot_id}: PMF expected rank disagrees for team {team_id}")
+        if summary["median_rank"] != ranking["median_rank"]:
+            raise SiteDataValidationError(f"{snapshot_id}: PMF median rank disagrees for team {team_id}")
+        if summary["interval_80"] != ranking["interval_80"]:
+            raise SiteDataValidationError(f"{snapshot_id}: PMF 80% interval disagrees for team {team_id}")
+        teams[team_id] = {"pmf": pmf, "summary": summary}
+
+    return {
+        "schema_version": SITE_SCHEMA_VERSION,
+        "snapshot_id": snapshot_id,
+        "rank_count": rank_count,
+        "teams": teams,
+    }
 
 
 def _validate_metadata(metadata: dict[str, Any], source: Path) -> None:
@@ -195,9 +312,14 @@ def _validate_metadata(metadata: dict[str, Any], source: Path) -> None:
         raise SiteDataValidationError(f"{metadata['snapshot_id']}: unsupported prior family")
 
 
-def _write_json(path: Path, value: Any) -> None:
+def _write_json(path: Path, value: Any, *, compact: bool = False) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    encoded = (
+        json.dumps(value, separators=(",", ":"), sort_keys=True)
+        if compact
+        else json.dumps(value, indent=2, sort_keys=True)
+    )
+    path.write_text(encoded + "\n", encoding="utf-8")
 
 
 def build_site_data(*, root: Path, config_path: Path, output_directory: Path) -> dict[str, Any]:
@@ -226,10 +348,12 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             )
         seen_publications.add(publication)
         rankings = _ranking_rows(source / "rankings.csv", metadata)
+        distribution = _distribution_artifact(source / "posterior_pmfs.csv", metadata, rankings)
         records = _records(source / "included_games.csv")
         for row in rankings:
             row["record"] = records.get(row["team_id"], "0-0")
         relative_data_path = f"data/snapshots/{snapshot_id}.json"
+        relative_distribution_path = f"data/distributions/{snapshot_id}.json"
         consumer_snapshot = {
             "schema_version": SITE_SCHEMA_VERSION,
             "snapshot_id": snapshot_id,
@@ -245,9 +369,15 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             "included_game_count": metadata.get("included_game_count", 0),
             "excluded_lower_division_games": metadata.get("excluded_lower_division_games", 0),
             "model_versions": metadata["model_versions"],
+            "rank_count": distribution["rank_count"],
             "rankings": rankings,
         }
         _write_json(output_directory / "snapshots" / f"{snapshot_id}.json", consumer_snapshot)
+        _write_json(
+            output_directory / "distributions" / f"{snapshot_id}.json",
+            distribution,
+            compact=True,
+        )
         manifest_entries.append(
             {
                 "season": metadata["season"],
@@ -266,6 +396,8 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
                 ),
                 "display_label": selected_snapshot.display_label,
                 "data_path": relative_data_path,
+                "distribution_path": relative_distribution_path,
+                "rank_count": distribution["rank_count"],
                 "model_versions": metadata["model_versions"],
                 "valid": True,
             }

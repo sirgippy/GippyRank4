@@ -54,6 +54,21 @@ def _copied_snapshot(tmp_path: Path, relative_source: str | None = None) -> Path
     return destination
 
 
+def _pmf_rows(source: Path) -> tuple[Path, list[str], list[dict[str, str]]]:
+    path = source / "posterior_pmfs.csv"
+    with path.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+        fields = list(rows[0])
+    return path, fields, rows
+
+
+def _write_pmf_rows(path: Path, fields: list[str], rows: list[dict[str, str]]) -> None:
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
 def _counterpart(
     entries: list[dict[str, object]], current: dict[str, object], prior: str
 ) -> dict[str, object]:
@@ -115,6 +130,7 @@ def test_logical_publication_slots_pair_context_and_history(
     assert counterpart["prior_family"] == to_prior
     assert counterpart["publication_slot"] == slot
     assert counterpart["snapshot_id"] != current["snapshot_id"]
+    assert counterpart["distribution_path"] != current["distribution_path"]
 
 
 def test_missing_logical_counterpart_keeps_current_selection(tmp_path: Path) -> None:
@@ -144,6 +160,153 @@ def test_site_data_is_byte_deterministic(tmp_path: Path) -> None:
     first = _hash_tree(output)
     build_site_data(root=ROOT, config_path=CONFIG, output_directory=output)
     assert _hash_tree(output) == first
+
+
+def test_distribution_artifact_contains_complete_fbs_pmfs_and_summaries(tmp_path: Path) -> None:
+    manifest = build_site_data(
+        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
+    )
+    entry = next(item for item in manifest["snapshots"] if item["prior_family"] == "context")
+    distribution = json.loads(
+        (tmp_path / "data" / entry["distribution_path"].removeprefix("data/")).read_text()
+    )
+    snapshot = json.loads(
+        (tmp_path / "data" / entry["data_path"].removeprefix("data/")).read_text()
+    )
+    assert distribution["schema_version"] == "1.0"
+    assert distribution["snapshot_id"] == entry["snapshot_id"]
+    assert distribution["rank_count"] == 138
+    assert set(distribution["teams"]) == {row["team_id"] for row in snapshot["rankings"]}
+    team = distribution["teams"][snapshot["rankings"][0]["team_id"]]
+    assert len(team["pmf"]) == distribution["rank_count"]
+    assert sum(team["pmf"]) == pytest.approx(1.0, abs=1e-9)
+    assert set(team["summary"]) == {
+        "expected_rank", "median_rank", "modal_rank", "interval_50", "interval_80",
+        "interval_95", "interval_widths", "rank_1_probability", "top5_probability",
+        "top10_probability", "top25_probability",
+    }
+
+
+def test_pmf_summary_uses_established_discrete_quantiles() -> None:
+    summary = site_data._pmf_summary([0.1, 0.2, 0.3, 0.2, 0.2])
+    assert summary["expected_rank"] == pytest.approx(3.2)
+    assert summary["median_rank"] == 3
+    assert summary["modal_rank"] == 3
+    assert summary["interval_50"] == [2, 4]
+    assert summary["interval_80"] == [1, 5]
+    assert summary["interval_95"] == [1, 5]
+    assert summary["interval_widths"] == {"50": 3, "80": 5, "95": 5}
+
+
+def test_exported_80_percent_interval_remains_the_ranking_interval(tmp_path: Path) -> None:
+    manifest = build_site_data(
+        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
+    )
+    for entry in manifest["snapshots"]:
+        snapshot = json.loads(
+            (tmp_path / "data" / entry["data_path"].removeprefix("data/")).read_text()
+        )
+        distribution = json.loads(
+            (tmp_path / "data" / entry["distribution_path"].removeprefix("data/")).read_text()
+        )
+        for row in snapshot["rankings"]:
+            assert distribution["teams"][row["team_id"]]["summary"]["interval_80"] == row["interval_80"]
+
+
+@pytest.mark.parametrize(
+    "relative_source",
+    [
+        "data/processed/snapshots/2026/2026-preseason-context/predictive/context",
+        "data/processed/snapshots/2026/2026-live-2026-09-05T23-59-59Z-context/predictive/context",
+    ],
+)
+def test_preseason_and_in_season_distribution_exports_work(
+    tmp_path: Path, relative_source: str
+) -> None:
+    source = _copied_snapshot(tmp_path, relative_source)
+    manifest = build_site_data(
+        root=tmp_path, config_path=_config_for(source, tmp_path), output_directory=tmp_path / "data"
+    )
+    entry = manifest["snapshots"][0]
+    distribution = json.loads(
+        (tmp_path / "data" / entry["distribution_path"].removeprefix("data/")).read_text()
+    )
+    assert distribution["rank_count"] == 138
+    assert len(distribution["teams"]) == 138
+
+
+def test_context_and_history_export_distinct_distribution_artifacts(tmp_path: Path) -> None:
+    manifest = build_site_data(
+        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
+    )
+    for slot in {entry["publication_slot"] for entry in manifest["snapshots"]}:
+        context, history = (
+            next(
+                entry
+                for entry in manifest["snapshots"]
+                if entry["publication_slot"] == slot and entry["prior_family"] == prior
+            )
+            for prior in ("context", "history")
+        )
+        context_path = tmp_path / "data" / context["distribution_path"].removeprefix("data/")
+        history_path = tmp_path / "data" / history["distribution_path"].removeprefix("data/")
+        assert context_path != history_path
+        assert context_path.read_bytes() != history_path.read_bytes()
+
+
+def test_missing_pmf_rank_is_refused(tmp_path: Path) -> None:
+    source = _copied_snapshot(tmp_path)
+    path, fields, rows = _pmf_rows(source)
+    team_id = rows[0]["team_id"]
+    _write_pmf_rows(path, fields, [row for row in rows if not (row["team_id"] == team_id and row["rank"] == "1")])
+    with pytest.raises(SiteDataValidationError, match="missing or unexpected ranks"):
+        build_site_data(root=tmp_path, config_path=_config_for(source, tmp_path), output_directory=tmp_path / "data")
+
+
+def test_duplicate_pmf_rank_is_refused(tmp_path: Path) -> None:
+    source = _copied_snapshot(tmp_path)
+    path, fields, rows = _pmf_rows(source)
+    team_id = rows[0]["team_id"]
+    next(row for row in rows if row["team_id"] == team_id and row["rank"] == "2")["rank"] = "1"
+    _write_pmf_rows(path, fields, rows)
+    with pytest.raises(SiteDataValidationError, match="duplicate PMF rank"):
+        build_site_data(root=tmp_path, config_path=_config_for(source, tmp_path), output_directory=tmp_path / "data")
+
+
+def test_pmf_team_mismatch_is_refused(tmp_path: Path) -> None:
+    source = _copied_snapshot(tmp_path)
+    path, fields, rows = _pmf_rows(source)
+    team_id = rows[0]["team_id"]
+    for row in rows:
+        if row["team_id"] == team_id:
+            row["team_id"] = "not-a-ranking-team"
+    _write_pmf_rows(path, fields, rows)
+    with pytest.raises(SiteDataValidationError, match=f"missing PMF for FBS team {team_id}"):
+        build_site_data(root=tmp_path, config_path=_config_for(source, tmp_path), output_directory=tmp_path / "data")
+
+
+@pytest.mark.parametrize(
+    ("value", "message"),
+    [("nan", "must be finite"), ("-0.01", "must be between 0 and 1"), ("1.01", "must be between 0 and 1")],
+)
+def test_malformed_pmf_probability_is_refused(
+    tmp_path: Path, value: str, message: str
+) -> None:
+    source = _copied_snapshot(tmp_path)
+    path, fields, rows = _pmf_rows(source)
+    rows[0]["probability"] = value
+    _write_pmf_rows(path, fields, rows)
+    with pytest.raises(SiteDataValidationError, match=message):
+        build_site_data(root=tmp_path, config_path=_config_for(source, tmp_path), output_directory=tmp_path / "data")
+
+
+def test_unnormalized_pmf_is_refused_without_renormalizing(tmp_path: Path) -> None:
+    source = _copied_snapshot(tmp_path)
+    path, fields, rows = _pmf_rows(source)
+    rows[0]["probability"] = "0.1"
+    _write_pmf_rows(path, fields, rows)
+    with pytest.raises(SiteDataValidationError, match="sum to"):
+        build_site_data(root=tmp_path, config_path=_config_for(source, tmp_path), output_directory=tmp_path / "data")
 
 
 def test_invalid_snapshot_is_refused(tmp_path: Path) -> None:
@@ -283,5 +446,28 @@ def test_site_uses_base_safe_relative_paths() -> None:
     assert 'href="./assets/style.css"' in index
     assert 'src="./assets/app.js"' in index
     assert 'fetch("./data/manifest.json")' in app
+    assert 'fetch(`./${entry.distribution_path}`)' in app
+    assert "distributionCache" in app
+    assert "selectedEntry()?.snapshot_id !== entry.snapshot_id" in app
     assert "publication_slot" in app
     assert "staying on" in app
+
+
+def test_uncertainty_copy_uses_central_interval_language() -> None:
+    app = (ROOT / "site/assets/app.js").read_text(encoding="utf-8")
+    assert "The central 50% interval spans" in app
+    assert "The central 80% interval spans" in app
+    assert "The central 95% interval spans" in app
+    assert "Half of the posterior lies between" not in app
+    assert "80% lies between" not in app
+    assert "95% lies between" not in app
+
+
+def test_percentage_formatter_preserves_nonzero_and_noncertainty_distinctions() -> None:
+    """Keep lightweight static coverage because this dependency-free site has no JS runner."""
+    app = (ROOT / "site/assets/app.js").read_text(encoding="utf-8")
+    assert 'if (value === 1) return "100%";' in app
+    assert 'if (valueAsPercent < 0.01) return "<0.01%";' in app
+    assert 'if (valueAsPercent >= 99.95) return "<100%";' in app
+    assert 'if (valueAsPercent >= 95) return `${valueAsPercent.toFixed(1)}%`;' in app
+    assert 'return `${Math.round(valueAsPercent)}%`;' in app
