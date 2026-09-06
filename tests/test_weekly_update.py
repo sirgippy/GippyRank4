@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import runpy
+import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -12,7 +14,11 @@ import pytest
 from gippyrank import weekly_update
 from gippyrank.data.cfbd import GAME_FIELDS, CurrentSeasonAcquisition
 from gippyrank.posterior.snapshots import Snapshot
-from gippyrank.weekly_update import _upsert_publication, prepare_weekly_update
+from gippyrank.weekly_update import (
+    _github_output_lines,
+    _upsert_publication,
+    prepare_weekly_update,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -82,8 +88,23 @@ def test_weekly_update_pairs_h_c_preserves_preseason_and_is_idempotent(tmp_path:
     assert {entry["source"].rsplit("/", 1)[-1] for entry in entries} == {"context", "history"}
     manifest = json.loads((root / "site/data/manifest.json").read_text())
     assert manifest["default_publication_slot"] == "2026-09-12"
+    assert first.candidate_paths is not None
+    assert first.candidate_paths.context_snapshot == first.context.directory
+    assert first.candidate_paths.history_snapshot == first.history.directory
+    assert first.candidate_paths.report_md.is_file()
+    assert first.candidate_paths.report_json.is_file()
+    outputs = dict(line.split("=", 1) for line in _github_output_lines(first, root=root))
+    assert outputs["context_snapshot_path"] == first.context.directory.relative_to(root).as_posix()
+    assert outputs["history_snapshot_path"] == first.history.directory.relative_to(root).as_posix()
+    assert outputs["report_md_path"] == "data/processed/weekly_updates/2026-09-12.md"
+    assert outputs["report_json_path"] == "data/processed/weekly_updates/2026-09-12.json"
+    assert outputs["fbs_schedule_path"] == "data/raw/cfbd/games/2026.json"
+    assert outputs["fcs_provenance_path"] == "data/raw/cfbd/games/2026-fcs.json.provenance.json"
     second = prepare_weekly_update(season=2026, root=root)
     assert not second.published
+    assert set(dict(line.split("=", 1) for line in _github_output_lines(second, root=root))) == {
+        "published", "slot", "branch", "report_path"
+    }
 
 
 def test_weekly_h_c_effective_cutoff_uses_earliest_required_source(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -133,10 +154,122 @@ def test_update_workflow_is_manual_and_pages_stays_model_and_cfbd_free() -> None
     assert "CFBD_API_KEY" in workflow and "/games/teams" not in workflow
     assert "pull-requests: write" in workflow and "base: main" in workflow
     assert "merge" not in workflow.casefold()
+    assert "add-paths:" not in workflow
+    assert "weekly_updates/${{ steps.candidate.outputs.slot }}.*" not in workflow
     run_block = workflow.split("        run: |", 1)[1].split("      - name: Report", 1)[0]
     assert "${{ inputs." not in run_block
     assert 'args=(--season "$INPUT_SEASON"' in run_block
     assert "CFBD_API_KEY" not in pages and "build_snapshot" not in pages and "cfbd" not in pages.casefold()
+
+
+def test_update_workflow_commits_only_a_published_non_dry_run_candidate() -> None:
+    workflow = Path(".github/workflows/update-rankings.yml").read_text(encoding="utf-8")
+    expected_if = "if: inputs.dry_run != true && steps.candidate.outputs.published == 'true'"
+    assert workflow.count(expected_if) == 2
+    assert "- name: Commit approved publication candidate" in workflow
+    assert "bash scripts/stage_weekly_publication_candidate.sh" in workflow
+    assert 'git commit -m "$CANDIDATE_COMMIT_MESSAGE"' in workflow
+    assert "git push" not in workflow
+    for output_name, environment_name in (
+        ("fbs_schedule_path", "FBS_SCHEDULE_PATH"),
+        ("fbs_provenance_path", "FBS_PROVENANCE_PATH"),
+        ("fcs_schedule_path", "FCS_SCHEDULE_PATH"),
+        ("fcs_provenance_path", "FCS_PROVENANCE_PATH"),
+        ("processed_games_path", "PROCESSED_GAMES_PATH"),
+        ("context_snapshot_path", "CONTEXT_SNAPSHOT_PATH"),
+        ("history_snapshot_path", "HISTORY_SNAPSHOT_PATH"),
+        ("report_md_path", "REPORT_MD_PATH"),
+        ("report_json_path", "REPORT_JSON_PATH"),
+        ("publish_config_path", "PUBLISH_CONFIG_PATH"),
+        ("site_data_path", "SITE_DATA_PATH"),
+    ):
+        assert f"{environment_name}: ${{{{ steps.candidate.outputs.{output_name} }}}}" in workflow
+
+
+def _write_candidate_file(root: Path, relative_path: str, content: str = "candidate\n") -> None:
+    path = root / relative_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
+def _candidate_environment() -> dict[str, str]:
+    return {
+        "FBS_SCHEDULE_PATH": "data/raw/cfbd/games/2026.json",
+        "FBS_PROVENANCE_PATH": "data/raw/cfbd/games/2026.json.provenance.json",
+        "FCS_SCHEDULE_PATH": "data/raw/cfbd/games/2026-fcs.json",
+        "FCS_PROVENANCE_PATH": "data/raw/cfbd/games/2026-fcs.json.provenance.json",
+        "PROCESSED_GAMES_PATH": "data/processed/cfbd/games.csv",
+        "CONTEXT_SNAPSHOT_PATH": "data/processed/snapshots/2026/actual-context/predictive/context",
+        "HISTORY_SNAPSHOT_PATH": "data/processed/snapshots/2026/actual-history/predictive/history",
+        "REPORT_MD_PATH": "data/processed/weekly_updates/2026-09-12.md",
+        "REPORT_JSON_PATH": "data/processed/weekly_updates/2026-09-12.json",
+        "PUBLISH_CONFIG_PATH": "site/publish_config.json",
+        "SITE_DATA_PATH": "site/data",
+    }
+
+
+def _candidate_repo(tmp_path: Path) -> dict[str, str]:
+    (tmp_path / ".gitignore").write_text("data/raw/\ndata/processed/\n", encoding="utf-8")
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    environment = _candidate_environment()
+    for relative_path in environment.values():
+        if relative_path.endswith(("context", "history", "data")):
+            _write_candidate_file(tmp_path, f"{relative_path}/artifact.json")
+        else:
+            _write_candidate_file(tmp_path, relative_path)
+    _write_candidate_file(tmp_path, "data/processed/research/should-stay-ignored.txt")
+    _write_candidate_file(tmp_path, "data/raw/private/cache.json")
+    _write_candidate_file(tmp_path, ".venv/should-stay-ignored.txt")
+    return environment
+
+
+def test_candidate_staging_force_adds_only_durable_ignored_publication_artifacts(tmp_path: Path) -> None:
+    environment = _candidate_repo(tmp_path)
+    result = subprocess.run(
+        ["bash", str(ROOT / "scripts/stage_weekly_publication_candidate.sh")],
+        cwd=tmp_path,
+        env={**os.environ, **environment},
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    staged = subprocess.run(
+        ["git", "diff", "--cached", "--name-only"],
+        cwd=tmp_path,
+        check=True,
+        text=True,
+        capture_output=True,
+    ).stdout.splitlines()
+    assert set(staged) == {
+        "data/raw/cfbd/games/2026.json",
+        "data/raw/cfbd/games/2026.json.provenance.json",
+        "data/raw/cfbd/games/2026-fcs.json",
+        "data/raw/cfbd/games/2026-fcs.json.provenance.json",
+        "data/processed/cfbd/games.csv",
+        "data/processed/snapshots/2026/actual-context/predictive/context/artifact.json",
+        "data/processed/snapshots/2026/actual-history/predictive/history/artifact.json",
+        "data/processed/weekly_updates/2026-09-12.md",
+        "data/processed/weekly_updates/2026-09-12.json",
+        "site/publish_config.json",
+        "site/data/artifact.json",
+    }
+
+
+def test_candidate_staging_rejects_any_pre_staged_non_publication_path(tmp_path: Path) -> None:
+    environment = _candidate_repo(tmp_path)
+    _write_candidate_file(tmp_path, "unrelated-source-edit.txt")
+    subprocess.run(["git", "add", "unrelated-source-edit.txt"], cwd=tmp_path, check=True)
+    result = subprocess.run(
+        ["bash", str(ROOT / "scripts/stage_weekly_publication_candidate.sh")],
+        cwd=tmp_path,
+        env={**os.environ, **environment},
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode != 0
+    assert "Refusing to commit non-publication path: unrelated-source-edit.txt" in result.stderr
 
 
 def test_default_weekly_root_is_repository_with_project_and_publication_markers() -> None:
