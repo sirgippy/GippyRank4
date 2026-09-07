@@ -1,0 +1,2922 @@
+{
+  "candidate_fields": [
+    "total_yards",
+    "rushing_yards",
+    "rushing_attempts",
+    "passing_yards",
+    "pass_attempts",
+    "completions",
+    "sacks",
+    "interceptions_thrown",
+    "total_fumbles",
+    "fumbles_lost",
+    "fumbles_recovered",
+    "turnovers_reported",
+    "first_downs",
+    "penalties",
+    "penalty_yards",
+    "offensive_plays_derived"
+  ],
+  "category_inventory": [
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 256,
+      "development_observations": 7208,
+      "modern_observations": 13916,
+      "observations": 46671,
+      "raw_formats": "compound_pair=46671",
+      "source_category": "completionAttempts",
+      "team_game_coverage_pct": 99.9693,
+      "training_observations": 25291,
+      "unique_team_games": 42391,
+      "value_examples": "19-31 (240); 17-26 (235); 17-28 (230); 15-26 (228); 17-27 (228)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2016,
+      "current_observations": 252,
+      "development_observations": 7145,
+      "modern_observations": 8214,
+      "observations": 19511,
+      "raw_formats": "integer=19511",
+      "source_category": "defensiveTDs",
+      "team_game_coverage_pct": 40.9207,
+      "training_observations": 3900,
+      "unique_team_games": 17352,
+      "value_examples": "0 (16558); 1 (2541); 2 (382); 3 (24); 4 (6)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 256,
+      "development_observations": 7208,
+      "modern_observations": 13916,
+      "observations": 46671,
+      "raw_formats": "integer=46671",
+      "source_category": "firstDowns",
+      "team_game_coverage_pct": 99.9693,
+      "training_observations": 25291,
+      "unique_team_games": 42391,
+      "value_examples": "20 (3080); 22 (3038); 19 (2972); 21 (2960); 18 (2905)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 256,
+      "development_observations": 7208,
+      "modern_observations": 13916,
+      "observations": 46671,
+      "raw_formats": "compound_pair=46671",
+      "source_category": "fourthDownEff",
+      "team_game_coverage_pct": 99.9693,
+      "training_observations": 25291,
+      "unique_team_games": 42391,
+      "value_examples": "0-0 (10315); 0-1 (7250); 1-1 (6928); 1-2 (5486); 2-2 (2991)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 256,
+      "development_observations": 7208,
+      "modern_observations": 13916,
+      "observations": 46671,
+      "raw_formats": "integer=46671",
+      "source_category": "fumblesLost",
+      "team_game_coverage_pct": 99.9693,
+      "training_observations": 25291,
+      "unique_team_games": 42391,
+      "value_examples": "0 (23795); 1 (15280); 2 (5608); 3 (1508); 4 (372)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 189,
+      "development_observations": 7207,
+      "modern_observations": 13133,
+      "observations": 45820,
+      "raw_formats": "integer=45820",
+      "source_category": "fumblesRecovered",
+      "team_game_coverage_pct": 98.1087,
+      "training_observations": 25291,
+      "unique_team_games": 41602,
+      "value_examples": "0 (22997); 1 (14316); 2 (6143); 3 (1515); 4 (659)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 119,
+      "development_observations": 3907,
+      "modern_observations": 7556,
+      "observations": 26530,
+      "raw_formats": "integer=26530",
+      "source_category": "interceptionTDs",
+      "team_game_coverage_pct": 57.1338,
+      "training_observations": 14948,
+      "unique_team_games": 24227,
+      "value_examples": "0 (22575); 1 (3704); 2 (243); 3 (7); 4 (1)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 119,
+      "development_observations": 3907,
+      "modern_observations": 7556,
+      "observations": 26530,
+      "raw_formats": "integer=26530",
+      "source_category": "interceptionYards",
+      "team_game_coverage_pct": 57.1338,
+      "training_observations": 14948,
+      "unique_team_games": 24227,
+      "value_examples": "0 (8407); 1 (578); 2 (576); 3 (532); 4 (471)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 256,
+      "development_observations": 7208,
+      "modern_observations": 13916,
+      "observations": 46671,
+      "raw_formats": "integer=46671",
+      "source_category": "interceptions",
+      "team_game_coverage_pct": 99.9693,
+      "training_observations": 25291,
+      "unique_team_games": 42391,
+      "value_examples": "0 (19936); 1 (16258); 2 (7265); 3 (2417); 4 (638)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2005,
+      "current_observations": 215,
+      "development_observations": 6100,
+      "modern_observations": 11650,
+      "observations": 34708,
+      "raw_formats": "integer=34708",
+      "source_category": "kickReturnTDs",
+      "team_game_coverage_pct": 73.7242,
+      "training_observations": 16743,
+      "unique_team_games": 31262,
+      "value_examples": "0 (33627); 1 (1055); 2 (26)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2005,
+      "current_observations": 215,
+      "development_observations": 6100,
+      "modern_observations": 11650,
+      "observations": 34708,
+      "raw_formats": "integer=34708",
+      "source_category": "kickReturnYards",
+      "team_game_coverage_pct": 73.7242,
+      "training_observations": 16743,
+      "unique_team_games": 31262,
+      "value_examples": "21 (474); 18 (459); 20 (455); 19 (447); 23 (438)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2005,
+      "current_observations": 215,
+      "development_observations": 6100,
+      "modern_observations": 11650,
+      "observations": 34708,
+      "raw_formats": "integer=34708",
+      "source_category": "kickReturns",
+      "team_game_coverage_pct": 73.7242,
+      "training_observations": 16743,
+      "unique_team_games": 31262,
+      "value_examples": "2 (7842); 1 (7102); 3 (6708); 4 (4882); 5 (3453)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 242,
+      "development_observations": 7081,
+      "modern_observations": 13575,
+      "observations": 45484,
+      "raw_formats": "integer=45484",
+      "source_category": "kickingPoints",
+      "team_game_coverage_pct": 97.7078,
+      "training_observations": 24586,
+      "unique_team_games": 41432,
+      "value_examples": "6 (4833); 7 (4675); 5 (4598); 4 (4470); 8 (4183)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 256,
+      "development_observations": 7208,
+      "modern_observations": 13916,
+      "observations": 46671,
+      "raw_formats": "integer=46671",
+      "source_category": "netPassingYards",
+      "team_game_coverage_pct": 99.9693,
+      "training_observations": 25291,
+      "unique_team_games": 42391,
+      "value_examples": "208 (219); 202 (218); 242 (217); 194 (215); 189 (212)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2016,
+      "current_observations": 252,
+      "development_observations": 7145,
+      "modern_observations": 8214,
+      "observations": 19511,
+      "raw_formats": "integer=19511",
+      "source_category": "passesDeflected",
+      "team_game_coverage_pct": 40.9207,
+      "training_observations": 3900,
+      "unique_team_games": 17352,
+      "value_examples": "2 (3745); 3 (3464); 1 (2931); 4 (2844); 5 (1945)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 119,
+      "development_observations": 3907,
+      "modern_observations": 7556,
+      "observations": 26530,
+      "raw_formats": "integer=26530",
+      "source_category": "passesIntercepted",
+      "team_game_coverage_pct": 57.1338,
+      "training_observations": 14948,
+      "unique_team_games": 24227,
+      "value_examples": "1 (16155); 2 (7187); 3 (2416); 4 (615); 5 (128)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 254,
+      "development_observations": 7206,
+      "modern_observations": 13914,
+      "observations": 46584,
+      "raw_formats": "integer=46584",
+      "source_category": "passingTDs",
+      "team_game_coverage_pct": 99.7948,
+      "training_observations": 25210,
+      "unique_team_games": 42317,
+      "value_examples": "1 (14175); 0 (11044); 2 (10854); 3 (6229); 4 (2748)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 256,
+      "development_observations": 7191,
+      "modern_observations": 13916,
+      "observations": 46592,
+      "raw_formats": "time_mm_ss=46592",
+      "source_category": "possessionTime",
+      "team_game_coverage_pct": 99.8444,
+      "training_observations": 25229,
+      "unique_team_games": 42338,
+      "value_examples": "30:00 (65); 30:41 (65); 29:19 (64); 31:28 (63); 31:47 (63)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 175,
+      "development_observations": 5059,
+      "modern_observations": 9394,
+      "observations": 35374,
+      "raw_formats": "integer=35374",
+      "source_category": "puntReturnTDs",
+      "team_game_coverage_pct": 76.2923,
+      "training_observations": 20746,
+      "unique_team_games": 32351,
+      "value_examples": "0 (33580); 1 (1713); 2 (78); 3 (3)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 175,
+      "development_observations": 5059,
+      "modern_observations": 9394,
+      "observations": 35374,
+      "raw_formats": "integer=35374",
+      "source_category": "puntReturnYards",
+      "team_game_coverage_pct": 76.2923,
+      "training_observations": 20746,
+      "unique_team_games": 32351,
+      "value_examples": "0 (3840); 1 (1283); 2 (1248); 4 (1136); 3 (1115)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 175,
+      "development_observations": 5059,
+      "modern_observations": 9394,
+      "observations": 35374,
+      "raw_formats": "integer=35374",
+      "source_category": "puntReturns",
+      "team_game_coverage_pct": 76.2923,
+      "training_observations": 20746,
+      "unique_team_games": 32351,
+      "value_examples": "1 (12345); 2 (9340); 3 (6200); 4 (3599); 5 (2112)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2016,
+      "current_observations": 252,
+      "development_observations": 7145,
+      "modern_observations": 8214,
+      "observations": 19511,
+      "raw_formats": "integer=19511",
+      "source_category": "qbHurries",
+      "team_game_coverage_pct": 40.9207,
+      "training_observations": 3900,
+      "unique_team_games": 17352,
+      "value_examples": "0 (5287); 1 (3745); 2 (3316); 3 (2419); 4 (1688)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 256,
+      "development_observations": 7208,
+      "modern_observations": 13916,
+      "observations": 46671,
+      "raw_formats": "integer=46671",
+      "source_category": "rushingAttempts",
+      "team_game_coverage_pct": 99.9693,
+      "training_observations": 25291,
+      "unique_team_games": 42391,
+      "value_examples": "35 (2015); 37 (1962); 34 (1934); 36 (1917); 38 (1883)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 254,
+      "development_observations": 7207,
+      "modern_observations": 13914,
+      "observations": 46662,
+      "raw_formats": "integer=46662",
+      "source_category": "rushingTDs",
+      "team_game_coverage_pct": 99.9528,
+      "training_observations": 25287,
+      "unique_team_games": 42384,
+      "value_examples": "1 (13141); 0 (12105); 2 (9736); 3 (6090); 4 (3190)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 256,
+      "development_observations": 7208,
+      "modern_observations": 13916,
+      "observations": 46671,
+      "raw_formats": "integer=46671",
+      "source_category": "rushingYards",
+      "team_game_coverage_pct": 99.9693,
+      "training_observations": 25291,
+      "unique_team_games": 42391,
+      "value_examples": "123 (249); 148 (243); 124 (238); 113 (234); 139 (233)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2016,
+      "current_observations": 252,
+      "development_observations": 7145,
+      "modern_observations": 8214,
+      "observations": 19511,
+      "raw_formats": "decimal=39; integer=19472",
+      "source_category": "sacks",
+      "team_game_coverage_pct": 40.9207,
+      "training_observations": 3900,
+      "unique_team_games": 17352,
+      "value_examples": "1 (4794); 2 (4184); 0 (3686); 3 (2949); 4 (1877)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2016,
+      "current_observations": 252,
+      "development_observations": 7145,
+      "modern_observations": 8214,
+      "observations": 19511,
+      "raw_formats": "integer=19511",
+      "source_category": "tackles",
+      "team_game_coverage_pct": 40.9207,
+      "training_observations": 3900,
+      "unique_team_games": 17352,
+      "value_examples": "36 (802); 38 (788); 39 (777); 37 (764); 33 (755)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2016,
+      "current_observations": 252,
+      "development_observations": 7145,
+      "modern_observations": 8214,
+      "observations": 19511,
+      "raw_formats": "decimal=116; integer=19395",
+      "source_category": "tacklesForLoss",
+      "team_game_coverage_pct": 40.9207,
+      "training_observations": 3900,
+      "unique_team_games": 17352,
+      "value_examples": "5 (2822); 6 (2630); 4 (2511); 7 (2086); 3 (2034)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 256,
+      "development_observations": 7208,
+      "modern_observations": 13916,
+      "observations": 46671,
+      "raw_formats": "compound_pair=46671",
+      "source_category": "thirdDownEff",
+      "team_game_coverage_pct": 99.9693,
+      "training_observations": 25291,
+      "unique_team_games": 42391,
+      "value_examples": "5-14 (1213); 5-13 (1201); 6-15 (1101); 6-14 (1099); 4-13 (1093)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2016,
+      "current_observations": 189,
+      "development_observations": 4362,
+      "modern_observations": 11031,
+      "observations": 18893,
+      "raw_formats": "integer=18893",
+      "source_category": "totalFumbles",
+      "team_game_coverage_pct": 40.5292,
+      "training_observations": 3311,
+      "unique_team_games": 17186,
+      "value_examples": "1 (7517); 2 (4903); 0 (3227); 3 (1871); 4 (906)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 256,
+      "development_observations": 7208,
+      "modern_observations": 13916,
+      "observations": 46671,
+      "raw_formats": "compound_pair=46671",
+      "source_category": "totalPenaltiesYards",
+      "team_game_coverage_pct": 99.9693,
+      "training_observations": 25291,
+      "unique_team_games": 42391,
+      "value_examples": "0-0 (3171); 3-25 (791); 4-30 (687); 5-45 (686); 5-40 (640)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 256,
+      "development_observations": 7208,
+      "modern_observations": 13916,
+      "observations": 46671,
+      "raw_formats": "integer=46671",
+      "source_category": "totalYards",
+      "team_game_coverage_pct": 99.9693,
+      "training_observations": 25291,
+      "unique_team_games": 42391,
+      "value_examples": "391 (176); 384 (173); 363 (172); 401 (170); 351 (169)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 256,
+      "development_observations": 7208,
+      "modern_observations": 13916,
+      "observations": 46671,
+      "raw_formats": "integer=46671",
+      "source_category": "turnovers",
+      "team_game_coverage_pct": 99.9693,
+      "training_observations": 25291,
+      "unique_team_games": 42391,
+      "value_examples": "1 (14648); 2 (11266); 0 (10442); 3 (6076); 4 (2771)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 256,
+      "development_observations": 7208,
+      "modern_observations": 13916,
+      "observations": 46671,
+      "raw_formats": "decimal=46665; other=6",
+      "source_category": "yardsPerPass",
+      "team_game_coverage_pct": 99.9693,
+      "training_observations": 25291,
+      "unique_team_games": 42391,
+      "value_examples": "6.8 (869); 6.3 (851); 6.0 (819); 6.7 (809); 6.9 (793)"
+    },
+    {
+      "coverage_end": 2026,
+      "coverage_start": 2004,
+      "current_observations": 256,
+      "development_observations": 7208,
+      "modern_observations": 13916,
+      "observations": 46671,
+      "raw_formats": "decimal=46665; other=6",
+      "source_category": "yardsPerRushAttempt",
+      "team_game_coverage_pct": 99.9693,
+      "training_observations": 25291,
+      "unique_team_games": 42391,
+      "value_examples": "3.8 (1156); 3.6 (1087); 3.9 (1085); 4.3 (1079); 4.0 (1077)"
+    }
+  ],
+  "category_spelling_variants": {},
+  "corpus": {
+    "duplicate_category_rows": 4,
+    "extreme_candidate_values": {
+      "fumbles_recovered": 14,
+      "offensive_plays_derived": 1,
+      "penalties": 6,
+      "penalty_yards": 1,
+      "rushing_attempts": 1,
+      "rushing_yards": 79,
+      "sacks": 10,
+      "total_fumbles": 8,
+      "total_yards": 3
+    },
+    "impossible_candidate_values": {
+      "penalties": 1,
+      "penalty_yards": 1,
+      "total_yards": 3
+    },
+    "malformed_candidate_values": {},
+    "schedule_conflicts": 0,
+    "schedule_exact_duplicates": 2379,
+    "schedule_unique_games": 36306,
+    "stat_conflicts": 0,
+    "stat_exact_duplicates": 4280,
+    "stat_payload_files": 764,
+    "stat_team_row_occurrences": 46684,
+    "stat_unique_team_games": 42404
+  },
+  "coverage": {
+    "by_season_pairing_rows": 1536,
+    "period_pairing": [
+      {
+        "expected_team_games": 20294,
+        "field": "total_yards",
+        "pairing": "FBS-FBS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 20224
+      },
+      {
+        "expected_team_games": 20294,
+        "field": "rushing_yards",
+        "pairing": "FBS-FBS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 20224
+      },
+      {
+        "expected_team_games": 20294,
+        "field": "rushing_attempts",
+        "pairing": "FBS-FBS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 20224
+      },
+      {
+        "expected_team_games": 20294,
+        "field": "passing_yards",
+        "pairing": "FBS-FBS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 20224
+      },
+      {
+        "expected_team_games": 20294,
+        "field": "pass_attempts",
+        "pairing": "FBS-FBS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 20224
+      },
+      {
+        "expected_team_games": 20294,
+        "field": "completions",
+        "pairing": "FBS-FBS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 20224
+      },
+      {
+        "expected_team_games": 20294,
+        "field": "sacks",
+        "pairing": "FBS-FBS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 3060
+      },
+      {
+        "expected_team_games": 20294,
+        "field": "interceptions_thrown",
+        "pairing": "FBS-FBS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 20224
+      },
+      {
+        "expected_team_games": 20294,
+        "field": "total_fumbles",
+        "pairing": "FBS-FBS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 2589
+      },
+      {
+        "expected_team_games": 20294,
+        "field": "fumbles_lost",
+        "pairing": "FBS-FBS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 20224
+      },
+      {
+        "expected_team_games": 20294,
+        "field": "fumbles_recovered",
+        "pairing": "FBS-FBS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 20224
+      },
+      {
+        "expected_team_games": 20294,
+        "field": "turnovers_reported",
+        "pairing": "FBS-FBS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 20224
+      },
+      {
+        "expected_team_games": 20294,
+        "field": "first_downs",
+        "pairing": "FBS-FBS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 20224
+      },
+      {
+        "expected_team_games": 20294,
+        "field": "penalties",
+        "pairing": "FBS-FBS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 20224
+      },
+      {
+        "expected_team_games": 20294,
+        "field": "penalty_yards",
+        "pairing": "FBS-FBS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 20224
+      },
+      {
+        "expected_team_games": 20294,
+        "field": "offensive_plays_derived",
+        "pairing": "FBS-FBS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 20224
+      },
+      {
+        "expected_team_games": 2570,
+        "field": "total_yards",
+        "pairing": "FBS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 2522
+      },
+      {
+        "expected_team_games": 2570,
+        "field": "rushing_yards",
+        "pairing": "FBS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 2522
+      },
+      {
+        "expected_team_games": 2570,
+        "field": "rushing_attempts",
+        "pairing": "FBS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 2522
+      },
+      {
+        "expected_team_games": 2570,
+        "field": "passing_yards",
+        "pairing": "FBS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 2522
+      },
+      {
+        "expected_team_games": 2570,
+        "field": "pass_attempts",
+        "pairing": "FBS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 2522
+      },
+      {
+        "expected_team_games": 2570,
+        "field": "completions",
+        "pairing": "FBS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 2522
+      },
+      {
+        "expected_team_games": 2570,
+        "field": "sacks",
+        "pairing": "FBS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 420
+      },
+      {
+        "expected_team_games": 2570,
+        "field": "interceptions_thrown",
+        "pairing": "FBS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 2522
+      },
+      {
+        "expected_team_games": 2570,
+        "field": "total_fumbles",
+        "pairing": "FBS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 361
+      },
+      {
+        "expected_team_games": 2570,
+        "field": "fumbles_lost",
+        "pairing": "FBS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 2522
+      },
+      {
+        "expected_team_games": 2570,
+        "field": "fumbles_recovered",
+        "pairing": "FBS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 2522
+      },
+      {
+        "expected_team_games": 2570,
+        "field": "turnovers_reported",
+        "pairing": "FBS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 2522
+      },
+      {
+        "expected_team_games": 2570,
+        "field": "first_downs",
+        "pairing": "FBS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 2522
+      },
+      {
+        "expected_team_games": 2570,
+        "field": "penalties",
+        "pairing": "FBS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 2522
+      },
+      {
+        "expected_team_games": 2570,
+        "field": "penalty_yards",
+        "pairing": "FBS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 2522
+      },
+      {
+        "expected_team_games": 2570,
+        "field": "offensive_plays_derived",
+        "pairing": "FBS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 2522
+      },
+      {
+        "expected_team_games": 16192,
+        "field": "total_yards",
+        "pairing": "FCS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 19
+      },
+      {
+        "expected_team_games": 16192,
+        "field": "rushing_yards",
+        "pairing": "FCS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 19
+      },
+      {
+        "expected_team_games": 16192,
+        "field": "rushing_attempts",
+        "pairing": "FCS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 19
+      },
+      {
+        "expected_team_games": 16192,
+        "field": "passing_yards",
+        "pairing": "FCS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 19
+      },
+      {
+        "expected_team_games": 16192,
+        "field": "pass_attempts",
+        "pairing": "FCS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 19
+      },
+      {
+        "expected_team_games": 16192,
+        "field": "completions",
+        "pairing": "FCS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 19
+      },
+      {
+        "expected_team_games": 16192,
+        "field": "sacks",
+        "pairing": "FCS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 16192,
+        "field": "interceptions_thrown",
+        "pairing": "FCS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 19
+      },
+      {
+        "expected_team_games": 16192,
+        "field": "total_fumbles",
+        "pairing": "FCS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 16192,
+        "field": "fumbles_lost",
+        "pairing": "FCS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 19
+      },
+      {
+        "expected_team_games": 16192,
+        "field": "fumbles_recovered",
+        "pairing": "FCS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 19
+      },
+      {
+        "expected_team_games": 16192,
+        "field": "turnovers_reported",
+        "pairing": "FCS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 19
+      },
+      {
+        "expected_team_games": 16192,
+        "field": "first_downs",
+        "pairing": "FCS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 19
+      },
+      {
+        "expected_team_games": 16192,
+        "field": "penalties",
+        "pairing": "FCS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 19
+      },
+      {
+        "expected_team_games": 16192,
+        "field": "penalty_yards",
+        "pairing": "FCS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 19
+      },
+      {
+        "expected_team_games": 16192,
+        "field": "offensive_plays_derived",
+        "pairing": "FCS-FCS",
+        "period": "training_2004_2017",
+        "team_games_with_value": 19
+      },
+      {
+        "expected_team_games": 39056,
+        "field": "total_yards",
+        "pairing": "all",
+        "period": "training_2004_2017",
+        "team_games_with_value": 22765
+      },
+      {
+        "expected_team_games": 39056,
+        "field": "rushing_yards",
+        "pairing": "all",
+        "period": "training_2004_2017",
+        "team_games_with_value": 22765
+      },
+      {
+        "expected_team_games": 39056,
+        "field": "rushing_attempts",
+        "pairing": "all",
+        "period": "training_2004_2017",
+        "team_games_with_value": 22765
+      },
+      {
+        "expected_team_games": 39056,
+        "field": "passing_yards",
+        "pairing": "all",
+        "period": "training_2004_2017",
+        "team_games_with_value": 22765
+      },
+      {
+        "expected_team_games": 39056,
+        "field": "pass_attempts",
+        "pairing": "all",
+        "period": "training_2004_2017",
+        "team_games_with_value": 22765
+      },
+      {
+        "expected_team_games": 39056,
+        "field": "completions",
+        "pairing": "all",
+        "period": "training_2004_2017",
+        "team_games_with_value": 22765
+      },
+      {
+        "expected_team_games": 39056,
+        "field": "sacks",
+        "pairing": "all",
+        "period": "training_2004_2017",
+        "team_games_with_value": 3480
+      },
+      {
+        "expected_team_games": 39056,
+        "field": "interceptions_thrown",
+        "pairing": "all",
+        "period": "training_2004_2017",
+        "team_games_with_value": 22765
+      },
+      {
+        "expected_team_games": 39056,
+        "field": "total_fumbles",
+        "pairing": "all",
+        "period": "training_2004_2017",
+        "team_games_with_value": 2950
+      },
+      {
+        "expected_team_games": 39056,
+        "field": "fumbles_lost",
+        "pairing": "all",
+        "period": "training_2004_2017",
+        "team_games_with_value": 22765
+      },
+      {
+        "expected_team_games": 39056,
+        "field": "fumbles_recovered",
+        "pairing": "all",
+        "period": "training_2004_2017",
+        "team_games_with_value": 22765
+      },
+      {
+        "expected_team_games": 39056,
+        "field": "turnovers_reported",
+        "pairing": "all",
+        "period": "training_2004_2017",
+        "team_games_with_value": 22765
+      },
+      {
+        "expected_team_games": 39056,
+        "field": "first_downs",
+        "pairing": "all",
+        "period": "training_2004_2017",
+        "team_games_with_value": 22765
+      },
+      {
+        "expected_team_games": 39056,
+        "field": "penalties",
+        "pairing": "all",
+        "period": "training_2004_2017",
+        "team_games_with_value": 22765
+      },
+      {
+        "expected_team_games": 39056,
+        "field": "penalty_yards",
+        "pairing": "all",
+        "period": "training_2004_2017",
+        "team_games_with_value": 22765
+      },
+      {
+        "expected_team_games": 39056,
+        "field": "offensive_plays_derived",
+        "pairing": "all",
+        "period": "training_2004_2017",
+        "team_games_with_value": 22765
+      },
+      {
+        "expected_team_games": 5700,
+        "field": "total_yards",
+        "pairing": "FBS-FBS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 5700
+      },
+      {
+        "expected_team_games": 5700,
+        "field": "rushing_yards",
+        "pairing": "FBS-FBS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 5700
+      },
+      {
+        "expected_team_games": 5700,
+        "field": "rushing_attempts",
+        "pairing": "FBS-FBS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 5700
+      },
+      {
+        "expected_team_games": 5700,
+        "field": "passing_yards",
+        "pairing": "FBS-FBS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 5700
+      },
+      {
+        "expected_team_games": 5700,
+        "field": "pass_attempts",
+        "pairing": "FBS-FBS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 5700
+      },
+      {
+        "expected_team_games": 5700,
+        "field": "completions",
+        "pairing": "FBS-FBS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 5700
+      },
+      {
+        "expected_team_games": 5700,
+        "field": "sacks",
+        "pairing": "FBS-FBS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 5651
+      },
+      {
+        "expected_team_games": 5700,
+        "field": "interceptions_thrown",
+        "pairing": "FBS-FBS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 5700
+      },
+      {
+        "expected_team_games": 5700,
+        "field": "total_fumbles",
+        "pairing": "FBS-FBS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 3268
+      },
+      {
+        "expected_team_games": 5700,
+        "field": "fumbles_lost",
+        "pairing": "FBS-FBS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 5700
+      },
+      {
+        "expected_team_games": 5700,
+        "field": "fumbles_recovered",
+        "pairing": "FBS-FBS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 5699
+      },
+      {
+        "expected_team_games": 5700,
+        "field": "turnovers_reported",
+        "pairing": "FBS-FBS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 5700
+      },
+      {
+        "expected_team_games": 5700,
+        "field": "first_downs",
+        "pairing": "FBS-FBS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 5700
+      },
+      {
+        "expected_team_games": 5700,
+        "field": "penalties",
+        "pairing": "FBS-FBS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 5700
+      },
+      {
+        "expected_team_games": 5700,
+        "field": "penalty_yards",
+        "pairing": "FBS-FBS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 5700
+      },
+      {
+        "expected_team_games": 5700,
+        "field": "offensive_plays_derived",
+        "pairing": "FBS-FBS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 5700
+      },
+      {
+        "expected_team_games": 758,
+        "field": "total_yards",
+        "pairing": "FBS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 754
+      },
+      {
+        "expected_team_games": 758,
+        "field": "rushing_yards",
+        "pairing": "FBS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 754
+      },
+      {
+        "expected_team_games": 758,
+        "field": "rushing_attempts",
+        "pairing": "FBS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 754
+      },
+      {
+        "expected_team_games": 758,
+        "field": "passing_yards",
+        "pairing": "FBS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 754
+      },
+      {
+        "expected_team_games": 758,
+        "field": "pass_attempts",
+        "pairing": "FBS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 754
+      },
+      {
+        "expected_team_games": 758,
+        "field": "completions",
+        "pairing": "FBS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 754
+      },
+      {
+        "expected_team_games": 758,
+        "field": "sacks",
+        "pairing": "FBS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 747
+      },
+      {
+        "expected_team_games": 758,
+        "field": "interceptions_thrown",
+        "pairing": "FBS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 754
+      },
+      {
+        "expected_team_games": 758,
+        "field": "total_fumbles",
+        "pairing": "FBS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 547
+      },
+      {
+        "expected_team_games": 758,
+        "field": "fumbles_lost",
+        "pairing": "FBS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 754
+      },
+      {
+        "expected_team_games": 758,
+        "field": "fumbles_recovered",
+        "pairing": "FBS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 754
+      },
+      {
+        "expected_team_games": 758,
+        "field": "turnovers_reported",
+        "pairing": "FBS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 754
+      },
+      {
+        "expected_team_games": 758,
+        "field": "first_downs",
+        "pairing": "FBS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 754
+      },
+      {
+        "expected_team_games": 758,
+        "field": "penalties",
+        "pairing": "FBS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 754
+      },
+      {
+        "expected_team_games": 758,
+        "field": "penalty_yards",
+        "pairing": "FBS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 754
+      },
+      {
+        "expected_team_games": 758,
+        "field": "offensive_plays_derived",
+        "pairing": "FBS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 754
+      },
+      {
+        "expected_team_games": 4342,
+        "field": "total_yards",
+        "pairing": "FCS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 4342,
+        "field": "rushing_yards",
+        "pairing": "FCS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 4342,
+        "field": "rushing_attempts",
+        "pairing": "FCS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 4342,
+        "field": "passing_yards",
+        "pairing": "FCS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 4342,
+        "field": "pass_attempts",
+        "pairing": "FCS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 4342,
+        "field": "completions",
+        "pairing": "FCS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 4342,
+        "field": "sacks",
+        "pairing": "FCS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 4342,
+        "field": "interceptions_thrown",
+        "pairing": "FCS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 4342,
+        "field": "total_fumbles",
+        "pairing": "FCS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 4342,
+        "field": "fumbles_lost",
+        "pairing": "FCS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 4342,
+        "field": "fumbles_recovered",
+        "pairing": "FCS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 4342,
+        "field": "turnovers_reported",
+        "pairing": "FCS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 4342,
+        "field": "first_downs",
+        "pairing": "FCS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 4342,
+        "field": "penalties",
+        "pairing": "FCS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 4342,
+        "field": "penalty_yards",
+        "pairing": "FCS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 4342,
+        "field": "offensive_plays_derived",
+        "pairing": "FCS-FCS",
+        "period": "development_2018_2021",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 10800,
+        "field": "total_yards",
+        "pairing": "all",
+        "period": "development_2018_2021",
+        "team_games_with_value": 6454
+      },
+      {
+        "expected_team_games": 10800,
+        "field": "rushing_yards",
+        "pairing": "all",
+        "period": "development_2018_2021",
+        "team_games_with_value": 6454
+      },
+      {
+        "expected_team_games": 10800,
+        "field": "rushing_attempts",
+        "pairing": "all",
+        "period": "development_2018_2021",
+        "team_games_with_value": 6454
+      },
+      {
+        "expected_team_games": 10800,
+        "field": "passing_yards",
+        "pairing": "all",
+        "period": "development_2018_2021",
+        "team_games_with_value": 6454
+      },
+      {
+        "expected_team_games": 10800,
+        "field": "pass_attempts",
+        "pairing": "all",
+        "period": "development_2018_2021",
+        "team_games_with_value": 6454
+      },
+      {
+        "expected_team_games": 10800,
+        "field": "completions",
+        "pairing": "all",
+        "period": "development_2018_2021",
+        "team_games_with_value": 6454
+      },
+      {
+        "expected_team_games": 10800,
+        "field": "sacks",
+        "pairing": "all",
+        "period": "development_2018_2021",
+        "team_games_with_value": 6398
+      },
+      {
+        "expected_team_games": 10800,
+        "field": "interceptions_thrown",
+        "pairing": "all",
+        "period": "development_2018_2021",
+        "team_games_with_value": 6454
+      },
+      {
+        "expected_team_games": 10800,
+        "field": "total_fumbles",
+        "pairing": "all",
+        "period": "development_2018_2021",
+        "team_games_with_value": 3815
+      },
+      {
+        "expected_team_games": 10800,
+        "field": "fumbles_lost",
+        "pairing": "all",
+        "period": "development_2018_2021",
+        "team_games_with_value": 6454
+      },
+      {
+        "expected_team_games": 10800,
+        "field": "fumbles_recovered",
+        "pairing": "all",
+        "period": "development_2018_2021",
+        "team_games_with_value": 6453
+      },
+      {
+        "expected_team_games": 10800,
+        "field": "turnovers_reported",
+        "pairing": "all",
+        "period": "development_2018_2021",
+        "team_games_with_value": 6454
+      },
+      {
+        "expected_team_games": 10800,
+        "field": "first_downs",
+        "pairing": "all",
+        "period": "development_2018_2021",
+        "team_games_with_value": 6454
+      },
+      {
+        "expected_team_games": 10800,
+        "field": "penalties",
+        "pairing": "all",
+        "period": "development_2018_2021",
+        "team_games_with_value": 6454
+      },
+      {
+        "expected_team_games": 10800,
+        "field": "penalty_yards",
+        "pairing": "all",
+        "period": "development_2018_2021",
+        "team_games_with_value": 6454
+      },
+      {
+        "expected_team_games": 10800,
+        "field": "offensive_plays_derived",
+        "pairing": "all",
+        "period": "development_2018_2021",
+        "team_games_with_value": 6454
+      },
+      {
+        "expected_team_games": 6348,
+        "field": "total_yards",
+        "pairing": "FBS-FBS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 6346
+      },
+      {
+        "expected_team_games": 6348,
+        "field": "rushing_yards",
+        "pairing": "FBS-FBS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 6346
+      },
+      {
+        "expected_team_games": 6348,
+        "field": "rushing_attempts",
+        "pairing": "FBS-FBS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 6346
+      },
+      {
+        "expected_team_games": 6348,
+        "field": "passing_yards",
+        "pairing": "FBS-FBS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 6346
+      },
+      {
+        "expected_team_games": 6348,
+        "field": "pass_attempts",
+        "pairing": "FBS-FBS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 6346
+      },
+      {
+        "expected_team_games": 6348,
+        "field": "completions",
+        "pairing": "FBS-FBS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 6346
+      },
+      {
+        "expected_team_games": 6348,
+        "field": "sacks",
+        "pairing": "FBS-FBS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 6282
+      },
+      {
+        "expected_team_games": 6348,
+        "field": "interceptions_thrown",
+        "pairing": "FBS-FBS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 6346
+      },
+      {
+        "expected_team_games": 6348,
+        "field": "total_fumbles",
+        "pairing": "FBS-FBS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 5064
+      },
+      {
+        "expected_team_games": 6348,
+        "field": "fumbles_lost",
+        "pairing": "FBS-FBS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 6346
+      },
+      {
+        "expected_team_games": 6348,
+        "field": "fumbles_recovered",
+        "pairing": "FBS-FBS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 5996
+      },
+      {
+        "expected_team_games": 6348,
+        "field": "turnovers_reported",
+        "pairing": "FBS-FBS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 6346
+      },
+      {
+        "expected_team_games": 6348,
+        "field": "first_downs",
+        "pairing": "FBS-FBS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 6346
+      },
+      {
+        "expected_team_games": 6348,
+        "field": "penalties",
+        "pairing": "FBS-FBS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 6346
+      },
+      {
+        "expected_team_games": 6348,
+        "field": "penalty_yards",
+        "pairing": "FBS-FBS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 6346
+      },
+      {
+        "expected_team_games": 6348,
+        "field": "offensive_plays_derived",
+        "pairing": "FBS-FBS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 6346
+      },
+      {
+        "expected_team_games": 970,
+        "field": "total_yards",
+        "pairing": "FBS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 970
+      },
+      {
+        "expected_team_games": 970,
+        "field": "rushing_yards",
+        "pairing": "FBS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 970
+      },
+      {
+        "expected_team_games": 970,
+        "field": "rushing_attempts",
+        "pairing": "FBS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 970
+      },
+      {
+        "expected_team_games": 970,
+        "field": "passing_yards",
+        "pairing": "FBS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 970
+      },
+      {
+        "expected_team_games": 970,
+        "field": "pass_attempts",
+        "pairing": "FBS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 970
+      },
+      {
+        "expected_team_games": 970,
+        "field": "completions",
+        "pairing": "FBS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 970
+      },
+      {
+        "expected_team_games": 970,
+        "field": "sacks",
+        "pairing": "FBS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 958
+      },
+      {
+        "expected_team_games": 970,
+        "field": "interceptions_thrown",
+        "pairing": "FBS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 970
+      },
+      {
+        "expected_team_games": 970,
+        "field": "total_fumbles",
+        "pairing": "FBS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 772
+      },
+      {
+        "expected_team_games": 970,
+        "field": "fumbles_lost",
+        "pairing": "FBS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 970
+      },
+      {
+        "expected_team_games": 970,
+        "field": "fumbles_recovered",
+        "pairing": "FBS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 915
+      },
+      {
+        "expected_team_games": 970,
+        "field": "turnovers_reported",
+        "pairing": "FBS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 970
+      },
+      {
+        "expected_team_games": 970,
+        "field": "first_downs",
+        "pairing": "FBS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 970
+      },
+      {
+        "expected_team_games": 970,
+        "field": "penalties",
+        "pairing": "FBS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 970
+      },
+      {
+        "expected_team_games": 970,
+        "field": "penalty_yards",
+        "pairing": "FBS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 970
+      },
+      {
+        "expected_team_games": 970,
+        "field": "offensive_plays_derived",
+        "pairing": "FBS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 970
+      },
+      {
+        "expected_team_games": 5326,
+        "field": "total_yards",
+        "pairing": "FCS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 5238
+      },
+      {
+        "expected_team_games": 5326,
+        "field": "rushing_yards",
+        "pairing": "FCS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 5238
+      },
+      {
+        "expected_team_games": 5326,
+        "field": "rushing_attempts",
+        "pairing": "FCS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 5238
+      },
+      {
+        "expected_team_games": 5326,
+        "field": "passing_yards",
+        "pairing": "FCS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 5238
+      },
+      {
+        "expected_team_games": 5326,
+        "field": "pass_attempts",
+        "pairing": "FCS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 5238
+      },
+      {
+        "expected_team_games": 5326,
+        "field": "completions",
+        "pairing": "FCS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 5238
+      },
+      {
+        "expected_team_games": 5326,
+        "field": "sacks",
+        "pairing": "FCS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 16
+      },
+      {
+        "expected_team_games": 5326,
+        "field": "interceptions_thrown",
+        "pairing": "FCS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 5238
+      },
+      {
+        "expected_team_games": 5326,
+        "field": "total_fumbles",
+        "pairing": "FCS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 4103
+      },
+      {
+        "expected_team_games": 5326,
+        "field": "fumbles_lost",
+        "pairing": "FCS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 5238
+      },
+      {
+        "expected_team_games": 5326,
+        "field": "fumbles_recovered",
+        "pairing": "FCS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 4928
+      },
+      {
+        "expected_team_games": 5326,
+        "field": "turnovers_reported",
+        "pairing": "FCS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 5238
+      },
+      {
+        "expected_team_games": 5326,
+        "field": "first_downs",
+        "pairing": "FCS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 5238
+      },
+      {
+        "expected_team_games": 5326,
+        "field": "penalties",
+        "pairing": "FCS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 5238
+      },
+      {
+        "expected_team_games": 5326,
+        "field": "penalty_yards",
+        "pairing": "FCS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 5238
+      },
+      {
+        "expected_team_games": 5326,
+        "field": "offensive_plays_derived",
+        "pairing": "FCS-FCS",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 5238
+      },
+      {
+        "expected_team_games": 12644,
+        "field": "total_yards",
+        "pairing": "all",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 12554
+      },
+      {
+        "expected_team_games": 12644,
+        "field": "rushing_yards",
+        "pairing": "all",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 12554
+      },
+      {
+        "expected_team_games": 12644,
+        "field": "rushing_attempts",
+        "pairing": "all",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 12554
+      },
+      {
+        "expected_team_games": 12644,
+        "field": "passing_yards",
+        "pairing": "all",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 12554
+      },
+      {
+        "expected_team_games": 12644,
+        "field": "pass_attempts",
+        "pairing": "all",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 12554
+      },
+      {
+        "expected_team_games": 12644,
+        "field": "completions",
+        "pairing": "all",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 12554
+      },
+      {
+        "expected_team_games": 12644,
+        "field": "sacks",
+        "pairing": "all",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 7256
+      },
+      {
+        "expected_team_games": 12644,
+        "field": "interceptions_thrown",
+        "pairing": "all",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 12554
+      },
+      {
+        "expected_team_games": 12644,
+        "field": "total_fumbles",
+        "pairing": "all",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 9939
+      },
+      {
+        "expected_team_games": 12644,
+        "field": "fumbles_lost",
+        "pairing": "all",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 12554
+      },
+      {
+        "expected_team_games": 12644,
+        "field": "fumbles_recovered",
+        "pairing": "all",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 11839
+      },
+      {
+        "expected_team_games": 12644,
+        "field": "turnovers_reported",
+        "pairing": "all",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 12554
+      },
+      {
+        "expected_team_games": 12644,
+        "field": "first_downs",
+        "pairing": "all",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 12554
+      },
+      {
+        "expected_team_games": 12644,
+        "field": "penalties",
+        "pairing": "all",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 12554
+      },
+      {
+        "expected_team_games": 12644,
+        "field": "penalty_yards",
+        "pairing": "all",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 12554
+      },
+      {
+        "expected_team_games": 12644,
+        "field": "offensive_plays_derived",
+        "pairing": "all",
+        "period": "modern_2022_2025",
+        "team_games_with_value": 12554
+      },
+      {
+        "expected_team_games": 100,
+        "field": "total_yards",
+        "pairing": "FBS-FBS",
+        "period": "current_2026",
+        "team_games_with_value": 50
+      },
+      {
+        "expected_team_games": 100,
+        "field": "rushing_yards",
+        "pairing": "FBS-FBS",
+        "period": "current_2026",
+        "team_games_with_value": 50
+      },
+      {
+        "expected_team_games": 100,
+        "field": "rushing_attempts",
+        "pairing": "FBS-FBS",
+        "period": "current_2026",
+        "team_games_with_value": 50
+      },
+      {
+        "expected_team_games": 100,
+        "field": "passing_yards",
+        "pairing": "FBS-FBS",
+        "period": "current_2026",
+        "team_games_with_value": 50
+      },
+      {
+        "expected_team_games": 100,
+        "field": "pass_attempts",
+        "pairing": "FBS-FBS",
+        "period": "current_2026",
+        "team_games_with_value": 50
+      },
+      {
+        "expected_team_games": 100,
+        "field": "completions",
+        "pairing": "FBS-FBS",
+        "period": "current_2026",
+        "team_games_with_value": 50
+      },
+      {
+        "expected_team_games": 100,
+        "field": "sacks",
+        "pairing": "FBS-FBS",
+        "period": "current_2026",
+        "team_games_with_value": 50
+      },
+      {
+        "expected_team_games": 100,
+        "field": "interceptions_thrown",
+        "pairing": "FBS-FBS",
+        "period": "current_2026",
+        "team_games_with_value": 50
+      },
+      {
+        "expected_team_games": 100,
+        "field": "total_fumbles",
+        "pairing": "FBS-FBS",
+        "period": "current_2026",
+        "team_games_with_value": 35
+      },
+      {
+        "expected_team_games": 100,
+        "field": "fumbles_lost",
+        "pairing": "FBS-FBS",
+        "period": "current_2026",
+        "team_games_with_value": 50
+      },
+      {
+        "expected_team_games": 100,
+        "field": "fumbles_recovered",
+        "pairing": "FBS-FBS",
+        "period": "current_2026",
+        "team_games_with_value": 35
+      },
+      {
+        "expected_team_games": 100,
+        "field": "turnovers_reported",
+        "pairing": "FBS-FBS",
+        "period": "current_2026",
+        "team_games_with_value": 50
+      },
+      {
+        "expected_team_games": 100,
+        "field": "first_downs",
+        "pairing": "FBS-FBS",
+        "period": "current_2026",
+        "team_games_with_value": 50
+      },
+      {
+        "expected_team_games": 100,
+        "field": "penalties",
+        "pairing": "FBS-FBS",
+        "period": "current_2026",
+        "team_games_with_value": 50
+      },
+      {
+        "expected_team_games": 100,
+        "field": "penalty_yards",
+        "pairing": "FBS-FBS",
+        "period": "current_2026",
+        "team_games_with_value": 50
+      },
+      {
+        "expected_team_games": 100,
+        "field": "offensive_plays_derived",
+        "pairing": "FBS-FBS",
+        "period": "current_2026",
+        "team_games_with_value": 50
+      },
+      {
+        "expected_team_games": 96,
+        "field": "total_yards",
+        "pairing": "FBS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 30
+      },
+      {
+        "expected_team_games": 96,
+        "field": "rushing_yards",
+        "pairing": "FBS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 30
+      },
+      {
+        "expected_team_games": 96,
+        "field": "rushing_attempts",
+        "pairing": "FBS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 30
+      },
+      {
+        "expected_team_games": 96,
+        "field": "passing_yards",
+        "pairing": "FBS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 30
+      },
+      {
+        "expected_team_games": 96,
+        "field": "pass_attempts",
+        "pairing": "FBS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 30
+      },
+      {
+        "expected_team_games": 96,
+        "field": "completions",
+        "pairing": "FBS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 30
+      },
+      {
+        "expected_team_games": 96,
+        "field": "sacks",
+        "pairing": "FBS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 30
+      },
+      {
+        "expected_team_games": 96,
+        "field": "interceptions_thrown",
+        "pairing": "FBS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 30
+      },
+      {
+        "expected_team_games": 96,
+        "field": "total_fumbles",
+        "pairing": "FBS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 23
+      },
+      {
+        "expected_team_games": 96,
+        "field": "fumbles_lost",
+        "pairing": "FBS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 30
+      },
+      {
+        "expected_team_games": 96,
+        "field": "fumbles_recovered",
+        "pairing": "FBS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 23
+      },
+      {
+        "expected_team_games": 96,
+        "field": "turnovers_reported",
+        "pairing": "FBS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 30
+      },
+      {
+        "expected_team_games": 96,
+        "field": "first_downs",
+        "pairing": "FBS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 30
+      },
+      {
+        "expected_team_games": 96,
+        "field": "penalties",
+        "pairing": "FBS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 30
+      },
+      {
+        "expected_team_games": 96,
+        "field": "penalty_yards",
+        "pairing": "FBS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 30
+      },
+      {
+        "expected_team_games": 96,
+        "field": "offensive_plays_derived",
+        "pairing": "FBS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 30
+      },
+      {
+        "expected_team_games": 146,
+        "field": "total_yards",
+        "pairing": "FCS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 98
+      },
+      {
+        "expected_team_games": 146,
+        "field": "rushing_yards",
+        "pairing": "FCS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 98
+      },
+      {
+        "expected_team_games": 146,
+        "field": "rushing_attempts",
+        "pairing": "FCS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 98
+      },
+      {
+        "expected_team_games": 146,
+        "field": "passing_yards",
+        "pairing": "FCS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 98
+      },
+      {
+        "expected_team_games": 146,
+        "field": "pass_attempts",
+        "pairing": "FCS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 98
+      },
+      {
+        "expected_team_games": 146,
+        "field": "completions",
+        "pairing": "FCS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 98
+      },
+      {
+        "expected_team_games": 146,
+        "field": "sacks",
+        "pairing": "FCS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 96
+      },
+      {
+        "expected_team_games": 146,
+        "field": "interceptions_thrown",
+        "pairing": "FCS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 98
+      },
+      {
+        "expected_team_games": 146,
+        "field": "total_fumbles",
+        "pairing": "FCS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 68
+      },
+      {
+        "expected_team_games": 146,
+        "field": "fumbles_lost",
+        "pairing": "FCS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 98
+      },
+      {
+        "expected_team_games": 146,
+        "field": "fumbles_recovered",
+        "pairing": "FCS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 68
+      },
+      {
+        "expected_team_games": 146,
+        "field": "turnovers_reported",
+        "pairing": "FCS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 98
+      },
+      {
+        "expected_team_games": 146,
+        "field": "first_downs",
+        "pairing": "FCS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 98
+      },
+      {
+        "expected_team_games": 146,
+        "field": "penalties",
+        "pairing": "FCS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 98
+      },
+      {
+        "expected_team_games": 146,
+        "field": "penalty_yards",
+        "pairing": "FCS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 98
+      },
+      {
+        "expected_team_games": 146,
+        "field": "offensive_plays_derived",
+        "pairing": "FCS-FCS",
+        "period": "current_2026",
+        "team_games_with_value": 98
+      },
+      {
+        "expected_team_games": 342,
+        "field": "total_yards",
+        "pairing": "all",
+        "period": "current_2026",
+        "team_games_with_value": 178
+      },
+      {
+        "expected_team_games": 342,
+        "field": "rushing_yards",
+        "pairing": "all",
+        "period": "current_2026",
+        "team_games_with_value": 178
+      },
+      {
+        "expected_team_games": 342,
+        "field": "rushing_attempts",
+        "pairing": "all",
+        "period": "current_2026",
+        "team_games_with_value": 178
+      },
+      {
+        "expected_team_games": 342,
+        "field": "passing_yards",
+        "pairing": "all",
+        "period": "current_2026",
+        "team_games_with_value": 178
+      },
+      {
+        "expected_team_games": 342,
+        "field": "pass_attempts",
+        "pairing": "all",
+        "period": "current_2026",
+        "team_games_with_value": 178
+      },
+      {
+        "expected_team_games": 342,
+        "field": "completions",
+        "pairing": "all",
+        "period": "current_2026",
+        "team_games_with_value": 178
+      },
+      {
+        "expected_team_games": 342,
+        "field": "sacks",
+        "pairing": "all",
+        "period": "current_2026",
+        "team_games_with_value": 176
+      },
+      {
+        "expected_team_games": 342,
+        "field": "interceptions_thrown",
+        "pairing": "all",
+        "period": "current_2026",
+        "team_games_with_value": 178
+      },
+      {
+        "expected_team_games": 342,
+        "field": "total_fumbles",
+        "pairing": "all",
+        "period": "current_2026",
+        "team_games_with_value": 126
+      },
+      {
+        "expected_team_games": 342,
+        "field": "fumbles_lost",
+        "pairing": "all",
+        "period": "current_2026",
+        "team_games_with_value": 178
+      },
+      {
+        "expected_team_games": 342,
+        "field": "fumbles_recovered",
+        "pairing": "all",
+        "period": "current_2026",
+        "team_games_with_value": 126
+      },
+      {
+        "expected_team_games": 342,
+        "field": "turnovers_reported",
+        "pairing": "all",
+        "period": "current_2026",
+        "team_games_with_value": 178
+      },
+      {
+        "expected_team_games": 342,
+        "field": "first_downs",
+        "pairing": "all",
+        "period": "current_2026",
+        "team_games_with_value": 178
+      },
+      {
+        "expected_team_games": 342,
+        "field": "penalties",
+        "pairing": "all",
+        "period": "current_2026",
+        "team_games_with_value": 178
+      },
+      {
+        "expected_team_games": 342,
+        "field": "penalty_yards",
+        "pairing": "all",
+        "period": "current_2026",
+        "team_games_with_value": 178
+      },
+      {
+        "expected_team_games": 342,
+        "field": "offensive_plays_derived",
+        "pairing": "all",
+        "period": "current_2026",
+        "team_games_with_value": 178
+      },
+      {
+        "expected_team_games": 1398,
+        "field": "total_yards",
+        "pairing": "FBS-FBS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 1398,
+        "field": "rushing_yards",
+        "pairing": "FBS-FBS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 1398,
+        "field": "rushing_attempts",
+        "pairing": "FBS-FBS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 1398,
+        "field": "passing_yards",
+        "pairing": "FBS-FBS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 1398,
+        "field": "pass_attempts",
+        "pairing": "FBS-FBS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 1398,
+        "field": "completions",
+        "pairing": "FBS-FBS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 1398,
+        "field": "sacks",
+        "pairing": "FBS-FBS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 1398,
+        "field": "interceptions_thrown",
+        "pairing": "FBS-FBS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 1398,
+        "field": "total_fumbles",
+        "pairing": "FBS-FBS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 1398,
+        "field": "fumbles_lost",
+        "pairing": "FBS-FBS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 1398,
+        "field": "fumbles_recovered",
+        "pairing": "FBS-FBS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 1398,
+        "field": "turnovers_reported",
+        "pairing": "FBS-FBS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 1398,
+        "field": "first_downs",
+        "pairing": "FBS-FBS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 1398,
+        "field": "penalties",
+        "pairing": "FBS-FBS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 1398,
+        "field": "penalty_yards",
+        "pairing": "FBS-FBS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 1398,
+        "field": "offensive_plays_derived",
+        "pairing": "FBS-FBS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 142,
+        "field": "total_yards",
+        "pairing": "FBS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 142,
+        "field": "rushing_yards",
+        "pairing": "FBS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 142,
+        "field": "rushing_attempts",
+        "pairing": "FBS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 142,
+        "field": "passing_yards",
+        "pairing": "FBS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 142,
+        "field": "pass_attempts",
+        "pairing": "FBS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 142,
+        "field": "completions",
+        "pairing": "FBS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 142,
+        "field": "sacks",
+        "pairing": "FBS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 142,
+        "field": "interceptions_thrown",
+        "pairing": "FBS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 142,
+        "field": "total_fumbles",
+        "pairing": "FBS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 142,
+        "field": "fumbles_lost",
+        "pairing": "FBS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 142,
+        "field": "fumbles_recovered",
+        "pairing": "FBS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 142,
+        "field": "turnovers_reported",
+        "pairing": "FBS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 142,
+        "field": "first_downs",
+        "pairing": "FBS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 142,
+        "field": "penalties",
+        "pairing": "FBS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 142,
+        "field": "penalty_yards",
+        "pairing": "FBS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 142,
+        "field": "offensive_plays_derived",
+        "pairing": "FBS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 996,
+        "field": "total_yards",
+        "pairing": "FCS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 996,
+        "field": "rushing_yards",
+        "pairing": "FCS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 996,
+        "field": "rushing_attempts",
+        "pairing": "FCS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 996,
+        "field": "passing_yards",
+        "pairing": "FCS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 996,
+        "field": "pass_attempts",
+        "pairing": "FCS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 996,
+        "field": "completions",
+        "pairing": "FCS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 996,
+        "field": "sacks",
+        "pairing": "FCS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 996,
+        "field": "interceptions_thrown",
+        "pairing": "FCS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 996,
+        "field": "total_fumbles",
+        "pairing": "FCS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 996,
+        "field": "fumbles_lost",
+        "pairing": "FCS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 996,
+        "field": "fumbles_recovered",
+        "pairing": "FCS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 996,
+        "field": "turnovers_reported",
+        "pairing": "FCS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 996,
+        "field": "first_downs",
+        "pairing": "FCS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 996,
+        "field": "penalties",
+        "pairing": "FCS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 996,
+        "field": "penalty_yards",
+        "pairing": "FCS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 996,
+        "field": "offensive_plays_derived",
+        "pairing": "FCS-FCS",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 2536,
+        "field": "total_yards",
+        "pairing": "all",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 2536,
+        "field": "rushing_yards",
+        "pairing": "all",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 2536,
+        "field": "rushing_attempts",
+        "pairing": "all",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 2536,
+        "field": "passing_yards",
+        "pairing": "all",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 2536,
+        "field": "pass_attempts",
+        "pairing": "all",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 2536,
+        "field": "completions",
+        "pairing": "all",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 2536,
+        "field": "sacks",
+        "pairing": "all",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 2536,
+        "field": "interceptions_thrown",
+        "pairing": "all",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 2536,
+        "field": "total_fumbles",
+        "pairing": "all",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 2536,
+        "field": "fumbles_lost",
+        "pairing": "all",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 2536,
+        "field": "fumbles_recovered",
+        "pairing": "all",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 2536,
+        "field": "turnovers_reported",
+        "pairing": "all",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 2536,
+        "field": "first_downs",
+        "pairing": "all",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 2536,
+        "field": "penalties",
+        "pairing": "all",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 2536,
+        "field": "penalty_yards",
+        "pairing": "all",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      },
+      {
+        "expected_team_games": 2536,
+        "field": "offensive_plays_derived",
+        "pairing": "all",
+        "period": "pre_training_2003",
+        "team_games_with_value": 0
+      }
+    ]
+  },
+  "official_crosscheck": {
+    "mismatched_fields": 11,
+    "sources": [
+      "https://fightingillini.com/sports/football/stats/2021/penn-state/boxscore/22918",
+      "https://ohiostatebuckeyes.com/documents/download/2023/6/30/2004-7-Indiana.pdf",
+      "https://static.sjsuspartans.com/Football/2018/HTML/ucd-sj.htm",
+      "https://utsports.com/sports/football/stats/2024/arkansas/boxscore/28878"
+    ],
+    "unavailable_fields": 29,
+    "verified_fields": 96
+  },
+  "plays": {
+    "derived_definition": "rushing_attempts + pass_attempts parsed from completionAttempts",
+    "direct_categories_observed": [],
+    "distribution": {
+      "maximum": 151,
+      "median": 68.0,
+      "minimum": 0,
+      "p01": 45.0,
+      "p99": 95.0
+    },
+    "maximum_overtime_periods": 9,
+    "official_direct_play_comparisons": 8,
+    "overtime_games": 889,
+    "overtime_team_rows": 1778,
+    "rows_with_derived_plays": 42386
+  },
+  "production_boundary": {
+    "current_season_acquisition_changed": false,
+    "production_files_changed": false,
+    "weekly_updater_changed": false
+  },
+  "reconciliation": {
+    "total_yards_vs_rushing_plus_passing": {
+      "by_period": [
+        {
+          "common_differences": {
+            "-12": 393,
+            "-11": 403,
+            "-10": 426,
+            "-9": 467,
+            "-8": 493,
+            "-7": 451,
+            "-6": 410,
+            "-5": 381
+          },
+          "mismatch_pct": 43.9413,
+          "mismatches": 10005,
+          "period": "training_2004_2017",
+          "rows_with_all_values": 22769
+        },
+        {
+          "common_differences": {},
+          "mismatch_pct": 0.0,
+          "mismatches": 0,
+          "period": "development_2018_2021",
+          "rows_with_all_values": 6454
+        },
+        {
+          "common_differences": {
+            "-23": 1,
+            "-11": 1,
+            "-2": 1,
+            "-1": 1,
+            "1": 1,
+            "18": 1
+          },
+          "mismatch_pct": 0.0463,
+          "mismatches": 6,
+          "period": "modern_2022_2025",
+          "rows_with_all_values": 12946
+        },
+        {
+          "common_differences": {},
+          "mismatch_pct": 0.0,
+          "mismatches": 0,
+          "period": "current_2026",
+          "rows_with_all_values": 222
+        },
+        {
+          "common_differences": {},
+          "mismatch_pct": null,
+          "mismatches": 0,
+          "period": "pre_training_2003",
+          "rows_with_all_values": 0
+        }
+      ],
+      "mismatches": 10011,
+      "rows_with_all_values": 42391
+    },
+    "turnovers_vs_interceptions_plus_fumbles_lost": {
+      "mismatches": 0,
+      "note": "reported turnover total is reconciled only as an audit check; component fields remain separate",
+      "rows_with_all_values": 42391
+    }
+  },
+  "scope": {
+    "model_fit_or_rank_evaluation": false,
+    "offline": true,
+    "periods": {
+      "current_2026": [
+        2026
+      ],
+      "development_2018_2021": [
+        2018,
+        2019,
+        2020,
+        2021
+      ],
+      "modern_2022_2025": [
+        2022,
+        2023,
+        2024,
+        2025
+      ],
+      "training_2004_2017": [
+        2004,
+        2005,
+        2006,
+        2007,
+        2008,
+        2009,
+        2010,
+        2011,
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017
+      ]
+    },
+    "schedule_payload_directory": "data/raw/cfbd/games",
+    "source": "cached CFBD /games/teams payloads",
+    "stat_payload_directory": "data/raw/cfbd/game_stats"
+  }
+}
