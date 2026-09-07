@@ -80,7 +80,7 @@ def _counterpart(
             if entry["season"] == current["season"]
             and entry["ranking_family"] == current["ranking_family"]
             and entry["publication_slot"] == current["publication_slot"]
-            and entry["prior_family"] == prior
+            and entry.get("prior_family") == prior
         ),
         current,
     )
@@ -94,7 +94,8 @@ def test_site_data_publishes_all_initial_h_c_preseason_and_current_snapshots(
     )
     assert manifest["seasons"] == [2026]
     assert manifest["default_publication_slot"] == "2026-09-06"
-    assert {(entry["snapshot_type"], entry["prior_family"]) for entry in manifest["snapshots"]} == {
+    predictive = [entry for entry in manifest["snapshots"] if entry["ranking_family"] == "predictive"]
+    assert {(entry["snapshot_type"], entry["prior_family"]) for entry in predictive} == {
         ("preseason", "context"),
         ("preseason", "history"),
         ("live", "context"),
@@ -102,6 +103,12 @@ def test_site_data_publishes_all_initial_h_c_preseason_and_current_snapshots(
         ("weekly", "context"),
         ("weekly", "history"),
     }
+    performance = [entry for entry in manifest["snapshots"] if entry["ranking_family"] == "performance"]
+    assert len(performance) == 1
+    assert performance[0]["publication_slot"] == "2026-09-06"
+    assert "prior_family" not in performance[0]
+    assert performance[0]["rated_count"] == 131
+    assert performance[0]["unrated_count"] == 7
     current = [entry for entry in manifest["snapshots"] if entry["snapshot_type"] == "live"]
     assert {entry["effective_cutoff"] for entry in current} == {
         "2026-09-05T20:11:12.864212+00:00"
@@ -156,7 +163,7 @@ def test_missing_logical_counterpart_keeps_current_selection(tmp_path: Path) -> 
         for entry in manifest["snapshots"]
         if not (
             entry["publication_slot"] == "2026-sep-05"
-            and entry["prior_family"] == "history"
+            and entry.get("prior_family") == "history"
         )
     ]
     assert _counterpart(entries, current, "history") == current
@@ -193,6 +200,18 @@ def test_distribution_artifact_contains_complete_fbs_pmfs_and_summaries(tmp_path
         "interval_95", "interval_widths", "rank_1_probability", "top5_probability",
         "top10_probability", "top25_probability",
     }
+
+
+def test_performance_export_keeps_nr_after_rated_teams_and_out_of_top25(tmp_path: Path) -> None:
+    manifest = build_site_data(
+        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
+    )
+    entry = next(item for item in manifest["snapshots"] if item["ranking_family"] == "performance")
+    snapshot = json.loads(
+        (tmp_path / "data" / entry["data_path"].removeprefix("data/")).read_text()
+    )
+    assert all(row["rated"] for row in snapshot["rankings"][:25])
+    assert all(row["display_rank"] == "NR" for row in snapshot["rankings"][131:])
 
 
 def test_pmf_summary_uses_established_discrete_quantiles() -> None:
@@ -459,6 +478,8 @@ def test_site_uses_base_safe_relative_paths() -> None:
     assert "selectedEntry()?.snapshot_id !== entry.snapshot_id" in app
     assert "publication_slot" in app
     assert "staying on" in app
+    assert 'state.family === "performance"' in app
+    assert "No eligible games played" in app
 
 
 def test_uncertainty_copy_uses_central_interval_language() -> None:

@@ -67,6 +67,7 @@ jobs:
           PROCESSED_GAMES_PATH: ${{ steps.candidate.outputs.processed_games_path }}
           CONTEXT_SNAPSHOT_PATH: ${{ steps.candidate.outputs.context_snapshot_path }}
           HISTORY_SNAPSHOT_PATH: ${{ steps.candidate.outputs.history_snapshot_path }}
+          PERFORMANCE_SNAPSHOT_PATH: ${{ steps.candidate.outputs.performance_snapshot_path }}
           REPORT_MD_PATH: ${{ steps.candidate.outputs.report_md_path }}
           REPORT_JSON_PATH: ${{ steps.candidate.outputs.report_json_path }}
           PUBLISH_CONFIG_PATH: ${{ steps.candidate.outputs.publish_config_path }}

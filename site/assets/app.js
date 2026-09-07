@@ -31,7 +31,8 @@ function svgElement(name, attributes = {}) {
 
 function labelFor(entry) { return `${entry.display_label} · ${entry.snapshot_type === "preseason" ? "Preseason" : "Current"}`; }
 function choices() { return state.manifest.snapshots.filter((entry) => entry.ranking_family === state.family && entry.season === state.season); }
-function selectedEntry() { return choices().find((entry) => entry.publication_slot === state.slot && entry.prior_family === state.prior); }
+function selectedEntry() { return choices().find((entry) => entry.publication_slot === state.slot && (state.family === "performance" || entry.prior_family === state.prior)); }
+function familyLabel() { return state.family === "performance" ? "Performance" : "Predictive"; }
 function formatDate(value) { return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }).format(new Date(value)); }
 function formatTimestamp(value) { return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC", timeZoneName: "short" }).format(new Date(value)); }
 function percentage(value) {
@@ -55,13 +56,14 @@ function ordinal(rank) {
 function chooseDefault() {
   const available = choices();
   const preferred = state.manifest.default_publication_slot;
-  const entry = available.find((item) => item.publication_slot === preferred && item.prior_family === state.prior)
+  const entry = available.find((item) => item.publication_slot === state.slot && (state.family === "performance" || item.prior_family === state.prior))
+    ?? available.find((item) => item.publication_slot === preferred && (state.family === "performance" || item.prior_family === state.prior))
     ?? available.find((item) => item.publication_slot === preferred)
-    ?? available.find((item) => item.prior_family === state.prior)
+    ?? available.find((item) => state.family === "performance" || item.prior_family === state.prior)
     ?? available[0];
   if (!entry) return null;
   state.slot = entry.publication_slot;
-  state.prior = entry.prior_family;
+  if (state.family !== "performance") state.prior = entry.prior_family;
   return entry;
 }
 
@@ -83,20 +85,24 @@ function populate() {
   const seasons = state.manifest.seasons;
   state.season ??= seasons[0];
   $("#season-select").replaceChildren(...seasons.map((season) => new Option(season, season, season === state.season, season === state.season)));
+  const entry = selectedEntry() ?? chooseDefault();
   const available = choices();
   const snapshotGroups = [...new Map(available.map((entry) => [entry.publication_slot, entry])).values()];
-  const entry = selectedEntry() ?? chooseDefault();
   $("#snapshot-select").replaceChildren(...snapshotGroups.map((item) => new Option(labelFor(item), item.publication_slot, item.publication_slot === state.slot, item.publication_slot === state.slot)));
   $("#snapshot-select").value = entry?.publication_slot ?? "";
-  document.querySelectorAll("[data-prior]").forEach((button) => button.classList.toggle("is-active", button.dataset.prior === state.prior));
+  const priorSelector = $("#prior-select");
+  const performance = state.family === "performance";
+  priorSelector.hidden = performance;
+  priorSelector.disabled = performance;
+  document.querySelectorAll("[data-prior]").forEach((button) => { button.classList.toggle("is-active", button.dataset.prior === state.prior); button.disabled = performance; });
 }
 
 function updateSnapshotSummary(entry, snapshot) {
   const current = entry.snapshot_type !== "preseason";
   $("#snapshot-kind").textContent = current ? "IN-SEASON / CURRENT" : "PRESEASON";
-  $("#snapshot-title").textContent = `${entry.season} ${entry.display_label} · ${entry.prior_family === "context" ? "Context" : "History"}`;
+  $("#snapshot-title").textContent = `${entry.season} ${entry.display_label} · ${familyLabel()}${state.family === "predictive" ? ` · ${entry.prior_family === "context" ? "Context" : "History"}` : ""}`;
   $("#snapshot-freshness").textContent = current ? `Rankings through ${formatDate(entry.effective_cutoff)}.` : "Frozen before any game evidence.";
-  const evidence = current ? `Effective cutoff: ${formatTimestamp(snapshot.effective_cutoff)} · ${snapshot.included_game_count} eligible games included · ${snapshot.excluded_lower_division_games} lower-division games excluded.` : `Snapshot generated ${formatTimestamp(snapshot.generation_timestamp)} · 0 eligible games included.`;
+  const evidence = current ? `Effective cutoff: ${formatTimestamp(snapshot.effective_cutoff)} · ${snapshot.included_game_count} eligible games included · ${snapshot.excluded_lower_division_games ?? 0} lower-division games excluded.${state.family === "performance" ? ` ${snapshot.rated_count} rated, ${snapshot.unrated_count} NR.` : ""}` : `Snapshot generated ${formatTimestamp(snapshot.generation_timestamp)} · 0 eligible games included.`;
   $("#snapshot-evidence").textContent = state.notice ? `${evidence} ${state.notice}` : evidence;
 }
 
@@ -127,11 +133,13 @@ function teamButton(row) {
   button.dataset.teamId = row.team_id;
   button.setAttribute("aria-label", `View ${row.team_name} rank uncertainty`);
   button.append(element("span", "team-name", row.team_name), element("span", "team-conference", row.conference || "Independent"));
+  if (row.rated === false) button.append(element("span", "team-status", "No eligible games played"));
   return button;
 }
 
 function renderRankings(snapshot) {
-  const rankings = state.depth === "all" ? snapshot.rankings : snapshot.rankings.slice(0, 25);
+  const rated = snapshot.rankings.filter((row) => row.rated !== false);
+  const rankings = state.depth === "all" ? snapshot.rankings : rated.slice(0, 25);
   $("#rankings-title").textContent = state.depth === "all" ? "All FBS rankings" : "Top 25";
   const rows = rankings.map((row) => {
     const tr = document.createElement("tr");
@@ -157,7 +165,10 @@ function renderRankings(snapshot) {
 }
 
 function summaryText(row, summary) {
-  return `Expected rank: ${summary.expected_rank.toFixed(1)}. Median: ${ordinal(summary.median_rank)}. Most likely rank: ${ordinal(summary.modal_rank)}. The central 50% interval spans ${ordinal(summary.interval_50[0])}–${ordinal(summary.interval_50[1])}. The central 80% interval spans ${ordinal(summary.interval_80[0])}–${ordinal(summary.interval_80[1])}. The central 95% interval spans ${ordinal(summary.interval_95[0])}–${ordinal(summary.interval_95[1])}. The model gives ${row.team_name} a ${percentage(summary.top10_probability)} chance of finishing in the Top 10 and a ${percentage(summary.top25_probability)} chance of finishing in the Top 25.`;
+  const lead = state.family === "performance"
+    ? `Based on the games ${row.team_name} has played, its expected Performance-equivalent rank is ${summary.expected_rank.toFixed(1)}.`
+    : `Expected rank: ${summary.expected_rank.toFixed(1)}.`;
+  return `${lead} Median: ${ordinal(summary.median_rank)}. Most likely rank: ${ordinal(summary.modal_rank)}. The central 50% interval spans ${ordinal(summary.interval_50[0])}–${ordinal(summary.interval_50[1])}. The central 80% interval spans ${ordinal(summary.interval_80[0])}–${ordinal(summary.interval_80[1])}. The central 95% interval spans ${ordinal(summary.interval_95[0])}–${ordinal(summary.interval_95[1])}. The model gives ${row.team_name} a ${percentage(summary.top10_probability)} chance of landing in the Top 10 and a ${percentage(summary.top25_probability)} chance of landing in the Top 25.`;
 }
 
 function rankX(rank, rankCount, left, width) { return left + ((rank - 0.5) / rankCount) * width; }
@@ -227,11 +238,16 @@ function renderDetail(row, entry, distribution) {
   const team = distribution.teams[row.team_id];
   if (!team || !Array.isArray(team.pmf) || team.pmf.length !== distribution.rank_count) throw new Error("The selected team's distribution is unavailable.");
   const summary = team.summary;
+  const rankLabel = row.rated === false ? "NR (not rated)" : `#${row.display_rank}`;
   $("#detail-team-name").textContent = row.team_name;
-  $("#detail-team-meta").textContent = `#${row.display_rank} by expected rank · ${row.conference || "Independent"} · ${row.record} modeled record · ${entry.prior_family === "context" ? "Context" : "History"}`;
+  $("#detail-team-meta").textContent = `${rankLabel} by expected rank · ${row.conference || "Independent"} · ${row.record} modeled record · ${familyLabel()}${state.family === "predictive" ? ` · ${entry.prior_family === "context" ? "Context" : "History"}` : ""}`;
   const heading = element("h3", "detail-section-title", "Rank uncertainty");
-  const explainer = element("p", "detail-explainer", `GippyRank does not assign ${row.team_name} one certain rank. It maintains a probability distribution over possible ranks. The table orders teams by expected rank; this distribution shows how uncertain that estimate is.`);
-  const currentBelief = element("p", "detail-current-belief", entry.snapshot_type === "preseason" ? "This preseason distribution is the model's belief before any eligible game evidence." : `This is the model's current belief after all eligible games through ${formatDate(entry.effective_cutoff)}. It is not a prediction of AP, Coaches, or CFP voters.`);
+  const explainer = element("p", "detail-explainer", state.family === "performance"
+    ? `Performance uses only ${row.team_name}'s eligible games. Predictive Context estimates still help interpret opponent quality, but ${row.team_name}'s own preseason prior does not directly contribute. Performance is not a predicted final rank, résumé, standings, or postseason deservingness.`
+    : `GippyRank does not assign ${row.team_name} one certain rank. It maintains a probability distribution over possible ranks. The table orders teams by expected rank; this distribution shows how uncertain that estimate is.`);
+  const currentBelief = element("p", "detail-current-belief", state.family === "performance" && row.rated === false
+    ? "No eligible games have been played by this team in the selected snapshot. It is shown as NR with a neutral uniform distribution."
+    : entry.snapshot_type === "preseason" ? "This preseason distribution is the model's belief before any eligible game evidence." : `This is the model's current belief after all eligible games through ${formatDate(entry.effective_cutoff)}. It is not a prediction of AP, Coaches, or CFP voters.`);
   const legend = element("ul", "chart-legend");
   [["distribution", "Discrete PMF"], ["expected", `Expected ${summary.expected_rank.toFixed(1)}`], ["median", `Median ${ordinal(summary.median_rank)}`], ["mode", `Mode ${ordinal(summary.modal_rank)}`], ["interval", "50% / 80% / 95% intervals"]].forEach(([kind, text]) => { const item = element("li", `legend-${kind}`); item.append(element("span", "legend-swatch"), document.createTextNode(text)); legend.append(item); });
   const chartPanel = element("div", "chart-panel");
@@ -311,7 +327,17 @@ $("#rankings-body").addEventListener("click", (event) => {
 });
 $("#detail-close").addEventListener("click", closeDetail);
 detailDialog.addEventListener("close", () => { state.selectedTeamId = null; });
-$("#family-select").addEventListener("change", (event) => { state.family = event.target.value; state.slot = null; state.notice = ""; prepareSnapshotChange(); void render(); });
+$("#family-select").addEventListener("change", (event) => {
+  const previousSlot = state.slot;
+  state.family = event.target.value;
+  state.notice = "";
+  if (previousSlot && !choices().some((entry) => entry.publication_slot === previousSlot)) {
+    state.slot = null;
+    if (state.family === "performance") state.notice = "Performance begins after eligible games have been played; showing the nearest available Performance snapshot.";
+  }
+  prepareSnapshotChange();
+  void render();
+});
 $("#season-select").addEventListener("change", (event) => { state.season = Number(event.target.value); state.slot = null; state.notice = ""; prepareSnapshotChange(); void render(); });
 $("#snapshot-select").addEventListener("change", (event) => { state.slot = event.target.value; state.notice = ""; prepareSnapshotChange(); void render(); });
 document.querySelectorAll("[data-prior]").forEach((button) => button.addEventListener("click", () => { changePrior(button.dataset.prior); prepareSnapshotChange(); void render(); }));
