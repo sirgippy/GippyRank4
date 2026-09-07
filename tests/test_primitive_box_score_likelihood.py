@@ -359,6 +359,61 @@ def test_comparison_keys_are_strict_and_identical() -> None:
         )
 
 
+def test_reconstructed_teams_use_supplied_preseason_pmfs_and_fixed_support() -> None:
+    script = _script()
+    targets = {
+        (2018, "fbs", "home"): {"pmf": np.zeros(3)},
+        (2018, "fbs", "away"): {"pmf": np.zeros(3)},
+    }
+    rows = [
+        {
+            "season": 2018,
+            "home_team_id": "home",
+            "away_team_id": "away",
+            "home_subdivision": "fbs",
+            "away_subdivision": "fbs",
+        }
+    ]
+    supplied = {"home": np.asarray([0.1, 0.2, 0.7]), "away": np.asarray([0.6, 0.3, 0.1])}
+    teams = script.make_reconstructed_teams(
+        2018, "history_reconstructed", rows, targets, supplied
+    )
+    assert {
+        team.team_id: team.prior.tolist() for team in teams
+    } == {
+        "home": pytest.approx([0.1, 0.2, 0.7]),
+        "away": pytest.approx([0.6, 0.3, 0.1]),
+    }
+    altered_labels = {key: {"pmf": np.ones(3)} for key in targets}
+    altered = script.make_reconstructed_teams(
+        2018, "history_reconstructed", rows, altered_labels, supplied
+    )
+    for left, right in zip(altered, teams, strict=True):
+        assert left.prior == pytest.approx(right.prior)
+
+
+def test_historical_prior_audit_declares_pre_target_boundary() -> None:
+    script = _script()
+    for season in range(2018, 2022):
+        row = script.reconstructed_prior_audit_row(season, "history_reconstructed", 10, [])
+        assert row["trained_through_season"] == season - 1
+        assert row["target_outcomes_used"] is False
+    assert script.RECONSTRUCTED_PRIOR_FAMILIES == (
+        "context_reconstructed",
+        "history_reconstructed",
+    )
+
+
+def test_candidate_definitions_thresholds_and_comparison_keys_are_frozen() -> None:
+    script = _script()
+    assert script.PRIMITIVE_CANDIDATES == ("a", "b", "c")
+    assert script.SELECTION_CANDIDATES == ("v1", "a", "b", "c")
+    assert script.DEVELOPMENT_SELECTION_RULE["comparison"] == (
+        "sequential A vs V1, B vs A, C vs B"
+    )
+    assert script.PROMOTION_CRITERIA["aggregate_nll_improvement_nats_per_team"] == 0.02
+
+
 def test_fit_is_deterministic() -> None:
     from gippyrank.research.primitive_box_score_likelihood import (
         component_mask,

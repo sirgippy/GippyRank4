@@ -24,8 +24,10 @@ import csv
 import hashlib
 import json
 import math
+import sys
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -89,6 +91,7 @@ PRIMITIVE_CANDIDATES = ("a", "b", "c")
 SELECTION_CANDIDATES = ("v1", "a", "b", "c")
 YPP_FIXED_DF = 15.0
 CUTOFF_FRACTIONS = (0.0, 0.20, 0.35, 0.55, 0.72, 0.87, 1.0)
+RECONSTRUCTED_PRIOR_FAMILIES = ("context_reconstructed", "history_reconstructed")
 
 # These thresholds are declared before the final 2022--2025 evaluation.  The
 # simpler candidate wins unless the added component clears every development
@@ -446,6 +449,170 @@ def make_frozen_teams(
             Team(team_id, names.get(team_id, team_id), "fcs", np.full(population, 1 / population))
         )
     return teams
+
+
+def make_reconstructed_teams(
+    season: int,
+    family: str,
+    rows: Sequence[Mapping[str, object]],
+    targets: Mapping[tuple[int, str, str], Mapping[str, object]],
+    reconstructed_pmfs: Mapping[str, np.ndarray],
+) -> list[Team]:
+    """Build graph teams from an outcome-free historical preseason PMF set."""
+
+    if family not in {"context_reconstructed", "history_reconstructed"}:
+        raise ValueError(f"unknown reconstructed prior family: {family}")
+    names = _team_names(rows)
+    teams: list[Team] = []
+    fbs_ids = {
+        str(row[f"{side}_team_id"])
+        for row in rows
+        for side in ("home", "away")
+        if str(row[f"{side}_subdivision"]) == "fbs"
+    }
+    missing = sorted(team_id for team_id in fbs_ids if team_id not in reconstructed_pmfs)
+    if missing:
+        raise ValueError(f"reconstructed {family} prior missing FBS teams for {season}: {missing[:5]}")
+    for team_id in sorted(fbs_ids):
+        pmf = np.asarray(reconstructed_pmfs[team_id], dtype=float)
+        if len(pmf) != len(np.asarray(targets[(season, "fbs", team_id)]["pmf"])):
+            raise ValueError(f"reconstructed {family} support mismatch for {season}/{team_id}")
+        teams.append(Team(team_id, names.get(team_id, team_id), "fbs", pmf))
+    fcs_ids = {
+        str(row[f"{side}_team_id"])
+        for row in rows
+        for side in ("home", "away")
+        if str(row[f"{side}_subdivision"]) == "fcs"
+    }
+    if fcs_ids:
+        population = _fcs_population(targets, season)
+        teams.extend(
+            Team(team_id, names.get(team_id, team_id), "fcs", np.full(population, 1 / population))
+            for team_id in sorted(fcs_ids)
+        )
+    return teams
+
+
+def reconstructed_prior_audit_row(
+    target_season: int, family: str, pmf_count: int, context_features: Sequence[str]
+) -> dict[str, object]:
+    """Record the temporal boundary used by one reconstructed prior family."""
+
+    return {
+        "target_season": target_season,
+        "prior_family": family,
+        "trained_through_season": target_season - 1,
+        "target_outcomes_used": False,
+        "pmf_count": pmf_count,
+        "context_features": list(context_features),
+    }
+
+
+def reconstruct_historical_priors(
+    targets: Mapping[tuple[int, str, str], Mapping[str, object]],
+    rows: Sequence[Mapping[str, object]],
+    seasons: Sequence[int],
+    families: Sequence[str] = RECONSTRUCTED_PRIOR_FAMILIES,
+) -> tuple[dict[tuple[int, str], list[Team]], list[dict[str, object]]]:
+    """Rebuild H 1.1/C 1.2 PMFs using only information available pre-target.
+
+    The target-season rank distributions are used only by the caller as held-out
+    labels.  Every model fit and every target-season feature row here is built
+    from completed outcomes through ``target_season - 1`` and preseason-
+    semantic feature fields.
+    """
+
+    scripts_path = str(ROOT / "scripts")
+    if scripts_path not in sys.path:
+        sys.path.insert(0, scripts_path)
+    import build_preseason_context_prior_v1_2 as context_prior
+    import build_preseason_prior as history_prior
+
+    context_features = [
+        *context_prior.COACH_FEATURES,
+        *context_prior.RECRUITING_FEATURES,
+        *context_prior.TALENT_FEATURES,
+        *context_prior.RETURNING_FEATURES,
+    ]
+    result: dict[tuple[int, str], list[Team]] = {}
+    audit: list[dict[str, object]] = []
+    for target_season in seasons:
+        trained_through = target_season - 1
+        historical, cold, _coverage = history_prior.load_rows(max_season=trained_through)
+        fbs = [row for row in historical if row.subdivision == "fbs"]
+        index, tenures = context_prior.feature_index(), context_prior.cached_tenures()
+        contextual, _context_coverage = context_prior.attach_context(fbs, index, tenures)
+        h_model, _h_fit = context_prior.build_history_prior(
+            fbs,
+            target_season=target_season,
+            trained_through_season=trained_through,
+        )
+        c_model = None
+        if "context_reconstructed" in families:
+            c_model, _c_fit = context_prior.build_context_prior(
+                contextual,
+                target_season=target_season,
+                trained_through_season=trained_through,
+                context_features=context_features,
+                mode="both",
+            )
+        inference = context_prior.inference_rows(
+            target_season, trained_through, index, tenures
+        )
+        inference = [
+            replace(
+                row,
+                population=int(
+                    targets[(target_season, "fbs", row.team_id)]["population"]
+                ),
+            )
+            for row in inference
+            if (target_season, "fbs", row.team_id) in targets
+        ]
+        needs_cold_start = any(row.cold_start_reason is not None for row in inference)
+        if needs_cold_start:
+            promotion, generic = context_prior.annual_cold_start_models(
+                cold, trained_through_season=trained_through
+            )
+        else:
+            promotion, generic = None, None
+        history_predictions, context_predictions = context_prior.future_predictions(
+            inference,
+            h_model,
+            c_model,
+            trained_through_season=trained_through,
+            promotion_model=promotion,
+            generic_prior=generic,
+        )
+        predictions_by_family = {
+            "history_reconstructed": history_predictions,
+            "context_reconstructed": context_predictions,
+        }
+        for family in families:
+            predictions = predictions_by_family[family]
+            pmfs = {
+                str(row["team_id"]): np.asarray(
+                    json.loads(row["pmf"]) if isinstance(row["pmf"], str) else row["pmf"],
+                    dtype=float,
+                )
+                for row in predictions
+            }
+            result[(target_season, family)] = make_reconstructed_teams(
+                target_season,
+                family,
+                [row for row in rows if int(row["season"]) == target_season],
+                targets,
+                pmfs,
+            )
+            audit.append(
+                reconstructed_prior_audit_row(
+                    target_season,
+                    family,
+                    len(pmfs),
+                    context_features if family == "context_reconstructed" else [],
+                )
+            )
+    return result, audit
 
 
 def standard_cutoffs(
@@ -880,6 +1047,7 @@ def run_posterior_panel(
     include_future: bool,
     future_candidates: Sequence[str] | None = None,
     final_only: bool = False,
+    reconstructed_teams: Mapping[tuple[int, str], Sequence[Team]] | None = None,
 ) -> tuple[list[dict[str, object]], list[dict[str, object]], list[dict[str, object]], dict[str, object]]:
     """Evaluate matched candidates on identical rows, cutoffs, and targets."""
 
@@ -899,7 +1067,12 @@ def run_posterior_panel(
                 for row in season_source
                 if _parse_date(row["start_date"]) <= cutoff
             ]
-            if frozen_priors:
+            if reconstructed_teams is not None:
+                team_by_family = {
+                    family: list(reconstructed_teams[(season, family)])
+                    for family in prior_families
+                }
+            elif frozen_priors:
                 # All final-season candidate rows use exactly the same frozen
                 # family/team support.  Development uses uniform supports for
                 # the explicit selection-prior reason documented above.
@@ -1672,6 +1845,8 @@ def run_rolling_robustness(
     likelihood: LikelihoodV1,
     selected_candidate: str,
     selected_df: float,
+    reconstructed_teams: Mapping[tuple[int, str], Sequence[Team]] | None = None,
+    prior_family: str = "uniform_selection_prior",
 ) -> list[dict[str, object]]:
     """Fit the selected architecture only on seasons before each target."""
 
@@ -1690,10 +1865,11 @@ def run_rolling_robustness(
             None,
             seasons=(target_season,),
             candidates=("v1", selected_candidate),
-            prior_families=("uniform",),
+            prior_families=(prior_family,),
             frozen_priors=False,
             include_future=False,
             final_only=True,
+            reconstructed_teams=reconstructed_teams,
         )
         del candidate_rows
         for row in _final_rows(season_rows):
@@ -1701,7 +1877,7 @@ def run_rolling_robustness(
                 {
                     "target_season": target_season,
                     "fit_seasons": f"{prior_seasons[0]}-{prior_seasons[-1]}",
-                    "prior_family": "uniform_selection_prior",
+                    "prior_family": prior_family,
                     "candidate": row["candidate"],
                     "game_count": row["game_count"],
                     "nll": row["nll"],
@@ -2044,6 +2220,7 @@ def write_report(
     excluded_rows: Sequence[Mapping[str, object]],
     selection_summary: Mapping[str, object],
     selection_comparisons: Sequence[Mapping[str, object]],
+    prior_sensitivity: Mapping[str, object],
     selection_rows: Sequence[Mapping[str, object]],
     season_rows: Sequence[Mapping[str, object]],
     aggregate_metrics: Sequence[Mapping[str, object]],
@@ -2096,6 +2273,11 @@ def write_report(
         lines.append(
             f"| {row['selection_stage']} | {_report_number(row['development_nll_gain_predecessor_minus_newer'])} | {_report_number(row['development_crps_delta_newer_minus_predecessor'])} | {_report_number(row['development_coverage_delta_newer_minus_predecessor'])} | {row['development_seasons_with_nll_improvement']} | {row['passed']} |"
         )
+    lines.extend(["", "## Development prior sensitivity", "", "The original uniform choice was explicit: frozen H/C PMFs in this checkout begin in 2022, while the 2018--2021 posterior labels remain available. A uniform ordinal PMF therefore supplied a reproducible, model-neutral starting state without pretending that a later frozen artifact was historically available. This matters because BP combines each team's prior with the V1 and optional primitive likelihood factors; an informative prior can change both the posterior rank weights and the nonlinear message-passing state, so it can change relative candidate scores even when candidate likelihood factors are identical.", "", "For the sensitivity, H 1.1 and C 1.2 were reconstructed separately for each target season using only completed rank distributions through the prior season and preseason-semantic feature fields. No 2022--2025 row or outcome was read. The candidate definitions, fitted component df choices, comparison keys, and gates are unchanged.", "", "| prior family | comparison | NLL gain | CRPS delta | 80% coverage delta | seasons improved | passed |", "|:--|:--|--:|--:|--:|--:|:--|"])
+    for family, rows_for_family in prior_sensitivity["comparisons"].items():
+        for row in rows_for_family:
+            lines.append(f"| {family} | {row['selection_stage']} | {_report_number(row['development_nll_gain_predecessor_minus_newer'])} | {_report_number(row['development_crps_delta_newer_minus_predecessor'])} | {_report_number(row['development_coverage_delta_newer_minus_predecessor'])} | {row['development_seasons_with_nll_improvement']} | {row['passed']} |")
+    lines.extend(["", f"Informative-prior selection paths: {json.dumps(prior_sensitivity['selection_paths'], sort_keys=True)}. Stability classification: **{prior_sensitivity['stability']}**. This is a sensitivity of the pre-2022 selection question, not a reselection using the final evaluation."])
     lines.extend(
         [
             "",
@@ -2165,7 +2347,7 @@ def write_report(
             "",
             "## Rolling robustness",
             "",
-            "The rolling panel fits the selected primitive architecture using only seasons before each target season (2008--2025; no 2026 outcomes). It uses a uniform ordinal selection prior so the panel does not invent unavailable historical H/C artifacts.",
+            "The original rolling panel used a uniform ordinal selection prior. It is therefore not directly comparable to the final H/C evaluation. The corrected History-prior rolling rows below use reconstructed H 1.1 PMFs from information through each target's prior season; no target-season outcomes enter prior construction.",
             "",
             "| target season | fit through | candidate | NLL | CRPS | 80% coverage |",
             "|--:|:--|:--|--:|--:|--:|",
@@ -2259,6 +2441,49 @@ def main() -> None:
     selected_candidate, selection_comparisons, selection_summary = select_candidate_from_development(
         development_candidate_rows
     )
+    print("reconstructing leakage-safe 2018-2021 H/C priors")
+    development_reconstructed_teams, prior_audit = reconstruct_historical_priors(
+        targets, enriched, DEVELOPMENT_YEARS
+    )
+    sensitivity_rows: dict[str, list[dict[str, object]]] = {}
+    sensitivity_paths: dict[str, str] = {}
+    for family in ("context_reconstructed", "history_reconstructed"):
+        sensitivity_candidate_rows, _season_rows, _calibration, _metadata = run_posterior_panel(
+            enriched,
+            targets,
+            likelihood,
+            development_primitive_models,
+            None,
+            seasons=DEVELOPMENT_YEARS,
+            candidates=SELECTION_CANDIDATES,
+            prior_families=(family,),
+            frozen_priors=False,
+            include_future=False,
+            final_only=True,
+            reconstructed_teams=development_reconstructed_teams,
+        )
+        path, comparisons, _summary = select_candidate_from_development(
+            sensitivity_candidate_rows
+        )
+        sensitivity_rows[family] = comparisons
+        sensitivity_paths[family] = path
+    original_path = selection_summary["selected_candidate"]
+    stability = (
+        "Stable"
+        if all(path == original_path for path in sensitivity_paths.values())
+        else "Sensitive but inconclusive"
+    )
+    prior_sensitivity = {
+        "method": "prospective reconstruction of H 1.1 and C 1.2 for each 2018-2021 target season",
+        "comparisons": sensitivity_rows,
+        "selection_paths": sensitivity_paths,
+        "original_uniform_selection": original_path,
+        "stability": stability,
+        "prior_audit": prior_audit,
+        "final_seasons_used_for_reconstruction": [],
+        "candidate_definitions_unchanged": True,
+        "thresholds_unchanged": True,
+    }
     for row in selection_rows:
         if row.get("selection_row_type") == "selected_summary":
             row["development_posterior_selection_candidate"] = selected_candidate
@@ -2312,6 +2537,10 @@ def main() -> None:
             and row.get("selection_row_type") != "selected_summary"
         )
     )
+    print("rerunning rolling panel with reconstructed History priors")
+    rolling_reconstructed_teams, rolling_prior_audit = reconstruct_historical_priors(
+        targets, enriched, ROLLING_YEARS, families=("history_reconstructed",)
+    )
     rolling_rows = run_rolling_robustness(
         enriched,
         targets,
@@ -2319,7 +2548,10 @@ def main() -> None:
         likelihood,
         selected_candidate,
         selected_df,
+        reconstructed_teams=rolling_reconstructed_teams,
+        prior_family="history_reconstructed",
     )
+    prior_sensitivity["rolling_prior_audit"] = rolling_prior_audit
     play_signal, play_summary = build_play_signal(
         enriched,
         data,
@@ -2364,6 +2596,7 @@ def main() -> None:
             "candidate_rows": selection_rows,
             "development_comparisons": selection_comparisons,
             "selection": selection_summary,
+            "prior_sensitivity": prior_sensitivity,
         },
         "evaluation": {
             "final_candidate_metrics": aggregate_metrics,
@@ -2446,6 +2679,7 @@ def main() -> None:
         rolling_rows=rolling_rows,
         future_rows=future_rows,
         promotion=promotion,
+        prior_sensitivity=prior_sensitivity,
         production_unchanged=production_unchanged,
     )
     print(
