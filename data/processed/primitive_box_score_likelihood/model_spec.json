@@ -126,6 +126,27 @@
     "direct turnover rating likelihood",
     "production Likelihood V2 and website/publication changes"
   ],
+  "selected_after_development": {
+    "final_metrics_used": false,
+    "final_seasons_used": [],
+    "selected_candidate": "a",
+    "selection_path": [],
+    "selection_rule": {
+      "aggregate_nll_gain_nats_per_team": 0.02,
+      "comparison": "sequential A vs V1, B vs A, C vs B",
+      "forced_reporting_candidate": "A when no A/B/C clears its predecessor; this does not imply promotion",
+      "maximum_80pct_coverage_drop": 0.03,
+      "maximum_crps_degradation": 0.002,
+      "maximum_single_season_nll_degradation": 0.1,
+      "minimum_of_four_development_seasons_with_nll_improvement": 3,
+      "tie_break": "simpler candidate"
+    }
+  },
+  "selected_component_df": {
+    "a": 15.0,
+    "b": 15.0,
+    "c": 15.0
+  },
   "temporal_design": {
     "development": "2018-2021",
     "evaluation": "2022-2025 leakage-safe historical evaluation/prospective-style validation; not independent confirmation",
