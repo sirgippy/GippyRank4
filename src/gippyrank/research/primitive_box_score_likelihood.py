@@ -36,8 +36,6 @@ from gippyrank.posterior.engine import (
     LikelihoodV1,
     PosteriorResult,
     Team,
-    game_factor,
-    infer_posterior,
 )
 
 MARGIN_KNOTS = (-28.0, -14.0, 0.0, 14.0, 28.0)
@@ -62,6 +60,8 @@ PRIMITIVE_FIELDS = (
 
 _LOCATION_CACHE: dict[tuple[object, ...], np.ndarray] = {}
 _FACTOR_CACHE: dict[tuple[object, ...], np.ndarray] = {}
+_V1_LOCATION_CACHE: dict[tuple[object, ...], np.ndarray] = {}
+_V1_FACTOR_CACHE: dict[tuple[object, ...], np.ndarray] = {}
 
 
 def _finite_float(value: object) -> float | None:
@@ -791,6 +791,72 @@ def _turnover_context_complete(
     )
 
 
+def _cached_v1_factor(
+    game: Game, home: Team, away: Team, likelihood: LikelihoodV1
+) -> np.ndarray:
+    """Research-local cached equivalent of the frozen V1 factor."""
+
+    location_key = (
+        likelihood.beta.tobytes(),
+        likelihood.scale,
+        likelihood.degrees_of_freedom,
+        home.subdivision,
+        away.subdivision,
+        len(home.prior),
+        len(away.prior),
+        game.neutral_site,
+    )
+    locations = _V1_LOCATION_CACHE.get(location_key)
+    cross = home.subdivision != away.subdivision
+    fcs_home_listing = cross and home.subdivision == "fcs"
+    if locations is None:
+        home_rank = np.arange(1, len(home.prior) + 1, dtype=float)
+        away_rank = np.arange(1, len(away.prior) + 1, dtype=float)
+        home_percentile = (home_rank - 0.5) / len(home_rank)
+        away_percentile = (away_rank - 0.5) / len(away_rank)
+        if fcs_home_listing:
+            x, y = np.meshgrid(away_percentile, home_percentile, indexing="ij")
+        else:
+            x, y = np.meshgrid(home_percentile, away_percentile, indexing="ij")
+        pairing = "fbs-fcs" if cross else f"{home.subdivision}-{away.subdivision}"
+        matrix = design_matrix(
+            x.ravel(),
+            y.ravel(),
+            np.full(x.size, pairing),
+            np.full(x.size, 1.0 - float(game.neutral_site)),
+            np.full(x.size, float(game.neutral_site)),
+            surface=True,
+            fbs_home=np.full(
+                x.size,
+                float(cross and home.subdivision == "fbs" and not game.neutral_site),
+            ),
+        )
+        locations = matrix @ likelihood.beta
+        if fcs_home_listing:
+            locations = locations.reshape(len(away.prior), len(home.prior)).T
+        else:
+            locations = locations.reshape(len(home.prior), len(away.prior))
+        _V1_LOCATION_CACHE[location_key] = locations
+    margin = oriented_margin(
+        home.subdivision,
+        away.subdivision,
+        game.home_points,
+        game.away_points,
+    )
+    factor_key = (*location_key, margin)
+    factor = _V1_FACTOR_CACHE.get(factor_key)
+    if factor is None:
+        logs = _student_t_logpdf(
+            margin,
+            locations,
+            likelihood.scale,
+            likelihood.degrees_of_freedom,
+        )
+        factor = np.exp(logs - np.max(logs))
+        _V1_FACTOR_CACHE[factor_key] = factor
+    return factor
+
+
 def _candidate_factors(
     variant: str,
     game: Game,
@@ -850,15 +916,6 @@ def infer_posterior_with_primitives(
 ) -> PosteriorResult:
     """Run research BP with V1 margin and optional conditional primitives."""
 
-    if variant == "v1":
-        return infer_posterior(
-            teams,
-            list(games),
-            likelihood,
-            max_iterations=max_iterations,
-            tolerance=tolerance,
-            damping=damping,
-        )
     by_id = {team.team_id: team for team in teams}
     if len(by_id) != len(teams):
         raise ValueError("team IDs must be unique")
@@ -867,7 +924,9 @@ def infer_posterior_with_primitives(
         if game.home_id not in by_id or game.away_id not in by_id:
             raise ValueError(f"game {game.game_id} references a team without a prior")
         home, away = by_id[game.home_id], by_id[game.away_id]
-        values = game_factor(game, home, away, likelihood)
+        # Candidate multiplication must not mutate the cached V1 array; the
+        # same geometry is revisited by A/B/C and by both prior families.
+        values = _cached_v1_factor(game, home, away, likelihood).copy()
         evidence = evidence_by_game.get(game.game_id)
         if evidence is not None:
             values *= _candidate_factors(
