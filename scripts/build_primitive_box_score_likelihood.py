@@ -1822,9 +1822,14 @@ def _promotion_assessment(
             "crps_delta": _metric_mean(current, selected_candidate, "crps") - _metric_mean(current, baseline, "crps"),
             "coverage_delta": _metric_mean(current, selected_candidate, "interval_80_coverage") - _metric_mean(current, baseline, "interval_80_coverage"),
         }
-    future_final = [row for row in future_rows if _bool(row.get("is_final_cutoff"))]
-    selected_future = [row for row in future_final if row["candidate"] == selected_candidate]
-    baseline_future = [row for row in future_final if row["candidate"] == baseline]
+    # The final cutoff has no games after it by construction.  Future-game
+    # validation therefore uses every non-empty standard cutoff, with the
+    # same candidate/game keys for the selected model and V1.
+    future_scored = [
+        row for row in future_rows if row.get("future_margin_mae") is not None
+    ]
+    selected_future = [row for row in future_scored if row["candidate"] == selected_candidate]
+    baseline_future = [row for row in future_scored if row["candidate"] == baseline]
     future = {
         "margin_mae_delta": _metric_mean(selected_future, selected_candidate, "future_margin_mae") - _metric_mean(baseline_future, baseline, "future_margin_mae"),
         "margin_nll_delta": _metric_mean(selected_future, selected_candidate, "future_margin_nll") - _metric_mean(baseline_future, baseline, "future_margin_nll"),
@@ -1862,6 +1867,7 @@ def _promotion_assessment(
         "aggregate_final_deltas_selected_minus_v1": aggregate,
         "per_season_final_deltas_selected_minus_v1": by_season,
         "future_final_deltas_selected_minus_v1": future,
+        "future_comparison_scope": "all non-empty standard cutoffs; final cutoff has no future games by construction",
         "rolling_nll_deltas_selected_minus_v1": rolling_deltas,
         "checks": checks,
     }
