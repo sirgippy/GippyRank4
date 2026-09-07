@@ -62,6 +62,7 @@ _LOCATION_CACHE: dict[tuple[object, ...], np.ndarray] = {}
 _FACTOR_CACHE: dict[tuple[object, ...], np.ndarray] = {}
 _V1_LOCATION_CACHE: dict[tuple[object, ...], np.ndarray] = {}
 _V1_FACTOR_CACHE: dict[tuple[object, ...], np.ndarray] = {}
+_RANK_LOCATION_CACHE: dict[tuple[object, ...], np.ndarray] = {}
 
 
 def _finite_float(value: object) -> float | None:
@@ -178,6 +179,9 @@ def _rank_feature_names(pairing: str) -> list[str]:
         *(f"rank_diff_x_hinge_{int(k * 100)}" for k in (0.2, 0.4, 0.6, 0.8)),
         "home_site",
     ]
+
+
+_BASE_FEATURE_COUNT = sum(len(_rank_feature_names(pairing)) for pairing in PAIRINGS)
 
 
 def feature_names(
@@ -606,30 +610,85 @@ def _model_locations(
     fumbles_lost_diff: np.ndarray,
     fumbles_lost_total: np.ndarray,
 ) -> np.ndarray:
-    matrix = primitive_design(
-        margin=margin,
-        pairing=pairing,
-        neutral=neutral,
-        fbs_home=fbs_home,
-        x=x,
-        y=y,
+    beta = np.asarray(model["beta"], dtype=float)
+    if len(beta) <= _BASE_FEATURE_COUNT:
+        raise ValueError(
+            f"primitive model has {len(beta)} coefficients but design has no conditional columns"
+        )
+    if len({
+        len(margin),
+        len(pairing),
+        len(neutral),
+        len(fbs_home),
+        len(x),
+        len(y),
+        len(plays_diff),
+        len(plays_total),
+        len(yards_total),
+        len(interceptions_diff),
+        len(interceptions_total),
+        len(fumbles_lost_diff),
+        len(fumbles_lost_total),
+    }) != 1:
+        raise ValueError("primitive location inputs must have equal lengths")
+
+    # The rank portion is fixed for a rank-support/site geometry.  Cache its
+    # beta projection rather than rebuilding a 130-by-130 design matrix for
+    # every game and every BP iteration.  Only the scalar conditional-context
+    # contribution changes from game to game.
+    rank_key = (
+        beta[:_BASE_FEATURE_COUNT].tobytes(),
+        bool(model["rank_signal"]),
+        str(pairing[0]),
+        bool(neutral[0]),
+        bool(fbs_home[0]),
+        len(np.unique(x)),
+        len(np.unique(y)),
+    )
+    rank_locations = _RANK_LOCATION_CACHE.get(rank_key)
+    if rank_locations is None:
+        rank_matrix = design_matrix(
+            x if bool(model["rank_signal"]) else np.zeros_like(x),
+            y if bool(model["rank_signal"]) else np.zeros_like(y),
+            pairing,
+            1.0 - neutral,
+            neutral,
+            surface=True,
+            fbs_home=fbs_home,
+        )
+        if rank_matrix.shape[1] != _BASE_FEATURE_COUNT:
+            raise ValueError(
+                f"unexpected V1 rank design width: {rank_matrix.shape[1]}"
+            )
+        rank_locations = rank_matrix @ beta[:_BASE_FEATURE_COUNT]
+        _RANK_LOCATION_CACHE[rank_key] = rank_locations
+
+    context_matrix = primitive_design(
+        margin=margin[:1],
+        pairing=pairing[:1],
+        neutral=neutral[:1],
+        fbs_home=fbs_home[:1],
+        x=x[:1],
+        y=y[:1],
         response_kind=str(model["response_kind"]),
         turnover_context=bool(model["turnover_context"]),
-        plays_diff=plays_diff,
-        plays_total=plays_total,
-        yards_total=yards_total,
-        interceptions_diff=interceptions_diff,
-        interceptions_total=interceptions_total,
-        fumbles_lost_diff=fumbles_lost_diff,
-        fumbles_lost_total=fumbles_lost_total,
-        rank_signal=bool(model["rank_signal"]),
+        plays_diff=plays_diff[:1],
+        plays_total=plays_total[:1],
+        yards_total=yards_total[:1],
+        interceptions_diff=interceptions_diff[:1],
+        interceptions_total=interceptions_total[:1],
+        fumbles_lost_diff=fumbles_lost_diff[:1],
+        fumbles_lost_total=fumbles_lost_total[:1],
+        rank_signal=False,
     )
-    beta = np.asarray(model["beta"], dtype=float)
-    if matrix.shape[1] != len(beta):
+    if context_matrix.shape[1] != len(beta):
         raise ValueError(
-            f"primitive model has {len(beta)} coefficients but design has {matrix.shape[1]} columns"
+            f"primitive model has {len(beta)} coefficients but design has {context_matrix.shape[1]} columns"
         )
-    return matrix @ beta
+    conditional_location = float(
+        context_matrix[0, _BASE_FEATURE_COUNT :] @ beta[_BASE_FEATURE_COUNT :]
+    )
+    return rank_locations + conditional_location
 
 
 def _evidence_tuple(
