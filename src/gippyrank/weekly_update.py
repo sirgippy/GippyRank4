@@ -15,6 +15,10 @@ from pathlib import Path
 from typing import Any
 
 from gippyrank.data.cfbd import fetch_current_season, update_processed_game_corpus
+from gippyrank.performance_snapshot import (
+    build_performance_snapshot,
+    validate_performance_against_context,
+)
 from gippyrank.posterior.snapshots import Snapshot, build_snapshot
 from gippyrank.site_data import build_site_data
 
@@ -30,6 +34,7 @@ class WeeklyUpdate:
     effective_cutoff: datetime
     context: Snapshot
     history: Snapshot
+    performance: Snapshot
     corpus: dict[str, int]
     published: bool
     report: dict[str, Any]
@@ -47,6 +52,7 @@ class PublicationCandidatePaths:
     processed_games: Path
     context_snapshot: Path
     history_snapshot: Path
+    performance_snapshot: Path
     report_md: Path
     report_json: Path
     publish_config: Path
@@ -118,6 +124,7 @@ def _github_output_lines(update: WeeklyUpdate, *, root: Path) -> list[str]:
         ("processed_games_path", update.candidate_paths.processed_games),
         ("context_snapshot_path", update.candidate_paths.context_snapshot),
         ("history_snapshot_path", update.candidate_paths.history_snapshot),
+        ("performance_snapshot_path", update.candidate_paths.performance_snapshot),
         ("report_md_path", update.candidate_paths.report_md),
         ("report_json_path", update.candidate_paths.report_json),
         ("publish_config_path", update.candidate_paths.publish_config),
@@ -149,14 +156,31 @@ def _ranking_signature(snapshot: Snapshot) -> tuple[bytes, bytes]:
 
 def _configured_snapshot(root: Path, config: dict[str, Any], family: str) -> Path | None:
     slot = config.get("default_publication_slot")
+    suffix = {
+        "context": "/predictive/context",
+        "history": "/predictive/history",
+        "performance": "/performance",
+    }.get(family)
+    if suffix is None:
+        raise ValueError(f"Unsupported publication family: {family}")
     for entry in config.get("snapshots", []):
-        if entry.get("publication_slot") == slot and entry.get("source", "").endswith(f"/{family}"):
+        if entry.get("publication_slot") == slot and entry.get("source", "").endswith(suffix):
             return root / entry["source"]
     return None
 
 
-def _is_publishable_change(root: Path, config: dict[str, Any], context: Snapshot, history: Snapshot) -> bool:
-    for family, snapshot in (("context", context), ("history", history)):
+def _is_publishable_change(
+    root: Path,
+    config: dict[str, Any],
+    context: Snapshot,
+    history: Snapshot,
+    performance: Snapshot,
+) -> bool:
+    for family, snapshot in (
+        ("context", context),
+        ("history", history),
+        ("performance", performance),
+    ):
         previous = _configured_snapshot(root, config, family)
         if previous is None or not previous.is_dir():
             return True
@@ -170,14 +194,17 @@ def _is_publishable_change(root: Path, config: dict[str, Any], context: Snapshot
 
 def _upsert_publication(
     *, root: Path, config_path: Path, context: Snapshot, history: Snapshot,
-    slot: str, label: str,
+    slot: str, label: str, performance: Snapshot | None = None,
 ) -> None:
     config = _load_json(config_path)
     retained = [
         entry for entry in config["snapshots"]
         if entry.get("publication_slot") != slot
     ]
-    for snapshot in (context, history):
+    snapshots = [context, history]
+    if performance is not None:
+        snapshots.append(performance)
+    for snapshot in snapshots:
         retained.append(
             {
                 "source": snapshot.directory.relative_to(root).as_posix(),
@@ -198,7 +225,10 @@ def _rows(snapshot: Snapshot) -> list[dict[str, str]]:
 def _top25(snapshot: Snapshot) -> str:
     return "\n".join(
         f"{row['display_rank']}. {row['team_name']}"
-        for row in sorted(_rows(snapshot), key=lambda row: int(row["display_rank"]))[:25]
+        for row in sorted(
+            (row for row in _rows(snapshot) if row["display_rank"] != "NR"),
+            key=lambda row: int(row["display_rank"]),
+        )[:25]
     )
 
 
@@ -206,7 +236,73 @@ def _diagnostics(snapshot: Snapshot) -> dict[str, Any]:
     return _load_json(snapshot.directory / "diagnostics.json")
 
 
-def _report(context: Snapshot, history: Snapshot, *, slot: str, label: str, corpus: dict[str, int]) -> dict[str, Any]:
+def _performance_differences(
+    context: Snapshot, performance: Snapshot
+) -> list[dict[str, object]]:
+    context_rows = {row["team_id"]: row for row in _rows(context)}
+    values = []
+    for row in _rows(performance):
+        if row["team_id"] not in context_rows or row.get("rated", "True") != "True":
+            continue
+        context_row = context_rows[row["team_id"]]
+        difference = float(row["expected_rank"]) - float(context_row["expected_rank"])
+        values.append(
+            {
+                "team": row["team_name"],
+                "performance_expected_rank": float(row["expected_rank"]),
+                "context_expected_rank": float(context_row["expected_rank"]),
+                "difference": difference,
+                "absolute_difference": abs(difference),
+            }
+        )
+    return sorted(
+        values, key=lambda item: (-float(item["absolute_difference"]), str(item["team"]))
+    )[:10]
+
+
+def _broadest_performance(performance: Snapshot) -> list[dict[str, object]]:
+    values = [
+        {
+            "team": row["team_name"],
+            "team_id": row["team_id"],
+            "interval_80_width": int(float(row["interval_80_width"])),
+            "interval_80": [
+                int(float(row["interval_80_low"])),
+                int(float(row["interval_80_high"])),
+            ],
+        }
+        for row in _rows(performance)
+        if row.get("rated", "True") == "True"
+    ]
+    return sorted(values, key=lambda item: (-int(item["interval_80_width"]), str(item["team"])))[:10]
+
+
+def _performance_counts(performance: Snapshot) -> dict[str, int]:
+    rows = _rows(performance)
+    return {
+        "rated_count": sum(row.get("rated", "True") == "True" for row in rows),
+        "unrated_count": sum(row.get("rated", "True") != "True" for row in rows),
+    }
+
+
+def _newly_rated(performance: Snapshot, previous: list[dict[str, str]]) -> list[str]:
+    previous_rated = {row["team_id"] for row in previous if row.get("rated") == "True"}
+    return [
+        row["team_name"]
+        for row in _rows(performance)
+        if row.get("rated") == "True" and row["team_id"] not in previous_rated
+    ]
+
+
+def _report(
+    context: Snapshot,
+    history: Snapshot,
+    performance: Snapshot,
+    *,
+    slot: str,
+    label: str,
+    corpus: dict[str, int],
+) -> dict[str, Any]:
     metadata = context.metadata
     return {
         "season": metadata["season"], "publication_slot": slot, "display_label": label,
@@ -219,6 +315,13 @@ def _report(context: Snapshot, history: Snapshot, *, slot: str, label: str, corp
         "schedule_overlap_count": corpus["overlap_count"],
         "context": {**_diagnostics(context), "top25": _top25(context)},
         "history": {**_diagnostics(history), "top25": _top25(history)},
+        "performance": {
+            **_diagnostics(performance),
+            "top25": _top25(performance),
+            **_performance_counts(performance),
+            "largest_expected_rank_differences": _performance_differences(context, performance),
+            "broadest_distributions": _broadest_performance(performance),
+        },
         "validation": "passed",
     }
 
@@ -251,6 +354,14 @@ def _disagreements(context: Snapshot, history: Snapshot) -> list[dict[str, objec
 
 
 def render_review_markdown(report: dict[str, Any]) -> str:
+    newly_rated = report["newly_rated_teams"]
+    newly_rated_summary = f"{len(newly_rated)} teams"
+    if newly_rated:
+        preview = ", ".join(newly_rated[:20])
+        newly_rated_summary += f": {preview}"
+        if len(newly_rated) > 20:
+            newly_rated_summary += ", …"
+
     def section(name: str, values: dict[str, Any]) -> str:
         return (
             f"## {name}\n\n"
@@ -268,6 +379,22 @@ def render_review_markdown(report: dict[str, Any]) -> str:
         f"- FCS population/fallbacks: `{report['fcs_population_size']}` / `{report['fcs_fallback_count']}`\n"
         "- Validation: `passed` (shared cutoff, corpus, and eligible game set)\n\n"
         + section("Context", report["context"]) + "\n" + section("History", report["history"])
+        + "\n## Performance\n\n"
+        + f"Rated teams: `{report['performance']['rated_count']}` · unrated/NR teams: `{report['performance']['unrated_count']}` · "
+        + f"transformation runtime: `{report['performance']['transformation_runtime_seconds']:.4f}s`\n\n"
+        + "### Top 25\n\n" + report["performance"]["top25"] + "\n\n"
+        + "### Largest Performance / Predictive Context expected-rank differences\n\n"
+        + "\n".join(
+            f"- {item['team']}: Performance {item['performance_expected_rank']:.1f}, Context {item['context_expected_rank']:.1f} (Δ {item['difference']:+.1f})"
+            for item in report["performance"]["largest_expected_rank_differences"]
+        )
+        + "\n\n### Broadest Performance distributions\n\n"
+        + "\n".join(
+            f"- {item['team']}: 80% interval {item['interval_80'][0]}–{item['interval_80'][1]} ({item['interval_80_width']} ranks)"
+            for item in report["performance"]["broadest_distributions"]
+        )
+        + "\n\n### Newly rated teams\n\n"
+        + newly_rated_summary
         + "\n## Review diagnostics\n\n"
         + "### Context biggest movers\n\n"
         + "\n".join(f"- {item['team']}: {item['rank_change']:+d} display ranks" for item in report["context_movers"])
@@ -307,9 +434,25 @@ def prepare_weekly_update(
         context = build_snapshot(prior_family="context", **common)
         history = build_snapshot(prior_family="history", **common)
         _same_evidence(context, history)
-        report = _report(context, history, slot=slot, label=label, corpus=corpus)
+        final_context_path = (
+            root
+            / "data/processed/snapshots"
+            / str(season)
+            / context.snapshot_id
+            / "predictive/context"
+        )
+        performance = build_performance_snapshot(
+            context,
+            root=root,
+            output_root=temporary,
+            source_context_path=final_context_path,
+            generation_timestamp=requested,
+        )
+        validate_performance_against_context(context, performance)
+        report = _report(context, history, performance, slot=slot, label=label, corpus=corpus)
         previous_context = _previous_rows(root, config, "context")
         previous_history = _previous_rows(root, config, "history")
+        previous_performance = _previous_rows(root, config, "performance")
         previous_games = _configured_snapshot(root, config, "context")
         previous_ids: set[str] = set()
         if previous_games is not None and previous_games.exists():
@@ -319,9 +462,13 @@ def prepare_weekly_update(
         report["context_movers"] = _movement(context, previous_context)
         report["history_movers"] = _movement(history, previous_history)
         report["h_c_disagreements"] = _disagreements(context, history)
-        if not _is_publishable_change(root, config, context, history):
+        report["newly_rated_teams"] = _newly_rated(performance, previous_performance)
+        if not _is_publishable_change(root, config, context, history, performance):
             effective = datetime.fromisoformat(str(context.metadata["effective_cutoff"]))
-            return WeeklyUpdate(season, slot, label, requested, effective, context, history, corpus, False, report)
+            return WeeklyUpdate(
+                season, slot, label, requested, effective, context, history, performance,
+                corpus, False, report
+            )
         final_snapshots: list[Snapshot] = []
         for snapshot in (context, history):
             final = root / "data/processed/snapshots" / str(season) / snapshot.snapshot_id / "predictive" / snapshot.metadata["prior_family"]
@@ -330,18 +477,36 @@ def prepare_weekly_update(
                 shutil.rmtree(final)
             shutil.copytree(snapshot.directory, final)
             final_snapshots.append(Snapshot(snapshot.snapshot_id, final, snapshot.metadata))
+        performance_final = (
+            root / "data/processed/snapshots" / performance.directory.relative_to(temporary)
+        )
+        performance_final.parent.mkdir(parents=True, exist_ok=True)
+        if performance_final.exists():
+            shutil.rmtree(performance_final)
+        shutil.copytree(performance.directory, performance_final)
     context, history = final_snapshots
-    _upsert_publication(root=root, config_path=config_path, context=context, history=history, slot=slot, label=label)
+    performance = Snapshot(performance.snapshot_id, performance_final, performance.metadata)
+    validate_performance_against_context(context, performance)
+    _upsert_publication(
+        root=root,
+        config_path=config_path,
+        context=context,
+        history=history,
+        performance=performance,
+        slot=slot,
+        label=label,
+    )
     build_site_data(root=root, config_path=config_path, output_directory=root / "site/data")
     first_export = _tree_hash(root / "site/data")
     build_site_data(root=root, config_path=config_path, output_directory=root / "site/data")
     if _tree_hash(root / "site/data") != first_export:
         raise ValueError("Static site export is not deterministic")
-    report = _report(context, history, slot=slot, label=label, corpus=corpus)
+    report = _report(context, history, performance, slot=slot, label=label, corpus=corpus)
     report["new_eligible_game_count"] = len(set(context.metadata["included_game_ids"]) - previous_ids)
     report["context_movers"] = _movement(context, previous_context)
     report["history_movers"] = _movement(history, previous_history)
     report["h_c_disagreements"] = _disagreements(context, history)
+    report["newly_rated_teams"] = _newly_rated(performance, previous_performance)
     report_dir = root / "data/processed/weekly_updates"
     report_dir.mkdir(parents=True, exist_ok=True)
     (report_dir / f"{slot}.json").write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -355,13 +520,15 @@ def prepare_weekly_update(
         processed_games=root / "data/processed/cfbd/games.csv",
         context_snapshot=context.directory,
         history_snapshot=history.directory,
+        performance_snapshot=performance.directory,
         report_md=report_dir / f"{slot}.md",
         report_json=report_dir / f"{slot}.json",
         publish_config=config_path,
         site_data=root / "site/data",
     )
     return WeeklyUpdate(
-        season, slot, label, requested, effective, context, history, corpus, True, report,
+        season, slot, label, requested, effective, context, history, performance,
+        corpus, True, report,
         candidate_paths,
     )
 

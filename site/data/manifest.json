@@ -4,6 +4,10 @@
     {
       "id": "predictive",
       "label": "Predictive"
+    },
+    {
+      "id": "performance",
+      "label": "Performance"
     }
   ],
   "schema_version": "1.0",
@@ -28,11 +32,13 @@
       "publication_slot": "2026-preseason",
       "rank_count": 138,
       "ranking_family": "predictive",
+      "rated_count": 138,
       "requested_cutoff": null,
       "season": 2026,
       "snapshot_id": "2026-preseason-context",
       "snapshot_type": "preseason",
       "source_retrieved_at": null,
+      "unrated_count": 0,
       "valid": true
     },
     {
@@ -52,11 +58,13 @@
       "publication_slot": "2026-preseason",
       "rank_count": 138,
       "ranking_family": "predictive",
+      "rated_count": 138,
       "requested_cutoff": null,
       "season": 2026,
       "snapshot_id": "2026-preseason-history",
       "snapshot_type": "preseason",
       "source_retrieved_at": null,
+      "unrated_count": 0,
       "valid": true
     },
     {
@@ -76,11 +84,13 @@
       "publication_slot": "2026-sep-05",
       "rank_count": 138,
       "ranking_family": "predictive",
+      "rated_count": 138,
       "requested_cutoff": "2026-09-05T23:59:59+00:00",
       "season": 2026,
       "snapshot_id": "2026-live-2026-09-05T23-59-59Z-context",
       "snapshot_type": "live",
       "source_retrieved_at": "2026-09-05T20:11:12.864212+00:00",
+      "unrated_count": 0,
       "valid": true
     },
     {
@@ -100,11 +110,13 @@
       "publication_slot": "2026-sep-05",
       "rank_count": 138,
       "ranking_family": "predictive",
+      "rated_count": 138,
       "requested_cutoff": "2026-09-05T23:59:59+00:00",
       "season": 2026,
       "snapshot_id": "2026-live-2026-09-05T23-59-59Z-history",
       "snapshot_type": "live",
       "source_retrieved_at": "2026-09-05T20:11:12.864212+00:00",
+      "unrated_count": 0,
       "valid": true
     },
     {
@@ -124,11 +136,13 @@
       "publication_slot": "2026-09-06",
       "rank_count": 138,
       "ranking_family": "predictive",
+      "rated_count": 138,
       "requested_cutoff": "2026-09-06T17:34:56.895103+00:00",
       "season": 2026,
       "snapshot_id": "2026-weekly-2026-09-06T17-34-56.895103Z-context",
       "snapshot_type": "weekly",
       "source_retrieved_at": "2026-09-06T17:34:56.895103+00:00",
+      "unrated_count": 0,
       "valid": true
     },
     {
@@ -148,11 +162,39 @@
       "publication_slot": "2026-09-06",
       "rank_count": 138,
       "ranking_family": "predictive",
+      "rated_count": 138,
       "requested_cutoff": "2026-09-06T17:34:56.895103+00:00",
       "season": 2026,
       "snapshot_id": "2026-weekly-2026-09-06T17-34-56.895103Z-history",
       "snapshot_type": "weekly",
       "source_retrieved_at": "2026-09-06T17:34:56.895103+00:00",
+      "unrated_count": 0,
+      "valid": true
+    },
+    {
+      "anchor_family": "context",
+      "data_path": "data/snapshots/2026-weekly-2026-09-06T17-34-56.895103Z-performance.json",
+      "display_label": "20260906",
+      "distribution_path": "data/distributions/2026-weekly-2026-09-06T17-34-56.895103Z-performance.json",
+      "effective_cutoff": "2026-09-06T17:34:56.895103+00:00",
+      "excluded_lower_division_games": 0,
+      "generation_timestamp": "2026-09-06T17:34:56.895103+00:00",
+      "included_game_count": 165,
+      "method": "prior_stripping",
+      "model_version": "1.0",
+      "model_versions": {
+        "performance": "1.0"
+      },
+      "publication_slot": "2026-09-06",
+      "rank_count": 138,
+      "ranking_family": "performance",
+      "rated_count": 131,
+      "requested_cutoff": "2026-09-06T17:34:56.895103+00:00",
+      "season": 2026,
+      "snapshot_id": "2026-weekly-2026-09-06T17-34-56.895103Z-performance",
+      "snapshot_type": "weekly",
+      "source_retrieved_at": "2026-09-06T17:34:56.895103+00:00",
+      "unrated_count": 7,
       "valid": true
     }
   ]

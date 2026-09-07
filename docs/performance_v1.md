@@ -1,14 +1,20 @@
 # Performance V1
 
-Performance V1 is a research-only descriptive estimate of how good a team
-appears to be from the football it has actually played. It is not standings,
+Performance V1 is a descriptive estimate of how good a team appears to be from
+the football it has actually played. The frozen research implementation remains
+the scientific reference; the production site uses the same Context-anchored
+formula through a durable snapshot contract. It is not standings,
 strength of record, postseason qualification, selection advice, a reward for
 winning, or a human-poll emulator. Competition rules determine postseason
 qualification separately.
 
-The public website does not register, select, or publish this family. The
-research build is `scripts/build_performance_v1.py`; its default output is
-`data/processed/performance_v1/`.
+The production family is `performance`, with model version `1.0`, anchor family
+`context`, and method `prior_stripping`. Production snapshots live under
+`data/processed/snapshots/<season>/<logical-snapshot>/performance/` and are
+derived only from a valid Predictive Context snapshot plus the frozen Context
+preseason prior. The research build remains `scripts/build_performance_v1.py`
+and its output under `data/processed/performance_v1/` is never used as site
+input.
 
 ## Mathematical definition
 
@@ -165,10 +171,34 @@ the story relative to the Predictive C marginal.
 
 ## Production boundary and reproducibility
 
-This work does not modify H/C priors, Historical Likelihood V1, Posterior V1
-default behavior, Predictive outputs, website selectors, or GitHub Pages data.
-It does not fetch CFBD or poll data. It reads the cached corpus, frozen prior
-artifacts, and serialized likelihood. Run it with:
+Production Performance does not modify H/C priors, Historical Likelihood V1,
+Posterior V1 default behavior, Predictive outputs, game eligibility, or the
+lower-division policy. It does not fetch CFBD or poll data. A production build
+reads a valid Context snapshot and the frozen Context prior, validates matching
+season/cutoff/corpus/game IDs/source evidence/prior hashes, then applies:
+
+`raw_i(r) = PredictiveContextPosterior_i(r | G) / ContextPreseasonPrior_i(r)`
+
+`Performance_i(r | G) = raw_i(r) / sum_r raw_i(r)`
+
+The implementation uses log-space subtraction and scaling only to prevent
+overflow/underflow; it does not clip, smooth, divide through zero, or
+renormalize malformed input. Teams with no eligible games receive the neutral
+uniform PMF, `rated=false`, and display rank `NR`; they are excluded from Top
+25 and sorted after rated teams in All FBS.
+
+Run a checked-in Context transformation with:
+
+```bash
+uv run python scripts/build_performance_snapshot.py \
+  --context data/processed/snapshots/<season>/<context-snapshot>/predictive/context
+```
+
+The weekly pipeline runs this transformation only after Context and History
+have succeeded. If Performance provenance or PMF validation fails, the entire
+publication candidate fails and no partial bundle is staged.
+
+The research build can still be run independently with:
 
 ```bash
 uv run python scripts/build_performance_v1.py

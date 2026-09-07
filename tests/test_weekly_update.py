@@ -84,18 +84,20 @@ def test_weekly_update_pairs_h_c_preserves_preseason_and_is_idempotent(tmp_path:
     config = json.loads((root / "site/publish_config.json").read_text())
     assert config["default_publication_slot"] == "2026-09-12"
     entries = config["snapshots"]
-    assert len(entries) == 2 and {entry["publication_slot"] for entry in entries} == {"2026-09-12"}
-    assert {entry["source"].rsplit("/", 1)[-1] for entry in entries} == {"context", "history"}
+    assert len(entries) == 3 and {entry["publication_slot"] for entry in entries} == {"2026-09-12"}
+    assert {entry["source"].rsplit("/", 1)[-1] for entry in entries} == {"context", "history", "performance"}
     manifest = json.loads((root / "site/data/manifest.json").read_text())
     assert manifest["default_publication_slot"] == "2026-09-12"
     assert first.candidate_paths is not None
     assert first.candidate_paths.context_snapshot == first.context.directory
     assert first.candidate_paths.history_snapshot == first.history.directory
+    assert first.candidate_paths.performance_snapshot == first.performance.directory
     assert first.candidate_paths.report_md.is_file()
     assert first.candidate_paths.report_json.is_file()
     outputs = dict(line.split("=", 1) for line in _github_output_lines(first, root=root))
     assert outputs["context_snapshot_path"] == first.context.directory.relative_to(root).as_posix()
     assert outputs["history_snapshot_path"] == first.history.directory.relative_to(root).as_posix()
+    assert outputs["performance_snapshot_path"] == first.performance.directory.relative_to(root).as_posix()
     assert outputs["report_md_path"] == "data/processed/weekly_updates/2026-09-12.md"
     assert outputs["report_json_path"] == "data/processed/weekly_updates/2026-09-12.json"
     assert outputs["fbs_schedule_path"] == "data/raw/cfbd/games/2026.json"
@@ -178,6 +180,7 @@ def test_update_workflow_commits_only_a_published_non_dry_run_candidate() -> Non
         ("processed_games_path", "PROCESSED_GAMES_PATH"),
         ("context_snapshot_path", "CONTEXT_SNAPSHOT_PATH"),
         ("history_snapshot_path", "HISTORY_SNAPSHOT_PATH"),
+        ("performance_snapshot_path", "PERFORMANCE_SNAPSHOT_PATH"),
         ("report_md_path", "REPORT_MD_PATH"),
         ("report_json_path", "REPORT_JSON_PATH"),
         ("publish_config_path", "PUBLISH_CONFIG_PATH"),
@@ -201,6 +204,7 @@ def _candidate_environment() -> dict[str, str]:
         "PROCESSED_GAMES_PATH": "data/processed/cfbd/games.csv",
         "CONTEXT_SNAPSHOT_PATH": "data/processed/snapshots/2026/actual-context/predictive/context",
         "HISTORY_SNAPSHOT_PATH": "data/processed/snapshots/2026/actual-history/predictive/history",
+        "PERFORMANCE_SNAPSHOT_PATH": "data/processed/snapshots/2026/actual-performance/performance",
         "REPORT_MD_PATH": "data/processed/weekly_updates/2026-09-12.md",
         "REPORT_JSON_PATH": "data/processed/weekly_updates/2026-09-12.json",
         "PUBLISH_CONFIG_PATH": "site/publish_config.json",
@@ -213,7 +217,7 @@ def _candidate_repo(tmp_path: Path) -> dict[str, str]:
     subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
     environment = _candidate_environment()
     for relative_path in environment.values():
-        if relative_path.endswith(("context", "history", "data")):
+        if relative_path.endswith(("context", "history", "performance", "data")):
             _write_candidate_file(tmp_path, f"{relative_path}/artifact.json")
         else:
             _write_candidate_file(tmp_path, relative_path)
@@ -249,6 +253,7 @@ def test_candidate_staging_force_adds_only_durable_ignored_publication_artifacts
         "data/processed/cfbd/games.csv",
         "data/processed/snapshots/2026/actual-context/predictive/context/artifact.json",
         "data/processed/snapshots/2026/actual-history/predictive/history/artifact.json",
+        "data/processed/snapshots/2026/actual-performance/performance/artifact.json",
         "data/processed/weekly_updates/2026-09-12.md",
         "data/processed/weekly_updates/2026-09-12.json",
         "site/publish_config.json",
