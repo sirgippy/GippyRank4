@@ -164,6 +164,23 @@ def test_fcs_fcs_is_exact_v1_fallback() -> None:
         assert research.pmfs[team_id] == pytest.approx(baseline.pmfs[team_id], abs=1e-12)
 
 
+def test_research_v1_variant_matches_production_v1() -> None:
+    teams = _teams()
+    game = _game()
+    baseline = infer_posterior(teams, [game], _likelihood(), tolerance=1e-12)
+    research = infer_posterior_with_primitives(
+        teams,
+        [game],
+        _likelihood(),
+        {},
+        {},
+        variant="v1",
+        tolerance=1e-12,
+    )
+    for team_id in baseline.pmfs:
+        assert research.pmfs[team_id] == pytest.approx(baseline.pmfs[team_id], abs=1e-12)
+
+
 def test_missing_a_evidence_falls_back_to_v1() -> None:
     teams = _teams()
     game = _game()
