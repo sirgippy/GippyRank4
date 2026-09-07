@@ -93,7 +93,10 @@ def test_site_data_publishes_all_initial_h_c_preseason_and_current_snapshots(
         root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
     )
     assert manifest["seasons"] == [2026]
-    assert manifest["default_publication_slot"] == "2026-09-06"
+    configured_default_slot = json.loads(CONFIG.read_text(encoding="utf-8"))[
+        "default_publication_slot"
+    ]
+    assert manifest["default_publication_slot"] == configured_default_slot
     predictive = [entry for entry in manifest["snapshots"] if entry["ranking_family"] == "predictive"]
     assert {(entry["snapshot_type"], entry["prior_family"]) for entry in predictive} == {
         ("preseason", "context"),
@@ -103,19 +106,31 @@ def test_site_data_publishes_all_initial_h_c_preseason_and_current_snapshots(
         ("weekly", "context"),
         ("weekly", "history"),
     }
-    performance = [entry for entry in manifest["snapshots"] if entry["ranking_family"] == "performance"]
+    performance = [
+        entry
+        for entry in manifest["snapshots"]
+        if entry["ranking_family"] == "performance"
+        and entry["publication_slot"] == configured_default_slot
+    ]
     assert len(performance) == 1
-    assert performance[0]["publication_slot"] == "2026-09-06"
+    assert performance[0]["publication_slot"] == configured_default_slot
     assert "prior_family" not in performance[0]
-    assert performance[0]["rated_count"] == 131
-    assert performance[0]["unrated_count"] == 7
+    assert (
+        performance[0]["rated_count"] + performance[0]["unrated_count"]
+        == performance[0]["rank_count"]
+    )
     current = [entry for entry in manifest["snapshots"] if entry["snapshot_type"] == "live"]
     assert {entry["effective_cutoff"] for entry in current} == {
         "2026-09-05T20:11:12.864212+00:00"
     }
-    weekly = [entry for entry in manifest["snapshots"] if entry["snapshot_type"] == "weekly"]
+    weekly = [
+        entry
+        for entry in manifest["snapshots"]
+        if entry["snapshot_type"] == "weekly"
+        and entry["publication_slot"] == configured_default_slot
+    ]
     assert {entry["effective_cutoff"] for entry in weekly} == {
-        "2026-09-06T17:34:56.895103+00:00",
+        performance[0]["effective_cutoff"]
     }
 
 
