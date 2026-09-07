@@ -6,14 +6,15 @@ Student-t family, and a research-only pairwise BP wrapper that multiplies
 
     p(margin | ranks, site) * p(YPP | margin, ranks, site)
 
-when YPP is observed.  Missing YPP is represented by an all-ones factor, so
-the posterior is exactly the V1 posterior for that game.
+when YPP is observed.  Missing YPP and historically unsupported pairings are
+represented by an all-ones factor, so the corrected posterior is exactly the
+V1 posterior for that game's evidence.
 """
 
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 
 import numpy as np
@@ -34,6 +35,8 @@ from gippyrank.posterior.engine import (
 
 MARGIN_KNOTS = (-28.0, -14.0, 0.0, 14.0, 28.0)
 DF_GRID = (3.0, 5.0, 8.0, 15.0)
+SUPPORTED_YPP_PAIRINGS = frozenset(("fbs-fbs", "fbs-fcs"))
+YPP_PAIRING_POLICY = "historically_supported_pairings_only"
 _MARGIN_LOCATION_CACHE: dict[tuple[object, ...], np.ndarray] = {}
 _MARGIN_FACTOR_CACHE: dict[tuple[object, ...], np.ndarray] = {}
 _YPP_LOCATION_CACHE: dict[tuple[object, ...], np.ndarray] = {}
@@ -60,6 +63,26 @@ def pairing_for(home_subdivision: str, away_subdivision: str) -> str:
     if home not in {"fbs", "fcs"} or away not in {"fbs", "fcs"}:
         raise ValueError(f"unsupported subdivisions: {home_subdivision}, {away_subdivision}")
     return "fbs-fcs" if home != away else f"{home}-{away}"
+
+
+def _normalise_pairing_policy(
+    pairings: Iterable[str] | None,
+) -> frozenset[str]:
+    values = PAIRINGS if pairings is None else tuple(str(value) for value in pairings)
+    allowed = frozenset(values)
+    unknown = allowed - frozenset(PAIRINGS)
+    if unknown:
+        raise ValueError(f"unsupported YPP pairing policy values: {sorted(unknown)}")
+    return allowed
+
+
+def ypp_pairing_supported(
+    home_subdivision: str,
+    away_subdivision: str,
+) -> bool:
+    """Return whether the corrected experiment has historical YPP support."""
+
+    return pairing_for(home_subdivision, away_subdivision) in SUPPORTED_YPP_PAIRINGS
 
 
 def oriented_margin(
@@ -264,11 +287,26 @@ class YPPData:
         return len(self.target)
 
 
-def build_ypp_data(rows: Sequence[Mapping[str, object]]) -> YPPData:
-    """Expand usable game rank supports into weighted pseudo-observations."""
+def build_ypp_data(
+    rows: Sequence[Mapping[str, object]],
+    *,
+    allowed_pairings: Iterable[str] | None = SUPPORTED_YPP_PAIRINGS,
+) -> YPPData:
+    """Expand usable supported-game rank supports into weighted observations.
 
+    The corrected experiment defaults to the prospective support boundary.  A
+    caller must explicitly pass ``None`` (all pairings) for the retained
+    legacy all-pairings diagnostic.
+    """
+
+    allowed = _normalise_pairing_policy(allowed_pairings)
     values: list[list[object]] = [[] for _ in range(10)]
     for row in rows:
+        pairing = pairing_for(
+            str(row["home_subdivision"]), str(row["away_subdivision"])
+        )
+        if pairing not in allowed:
+            continue
         target = oriented_ypp_difference(
             str(row["home_subdivision"]),
             str(row["away_subdivision"]),
@@ -310,7 +348,7 @@ def build_ypp_data(rows: Sequence[Mapping[str, object]]) -> YPPData:
                     int(row["home_points"]),
                     int(row["away_points"]),
                 ),
-                pairing_for(home_subdivision, away_subdivision),
+                pairing,
                 float(neutral),
                 fbs_home,
                 1.0 / n,
@@ -330,29 +368,44 @@ def fit_ypp_model(
     rank_signal: bool,
     include_margin: bool = True,
     degrees_of_freedom: float,
+    allowed_pairings: Iterable[str] | None = SUPPORTED_YPP_PAIRINGS,
 ) -> dict[str, object]:
-    """Fit one frozen candidate specification by weighted robust regression."""
+    """Fit one frozen candidate specification by weighted robust regression.
 
+    Filtering is repeated here as a semantic guard so unsupported rows cannot
+    enter a corrected fit even if the caller supplied an all-pairing data
+    object.  The legacy diagnostic opts into all pairings explicitly.
+    """
+
+    allowed = _normalise_pairing_policy(allowed_pairings)
+    fit_mask = np.asarray(mask, dtype=bool) & np.isin(
+        data.pairing, tuple(sorted(allowed))
+    )
+    if not np.any(fit_mask):
+        raise ValueError("YPP fit has no observations in the requested pairing policy")
     matrix = conditional_design(
-        data.margin[mask],
-        data.pairing[mask],
-        data.neutral[mask],
-        data.fbs_home[mask],
-        data.x[mask],
-        data.y[mask],
+        data.margin[fit_mask],
+        data.pairing[fit_mask],
+        data.neutral[fit_mask],
+        data.fbs_home[fit_mask],
+        data.x[fit_mask],
+        data.y[fit_mask],
         rank_signal=rank_signal,
         include_margin=include_margin,
     )
     model = fit_robust_surface(
         matrix,
-        data.target[mask],
-        data.weight[mask],
+        data.target[fit_mask],
+        data.weight[fit_mask],
         df=degrees_of_freedom,
     )
     return {
         **model,
         "rank_signal": rank_signal,
         "include_margin": include_margin,
+        "fit_pairings": tuple(sorted(allowed)),
+        "fit_game_count": len(set(data.game_id[fit_mask].tolist())),
+        "fit_pseudo_observation_count": int(np.sum(fit_mask)),
         "feature_names": feature_names(
             rank_signal=rank_signal, include_margin=include_margin
         ),
@@ -414,13 +467,22 @@ def ypp_factor(
     model: Mapping[str, object] | None,
     home_ypp: object,
     away_ypp: object,
+    *,
+    allowed_pairings: Iterable[str] | None = SUPPORTED_YPP_PAIRINGS,
 ) -> np.ndarray:
-    """Return a normalized conditional YPP factor or ones when YPP is missing."""
+    """Return a normalized conditional YPP factor or exact V1 fallback.
 
+    The default policy disables YPP for FCS--FCS regardless of observation
+    availability.  Passing ``None`` is reserved for the explicitly retained
+    pre-correction all-pairings diagnostic.
+    """
+
+    allowed = _normalise_pairing_policy(allowed_pairings)
+    pairing = pairing_for(home.subdivision, away.subdivision)
     target = oriented_ypp_difference(
         home.subdivision, away.subdivision, home_ypp, away_ypp
     )
-    if target is None or model is None:
+    if pairing not in allowed or target is None or model is None:
         return np.ones((len(home.prior), len(away.prior)), dtype=float)
 
     beta = np.asarray(model["beta"], dtype=float)
@@ -438,6 +500,7 @@ def ypp_factor(
         game.away_points,
         game.neutral_site,
         target,
+        tuple(sorted(allowed)),
     )
     cached = _YPP_FACTOR_CACHE.get(factor_key)
     if cached is not None:
@@ -608,6 +671,7 @@ def infer_posterior_with_ypp(
     ypp_by_game: Mapping[str, tuple[object, object]],
     model: Mapping[str, object] | None,
     *,
+    allowed_pairings: Iterable[str] | None = SUPPORTED_YPP_PAIRINGS,
     max_iterations: int = 100,
     tolerance: float = 1e-6,
     damping: float = 0.35,
@@ -625,7 +689,13 @@ def infer_posterior_with_ypp(
         margin_values = _fast_margin_factor(game, home, away, likelihood)
         home_ypp, away_ypp = ypp_by_game.get(game.game_id, (None, None))
         values = margin_values * ypp_factor(
-            game, home, away, model, home_ypp, away_ypp
+            game,
+            home,
+            away,
+            model,
+            home_ypp,
+            away_ypp,
+            allowed_pairings=allowed_pairings,
         )
         key = tuple(sorted((game.home_id, game.away_id)))
         if (game.home_id, game.away_id) != key:

@@ -9,8 +9,9 @@ The candidate family is deliberately fixed in this file before the
 2022--2025 evaluation:
 
 * Y0: frozen Historical Likelihood V1;
-* Y1: rank-independent conditional YPP factor;
-* Y2: conditional YPP factor with a restrained rank-percentile basis; and
+* Y1: rank-independent conditional YPP factor on supported pairings;
+* Y2-supported: the corrected conditional YPP factor on FBS-FBS and FBS-FCS;
+* Y2-all-pairings-original: the retained invalid PR #17 diagnostic; and
 * a naïve independent YPP diagnostic, never a promotion candidate.
 """
 
@@ -46,6 +47,8 @@ from gippyrank.posterior.snapshots import load_likelihood, load_teams
 from gippyrank.preseason import pmf_summaries
 from gippyrank.research.ypp_likelihood import (
     DF_GRID,
+    SUPPORTED_YPP_PAIRINGS,
+    YPP_PAIRING_POLICY,
     YPPData,
     build_ypp_data,
     fit_ypp_model,
@@ -70,8 +73,10 @@ DEVELOPMENT_YEARS = tuple(range(2018, 2022))
 FINAL_YEARS = (2022, 2023, 2024, 2025)
 ALL_HISTORICAL_YEARS = tuple(range(2003, 2027))
 CUTOFF_FRACTIONS = (0.0, 0.20, 0.35, 0.55, 0.72, 0.87, 1.0)
-POSTERIOR_VARIANTS = ("v1", "y1", "y2")
 NAIVE_VARIANT = "naive_independent_diagnostic"
+Y2_ORIGINAL_VARIANT = "y2_all_pairings_original"
+Y2_SUPPORTED_VARIANT = "y2_supported"
+POSTERIOR_VARIANTS = ("v1", "y1", Y2_ORIGINAL_VARIANT, Y2_SUPPORTED_VARIANT)
 _FUTURE_SURFACE_CACHE: dict[tuple[object, ...], tuple[np.ndarray, np.ndarray, float]] = {}
 
 # These thresholds are declared in source before the final test is read.  They
@@ -454,6 +459,41 @@ def build_coverage_audit(
             > 20
         ),
     }
+
+
+def summarise_pairing_coverage(
+    coverage_rows: Sequence[Mapping[str, object]],
+) -> list[dict[str, object]]:
+    """Aggregate raw pairing coverage over the declared temporal periods."""
+
+    grouped: dict[tuple[str, str], list[Mapping[str, object]]] = defaultdict(list)
+    for row in coverage_rows:
+        pairing = str(row["pairing"])
+        if pairing not in {"fbs-fbs", "fbs-fcs", "fcs-fcs"}:
+            continue
+        grouped[(_period(int(row["season"])), pairing)].append(row)
+    output: list[dict[str, object]] = []
+    for (period, pairing), values in sorted(grouped.items()):
+        games = sum(int(row["games"]) for row in values)
+        both = sum(int(row["games_with_both_usable_ypp"]) for row in values)
+        expected = sum(int(row["team_game_rows_expected"]) for row in values)
+        usable = sum(int(row["team_game_rows_with_usable_ypp"]) for row in values)
+        output.append(
+            {
+                "period": period,
+                "pairing": pairing,
+                "seasons": ",".join(str(row["season"]) for row in values),
+                "games": games,
+                "games_with_both_usable_ypp": both,
+                "game_coverage_pct": round(100 * both / games, 4) if games else 0.0,
+                "team_game_rows_expected": expected,
+                "team_game_rows_with_usable_ypp": usable,
+                "team_game_coverage_pct": round(100 * usable / expected, 4)
+                if expected
+                else 0.0,
+            }
+        )
+    return output
 
 
 def load_historical_rows() -> list[dict[str, object]]:
@@ -881,10 +921,23 @@ def _signal_summaries(rows: Sequence[Mapping[str, object]]) -> list[dict[str, ob
     return output
 
 
-def select_ypp_models(data: YPPData) -> tuple[dict[str, dict[str, object]], list[dict[str, object]], dict[str, object]]:
-    train = np.isin(data.season, TRAIN_YEARS)
-    development = np.isin(data.season, DEVELOPMENT_YEARS)
-    pretest = data.season < 2022
+def select_ypp_models(
+    data: YPPData,
+    *,
+    allowed_pairings: Iterable[str] | None = SUPPORTED_YPP_PAIRINGS,
+    model_panel: str = "supported_pairings",
+) -> tuple[dict[str, dict[str, object]], list[dict[str, object]], dict[str, object]]:
+    allowed = (
+        frozenset(data.pairing.tolist())
+        if allowed_pairings is None
+        else frozenset(str(value) for value in allowed_pairings)
+    )
+    pairing_mask = np.isin(data.pairing, tuple(sorted(allowed)))
+    train = np.isin(data.season, TRAIN_YEARS) & pairing_mask
+    development = np.isin(data.season, DEVELOPMENT_YEARS) & pairing_mask
+    pretest = (data.season < 2022) & pairing_mask
+    if not np.any(train):
+        raise ValueError(f"{model_panel} has no training YPP observations")
     models: dict[str, dict[str, object]] = {}
     selection_rows: list[dict[str, object]] = []
     selected: dict[str, object] = {}
@@ -901,6 +954,7 @@ def select_ypp_models(data: YPPData) -> tuple[dict[str, dict[str, object]], list
                 rank_signal=rank_signal,
                 include_margin=include_margin,
                 degrees_of_freedom=df,
+                allowed_pairings=allowed,
             )
             train_scores = ypp_model_scores(fit, data, train)
             development_scores = ypp_model_scores(fit, data, development)
@@ -908,6 +962,8 @@ def select_ypp_models(data: YPPData) -> tuple[dict[str, dict[str, object]], list
             selection_rows.append(
                 {
                     "candidate": name,
+                    "model_panel": model_panel,
+                    "allowed_pairings": ",".join(sorted(allowed)),
                     "student_t_df": df,
                     "train_games": train_scores["n_games"],
                     "development_games": development_scores["n_games"],
@@ -925,15 +981,25 @@ def select_ypp_models(data: YPPData) -> tuple[dict[str, dict[str, object]], list
             rank_signal=rank_signal,
             include_margin=include_margin,
             degrees_of_freedom=selected_df,
+            allowed_pairings=allowed,
         )
+        final_fit["model_panel"] = model_panel
         models[name] = final_fit
         selected[name] = {
+            "model_panel": model_panel,
             "student_t_df": selected_df,
             "development_marginalized_nll": selected_dev_nll,
             "rank_signal": rank_signal,
             "include_margin": include_margin,
             "selection_rule": "minimum development equal-game marginalized YPP NLL; ties choose lower df",
+            "fit_pairings": sorted(allowed),
+            "training_seasons": "2004-2017",
+            "development_seasons": "2018-2021",
             "final_fit_seasons": "2004-2021",
+            "final_fit_game_count": final_fit["fit_game_count"],
+            "final_fit_pseudo_observation_count": final_fit[
+                "fit_pseudo_observation_count"
+            ],
         }
         for row in selection_rows:
             if row["candidate"] == name and row["student_t_df"] == selected_df:
@@ -1050,6 +1116,87 @@ def _game_key_hash(team_ids: Iterable[str]) -> str:
 def _game_population_hash(rows: Sequence[Mapping[str, object]]) -> str:
     value = "\n".join(sorted(str(row["game_id"]) for row in rows)).encode("utf-8")
     return hashlib.sha256(value).hexdigest()
+
+
+def _comparison_group_key(row: Mapping[str, object]) -> tuple[object, ...]:
+    return (
+        int(row["season"]),
+        int(row["cutoff_index"]),
+        str(row["prior_family"]),
+        str(row["population_view"]),
+    )
+
+
+def validate_common_comparison_keys(
+    rows: Sequence[Mapping[str, object]],
+) -> dict[str, object]:
+    """Require identical game and strict FBS target keys across candidates."""
+
+    grouped: dict[tuple[object, ...], list[Mapping[str, object]]] = defaultdict(list)
+    for row in rows:
+        grouped[_comparison_group_key(row)].append(row)
+    audits: list[dict[str, object]] = []
+    for key, values in sorted(grouped.items(), key=lambda item: tuple(str(v) for v in item[0])):
+        hashes = {
+            (str(row["game_key_sha256"]), str(row["team_key_sha256"]))
+            for row in values
+        }
+        if len(hashes) != 1:
+            raise ValueError(f"comparison support mismatch for {key}")
+        audits.append(
+            {
+                "season": key[0],
+                "cutoff_index": key[1],
+                "prior_family": key[2],
+                "population_view": key[3],
+                "candidate_count": len(values),
+                "game_key_sha256": values[0]["game_key_sha256"],
+                "team_key_sha256": values[0]["team_key_sha256"],
+                "matched_fbs_teams": values[0]["matched_fbs_teams"],
+            }
+        )
+    return {"groups": audits, "group_count": len(audits)}
+
+
+def _future_key_hash(rows: Sequence[Mapping[str, object]]) -> str:
+    value = "\n".join(sorted(str(row["game_id"]) for row in rows)).encode("utf-8")
+    return hashlib.sha256(value).hexdigest()
+
+
+def validate_common_future_keys(
+    rows: Sequence[Mapping[str, object]],
+) -> dict[str, object]:
+    grouped: dict[tuple[object, ...], list[Mapping[str, object]]] = defaultdict(list)
+    for row in rows:
+        grouped[
+            (
+                int(row["season"]),
+                int(row["cutoff_index"]),
+                str(row["prior_family"]),
+            )
+        ].append(row)
+    audits: list[dict[str, object]] = []
+    for key, values in sorted(grouped.items(), key=lambda item: tuple(str(v) for v in item[0])):
+        hashes = {
+            (
+                str(row["future_game_key_sha256"]),
+                str(row["next_game_key_sha256"]),
+            )
+            for row in values
+        }
+        if len(hashes) != 1:
+            raise ValueError(f"future comparison support mismatch for {key}")
+        audits.append(
+            {
+                "season": key[0],
+                "cutoff_index": key[1],
+                "prior_family": key[2],
+                "candidate_count": len(values),
+                "future_game_key_sha256": values[0]["future_game_key_sha256"],
+                "next_game_key_sha256": values[0]["next_game_key_sha256"],
+            }
+        )
+    return {"groups": audits, "group_count": len(audits)}
 
 
 def _target_pmfs(
@@ -1222,13 +1369,33 @@ def _inference_pmfs(
     }
     if variant == "y1" and v1_result is not None:
         return v1_result, teams
-    model = None if variant == "v1" else models["y2" if variant == "y2" else "naive"]
+    if variant == "v1":
+        model = None
+        allowed_pairings = SUPPORTED_YPP_PAIRINGS
+    elif variant == "y1":
+        model = models["supported_pairings"]["y1"]
+        allowed_pairings = SUPPORTED_YPP_PAIRINGS
+    elif variant == Y2_ORIGINAL_VARIANT:
+        model = models["all_pairings_original"]["y2"]
+        # This is intentionally isolated to the retained pre-correction
+        # diagnostic so the old PR result can be quantified.  The corrected
+        # candidate never opts into this policy.
+        allowed_pairings = None
+    elif variant == Y2_SUPPORTED_VARIANT:
+        model = models["supported_pairings"]["y2"]
+        allowed_pairings = SUPPORTED_YPP_PAIRINGS
+    elif variant == "naive":
+        model = models["supported_pairings"]["naive"]
+        allowed_pairings = SUPPORTED_YPP_PAIRINGS
+    else:
+        raise ValueError(f"unknown posterior variant: {variant}")
     result = infer_posterior_with_ypp(
         teams,
         games,
         likelihood,
         ypp_by_game,
         model,
+        allowed_pairings=allowed_pairings,
         max_iterations=100,
         tolerance=1e-6,
         damping=0.35,
@@ -1251,6 +1418,25 @@ def _future_games(
     ]
 
 
+def _next_future_game_ids(
+    future_rows: Sequence[Mapping[str, object]],
+) -> set[str]:
+    """Return the union of each team's first strictly-future game IDs."""
+
+    by_team: dict[str, list[Mapping[str, object]]] = defaultdict(list)
+    for row in future_rows:
+        by_team[str(row["home_team_id"])].append(row)
+        by_team[str(row["away_team_id"])].append(row)
+    selected: set[str] = set()
+    for team_rows in by_team.values():
+        first = min(
+            team_rows,
+            key=lambda row: (_parse_date(row["start_date"]), str(row["game_id"])),
+        )
+        selected.add(str(first["game_id"]))
+    return selected
+
+
 def run_posterior_evaluation(
     rows: Sequence[Mapping[str, object]],
     targets: Mapping[tuple[int, str, str], Mapping[str, object]],
@@ -1263,6 +1449,8 @@ def run_posterior_evaluation(
     season_rows: list[dict[str, object]] = []
     calibration_rows: list[dict[str, object]] = []
     future_rows: list[dict[str, object]] = []
+    contamination_rows: list[dict[str, object]] = []
+    team_impact_rows: list[dict[str, object]] = []
     for season in FINAL_YEARS:
         season_rows_source = [row for row in rows if int(row["season"]) == season]
         cutoffs = standard_cutoffs(rows, season)
@@ -1281,9 +1469,16 @@ def run_posterior_evaluation(
                         )
                     ]
                     game_hash = _game_population_hash(eligible)
-                    key_team_ids = [team_id for (target_season, subdivision, team_id) in targets if target_season == season and subdivision == "fbs"]
+                    key_team_ids = [
+                        team_id
+                        for (target_season, subdivision, team_id) in targets
+                        if target_season == season and subdivision == "fbs"
+                    ]
                     key_hash = _game_key_hash(key_team_ids)
                     v1_result: PosteriorResult | None = None
+                    final_results: dict[str, PosteriorResult] = {}
+                    final_teams: dict[str, list[Team]] = {}
+                    final_metrics: dict[str, dict[str, float | int]] = {}
                     for variant in POSTERIOR_VARIANTS:
                         if variant == "y1" and v1_result is not None:
                             result = v1_result
@@ -1342,27 +1537,38 @@ def run_posterior_evaluation(
                         )
                         if cutoff_index == len(cutoffs) - 1:
                             season_rows.append(row.copy())
+                            final_results[variant] = result
+                            final_teams[variant] = teams
+                            final_metrics[variant] = metrics
 
                         if view == "full":
                             future = _future_games(season_rows_source, cutoff)
+                            next_ids = _next_future_game_ids(future)
                             team_by_id = {team.team_id: team for team in teams}
                             scores: list[dict[str, float]] = []
+                            scored_future_rows: list[Mapping[str, object]] = []
+                            next_scores: list[dict[str, float]] = []
+                            scored_next_rows: list[Mapping[str, object]] = []
                             for future_row in future:
                                 game = row_to_game(future_row)
                                 if game.home_id not in result.pmfs or game.away_id not in result.pmfs:
                                     continue
                                 if game.home_id not in team_by_id or game.away_id not in team_by_id:
                                     continue
-                                scores.append(
-                                    future_margin_score(
-                                        game,
-                                        team_by_id[game.home_id],
-                                        team_by_id[game.away_id],
-                                        result.pmfs,
-                                        likelihood,
-                                    )
+                                score = future_margin_score(
+                                    game,
+                                    team_by_id[game.home_id],
+                                    team_by_id[game.away_id],
+                                    result.pmfs,
+                                    likelihood,
                                 )
+                                scores.append(score)
+                                scored_future_rows.append(future_row)
+                                if str(future_row["game_id"]) in next_ids:
+                                    next_scores.append(score)
+                                    scored_next_rows.append(future_row)
                             aggregate = aggregate_future_scores(scores)
+                            next_aggregate = aggregate_future_scores(next_scores)
                             future_rows.append(
                                 {
                                     "season": season,
@@ -1374,6 +1580,16 @@ def run_posterior_evaluation(
                                     "future_margin_mae": aggregate["margin_mae"],
                                     "future_win_brier": aggregate["win_brier"],
                                     "future_margin_nll": aggregate["margin_nll"],
+                                    "future_game_key_sha256": _future_key_hash(
+                                        scored_future_rows
+                                    ),
+                                    "next_game_count": next_aggregate["n_games"],
+                                    "next_margin_mae": next_aggregate["margin_mae"],
+                                    "next_win_brier": next_aggregate["win_brier"],
+                                    "next_margin_nll": next_aggregate["margin_nll"],
+                                    "next_game_key_sha256": _future_key_hash(
+                                        scored_next_rows
+                                    ),
                                 }
                             )
                     if view == "full" and cutoff_index == len(cutoffs) - 1:
@@ -1410,6 +1626,9 @@ def run_posterior_evaluation(
                         }
                         candidate_rows.append(diagnostic)
                         season_rows.append(diagnostic.copy())
+                        final_results[NAIVE_VARIANT] = result
+                        final_teams[NAIVE_VARIANT] = teams
+                        final_metrics[NAIVE_VARIANT] = metrics
                         calibration_rows.append(
                             {
                                 "season": season,
@@ -1426,10 +1645,125 @@ def run_posterior_evaluation(
                                 "mean_max_probability": metrics["mean_max_probability"],
                             }
                         )
+                    if (
+                        view == "full"
+                        and Y2_ORIGINAL_VARIANT in final_metrics
+                        and Y2_SUPPORTED_VARIANT in final_metrics
+                    ):
+                        original = final_metrics[Y2_ORIGINAL_VARIANT]
+                        supported = final_metrics[Y2_SUPPORTED_VARIANT]
+                        contamination_rows.append(
+                            {
+                                "season": season,
+                                "prior_family": family,
+                                "population_view": view,
+                                "original_candidate": Y2_ORIGINAL_VARIANT,
+                                "corrected_candidate": Y2_SUPPORTED_VARIANT,
+                                "delta_nll_supported_minus_original": float(
+                                    supported["nll"] - original["nll"]
+                                ),
+                                "delta_crps_supported_minus_original": float(
+                                    supported["crps"] - original["crps"]
+                                ),
+                                "delta_expected_rank_mae_supported_minus_original": float(
+                                    supported["expected_rank_mae"]
+                                    - original["expected_rank_mae"]
+                                ),
+                                "delta_median_rank_mae_supported_minus_original": float(
+                                    supported["median_rank_mae"]
+                                    - original["median_rank_mae"]
+                                ),
+                                "delta_interval_80_coverage_supported_minus_original": float(
+                                    supported["interval_80_coverage"]
+                                    - original["interval_80_coverage"]
+                                ),
+                                "delta_interval_80_width_supported_minus_original": float(
+                                    supported["interval_80_width"]
+                                    - original["interval_80_width"]
+                                ),
+                                "delta_top5_brier_supported_minus_original": float(
+                                    supported["top5_brier"] - original["top5_brier"]
+                                ),
+                                "delta_top10_brier_supported_minus_original": float(
+                                    supported["top10_brier"] - original["top10_brier"]
+                                ),
+                                "delta_top25_brier_supported_minus_original": float(
+                                    supported["top25_brier"] - original["top25_brier"]
+                                ),
+                                "delta_entropy_supported_minus_original": float(
+                                    supported["mean_entropy"] - original["mean_entropy"]
+                                ),
+                            }
+                        )
+                        original_result = final_results[Y2_ORIGINAL_VARIANT]
+                        supported_result = final_results[Y2_SUPPORTED_VARIANT]
+                        original_team_lookup = {
+                            team.team_id: team for team in final_teams[Y2_ORIGINAL_VARIANT]
+                        }
+                        supported_team_lookup = {
+                            team.team_id: team for team in final_teams[Y2_SUPPORTED_VARIANT]
+                        }
+                        for team_id in sorted(
+                            set(original_result.pmfs)
+                            & set(supported_result.pmfs)
+                            & set(key_team_ids)
+                        ):
+                            original_pmf = original_result.pmfs[team_id]
+                            supported_pmf = supported_result.pmfs[team_id]
+                            ranks = np.arange(1, len(original_pmf) + 1, dtype=float)
+                            original_expected = float(np.dot(ranks, original_pmf))
+                            supported_expected = float(np.dot(ranks, supported_pmf))
+                            fcs_opponents: set[str] = set()
+                            fbs_fcs_games = 0
+                            for source in eligible:
+                                if source["pairing"] != "fbs-fcs":
+                                    continue
+                                if str(source["home_team_id"]) == team_id:
+                                    fcs_id = str(source["away_team_id"])
+                                    fcs_name = str(source.get("away_team", fcs_id))
+                                elif str(source["away_team_id"]) == team_id:
+                                    fcs_id = str(source["home_team_id"])
+                                    fcs_name = str(source.get("home_team", fcs_id))
+                                else:
+                                    continue
+                                fcs_opponents.add(f"{fcs_name} ({fcs_id})")
+                                fbs_fcs_games += 1
+                            team = supported_team_lookup.get(
+                                team_id, original_team_lookup[team_id]
+                            )
+                            team_impact_rows.append(
+                                {
+                                    "season": season,
+                                    "prior_family": family,
+                                    "population_view": view,
+                                    "team_id": team_id,
+                                    "team_name": team.name,
+                                    "subdivision": team.subdivision,
+                                    "original_expected_rank": original_expected,
+                                    "supported_expected_rank": supported_expected,
+                                    "delta_expected_rank_supported_minus_original": supported_expected
+                                    - original_expected,
+                                    "absolute_delta_expected_rank": abs(
+                                        supported_expected - original_expected
+                                    ),
+                                    "original_expected_percentile": original_expected
+                                    / len(original_pmf),
+                                    "supported_expected_percentile": supported_expected
+                                    / len(supported_pmf),
+                                    "fbs_fcs_game_count": fbs_fcs_games,
+                                    "fcs_opponents": "; ".join(sorted(fcs_opponents)),
+                                }
+                            )
+    comparison_key_audit = validate_common_comparison_keys(candidate_rows)
+    future_key_audit = validate_common_future_keys(future_rows)
     return candidate_rows, season_rows, calibration_rows, {
         "future_game_metrics": future_rows,
+        "pairing_contamination": contamination_rows,
+        "team_impact": team_impact_rows,
+        "comparison_key_audit": comparison_key_audit,
+        "future_key_audit": future_key_audit,
         "standard_cutoff_definition": "seven actual-date regular-season quantiles: 0, .20, .35, .55, .72, .87, 1.0",
-        "posterior_engine": "production V1 BP semantics with research factor multiplication; 100 iterations, tolerance 1e-6, damping .35",
+        "posterior_engine": "production V1 BP semantics with research factor multiplication; unsupported FCS-FCS YPP uses an all-ones factor; 100 iterations, tolerance 1e-6, damping .35",
     }
 
 
@@ -1455,6 +1789,12 @@ def _aggregate_metric_rows(
         result[key] = {
             "nll": float(np.mean([float(row["nll"]) for row in values])),
             "crps": float(np.mean([float(row["crps"]) for row in values])),
+            "expected_rank_mae": float(
+                np.mean([float(row["expected_rank_mae"]) for row in values])
+            ),
+            "median_rank_mae": float(
+                np.mean([float(row["median_rank_mae"]) for row in values])
+            ),
             "interval_80_coverage": float(
                 np.mean([float(row["interval_80_coverage"]) for row in values])
             ),
@@ -1465,6 +1805,9 @@ def _aggregate_metric_rows(
             "mean_max_probability": float(
                 np.mean([float(row["mean_max_probability"]) for row in values])
             ),
+            "top5_brier": float(np.mean([float(row["top5_brier"]) for row in values])),
+            "top10_brier": float(np.mean([float(row["top10_brier"]) for row in values])),
+            "top25_brier": float(np.mean([float(row["top25_brier"]) for row in values])),
         }
     return result
 
@@ -1489,6 +1832,10 @@ def _metric_delta(
                 "population_view": view,
                 "delta_nll": left_map[key]["nll"] - right_map[key]["nll"],
                 "delta_crps": left_map[key]["crps"] - right_map[key]["crps"],
+                "delta_expected_rank_mae": left_map[key]["expected_rank_mae"]
+                - right_map[key]["expected_rank_mae"],
+                "delta_median_rank_mae": left_map[key]["median_rank_mae"]
+                - right_map[key]["median_rank_mae"],
                 "delta_interval_80_coverage": left_map[key]["interval_80_coverage"]
                 - right_map[key]["interval_80_coverage"],
                 "delta_interval_80_width": left_map[key]["interval_80_width"]
@@ -1497,6 +1844,12 @@ def _metric_delta(
                 - right_map[key]["mean_entropy"],
                 "delta_mean_max_probability": left_map[key]["mean_max_probability"]
                 - right_map[key]["mean_max_probability"],
+                "delta_top5_brier": left_map[key]["top5_brier"]
+                - right_map[key]["top5_brier"],
+                "delta_top10_brier": left_map[key]["top10_brier"]
+                - right_map[key]["top10_brier"],
+                "delta_top25_brier": left_map[key]["top25_brier"]
+                - right_map[key]["top25_brier"],
             }
         )
     return output
@@ -1574,7 +1927,7 @@ def _local_disagreement_effect(
     after = [*before, dict(row)]
     results: dict[str, tuple[PosteriorResult, list[Team]]] = {}
     after_teams: list[Team] = []
-    for variant in ("v1", "y2"):
+    for variant in ("v1", Y2_SUPPORTED_VARIANT):
         results[f"before_{variant}"], _ = _inference_pmfs(
             season=season,
             family="context",
@@ -1603,8 +1956,12 @@ def _local_disagreement_effect(
 
     v1_before_diff = expected_percentile(results["before_v1"], first_id) - expected_percentile(results["before_v1"], second_id)
     v1_after_diff = expected_percentile(results["after_v1"], first_id) - expected_percentile(results["after_v1"], second_id)
-    y2_before_diff = expected_percentile(results["before_y2"], first_id) - expected_percentile(results["before_y2"], second_id)
-    y2_after_diff = expected_percentile(results["after_y2"], first_id) - expected_percentile(results["after_y2"], second_id)
+    y2_before_diff = expected_percentile(
+        results[f"before_{Y2_SUPPORTED_VARIANT}"], first_id
+    ) - expected_percentile(results[f"before_{Y2_SUPPORTED_VARIANT}"], second_id)
+    y2_after_diff = expected_percentile(
+        results[f"after_{Y2_SUPPORTED_VARIANT}"], first_id
+    ) - expected_percentile(results[f"after_{Y2_SUPPORTED_VARIANT}"], second_id)
     game = row_to_game(row)
     pre_pmfs = dict(results["before_v1"].pmfs)
     for team_id in (game.home_id, game.away_id):
@@ -1730,7 +2087,7 @@ def write_plots(
     final_deltas = [
         row
         for row in delta_rows
-        if row["candidate"] == "y2"
+        if row["candidate"] == Y2_SUPPORTED_VARIANT
         and row["population_view"] == "full"
     ]
     fig, ax = plt.subplots(figsize=(8, 4))
@@ -1747,7 +2104,11 @@ def write_plots(
             color=color,
         )
     ax.axhline(0, color="black", linewidth=0.7)
-    ax.set(title="Y2 minus V1 final-rank NLL", xlabel="Season", ylabel="NLL delta (lower is better)")
+    ax.set(
+        title="Supported Y2 minus V1 final-rank NLL",
+        xlabel="Season",
+        ylabel="NLL delta (lower is better)",
+    )
     ax.grid(alpha=0.25)
     ax.legend()
     fig.tight_layout()
@@ -1761,7 +2122,9 @@ def _promotion_assessment(
     future_rows: Sequence[Mapping[str, object]],
     signal_summaries: Sequence[Mapping[str, object]],
 ) -> dict[str, object]:
-    deltas = _metric_delta(candidate_rows, "y2", "v1", view="full")
+    deltas = _metric_delta(
+        candidate_rows, Y2_SUPPORTED_VARIANT, "v1", view="full"
+    )
     context = [row for row in deltas if row["prior_family"] == "context"]
     history = [row for row in deltas if row["prior_family"] == "history"]
     all_deltas = [*context, *history]
@@ -1782,7 +2145,7 @@ def _promotion_assessment(
                 for row in future_rows
                 if row["prior_family"] == family
                 and int(row["season"]) == season
-                and row["candidate"] == "y2"
+                and row["candidate"] == Y2_SUPPORTED_VARIANT
                 and int(row["cutoff_index"]) == 0
             ]
             v1 = [
@@ -1808,7 +2171,7 @@ def _promotion_assessment(
         row
         for row in signal_summaries
         if row["period"] == "final_2022_2025"
-        and row["pairing"] in {"fbs-fbs", "fbs-fcs", "fcs-fcs"}
+        and row["pairing"] in SUPPORTED_YPP_PAIRINGS
         and row["quality_slope"] is not None
         and int(row["n_games"]) >= 20
     ]
@@ -1880,33 +2243,55 @@ def _metric_table_rows(
 ) -> list[dict[str, object]]:
     output: list[dict[str, object]] = []
     for candidate in candidates:
-        selected = [
-            row
-            for row in rows
-            if row["candidate"] == candidate
-            and row["population_view"] == view
-            and bool(row["is_final_cutoff"])
-        ]
-        if not selected:
-            continue
-        output.append(
-            {
-                "candidate": candidate,
-                "population_view": view,
-                "nll": float(np.mean([float(row["nll"]) for row in selected])),
-                "crps": float(np.mean([float(row["crps"]) for row in selected])),
-                "expected_rank_mae": float(np.mean([float(row["expected_rank_mae"]) for row in selected])),
-                "median_rank_mae": float(np.mean([float(row["median_rank_mae"]) for row in selected])),
-                "interval_80_coverage": float(np.mean([float(row["interval_80_coverage"]) for row in selected])),
-                "interval_80_width": float(np.mean([float(row["interval_80_width"]) for row in selected])),
-                "top5_brier": float(np.mean([float(row["top5_brier"]) for row in selected])),
-                "top10_brier": float(np.mean([float(row["top10_brier"]) for row in selected])),
-                "top25_brier": float(np.mean([float(row["top25_brier"]) for row in selected])),
-                "mean_entropy": float(np.mean([float(row["mean_entropy"]) for row in selected])),
-                "mean_max_probability": float(np.mean([float(row["mean_max_probability"]) for row in selected])),
-                "n_rows": len(selected),
-            }
-        )
+        grouped: dict[str, list[Mapping[str, object]]] = defaultdict(list)
+        for row in rows:
+            if (
+                row["candidate"] == candidate
+                and row["population_view"] == view
+                and bool(row["is_final_cutoff"])
+            ):
+                grouped[str(row["prior_family"])].append(row)
+        for family in ("context", "history"):
+            selected = grouped.get(family, [])
+            if not selected:
+                continue
+            output.append(
+                {
+                    "prior_family": family,
+                    "candidate": candidate,
+                    "population_view": view,
+                    "nll": float(np.mean([float(row["nll"]) for row in selected])),
+                    "crps": float(np.mean([float(row["crps"]) for row in selected])),
+                    "expected_rank_mae": float(
+                        np.mean([float(row["expected_rank_mae"]) for row in selected])
+                    ),
+                    "median_rank_mae": float(
+                        np.mean([float(row["median_rank_mae"]) for row in selected])
+                    ),
+                    "interval_80_coverage": float(
+                        np.mean([float(row["interval_80_coverage"]) for row in selected])
+                    ),
+                    "interval_80_width": float(
+                        np.mean([float(row["interval_80_width"]) for row in selected])
+                    ),
+                    "top5_brier": float(
+                        np.mean([float(row["top5_brier"]) for row in selected])
+                    ),
+                    "top10_brier": float(
+                        np.mean([float(row["top10_brier"]) for row in selected])
+                    ),
+                    "top25_brier": float(
+                        np.mean([float(row["top25_brier"]) for row in selected])
+                    ),
+                    "mean_entropy": float(
+                        np.mean([float(row["mean_entropy"]) for row in selected])
+                    ),
+                    "mean_max_probability": float(
+                        np.mean([float(row["mean_max_probability"]) for row in selected])
+                    ),
+                    "n_rows": len(selected),
+                }
+            )
     return output
 
 
@@ -1929,23 +2314,44 @@ def write_report(
     future_rows: Sequence[Mapping[str, object]],
     disagreement_rows: Sequence[Mapping[str, object]],
     signal_summaries: Sequence[Mapping[str, object]],
+    contamination_rows: Sequence[Mapping[str, object]],
+    team_impact_rows: Sequence[Mapping[str, object]],
 ) -> None:
     audit = summary["audit"]
     split = summary["data_split"]
     selection = summary["model_selection"]
     assessment = summary["promotion_assessment"]
+    candidate_labels = {
+        "v1": "V1",
+        "y1": "Y1",
+        Y2_ORIGINAL_VARIANT: "Y2-all-pairings-original",
+        Y2_SUPPORTED_VARIANT: "Y2-supported",
+        NAIVE_VARIANT: "naive-independence diagnostic",
+    }
     lines = [
         "# YPP conditional-likelihood investigation",
         "",
         "## Question and conclusion",
         "",
-        f"This research asks whether yards per play adds latent team-quality information beyond score margin, opponent quality, and site in Historical Likelihood V1. The predeclared recommendation is **{assessment['recommendation']}**.",
+        f"This research asks whether yards per play adds latent team-quality information beyond score margin, opponent quality, and site in Historical Likelihood V1. Applying the unchanged predeclared gate to the corrected supported-pairing candidate gives Recommendation **{assessment['recommendation']}**.",
         "",
-        "The production V1 margin factor is frozen. YPP is evaluated only through the conditional decomposition `p(margin | ranks, site) × p(YPP | margin, ranks, site)`. The independent product is retained as a double-counting diagnostic and is not a promotion candidate.",
+        "The production V1 margin factor is frozen. The corrected candidate is `Y2-supported`: `p(margin | ranks, site) × p(YPP | margin, ranks, site)` only for historically supported FBS–FBS and FBS–FCS pairings. FCS–FCS uses the exact V1 margin factor because its YPP support is absent before the final test. The independent product remains a separate double-counting diagnostic and is not a promotion candidate.",
+        "",
+        "## Temporal split and prospective support policy",
+        "",
+        f"The temporal experiment is unchanged: training is {split['training']}; development is {split['development']}; the final test is {split['final_test']}. 2022–2025 remained untouched for candidate fitting, degrees-of-freedom selection, and promotion selection.",
+        "",
+        "| Pairing | Candidate fitting | Inference YPP factor |",
+        "|:---|:---|:---|",
+        "| FBS–FBS | enabled | conditional YPP when usable |",
+        "| FBS–FCS | enabled | conditional YPP when usable |",
+        "| FCS–FCS | unsupported; excluded from corrected fits | exactly 1; V1 margin only regardless of YPP |",
+        "",
+        "This is a prospective support boundary, not a post-hoc performance adjustment. `Y2-all-pairings-original` is retained only as the explicitly labelled invalid diagnostic that reproduces the first PR formulation. It is not used for promotion. For supported pairings, missing or unusable YPP also gives exactly the V1 margin factor.",
         "",
         "## Data audit",
         "",
-        f"The research uses the frozen historical modeling corpus for 2003–2025; 2003 has no usable team-game YPP, so the defensible common-data fit starts in 2004. Training is {split['training']}; development is {split['development']}; the final test is {split['final_test']} and was not used for model selection.",
+        "The research uses the frozen historical modeling corpus for 2003–2025; 2003 has no usable team-game YPP, so the defensible common-data fit starts in 2004. The primary final-rank evaluation is for FBS teams using strict common FBS keys.",
         "",
         f"CFBD raw `/games/teams` responses contain no direct `yardsPerPlay`, `plays`, `offensivePlays`, or `totalPlays` category in the cached corpus. The derivation remains `plays = rushingAttempts + pass attempts parsed from completionAttempts`, then `totalYards / plays`. On {audit['processed_derivation']['raw_processed_common_rows']} raw/processed common team-game rows, derivation mismatches were {audit['processed_derivation']['raw_processed_derivation_mismatches']}.",
         "",
@@ -1959,74 +2365,210 @@ def write_report(
         "",
         "CFBD API schema reference: https://apinext.collegefootballdata.com/api/games. Official attempt/play cross-check: https://utsports.com/documents/download/2024/11/4/G9_UT_Notes_MSU.pdf.",
         "",
-        "### Coverage by era",
+        "### Pairing-specific coverage by era",
         "",
-        "| Season | Pairing | Games | Both YPP | Team-row coverage |",
-        "|---:|:---|---:|---:|---:|",
+        "The aggregate coverage series is misleading for this question because it is dominated by the much larger FCS–FCS schedule. The pairing-specific audit is the relevant support check:",
+        "",
+        "| Period | Pairing | Games | Both YPP | Game coverage | Team-row coverage |",
+        "|:---|:---|---:|---:|---:|---:|",
     ]
-    for row in coverage_rows:
-        if row["pairing"] == "all" and int(row["season"]) in (*TRAIN_YEARS, *DEVELOPMENT_YEARS, *FINAL_YEARS):
+    for row in audit["coverage_summary"]["period_pairing"]:
+        if row["period"] in {
+            "training_2004_2017",
+            "development_2018_2021",
+            "final_2022_2025",
+        }:
             lines.append(
-                f"| {row['season']} | all | {row['games']} | {row['games_with_both_usable_ypp']} | {_report_number(row['team_game_coverage_pct'], 1)}% |"
+                f"| {row['period']} | {row['pairing']} | {row['games']} | {row['games_with_both_usable_ypp']} | {_report_number(row['game_coverage_pct'], 1)}% | {_report_number(row['team_game_coverage_pct'], 1)}% |"
             )
+    lines.extend(
+        [
+            "",
+            "FBS–FBS YPP is essentially complete throughout most of 2004–2021, and FBS–FCS is generally near-complete. FCS–FCS is essentially absent through 2021, then becomes approximately 98–99% covered in 2022–2025. The appropriate conclusion is that FCS–FCS YPP is unsupported by the training/development data for this experiment; the post-2022 FCS–FCS relationship is not treated as a validated negative or unstable YPP effect.",
+            "",
+        ]
+    )
     lines.extend(
         [
             "",
             "## Conditional signal",
             "",
-            f"Y1 uses only the fixed margin/site/pairing basis; Y2 adds the predeclared rank-percentile contrast basis. Student-t degrees of freedom were selected on 2018–2021 equal-game marginalized YPP NLL only. Selected values: `{json.dumps(selection, sort_keys=True)}`.",
+            f"Y1 uses only the fixed margin/site/pairing basis; Y2 adds the predeclared rank-percentile contrast basis. Student-t degrees of freedom were selected on 2018–2021 equal-game marginalized YPP NLL only, separately for the all-pairings diagnostic and the supported-pairing panel. Selected values: `{json.dumps(selection, sort_keys=True)}`.",
             "",
-            "The residual is observed YPP differential minus the Y1 conditional mean. Positive residual means the V1- oriented side produced more YPP than its margin/site/pairing relationship predicted. `conditional_signal.csv` reports margin and residual bins; `temporal_stability.csv` reports season/pairing effects.",
+            "A. Direct residual signal. The residual is observed YPP differential minus the supported-pairing Y1 conditional mean. Positive residual means the V1-oriented side produced more YPP than its margin/site/pairing relationship predicted. This table includes only FBS–FBS and FBS–FCS rows; FCS–FCS rows are not mixed into the direct-signal conclusion. `conditional_signal.csv` reports margin and residual bins; `temporal_stability.csv` reports season/pairing effects.",
             "",
             "| Period | Season | Pairing | Site | N | Quality slope | Quality Spearman | Next-game slope |",
             "|:---|---:|:---|:---|---:|---:|---:|---:|",
         ]
     )
     for row in signal_summaries:
-        if row["pairing"] in {"fbs-fbs", "fbs-fcs", "fcs-fcs"}:
+        if row["pairing"] in SUPPORTED_YPP_PAIRINGS:
             lines.append(
                 f"| {row['period']} | {row['season']} | {row['pairing']} | {row['site']} | {row['n_games']} | {_report_number(row['quality_slope'])} | {_report_number(row['quality_spearman'])} | {_report_number(row['next_margin_slope'])} |"
             )
     lines.extend(
         [
             "",
-            "The descriptive relationship is the decision-relevant evidence: inspect the final-period slopes and correlations rather than treating the extra-variable YPP NLL as comparable with margin-only NLL. A positive quality slope means higher conditional YPP residual was associated with better eventual oriented rank percentile.",
+            "The descriptive relationship is the direct residual evidence: inspect FBS–FBS and FBS–FCS slopes and correlations rather than treating the extra-variable YPP NLL as comparable with margin-only NLL. A positive quality slope means higher conditional YPP residual was associated with better eventual oriented rank percentile. This direct question is separate from the end-to-end posterior question below; a direct signal can exist while the connected posterior does not improve.",
+            "",
+            "### Candidate fitting and selection",
+            "",
+            "The corrected `Y2-supported` and the retained `Y2-all-pairings-original` diagnostic use the already-declared Y1/Y2 formulations, feature basis, Student-t grid, and development selection rule. Only the corrected panel is eligible for promotion. The final test is never used for candidate or df selection.",
+            "",
+            "| Panel | Candidate | Fit pairings | Selected df | Development marginalized NLL | Final fit seasons |",
+            "|:---|:---|:---|---:|---:|:---|",
+        ]
+    )
+    for panel, values in selection.items():
+        for candidate in ("y1", "y2"):
+            value = values[candidate]
+            lines.append(
+                f"| {panel} | {candidate} | {', '.join(value['fit_pairings'])} | {_report_number(value['student_t_df'], 1)} | {_report_number(value['development_marginalized_nll'])} | {value['final_fit_seasons']} |"
+            )
+    original_y2_df = selection["all_pairings_original"]["y2"]["student_t_df"]
+    supported_y2_df = selection["supported_pairings"]["y2"]["student_t_df"]
+    lines.append(
+        f"Y2 selected df was {_report_number(original_y2_df, 1)} for the original panel and {_report_number(supported_y2_df, 1)} for the corrected panel; the selected formulation/df therefore did not change. The supported development NLL differs slightly because the corrected fit removes the unsupported FCS–FCS training observations."
+    )
+    lines.extend(
+        [
             "",
             "## Candidate selection and evaluation",
             "",
-            "The table below averages the final-cutoff row for each of the four final-test seasons under each prior family. `candidate_metrics.csv` retains every matched cutoff row.",
+            "The primary evaluation is FBS final-rank quality on the untouched 2022–2025 test period. Context and History priors, cutoffs, rank supports, final-rank targets, and strict comparison keys are identical across candidates. `candidate_metrics.csv` retains every matched cutoff row.",
             "",
-            "| Candidate | View | NLL | CRPS | Expected-rank MAE | 80% coverage | 80% width | Top-10 Brier | Entropy |",
-            "|:---|:---|---:|---:|---:|---:|---:|---:|---:|",
+            "| Prior | Candidate | View | NLL | CRPS | Expected-rank MAE | Median-rank MAE | 80% coverage | 80% width | Top-5 Brier | Top-10 Brier | Top-25 Brier |",
+            "|:---|:---|:---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
         ]
     )
     for row in metric_table:
         lines.append(
-            f"| {row['candidate']} | {row['population_view']} | {_report_number(row['nll'])} | {_report_number(row['crps'])} | {_report_number(row['expected_rank_mae'])} | {_report_number(row['interval_80_coverage'])} | {_report_number(row['interval_80_width'], 1)} | {_report_number(row['top10_brier'])} | {_report_number(row['mean_entropy'], 1)} |"
+            f"| {row['prior_family']} | {candidate_labels.get(str(row['candidate']), row['candidate'])} | {row['population_view']} | {_report_number(row['nll'])} | {_report_number(row['crps'])} | {_report_number(row['expected_rank_mae'])} | {_report_number(row['median_rank_mae'])} | {_report_number(row['interval_80_coverage'])} | {_report_number(row['interval_80_width'], 1)} | {_report_number(row['top5_brier'])} | {_report_number(row['top10_brier'])} | {_report_number(row['top25_brier'])} |"
         )
     lines.extend(
         [
             "",
-            "The primary rank comparison is final-rank quality, with identical priors, cutoffs, rank supports, outcome targets, and comparison keys within each population view. Full production-style keeps every eligible game and gives missing-YPP games exactly V1 margin evidence. The YPP-observed view restricts both V1 and YPP candidates to the same games where YPP could contribute; for runtime control, it is reported at each season's final cutoff, while the full view includes all seven standard cutoffs.",
+            "The primary end-to-end question is whether adding supported YPP to the connected ranking network improves FBS posterior quality. Full production-style keeps every eligible game: supported-pairing missing YPP gets exactly V1 margin evidence, and every FCS–FCS game gets V1 margin evidence regardless of YPP. The YPP-observed view restricts both V1 and YPP candidates to the same games where YPP could contribute; it is a matched diagnostic, while the full view is primary.",
             "",
-            "### Final test deltas by season",
+            "### Y2-supported minus V1 by final-test season",
             "",
-            "| Prior | Season | View | Δ NLL Y2−V1 | Δ CRPS | Δ 80% coverage | Δ width |",
-            "|:---|---:|:---|---:|---:|---:|---:|",
+            "| Prior | Season | Δ NLL | Δ CRPS | Δ expected-rank MAE | Δ median-rank MAE | Δ 80% coverage | Δ width | Δ Top-5 Brier | Δ Top-10 Brier | Δ Top-25 Brier |",
+            "|:---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
         ]
     )
-    for row in _metric_delta(season_rows, "y2", "v1", view="full"):
+    supported_deltas = _metric_delta(
+        season_rows, Y2_SUPPORTED_VARIANT, "v1", view="full"
+    )
+    for row in supported_deltas:
         lines.append(
-            f"| {row['prior_family']} | {row['season']} | full | {_report_number(row['delta_nll'])} | {_report_number(row['delta_crps'])} | {_report_number(row['delta_interval_80_coverage'])} | {_report_number(row['delta_interval_80_width'], 1)} |"
+            f"| {row['prior_family']} | {row['season']} | {_report_number(row['delta_nll'])} | {_report_number(row['delta_crps'])} | {_report_number(row['delta_expected_rank_mae'])} | {_report_number(row['delta_median_rank_mae'])} | {_report_number(row['delta_interval_80_coverage'])} | {_report_number(row['delta_interval_80_width'], 1)} | {_report_number(row['delta_top5_brier'])} | {_report_number(row['delta_top10_brier'])} | {_report_number(row['delta_top25_brier'])} |"
+        )
+    aggregate_supported_deltas: dict[str, list[Mapping[str, object]]] = defaultdict(list)
+    for row in supported_deltas:
+        aggregate_supported_deltas[str(row["prior_family"])].append(row)
+    lines.extend(
+        [
+            "",
+            "### Aggregate Y2-supported minus V1",
+            "",
+            "| Prior | Δ NLL | Δ CRPS | Δ expected-rank MAE | Δ median-rank MAE | Δ 80% coverage | Δ width | Δ Top-5 Brier | Δ Top-10 Brier | Δ Top-25 Brier |",
+            "|:---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+        ]
+    )
+    for family in ("context", "history"):
+        values = aggregate_supported_deltas[family]
+        if not values:
+            continue
+        mean = {
+            field: float(np.mean([float(row[field]) for row in values]))
+            for field in (
+                "delta_nll",
+                "delta_crps",
+                "delta_expected_rank_mae",
+                "delta_median_rank_mae",
+                "delta_interval_80_coverage",
+                "delta_interval_80_width",
+                "delta_top5_brier",
+                "delta_top10_brier",
+                "delta_top25_brier",
+            )
+        }
+        lines.append(
+            f"| {family} | {_report_number(mean['delta_nll'])} | {_report_number(mean['delta_crps'])} | {_report_number(mean['delta_expected_rank_mae'])} | {_report_number(mean['delta_median_rank_mae'])} | {_report_number(mean['delta_interval_80_coverage'])} | {_report_number(mean['delta_interval_80_width'], 1)} | {_report_number(mean['delta_top5_brier'])} | {_report_number(mean['delta_top10_brier'])} | {_report_number(mean['delta_top25_brier'])} |"
         )
     lines.extend(
         [
             "",
             "Y1 is a semantic null: its factor is rank-invariant, and the posterior rows match V1 up to the deterministic alias used by the research evaluator. The naïve independent diagnostic is shown in `candidate_metrics.csv` only at final full cutoffs; any sharper posterior without commensurate rank scores is double-counting warning evidence.",
             "",
+            "### Original all-pairings diagnostic versus corrected supported pairing",
+            "",
+            "The following differences are `Y2-supported − Y2-all-pairings-original` on the same full-population final cutoffs. They quantify how much the unsupported FCS–FCS factor in the first result changed downstream FBS posterior evaluation; they are diagnostic, not a new model search.",
+            "",
+            "| Prior | Season | Δ NLL | Δ CRPS | Δ expected-rank MAE | Δ median-rank MAE | Δ 80% coverage | Δ width | Δ Top-10 Brier |",
+            "|:---|---:|---:|---:|---:|---:|---:|---:|---:|",
+        ]
+    )
+    for row in contamination_rows:
+        lines.append(
+            f"| {row['prior_family']} | {row['season']} | {_report_number(row['delta_nll_supported_minus_original'])} | {_report_number(row['delta_crps_supported_minus_original'])} | {_report_number(row['delta_expected_rank_mae_supported_minus_original'])} | {_report_number(row['delta_median_rank_mae_supported_minus_original'])} | {_report_number(row['delta_interval_80_coverage_supported_minus_original'])} | {_report_number(row['delta_interval_80_width_supported_minus_original'], 1)} | {_report_number(row['delta_top10_brier_supported_minus_original'])} |"
+        )
+    full_contamination = [
+        row for row in contamination_rows if row["population_view"] == "full"
+    ]
+    if full_contamination:
+        mean_contamination_nll = float(
+            np.mean(
+                [
+                    float(row["delta_nll_supported_minus_original"])
+                    for row in full_contamination
+                ]
+            )
+        )
+        mean_contamination_coverage = float(
+            np.mean(
+                [
+                    float(row["delta_interval_80_coverage_supported_minus_original"])
+                    for row in full_contamination
+                ]
+            )
+        )
+        lines.extend(
+            [
+                "",
+                f"Across the full final-cutoff rows, the mean corrected-minus-original NLL change was {_report_number(mean_contamination_nll)} and the mean 80% coverage change was {_report_number(mean_contamination_coverage)}. The full row-level comparison is in `pairing_contamination.csv`.",
+                "",
+                "The largest FBS expected-rank shifts are listed below. `fbs_fcs_game_count` and `fcs_opponents` are descriptive network exposure fields, not causal attribution.",
+                "",
+                "| Season | Prior | Team | Δ expected rank | FBS–FCS games | FCS opponents |",
+                "|---:|:---|:---|---:|---:|:---|",
+            ]
+        )
+        top_team_rows = sorted(
+            [
+                row
+                for row in team_impact_rows
+                if row["population_view"] == "full"
+                and row["subdivision"] == "fbs"
+            ],
+            key=lambda row: (-float(row["absolute_delta_expected_rank"]), str(row["team_id"])),
+        )[:12]
+        for row in top_team_rows:
+            lines.append(
+                f"| {row['season']} | {row['prior_family']} | {row['team_name']} ({row['team_id']}) | {_report_number(row['delta_expected_rank_supported_minus_original'])} | {row['fbs_fcs_game_count']} | {row['fcs_opponents'] or 'none'} |"
+            )
+        lines.extend(
+            [
+                "",
+                "This is a propagation diagnostic through the connected schedule graph. It does not claim that a particular FBS–FCS opponent caused the change; it identifies where the unsupported FCS–FCS evidence reached the FBS posterior most strongly.",
+            ]
+        )
+    lines.extend(
+        [
+            "",
             "### Future-game check",
             "",
-            "Future games are scored with the same frozen V1 margin density from each cutoff posterior. The YPP factor is not used to score future margins; it only changes the state estimate.",
+            "Future games are scored with the same frozen V1 margin density from each cutoff posterior. The YPP factor is not used to score future margins; it only changes the state estimate. Future and next-game keys are identical across V1, Y1, Y2-all-pairings-original, and Y2-supported.",
             "",
         ]
     )
@@ -2035,8 +2577,8 @@ def write_report(
         future_summary[(str(row["prior_family"]), str(row["candidate"]))].append(row)
     lines.extend(
         [
-            "| Prior | Candidate | Future games | Margin MAE | Win Brier | Margin NLL |",
-            "|:---|:---|---:|---:|---:|---:|",
+            "| Prior | Candidate | Future games | Next-game MAE | Future Win Brier | Next-game Brier | Future margin NLL | Next-game NLL |",
+            "|:---|:---|---:|---:|---:|---:|---:|---:|",
         ]
     )
     for (family, candidate), values in sorted(future_summary.items()):
@@ -2044,14 +2586,14 @@ def write_report(
         if not usable:
             continue
         lines.append(
-            f"| {family} | {candidate} | {sum(int(row['future_game_count']) for row in usable)} | {_report_number(np.mean([float(row['future_margin_mae']) for row in usable]))} | {_report_number(np.mean([float(row['future_win_brier']) for row in usable]))} | {_report_number(np.mean([float(row['future_margin_nll']) for row in usable]))} |"
+            f"| {family} | {candidate_labels.get(candidate, candidate)} | {sum(int(row['future_game_count']) for row in usable)} | {_report_number(np.mean([float(row['next_margin_mae']) for row in usable if row['next_margin_mae'] is not None]))} | {_report_number(np.mean([float(row['future_win_brier']) for row in usable]))} | {_report_number(np.mean([float(row['next_win_brier']) for row in usable if row['next_win_brier'] is not None]))} | {_report_number(np.mean([float(row['future_margin_nll']) for row in usable]))} | {_report_number(np.mean([float(row['next_margin_nll']) for row in usable if row['next_margin_nll'] is not None]))} |"
         )
     lines.extend(
         [
             "",
             "## Margin/YPP disagreement games",
             "",
-            "The examples below are real corpus games. `v1_margin_predictive_nll` is the pre-game V1 predictive evidence; quality shifts are oriented percentile shifts from a context-prior local update; negative YPP-augmented effect means the YPP factor moves the V1-oriented side toward a better latent rank relative to V1 alone.",
+            "The examples below are real corpus FBS–FBS or FBS–FCS games. `v1_margin_predictive_nll` is the pre-game V1 predictive evidence; quality shifts are oriented percentile shifts from a context-prior local update; negative YPP-augmented effect means the supported YPP factor moves the V1-oriented side toward a better latent rank relative to V1 alone.",
             "",
             "| Type | Season | Game | Teams | Score | Margin | YPP diff | V1 NLL | V1 shift | YPP effect |",
             "|:---|---:|---:|:---|:---|---:|---:|---:|---:|---:|",
@@ -2066,11 +2608,11 @@ def write_report(
             "",
             "## Temporal and subdivision stability",
             "",
-            "The fixed pre-test model is evaluated by season and pairing; no adaptive era weighting, NIL break, or post-test refit is introduced. The result should be read separately for FBS/FBS, FBS/FCS, and FCS/FCS. Sparse or unstable cross-subdivision effects are not promoted by assumption.",
+            "The fixed pre-test model is evaluated by season and supported pairing; no adaptive era weighting, NIL break, or post-test refit is introduced. FCS–FCS is excluded from the direct residual-signal interpretation and receives V1-only evidence in the corrected posterior.",
             "",
             "Before reading 2022–2025, the promotion gate was fixed at: aggregate final-rank NLL improvement of at least 0.02 nats/team; CRPS degradation no greater than 0.002; 80% coverage drop no greater than 0.03; improvement in at least 3 of 4 held-out seasons for both prior families; no single-season NLL degradation above 0.10 or CRPS degradation above 0.02; future margin MAE degradation no greater than 0.50 points and NLL degradation no greater than 0.02; and positive common-subset quality slope in at least 3 seasons.",
             "",
-            f"The promotion assessment is `{json.dumps(assessment, sort_keys=True)}`.",
+            f"The promotion assessment for Y2-supported is `{json.dumps(assessment, sort_keys=True)}`. These are the unchanged predeclared thresholds; the original all-pairings diagnostic is not used for this decision.",
             "",
             "## Production feasibility (not productionized here)",
             "",
@@ -2126,27 +2668,73 @@ def main() -> None:
     raw_stats, stat_audit = load_raw_stats()
     processed_stats = load_processed_ypp()
     coverage_rows, coverage_summary = build_coverage_audit(games, raw_stats)
+    coverage_summary["period_pairing"] = summarise_pairing_coverage(coverage_rows)
     processed_derivation = audit_processed_derivation(raw_stats, processed_stats)
     historical = load_historical_rows()
     targets = load_rank_targets()
     enriched = build_enriched_rows(historical, games, targets)
     attach_next_game_performance(enriched)
-    data = build_ypp_data(enriched)
-    models, selection_rows, selected_models = select_ypp_models(data)
-    signal_rows = build_signal_rows(enriched, models["y1"], models["y2"], targets)
+    data_all_pairings = build_ypp_data(enriched, allowed_pairings=None)
+    data_supported_pairings = build_ypp_data(
+        enriched, allowed_pairings=SUPPORTED_YPP_PAIRINGS
+    )
+    all_models, all_selection_rows, all_selected_models = select_ypp_models(
+        data_all_pairings,
+        allowed_pairings=None,
+        model_panel="all_pairings_original",
+    )
+    supported_models, supported_selection_rows, supported_selected_models = (
+        select_ypp_models(
+            data_supported_pairings,
+            allowed_pairings=SUPPORTED_YPP_PAIRINGS,
+            model_panel="supported_pairings",
+        )
+    )
+    models = {
+        "all_pairings_original": all_models,
+        "supported_pairings": supported_models,
+    }
+    selection_rows = [*all_selection_rows, *supported_selection_rows]
+    selected_models = {
+        "all_pairings_original": all_selected_models,
+        "supported_pairings": supported_selected_models,
+    }
+    supported_signal_rows = [
+        row for row in enriched if row["pairing"] in SUPPORTED_YPP_PAIRINGS
+    ]
+    signal_rows = build_signal_rows(
+        supported_signal_rows,
+        supported_models["y1"],
+        supported_models["y2"],
+        targets,
+    )
     signal_table, signal_summary = build_conditional_signal_table(signal_rows)
     likelihood = load_likelihood(ROOT / "data/processed/posterior/historical_likelihood_v1.json")
     candidate_rows, season_rows, calibration_rows, evaluation_metadata = run_posterior_evaluation(
         enriched, targets, models, likelihood
     )
     future_rows = evaluation_metadata.pop("future_game_metrics")
-    disagreement_rows = build_disagreement_table(enriched, targets, models, likelihood)
-    delta_rows = _metric_delta(candidate_rows, "y2", "v1", view="full")
+    contamination_rows = evaluation_metadata["pairing_contamination"]
+    team_impact_rows = evaluation_metadata["team_impact"]
+    disagreement_rows = build_disagreement_table(
+        enriched, targets, models, likelihood
+    )
+    delta_rows = _metric_delta(
+        candidate_rows, Y2_SUPPORTED_VARIANT, "v1", view="full"
+    )
     promotion = _promotion_assessment(candidate_rows, season_rows, future_rows, signal_summary["period_pairing"])
 
     metric_table = [
-        *_metric_table_rows(season_rows, ("v1", "y1", "y2", NAIVE_VARIANT), view="full"),
-        *_metric_table_rows(season_rows, ("v1", "y1", "y2"), view="ypp_observed"),
+        *_metric_table_rows(
+            season_rows,
+            ("v1", "y1", Y2_ORIGINAL_VARIANT, Y2_SUPPORTED_VARIANT, NAIVE_VARIANT),
+            view="full",
+        ),
+        *_metric_table_rows(
+            season_rows,
+            ("v1", "y1", Y2_ORIGINAL_VARIANT, Y2_SUPPORTED_VARIANT),
+            view="ypp_observed",
+        ),
     ]
     production_hashes_after = {
         str(path.relative_to(ROOT)): _sha256(path)
@@ -2156,16 +2744,24 @@ def main() -> None:
     summary: dict[str, object] = {
         "research_question": "Does YPP add enough quality information beyond margin to deserve a place in the game likelihood?",
         "recommendation": promotion["recommendation"],
+        "ypp_support_policy": {
+            "name": YPP_PAIRING_POLICY,
+            "supported_pairings": sorted(SUPPORTED_YPP_PAIRINGS),
+            "unsupported_pairings": ["fcs-fcs"],
+            "unsupported_inference_factor": "all ones; exact Historical Likelihood V1 margin fallback",
+            "unsupported_fit_behavior": "excluded from corrected Y1/Y2/naive candidate fitting",
+        },
         "data_split": {
             "training": "2004-2017 (2003 has no usable YPP)",
             "development": "2018-2021",
-            "final_test": "2022-2025 untouched until model selection and fit were complete",
+            "final_test": "2022-2025 untouched until candidate fitting, df selection, and promotion selection were complete",
             "final_rank_target": "frozen final constituent-rank PMFs from team_season_rank_distributions.csv; common FBS keys only",
         },
         "candidate_family": {
             "y0": "frozen Historical Likelihood V1 margin factor",
-            "y1": "p(YPP_diff | margin basis, site, pairing), rank-independent semantic null",
-            "y2": "p(YPP_diff | margin basis, restrained rank-percentile basis, site, pairing)",
+            "y1": "p(YPP_diff | margin basis, site, supported pairing), rank-independent semantic null",
+            "y2_all_pairings_original": "retained diagnostic p(YPP_diff | margin basis, restrained rank-percentile basis, site, all pairings); invalid for promotion",
+            "y2_supported": "corrected p(YPP_diff | margin basis, restrained rank-percentile basis, site, FBS-FBS/FBS-FCS only)",
             "naive_independent_diagnostic": "p(margin | ranks, site) × p(YPP_diff | ranks, site), never a promotion candidate",
             "margin_basis": "intercept, signed margin/20, abs(margin)/20, fixed hinges at -28,-14,0,14,28, plus V1 site indicators",
             "rank_basis": "same-subdivision odd percentile terms d, d*mean, d*abs(d); cross-subdivision FBS-minus-FCS d and d*mean",
@@ -2178,11 +2774,20 @@ def main() -> None:
             "coverage_summary": coverage_summary,
         },
         "model_selection": selected_models,
+        "fitting_data": {
+            "all_pairings_original_pseudo_observations": len(data_all_pairings),
+            "supported_pairings_pseudo_observations": len(data_supported_pairings),
+            "all_pairings_original_games": len(set(data_all_pairings.game_id.tolist())),
+            "supported_pairings_games": len(set(data_supported_pairings.game_id.tolist())),
+            "training_seasons": list(TRAIN_YEARS),
+            "development_seasons": list(DEVELOPMENT_YEARS),
+            "final_test_seasons_excluded_from_selection": list(FINAL_YEARS),
+        },
         "signal": signal_summary,
         "promotion_criteria": PROMOTION_CRITERIA,
         "promotion_assessment": promotion,
         "final_metric_table": metric_table,
-        "final_metric_deltas_y2_minus_v1": delta_rows,
+        "final_metric_deltas_y2_supported_minus_v1": delta_rows,
         "evaluation": evaluation_metadata,
         "input_sha256": {
             "historical_modeling_games.csv": _sha256(HISTORICAL_ROWS_PATH),
@@ -2207,6 +2812,8 @@ def main() -> None:
             "disagreement_games.csv": "real margin/YPP disagreement cases and local effects",
             "calibration.csv": "interval width/coverage and concentration diagnostics",
             "temporal_stability.csv": "season/pairing conditional signal effects",
+            "pairing_contamination.csv": "same-cutoff Y2-supported minus original all-pairings diagnostic differences",
+            "team_impact.csv": "FBS posterior expected-rank shifts from removing unsupported FCS-FCS YPP",
             "plots/": "deterministic coverage, signal, and final-rank delta PNGs",
         },
     }
@@ -2221,6 +2828,8 @@ def main() -> None:
     _write_csv(OUT / "calibration.csv", calibration_rows)
     _write_csv(OUT / "temporal_stability.csv", signal_summary["period_pairing"])
     _write_csv(OUT / "metric_deltas.csv", delta_rows)
+    _write_csv(OUT / "pairing_contamination.csv", contamination_rows)
+    _write_csv(OUT / "team_impact.csv", team_impact_rows)
     if not args.skip_plots:
         write_plots(coverage_rows, signal_rows, candidate_rows, delta_rows)
     write_report(
@@ -2231,6 +2840,8 @@ def main() -> None:
         future_rows,
         disagreement_rows,
         signal_summary["period_pairing"],
+        contamination_rows,
+        team_impact_rows,
     )
     print(json.dumps({"output": str(OUT), "recommendation": promotion["recommendation"], "candidate_rows": len(candidate_rows), "future_rows": len(future_rows)}, sort_keys=True))
 

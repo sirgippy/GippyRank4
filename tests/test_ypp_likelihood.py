@@ -13,6 +13,7 @@ import pytest
 from gippyrank.posterior.engine import Game, LikelihoodV1, Team, infer_posterior
 from gippyrank.research.ypp_likelihood import (
     DF_GRID,
+    SUPPORTED_YPP_PAIRINGS,
     build_ypp_data,
     conditional_design,
     feature_names,
@@ -20,7 +21,9 @@ from gippyrank.research.ypp_likelihood import (
     infer_posterior_with_ypp,
     oriented_rank_coordinates,
     oriented_ypp_difference,
+    pairing_for,
     ypp_factor,
+    ypp_pairing_supported,
 )
 
 
@@ -42,6 +45,13 @@ def _teams() -> list[Team]:
     return [
         Team("home", "Home", "fbs", np.full(5, 0.2)),
         Team("away", "Away", "fbs", np.full(5, 0.2)),
+    ]
+
+
+def _fcs_teams() -> list[Team]:
+    return [
+        Team("home", "Home", "fcs", np.asarray([0.05, 0.15, 0.25, 0.25, 0.30])),
+        Team("away", "Away", "fcs", np.asarray([0.30, 0.25, 0.20, 0.15, 0.10])),
     ]
 
 
@@ -94,6 +104,118 @@ def test_missing_ypp_is_exactly_the_frozen_v1_factor() -> None:
             assert research.pmfs[team_id] == pytest.approx(
                 baseline.pmfs[team_id], abs=1e-12
             )
+
+
+@pytest.mark.parametrize(
+    ("home_subdivision", "away_subdivision"),
+    [("fbs", "fbs"), ("fbs", "fcs")],
+)
+def test_supported_pairings_with_usable_ypp_get_a_y2_factor(
+    home_subdivision: str, away_subdivision: str
+) -> None:
+    home = Team("home", "Home", home_subdivision, np.full(5, 0.2))
+    away = Team("away", "Away", away_subdivision, np.full(5, 0.2))
+    game = Game(
+        "g",
+        "home",
+        "away",
+        home_subdivision,
+        away_subdivision,
+        31,
+        17,
+        False,
+    )
+    factor = ypp_factor(game, home, away, _y2_model(), 6.0, 4.0)
+    assert factor.shape == (5, 5)
+    assert not np.allclose(factor, np.ones_like(factor))
+    assert pairing_for(home_subdivision, away_subdivision) in SUPPORTED_YPP_PAIRINGS
+    assert ypp_pairing_supported(home_subdivision, away_subdivision)
+
+
+def test_fcs_fcs_ypp_is_always_an_all_ones_factor_and_v1_posterior() -> None:
+    teams = _fcs_teams()
+    game = Game("g", "home", "away", "fcs", "fcs", 31, 17, False)
+    factor = ypp_factor(game, teams[0], teams[1], _y2_model(), 6.0, 4.0)
+    assert np.array_equal(factor, np.ones((5, 5)))
+
+    baseline = infer_posterior(teams, [game], _likelihood(), tolerance=1e-12)
+    corrected = infer_posterior_with_ypp(
+        teams,
+        [game],
+        _likelihood(),
+        {"g": (6.0, 4.0)},
+        _y2_model(),
+        tolerance=1e-12,
+    )
+    for team_id in baseline.pmfs:
+        assert corrected.pmfs[team_id] == pytest.approx(
+            baseline.pmfs[team_id], abs=1e-12
+        )
+
+
+def test_missing_supported_pairing_ypp_factor_is_exactly_ones() -> None:
+    teams = _teams()
+    game = Game("g", "home", "away", "fbs", "fbs", 31, 17, False)
+    factor = ypp_factor(game, teams[0], teams[1], _y2_model(), None, 4.0)
+    assert np.array_equal(factor, np.ones((5, 5)))
+
+
+def test_corrected_fit_excludes_unsupported_pairing_rows() -> None:
+    data_type = type(build_ypp_data([]))
+    supported = data_type(
+        x=np.linspace(0.1, 0.9, 16),
+        y=np.linspace(0.9, 0.1, 16),
+        target=np.linspace(-1.0, 2.0, 16),
+        margin=np.linspace(-14.0, 14.0, 16),
+        pairing=np.asarray(["fbs-fbs"] * 16),
+        neutral=np.zeros(16),
+        fbs_home=np.zeros(16),
+        weight=np.ones(16),
+        game_id=np.asarray([f"s{i}" for i in range(16)]),
+        season=np.asarray([2010] * 16),
+    )
+    unsupported = data_type(
+        x=np.asarray([0.2, 0.8]),
+        y=np.asarray([0.8, 0.2]),
+        target=np.asarray([100.0, -100.0]),
+        margin=np.asarray([7.0, -7.0]),
+        pairing=np.asarray(["fcs-fcs", "fcs-fcs"]),
+        neutral=np.zeros(2),
+        fbs_home=np.zeros(2),
+        weight=np.ones(2),
+        game_id=np.asarray(["u1", "u2"]),
+        season=np.asarray([2010, 2010]),
+    )
+    all_data = data_type(
+        **{
+            field: np.concatenate([getattr(supported, field), getattr(unsupported, field)])
+            for field in (
+                "x",
+                "y",
+                "target",
+                "margin",
+                "pairing",
+                "neutral",
+                "fbs_home",
+                "weight",
+                "game_id",
+                "season",
+            )
+        }
+    )
+    mask = np.ones(len(all_data), dtype=bool)
+    filtered_fit = fit_ypp_model(
+        all_data, mask, rank_signal=True, degrees_of_freedom=5.0
+    )
+    direct_fit = fit_ypp_model(
+        supported,
+        np.ones(len(supported), dtype=bool),
+        rank_signal=True,
+        degrees_of_freedom=5.0,
+    )
+    assert filtered_fit["fit_pairings"] == tuple(sorted(SUPPORTED_YPP_PAIRINGS))
+    assert filtered_fit["fit_game_count"] == direct_fit["fit_game_count"]
+    assert filtered_fit["beta"] == pytest.approx(direct_fit["beta"])
 
 
 def test_conditional_ypp_null_is_rank_invariant() -> None:
@@ -173,6 +295,56 @@ def test_candidate_selection_is_deterministic() -> None:
     second = script.select_ypp_models(data)
     assert first[1] == second[1]
     assert first[2] == second[2]
+
+
+def test_candidate_selection_excludes_2022_2025_from_fit_and_selection() -> None:
+    script = _research_script()
+    n = 88
+    data_type = type(build_ypp_data([]))
+    data = data_type(
+        x=np.linspace(0.05, 0.95, n),
+        y=np.linspace(0.95, 0.05, n),
+        target=np.concatenate(
+            [np.linspace(-2.0, 3.0, 72), np.asarray([100.0] * 16)]
+        ),
+        margin=np.tile(np.asarray([-21.0, -7.0, 7.0, 21.0]), 22),
+        pairing=np.asarray(["fbs-fbs"] * n),
+        neutral=np.asarray([0.0, 1.0] * (n // 2)),
+        fbs_home=np.zeros(n),
+        weight=np.ones(n),
+        game_id=np.asarray([f"g{i}" for i in range(n)]),
+        season=np.repeat(np.arange(2004, 2026), 4),
+    )
+    _models, selection_rows, selected = script.select_ypp_models(data)
+    assert {int(row["train_games"]) for row in selection_rows} == {56}
+    assert {int(row["development_games"]) for row in selection_rows} == {16}
+    for value in selected.values():
+        assert value["training_seasons"] == "2004-2017"
+        assert value["development_seasons"] == "2018-2021"
+        assert value["final_fit_seasons"] == "2004-2021"
+        assert value["final_fit_game_count"] == 72
+
+
+def test_comparison_fbs_keys_are_required_to_match() -> None:
+    script = _research_script()
+    common = {
+        "season": 2022,
+        "cutoff_index": 6,
+        "prior_family": "context",
+        "population_view": "full",
+        "game_key_sha256": "game",
+        "team_key_sha256": "teams",
+        "matched_fbs_teams": 10,
+    }
+    rows = [
+        {**common, "candidate": "v1"},
+        {**common, "candidate": "y2_supported"},
+    ]
+    assert script.validate_common_comparison_keys(rows)["group_count"] == 1
+    with pytest.raises(ValueError, match="support mismatch"):
+        script.validate_common_comparison_keys(
+            [rows[0], {**rows[1], "team_key_sha256": "different"}]
+        )
 
 
 def test_fit_candidate_is_deterministic() -> None:
