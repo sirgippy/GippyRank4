@@ -1,0 +1,98 @@
+{
+  "experiment": "primitive_box_score_likelihood",
+  "factorization": {
+    "v1": "p(margin | ranks, site)",
+    "a": "p(margin | ranks, site) * p(yards_diff | plays_diff, plays_total, yards_total, margin, ranks, site, pairing)",
+    "b": "p(margin | ranks, site) * p(plays_diff | plays_total, margin, ranks, site, pairing) * p(yards_diff | plays_diff, plays_total, yards_total, margin, ranks, site, pairing)",
+    "c": "B with separate interceptions_thrown_diff/total and fumbles_lost_diff/total as context covariates in both conditional components; no p(INT,FL | ranks)"
+  },
+  "primitive_representation": {
+    "selected_fields": [
+      "total_yards",
+      "offensive_plays_derived",
+      "interceptions_thrown",
+      "fumbles_lost"
+    ],
+    "team_pair_coordinates": [
+      "yards_diff",
+      "yards_total",
+      "plays_diff",
+      "plays_total"
+    ],
+    "turnover_coordinates": [
+      "interceptions_thrown_diff",
+      "interceptions_thrown_total",
+      "fumbles_lost_diff",
+      "fumbles_lost_total"
+    ],
+    "orientation": "same-subdivision home-minus-away; cross-subdivision FBS-minus-FCS regardless of listing order"
+  },
+  "response_transforms": {
+    "yards_diff": "asinh(yards_diff / 100.0)",
+    "plays_diff": "asinh(plays_diff / 10.0)",
+    "yards_total_context": "asinh(yards_total / 200.0)",
+    "plays_total_context": "asinh(plays_total / 80.0)",
+    "turnover_diff_and_total_context": "asinh(value / 1.0), separately for interceptions_thrown and fumbles_lost",
+    "winsorization": false
+  },
+  "rank_basis": "frozen V1 percentile surface; rank-neutral controls set rank coordinates to zero while retaining margin/site/context columns",
+  "distribution": {
+    "family": "Student-t",
+    "fit": "equal-total-weight rank-pair pseudo-observations per game; robust IRLS",
+    "df_grid": [3.0, 5.0, 8.0, 15.0],
+    "scale": "one fitted robust residual scale per conditional component"
+  },
+  "temporal_design": {
+    "training": "2004-2017",
+    "development": "2018-2021",
+    "evaluation": "2022-2025 leakage-safe historical evaluation/prospective-style validation; not independent confirmation",
+    "rolling": "target seasons 2008-2025 fit primitive components only on earlier seasons; no 2026 outcomes"
+  },
+  "pairing_support": {
+    "supported": ["fbs-fbs", "fbs-fcs"],
+    "unsupported": ["fcs-fcs"],
+    "fcs_fcs_behavior": "exact Historical Likelihood V1 fallback"
+  },
+  "missing_data": {
+    "rule": "missing is not zero",
+    "a": "missing yards or plays -> V1",
+    "b": "missing plays disables play factor; missing yards disables yards factor; no usable factor -> V1",
+    "c": "missing either separate turnover context for either team -> exact B fallback for that game"
+  },
+  "candidate_selection": {
+    "comparison": "sequential A vs V1, B vs A, C vs B",
+    "development_only": true,
+    "final_metrics_used": false,
+    "prefer_simpler": true
+  },
+  "promotion_thresholds": {
+    "aggregate_nll_improvement_nats_per_team": 0.02,
+    "maximum_aggregate_crps_degradation": 0.002,
+    "maximum_aggregate_80pct_coverage_drop": 0.03,
+    "minimum_evaluation_seasons_with_nll_improvement": 3,
+    "maximum_single_season_nll_degradation": 0.10,
+    "maximum_single_season_crps_degradation": 0.02,
+    "maximum_future_margin_mae_degradation_points": 0.5,
+    "maximum_future_margin_nll_degradation_nats": 0.02,
+    "minimum_rolling_seasons_with_nll_improvement": 9
+  },
+  "ypp_comparator": {
+    "name": "ypp_supported",
+    "source": "PR #17 final supported-pairing YPP candidate",
+    "student_t_df": 15.0,
+    "retuning": false
+  },
+  "scope_exclusions": [
+    "passing/rushing splits",
+    "sacks",
+    "total fumbles",
+    "first downs",
+    "penalties",
+    "PPA/EPA",
+    "success rate",
+    "explosiveness",
+    "play-by-play",
+    "direct turnover rating likelihood",
+    "production Likelihood V2 and website/publication changes"
+  ]
+}
