@@ -14,6 +14,7 @@ from gippyrank.posterior.engine import Game, LikelihoodV1, Team, infer_posterior
 from gippyrank.research.primitive_box_score_likelihood import (
     PRIMITIVE_FIELDS,
     PrimitiveData,
+    _model_locations,
     build_primitive_data,
     feature_names,
     infer_posterior_with_primitives,
@@ -279,6 +280,26 @@ def test_turnover_context_alone_is_rank_invariant_when_rank_neutralized() -> Non
         away_evidence=away,
     )
     assert np.allclose(factor, factor[0, 0])
+
+
+def test_rank_location_cache_preserves_single_point_coordinates() -> None:
+    model = _model("yards")
+    common = {
+        "margin": np.asarray([3.0]),
+        "pairing": np.asarray(["fbs-fbs"]),
+        "neutral": np.asarray([0.0]),
+        "fbs_home": np.asarray([0.0]),
+        "plays_diff": np.asarray([4.0]),
+        "plays_total": np.asarray([140.0]),
+        "yards_total": np.asarray([900.0]),
+        "interceptions_diff": np.asarray([0.0]),
+        "interceptions_total": np.asarray([2.0]),
+        "fumbles_lost_diff": np.asarray([0.0]),
+        "fumbles_lost_total": np.asarray([1.0]),
+    }
+    first = _model_locations(model, x=np.asarray([0.1]), y=np.asarray([0.2]), **common)
+    second = _model_locations(model, x=np.asarray([0.8]), y=np.asarray([0.9]), **common)
+    assert first[0] != pytest.approx(second[0])
 
 
 def test_development_selection_does_not_read_final_metrics() -> None:

@@ -610,6 +610,17 @@ def _model_locations(
     fumbles_lost_diff: np.ndarray,
     fumbles_lost_total: np.ndarray,
 ) -> np.ndarray:
+    def coordinate_signature(values: np.ndarray) -> tuple[object, ...]:
+        values = np.asarray(values, dtype=float)
+        if values.size == 1:
+            return (1, float(values[0]))
+        return (
+            int(values.size),
+            int(np.unique(values).size),
+            float(values[0]),
+            float(values[-1]),
+        )
+
     beta = np.asarray(model["beta"], dtype=float)
     if len(beta) <= _BASE_FEATURE_COUNT:
         raise ValueError(
@@ -642,8 +653,8 @@ def _model_locations(
         str(pairing[0]),
         bool(neutral[0]),
         bool(fbs_home[0]),
-        len(np.unique(x)),
-        len(np.unique(y)),
+        coordinate_signature(x) if bool(model["rank_signal"]) else (0,),
+        coordinate_signature(y) if bool(model["rank_signal"]) else (0,),
     )
     rank_locations = _RANK_LOCATION_CACHE.get(rank_key)
     if rank_locations is None:
