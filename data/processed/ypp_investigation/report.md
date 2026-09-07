@@ -177,16 +177,16 @@ The primary evaluation is FBS final-rank quality on the untouched 2022–2025 te
 | history | Y2-supported | full | 3.859 | 0.021 | 8.032 | 8.321 | 0.786 | 28.7 | 0.007 | 0.009 | 0.020 |
 | context | naive-independence diagnostic | full | 4.196 | 0.029 | 9.311 | 9.610 | 0.661 | 23.0 | 0.007 | 0.010 | 0.022 |
 | history | naive-independence diagnostic | full | 4.106 | 0.027 | 8.935 | 9.209 | 0.680 | 23.4 | 0.007 | 0.010 | 0.023 |
-| context | V1 | ypp_observed | 3.929 | 0.025 | 8.689 | 9.101 | 0.762 | 28.6 | 0.007 | 0.009 | 0.020 |
-| history | V1 | ypp_observed | 3.824 | 0.019 | 7.655 | 7.921 | 0.802 | 29.4 | 0.007 | 0.009 | 0.019 |
-| context | Y1 | ypp_observed | 3.929 | 0.025 | 8.689 | 9.101 | 0.762 | 28.6 | 0.007 | 0.009 | 0.020 |
-| history | Y1 | ypp_observed | 3.824 | 0.019 | 7.655 | 7.921 | 0.802 | 29.4 | 0.007 | 0.009 | 0.019 |
-| context | Y2-all-pairings-original | ypp_observed | 4.024 | 0.029 | 9.502 | 9.954 | 0.729 | 27.9 | 0.007 | 0.009 | 0.021 |
-| history | Y2-all-pairings-original | ypp_observed | 3.886 | 0.023 | 8.224 | 8.579 | 0.777 | 28.6 | 0.006 | 0.009 | 0.020 |
-| context | Y2-supported | ypp_observed | 3.948 | 0.025 | 8.779 | 9.202 | 0.751 | 28.0 | 0.007 | 0.009 | 0.019 |
-| history | Y2-supported | ypp_observed | 3.858 | 0.021 | 8.030 | 8.336 | 0.786 | 28.7 | 0.007 | 0.009 | 0.020 |
+| context | V1 | supported_ypp_observed | 3.914 | 0.024 | 8.531 | 8.942 | 0.765 | 29.0 | 0.007 | 0.009 | 0.020 |
+| history | V1 | supported_ypp_observed | 3.808 | 0.019 | 7.451 | 7.694 | 0.809 | 29.8 | 0.007 | 0.009 | 0.018 |
+| context | Y1 | supported_ypp_observed | 3.914 | 0.024 | 8.531 | 8.942 | 0.765 | 29.0 | 0.007 | 0.009 | 0.020 |
+| history | Y1 | supported_ypp_observed | 3.808 | 0.019 | 7.451 | 7.694 | 0.809 | 29.8 | 0.007 | 0.009 | 0.018 |
+| context | Y2-all-pairings-original | supported_ypp_observed | 3.932 | 0.025 | 8.602 | 9.022 | 0.756 | 28.4 | 0.007 | 0.009 | 0.020 |
+| history | Y2-all-pairings-original | supported_ypp_observed | 3.842 | 0.020 | 7.861 | 8.152 | 0.790 | 29.1 | 0.007 | 0.009 | 0.019 |
+| context | Y2-supported | supported_ypp_observed | 3.932 | 0.025 | 8.602 | 9.020 | 0.756 | 28.4 | 0.007 | 0.009 | 0.020 |
+| history | Y2-supported | supported_ypp_observed | 3.842 | 0.020 | 7.861 | 8.152 | 0.790 | 29.1 | 0.007 | 0.009 | 0.019 |
 
-The primary end-to-end question is whether adding supported YPP to the connected ranking network improves FBS posterior quality. Full production-style keeps every eligible game: supported-pairing missing YPP gets exactly V1 margin evidence, and every FCS–FCS game gets V1 margin evidence regardless of YPP. The YPP-observed view restricts both V1 and YPP candidates to the same games where YPP could contribute; it is a matched diagnostic, while the full view is primary.
+The primary end-to-end question is whether adding supported YPP to the connected ranking network improves FBS posterior quality. Full production-style keeps every eligible game: supported-pairing missing YPP gets exactly V1 margin evidence, and every FCS–FCS game gets V1 margin evidence regardless of YPP. The `supported_ypp_observed` view is the matched diagnostic subset of games with usable YPP and pairing exactly FBS–FBS or FBS–FCS; FCS–FCS is excluded even when YPP values exist. Both V1 and Y2 use that identical selected game population, while the full view remains primary.
 
 ### Y2-supported minus V1 by final-test season
 
@@ -263,19 +263,19 @@ Future games are scored with the same frozen V1 margin density from each cutoff 
 
 ## Margin/YPP disagreement games
 
-The examples below are real corpus FBS–FBS or FBS–FCS games. `v1_margin_predictive_nll` is the pre-game V1 predictive evidence; quality shifts are oriented percentile shifts from a context-prior local update; negative YPP-augmented effect means the supported YPP factor moves the V1-oriented side toward a better latent rank relative to V1 alone.
+The examples below are real corpus FBS–FBS or FBS–FCS games with usable YPP. `v1_margin_predictive_nll` is the pre-game V1 predictive evidence; quality shifts are oriented percentile shifts from a context-prior local update; negative YPP-augmented effect means the supported YPP factor moves the V1-oriented side toward a better latent rank relative to V1 alone.
 
 | Type | Season | Game | Teams | Score | Margin | YPP diff | V1 NLL | V1 shift | YPP effect |
 |:---|---:|---:|:---|:---|---:|---:|---:|---:|---:|
 | large_win_with_nonpositive_ypp | 2025 | 401752818 | Rutgers–Miami (OH) | 45–17 | 28 | -2.710 | 4.138 | -0.173 | 0.067 |
-| large_win_with_nonpositive_ypp | 2024 | 401729780 | Montana State–Idaho | 52–19 | 33 | -1.089 | 4.534 | -0.030 | -0.005 |
 | large_win_with_nonpositive_ypp | 2025 | 401756942 | Utah–Cincinnati | 45–14 | 31 | -1.063 | 4.378 | -0.061 | 0.047 |
-| close_loss_with_strong_positive_ypp | 2022 | 401424403 | Monmouth–Fordham | 49–52 | -3 | 3.742 | 3.981 | -0.027 | 0.000 |
-| close_loss_with_strong_positive_ypp | 2023 | 401540237 | UC Davis–Eastern Washington | 24–27 | -3 | 3.613 | 3.916 | 0.080 | 0.003 |
-| close_loss_with_strong_positive_ypp | 2024 | 401636379 | Florida A&M–Mississippi Valley State | 21–24 | -3 | 3.566 | 5.958 | 0.055 | 0.014 |
+| large_win_with_nonpositive_ypp | 2024 | 401636941 | Baylor–Kansas | 45–17 | 28 | -1.530 | 5.430 | -0.090 | 0.010 |
+| close_loss_with_strong_positive_ypp | 2025 | 401756905 | Kansas–Cincinnati | 34–37 | -3 | 3.317 | 3.901 | 0.073 | 0.005 |
+| close_loss_with_strong_positive_ypp | 2023 | 401551766 | Kentucky–Clemson | 35–38 | -3 | 3.216 | 3.630 | -0.009 | -0.037 |
+| close_loss_with_strong_positive_ypp | 2024 | 401635574 | NC State–Syracuse | 17–24 | -7 | 3.554 | 3.703 | 0.025 | -0.037 |
 | close_win_with_strong_negative_ypp | 2025 | 401761648 | Louisiana–Texas State | 42–39 | 3 | -4.402 | 3.710 | -0.020 | 0.023 |
-| close_win_with_strong_negative_ypp | 2025 | 401767343 | Sacred Heart–Delaware State | 35–31 | 4 | -3.490 | 3.910 | -0.081 | 0.007 |
-| close_win_with_strong_negative_ypp | 2022 | 401420815 | North Dakota–Northern Iowa | 29–27 | 2 | -3.125 | 3.958 | 0.012 | 0.011 |
+| close_win_with_strong_negative_ypp | 2024 | 401628384 | Vanderbilt–Alabama | 40–35 | 5 | -3.182 | 5.035 | -0.092 | 0.052 |
+| close_win_with_strong_negative_ypp | 2022 | 401405113 | Purdue–Nebraska | 43–37 | 6 | -3.134 | 4.108 | 0.078 | 0.038 |
 
 ## Temporal and subdivision stability
 

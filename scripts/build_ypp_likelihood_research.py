@@ -76,6 +76,7 @@ CUTOFF_FRACTIONS = (0.0, 0.20, 0.35, 0.55, 0.72, 0.87, 1.0)
 NAIVE_VARIANT = "naive_independent_diagnostic"
 Y2_ORIGINAL_VARIANT = "y2_all_pairings_original"
 Y2_SUPPORTED_VARIANT = "y2_supported"
+SUPPORTED_YPP_OBSERVED_VIEW = "supported_ypp_observed"
 POSTERIOR_VARIANTS = ("v1", "y1", Y2_ORIGINAL_VARIANT, Y2_SUPPORTED_VARIANT)
 _FUTURE_SURFACE_CACHE: dict[tuple[object, ...], tuple[np.ndarray, np.ndarray, float]] = {}
 
@@ -153,6 +154,51 @@ def _parse_date(value: object) -> datetime:
 
 def _site_label(row: Mapping[str, object]) -> str:
     return "neutral" if _bool(row.get("neutral_site")) else "home_site"
+
+
+def _row_pairing(row: Mapping[str, object]) -> str:
+    return pairing_for(str(row["home_subdivision"]), str(row["away_subdivision"]))
+
+
+def _usable_ypp_difference(row: Mapping[str, object]) -> float | None:
+    existing = _float(row.get("ypp_diff"))
+    if existing is not None:
+        return existing
+    return oriented_ypp_difference(
+        str(row["home_subdivision"]),
+        str(row["away_subdivision"]),
+        row.get("home_ypp"),
+        row.get("away_ypp"),
+    )
+
+
+def is_supported_ypp_observed(row: Mapping[str, object]) -> bool:
+    """Return whether a game belongs to the matched supported-YPP view."""
+
+    return (
+        _row_pairing(row) in SUPPORTED_YPP_PAIRINGS
+        and _usable_ypp_difference(row) is not None
+    )
+
+
+def select_population_rows(
+    rows: Sequence[Mapping[str, object]],
+    *,
+    season: int,
+    cutoff: datetime,
+    view: str,
+) -> list[Mapping[str, object]]:
+    """Select one cutoff population without changing the primary full view."""
+
+    if view not in {"full", SUPPORTED_YPP_OBSERVED_VIEW}:
+        raise ValueError(f"unknown population view: {view}")
+    return [
+        row
+        for row in rows
+        if int(row["season"]) == season
+        and _parse_date(row["start_date"]) <= cutoff
+        and (view == "full" or is_supported_ypp_observed(row))
+    ]
 
 
 def _normalised_correlation(x: np.ndarray, y: np.ndarray) -> float | None:
@@ -1456,18 +1502,15 @@ def run_posterior_evaluation(
         cutoffs = standard_cutoffs(rows, season)
         for cutoff_index, (cutoff_label, cutoff) in enumerate(cutoffs):
             for family in ("context", "history"):
-                for view in ("full", "ypp_observed"):
-                    if view == "ypp_observed" and cutoff_index != len(cutoffs) - 1:
+                for view in ("full", SUPPORTED_YPP_OBSERVED_VIEW):
+                    if view == SUPPORTED_YPP_OBSERVED_VIEW and cutoff_index != len(cutoffs) - 1:
                         continue
-                    eligible = [
-                        row
-                        for row in season_rows_source
-                        if _parse_date(row["start_date"]) <= cutoff
-                        and (
-                            view == "full"
-                            or row.get("ypp_diff") is not None
-                        )
-                    ]
+                    eligible = select_population_rows(
+                        season_rows_source,
+                        season=season,
+                        cutoff=cutoff,
+                        view=view,
+                    )
                     game_hash = _game_population_hash(eligible)
                     key_team_ids = [
                         team_id
@@ -1869,9 +1912,11 @@ def _choose_disagreement_rows(rows: Sequence[Mapping[str, object]]) -> list[dict
     for source in rows:
         if int(source["season"]) not in FINAL_YEARS:
             continue
-        if source.get("ypp_diff") is None:
+        if not is_supported_ypp_observed(source):
             continue
         row = dict(source)
+        row["pairing"] = _row_pairing(source)
+        row["ypp_diff"] = _usable_ypp_difference(source)
         margin = oriented_margin(
             str(row["home_subdivision"]),
             str(row["away_subdivision"]),
@@ -2448,7 +2493,7 @@ def write_report(
     lines.extend(
         [
             "",
-            "The primary end-to-end question is whether adding supported YPP to the connected ranking network improves FBS posterior quality. Full production-style keeps every eligible game: supported-pairing missing YPP gets exactly V1 margin evidence, and every FCS–FCS game gets V1 margin evidence regardless of YPP. The YPP-observed view restricts both V1 and YPP candidates to the same games where YPP could contribute; it is a matched diagnostic, while the full view is primary.",
+            "The primary end-to-end question is whether adding supported YPP to the connected ranking network improves FBS posterior quality. Full production-style keeps every eligible game: supported-pairing missing YPP gets exactly V1 margin evidence, and every FCS–FCS game gets V1 margin evidence regardless of YPP. The `supported_ypp_observed` view is the matched diagnostic subset of games with usable YPP and pairing exactly FBS–FBS or FBS–FCS; FCS–FCS is excluded even when YPP values exist. Both V1 and Y2 use that identical selected game population, while the full view remains primary.",
             "",
             "### Y2-supported minus V1 by final-test season",
             "",
@@ -2593,7 +2638,7 @@ def write_report(
             "",
             "## Margin/YPP disagreement games",
             "",
-            "The examples below are real corpus FBS–FBS or FBS–FCS games. `v1_margin_predictive_nll` is the pre-game V1 predictive evidence; quality shifts are oriented percentile shifts from a context-prior local update; negative YPP-augmented effect means the supported YPP factor moves the V1-oriented side toward a better latent rank relative to V1 alone.",
+            "The examples below are real corpus FBS–FBS or FBS–FCS games with usable YPP. `v1_margin_predictive_nll` is the pre-game V1 predictive evidence; quality shifts are oriented percentile shifts from a context-prior local update; negative YPP-augmented effect means the supported YPP factor moves the V1-oriented side toward a better latent rank relative to V1 alone.",
             "",
             "| Type | Season | Game | Teams | Score | Margin | YPP diff | V1 NLL | V1 shift | YPP effect |",
             "|:---|---:|---:|:---|:---|---:|---:|---:|---:|---:|",
@@ -2733,7 +2778,7 @@ def main() -> None:
         *_metric_table_rows(
             season_rows,
             ("v1", "y1", Y2_ORIGINAL_VARIANT, Y2_SUPPORTED_VARIANT),
-            view="ypp_observed",
+            view=SUPPORTED_YPP_OBSERVED_VIEW,
         ),
     ]
     production_hashes_after = {
@@ -2766,6 +2811,10 @@ def main() -> None:
             "margin_basis": "intercept, signed margin/20, abs(margin)/20, fixed hinges at -28,-14,0,14,28, plus V1 site indicators",
             "rank_basis": "same-subdivision odd percentile terms d, d*mean, d*abs(d); cross-subdivision FBS-minus-FCS d and d*mean",
             "fit": "weighted pseudo-observations with equal total weight per game and robust Student-t IRLS",
+        },
+        "population_views": {
+            "full": "all eligible regular-season FBS-FBS, FBS-FCS, and FCS-FCS games through each cutoff; unsupported FCS-FCS YPP still uses the exact V1 margin fallback",
+            SUPPORTED_YPP_OBSERVED_VIEW: "eligible games through the final cutoff with usable YPP and pairing exactly FBS-FBS or FBS-FCS; FCS-FCS is excluded even when YPP exists; V1 and Y2 use identical game keys",
         },
         "audit": {
             "games": game_audit,
@@ -2806,7 +2855,7 @@ def main() -> None:
             "coverage.csv": "season/pairing YPP coverage and missingness",
             "conditional_signal.csv": "margin/residual bins",
             "candidate_selection.csv": "predeclared Student-t df development selection",
-            "candidate_metrics.csv": "matched cutoff posterior metrics",
+            "candidate_metrics.csv": "matched cutoff posterior metrics for full and supported_ypp_observed populations",
             "season_metrics.csv": "final cutoff metrics by season",
             "future_game_metrics.csv": "frozen V1 future-margin scoring from each posterior",
             "disagreement_games.csv": "real margin/YPP disagreement cases and local effects",

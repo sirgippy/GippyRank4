@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
 
@@ -72,6 +73,30 @@ def _y2_model() -> dict[str, object]:
         "df": 5.0,
         "rank_signal": True,
         "include_margin": True,
+    }
+
+
+def _population_row(
+    game_id: str,
+    home_subdivision: str,
+    away_subdivision: str,
+    ypp_diff: float | None,
+    *,
+    home_points: int = 45,
+    away_points: int = 17,
+) -> dict[str, object]:
+    return {
+        "game_id": game_id,
+        "season": 2022,
+        "start_date": "2022-09-10T17:00:00Z",
+        "home_subdivision": home_subdivision,
+        "away_subdivision": away_subdivision,
+        "home_points": home_points,
+        "away_points": away_points,
+        "home_ypp": None if ypp_diff is None else 6.0,
+        "away_ypp": None if ypp_diff is None else 6.0 - ypp_diff,
+        "ypp_diff": ypp_diff,
+        "neutral_site": False,
     }
 
 
@@ -273,6 +298,132 @@ def test_naive_independent_diagnostic_is_not_a_candidate_name() -> None:
     # deliberately not in the candidate set evaluated for selection.
     assert "naive_independent_diagnostic" not in {"v1", "y1", "y2"}
     assert len(DF_GRID) == 4
+
+
+def test_disagreement_artifact_selector_restricts_pairings(monkeypatch: pytest.MonkeyPatch) -> None:
+    script = _research_script()
+    rows = [
+        _population_row("fbs-fbs", "fbs", "fbs", -1.0),
+        _population_row("fbs-fcs", "fbs", "fcs", -1.0),
+        _population_row("fcs-fcs", "fcs", "fcs", -1.0),
+    ]
+
+    def fake_local_effect(row, _all_rows, _targets, _models, _likelihood):
+        return {"game_id": row["game_id"], "pairing": row["pairing"]}
+
+    monkeypatch.setattr(script, "_local_disagreement_effect", fake_local_effect)
+    artifact_rows = script.build_disagreement_table(rows, {}, {}, None)
+
+    assert {row["pairing"] for row in artifact_rows} <= set(
+        script.SUPPORTED_YPP_PAIRINGS
+    )
+    assert {row["game_id"] for row in artifact_rows} == {"fbs-fbs", "fbs-fcs"}
+
+
+def test_disagreement_artifact_selector_requires_usable_ypp() -> None:
+    script = _research_script()
+    rows = [
+        _population_row("missing-ypp", "fbs", "fbs", None),
+        _population_row("usable-ypp", "fbs", "fbs", -1.0),
+    ]
+
+    selected = script._choose_disagreement_rows(rows)
+
+    assert [row["game_id"] for row in selected] == ["usable-ypp"]
+
+
+def test_supported_ypp_observed_population_excludes_fcs_fcs_with_ypp() -> None:
+    script = _research_script()
+    rows = [
+        _population_row("supported-same", "fbs", "fbs", -1.0),
+        _population_row("supported-cross", "fbs", "fcs", -1.0),
+        _population_row("unsupported-with-ypp", "fcs", "fcs", -1.0),
+        _population_row("supported-missing", "fbs", "fbs", None),
+    ]
+
+    selected = script.select_population_rows(
+        rows,
+        season=2022,
+        cutoff=datetime(2022, 12, 31, tzinfo=UTC),
+        view=script.SUPPORTED_YPP_OBSERVED_VIEW,
+    )
+
+    assert [row["game_id"] for row in selected] == [
+        "supported-same",
+        "supported-cross",
+    ]
+
+
+def test_supported_ypp_observed_v1_and_y2_comparison_keys_are_identical() -> None:
+    script = _research_script()
+    rows = [
+        _population_row("supported", "fbs", "fbs", -1.0),
+        _population_row("unsupported", "fcs", "fcs", -1.0),
+    ]
+    selected_v1 = script.select_population_rows(
+        rows,
+        season=2022,
+        cutoff=datetime(2022, 12, 31, tzinfo=UTC),
+        view=script.SUPPORTED_YPP_OBSERVED_VIEW,
+    )
+    selected_y2 = script.select_population_rows(
+        rows,
+        season=2022,
+        cutoff=datetime(2022, 12, 31, tzinfo=UTC),
+        view=script.SUPPORTED_YPP_OBSERVED_VIEW,
+    )
+    assert [row["game_id"] for row in selected_v1] == [row["game_id"] for row in selected_y2]
+
+    common = {
+        "season": 2022,
+        "cutoff_index": 6,
+        "prior_family": "context",
+        "population_view": script.SUPPORTED_YPP_OBSERVED_VIEW,
+        "game_key_sha256": script._game_population_hash(selected_v1),
+        "team_key_sha256": "teams",
+        "matched_fbs_teams": 1,
+    }
+    comparison_rows = [
+        {**common, "candidate": candidate}
+        for candidate in ("v1", script.Y2_SUPPORTED_VARIANT)
+    ]
+    assert script.validate_common_comparison_keys(comparison_rows)["group_count"] == 1
+
+
+def test_full_population_keeps_fcs_fcs_games() -> None:
+    script = _research_script()
+    rows = [
+        _population_row("supported", "fbs", "fbs", -1.0),
+        _population_row("unsupported-with-ypp", "fcs", "fcs", -1.0),
+        _population_row("unsupported-missing", "fcs", "fcs", None),
+    ]
+
+    selected = script.select_population_rows(
+        rows,
+        season=2022,
+        cutoff=datetime(2022, 12, 31, tzinfo=UTC),
+        view="full",
+    )
+
+    assert [row["game_id"] for row in selected] == [
+        "supported",
+        "unsupported-with-ypp",
+        "unsupported-missing",
+    ]
+
+
+def test_promotion_assessment_uses_full_view(monkeypatch: pytest.MonkeyPatch) -> None:
+    script = _research_script()
+    views: list[str] = []
+
+    def fake_metric_delta(*_args, **kwargs):
+        views.append(kwargs["view"])
+        return []
+
+    monkeypatch.setattr(script, "_metric_delta", fake_metric_delta)
+    script._promotion_assessment([], [], [], [])
+
+    assert views == ["full"]
 
 
 def test_candidate_selection_is_deterministic() -> None:
