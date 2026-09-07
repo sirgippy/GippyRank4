@@ -93,16 +93,22 @@ def test_site_data_publishes_all_initial_h_c_preseason_and_current_snapshots(
         root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
     )
     assert manifest["seasons"] == [2026]
-    assert manifest["default_publication_slot"] == "2026-sep-05"
+    assert manifest["default_publication_slot"] == "2026-09-06"
     assert {(entry["snapshot_type"], entry["prior_family"]) for entry in manifest["snapshots"]} == {
         ("preseason", "context"),
         ("preseason", "history"),
         ("live", "context"),
         ("live", "history"),
+        ("weekly", "context"),
+        ("weekly", "history"),
     }
     current = [entry for entry in manifest["snapshots"] if entry["snapshot_type"] == "live"]
     assert {entry["effective_cutoff"] for entry in current} == {
         "2026-09-05T20:11:12.864212+00:00"
+    }
+    weekly = [entry for entry in manifest["snapshots"] if entry["snapshot_type"] == "weekly"]
+    assert {entry["effective_cutoff"] for entry in weekly} == {
+        "2026-09-06T17:34:56.895103+00:00",
     }
 
 
@@ -113,6 +119,8 @@ def test_site_data_publishes_all_initial_h_c_preseason_and_current_snapshots(
         ("2026-preseason", "history", "context"),
         ("2026-sep-05", "context", "history"),
         ("2026-sep-05", "history", "context"),
+        ("2026-09-06", "context", "history"),
+        ("2026-09-06", "history", "context"),
     ],
 )
 def test_logical_publication_slots_pair_context_and_history(

@@ -1,0 +1,22 @@
+artifact,bytes,rows,purpose,generated,needed_for_reproducibility,needed_for_audit
+anchor_sensitivity.csv,1268842,3738,historical Context/History sensitivity and row-level decomposition,True,True,True
+anchor_sensitivity_decomposition.csv,4325,31,aggregated sensitivity decomposition by evidence and network descriptors,True,True,True
+bp_prior_removal_validation.csv,7345,31,prospective prior-stripping versus explicit-neutralization audit cases,True,True,True
+current_anchor_sensitivity.csv,17292,138,latest current-season Context/History sensitivity,True,False,True
+current_performance_vs_predictive.csv,22721,138,latest current-season Performance versus Predictive comparison,True,False,True
+current_pmfs.csv,2057809,19044,latest current-season Context Performance PMFs,True,True,True
+current_pmfs_history.csv,2057832,19044,latest current-season History Performance PMFs,True,True,True
+current_rankings.csv,29400,138,latest current-season Context Performance summaries,True,True,True
+current_rankings_history.csv,29412,138,latest current-season History Performance summaries,True,True,True
+future_game_predictions.csv,20641193,90284,row-level future predictions for leakage and scoring-key audit,True,True,True
+future_game_validation.csv,59133,328,aggregated future-game validation metrics,True,True,True
+game_evidence.csv,9061331,50804,game-level evidence and opponent-anchor provenance,True,True,True
+idle_team_examples.csv,1941,12,examples of network updates without new focal games,True,False,True
+illustrative_cases.csv,1822,6,deterministic corpus examples for interpretation,True,False,True
+performance_vs_predictive.csv,562859,3738,historical Performance versus Predictive comparison,True,True,True
+plots/anchor_sensitivity_by_games.png,59304,,anchor sensitivity visualization,True,False,True
+plots/current_uncertainty_by_games.png,40782,,current Performance uncertainty visualization,True,False,True
+plots/future_validation_by_games.png,69635,,future validation visualization,True,False,True
+plots/performance_vs_predictive_by_games.png,44839,,Performance versus Predictive visualization,True,False,True
+report.md,19696,,human-readable generated research report,True,True,True
+summary.json,257283,,"machine-readable study summary, provenance, and diagnostics",True,True,True
