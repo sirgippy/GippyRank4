@@ -77,6 +77,75 @@ GAME_FIELDS = (
 EVALUATION_SEASONS = (2022, 2023, 2024, 2025)
 CURRENT_SEASON = 2026
 STANDARD_FRACTIONS = (0.0, 0.2, 0.35, 0.55, 0.72, 0.87, 1.0)
+FUTURE_MODELS = ("Predictive_C", "Predictive_H", "Performance_C", "Performance_H")
+
+# The stripping audit is a prospective design.  The target is selected from
+# ordinary posterior, anchor, and graph descriptors only; no stripping error
+# or explicit-neutralization result is used in selection.
+PRIOR_REMOVAL_VALIDATION_RULE_VERSION = "fixed-season-phase-depth-diagnostics-v2"
+PRIOR_REMOVAL_VALIDATION_CUTOFF_INDICES = (0, 1, 3, 6)
+PRIOR_REMOVAL_VALIDATION_PLAN = (
+    {
+        "label": "zero_games",
+        "cutoff_index": 0,
+        "games_bucket": "0",
+        "selector": "lowest_expected_rank",
+    },
+    {
+        "label": "elite_early",
+        "cutoff_index": 1,
+        "games_bucket": "1-3",
+        "selector": "lowest_expected_rank",
+    },
+    {
+        "label": "middle_early",
+        "cutoff_index": 1,
+        "games_bucket": "1-3",
+        "selector": "middle_expected_rank",
+    },
+    {
+        "label": "weak_early",
+        "cutoff_index": 1,
+        "games_bucket": "1-3",
+        "selector": "highest_expected_rank",
+    },
+    {
+        "label": "narrow_mid",
+        "cutoff_index": 3,
+        "games_bucket": "4-6",
+        "selector": "narrowest_posterior",
+    },
+    {
+        "label": "broad_mid",
+        "cutoff_index": 3,
+        "games_bucket": "4-6",
+        "selector": "broadest_posterior",
+    },
+    {
+        "label": "irregular_mid",
+        "cutoff_index": 3,
+        "games_bucket": "4-6",
+        "selector": "most_irregular_posterior",
+    },
+    {
+        "label": "anchor_disagreement_late",
+        "cutoff_index": 6,
+        "games_bucket": "7+",
+        "selector": "largest_context_history_pmf_tv",
+    },
+    {
+        "label": "dense_graph_late",
+        "cutoff_index": 6,
+        "games_bucket": "7+",
+        "selector": "highest_graph_degree",
+    },
+    {
+        "label": "cycle_exposure_late",
+        "cutoff_index": 6,
+        "games_bucket": "7+",
+        "selector": "highest_cycle_edge_exposure",
+    },
+)
 
 # Predeclared before reading the full comparison table.  These are intentionally
 # aligned with the existing small-graph BP audit rather than tuned to this run.
@@ -445,6 +514,209 @@ def _games_bucket(count: int) -> str:
     return "7+"
 
 
+def _local_irregularity(pmf: np.ndarray) -> float:
+    return float(np.sum(np.abs(np.diff(pmf, n=2))))
+
+
+def _network_metrics(
+    teams: Iterable[Team], games: Iterable[Game]
+) -> dict[str, dict[str, int | bool]]:
+    """Describe undirected schedule topology without adding a graph dependency.
+
+    Rematches are represented by one edge, matching the posterior engine's
+    pair-factor grouping.  ``cycle_edge_count`` counts incident edges that are
+    not bridges; it is an exposure measure, not a count of distinct cycles.
+    ``component_cycle_rank`` is E - V + 1 for the connected component.
+    """
+    adjacency: dict[str, set[str]] = {team.team_id: set() for team in teams}
+    edges: set[tuple[str, str]] = set()
+    for game in games:
+        first, second = sorted((game.home_id, game.away_id))
+        adjacency.setdefault(first, set()).add(second)
+        adjacency.setdefault(second, set()).add(first)
+        edges.add((first, second))
+
+    component_by_team: dict[str, int] = {}
+    components: list[set[str]] = []
+    for start in sorted(adjacency):
+        if start in component_by_team:
+            continue
+        component_index = len(components)
+        component: set[str] = set()
+        pending = [start]
+        while pending:
+            current = pending.pop()
+            if current in component:
+                continue
+            component.add(current)
+            component_by_team[current] = component_index
+            pending.extend(sorted(adjacency[current] - component))
+        components.append(component)
+
+    def connected_without_edge(
+        start: str, target: str, blocked: tuple[str, str]
+    ) -> bool:
+        seen = {start}
+        pending = [start]
+        while pending:
+            current = pending.pop()
+            for neighbor in adjacency[current]:
+                if tuple(sorted((current, neighbor))) == blocked:
+                    continue
+                if neighbor == target:
+                    return True
+                if neighbor not in seen:
+                    seen.add(neighbor)
+                    pending.append(neighbor)
+        return False
+
+    bridge_edges = {
+        edge
+        for edge in edges
+        if not connected_without_edge(edge[0], edge[1], edge)
+    }
+    cycle_edges = edges - bridge_edges
+    component_edges = [
+        sum(first in component and second in component for first, second in edges)
+        for component in components
+    ]
+    component_cycle_rank = [
+        max(0, edge_count - len(component) + 1)
+        for component, edge_count in zip(components, component_edges, strict=True)
+    ]
+
+    result: dict[str, dict[str, int | bool]] = {}
+    for team_id, opponents in adjacency.items():
+        component_index = component_by_team[team_id]
+        result[team_id] = {
+            "unique_opponent_count": len(opponents),
+            "graph_degree": len(opponents),
+            "component_node_count": len(components[component_index]),
+            "component_edge_count": component_edges[component_index],
+            "component_cycle_rank": component_cycle_rank[component_index],
+            "cycle_edge_count": sum(
+                tuple(sorted((team_id, opponent))) in cycle_edges
+                for opponent in opponents
+            ),
+            "cycle_participation": any(
+                tuple(sorted((team_id, opponent))) in cycle_edges
+                for opponent in opponents
+            ),
+        }
+    return result
+
+
+def _anchor_decomposition(
+    run: CutoffRun, team_id: str, network: dict[str, dict[str, int | bool]]
+) -> dict[str, object]:
+    """Return row-level descriptors for explaining C/H anchor sensitivity."""
+    context_teams = _team_lookup(run.context)
+    history_teams = _team_lookup(run.history)
+    opponents = {
+        game.away_id if game.home_id == team_id else game.home_id
+        for game in run.prepared.games
+        if team_id in {game.home_id, game.away_id}
+    }
+    posterior_tvs: list[float] = []
+    posterior_expected_differences: list[float] = []
+    prior_tvs: list[float] = []
+    for opponent_id in sorted(opponents):
+        context_pmf = run.context.anchor_result.pmfs.get(opponent_id)
+        history_pmf = run.history.anchor_result.pmfs.get(opponent_id)
+        context_team = context_teams.get(opponent_id)
+        history_team = history_teams.get(opponent_id)
+        if context_pmf is not None and history_pmf is not None:
+            posterior_tvs.append(pmf_tv_distance(context_pmf, history_pmf))
+            posterior_expected_differences.append(
+                abs(
+                    float(
+                        np.dot(
+                            np.arange(1, len(context_pmf) + 1), context_pmf
+                        )
+                    )
+                    - float(
+                        np.dot(
+                            np.arange(1, len(history_pmf) + 1), history_pmf
+                        )
+                    )
+                )
+            )
+        if context_team is not None and history_team is not None:
+            prior_tvs.append(pmf_tv_distance(context_team.prior, history_team.prior))
+
+    def total(values: list[float]) -> float:
+        return float(np.sum(values)) if values else 0.0
+
+    def mean(values: list[float]) -> float:
+        return float(np.mean(values)) if values else 0.0
+
+    def maximum(values: list[float]) -> float:
+        return float(np.max(values)) if values else 0.0
+
+    posterior_tv_sum = total(posterior_tvs)
+    posterior_tv_max = maximum(posterior_tvs)
+    return {
+        **network.get(
+            team_id,
+            {
+                "unique_opponent_count": 0,
+                "graph_degree": 0,
+                "component_node_count": 1,
+                "component_edge_count": 0,
+                "component_cycle_rank": 0,
+                "cycle_edge_count": 0,
+                "cycle_participation": False,
+            },
+        ),
+        "opponent_anchor_count": len(posterior_tvs),
+        "opponent_anchor_posterior_tv_mean": mean(posterior_tvs),
+        "opponent_anchor_posterior_tv_sum": posterior_tv_sum,
+        "opponent_anchor_posterior_tv_max": posterior_tv_max,
+        "opponent_anchor_posterior_tv_max_share": (
+            posterior_tv_max / posterior_tv_sum if posterior_tv_sum else 0.0
+        ),
+        "opponent_anchor_expected_rank_difference_mean": mean(
+            posterior_expected_differences
+        ),
+        "opponent_anchor_expected_rank_difference_sum": total(
+            posterior_expected_differences
+        ),
+        "opponent_anchor_expected_rank_difference_max": maximum(
+            posterior_expected_differences
+        ),
+        "opponent_prior_pmf_tv_mean": mean(prior_tvs),
+        "opponent_prior_pmf_tv_sum": total(prior_tvs),
+        "opponent_prior_pmf_tv_max": maximum(prior_tvs),
+    }
+
+
+def _validation_target_metrics(
+    run: CutoffRun, team_id: str
+) -> dict[str, object]:
+    summary = performance_pmf_summaries(run.context.anchor_result.pmfs[team_id])
+    network = _network_metrics(run.context.teams, run.prepared.games)
+    metrics = _anchor_decomposition(run, team_id, network)
+    metrics.update(
+        {
+            "expected_rank": summary["expected_rank"],
+            "interval_80_width": int(summary["interval_80_high"])
+            - int(summary["interval_80_low"]),
+            "local_irregularity": _local_irregularity(
+                run.context.anchor_result.pmfs[team_id]
+            ),
+            "context_history_pmf_tv": pmf_tv_distance(
+                run.context.pmfs[team_id], run.history.pmfs[team_id]
+            ),
+            "context_history_expected_rank_difference": float(
+                performance_pmf_summaries(run.context.pmfs[team_id])["expected_rank"]
+                - performance_pmf_summaries(run.history.pmfs[team_id])["expected_rank"]
+            ),
+            "games_played": run.context.eligible_game_counts[team_id],
+        }
+    )
+    return metrics
+
+
 def _rank_row(
     inference: PerformanceInference,
     team: Team,
@@ -712,10 +984,10 @@ def future_prediction_rows(
     run: CutoffRun, likelihood: LikelihoodV1
 ) -> list[dict[str, object]]:
     models = (
-        ("Predictive_C", run.context),
-        ("Predictive_H", run.history),
-        ("Performance_C", run.context),
-        ("Performance_H", run.history),
+        (FUTURE_MODELS[0], run.context),
+        (FUTURE_MODELS[1], run.history),
+        (FUTURE_MODELS[2], run.context),
+        (FUTURE_MODELS[3], run.history),
     )
     context_teams = _team_lookup(run.context)
     history_teams = _team_lookup(run.history)
@@ -793,6 +1065,7 @@ def future_prediction_rows(
                         "games_played": games_played,
                         "games_played_bucket": _games_bucket(games_played),
                         "is_next_game": (focal_id, game.game_id) in next_game_ids,
+                        "game_start_date": row["startDate"],
                         "site": (
                             "neutral"
                             if game.neutral_site
@@ -807,6 +1080,143 @@ def future_prediction_rows(
     return rows
 
 
+def _future_scoring_key(row: dict[str, object]) -> tuple[str, str, str, str]:
+    return (
+        str(row["season"]),
+        str(row["cutoff"]),
+        str(row["game_id"]),
+        str(row["focal_team_id"]),
+    )
+
+
+def validate_common_future_keys(rows: list[dict[str, object]]) -> dict[str, object]:
+    """Require all four model variants to score identical team-game keys."""
+    by_model: dict[str, list[dict[str, object]]] = defaultdict(list)
+    for row in rows:
+        by_model[str(row["model"])].append(row)
+    missing_models = [model for model in FUTURE_MODELS if model not in by_model]
+    unexpected_models = sorted(set(by_model) - set(FUTURE_MODELS))
+    if missing_models or unexpected_models:
+        raise ValueError(
+            "future validation models do not match the declared model panel: "
+            f"missing={missing_models}, unexpected={unexpected_models}"
+        )
+    keys_by_model: dict[str, set[tuple[str, str, str, str]]] = {}
+    duplicate_counts: dict[str, int] = {}
+    for model in FUTURE_MODELS:
+        keys = [_future_scoring_key(row) for row in by_model[model]]
+        duplicate_counts[model] = len(keys) - len(set(keys))
+        if duplicate_counts[model]:
+            raise ValueError(f"future validation has duplicate keys for {model}")
+        keys_by_model[model] = set(keys)
+    reference = keys_by_model[FUTURE_MODELS[0]]
+    differing_models = {
+        model: {
+            "missing_from_reference": len(reference - keys),
+            "extra_against_reference": len(keys - reference),
+        }
+        for model, keys in keys_by_model.items()
+        if keys != reference
+    }
+    if differing_models:
+        raise ValueError(
+            "future validation models do not share strict common scoring keys: "
+            f"{differing_models}"
+        )
+    return {
+        "models": list(FUTURE_MODELS),
+        "key_count_per_model": {
+            model: len(keys_by_model[model]) for model in FUTURE_MODELS
+        },
+        "common_key_count": len(reference),
+        "all_models_share_identical_keys": True,
+        "duplicate_key_counts": duplicate_counts,
+    }
+
+
+def future_validation_population(
+    runs: list[CutoffRun],
+    predictions: list[dict[str, object]],
+    key_audit: dict[str, object],
+) -> dict[str, object]:
+    """Summarize candidate, scored, excluded, and next-game populations."""
+    candidate_game_instances: set[tuple[str, str, str]] = set()
+    candidate_keys: set[tuple[str, str, str, str]] = set()
+    by_season: dict[int, dict[str, int]] = defaultdict(
+        lambda: {
+            "candidate_future_game_instances": 0,
+            "candidate_fbs_team_game_keys": 0,
+            "scored_fbs_team_game_keys": 0,
+            "next_game_keys": 0,
+        }
+    )
+    for run in runs:
+        cutoff = run.prepared.effective_cutoff.isoformat()
+        season_counts = by_season[run.prepared.season]
+        for game in run.prepared.future_games:
+            candidate_game_instances.add(
+                (str(run.prepared.season), cutoff, game.game_id)
+            )
+            season_counts["candidate_future_game_instances"] += 1
+            for team_id, subdivision in (
+                (game.home_id, game.home_subdivision),
+                (game.away_id, game.away_subdivision),
+            ):
+                if subdivision != "fbs":
+                    continue
+                key = (str(run.prepared.season), cutoff, game.game_id, team_id)
+                candidate_keys.add(key)
+                season_counts["candidate_fbs_team_game_keys"] += 1
+
+    reference_model = FUTURE_MODELS[0]
+    scored_rows = [
+        row for row in predictions if row["model"] == reference_model
+    ]
+    scored_keys = {_future_scoring_key(row) for row in scored_rows}
+    for row in scored_rows:
+        counts = by_season[int(row["season"])]
+        counts["scored_fbs_team_game_keys"] += 1
+        if row["is_next_game"]:
+            counts["next_game_keys"] += 1
+    return {
+        "seasons": sorted(by_season),
+        "cutoff_count": len(
+            {(str(run.prepared.season), run.prepared.effective_cutoff.isoformat()) for run in runs}
+        ),
+        "cutoffs": sorted(
+            {
+                f"{run.prepared.season}:{run.prepared.effective_cutoff.isoformat()}"
+                for run in runs
+            }
+        ),
+        "candidate_future_game_instance_count": len(candidate_game_instances),
+        "candidate_fbs_team_game_key_count": len(candidate_keys),
+        "scored_fbs_team_game_key_count": len(scored_keys),
+        "excluded_fbs_team_game_key_count": len(candidate_keys - scored_keys),
+        "next_game_key_count": sum(
+            int(row["is_next_game"]) for row in scored_rows
+        ),
+        "later_future_key_count": sum(
+            not bool(row["is_next_game"]) for row in scored_rows
+        ),
+        "model_row_counts": {
+            str(model): sum(1 for row in predictions if row["model"] == model)
+            for model in FUTURE_MODELS
+        },
+        "strict_common_key_audit": key_audit,
+        "by_season": [
+            {"season": season, **counts}
+            for season, counts in sorted(by_season.items())
+        ],
+        "missingness_policy": (
+            "Candidate keys are completed, valid FBS/FCS rows after the effective "
+            "cutoff. A key is excluded only when a model cannot construct the "
+            "required team PMF; the strict common-key check fails if model panels "
+            "then differ."
+        ),
+    }
+
+
 def _mean(values: list[float]) -> float | None:
     return float(np.mean(values)) if values else None
 
@@ -814,16 +1224,17 @@ def _mean(values: list[float]) -> float | None:
 def aggregate_future_rows(rows: list[dict[str, object]]) -> list[dict[str, object]]:
     groups: dict[tuple[object, ...], list[dict[str, object]]] = defaultdict(list)
     for row in rows:
-        horizon = "next_game" if row["is_next_game"] else "all_future"
-        key = (
-            row["season"],
-            row["cutoff"],
-            row["season_phase"],
-            row["model"],
-            horizon,
-            row["games_played_bucket"],
-        )
-        groups[key].append(row)
+        horizons = ("all_future", "next_game") if row["is_next_game"] else ("all_future",)
+        for horizon in horizons:
+            key = (
+                row["season"],
+                row["cutoff"],
+                row["season_phase"],
+                row["model"],
+                horizon,
+                row["games_played_bucket"],
+            )
+            groups[key].append(row)
     result = []
     for key, group in sorted(
         groups.items(), key=lambda item: tuple(str(v) for v in item[0])
@@ -884,6 +1295,146 @@ def _write_json(path: Path, value: object) -> None:
     )
 
 
+ARTIFACT_PURPOSES = {
+    "anchor_sensitivity.csv": (
+        "historical Context/History sensitivity and row-level decomposition",
+        True,
+        True,
+    ),
+    "anchor_sensitivity_decomposition.csv": (
+        "aggregated sensitivity decomposition by evidence and network descriptors",
+        True,
+        True,
+    ),
+    "bp_prior_removal_validation.csv": (
+        "prospective prior-stripping versus explicit-neutralization audit cases",
+        True,
+        True,
+    ),
+    "current_anchor_sensitivity.csv": (
+        "latest current-season Context/History sensitivity",
+        False,
+        True,
+    ),
+    "current_performance_vs_predictive.csv": (
+        "latest current-season Performance versus Predictive comparison",
+        False,
+        True,
+    ),
+    "current_pmfs.csv": (
+        "latest current-season Context Performance PMFs",
+        True,
+        True,
+    ),
+    "current_pmfs_history.csv": (
+        "latest current-season History Performance PMFs",
+        True,
+        True,
+    ),
+    "current_rankings.csv": (
+        "latest current-season Context Performance summaries",
+        True,
+        True,
+    ),
+    "current_rankings_history.csv": (
+        "latest current-season History Performance summaries",
+        True,
+        True,
+    ),
+    "future_game_predictions.csv": (
+        "row-level future predictions for leakage and scoring-key audit",
+        True,
+        True,
+    ),
+    "future_game_validation.csv": (
+        "aggregated future-game validation metrics",
+        True,
+        True,
+    ),
+    "game_evidence.csv": (
+        "game-level evidence and opponent-anchor provenance",
+        True,
+        True,
+    ),
+    "idle_team_examples.csv": (
+        "examples of network updates without new focal games",
+        False,
+        True,
+    ),
+    "illustrative_cases.csv": (
+        "deterministic corpus examples for interpretation",
+        False,
+        True,
+    ),
+    "performance_vs_predictive.csv": (
+        "historical Performance versus Predictive comparison",
+        True,
+        True,
+    ),
+    "report.md": (
+        "human-readable generated research report",
+        True,
+        True,
+    ),
+    "summary.json": (
+        "machine-readable study summary, provenance, and diagnostics",
+        True,
+        True,
+    ),
+    "plots/anchor_sensitivity_by_games.png": (
+        "anchor sensitivity visualization",
+        False,
+        True,
+    ),
+    "plots/current_uncertainty_by_games.png": (
+        "current Performance uncertainty visualization",
+        False,
+        True,
+    ),
+    "plots/future_validation_by_games.png": (
+        "future validation visualization",
+        False,
+        True,
+    ),
+    "plots/performance_vs_predictive_by_games.png": (
+        "Performance versus Predictive visualization",
+        False,
+        True,
+    ),
+}
+
+
+def _artifact_inventory(
+    output: Path, *, exclude: frozenset[str] = frozenset()
+) -> list[dict[str, object]]:
+    """Measure generated bundle members without including the inventory itself."""
+    inventory = []
+    for path in sorted(path for path in output.rglob("*") if path.is_file()):
+        relative = path.relative_to(output).as_posix()
+        if relative == "artifact_inventory.csv" or relative in exclude:
+            continue
+        purpose, reproducible, audit = ARTIFACT_PURPOSES.get(
+            relative,
+            ("generated research artifact", False, True),
+        )
+        row_count: int | None = None
+        if path.suffix == ".csv":
+            with path.open(newline="", encoding="utf-8") as handle:
+                row_count = max(sum(1 for _ in handle) - 1, 0)
+        inventory.append(
+            {
+                "artifact": relative,
+                "bytes": path.stat().st_size,
+                "rows": row_count,
+                "purpose": purpose,
+                "generated": True,
+                "needed_for_reproducibility": reproducible,
+                "needed_for_audit": audit,
+            }
+        )
+    return inventory
+
+
 def _summary_for_rows(
     rows: list[dict[str, object]], value_key: str
 ) -> dict[str, float | int | None]:
@@ -899,101 +1450,122 @@ def _summary_for_rows(
     }
 
 
-def _local_irregularity(pmf: np.ndarray) -> float:
-    return float(np.sum(np.abs(np.diff(pmf, n=2))))
-
-
-def _validation_case_targets(run: CutoffRun) -> list[tuple[str, CutoffRun, str]]:
-    teams = [team for team in run.context.teams if team.subdivision == "fbs"]
-
-    def best(key) -> str:
-        return min(teams, key=lambda team: (key(team), team.name, team.team_id)).team_id
-
-    def worst(key) -> str:
-        return max(teams, key=lambda team: (key(team), team.name, team.team_id)).team_id
-
-    posterior_summary = lambda team: performance_pmf_summaries(
-        run.context.anchor_result.pmfs[team.team_id]
-    )
+def _validation_case_targets(
+    runs: list[CutoffRun],
+) -> list[tuple[str, CutoffRun, str]]:
+    """Select the fixed audit panel without looking at stripping errors."""
+    by_season_and_index = {
+        (run.prepared.season, run.cutoff_index): run
+        for run in runs
+        if run.cutoff_index is not None
+    }
+    selected: dict[tuple[int, str, str], list[str]] = defaultdict(list)
+    selected_runs: dict[tuple[int, str, str], CutoffRun] = {}
+    for season in EVALUATION_SEASONS:
+        for plan in PRIOR_REMOVAL_VALIDATION_PLAN:
+            run = by_season_and_index.get((season, plan["cutoff_index"]))
+            if run is None:
+                continue
+            candidates = [
+                team
+                for team in run.context.teams
+                if team.subdivision == "fbs"
+                and _games_bucket(
+                    run.context.eligible_game_counts[team.team_id]
+                )
+                == plan["games_bucket"]
+            ]
+            if not candidates:
+                continue
+            metrics = {
+                team.team_id: _validation_target_metrics(run, team.team_id)
+                for team in candidates
+            }
+            selector = plan["selector"]
+            if selector == "middle_expected_rank":
+                ordered = sorted(
+                    candidates,
+                    key=lambda team: (
+                        float(metrics[team.team_id]["expected_rank"]),
+                        team.name,
+                        team.team_id,
+                    ),
+                )
+                target = ordered[(len(ordered) - 1) // 2]
+            else:
+                descending = selector not in {
+                    "lowest_expected_rank",
+                    "narrowest_posterior",
+                }
+                metric_key = {
+                    "lowest_expected_rank": "expected_rank",
+                    "highest_expected_rank": "expected_rank",
+                    "narrowest_posterior": "interval_80_width",
+                    "broadest_posterior": "interval_80_width",
+                    "most_irregular_posterior": "local_irregularity",
+                    "largest_context_history_pmf_tv": "context_history_pmf_tv",
+                    "highest_graph_degree": "graph_degree",
+                    "highest_cycle_edge_exposure": "cycle_edge_count",
+                }[selector]
+                target = min(
+                    candidates,
+                    key=lambda team: (
+                        (-1 if descending else 1)
+                        * float(metrics[team.team_id][metric_key]),
+                        team.name,
+                        team.team_id,
+                    ),
+                )
+            key = (season, run.prepared.effective_cutoff.isoformat(), target.team_id)
+            selected[key].append(str(plan["label"]))
+            selected_runs[key] = run
     return [
-        (
-            "elite_early",
-            run,
-            best(lambda team: posterior_summary(team)["expected_rank"]),
-        ),
-        (
-            "weak_early",
-            run,
-            worst(lambda team: posterior_summary(team)["expected_rank"]),
-        ),
-        (
-            "broad_early",
-            run,
-            worst(
-                lambda team: (
-                    int(posterior_summary(team)["interval_80_high"])
-                    - int(posterior_summary(team)["interval_80_low"])
+        (";".join(selected[key]), selected_runs[key], key[2])
+        for key in sorted(selected, key=lambda value: (value[0], value[1], value[2]))
+    ]
+
+
+def _validation_group_summary(
+    rows: list[dict[str, object]], group_key: str
+) -> list[dict[str, object]]:
+    grouped: dict[str, list[dict[str, object]]] = defaultdict(list)
+    for row in rows:
+        grouped[str(row[group_key])].append(row)
+    return [
+        {
+            "group": group,
+            "count": len(items),
+            "median_tv": float(np.median([float(item["tv_distance"]) for item in items])),
+            "p95_tv": float(
+                np.quantile([float(item["tv_distance"]) for item in items], 0.95)
+            ),
+            "max_tv": float(np.max([float(item["tv_distance"]) for item in items])),
+            "median_abs_expected_rank_difference": float(
+                np.median(
+                    [
+                        abs(float(item["expected_rank_difference"]))
+                        for item in items
+                    ]
                 )
             ),
-        ),
-        (
-            "concentrated_early",
-            run,
-            best(
-                lambda team: (
-                    int(posterior_summary(team)["interval_80_high"])
-                    - int(posterior_summary(team)["interval_80_low"])
-                )
-            ),
-        ),
-        (
-            "irregular_early",
-            run,
-            worst(
-                lambda team: _local_irregularity(
-                    run.context.anchor_result.pmfs[team.team_id]
-                )
-            ),
-        ),
+        }
+        for group, items in sorted(grouped.items())
     ]
 
 
 def run_prior_removal_validation(
-    root: Path,
-    corpus: Corpus,
+    runs: list[CutoffRun],
     likelihood: LikelihoodV1,
-    early_run: CutoffRun,
-    later_run: CutoffRun,
     *,
     max_iterations: int,
     tolerance: float,
     damping: float,
 ) -> tuple[list[dict[str, object]], dict[str, object]]:
-    cases = _validation_case_targets(early_run)
-    teams = [team for team in later_run.context.teams if team.subdivision == "fbs"]
-    later_target = min(teams, key=lambda team: (team.name, team.team_id)).team_id
-    cases.extend(
-        [
-            ("later_cutoff", later_run, later_target),
-            (
-                "later_elite",
-                later_run,
-                min(
-                    teams,
-                    key=lambda team: (
-                        performance_pmf_summaries(
-                            later_run.context.anchor_result.pmfs[team.team_id]
-                        )["expected_rank"],
-                        team.name,
-                        team.team_id,
-                    ),
-                ).team_id,
-            ),
-        ]
-    )
+    cases = _validation_case_targets(runs)
     rows: list[dict[str, object]] = []
     for label, run, target_id in cases:
         team = next(team for team in run.context.teams if team.team_id == target_id)
+        target_metrics = _validation_target_metrics(run, target_id)
         stripped = remove_focal_prior(
             run.context.anchor_result.pmfs[target_id], team.prior
         )
@@ -1016,6 +1588,15 @@ def run_prior_removal_validation(
                 "team_id": target_id,
                 "team_name": team.name,
                 "games_played": run.context.eligible_game_counts[target_id],
+                "selection_rule": label,
+                "unique_opponent_count": target_metrics["unique_opponent_count"],
+                "graph_degree": target_metrics["graph_degree"],
+                "component_cycle_rank": target_metrics["component_cycle_rank"],
+                "cycle_edge_count": target_metrics["cycle_edge_count"],
+                "context_history_pmf_tv": target_metrics["context_history_pmf_tv"],
+                "context_history_expected_rank_difference": target_metrics[
+                    "context_history_expected_rank_difference"
+                ],
                 "expected_rank_stripped": stripped_summary["expected_rank"],
                 "expected_rank_explicit_neutralized": explicit_summary["expected_rank"],
                 "expected_rank_difference": float(
@@ -1036,11 +1617,42 @@ def run_prior_removal_validation(
                     + int(explicit_summary["interval_80_low"])
                 ),
                 "explicit_iterations": explicit_result.iterations,
+                "explicit_converged": explicit_result.converged,
             }
         )
     tv = [float(row["tv_distance"]) for row in rows]
+    coverage = {
+        "rule_version": PRIOR_REMOVAL_VALIDATION_RULE_VERSION,
+        "cutoff_indices": list(PRIOR_REMOVAL_VALIDATION_CUTOFF_INDICES),
+        "requested_case_roles": [
+            str(plan["label"]) for plan in PRIOR_REMOVAL_VALIDATION_PLAN
+        ],
+        "case_count": len(rows),
+        "unique_team_season_case_count": len(
+            {(row["season"], row["team_id"]) for row in rows}
+        ),
+        "seasons": sorted({int(row["season"]) for row in rows}),
+        "season_phases": sorted(
+            {
+                _phase(run)
+                for _label, run, _target_id in cases
+            }
+        ),
+        "games_played_buckets": sorted(
+            {_games_bucket(int(row["games_played"])) for row in rows}
+        ),
+        "represented_case_roles": sorted(
+            {
+                role
+                for row in rows
+                for role in str(row["selection_rule"]).split(";")
+            }
+        ),
+        "cutoffs": sorted({str(row["cutoff"]) for row in rows}),
+    }
     summary = {
         "case_count": len(rows),
+        "coverage": coverage,
         "predeclared_p95_tv_limit": PRIOR_REMOVAL_P95_TV_LIMIT,
         "predeclared_worst_tv_limit": PRIOR_REMOVAL_WORST_TV_LIMIT,
         "median_tv": float(np.median(tv)),
@@ -1052,6 +1664,43 @@ def run_prior_removal_validation(
         "worst_abs_expected_rank_difference": float(
             np.max(np.abs([float(row["expected_rank_difference"]) for row in rows]))
         ),
+        "by_season": _validation_group_summary(rows, "season"),
+        "by_games_played_bucket": [
+            {
+                **group,
+                "group": group["group"],
+            }
+            for group in _validation_group_summary(
+                [
+                    {**row, "games_played_bucket": _games_bucket(int(row["games_played"]))}
+                    for row in rows
+                ],
+                "games_played_bucket",
+            )
+        ],
+        "by_season_phase": _validation_group_summary(
+            [
+                {
+                    **row,
+                    "season_phase": _phase(
+                        next(
+                            run
+                            for _label, run, target_id in cases
+                            if target_id == row["team_id"]
+                            and run.prepared.season == row["season"]
+                            and run.prepared.effective_cutoff.isoformat()
+                            == row["cutoff"]
+                        )
+                    ),
+                }
+                for row in rows
+            ],
+            "season_phase",
+        ),
+        "worst_cases": sorted(
+            rows,
+            key=lambda row: (-float(row["tv_distance"]), str(row["team_name"])),
+        )[:10],
         "accepted": bool(
             np.quantile(tv, 0.95) <= PRIOR_REMOVAL_P95_TV_LIMIT
             and np.max(tv) <= PRIOR_REMOVAL_WORST_TV_LIMIT
@@ -1070,6 +1719,7 @@ def anchor_sensitivity_rows(runs: list[CutoffRun]) -> list[dict[str, object]]:
     rows = []
     for run in runs:
         context_teams = _team_lookup(run.context)
+        network = _network_metrics(run.context.teams, run.prepared.games)
         for team_id, context_pmf in run.context.pmfs.items():
             if team_id not in run.history.pmfs or team_id not in context_teams:
                 continue
@@ -1080,6 +1730,7 @@ def anchor_sensitivity_rows(runs: list[CutoffRun]) -> list[dict[str, object]]:
             c_summary = performance_pmf_summaries(context_pmf)
             h_summary = performance_pmf_summaries(history_pmf)
             games = run.context.eligible_game_counts[team_id]
+            decomposition = _anchor_decomposition(run, team_id, network)
             rows.append(
                 {
                     "season": run.prepared.season,
@@ -1104,6 +1755,7 @@ def anchor_sensitivity_rows(runs: list[CutoffRun]) -> list[dict[str, object]]:
                     - int(c_summary["interval_80_low"]),
                     "history_interval_80_width": int(h_summary["interval_80_high"])
                     - int(h_summary["interval_80_low"]),
+                    **decomposition,
                 }
             )
     return rows
@@ -1356,6 +2008,240 @@ def illustrative_cases(run: CutoffRun) -> list[dict[str, object]]:
     return selected
 
 
+def _synthetic_cycle_games(
+    topology: str, cycle_length: int = 3, returning_paths: int = 1
+) -> tuple[list[Team], list[Game]]:
+    if topology not in {"tree", "cycle"}:
+        raise ValueError(f"unsupported synthetic topology: {topology}")
+    if cycle_length < 3 or returning_paths < 1:
+        raise ValueError("synthetic cycles need length >= 3 and at least one path")
+    support = 30
+    uniform = uniform_pmf(support)
+    teams = [Team("focal", "Focal", "fbs", uniform)]
+    games: list[Game] = []
+    edge_index = 0
+    original_cycle_scores = ((31, 24), (21, 17), (28, 27))
+    for path_index in range(returning_paths):
+        nodes = [f"path{path_index}_node{index}" for index in range(cycle_length - 1)]
+        teams.extend(Team(node, node, "fbs", uniform) for node in nodes)
+        edges = list(zip(("focal", *nodes), nodes, strict=False))
+        if topology == "cycle":
+            edges.append((nodes[-1], "focal"))
+        for first, second in edges:
+            if edge_index < len(original_cycle_scores):
+                home_points, away_points = original_cycle_scores[edge_index]
+            else:
+                home_points, away_points = 32 + (edge_index % 3) * 3, 30
+            games.append(
+                Game(
+                    f"synthetic-{edge_index}",
+                    first,
+                    second,
+                    "fbs",
+                    "fbs",
+                    home_points,
+                    away_points,
+                )
+            )
+            edge_index += 1
+    return teams, games
+
+
+def _synthetic_focal_prior_pair(
+    support: int, strength: float, *, linear: bool = False
+) -> tuple[np.ndarray, np.ndarray]:
+    if linear:
+        first = np.linspace(1, support, support) ** -1
+        second = np.linspace(1, support, support)
+    else:
+        coordinate = np.linspace(-1.0, 1.0, support)
+        first = np.exp(-strength * coordinate)
+        second = first[::-1]
+    first /= first.sum()
+    second /= second.sum()
+    return first, second
+
+
+def _synthetic_prior_comparison(
+    likelihood: LikelihoodV1,
+    topology: str,
+    cycle_length: int,
+    returning_paths: int,
+    focal_prior_strength: float,
+    *,
+    linear_priors: bool = False,
+    max_iterations: int,
+    tolerance: float,
+    damping: float,
+    label: str,
+) -> dict[str, object]:
+    teams, games = _synthetic_cycle_games(
+        topology, cycle_length, returning_paths
+    )
+    first_prior, second_prior = _synthetic_focal_prior_pair(
+        len(teams[0].prior), focal_prior_strength, linear=linear_priors
+    )
+    common = teams[1:]
+    first_teams = [Team("focal", "Focal", "fbs", first_prior), *common]
+    second_teams = [Team("focal", "Focal", "fbs", second_prior), *common]
+    stripped_first = infer_performance(
+        first_teams,
+        games,
+        likelihood,
+        anchor_family="context",
+        max_iterations=max_iterations,
+        tolerance=tolerance,
+        damping=damping,
+    )
+    stripped_second = infer_performance(
+        second_teams,
+        games,
+        likelihood,
+        anchor_family="context",
+        max_iterations=max_iterations,
+        tolerance=tolerance,
+        damping=damping,
+    )
+    explicit_first, explicit_first_result = explicit_neutralized_target(
+        first_teams,
+        games,
+        likelihood,
+        "focal",
+        max_iterations=max_iterations,
+        tolerance=tolerance,
+        damping=damping,
+    )
+    explicit_second, explicit_second_result = explicit_neutralized_target(
+        second_teams,
+        games,
+        likelihood,
+        "focal",
+        max_iterations=max_iterations,
+        tolerance=tolerance,
+        damping=damping,
+    )
+    ranks = np.arange(1, len(first_prior) + 1)
+    return {
+        "label": label,
+        "topology": topology,
+        "cycle_length": cycle_length if topology == "cycle" else None,
+        "returning_path_count": returning_paths if topology == "cycle" else 0,
+        "focal_prior_strength": focal_prior_strength,
+        "linear_reversal_priors": linear_priors,
+        "max_iterations": max_iterations,
+        "tolerance": tolerance,
+        "damping": damping,
+        "stripping_tv_distance": pmf_tv_distance(
+            stripped_first.pmfs["focal"], stripped_second.pmfs["focal"]
+        ),
+        "stripping_expected_rank_difference": float(
+            np.dot(ranks, stripped_first.pmfs["focal"])
+            - np.dot(ranks, stripped_second.pmfs["focal"])
+        ),
+        "explicit_neutralized_tv_distance": pmf_tv_distance(
+            explicit_first, explicit_second
+        ),
+        "stripping_converged": bool(
+            stripped_first.anchor_result.converged
+            and stripped_second.anchor_result.converged
+        ),
+        "explicit_converged": bool(
+            explicit_first_result.converged and explicit_second_result.converged
+        ),
+        "stripping_iterations": max(
+            stripped_first.anchor_result.iterations,
+            stripped_second.anchor_result.iterations,
+        ),
+        "explicit_iterations": max(
+            explicit_first_result.iterations, explicit_second_result.iterations
+        ),
+    }
+
+
+def loopy_cycle_diagnostics(likelihood: LikelihoodV1) -> dict[str, object]:
+    """Separate returning-path feedback from initialization and tolerance."""
+    support = 30
+    baseline = _synthetic_prior_comparison(
+        likelihood,
+        "cycle",
+        3,
+        1,
+        0.0,
+        linear_priors=True,
+        max_iterations=500,
+        tolerance=1e-9,
+        damping=0.35,
+        label="baseline_original_cycle",
+    )
+    topology_rows = [
+        _synthetic_prior_comparison(
+            likelihood,
+            "tree",
+            cycle_length,
+            1,
+            strength,
+            max_iterations=500,
+            tolerance=1e-9,
+            damping=0.35,
+            label=f"tree_length_{cycle_length}_strength_{strength}",
+        )
+        for cycle_length in (3, 4, 5)
+        for strength in (0.5, 1.5, 3.0)
+    ]
+    topology_rows.extend(
+        _synthetic_prior_comparison(
+            likelihood,
+            "cycle",
+            cycle_length,
+            returning_paths,
+            strength,
+            max_iterations=500,
+            tolerance=1e-9,
+            damping=0.35,
+            label=(
+                f"cycle_length_{cycle_length}_paths_{returning_paths}_"
+                f"strength_{strength}"
+            ),
+        )
+        for cycle_length in (3, 4, 5)
+        for returning_paths in (1, 2)
+        for strength in (0.5, 1.5, 3.0)
+    )
+    settings_rows = [
+        _synthetic_prior_comparison(
+            likelihood,
+            "cycle",
+            3,
+            1,
+            0.0,
+            linear_priors=True,
+            max_iterations=max_iterations,
+            tolerance=tolerance,
+            damping=0.35,
+            label=label,
+        )
+        for label, max_iterations, tolerance in (
+            ("one_message_sweep", 1, 1e-12),
+            ("production_like", 100, 1e-6),
+            ("tight_converged", 500, 1e-10),
+        )
+    ]
+    return {
+        "support": support,
+        "baseline": baseline,
+        "topology_rows": topology_rows,
+        "settings_rows": settings_rows,
+        "conclusion": (
+            "A tree has no path that returns focal information, so stripping is "
+            "invariant. A cycle lets the focal prior affect an outgoing message, "
+            "which can return through an opponent and survive algebraic stripping. "
+            "The residual remains after convergence and explicit target neutralization "
+            "removes it; one message sweep suppresses the feedback because the first "
+            "outgoing focal message is initialized uniformly."
+        ),
+    }
+
+
 def structural_diagnostics(likelihood: LikelihoodV1) -> dict[str, object]:
     """Run small semantic checks against the frozen likelihood surface."""
     support = 30
@@ -1407,24 +2293,8 @@ def structural_diagnostics(likelihood: LikelihoodV1) -> dict[str, object]:
     second = infer_performance(
         [focal_b, opponent], [game], likelihood, anchor_family="context"
     ).pmfs["focal"]
-    cycle_games = [
-        Game("ab", "focal", "opponent", "fbs", "fbs", 31, 24),
-        Game("bc", "opponent", "third", "fbs", "fbs", 21, 17),
-        Game("ca", "third", "focal", "fbs", "fbs", 28, 27),
-    ]
-    third = Team("third", "Third", "fbs", uniform)
-    cycle_first = infer_performance(
-        [focal_a, opponent, third], cycle_games, likelihood, anchor_family="context"
-    ).pmfs["focal"]
-    cycle_second = infer_performance(
-        [focal_b, opponent, third], cycle_games, likelihood, anchor_family="context"
-    ).pmfs["focal"]
-    explicit_cycle_first, _ = explicit_neutralized_target(
-        [focal_a, opponent, third], cycle_games, likelihood, "focal"
-    )
-    explicit_cycle_second, _ = explicit_neutralized_target(
-        [focal_b, opponent, third], cycle_games, likelihood, "focal"
-    )
+    cycle_diagnostics = loopy_cycle_diagnostics(likelihood)
+    cycle_baseline = cycle_diagnostics["baseline"]
     no_game = infer_performance(
         [focal_a], [], likelihood, anchor_family="context"
     ).pmfs["focal"]
@@ -1454,24 +2324,24 @@ def structural_diagnostics(likelihood: LikelihoodV1) -> dict[str, object]:
         "focal_prior_independence": {
             "tv_distance": pmf_tv_distance(first, second),
             "passes": bool(np.allclose(first, second, atol=1e-10)),
-            "loopy_cycle_residual_tv_distance": pmf_tv_distance(
-                cycle_first, cycle_second
-            ),
-            "loopy_cycle_residual_expected_rank_difference": float(
-                np.dot(np.arange(1, support + 1), cycle_first)
-                - np.dot(np.arange(1, support + 1), cycle_second)
-            ),
+            "loopy_cycle_residual_tv_distance": cycle_baseline[
+                "stripping_tv_distance"
+            ],
+            "loopy_cycle_residual_expected_rank_difference": cycle_baseline[
+                "stripping_expected_rank_difference"
+            ],
             "loopy_cycle_residual_within_predeclared_tolerance": bool(
-                pmf_tv_distance(cycle_first, cycle_second)
+                float(cycle_baseline["stripping_tv_distance"])
                 <= PRIOR_REMOVAL_WORST_TV_LIMIT
             ),
-            "explicit_neutralized_cycle_tv_distance": pmf_tv_distance(
-                explicit_cycle_first, explicit_cycle_second
-            ),
+            "explicit_neutralized_cycle_tv_distance": cycle_baseline[
+                "explicit_neutralized_tv_distance"
+            ],
             "explicit_neutralized_cycle_passes": bool(
-                np.allclose(explicit_cycle_first, explicit_cycle_second, atol=1e-10)
+                float(cycle_baseline["explicit_neutralized_tv_distance"]) <= 1e-10
             ),
         },
+        "loopy_cycle_diagnostics": cycle_diagnostics,
         "zero_game_neutrality": {
             "expected_rank": float(np.dot(np.arange(1, support + 1), no_game)),
             "expected_uniform_rank": (support + 1) / 2,
@@ -1674,6 +2544,189 @@ def _group_metric_summary_by_week(
     ]
 
 
+def _correlation_with_pmf_tv(
+    rows: list[dict[str, object]], value_key: str
+) -> float | None:
+    left = np.asarray([float(row["pmf_tv"]) for row in rows], dtype=float)
+    right = np.asarray([float(row[value_key]) for row in rows], dtype=float)
+    if len(left) < 2 or np.isclose(left.std(), 0.0) or np.isclose(right.std(), 0.0):
+        return None
+    return float(np.corrcoef(left, right)[0, 1])
+
+
+def _rank_quartile_labels(
+    rows: list[dict[str, object]], value_key: str
+) -> dict[int, str]:
+    ordered = sorted(
+        range(len(rows)),
+        key=lambda index: (
+            float(rows[index][value_key]),
+            int(rows[index]["season"]),
+            str(rows[index]["cutoff"]),
+            str(rows[index]["team_id"]),
+        ),
+    )
+    return {
+        index: f"Q{min(4, position * 4 // max(len(ordered), 1) + 1)}"
+        for position, index in enumerate(ordered)
+    }
+
+
+def _anchor_decomposition_group_rows(
+    rows: list[dict[str, object]], dimension: str, labels: list[str]
+) -> list[dict[str, object]]:
+    grouped: dict[str, list[dict[str, object]]] = defaultdict(list)
+    for row, label in zip(rows, labels, strict=True):
+        grouped[label].append(row)
+    result = []
+    for bucket, group in sorted(grouped.items()):
+        result.append(
+            {
+                "dimension": dimension,
+                "bucket": bucket,
+                "count": len(group),
+                "median_pmf_tv": float(
+                    np.median([float(row["pmf_tv"]) for row in group])
+                ),
+                "p95_pmf_tv": float(
+                    np.quantile([float(row["pmf_tv"]) for row in group], 0.95)
+                ),
+                "median_abs_expected_rank_difference": float(
+                    np.median(
+                        [
+                            abs(float(row["context_minus_history_expected_rank"]))
+                            for row in group
+                        ]
+                    )
+                ),
+                "median_games_played": float(
+                    np.median([int(row["games_played"]) for row in group])
+                ),
+                "median_unique_opponents": float(
+                    np.median([int(row["unique_opponent_count"]) for row in group])
+                ),
+                "median_opponent_anchor_posterior_tv_sum": float(
+                    np.median(
+                        [
+                            float(row["opponent_anchor_posterior_tv_sum"])
+                            for row in group
+                        ]
+                    )
+                ),
+                "median_opponent_anchor_posterior_tv_max": float(
+                    np.median(
+                        [
+                            float(row["opponent_anchor_posterior_tv_max"])
+                            for row in group
+                        ]
+                    )
+                ),
+                "median_context_interval_80_width": float(
+                    np.median(
+                        [int(row["context_interval_80_width"]) for row in group]
+                    )
+                ),
+            }
+        )
+    return result
+
+
+def anchor_decomposition_summary(
+    rows: list[dict[str, object]]
+) -> tuple[list[dict[str, object]], dict[str, object]]:
+    """Summarize whether C/H disagreement tracks breadth or divergent anchors."""
+    dimensions: list[tuple[str, list[str]]] = [
+        (
+            "season_phase",
+            [str(row["season_phase"]) for row in rows],
+        ),
+        (
+            "games_played_bucket",
+            [str(row["games_played_bucket"]) for row in rows],
+        ),
+        (
+            "unique_opponents_bucket",
+            [_games_bucket(int(row["unique_opponent_count"])) for row in rows],
+        ),
+    ]
+    for value_key, dimension in (
+        ("opponent_anchor_posterior_tv_sum", "opponent_anchor_tv_sum_quartile"),
+        ("opponent_anchor_posterior_tv_max", "opponent_anchor_tv_max_quartile"),
+        ("context_interval_80_width", "performance_width_quartile"),
+        ("graph_degree", "graph_degree_quartile"),
+        ("cycle_edge_count", "cycle_exposure_quartile"),
+    ):
+        quartiles = _rank_quartile_labels(rows, value_key)
+        dimensions.append(
+            (dimension, [quartiles[index] for index in range(len(rows))])
+        )
+    group_rows = [
+        group
+        for dimension, labels in dimensions
+        for group in _anchor_decomposition_group_rows(rows, dimension, labels)
+    ]
+    metric_keys = (
+        "games_played",
+        "unique_opponent_count",
+        "graph_degree",
+        "component_cycle_rank",
+        "cycle_edge_count",
+        "opponent_anchor_posterior_tv_mean",
+        "opponent_anchor_posterior_tv_sum",
+        "opponent_anchor_posterior_tv_max",
+        "opponent_anchor_expected_rank_difference_sum",
+        "context_interval_80_width",
+    )
+    correlations = {
+        key: _correlation_with_pmf_tv(rows, key) for key in metric_keys
+    }
+    nonzero_sums = [
+        float(row["opponent_anchor_posterior_tv_sum"])
+        for row in rows
+        if float(row["opponent_anchor_posterior_tv_sum"]) > 0
+    ]
+    max_shares = [
+        float(row["opponent_anchor_posterior_tv_max_share"])
+        for row in rows
+        if float(row["opponent_anchor_posterior_tv_sum"]) > 0
+    ]
+    dominance = {
+        "nonzero_opponent_anchor_sum_count": len(nonzero_sums),
+        "median_opponent_anchor_tv_sum": float(np.median(nonzero_sums))
+        if nonzero_sums
+        else 0.0,
+        "median_largest_opponent_share": float(np.median(max_shares))
+        if max_shares
+        else 0.0,
+        "fraction_largest_opponent_share_at_least_half": (
+            float(np.mean(np.asarray(max_shares) >= 0.5)) if max_shares else 0.0
+        ),
+        "correlation_pmf_tv_with_opponent_sum": correlations[
+            "opponent_anchor_posterior_tv_sum"
+        ],
+        "correlation_pmf_tv_with_largest_opponent": correlations[
+            "opponent_anchor_posterior_tv_max"
+        ],
+    }
+    network = {
+        "unique_opponent_count": _summary_for_rows(
+            rows, "unique_opponent_count"
+        ),
+        "graph_degree": _summary_for_rows(rows, "graph_degree"),
+        "component_cycle_rank": _summary_for_rows(rows, "component_cycle_rank"),
+        "cycle_edge_count": _summary_for_rows(rows, "cycle_edge_count"),
+        "cycle_participation_count": sum(
+            bool(row["cycle_participation"]) for row in rows
+        ),
+    }
+    return group_rows, {
+        "metric_correlations_with_pmf_tv": correlations,
+        "dominance": dominance,
+        "network": network,
+        "group_rows": group_rows,
+    }
+
+
 def _weighted_future_metric(
     group: list[dict[str, object]], value_key: str, weight_key: str, denominator: int
 ) -> float:
@@ -1692,11 +2745,30 @@ def _report(
     summary: dict[str, object],
     current_rows: list[dict[str, object]],
     cases: list[dict[str, object]],
+    artifact_inventory: list[dict[str, object]],
 ) -> None:
     top25 = sorted(
         [row for row in current_rows if row["rated"]],
         key=lambda row: (float(row["expected_rank"]), str(row["team_name"])),
     )[:25]
+    bp_validation = summary["bp_prior_removal_validation"]
+    bp_coverage = bp_validation["coverage"]
+    anchor_summary = summary["anchor_sensitivity"]
+    decomposition = anchor_summary["decomposition"]
+    future_validation = summary["future_validation"]
+    future_population = future_validation["population"]
+    loopy_diagnostics = summary["structural_diagnostics"]["loopy_cycle_diagnostics"]
+    loopy_baseline = loopy_diagnostics["baseline"]
+    tree_diagnostics = [
+        row
+        for row in loopy_diagnostics["topology_rows"]
+        if row["topology"] == "tree"
+    ]
+    cycle_diagnostics = [
+        row
+        for row in loopy_diagnostics["topology_rows"]
+        if row["topology"] == "cycle"
+    ]
     lines = [
         "# Performance V1 research report",
         "",
@@ -1708,22 +2780,45 @@ def _report(
         "",
         "`Performance_C_i(r | G) = normalize(Post_C_i(r | G) / C_i(r))`.",
         "",
-        "Performance H uses the identical construction with History priors for the network and the focal denominator. Equivalently, under exact factorized inference this is the game-derived likelihood profile under a uniform focal prior. The implementation leaves the focal team's preseason prior out of the final PMF; Context remains the primary opponent anchor. Opponent quality is allowed to update after the focal game and before the cutoff, so an idle team's Performance can move when its opponent plays.",
+        "Performance H uses the identical construction with History priors for the network and the focal denominator. Equivalently, under exact factorized inference this is the game-derived likelihood profile under a uniform focal prior. The focal preseason prior is removed as a direct factor. Under loopy BP, a small indirect feedback residue can remain because prior information may propagate through opponents and return through schedule cycles. Explicit focal-prior neutralization is the correctness baseline; empirical stripping error on historical cases is quantified separately. Context remains the primary opponent anchor. Opponent quality is allowed to update after the focal game and before the cutoff, so an idle team's Performance can move when its opponent plays.",
         "",
         "## Prior-removal validation",
         "",
-        f"The predeclared acceptance rule was p95 PMF TV ≤ {summary['bp_prior_removal_validation']['predeclared_p95_tv_limit']:.2f} and worst PMF TV ≤ {summary['bp_prior_removal_validation']['predeclared_worst_tv_limit']:.2f}, measured against ordinary BP with only the target prior replaced by a uniform PMF. The selected method was **{summary['performance_method']}**.",
+        f"The predeclared acceptance rule was p95 PMF TV ≤ {bp_validation['predeclared_p95_tv_limit']:.2f} and worst PMF TV ≤ {bp_validation['predeclared_worst_tv_limit']:.2f}, measured against ordinary BP with only the target prior replaced by a uniform PMF. The selected method was **{summary['performance_method']}**.",
         "",
-        f"Observed median/p95/worst TV: {summary['bp_prior_removal_validation']['median_tv']:.6f} / {summary['bp_prior_removal_validation']['p95_tv']:.6f} / {summary['bp_prior_removal_validation']['worst_tv']:.6f}. The validation was {'accepted' if summary['bp_prior_removal_validation']['accepted'] else 'not accepted'} under that predeclared rule.",
+        f"The prospective panel contains {bp_coverage['case_count']} unique comparison cases across seasons {', '.join(str(value) for value in bp_coverage['seasons'])}, phases {', '.join(bp_coverage['season_phases'])}, games-played buckets {', '.join(bp_coverage['games_played_buckets'])}, and {len(bp_coverage['cutoffs'])} cutoff instances. Target selection uses fixed cutoff indices {bp_coverage['cutoff_indices']} and ordinary posterior shape/location, Context/History disagreement, and graph descriptors; it never uses stripping error, explicit-neutralization output, or future outcomes.",
         "",
-        "## Current 2026 Performance C",
+        f"Represented roles: {', '.join(bp_coverage['represented_case_roles'])}. Observed median/p95/worst TV: {bp_validation['median_tv']:.6f} / {bp_validation['p95_tv']:.6f} / {bp_validation['worst_tv']:.6f}. The validation was {'accepted' if bp_validation['accepted'] else 'not accepted'} under that predeclared rule.",
         "",
-        f"Latest checked-in cutoff: `{summary['current_cutoff']}`. Rated teams: {summary['current']['rated_team_count']} of {summary['current']['team_count']}; zero-game teams are marked unrated and kept out of meaningful display ordering.",
-        f"Observed local build runtime: {float(summary['runtime_seconds_observed']):.3f} seconds (wall-clock and hardware dependent).",
-        "",
-        "| Display | Team | Expected quality-equivalent rank | Median | 50% | 80% | 95% | Top 5 | Top 10 | Top 25 | Games |",
-        "|---:|---|---:|---:|---|---|---|---:|---:|---:|---:|",
+        "Validation error by selected phase:",
     ]
+    for group in bp_validation["by_season_phase"]:
+        lines.append(
+            f"- {group['group']}: n={group['count']}, median TV {float(group['median_tv']):.6f}, p95 {float(group['p95_tv']):.6f}, max {float(group['max_tv']):.6f}."
+        )
+    lines.append("Worst selected cases:")
+    for row in bp_validation["worst_cases"][:5]:
+        lines.append(
+            f"- {row['case_label']}: {row['season']} {row['team_name']} ({row['games_played']} games, {row['unique_opponent_count']} unique opponents, cycle-edge exposure {row['cycle_edge_count']}), TV {float(row['tv_distance']):.6f}, expected-rank difference {float(row['expected_rank_difference']):+.6f}."
+        )
+    lines.extend(
+        [
+            "",
+            "The original seven-case conclusion is therefore reassessed on a deliberately broader panel; the acceptance rule itself is unchanged.",
+        ]
+    )
+    lines.extend(
+        [
+            "",
+            "## Current 2026 Performance C",
+            "",
+            f"Latest checked-in cutoff: `{summary['current_cutoff']}`. Rated teams: {summary['current']['rated_team_count']} of {summary['current']['team_count']}; zero-game teams are marked unrated and kept out of meaningful display ordering.",
+            f"Observed local build runtime: {float(summary['runtime_seconds_observed']):.3f} seconds (wall-clock and hardware dependent).",
+            "",
+            "| Display | Team | Expected quality-equivalent rank | Median | 50% | 80% | 95% | Top 5 | Top 10 | Top 25 | Games |",
+            "|---:|---|---:|---:|---|---|---|---:|---:|---:|---:|",
+        ]
+    )
     for row in top25:
         lines.append(
             f"| {row['display_rank']} | {row['team_name']} | {float(row['expected_rank']):.2f} | {row['median_rank']} | {row['interval_50_low']}–{row['interval_50_high']} | {row['interval_80_low']}–{row['interval_80_high']} | {row['interval_95_low']}–{row['interval_95_high']} | {float(row['top5_probability']):.3f} | {float(row['top10_probability']):.3f} | {float(row['top25_probability']):.3f} | {row['games_played']} |"
@@ -1740,6 +2835,28 @@ def _report(
             "Anchor sensitivity is also emitted by games-played bucket and season/week so the early-to-late hypothesis can be checked rather than assumed.",
             "",
             f"Performance C versus Predictive C expected-rank difference (Performance minus Predictive) had median {summary['performance_vs_predictive']['expected_rank_difference']['median']:.3f} and absolute p95/max {summary['performance_vs_predictive']['absolute_expected_rank_difference']['p95']:.3f} / {summary['performance_vs_predictive']['absolute_expected_rank_difference']['max']:.3f}. Performance uncertainty remains broader when evidence is sparse; it is not artificially narrowed.",
+            "",
+        ]
+    )
+    lines.append("Historical anchor sensitivity by phase and games-played bucket:")
+    expected_rank_by_group = {
+        (str(row["season_phase"]), str(row["games_played_bucket"])): row
+        for row in anchor_summary["by_games_bucket"]
+    }
+    for row in anchor_summary["by_games_bucket_pmf_tv"]:
+        expected_rank = expected_rank_by_group[
+            (str(row["season_phase"]), str(row["games_played_bucket"]))
+        ]
+        lines.append(
+            f"- {row['season_phase']} / {row['games_played_bucket']}: median PMF TV {float(row['median']):.4f}, p95 {float(row['p95']):.4f}; median absolute expected-rank difference {float(expected_rank['median']):.3f}, n={row['count']}."
+        )
+    lines.extend(
+        [
+            "",
+            "Targeted decomposition of the increasing C/H sensitivity:",
+            f"- Pearson correlation of focal PMF TV with summed opponent posterior C/H TV: {decomposition['metric_correlations_with_pmf_tv']['opponent_anchor_posterior_tv_sum']!s}; with the largest opponent TV: {decomposition['metric_correlations_with_pmf_tv']['opponent_anchor_posterior_tv_max']!s}.",
+            f"- Among rows with nonzero opponent disagreement, the median largest-opponent share of summed TV was {float(decomposition['dominance']['median_largest_opponent_share']):.3f}; the largest opponent supplied at least half the sum in {float(decomposition['dominance']['fraction_largest_opponent_share_at_least_half']):.1%} of such rows.",
+            "- The row-level CSV records games played, unique opponents, graph degree, cycle-edge exposure, opponent posterior disagreement sum/max, and focal posterior width; the grouped companion artifact reports each fixed quartile. These are descriptive associations, not a causal decomposition.",
             "",
             "Largest current Context-versus-History anchor disagreements (C − H expected rank):",
         ]
@@ -1797,6 +2914,13 @@ def _report(
             "",
         ]
     )
+    lines.extend(
+        [
+            f"Population audit: {future_population['cutoff_count']} cutoff instances across seasons {', '.join(str(value) for value in future_population['seasons'])}; {future_population['candidate_future_game_instance_count']} candidate future game instances produced {future_population['candidate_fbs_team_game_key_count']} FBS team-game keys. All four models share {future_population['scored_fbs_team_game_key_count']} strict common scoring keys; {future_population['excluded_fbs_team_game_key_count']} candidate keys were not scored. `all_future` is the inclusive population ({future_population['scored_fbs_team_game_key_count']} keys), while `next_game` is its {future_population['next_game_key_count']}-key subset and the remaining {future_population['later_future_key_count']} keys are later future games.",
+            "The cutoff invariant is enforced from source start dates: completed games at or before the effective cutoff form inference, completed games after it form the future pool, and incomplete/invalid/lower-division rows are excluded explicitly. A model-panel mismatch or duplicate scoring key fails the build rather than changing the comparison population.",
+            "",
+        ]
+    )
     for row in summary["future_validation"]["overall"]:
         lines.append(
             f"- {row['model']} / {row['horizon']}: n={row['prediction_count']}, marginalized NLL={row['marginalized_nll']:.4f}, margin MAE={row['margin_absolute_error']:.4f}, win Brier={row['win_brier']:.4f}, calibration absolute error={row['calibration_absolute_error']:.4f}."
@@ -1814,19 +2938,56 @@ def _report(
     lines.extend(
         [
             "",
+            "## Loopy-BP residual diagnostic",
+            "",
+            f"The synthetic baseline (one 3-team cycle, converged damped BP, reversed linear focal priors) produced stripping TV {float(loopy_baseline['stripping_tv_distance']):.6f} and explicit-neutralized TV {float(loopy_baseline['explicit_neutralized_tv_distance']):.6g}. Tree controls had maximum stripping TV {max(float(row['stripping_tv_distance']) for row in tree_diagnostics):.6g}; cycle variants had maximum {max(float(row['stripping_tv_distance']) for row in cycle_diagnostics):.6f} under the same converged settings.",
+            f"The historical panel worst TV was {float(bp_validation['worst_tv']):.6f}; the synthetic baseline is {float(loopy_baseline['stripping_tv_distance']) / max(float(bp_validation['worst_tv']), 1e-300):.1f} times larger (and its median historical comparison is {float(loopy_baseline['stripping_tv_distance']) / max(float(bp_validation['median_tv']), 1e-300):.1f} times larger).",
+            f"{loopy_diagnostics['conclusion']}",
+            "",
+            "Tolerance/iteration controls:",
+        ]
+    )
+    for row in loopy_diagnostics["settings_rows"]:
+        lines.append(
+            f"- {row['label']}: iterations={row['max_iterations']}, tolerance={row['tolerance']}, converged={row['stripping_converged']}, stripping TV={float(row['stripping_tv_distance']):.6f}, explicit-neutralized TV={float(row['explicit_neutralized_tv_distance']):.6g}."
+        )
+    lines.extend(
+        [
+            "",
+            "This is a limitation of approximate loopy inference, not a production retuning target. Historical validation is the realistic check: its worst stripping error is compared with this synthetic stress panel separately, and explicit neutralization remains the correctness baseline.",
+        ]
+    )
+    lines.extend(
+        [
+            "",
             "The selector is deterministic and rule-based; it includes an uncomfortable record/performance gap rather than only favorable examples. These comparisons describe played football and opponent interpretation, not reward or punishment for winning.",
             "",
             "## Structural semantics and limitations",
             "",
-            f"The frozen Historical Likelihood V1 surface is used unchanged: Student-t df 15, rank-percentile surface, site semantics, FBS/FCS orientation, and margin. There is no win indicator, record feature, capped margin, YPP, recency weight, poll input, or selection logic. Structural checks passed: direct focal-prior TV {float(summary['structural_diagnostics']['focal_prior_independence']['tv_distance']):.3g}; loopy-cycle prior-sensitivity residual TV {float(summary['structural_diagnostics']['focal_prior_independence']['loopy_cycle_residual_tv_distance']):.3g} within the predeclared tolerance; explicit-neutralized cycle TV {float(summary['structural_diagnostics']['focal_prior_independence']['explicit_neutralized_cycle_tv_distance']):.3g}; maximum adjacent −1/0/+1 expected-rank jump {float(summary['structural_diagnostics']['win_loss_continuity']['max_adjacent_jump']):.3f}; zero-game output is uniform.",
+            f"The frozen Historical Likelihood V1 surface is used unchanged: Student-t df 15, rank-percentile surface, site semantics, FBS/FCS orientation, and margin. There is no win indicator, record feature, capped margin, YPP, recency weight, poll input, or selection logic. Structural checks passed: direct focal-prior TV {float(summary['structural_diagnostics']['focal_prior_independence']['tv_distance']):.3g}; the loopy-cycle stripping residual is {float(summary['structural_diagnostics']['focal_prior_independence']['loopy_cycle_residual_tv_distance']):.3g} and explicit-neutralized cycle TV is {float(summary['structural_diagnostics']['focal_prior_independence']['explicit_neutralized_cycle_tv_distance']):.3g}; maximum adjacent −1/0/+1 expected-rank jump {float(summary['structural_diagnostics']['win_loss_continuity']['max_adjacent_jump']):.3f}; zero-game output is uniform. The focal preseason prior is removed as a direct factor, not claimed to be perfectly independent under approximate loopy BP.",
             "",
             f"Idle-team updates were observed in {summary['idle_update']['row_count']} no-new-game cutoff transitions; the largest expected-rank movement was {summary['idle_update']['largest_abs_expected_rank_change']:.3f}. This is expected network updating, not a bug.",
             "",
             "FCS opponents use the established full-season support/fallback policy. Historical 2018–2021 priors are not available in the frozen H/C prediction artifacts, so they were not fabricated; the temporal evaluation uses 2022–2025. Current 2026 uses the latest checked-in cached cutoff and does not fetch new data.",
             "",
+            "## Artifact footprint and reproducibility",
+            "",
+            f"The generated bundle retains evidence needed for the audit: {len(artifact_inventory)} measured pre-report members totaling {sum(int(item['bytes']) for item in artifact_inventory):,} bytes before this report and its manifest are written. No artifact was pruned or compacted in this audit, and no runtime cache is committed. The final detailed byte/row/purpose inventory, including this report, is written to `artifact_inventory.csv`.",
+            "",
+            "Row-level PMFs, future predictions, game evidence, validation cases, aggregates, and plots are intentionally retained because each supports reproducibility, leakage review, or interpretation; repeated representations are not treated as interchangeable evidence.",
+            "",
             "Artifacts are research-only and reproducibly generated by `uv run python scripts/build_performance_v1.py`. The website selectors and Predictive H/C/Likelihood V1 production behavior are unchanged.",
         ]
     )
+    lines.extend(["", "Measured artifact inventory before this report and its manifest are written:"])
+    for item in sorted(
+        artifact_inventory,
+        key=lambda value: (-int(value["bytes"]), str(value["artifact"])),
+    ):
+        rows = "" if item["rows"] is None else str(item["rows"])
+        lines.append(
+            f"- `{item['artifact']}`: {int(item['bytes']):,} bytes, {rows or 'n/a'} rows; {item['purpose']}."
+        )
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -1854,47 +3015,6 @@ def main() -> None:
         season: standard_cutoffs(corpus.rows_by_season[season], season)
         for season in EVALUATION_SEASONS
     }
-    # Validation is run before the full table is generated.  It is a fixed
-    # diagnostic panel, not a search over cases or parameters.
-    validation_early = build_cutoff_run(
-        ROOT,
-        corpus,
-        2022,
-        historical_cutoffs[2022][1],
-        likelihood,
-        "prior_stripping",
-        cutoff_index=1,
-        cutoff_count=len(historical_cutoffs[2022]),
-        max_iterations=args.inference_max_iterations,
-        tolerance=args.inference_tolerance,
-        damping=args.inference_damping,
-    )
-    validation_late = build_cutoff_run(
-        ROOT,
-        corpus,
-        2025,
-        historical_cutoffs[2025][-1],
-        likelihood,
-        "prior_stripping",
-        cutoff_index=len(historical_cutoffs[2025]) - 1,
-        cutoff_count=len(historical_cutoffs[2025]),
-        max_iterations=args.inference_max_iterations,
-        tolerance=args.inference_tolerance,
-        damping=args.inference_damping,
-    )
-    bp_rows, bp_summary = run_prior_removal_validation(
-        ROOT,
-        corpus,
-        likelihood,
-        validation_early,
-        validation_late,
-        max_iterations=args.inference_max_iterations,
-        tolerance=args.inference_tolerance,
-        damping=args.inference_damping,
-    )
-    method: PerformanceMethod = (
-        bp_summary["recommendation_if_auto"] if args.method == "auto" else args.method
-    )
     runs: list[CutoffRun] = []
     for season in EVALUATION_SEASONS:
         cutoffs = historical_cutoffs[season]
@@ -1907,7 +3027,7 @@ def main() -> None:
                     season,
                     cutoff,
                     likelihood,
-                    method,
+                    "prior_stripping",
                     cutoff_index=index,
                     cutoff_count=len(cutoffs),
                     max_iterations=args.inference_max_iterations,
@@ -1915,6 +3035,43 @@ def main() -> None:
                     damping=args.inference_damping,
                 )
             )
+    # Validation uses a fixed prospective case panel after all ordinary
+    # Context/History runs are available.  It is never selected by stripping
+    # error, and the ordinary runs are reused when auto selects stripping.
+    bp_rows, bp_summary = run_prior_removal_validation(
+        runs,
+        likelihood,
+        max_iterations=args.inference_max_iterations,
+        tolerance=args.inference_tolerance,
+        damping=args.inference_damping,
+    )
+    method: PerformanceMethod = (
+        bp_summary["recommendation_if_auto"] if args.method == "auto" else args.method
+    )
+    if method == "explicit_neutralized":
+        runs = []
+        for season in EVALUATION_SEASONS:
+            cutoffs = historical_cutoffs[season]
+            for index, cutoff in enumerate(cutoffs):
+                print(
+                    f"building {season} explicit cutoff {index + 1}/{len(cutoffs)}",
+                    flush=True,
+                )
+                runs.append(
+                    build_cutoff_run(
+                        ROOT,
+                        corpus,
+                        season,
+                        cutoff,
+                        likelihood,
+                        method,
+                        cutoff_index=index,
+                        cutoff_count=len(cutoffs),
+                        max_iterations=args.inference_max_iterations,
+                        tolerance=args.inference_tolerance,
+                        damping=args.inference_damping,
+                    )
+                )
     current_requested = (
         _parse_datetime(args.current_cutoff)
         if args.current_cutoff
@@ -1944,6 +3101,10 @@ def main() -> None:
         for run in runs
         for prediction in future_prediction_rows(run, likelihood)
     ]
+    future_key_audit = validate_common_future_keys(future_predictions)
+    future_population = future_validation_population(
+        runs, future_predictions, future_key_audit
+    )
     future_summary_rows = aggregate_future_rows(future_predictions)
     idle = idle_rows(runs)
     cases = illustrative_cases(
@@ -1988,6 +3149,18 @@ def main() -> None:
         )[:20],
     }
     structural = structural_diagnostics(likelihood)
+    anchor_decomposition_rows, anchor_decomposition = anchor_decomposition_summary(
+        anchor_rows
+    )
+    anchor_expected_rank_rows = [
+        {
+            **row,
+            "absolute_expected_rank_difference": abs(
+                float(row["context_minus_history_expected_rank"])
+            ),
+        }
+        for row in anchor_rows
+    ]
     anchor_summary = {
         "absolute_expected_rank_difference": _summary_for_rows(
             [
@@ -1998,41 +3171,20 @@ def main() -> None:
         ),
         "pmf_tv": _summary_for_rows(anchor_rows, "pmf_tv"),
         "by_games_bucket": _group_metric_summary(
-            [
-                {
-                    **row,
-                    "absolute_expected_rank_difference": abs(
-                        float(row["context_minus_history_expected_rank"])
-                    ),
-                }
-                for row in anchor_rows
-            ],
+            anchor_expected_rank_rows,
             "absolute_expected_rank_difference",
         ),
+        "by_games_bucket_pmf_tv": _group_metric_summary(anchor_rows, "pmf_tv"),
         "by_phase": _group_metric_summary(
-            [
-                {
-                    **row,
-                    "absolute_expected_rank_difference": abs(
-                        float(row["context_minus_history_expected_rank"])
-                    ),
-                }
-                for row in anchor_rows
-            ],
+            anchor_expected_rank_rows,
             "absolute_expected_rank_difference",
         ),
+        "by_phase_pmf_tv": _group_metric_summary(anchor_rows, "pmf_tv"),
         "by_week": _group_metric_summary_by_week(
-            [
-                {
-                    **row,
-                    "absolute_expected_rank_difference": abs(
-                        float(row["context_minus_history_expected_rank"])
-                    ),
-                }
-                for row in anchor_rows
-            ],
+            anchor_expected_rank_rows,
             "absolute_expected_rank_difference",
         ),
+        "by_week_pmf_tv": _group_metric_summary_by_week(anchor_rows, "pmf_tv"),
         "largest_disagreements": sorted(
             anchor_rows,
             key=lambda row: (
@@ -2040,6 +3192,7 @@ def main() -> None:
                 str(row["team_name"]),
             ),
         )[:20],
+        "decomposition": anchor_decomposition,
     }
     predictive_summary = {
         "expected_rank_difference": _summary_for_rows(
@@ -2132,7 +3285,28 @@ def main() -> None:
         "development_note": "Frozen H/C preseason prediction artifacts begin in 2022; no 2018-2021 priors were fabricated.",
         "primary_anchor_family": "context",
         "performance_method": method,
-        "focal_prior": "uniform across applicable FBS rank support; original focal prior absent from final method",
+        "focal_prior": (
+            "uniform across applicable FBS rank support; the focal preseason prior "
+            "is removed as a direct factor, but approximate loopy BP can retain "
+            "indirect cycle feedback"
+        ),
+        "prior_removal_validation_design": {
+            "rule_version": PRIOR_REMOVAL_VALIDATION_RULE_VERSION,
+            "selection_uses": [
+                "season",
+                "fixed cutoff index",
+                "games-played bucket",
+                "ordinary posterior location and width",
+                "ordinary posterior shape",
+                "Context/History posterior disagreement",
+                "schedule graph degree and cycle-edge exposure",
+            ],
+            "selection_does_not_use": [
+                "prior-stripping error",
+                "explicit-neutralization output",
+                "future-game outcomes",
+            ],
+        },
         "zero_game_policy": "uniform PMF and rated=false; zero-game rows have no meaningful display rank",
         "historical_likelihood": "Historical Likelihood V1 unchanged; Student-t df 15; margin/site/subdivision semantics retained",
         "eligible_game_policy": "completed FBS/FCS games at or before cutoff; lower divisions excluded; FCS fallback/support unchanged",
@@ -2155,6 +3329,7 @@ def main() -> None:
         "future_validation": {
             "overall": overall_future,
             "row_count": len(future_summary_rows),
+            "population": future_population,
         },
         "idle_update": {
             "row_count": len(idle),
@@ -2171,6 +3346,16 @@ def main() -> None:
             for season in sorted(corpus.source_paths_by_season)
         },
         "input_coverage": _input_coverage(corpus, ROOT),
+        "artifact_status": {
+            "inventory_path": "artifact_inventory.csv",
+            "runtime_caches_committed": False,
+            "pruned_or_compacted": [],
+            "retention_note": (
+                "Row-level PMFs, predictions, evidence, validation cases, and "
+                "aggregates are retained because they support reproducibility "
+                "or a specific audit claim; no runtime cache is committed."
+            ),
+        },
         "runtime_seconds_observed": round(time.perf_counter() - started, 3),
     }
     output = args.output
@@ -2206,6 +3391,14 @@ def main() -> None:
     )
     anchor_fields = list(anchor_rows[0]) if anchor_rows else []
     _write_csv(output / "anchor_sensitivity.csv", anchor_rows, anchor_fields)
+    decomposition_fields = (
+        list(anchor_decomposition_rows[0]) if anchor_decomposition_rows else []
+    )
+    _write_csv(
+        output / "anchor_sensitivity_decomposition.csv",
+        anchor_decomposition_rows,
+        decomposition_fields,
+    )
     _write_csv(
         output / "current_anchor_sensitivity.csv",
         current_anchor_rows,
@@ -2239,7 +3432,6 @@ def main() -> None:
     case_fields = sorted({key for row in cases for key in row})
     _write_csv(output / "illustrative_cases.csv", cases, case_fields)
     _write_json(output / "summary.json", summary)
-    _report(output / "report.md", summary, current_context_rows, cases)
     plots = output / "plots"
     _plot_anchor(anchor_rows, plots / "anchor_sensitivity_by_games.png")
     _plot_performance_predictive(
@@ -2247,6 +3439,24 @@ def main() -> None:
     )
     _plot_uncertainty(current_context_rows, plots / "current_uncertainty_by_games.png")
     _plot_future(future_summary_rows, plots / "future_validation_by_games.png")
+    inventory_preview = _artifact_inventory(
+        output, exclude=frozenset({"report.md", "artifact_inventory.csv"})
+    )
+    _report(output / "report.md", summary, current_context_rows, cases, inventory_preview)
+    artifact_inventory = _artifact_inventory(output)
+    _write_csv(
+        output / "artifact_inventory.csv",
+        artifact_inventory,
+        [
+            "artifact",
+            "bytes",
+            "rows",
+            "purpose",
+            "generated",
+            "needed_for_reproducibility",
+            "needed_for_audit",
+        ],
+    )
     print(f"wrote Performance V1 research artifacts to {output}")
     print(f"selected method: {method}")
     print(f"observed runtime seconds: {time.perf_counter() - started:.3f}")

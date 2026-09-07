@@ -1,9 +1,12 @@
 """Research-only Performance V1 inference and PMF utilities.
 
-Performance removes the focal team's preseason prior from the shared
-Historical Likelihood V1 posterior.  It deliberately keeps the predictive
-anchor for the rest of the schedule network, so opponent quality remains
-informed by the selected Context or History preseason model.
+Performance removes the focal team's preseason prior as a direct factor from
+the shared Historical Likelihood V1 posterior. It deliberately keeps the
+predictive anchor for the rest of the schedule network, so opponent quality
+remains informed by the selected Context or History preseason model. Under
+approximate loopy BP, a small indirect feedback residue can remain when prior
+information travels through opponents and returns through schedule cycles;
+explicit focal-prior neutralization is the correctness baseline.
 """
 
 from __future__ import annotations

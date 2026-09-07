@@ -31,12 +31,15 @@ focal team's History prior in the same way:
 `Performance_H_i(r | G_T) = normalize(Post_H_i(r | G_T) / H_i(r))`.
 
 Under exact inference with factorized team priors, the ratio is the game-only
-likelihood profile for the focal team under a uniform prior. The focal prior
-therefore contributes no final Performance belief. Context or History still
-anchors non-focal teams because opponent quality must be estimated in order to
-interpret the focal team's margins. Context is the predeclared primary
-candidate; History is an anchor-sensitivity/control analysis, not an ensemble
-or a selection rule.
+likelihood profile for the focal team under a uniform prior. The focal
+preseason prior is removed as a direct factor. Under loopy BP, a small indirect
+feedback residue can remain because prior information may propagate through
+opponents and return through schedule cycles. Explicit focal-prior neutralization
+is the correctness baseline; empirical stripping error on historical cases is
+quantified separately. Context or History still anchors non-focal teams because
+opponent quality must be estimated in order to interpret the focal team's
+margins. Context is the predeclared primary candidate; History is an
+anchor-sensitivity/control analysis, not an ensemble or a selection rule.
 
 The focal neutral prior is uniform over the applicable FBS support. With zero
 eligible games, Performance is exactly uniform and `rated=false`; arbitrary
@@ -52,13 +55,21 @@ Context BP with the selected target replaced by a uniform PMF. It records TV,
 expected-rank, median, and 80% interval differences in
 `bp_prior_removal_validation.csv`.
 
-The baseline panel deliberately includes nonzero-game early cutoffs and later
-cutoffs. Elite, weak, broad, concentrated, and irregular targets are selected
-from the corresponding ordinary posterior PMFs, not from their preseason
-priors. A small loopy-cycle audit is also recorded: direct focal-prior removal
-is exact on a tree, while loopy message feedback can leave a bounded numerical
-residual. If the residual is material under the predeclared rule, explicit
-target-neutralized inference is selected.
+The prior-removal panel uses a fixed prospective stratification across all four
+evaluation seasons and fixed early/mid/late cutoff indices. It includes zero,
+1–3, 4–6, and 7+ game strata; elite, middle, and weak ordinary posterior
+locations; narrow, broad, and irregular PMFs; high Context/History disagreement;
+and high graph degree and cycle-edge exposure. Selection uses only ordinary
+posterior, anchor, and graph descriptors plus deterministic team-ID tie breaks;
+it does not inspect stripping error, explicit-neutralization output, or future
+outcomes. The resulting case count and strata are recorded in
+`summary.json` and `bp_prior_removal_validation.csv`.
+
+A small loopy-cycle audit is also recorded. Direct focal-prior removal is exact
+on a tree, while loopy message feedback can leave a residual. The experiment
+varies topology, cycle length, the number of returning paths, focal-prior
+strength, and convergence settings. If the residual is material under the
+predeclared rule, explicit target-neutralized inference is selected.
 
 The acceptance rule is predeclared before inspecting the full study:
 
@@ -70,6 +81,11 @@ neutralization for the final Performance calculations. Explicit neutralization
 is slower because it reruns ordinary BP for each focal team, but correctness
 has priority over speed. The selected method and audit values are recorded in
 `summary.json` and `report.md`.
+
+The production interpretation is therefore not a claim of perfect mathematical
+focal-prior independence under approximate loopy inference. It is a direct
+factor-removal construction whose realistic approximation error is measured
+against explicit focal neutralization.
 
 ## Evidence semantics
 
@@ -121,21 +137,31 @@ intended behavior; the build does not narrow them for visual appeal.
 
 The temporal evaluation uses leakage-safe actual-date cutoffs in 2022–2025,
 with the existing seven-cutoff early/mid/late panel. Ratings at `T` use only
-games at or before `T`; future completed games are scored afterward. The study
-compares Predictive C, Predictive H, Performance C, and Performance H on
-marginalized next-game NLL, margin error, win Brier behavior, and calibration,
-with results broken out by season phase and games-played bucket. These are
+completed games whose source `startDate` is at or before the effective cutoff;
+completed games after `T` form the future pool and are never included in that
+inference. Predictive anchors are the frozen preseason H/C artifacts, and no
+target-game result is used to construct an anchor. Predictive C, Predictive H,
+Performance C, and Performance H are required to share identical
+`(season, cutoff, game_id, focal_team_id)` scoring keys; duplicate or mismatched
+keys fail the build. `all_future` is the inclusive future population and
+`next_game` is its subset, not a disjoint complement. Candidate, scored,
+excluded, and common-key counts are recorded in `summary.json`. These are
 descriptive external checks, not a promotion criterion for replacing
-Predictive rankings. Frozen H/C prediction artifacts do not contain
-2018–2021 rows, so those priors are not fabricated for this study.
+Predictive rankings. Frozen H/C prediction artifacts do not contain 2018–2021
+rows, so those priors are not fabricated for this study.
 
 The anchor sensitivity artifact reports Context-minus-History expected-rank
 differences, median differences, and PMF TV by cutoff, season phase, and games
-played, with a season/week breakdown. The difference measures uncertainty about
-opponent quality; it is not remaining focal-team preseason information. The
-Performance-versus-Predictive
-artifact reports how observed games changed the story relative to the
-Predictive C marginal.
+played, with a season/week breakdown. It also records unique opponents, graph
+degree, component cycle rank, cycle-edge exposure, opponent posterior C/H TV
+sum and maximum, and focal posterior width. The companion
+`anchor_sensitivity_decomposition.csv` reports fixed grouped summaries and
+correlations. This decomposition characterizes whether later disagreement is
+associated with many small anchor differences or a few divergent anchors; it
+does not remove or ensemble the sensitivity. The difference measures uncertainty
+about opponent quality; it is not remaining focal-team preseason information.
+The Performance-versus-Predictive artifact reports how observed games changed
+the story relative to the Predictive C marginal.
 
 ## Production boundary and reproducibility
 
@@ -149,11 +175,15 @@ uv run python scripts/build_performance_v1.py
 ```
 
 The generated research bundle contains `summary.json` (including source hashes,
-season coverage, and missingness counts), `report.md`, current C and H
+season coverage, missingness counts, topology diagnostics, and strict scoring
+population checks), `report.md`, `artifact_inventory.csv`, current C and H
 rankings/PMFs, `future_game_validation.csv`,
-`bp_prior_removal_validation.csv`, `anchor_sensitivity.csv`,
+`future_game_predictions.csv`, `bp_prior_removal_validation.csv`,
+`anchor_sensitivity.csv`, `anchor_sensitivity_decomposition.csv`,
 `performance_vs_predictive.csv`, `game_evidence.csv`, deterministic illustrative
-case selections, idle-team examples, and plots. Repeating the build with the
-same inputs produces the same substantive PMFs, rankings, validation rows,
-and hashes; wall-clock runtime is reported separately because it is hardware
-dependent.
+case selections, idle-team examples, and plots. No runtime cache is committed.
+The row-level future and evidence tables are retained because they support
+leakage and audit review; the inventory records their bytes, row counts,
+purpose, and retention role. Repeating the build with the same inputs produces
+the same substantive PMFs, rankings, validation rows, and hashes; wall-clock
+runtime is reported separately because it is hardware dependent.
