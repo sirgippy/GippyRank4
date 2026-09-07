@@ -13,6 +13,8 @@ from pathlib import Path
 
 import httpx
 
+from gippyrank.data.cfbd import raw_stat_payload_paths
+
 ROOT = Path(__file__).resolve().parents[1]
 RAW = ROOT / "data/raw/cfbd"
 RAW_GAMES = RAW / "games"
@@ -191,6 +193,13 @@ def parse_int(value: str | None) -> int | None:
         return None
 
 
+def raw_game_response_count(
+    schedules: dict[tuple[int, str], list[dict]],
+) -> int:
+    """Count cached schedule and team-stat API response payloads."""
+    return len(schedules) + len(raw_stat_payload_paths(RAW_STATS))
+
+
 def build_stats(
     schedules: dict[tuple[int, str], list[dict]],
 ) -> tuple[list[dict[str, object]], list[dict[str, object]], int]:
@@ -199,7 +208,7 @@ def build_stats(
     rows_by_key: dict[tuple[int, int], dict[str, object]] = {}
     conflicts = []
     duplicate_count = 0
-    for path in sorted(RAW_STATS.glob("*.json")):
+    for path in raw_stat_payload_paths(RAW_STATS):
         with path.open(encoding="utf-8") as handle:
             payload = json.load(handle)
         for game in payload:
@@ -387,9 +396,7 @@ def main() -> None:
         "duplicate_team_game_rows_removed": stat_duplicates,
         "conflicts": stat_conflicts,
     }
-    report["raw_game_response_count"] = len(schedules) + len(
-        list(RAW_STATS.glob("*.json"))
-    )
+    report["raw_game_response_count"] = raw_game_response_count(schedules)
     (PROCESSED / "coverage_report.json").write_text(
         json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )

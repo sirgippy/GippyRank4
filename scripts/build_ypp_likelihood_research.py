@@ -35,6 +35,7 @@ import numpy as np
 from scipy.stats import spearmanr
 from scipy.stats import t as student_t
 
+from gippyrank.data.cfbd import raw_stat_payload_paths
 from gippyrank.modeling import read_csv
 from gippyrank.posterior.engine import (
     Game,
@@ -299,10 +300,9 @@ def load_raw_games() -> tuple[dict[str, dict[str, object]], dict[str, object]]:
 def load_raw_stats() -> tuple[dict[tuple[int, int], dict[str, object]], dict[str, object]]:
     """Derive the current YPP rows while auditing every raw response.
 
-    Provenance sidecars are intentionally excluded here.  The historical
-    corpus builder's broad ``*.json`` glob would otherwise try to parse a
-    provenance object as a game response; that operational issue is reported,
-    but this audit does not rewrite the corpus or change the derivation.
+    Provenance sidecars are intentionally excluded here and by the shared
+    filename-aware raw-stat payload enumerator. This audit does not rewrite
+    the corpus or change the derivation.
     """
 
     rows: dict[tuple[int, int], dict[str, object]] = {}
@@ -315,9 +315,7 @@ def load_raw_stats() -> tuple[dict[tuple[int, int], dict[str, object]], dict[str
     team_row_count = 0
     file_count = 0
     current_season_stat_files_by_classification: Counter[str] = Counter()
-    for path in sorted((ROOT / "data/raw/cfbd/game_stats").glob("*.json")):
-        if path.name.endswith(".provenance.json"):
-            continue
+    for path in raw_stat_payload_paths(ROOT / "data/raw/cfbd/game_stats"):
         file_count += 1
         path_parts = path.stem.split("-")
         if path_parts and path_parts[0] == "2026" and len(path_parts) > 1:
@@ -2406,7 +2404,7 @@ def write_report(
         "",
         "Representative raw payloads contain the expected `rushingAttempts`, `completionAttempts`, `totalYards`, and `sacks` fields. No direct YPP/plays value was available to compare. In the stored 2024 Tennessee–Arkansas example, CFBD gives 36 rush attempts + 29 pass attempts = 65 plays for Tennessee and 44 + 30 = 74 for Arkansas; the official team notes report total offensive plays of 65 and 74 while listing sacks separately. This supports the current NCAA-style attempt semantics for this audit, without changing the corpus derivation. Because CFBD did not expose a source-wide official-play field in these payloads, this one official cross-check cannot establish a season-wide sacks mismatch rate; that remains a follow-up data-quality check if a direct play field becomes available.",
         "",
-        "The current corpus builder has an operational sidecar hazard: a broad `game_stats/*.json` glob will see `.provenance.json` objects if a refreshed corpus is present. The audit excluded sidecars and did not rewrite or silently correct the stored corpus. This does not create a YPP-value mismatch in the common rows above, but it should be fixed in a separate acquisition-maintenance change.",
+        "Raw `game_stats` readers classify generated `/games/teams` payload filenames and exclude adjacent `.provenance.json` sidecars. The audit does not rewrite or silently correct the stored corpus, and this cache-file classification does not change the YPP derivation.",
         "",
         "CFBD API schema reference: https://apinext.collegefootballdata.com/api/games. Official attempt/play cross-check: https://utsports.com/documents/download/2024/11/4/G9_UT_Notes_MSU.pdf.",
         "",

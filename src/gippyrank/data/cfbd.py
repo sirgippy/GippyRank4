@@ -1,7 +1,8 @@
-"""Small, schedule-only CFBD acquisition for periodic ranking updates.
+"""CFBD acquisition helpers for periodic updates and raw corpus processing.
 
-This intentionally does not share the historical corpus builder's team-stat
-path.  Posterior V1 consumes game results, not YPP/team-stat responses.
+The current-season acquisition remains schedule-only. Posterior V1 consumes
+game results, not YPP/team-stat responses; the payload-path helper is shared
+with offline readers of the historical team-stat cache.
 """
 
 from __future__ import annotations
@@ -10,6 +11,7 @@ import csv
 import hashlib
 import json
 import os
+import re
 import time
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -20,12 +22,24 @@ import httpx
 
 API = "https://api.collegefootballdata.com"
 CLASSIFICATIONS = ("fbs", "fcs")
+_RAW_STAT_PAYLOAD_NAME = re.compile(
+    r"\d{4}-(?:fbs|fcs)-week\d+-[A-Za-z0-9_-]+\.json"
+)
 GAME_FIELDS = (
     "id", "season", "week", "seasonType", "startDate", "completed", "neutralSite",
     "conferenceGame", "homeId", "homeTeam", "homeClassification", "homeConference",
     "homePoints", "awayId", "awayTeam", "awayClassification", "awayConference",
     "awayPoints",
 )
+
+
+def raw_stat_payload_paths(directory: Path) -> list[Path]:
+    """Return cached ``/games/teams`` response payloads in deterministic order."""
+    return sorted(
+        path
+        for path in directory.iterdir()
+        if path.is_file() and _RAW_STAT_PAYLOAD_NAME.fullmatch(path.name)
+    )
 
 
 @dataclass(frozen=True)
