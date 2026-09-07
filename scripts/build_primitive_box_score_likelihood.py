@@ -879,6 +879,7 @@ def run_posterior_panel(
     frozen_priors: bool,
     include_future: bool,
     future_candidates: Sequence[str] | None = None,
+    final_only: bool = False,
 ) -> tuple[list[dict[str, object]], list[dict[str, object]], list[dict[str, object]], dict[str, object]]:
     """Evaluate matched candidates on identical rows, cutoffs, and targets."""
 
@@ -891,6 +892,8 @@ def run_posterior_panel(
         season_source = [row for row in rows if int(row["season"]) == season]
         cutoffs = standard_cutoffs(rows, season)
         for cutoff_index, (cutoff_label, cutoff) in enumerate(cutoffs):
+            if final_only and cutoff_index != len(cutoffs) - 1:
+                continue
             eligible = [
                 row
                 for row in season_source
@@ -906,7 +909,13 @@ def run_posterior_panel(
                 }
             else:
                 team_by_family = {
-                    family: _uniform_models_for_development(eligible, targets, season)
+                    # Development selection uses an explicit uniform ordinal
+                    # prior over the full season's target support.  The
+                    # full-season support is needed even though the games are
+                    # still restricted to the cutoff, otherwise early cutoffs
+                    # can have no common target keys.  Selection calls use the
+                    # final cutoff only (``final_only=True``).
+                    family: _uniform_models_for_development(season_source, targets, season)
                     for family in prior_families
                 }
             game_hash = _game_population_hash(eligible)
@@ -1684,6 +1693,7 @@ def run_rolling_robustness(
             prior_families=("uniform",),
             frozen_priors=False,
             include_future=False,
+            final_only=True,
         )
         del candidate_rows
         for row in _final_rows(season_rows):
@@ -2238,6 +2248,7 @@ def main() -> None:
         prior_families=("uniform",),
         frozen_priors=False,
         include_future=False,
+        final_only=True,
     )
     selected_candidate, selection_comparisons, selection_summary = select_candidate_from_development(
         development_candidate_rows
