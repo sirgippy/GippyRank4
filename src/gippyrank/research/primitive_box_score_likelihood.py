@@ -867,6 +867,8 @@ def _candidate_factors(
     away_evidence: Mapping[str, object],
 ) -> np.ndarray:
     values = np.ones((len(home.prior), len(away.prior)), dtype=float)
+    if variant == "v1":
+        return values
     if variant == "a":
         return values * primitive_factor(
             game,
