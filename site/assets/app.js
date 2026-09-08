@@ -1,9 +1,11 @@
+const pageParams = new URLSearchParams(window.location.search);
+const requestedSeason = Number(pageParams.get("season"));
 const state = {
   manifest: null,
-  family: "predictive",
-  season: null,
-  slot: null,
-  prior: "context",
+  family: pageParams.get("family") === "performance" ? "performance" : "predictive",
+  season: Number.isInteger(requestedSeason) ? requestedSeason : null,
+  slot: pageParams.get("snapshot") || pageParams.get("slot") || null,
+  prior: pageParams.get("prior") === "history" ? "history" : "context",
   depth: 25,
   notice: "",
   snapshot: null,
@@ -56,7 +58,9 @@ function ordinal(rank) {
 function chooseDefault() {
   const available = choices();
   const preferred = state.manifest.default_publication_slot;
-  const entry = available.find((item) => item.publication_slot === state.slot && (state.family === "performance" || item.prior_family === state.prior))
+  const requestedSnapshot = available.find((item) => item.snapshot_id === state.slot && (state.family === "performance" || item.prior_family === state.prior));
+  const entry = requestedSnapshot
+    ?? available.find((item) => item.publication_slot === state.slot && (state.family === "performance" || item.prior_family === state.prior))
     ?? available.find((item) => item.publication_slot === preferred && (state.family === "performance" || item.prior_family === state.prior))
     ?? available.find((item) => item.publication_slot === preferred)
     ?? available.find((item) => state.family === "performance" || item.prior_family === state.prior)
@@ -127,32 +131,47 @@ function uncertaintyIndicator(row, rankCount) {
   return indicator;
 }
 
-function teamButton(row) {
-  const button = element("button", "team-button");
+function teamPageUrl(row, entry) {
+  const url = new URL("./team.html", document.baseURI);
+  url.searchParams.set("team", row.team_id);
+  url.searchParams.set("season", String(entry.season));
+  url.searchParams.set("snapshot", entry.snapshot_id);
+  url.searchParams.set("family", state.family);
+  if (state.family === "predictive") url.searchParams.set("prior", entry.prior_family);
+  return `${url.pathname}${url.search}`;
+}
+
+function teamCell(row, entry) {
+  const wrapper = element("div", "team-cell-content");
+  const link = element("a", "team-link", row.team_name);
+  link.href = teamPageUrl(row, entry);
+  link.setAttribute("aria-label", `Open ${row.team_name} season page`);
+  wrapper.append(link, element("span", "team-conference", row.conference || "Independent"));
+  if (row.rated === false) wrapper.append(element("span", "team-status", "No eligible games played"));
+  return wrapper;
+}
+
+function detailsButton(row) {
+  const button = element("button", "details-button", "View");
   button.type = "button";
   button.dataset.teamId = row.team_id;
   button.setAttribute("aria-label", `View ${row.team_name} rank uncertainty`);
-  button.append(element("span", "team-name", row.team_name), element("span", "team-conference", row.conference || "Independent"));
-  if (row.rated === false) button.append(element("span", "team-status", "No eligible games played"));
   return button;
 }
 
 function renderRankings(snapshot) {
+  const entry = selectedEntry();
   const rated = snapshot.rankings.filter((row) => row.rated !== false);
   const rankings = state.depth === "all" ? snapshot.rankings : rated.slice(0, 25);
   $("#rankings-title").textContent = state.depth === "all" ? "All FBS rankings" : "Top 25";
   const rows = rankings.map((row) => {
     const tr = document.createElement("tr");
     const team = element("td", "team");
-    team.append(teamButton(row));
+    team.append(teamCell(row, entry));
     const uncertainty = element("td", "uncertainty-column");
     uncertainty.append(uncertaintyIndicator(row, snapshot.rank_count));
     const details = element("td", "details-cell");
-    const detailsButton = element("button", "details-button", "View");
-    detailsButton.type = "button";
-    detailsButton.dataset.teamId = row.team_id;
-    detailsButton.setAttribute("aria-label", `View ${row.team_name} rank uncertainty`);
-    details.append(detailsButton);
+    details.append(detailsButton(row));
     tr.append(
       element("td", "rank", row.display_rank), team, element("td", "record-column", row.record),
       element("td", "expected-rank", row.expected_rank.toFixed(1)), element("td", "median-column", row.median_rank),

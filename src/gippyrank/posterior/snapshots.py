@@ -14,6 +14,7 @@ from typing import Literal
 import numpy as np
 
 from gippyrank.posterior.engine import Game, LikelihoodV1, Team, infer_posterior
+from gippyrank.posterior.game_evidence import build_team_season_artifact
 from gippyrank.preseason import pmf_summaries
 
 SCHEMA_VERSION = "1.0"
@@ -473,7 +474,25 @@ def build_snapshot(
             "history_prior": "1.1",
             "historical_likelihood": "V1",
         },
+        "team_season_path": "team_seasons.json" if prior_family == "context" else None,
+        "team_season_schema_version": "1.0" if prior_family == "context" else None,
     }
+    if prior_family == "context":
+        team_season = build_team_season_artifact(
+            root=root,
+            metadata=metadata,
+            teams=teams,
+            team_rows=team_rows,
+            games=games,
+            included_rows=included,
+            posterior=result,
+            likelihood=likelihood if games else None,
+        )
+        metadata["team_season_path"] = "team_seasons.json"
+        metadata["team_season_schema_version"] = team_season["schema_version"]
+        (directory / "team_seasons.json").write_text(
+            json.dumps(team_season, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
     (directory / "metadata.json").write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )

@@ -20,6 +20,13 @@ snapshots, copies display-level summaries only, and derives records solely from
 each snapshot's `included_games.csv`. Raw posterior PMFs remain research
 artifacts and are not sent to the browser.
 
+Team names link to a deep-linkable `site/team.html` view. It lazy-loads a
+snapshot-scoped team-season artifact containing schedule metadata and compact,
+Context-anchored game-rating summaries with uncertainty; future results are
+redacted relative to the selected cutoff. See
+[the team-season artifact contract](docs/team_season_schema.md) for the
+mathematical definition and provenance checks.
+
 Each approved item has a deterministic `publication_slot`. Context and History
 entries in the same slot represent the same logical publication, so changing
 views preserves (for example) Sep. 5 rather than jumping to Preseason. The
