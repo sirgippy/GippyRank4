@@ -2510,49 +2510,33 @@ def main() -> None:
 
     if args.prior_preflight:
         started = datetime.now(UTC)
-        if not RANK_DISTRIBUTIONS_PATH.exists():
-            raise FileNotFoundError(str(RANK_DISTRIBUTIONS_PATH))
-        sys.path.insert(0, str(ROOT / "scripts"))
-        import build_preseason_context_prior_v1_2 as context_prior
-        import build_preseason_prior as history_prior
-        index, tenures = context_prior.feature_index(), context_prior.cached_tenures()
-        rows_out: list[dict[str, object]] = []
-        requests = [(season, RECONSTRUCTED_PRIOR_FAMILIES) for season in DEVELOPMENT_YEARS]
-        requests.extend((season, ("history_reconstructed",)) for season in ROLLING_YEARS)
-        for target, families in requests:
-            _historical, cold, _ = history_prior.load_rows(max_season=target - 1)
-            inference = context_prior.inference_rows(target, target - 1, index, tenures)
-            promotion_source = history_prior.cold_start_teams(cold)
-            reasons, promotion, generic = cold_start_requirements(inference, cold, promotion_source, target - 1)
-            preflight_error = None
-            if reasons.get("fcs_to_fbs_transition", 0) and promotion:
-                model = context_prior.DirectRankModel.fit(promotion, [], penalty=0.25)
-                target_row = next(row for row in inference if row.cold_start_reason == "fcs_to_fbs_transition")
-                source_row = promotion[0]
-                if len(model.pmf({}, source_row.lag1_z, target_row.population)) != target_row.population:
-                    preflight_error = "promotion fallback produced unexpected PMF support"
-            if reasons.get("no_prior_rank_distribution", 0) and generic:
-                generic_model = context_prior.GenericRankPrior.fit(generic_team_seasons(generic))
-                target_row = next(row for row in inference if row.cold_start_reason == "no_prior_rank_distribution")
-                if len(generic_model.pmf(target_row.population)) != target_row.population:
-                    preflight_error = "generic fallback produced unexpected PMF support"
-            for family in families:
-                unsupported_promotion = reasons.get("fcs_to_fbs_transition", 0) > 0 and not promotion
-                unsupported_generic = reasons.get("no_prior_rank_distribution", 0) > 0 and not generic
-                unsupported = unsupported_promotion or unsupported_generic
-                if preflight_error:
-                    unsupported = True
-                reason = None
-                if unsupported_promotion:
-                    reason = "required FCS-to-FBS promotion fallback has zero pre-target training rows"
-                elif unsupported_generic:
-                    reason = "required generic FBS cold-start fallback has zero pre-target training rows"
-                elif preflight_error:
-                    reason = preflight_error
-                rows_out.append({"target_season": target, "family": family, "inference_team_count": len(inference), "generic_cold_start_count": reasons.get("no_prior_rank_distribution", 0), "promotion_cold_start_count": reasons.get("fcs_to_fbs_transition", 0), "generic_training_row_count": len(generic) if reasons.get("no_prior_rank_distribution", 0) else None, "promotion_training_row_count": len(promotion) if reasons.get("fcs_to_fbs_transition", 0) else None, "supported": not unsupported, "reason": reason, "target_outcomes_used": False})
-        rolling_supported = sorted({int(row["target_season"]) for row in rows_out if row["family"] == "history_reconstructed" and row["supported"]})
-        rolling_excluded = [row for row in rows_out if row["family"] == "history_reconstructed" and not row["supported"]]
-        print(json.dumps({"runtime_seconds": (datetime.now(UTC) - started).total_seconds(), "rows": rows_out, "rolling_consumer_preflight": {"supported_seasons": rolling_supported, "supported_count": len(rolling_supported), "excluded": rolling_excluded, "missing_key_risk": False}}, indent=2, sort_keys=True))
+        historical = load_historical_rows()
+        audit, _ = load_audit_evidence()
+        enriched, _ = attach_primitive_evidence(historical, audit)
+        targets = load_rank_targets()
+        development_teams, development_audit = reconstruct_historical_priors(
+            targets, enriched, DEVELOPMENT_YEARS
+        )
+        rolling_teams, rolling_audit = reconstruct_historical_priors(
+            targets, enriched, ROLLING_YEARS, families=("history_reconstructed",)
+        )
+        expected_development = {
+            (season, family)
+            for season in DEVELOPMENT_YEARS
+            for family in RECONSTRUCTED_PRIOR_FAMILIES
+        }
+        expected_rolling = {
+            (season, "history_reconstructed")
+            for season in ROLLING_YEARS
+            if season != 2012
+        }
+        actual_development = set(development_teams)
+        actual_rolling = set(rolling_teams)
+        if actual_development != expected_development or actual_rolling != expected_rolling:
+            raise RuntimeError(
+                f"prior reconstruction key mismatch: development={actual_development ^ expected_development}, rolling={actual_rolling ^ expected_rolling}"
+            )
+        print(json.dumps({"runtime_seconds": (datetime.now(UTC) - started).total_seconds(), "development_keys": sorted([list(key) for key in actual_development]), "rolling_keys": sorted([list(key) for key in actual_rolling]), "development_audit": development_audit, "rolling_audit": rolling_audit, "rolling_consumer_preflight": {"supported_seasons": sorted(season for season, _family in actual_rolling), "supported_count": len(actual_rolling), "excluded": [row for row in rolling_audit if not row["supported"]], "missing_key_risk": False}}, indent=2, sort_keys=True))
         return
 
     production_before: dict[str, str] = {}
