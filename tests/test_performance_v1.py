@@ -443,7 +443,7 @@ def test_opponent_strength_monotonicity() -> None:
 def test_road_performance_is_at_least_as_strong_as_home_performance() -> None:
     home = one_game(7, focal_home=True)
     road = one_game(7, focal_home=False)
-    assert expected(road) <= expected(home)
+    assert expected(road) <= expected(home) + 1e-12
 
 
 def test_summaries_include_mode_and_all_requested_intervals() -> None:

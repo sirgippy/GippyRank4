@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Install locked dependencies
+        run: uv sync --locked
+
+      - name: Run retained test suite
+        run: uv run pytest -q
+
+      - name: Run Ruff
+        run: uv run ruff check .
+
+      - name: Check committed diff whitespace
+        env:
+          DIFF_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          DIFF_HEAD: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: git diff --check "$DIFF_BASE" "$DIFF_HEAD"
+
+      - name: Check validation side effects
+        run: git diff --exit-code
