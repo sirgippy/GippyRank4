@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 import numpy as np
@@ -13,6 +14,7 @@ from gippyrank.research.offense_defense import (
     evaluate_candidates,
     expected_score_decomposition,
     fit_od_model,
+    leakage_safe_residual_rows,
     od_predictive_scores,
     residual_rows,
     select_candidate,
@@ -84,7 +86,9 @@ def _prior(season: int, team_id: str, population: int = 3) -> PriorInput:
     )
 
 
-def test_expected_score_decomposition_has_symmetric_offense_and_defense_orientation() -> None:
+def test_expected_score_decomposition_has_symmetric_offense_and_defense_orientation() -> (
+    None
+):
     games, environment = _environment()
     decomposition = expected_score_decomposition(games[1], _likelihood(), environment)
     assert decomposition.expected_home_points == 20
@@ -112,11 +116,23 @@ def test_same_subdivision_home_away_swap_preserves_team_residual_meanings() -> N
 def test_cross_subdivision_expected_score_uses_fbs_first_orientation() -> None:
     start = datetime(2008, 8, 30, tzinfo=UTC)
     games = [
-        _game("cross", start, "fcs", "fbs", 7, 28, week=1, home_subdivision="fcs", away_subdivision="fbs"),
+        _game(
+            "cross",
+            start,
+            "fcs",
+            "fbs",
+            7,
+            28,
+            week=1,
+            home_subdivision="fcs",
+            away_subdivision="fbs",
+        ),
     ]
     environment = build_score_environment(games, (2008,))
     decomposition = expected_score_decomposition(games[0], _likelihood(), environment)
-    assert decomposition.expected_home_points == decomposition.expected_away_points == 17.5
+    assert (
+        decomposition.expected_home_points == decomposition.expected_away_points == 17.5
+    )
     assert decomposition.home_offensive_residual == -10.5
     assert decomposition.away_offensive_residual == 10.5
 
@@ -128,6 +144,44 @@ def test_residual_cutoff_excludes_future_games() -> None:
     assert {row["game_id"] for row in rows} == {"train"}
 
 
+def test_leakage_safe_residuals_ignore_later_outcomes_and_rank_pairs() -> None:
+    training = [
+        _game(
+            "environment",
+            datetime(2007, 8, 30, tzinfo=UTC),
+            "a",
+            "b",
+            20,
+            20,
+            week=1,
+            season=2007,
+        )
+    ]
+    target = _game(
+        "target", datetime(2008, 8, 30, tzinfo=UTC), "a", "b", 20, 10, week=1
+    )
+    later = _game("later", datetime(2008, 9, 6, tzinfo=UTC), "a", "b", 30, 10, week=2)
+    environment = build_score_environment(training, (2007,))
+    priors = {(2008, team): _prior(2008, team) for team in ("a", "b")}
+    before = leakage_safe_residual_rows(
+        [target, later], priors, _likelihood(), environment
+    )
+    changed = [
+        replace(target, rank_pairs=np.array([[3, 1], [3, 2]], dtype=float)),
+        replace(later, home_points=7, away_points=42, margin=-35.0),
+    ]
+    after = leakage_safe_residual_rows(changed, priors, _likelihood(), environment)
+    before_target = next(
+        row for row in before if row["game_id"] == "target" and row["team_id"] == "a"
+    )
+    after_target = next(
+        row for row in after if row["game_id"] == "target" and row["team_id"] == "a"
+    )
+    assert before_target["expected_margin"] == after_target["expected_margin"]
+    assert before_target["offensive_residual"] == after_target["offensive_residual"]
+    assert before_target["defensive_residual"] == after_target["defensive_residual"]
+
+
 def test_stage0_constructs_same_and_cross_component_relations_and_nulls() -> None:
     rows = []
     for index in range(4):
@@ -136,7 +190,9 @@ def test_stage0_constructs_same_and_cross_component_relations_and_nulls() -> Non
                 "season": 2018,
                 "team_id": "a",
                 "game_id": str(index),
-                "game_date": (datetime(2018, 9, 1, tzinfo=UTC) + timedelta(days=7 * index)).isoformat(),
+                "game_date": (
+                    datetime(2018, 9, 1, tzinfo=UTC) + timedelta(days=7 * index)
+                ).isoformat(),
                 "offensive_residual": float(index),
                 "defensive_residual": float(index * 2),
             }
@@ -144,7 +200,12 @@ def test_stage0_constructs_same_and_cross_component_relations_and_nulls() -> Non
     metrics, early_late, summary = stage0_component_persistence(rows, permutations=2)
     relations = {str(row["relation"]) for row in metrics}
     controls = {str(row["control"]) for row in metrics}
-    assert {"offense->offense", "defense->defense", "offense->defense", "defense->offense"} <= relations
+    assert {
+        "offense->offense",
+        "defense->defense",
+        "offense->defense",
+        "defense->offense",
+    } <= relations
     assert {"observed", "shuffle_order"} <= controls
     assert summary["n_team_seasons_with_at_least_3_games"] == 1
     assert early_late
@@ -160,13 +221,19 @@ def test_od_fit_is_centered_and_uses_opponent_defense_in_score_prediction() -> N
     environment = build_score_environment(training, (2008,))
     priors = {(2018, team): _prior(2018, team) for team in ("a", "b", "c")}
     metadata = {team: (team.upper(), "fbs", 3) for team in ("a", "b", "c")}
-    fit = fit_od_model(games[:1], priors, environment, candidate_grid()[0], team_metadata=metadata)
+    fit = fit_od_model(
+        games[:1], priors, environment, candidate_grid()[0], team_metadata=metadata
+    )
     assert np.isclose(np.mean([state.offense for state in fit.states.values()]), 0.0)
     assert np.isclose(np.mean([state.defense for state in fit.states.values()]), 0.0)
     prediction = od_predictive_scores(games[1], fit, environment)
     changed = dict(fit.states)
-    changed["c"] = type(changed["c"])(**{**changed["c"].__dict__, "defense": changed["c"].defense + 5})
-    changed_fit = ODFit(fit.candidate, changed, fit.score_scale, fit.cutoff, fit.training_game_ids)
+    changed["c"] = type(changed["c"])(
+        **{**changed["c"].__dict__, "defense": changed["c"].defense + 5}
+    )
+    changed_fit = ODFit(
+        fit.candidate, changed, fit.score_scale, fit.cutoff, fit.training_game_ids
+    )
     changed_prediction = od_predictive_scores(games[1], changed_fit, environment)
     assert changed_prediction["expected_margin"] < prediction["expected_margin"]
 
@@ -177,9 +244,38 @@ def test_candidate_grid_and_development_selection_are_frozen() -> None:
     for season in range(2018, 2022):
         rows.extend(
             [
-                {"candidate": "Posterior V1", "target_kind": "next_game", "season": season, "margin_nll": 4.0, "margin_mae": 10.0, "win_brier": 0.20},
-                {"candidate": "OD0", "target_kind": "next_game", "season": season, "margin_nll": 3.9, "margin_mae": 9.8, "win_brier": 0.20},
-                {"candidate": "OD1", "target_kind": "next_game", "season": season, "margin_nll": 3.91, "margin_mae": 9.8, "win_brier": 0.20},
+                {
+                    "candidate": "Posterior V1",
+                    "target_kind": "next_game",
+                    "season": season,
+                    "margin_nll": 4.0,
+                    "margin_mae": 10.0,
+                    "win_brier": 0.20,
+                },
+                {
+                    "candidate": "Scalar scoreboard",
+                    "target_kind": "next_game",
+                    "season": season,
+                    "margin_nll": 3.95,
+                    "margin_mae": 9.9,
+                    "win_brier": 0.20,
+                },
+                {
+                    "candidate": "OD0",
+                    "target_kind": "next_game",
+                    "season": season,
+                    "margin_nll": 3.9,
+                    "margin_mae": 9.8,
+                    "win_brier": 0.20,
+                },
+                {
+                    "candidate": "OD1",
+                    "target_kind": "next_game",
+                    "season": season,
+                    "margin_nll": 3.91,
+                    "margin_mae": 9.8,
+                    "win_brier": 0.20,
+                },
             ]
         )
     gate = development_gate(rows)
@@ -189,7 +285,16 @@ def test_candidate_grid_and_development_selection_are_frozen() -> None:
 def test_evaluation_uses_identical_future_keys_and_strict_cutoffs() -> None:
     start = datetime(2018, 8, 30, tzinfo=UTC)
     games = [
-        _game(f"g{index}", start + timedelta(days=7 * index), "a", "b", 20 + index, 10, week=index + 1, season=2018)
+        _game(
+            f"g{index}",
+            start + timedelta(days=7 * index),
+            "a",
+            "b",
+            20 + index,
+            10,
+            week=index + 1,
+            season=2018,
+        )
         for index in range(5)
     ]
     train = [_game("t", datetime(2008, 8, 30, tzinfo=UTC), "a", "b", 20, 20, week=1)]
@@ -209,7 +314,12 @@ def test_evaluation_uses_identical_future_keys_and_strict_cutoffs() -> None:
             for row in rows
             if row["candidate"] == candidate
         }
-        for candidate in ("Posterior V1", "OD0", "OD1")
+        for candidate in ("Posterior V1", "Scalar scoreboard", "OD0", "OD1")
     }
-    assert by_candidate["Posterior V1"] == by_candidate["OD0"] == by_candidate["OD1"]
+    assert (
+        by_candidate["Posterior V1"]
+        == by_candidate["Scalar scoreboard"]
+        == by_candidate["OD0"]
+        == by_candidate["OD1"]
+    )
     assert all(row["target_date"] > row["cutoff"] for row in rows)

@@ -10,10 +10,15 @@ The historical split is 2008–2017 training, 2018–2021 development, and
 evaluation, not untouched independent confirmation. 2026 outcomes are never
 used.
 
-The V1 expected margin is evaluated at the historical rank-pair observations.
-Because V1 exposes a margin rather than separate expected scores, the runner
-uses a training-only pairing/site total-scoring environment. If `m` is the
-V1 expected margin and `T` is that environment's total, the two oriented
+Stage 0 uses only outcome-free preseason Context PMFs (or uniform cold-start
+PMFs) to compute a conservative scalar expected margin. Historical
+`rank_pairs` are end-of-season observations and are deliberately excluded from
+Stage 0. Stage 1 retains the pregame Posterior V1 construction, which updates
+the preseason PMF with games available before each cutoff.
+
+Because the model exposes a margin rather than separate expected scores, the
+runner uses a training-only pairing/site total-scoring environment. If `m` is
+the expected margin and `T` is that environment's total, the two oriented
 expected scores are `(T + m) / 2` and `(T - m) / 2`. Same-subdivision games
 use home-minus-away orientation; cross-subdivision games use FBS-minus-FCS
 orientation. This is symmetric and does not assign the whole margin to one
@@ -29,13 +34,24 @@ defensive residual = expected opponent points - opponent points scored
 Stage 0 reports same-component and cross-component lag correlations, raw and
 team-season-demeaned variants, early/late relationships, elapsed-time bins,
 season rows, shuffle-order nulls, shuffled unrelated-team pairings, and
-deterministic summary effects.
+deterministic summary effects. The Stage 0 decision is made from development
+seasons only and uses observed-minus-null effects per relation; evaluation
+seasons are descriptive and cannot open the modeling stage. The primary gate
+uses observed-minus-shuffle-order effects, which preserves the appropriate
+negative-demeaning null baseline; unrelated-team effects are retained as a
+secondary descriptive null.
 
 Stage 1 has only two predeclared candidates:
 
 - `OD0`: independent offense/defense prior components.
 - `OD1`: the same model with a fixed `rho=0.25` offense/defense prior
   correlation.
+
+Stage 1 also scores a matched scalar scoreboard control. It uses one centered
+team quality `Q`, the same training environment, Normal likelihood, prior
+regularization, score scale, and cutoff construction as OD. The OD candidates
+must clear the original development gate and be no worse than this scalar
+control on margin NLL and MAE. Stage 1 is skipped entirely when Stage 0 fails.
 
 The research fit uses scoreboard-only observations. Its score means are:
 
@@ -51,6 +67,18 @@ scalar quality is split symmetrically as a starting point, while the OD game
 evidence estimates the component separation. The candidate's score
 distribution is an independent Normal with a training-frozen scale, so score
 NLL is reported only for this explicitly defined OD distribution.
+
+The additive margin has an important limitation:
+
+```text
+margin = environment_margin + (O + D)_home - (O + D)_away
+```
+
+Consequently, margin metrics mostly test the scalar `O + D` sum. Score and
+total-point diagnostics are retained to assess whether the offense/defense
+composition adds information beyond that scalar margin. Pace and scoring
+environment can confound these score residuals, so the result is not a pure
+possession-level offense/defense decomposition.
 
 Candidate selection uses only the development gate from the issue:
 

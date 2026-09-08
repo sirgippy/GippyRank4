@@ -134,6 +134,17 @@ class ODFit:
     training_game_ids: tuple[str, ...]
 
 
+@dataclass(frozen=True)
+class ScalarFit:
+    """Matched one-component scoreboard-only MAP fit."""
+
+    states: Mapping[str, float]
+    games_seen: Mapping[str, int]
+    score_scale: float
+    cutoff: str | None
+    training_game_ids: tuple[str, ...]
+
+
 def candidate_grid() -> tuple[ODCandidate, ...]:
     """Return the predeclared candidate family in stable order."""
 
@@ -168,7 +179,10 @@ def build_score_environment(
             (float(game.home_points), float(game.away_points))
         )
     means = {
-        key: (float(np.mean([row[0] for row in rows])), float(np.mean([row[1] for row in rows])))
+        key: (
+            float(np.mean([row[0] for row in rows])),
+            float(np.mean([row[1] for row in rows])),
+        )
         for key, rows in sorted(values.items())
     }
     all_scores = np.asarray(
@@ -180,7 +194,10 @@ def build_score_environment(
     for game in selected:
         baseline = means[_environment_key(game)]
         residuals.extend(
-            [float(game.home_points) - baseline[0], float(game.away_points) - baseline[1]]
+            [
+                float(game.home_points) - baseline[0],
+                float(game.away_points) - baseline[1],
+            ]
         )
     scale = max(float(np.std(residuals, ddof=0)), 5.0)
     return ScoreEnvironment(means, fallback, scale, seasons)
@@ -194,12 +211,17 @@ def _v1_locations_for_rank_pairs(
         raise ValueError(f"game {game.game_id} has no valid rank pairs")
     home_coordinate = (pairs[:, 0] - 0.5) / game.home_population
     away_coordinate = (pairs[:, 1] - 0.5) / game.away_population
-    if game.home_subdivision != game.away_subdivision and game.home_subdivision == "fcs":
+    if (
+        game.home_subdivision != game.away_subdivision
+        and game.home_subdivision == "fcs"
+    ):
         x, y = away_coordinate, home_coordinate
     else:
         x, y = home_coordinate, away_coordinate
     cross = game.home_subdivision != game.away_subdivision
-    pairing = np.full(len(pairs), pairing_for(game.home_subdivision, game.away_subdivision))
+    pairing = np.full(
+        len(pairs), pairing_for(game.home_subdivision, game.away_subdivision)
+    )
     matrix = design_matrix(
         np.asarray(x, dtype=float),
         np.asarray(y, dtype=float),
@@ -208,7 +230,8 @@ def _v1_locations_for_rank_pairs(
         np.full(len(pairs), float(game.neutral_site)),
         surface=True,
         fbs_home=np.full(
-            len(pairs), float(cross and game.home_subdivision == "fbs" and not game.neutral_site)
+            len(pairs),
+            float(cross and game.home_subdivision == "fbs" and not game.neutral_site),
         ),
     )
     if len(likelihood.beta) != matrix.shape[1]:
@@ -228,6 +251,8 @@ def expected_score_decomposition(
     game: HistoricalGame,
     likelihood: LikelihoodV1,
     environment: ScoreEnvironment,
+    *,
+    expected_margin: float | None = None,
 ) -> ScoreDecomposition:
     """Split a V1 expected margin around a training-only total environment.
 
@@ -238,12 +263,15 @@ def expected_score_decomposition(
     never silently assigns all of a margin to one component.
     """
 
-    expected_margin = v1_expected_margin(game, likelihood)
+    expected_margin = (
+        v1_expected_margin(game, likelihood)
+        if expected_margin is None
+        else float(expected_margin)
+    )
     base_home, base_away = environment.baseline_scores(game)
     expected_total = base_home + base_away
     fbs_home_orientation = (
-        game.home_subdivision == game.away_subdivision
-        or game.home_subdivision == "fbs"
+        game.home_subdivision == game.away_subdivision or game.home_subdivision == "fbs"
     )
     first_points = (expected_total + expected_margin) / 2.0
     second_points = (expected_total - expected_margin) / 2.0
@@ -261,6 +289,133 @@ def expected_score_decomposition(
         expected_margin=expected_margin,
         expected_total=expected_total,
     )
+
+
+def _prior_pmf(
+    priors: Mapping[tuple[int, str], PriorInput],
+    season: int,
+    team_id: str,
+    population: int,
+) -> np.ndarray:
+    prior = priors.get((season, team_id))
+    if prior is None:
+        return np.full(population, 1.0 / population)
+    values = np.asarray(prior.pmf, dtype=float)
+    if len(values) != population:
+        values = np.resize(values, population)
+    values = np.maximum(values, 0.0)
+    if values.sum() <= 0:
+        return np.full(population, 1.0 / population)
+    return values / values.sum()
+
+
+def _preseason_scalar_margin(
+    game: HistoricalGame,
+    home_prior: np.ndarray,
+    away_prior: np.ndarray,
+    likelihood: LikelihoodV1,
+) -> float:
+    """Evaluate the V1 surface at the two preseason mean rank coordinates."""
+
+    home_coordinate = float(
+        np.sum(home_prior * (np.arange(1, len(home_prior) + 1) - 0.5) / len(home_prior))
+    )
+    away_coordinate = float(
+        np.sum(away_prior * (np.arange(1, len(away_prior) + 1) - 0.5) / len(away_prior))
+    )
+    cross = game.home_subdivision != game.away_subdivision
+    if cross and game.home_subdivision == "fcs":
+        x, y = away_coordinate, home_coordinate
+    else:
+        x, y = home_coordinate, away_coordinate
+    matrix = design_matrix(
+        np.asarray([x]),
+        np.asarray([y]),
+        np.asarray([pairing_for(game.home_subdivision, game.away_subdivision)]),
+        np.asarray([float(not game.neutral_site)]),
+        np.asarray([float(game.neutral_site)]),
+        surface=True,
+        fbs_home=np.asarray(
+            [float(cross and game.home_subdivision == "fbs" and not game.neutral_site)]
+        ),
+    )
+    if len(likelihood.beta) != matrix.shape[1]:
+        raise ValueError(
+            f"V1 beta has {len(likelihood.beta)} coefficients; expected {matrix.shape[1]}"
+        )
+    return float((matrix @ likelihood.beta)[0])
+
+
+def leakage_safe_residual_rows(
+    games: Sequence[HistoricalGame],
+    priors: Mapping[tuple[int, str], PriorInput],
+    likelihood: LikelihoodV1,
+    environment: ScoreEnvironment,
+    *,
+    cutoff: datetime | date | None = None,
+) -> list[dict[str, object]]:
+    """Build Stage 0 residuals from outcome-free preseason scalar beliefs.
+
+    The existing historical ``rank_pairs`` are end-of-season observations and
+    are therefore intentionally not used here.  This conservative version
+    uses only the Context preseason PMF (or a uniform cold-start PMF) for each
+    team-season.  It is a leakage-safe scalar pregame expectation; the
+    matched full pregame Posterior V1 remains the Stage 1 baseline.
+    """
+
+    cutoff_value = _as_utc(cutoff) if cutoff is not None else None
+    rows: list[dict[str, object]] = []
+    for game in sorted(games, key=lambda item: (item.start, item.game_id)):
+        if cutoff_value is not None and _as_utc(game.start) >= cutoff_value:
+            continue
+        home_prior = _prior_pmf(priors, game.season, game.home_id, game.home_population)
+        away_prior = _prior_pmf(priors, game.season, game.away_id, game.away_population)
+        expected_margin = _preseason_scalar_margin(
+            game, home_prior, away_prior, likelihood
+        )
+        decomposition = expected_score_decomposition(
+            game, likelihood, environment, expected_margin=expected_margin
+        )
+        common = {
+            "season": game.season,
+            "game_id": game.game_id,
+            "game_date": game.start.isoformat(),
+            "week": game.week,
+            "pairing": pairing_for(game.home_subdivision, game.away_subdivision),
+            "neutral_site": game.neutral_site,
+            "expected_margin": decomposition.expected_margin,
+            "expected_total": decomposition.expected_total,
+            "residual_source": "context_preseason_scalar_v1",
+        }
+        rows.extend(
+            [
+                {
+                    **common,
+                    "team_id": game.home_id,
+                    "team_name": game.home_name,
+                    "subdivision": game.home_subdivision,
+                    "opponent_id": game.away_id,
+                    "opponent_name": game.away_name,
+                    "points_for": game.home_points,
+                    "points_against": game.away_points,
+                    "offensive_residual": decomposition.home_offensive_residual,
+                    "defensive_residual": decomposition.home_defensive_residual,
+                },
+                {
+                    **common,
+                    "team_id": game.away_id,
+                    "team_name": game.away_name,
+                    "subdivision": game.away_subdivision,
+                    "opponent_id": game.home_id,
+                    "opponent_name": game.home_name,
+                    "points_for": game.away_points,
+                    "points_against": game.home_points,
+                    "offensive_residual": decomposition.away_offensive_residual,
+                    "defensive_residual": decomposition.away_defensive_residual,
+                },
+            ]
+        )
+    return rows
 
 
 def residual_rows(
@@ -410,7 +565,9 @@ def stage0_component_persistence(
     )
     rng = np.random.default_rng(seed)
 
-    def values_for(rows: Sequence[Mapping[str, object]], component: str, scale: str) -> np.ndarray:
+    def values_for(
+        rows: Sequence[Mapping[str, object]], component: str, scale: str
+    ) -> np.ndarray:
         field = {
             "offense": "offensive_residual",
             "defense": "defensive_residual",
@@ -431,13 +588,25 @@ def stage0_component_persistence(
                         (float(source_values[i]), float(target_values[i + lag]))
                         for i in range(len(rows) - lag)
                     ]
-                    observed[(period, season, scale, f"{source}->{target}", lag)].extend(pairs)
+                    observed[
+                        (period, season, scale, f"{source}->{target}", lag)
+                    ].extend(pairs)
                     for i in range(len(rows) - lag):
                         days = (
-                            _as_utc(datetime.fromisoformat(str(rows[i + lag]["game_date"])))
+                            _as_utc(
+                                datetime.fromisoformat(str(rows[i + lag]["game_date"]))
+                            )
                             - _as_utc(datetime.fromisoformat(str(rows[i]["game_date"])))
                         ).total_seconds() / 86400.0
-                        elapsed[(period, scale, f"{source}->{target}", lag, _elapsed_bin(days))].append(
+                        elapsed[
+                            (
+                                period,
+                                scale,
+                                f"{source}->{target}",
+                                lag,
+                                _elapsed_bin(days),
+                            )
+                        ].append(
                             (float(source_values[i]), float(target_values[i + lag]))
                         )
             # Within-team-season order shuffling is a deterministic null.  The
@@ -449,7 +618,9 @@ def stage0_component_persistence(
                     source_values = values_for(shuffled, source, scale)
                     target_values = values_for(shuffled, target, scale)
                     for lag in (1, 2):
-                        nulls[(period, scale, f"{source}->{target}", "shuffle_order", lag)].extend(
+                        nulls[
+                            (period, scale, f"{source}->{target}", "shuffle_order", lag)
+                        ].extend(
                             (float(source_values[i]), float(target_values[i + lag]))
                             for i in range(len(rows) - lag)
                         )
@@ -493,8 +664,19 @@ def stage0_component_persistence(
                         for lag in (1, 2):
                             n = min(len(source_values), len(target_values)) - lag
                             if n > 0:
-                                nulls[(period, scale, f"{source}->{target}", "unrelated_team", lag)].extend(
-                                    (float(source_values[i]), float(target_values[i + lag]))
+                                nulls[
+                                    (
+                                        period,
+                                        scale,
+                                        f"{source}->{target}",
+                                        "unrelated_team",
+                                        lag,
+                                    )
+                                ].extend(
+                                    (
+                                        float(source_values[i]),
+                                        float(target_values[i + lag]),
+                                    )
                                     for i in range(n)
                                 )
             for left, right in zip(sequences, shuffled, strict=True):
@@ -507,13 +689,26 @@ def stage0_component_persistence(
                         for lag in (1, 2):
                             n = min(len(source_values), len(target_values)) - lag
                             if n > 0:
-                                nulls[(period, scale, f"{source}->{target}", "shuffle_components", lag)].extend(
-                                    (float(source_values[i]), float(target_values[i + lag]))
+                                nulls[
+                                    (
+                                        period,
+                                        scale,
+                                        f"{source}->{target}",
+                                        "shuffle_components",
+                                        lag,
+                                    )
+                                ].extend(
+                                    (
+                                        float(source_values[i]),
+                                        float(target_values[i + lag]),
+                                    )
                                     for i in range(n)
                                 )
 
     metrics: list[dict[str, object]] = []
-    for (period, season, scale, relation, lag), pairs in sorted(observed.items(), key=str):
+    for (period, season, scale, relation, lag), pairs in sorted(
+        observed.items(), key=str
+    ):
         metrics.append(
             _metric(
                 pairs,
@@ -526,10 +721,14 @@ def stage0_component_persistence(
                 bin_name="all",
             )
         )
-    combined_observed: dict[tuple[object, ...], list[tuple[float, float]]] = defaultdict(list)
+    combined_observed: dict[tuple[object, ...], list[tuple[float, float]]] = (
+        defaultdict(list)
+    )
     for (period, _season, scale, relation, lag), pairs in observed.items():
         combined_observed[(period, scale, relation, lag)].extend(pairs)
-    for (period, scale, relation, lag), pairs in sorted(combined_observed.items(), key=str):
+    for (period, scale, relation, lag), pairs in sorted(
+        combined_observed.items(), key=str
+    ):
         metrics.append(
             _metric(
                 pairs,
@@ -542,7 +741,9 @@ def stage0_component_persistence(
                 bin_name="all",
             )
         )
-    for (period, scale, relation, control, lag), pairs in sorted(nulls.items(), key=str):
+    for (period, scale, relation, control, lag), pairs in sorted(
+        nulls.items(), key=str
+    ):
         metrics.append(
             _metric(
                 pairs,
@@ -555,7 +756,9 @@ def stage0_component_persistence(
                 bin_name="all",
             )
         )
-    for (period, scale, relation, lag, bin_name), pairs in sorted(elapsed.items(), key=str):
+    for (period, scale, relation, lag, bin_name), pairs in sorted(
+        elapsed.items(), key=str
+    ):
         metrics.append(
             _metric(
                 pairs,
@@ -584,7 +787,9 @@ def stage0_component_persistence(
         }
     summary = {
         "n_focal_team_games": len(residuals),
-        "n_team_seasons_with_at_least_3_games": sum(len(rows) >= 3 for rows in groups.values()),
+        "n_team_seasons_with_at_least_3_games": sum(
+            len(rows) >= 3 for rows in groups.values()
+        ),
         "null_seed": seed,
         "null_permutations": permutations,
         "early_late_by_period": early_late_summary,
@@ -607,8 +812,16 @@ def _team_metadata(
 ) -> dict[str, tuple[str, str, int]]:
     result: dict[str, tuple[str, str, int]] = {}
     for game in games:
-        result[game.home_id] = (game.home_name, game.home_subdivision, game.home_population)
-        result[game.away_id] = (game.away_name, game.away_subdivision, game.away_population)
+        result[game.home_id] = (
+            game.home_name,
+            game.home_subdivision,
+            game.home_population,
+        )
+        result[game.away_id] = (
+            game.away_name,
+            game.away_subdivision,
+            game.away_population,
+        )
     return result
 
 
@@ -653,15 +866,21 @@ def fit_od_model(
 
     metadata = dict(team_metadata or _team_metadata(games))
     for game in games:
-        metadata.setdefault(game.home_id, (game.home_name, game.home_subdivision, game.home_population))
-        metadata.setdefault(game.away_id, (game.away_name, game.away_subdivision, game.away_population))
+        metadata.setdefault(
+            game.home_id, (game.home_name, game.home_subdivision, game.home_population)
+        )
+        metadata.setdefault(
+            game.away_id, (game.away_name, game.away_subdivision, game.away_population)
+        )
     team_ids = sorted(metadata)
     if len(team_ids) < 2:
         states = {
             team_id: ODState(team_id, *metadata[team_id][:2], 0.0, 0.0, 0.0)
             for team_id in team_ids
         }
-        return ODFit(candidate.name, states, environment.scale, _cutoff_string(cutoff), ())
+        return ODFit(
+            candidate.name, states, environment.scale, _cutoff_string(cutoff), ()
+        )
     index = {team_id: position for position, team_id in enumerate(team_ids)}
     reduction = _centered_reduction(len(team_ids))
     design_rows: list[np.ndarray] = []
@@ -726,13 +945,94 @@ def fit_od_model(
             quality,
             seen[team_id],
         )
-    if not np.isclose(np.mean([state.offense for state in states.values()]), 0.0, atol=1e-8):
+    if not np.isclose(
+        np.mean([state.offense for state in states.values()]), 0.0, atol=1e-8
+    ):
         raise AssertionError("offensive centering constraint failed")
-    if not np.isclose(np.mean([state.defense for state in states.values()]), 0.0, atol=1e-8):
+    if not np.isclose(
+        np.mean([state.defense for state in states.values()]), 0.0, atol=1e-8
+    ):
         raise AssertionError("defensive centering constraint failed")
     return ODFit(
         candidate.name,
         states,
+        environment.scale,
+        _cutoff_string(cutoff),
+        tuple(game.game_id for game in games),
+    )
+
+
+def fit_scalar_scoreboard_model(
+    games: Sequence[HistoricalGame],
+    priors: Mapping[tuple[int, str], PriorInput],
+    environment: ScoreEnvironment,
+    *,
+    team_metadata: Mapping[str, tuple[str, str, int]] | None = None,
+    prior_sd: float = PRIOR_SD,
+    cutoff: datetime | date | str | None = None,
+) -> ScalarFit:
+    """Fit the matched one-component scoreboard control.
+
+    A team has one centered quality ``Q``.  Score means use the same fixed
+    environment and score scale as OD, with a symmetric half-difference:
+    ``home = env_home + (Q_home - Q_away)/2`` and vice versa.  Thus the
+    predicted margin depends on ``Q_home - Q_away`` while the prior and ridge
+    treatment remain directly comparable to the OD sum ``O + D``.
+    """
+
+    metadata = dict(team_metadata or _team_metadata(games))
+    for game in games:
+        metadata.setdefault(
+            game.home_id, (game.home_name, game.home_subdivision, game.home_population)
+        )
+        metadata.setdefault(
+            game.away_id, (game.away_name, game.away_subdivision, game.away_population)
+        )
+    team_ids = sorted(metadata)
+    n = len(team_ids)
+    if n < 2:
+        return ScalarFit(
+            {team_id: 0.0 for team_id in team_ids},
+            {team_id: 0 for team_id in team_ids},
+            environment.scale,
+            _cutoff_string(cutoff),
+            tuple(game.game_id for game in games),
+        )
+    index = {team_id: position for position, team_id in enumerate(team_ids)}
+    reduction = _centered_reduction(n)
+    design_rows: list[np.ndarray] = []
+    targets: list[float] = []
+    seen: dict[str, int] = defaultdict(int)
+    for game in games:
+        row = np.zeros(n - 1)
+        row += 0.5 * (reduction[index[game.home_id]] - reduction[index[game.away_id]])
+        design_rows.append(row)
+        targets.append(float(game.home_points) - environment.baseline_scores(game)[0])
+        design_rows.append(-row)
+        targets.append(float(game.away_points) - environment.baseline_scores(game)[1])
+        seen[game.home_id] += 1
+        seen[game.away_id] += 1
+    matrix = np.asarray(design_rows, dtype=float)
+    target = np.asarray(targets, dtype=float)
+    prior_full = np.zeros(n)
+    season = games[0].season if games else None
+    for team_id, position in index.items():
+        _name, _subdivision, population = metadata[team_id]
+        prior = priors.get((season, team_id)) if season is not None else None
+        prior_full[position] = _team_quality(prior, population)
+    prior_full -= prior_full.mean()
+    precision = np.eye(n - 1) / prior_sd**2
+    prior_reduced = prior_full[: n - 1]
+    normal = matrix.T @ matrix / environment.scale**2 + precision
+    rhs = matrix.T @ target / environment.scale**2 + precision @ prior_reduced
+    try:
+        fitted = np.linalg.solve(normal, rhs)
+    except np.linalg.LinAlgError:
+        fitted = np.linalg.lstsq(normal, rhs, rcond=None)[0]
+    full = reduction @ fitted
+    return ScalarFit(
+        {team_id: float(full[position]) for team_id, position in index.items()},
+        dict(seen),
         environment.scale,
         _cutoff_string(cutoff),
         tuple(game.game_id for game in games),
@@ -780,11 +1080,64 @@ def od_predictive_scores(
         "margin_nll": float(-norm.logpdf(actual_margin, expected_margin, margin_scale)),
         "margin_mae": abs(expected_margin - actual_margin),
         "win_brier": (win_probability - actual_win) ** 2,
-        "home_score_nll": float(-norm.logpdf(game.home_points, expected_home, fit.score_scale)),
-        "away_score_nll": float(-norm.logpdf(game.away_points, expected_away, fit.score_scale)),
+        "home_score_nll": float(
+            -norm.logpdf(game.home_points, expected_home, fit.score_scale)
+        ),
+        "away_score_nll": float(
+            -norm.logpdf(game.away_points, expected_away, fit.score_scale)
+        ),
         "home_score_mae": abs(expected_home - float(game.home_points)),
         "away_score_mae": abs(expected_away - float(game.away_points)),
-        "total_points_nll": float(-norm.logpdf(actual_total, total_expected, total_scale)),
+        "total_points_nll": float(
+            -norm.logpdf(actual_total, total_expected, total_scale)
+        ),
+        "total_points_mae": abs(total_expected - actual_total),
+        "expected_margin": float(expected_margin),
+        "win_probability": win_probability,
+        "actual_margin": actual_margin,
+        "expected_home_points": float(expected_home),
+        "expected_away_points": float(expected_away),
+        "actual_total_points": actual_total,
+    }
+
+
+def scalar_scoreboard_predictive_scores(
+    game: HistoricalGame,
+    fit: ScalarFit,
+    environment: ScoreEnvironment,
+) -> dict[str, float]:
+    """Score a target with the matched one-component Normal control."""
+
+    base_home, base_away = environment.baseline_scores(game)
+    home_quality = fit.states.get(game.home_id, 0.0)
+    away_quality = fit.states.get(game.away_id, 0.0)
+    home_effect = 0.5 * (home_quality - away_quality)
+    expected_home = base_home + home_effect
+    expected_away = base_away - home_effect
+    if game.home_subdivision == game.away_subdivision or game.home_subdivision == "fbs":
+        expected_margin = expected_home - expected_away
+    else:
+        expected_margin = expected_away - expected_home
+    margin_scale = math.sqrt(2.0) * fit.score_scale
+    actual_margin = _actual_oriented_margin(game)
+    win_probability = float(norm.cdf(expected_margin / margin_scale))
+    actual_total = float(game.home_points + game.away_points)
+    total_expected = expected_home + expected_away
+    return {
+        "margin_nll": float(-norm.logpdf(actual_margin, expected_margin, margin_scale)),
+        "margin_mae": abs(expected_margin - actual_margin),
+        "win_brier": (win_probability - float(actual_margin > 0)) ** 2,
+        "home_score_nll": float(
+            -norm.logpdf(game.home_points, expected_home, fit.score_scale)
+        ),
+        "away_score_nll": float(
+            -norm.logpdf(game.away_points, expected_away, fit.score_scale)
+        ),
+        "home_score_mae": abs(expected_home - float(game.home_points)),
+        "away_score_mae": abs(expected_away - float(game.away_points)),
+        "total_points_nll": float(
+            -norm.logpdf(actual_total, total_expected, margin_scale)
+        ),
         "total_points_mae": abs(total_expected - actual_total),
         "expected_margin": float(expected_margin),
         "win_probability": win_probability,
@@ -802,15 +1155,28 @@ def scalar_predictive_scores(
 ) -> dict[str, float]:
     """Score a target with the unchanged Posterior V1 Student-t margin model."""
 
-    home = Team(game.home_id, game.home_name, game.home_subdivision, posterior[game.home_id])  # type: ignore[arg-type]
-    away = Team(game.away_id, game.away_name, game.away_subdivision, posterior[game.away_id])  # type: ignore[arg-type]
-    locations, _margin = game_margin_parameters(game.as_engine_game(), home, away, likelihood)
+    home = Team(
+        game.home_id, game.home_name, game.home_subdivision, posterior[game.home_id]
+    )  # type: ignore[arg-type]
+    away = Team(
+        game.away_id, game.away_name, game.away_subdivision, posterior[game.away_id]
+    )  # type: ignore[arg-type]
+    locations, _margin = game_margin_parameters(
+        game.as_engine_game(), home, away, likelihood
+    )
     joint = home.prior[:, None] * away.prior[None, :]
     actual = _actual_oriented_margin(game)
-    density = t.pdf((actual - locations) / likelihood.scale, likelihood.degrees_of_freedom) / likelihood.scale
+    density = (
+        t.pdf((actual - locations) / likelihood.scale, likelihood.degrees_of_freedom)
+        / likelihood.scale
+    )
     predictive_density = float(np.sum(joint * density))
     expected = float(np.sum(joint * locations))
-    win_probability = float(np.sum(joint * t.cdf(locations / likelihood.scale, likelihood.degrees_of_freedom)))
+    win_probability = float(
+        np.sum(
+            joint * t.cdf(locations / likelihood.scale, likelihood.degrees_of_freedom)
+        )
+    )
     return {
         "margin_nll": float(-np.log(max(predictive_density, EPSILON))),
         "margin_mae": abs(expected - actual),
@@ -861,7 +1227,9 @@ def _scalar_posterior(
             team_id,
             metadata[team_id][0],
             metadata[team_id][1],  # type: ignore[arg-type]
-            _prior_for_team(priors, season_games[0].season, team_id, metadata[team_id][2]),
+            _prior_for_team(
+                priors, season_games[0].season, team_id, metadata[team_id][2]
+            ),
         )
         for team_id in sorted(metadata)
     ]
@@ -873,14 +1241,18 @@ def _scalar_posterior(
         tolerance=1e-3,
     )
     if not result.converged:
-        raise RuntimeError(f"Posterior V1 did not converge for {season_games[0].season}")
+        raise RuntimeError(
+            f"Posterior V1 did not converge for {season_games[0].season}"
+        )
     return result.pmfs
 
 
 def _phase(season_games: Sequence[HistoricalGame], cutoff: datetime) -> str:
     first = min(_as_utc(game.start) for game in season_games)
     last = max(_as_utc(game.start) for game in season_games)
-    fraction = (cutoff - first).total_seconds() / max((last - first).total_seconds(), 1.0)
+    fraction = (cutoff - first).total_seconds() / max(
+        (last - first).total_seconds(), 1.0
+    )
     return "early" if fraction < 1 / 3 else "mid" if fraction < 2 / 3 else "late"
 
 
@@ -903,7 +1275,9 @@ def evaluate_candidates(
     diagnostics: list[dict[str, object]] = []
     profiles: list[dict[str, object]] = []
     for season, season_games in sorted(by_season.items()):
-        season_games = sorted(season_games, key=lambda item: (_as_utc(item.start), item.game_id))
+        season_games = sorted(
+            season_games, key=lambda item: (_as_utc(item.start), item.game_id)
+        )
         metadata = _team_metadata(season_games)
         by_team: dict[str, list[HistoricalGame]] = defaultdict(list)
         for game in season_games:
@@ -922,7 +1296,9 @@ def evaluate_candidates(
                 continue
             posterior = _scalar_posterior(season_games, past, priors, likelihood)
             baseline_rows = []
-            for target in sorted(targets.values(), key=lambda item: (_as_utc(item.start), item.game_id)):
+            for target in sorted(
+                targets.values(), key=lambda item: (_as_utc(item.start), item.game_id)
+            ):
                 scores = scalar_predictive_scores(target, posterior, likelihood)
                 baseline_rows.append(
                     {
@@ -940,6 +1316,52 @@ def evaluate_candidates(
                     }
                 )
             rows.extend(baseline_rows)
+            scalar_fit = fit_scalar_scoreboard_model(
+                past,
+                priors,
+                environment,
+                team_metadata=metadata,
+                cutoff=cutoff,
+            )
+            scalar_values = np.asarray(list(scalar_fit.states.values()))
+            diagnostics.append(
+                {
+                    "season": season,
+                    "cutoff": cutoff.isoformat(),
+                    "candidate": "Scalar scoreboard",
+                    "n_teams": len(scalar_values),
+                    "n_games": len(past),
+                    "offense_defense_correlation": None,
+                    "offense_scalar_correlation": None,
+                    "defense_scalar_correlation": None,
+                    "offense_minus_defense_variance": None,
+                    "center_offense": float(np.mean(scalar_values))
+                    if len(scalar_values)
+                    else None,
+                    "center_defense": None,
+                }
+            )
+            for target in sorted(
+                targets.values(), key=lambda item: (_as_utc(item.start), item.game_id)
+            ):
+                scores = scalar_scoreboard_predictive_scores(
+                    target, scalar_fit, environment
+                )
+                rows.append(
+                    {
+                        "season": season,
+                        "cutoff": cutoff.isoformat(),
+                        "cutoff_index": cutoff_index,
+                        "phase": _phase(season_games, cutoff),
+                        "candidate": "Scalar scoreboard",
+                        "target_kind": "next_game",
+                        "target_game_id": target.game_id,
+                        "target_date": target.start.isoformat(),
+                        "home_team_id": target.home_id,
+                        "away_team_id": target.away_id,
+                        **scores,
+                    }
+                )
             for candidate in candidates:
                 fit = fit_od_model(
                     past,
@@ -950,7 +1372,9 @@ def evaluate_candidates(
                     cutoff=cutoff,
                 )
                 state_values = list(fit.states.values())
-                scalar_values = np.asarray([state.scalar_quality for state in state_values])
+                scalar_values = np.asarray(
+                    [state.scalar_quality for state in state_values]
+                )
                 offenses = np.asarray([state.offense for state in state_values])
                 defenses = np.asarray([state.defense for state in state_values])
                 diagnostics.append(
@@ -961,9 +1385,15 @@ def evaluate_candidates(
                         "n_teams": len(state_values),
                         "n_games": len(past),
                         "offense_defense_correlation": _correlation(offenses, defenses),
-                        "offense_scalar_correlation": _correlation(offenses, scalar_values),
-                        "defense_scalar_correlation": _correlation(defenses, scalar_values),
-                        "offense_minus_defense_variance": float(np.var(offenses - defenses)),
+                        "offense_scalar_correlation": _correlation(
+                            offenses, scalar_values
+                        ),
+                        "defense_scalar_correlation": _correlation(
+                            defenses, scalar_values
+                        ),
+                        "offense_minus_defense_variance": float(
+                            np.var(offenses - defenses)
+                        ),
                         "center_offense": float(np.mean(offenses)),
                         "center_defense": float(np.mean(defenses)),
                     }
@@ -984,7 +1414,10 @@ def evaluate_candidates(
                             "games_seen": state.games_seen,
                         }
                     )
-                for target in sorted(targets.values(), key=lambda item: (_as_utc(item.start), item.game_id)):
+                for target in sorted(
+                    targets.values(),
+                    key=lambda item: (_as_utc(item.start), item.game_id),
+                ):
                     scores = od_predictive_scores(target, fit, environment)
                     rows.append(
                         {
@@ -1013,21 +1446,35 @@ def evaluate_candidates(
     return rows, diagnostics, profiles
 
 
-def aggregate_future_metrics(rows: Sequence[Mapping[str, object]]) -> list[dict[str, object]]:
-    grouped: dict[tuple[str, str, int, str | None], list[Mapping[str, object]]] = defaultdict(list)
+def aggregate_future_metrics(
+    rows: Sequence[Mapping[str, object]],
+) -> list[dict[str, object]]:
+    grouped: dict[tuple[str, str, int, str | None], list[Mapping[str, object]]] = (
+        defaultdict(list)
+    )
     for row in rows:
-        grouped[(str(row["candidate"]), str(row["target_kind"]), int(row["season"]), None)].append(row)
+        grouped[
+            (str(row["candidate"]), str(row["target_kind"]), int(row["season"]), None)
+        ].append(row)
     result = []
-    for (candidate, target_kind, season, _phase_name), values in sorted(grouped.items()):
+    for (candidate, target_kind, season, _phase_name), values in sorted(
+        grouped.items()
+    ):
         result.append(
             {
                 "candidate": candidate,
                 "target_kind": target_kind,
                 "season": season,
                 "n": len(values),
-                "margin_nll": float(np.mean([float(row["margin_nll"]) for row in values])),
-                "margin_mae": float(np.mean([float(row["margin_mae"]) for row in values])),
-                "win_brier": float(np.mean([float(row["win_brier"]) for row in values])),
+                "margin_nll": float(
+                    np.mean([float(row["margin_nll"]) for row in values])
+                ),
+                "margin_mae": float(
+                    np.mean([float(row["margin_mae"]) for row in values])
+                ),
+                "win_brier": float(
+                    np.mean([float(row["win_brier"]) for row in values])
+                ),
                 "home_score_nll": _mean_optional(values, "home_score_nll"),
                 "away_score_nll": _mean_optional(values, "away_score_nll"),
                 "home_score_mae": _mean_optional(values, "home_score_mae"),
@@ -1039,10 +1486,14 @@ def aggregate_future_metrics(rows: Sequence[Mapping[str, object]]) -> list[dict[
     return result
 
 
-def aggregate_phase_metrics(rows: Sequence[Mapping[str, object]]) -> list[dict[str, object]]:
+def aggregate_phase_metrics(
+    rows: Sequence[Mapping[str, object]],
+) -> list[dict[str, object]]:
     grouped: dict[tuple[str, str, str], list[Mapping[str, object]]] = defaultdict(list)
     for row in rows:
-        grouped[(str(row["candidate"]), str(row["target_kind"]), str(row["phase"]))].append(row)
+        grouped[
+            (str(row["candidate"]), str(row["target_kind"]), str(row["phase"]))
+        ].append(row)
     result = []
     for (candidate, target_kind, phase), values in sorted(grouped.items()):
         result.append(
@@ -1051,9 +1502,15 @@ def aggregate_phase_metrics(rows: Sequence[Mapping[str, object]]) -> list[dict[s
                 "target_kind": target_kind,
                 "phase": phase,
                 "n": len(values),
-                "margin_nll": float(np.mean([float(row["margin_nll"]) for row in values])),
-                "margin_mae": float(np.mean([float(row["margin_mae"]) for row in values])),
-                "win_brier": float(np.mean([float(row["win_brier"]) for row in values])),
+                "margin_nll": float(
+                    np.mean([float(row["margin_nll"]) for row in values])
+                ),
+                "margin_mae": float(
+                    np.mean([float(row["margin_mae"]) for row in values])
+                ),
+                "win_brier": float(
+                    np.mean([float(row["win_brier"]) for row in values])
+                ),
             }
         )
     return result
@@ -1067,23 +1524,106 @@ def _mean_optional(values: Sequence[Mapping[str, object]], key: str) -> float | 
 def development_gate(rows: Sequence[Mapping[str, object]]) -> list[dict[str, object]]:
     """Apply the issue's frozen development gate using only 2018–2021."""
 
-    dev = [row for row in rows if int(row["season"]) in DEVELOPMENT_SEASONS and row["target_kind"] == "next_game"]
+    dev = [
+        row
+        for row in rows
+        if int(row["season"]) in DEVELOPMENT_SEASONS
+        and row["target_kind"] == "next_game"
+    ]
     aggregate = aggregate_future_metrics(dev)
     deltas: list[dict[str, object]] = []
     for candidate in [item.name for item in candidate_grid()]:
         all_candidate = [item for item in aggregate if item["candidate"] == candidate]
         base_all = [item for item in aggregate if item["candidate"] == "Posterior V1"]
+        scalar_all = [
+            item for item in aggregate if item["candidate"] == "Scalar scoreboard"
+        ]
         n = sum(int(item["n"]) for item in all_candidate)
         baseline_n = sum(int(item["n"]) for item in base_all)
-        candidate_nll = float(np.average([item["margin_nll"] for item in all_candidate], weights=[item["n"] for item in all_candidate]))
-        candidate_mae = float(np.average([item["margin_mae"] for item in all_candidate], weights=[item["n"] for item in all_candidate]))
-        candidate_brier = float(np.average([item["win_brier"] for item in all_candidate], weights=[item["n"] for item in all_candidate]))
-        base_nll = float(np.average([item["margin_nll"] for item in base_all], weights=[item["n"] for item in base_all]))
-        base_mae = float(np.average([item["margin_mae"] for item in base_all], weights=[item["n"] for item in base_all]))
-        base_brier = float(np.average([item["win_brier"] for item in base_all], weights=[item["n"] for item in base_all]))
+        candidate_nll = float(
+            np.average(
+                [item["margin_nll"] for item in all_candidate],
+                weights=[item["n"] for item in all_candidate],
+            )
+        )
+        candidate_mae = float(
+            np.average(
+                [item["margin_mae"] for item in all_candidate],
+                weights=[item["n"] for item in all_candidate],
+            )
+        )
+        candidate_brier = float(
+            np.average(
+                [item["win_brier"] for item in all_candidate],
+                weights=[item["n"] for item in all_candidate],
+            )
+        )
+        base_nll = float(
+            np.average(
+                [item["margin_nll"] for item in base_all],
+                weights=[item["n"] for item in base_all],
+            )
+        )
+        base_mae = float(
+            np.average(
+                [item["margin_mae"] for item in base_all],
+                weights=[item["n"] for item in base_all],
+            )
+        )
+        base_brier = float(
+            np.average(
+                [item["win_brier"] for item in base_all],
+                weights=[item["n"] for item in base_all],
+            )
+        )
+        scalar_available = bool(scalar_all)
+        scalar_nll = (
+            float(
+                np.average(
+                    [item["margin_nll"] for item in scalar_all],
+                    weights=[item["n"] for item in scalar_all],
+                )
+            )
+            if scalar_available
+            else None
+        )
+        scalar_mae = (
+            float(
+                np.average(
+                    [item["margin_mae"] for item in scalar_all],
+                    weights=[item["n"] for item in scalar_all],
+                )
+            )
+            if scalar_available
+            else None
+        )
+        scalar_brier = (
+            float(
+                np.average(
+                    [item["win_brier"] for item in scalar_all],
+                    weights=[item["n"] for item in scalar_all],
+                )
+            )
+            if scalar_available
+            else None
+        )
         by_season = {int(item["season"]): item for item in all_candidate}
         base_by_season = {int(item["season"]): item for item in base_all}
-        nll_deltas = [float(by_season[season]["margin_nll"]) - float(base_by_season[season]["margin_nll"]) for season in DEVELOPMENT_SEASONS if season in by_season and season in base_by_season]
+        nll_deltas = [
+            float(by_season[season]["margin_nll"])
+            - float(base_by_season[season]["margin_nll"])
+            for season in DEVELOPMENT_SEASONS
+            if season in by_season and season in base_by_season
+        ]
+        scalar_nll_improvement = (
+            None if scalar_nll is None else scalar_nll - candidate_nll
+        )
+        scalar_mae_improvement = (
+            None if scalar_mae is None else scalar_mae - candidate_mae
+        )
+        scalar_brier_delta = (
+            None if scalar_brier is None else candidate_brier - scalar_brier
+        )
         deltas.append(
             {
                 "candidate": candidate,
@@ -1098,6 +1638,13 @@ def development_gate(rows: Sequence[Mapping[str, object]]) -> list[dict[str, obj
                 "nll_improvement": base_nll - candidate_nll,
                 "mae_improvement": base_mae - candidate_mae,
                 "brier_delta": candidate_brier - base_brier,
+                "matched_scalar_available": scalar_available,
+                "matched_scalar_margin_nll": scalar_nll,
+                "matched_scalar_margin_mae": scalar_mae,
+                "matched_scalar_win_brier": scalar_brier,
+                "od_vs_scalar_nll_improvement": scalar_nll_improvement,
+                "od_vs_scalar_mae_improvement": scalar_mae_improvement,
+                "od_vs_scalar_brier_delta": scalar_brier_delta,
                 "seasons_nll_improved": sum(delta < 0 for delta in nll_deltas),
                 "worst_season_nll_delta": max(nll_deltas, default=float("inf")),
                 "passes_gate": bool(
@@ -1106,6 +1653,9 @@ def development_gate(rows: Sequence[Mapping[str, object]]) -> list[dict[str, obj
                     and candidate_brier - base_brier <= 0.001
                     and sum(delta < 0 for delta in nll_deltas) >= 3
                     and max(nll_deltas, default=float("inf")) <= 0.015
+                    and scalar_available
+                    and candidate_nll <= scalar_nll
+                    and candidate_mae <= scalar_mae
                 ),
             }
         )
@@ -1118,8 +1668,13 @@ def select_candidate(gate_rows: Sequence[Mapping[str, object]]) -> str | None:
         return None
     best_nll = min(float(row["margin_nll"]) for row in qualifying)
     tied = [row for row in qualifying if float(row["margin_nll"]) - best_nll <= 0.002]
-    complexity = {candidate.name: index for index, candidate in enumerate(candidate_grid())}
-    return min(tied, key=lambda row: (complexity[str(row["candidate"])], float(row["margin_nll"])))["candidate"]  # type: ignore[return-value]
+    complexity = {
+        candidate.name: index for index, candidate in enumerate(candidate_grid())
+    }
+    return min(
+        tied,
+        key=lambda row: (complexity[str(row["candidate"])], float(row["margin_nll"])),
+    )["candidate"]  # type: ignore[return-value]
 
 
 def sha256(path: Path) -> str:
@@ -1132,17 +1687,22 @@ def sha256(path: Path) -> str:
 
 def production_hashes(root: Path) -> dict[str, str]:
     paths = {
-        "historical_likelihood_v1": root / "data/processed/posterior/historical_likelihood_v1.json",
+        "historical_likelihood_v1": root
+        / "data/processed/posterior/historical_likelihood_v1.json",
         "context_prior": root / "data/processed/preseason/context/predictions.csv",
         "history_prior": root / "data/processed/preseason/history/predictions.csv",
-        "context_prior_2026": root / "data/processed/preseason/context/annual/2026/predictions.csv",
-        "history_prior_2026": root / "data/processed/preseason/history/annual/2026/predictions.csv",
+        "context_prior_2026": root
+        / "data/processed/preseason/context/annual/2026/predictions.csv",
+        "history_prior_2026": root
+        / "data/processed/preseason/history/annual/2026/predictions.csv",
     }
     return {name: sha256(path) for name, path in paths.items() if path.exists()}
 
 
 def load_likelihood(root: Path) -> LikelihoodV1:
-    value = json.loads((root / "data/processed/posterior/historical_likelihood_v1.json").read_text())
+    value = json.loads(
+        (root / "data/processed/posterior/historical_likelihood_v1.json").read_text()
+    )
     return LikelihoodV1(
         np.asarray(value["beta"], dtype=float),
         float(value["scale"]),
@@ -1157,11 +1717,16 @@ def write_csv(path: Path, rows: Sequence[Mapping[str, object]]) -> None:
     if not fields:
         fields = ["empty"]
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fields, extrasaction="ignore", lineterminator="\n")
+        writer = csv.DictWriter(
+            handle, fieldnames=fields, extrasaction="ignore", lineterminator="\n"
+        )
         writer.writeheader()
         writer.writerows(rows)
 
 
 def write_json(path: Path, value: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(value, indent=2, sort_keys=True, default=str) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(value, indent=2, sort_keys=True, default=str) + "\n",
+        encoding="utf-8",
+    )

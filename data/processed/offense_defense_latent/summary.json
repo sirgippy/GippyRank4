@@ -1,40 +1,5 @@
 {
-  "development_gate": [
-    {
-      "baseline_margin_mae": 13.838513963428703,
-      "baseline_margin_nll": 4.283174811206167,
-      "baseline_n": 1591,
-      "baseline_win_brier": 0.19082266954185148,
-      "brier_delta": 0.003499525864458841,
-      "candidate": "OD0",
-      "mae_improvement": -0.1488306007331648,
-      "margin_mae": 13.987344564161868,
-      "margin_nll": 4.3059020046951,
-      "n": 1591,
-      "nll_improvement": -0.02272719348893304,
-      "passes_gate": false,
-      "seasons_nll_improved": 1,
-      "win_brier": 0.19432219540631032,
-      "worst_season_nll_delta": 0.05118640713917699
-    },
-    {
-      "baseline_margin_mae": 13.838513963428703,
-      "baseline_margin_nll": 4.283174811206167,
-      "baseline_n": 1591,
-      "baseline_win_brier": 0.19082266954185148,
-      "brier_delta": 0.0028869549618278922,
-      "candidate": "OD1",
-      "mae_improvement": -0.08770718746062833,
-      "margin_mae": 13.926221150889331,
-      "margin_nll": 4.303385933828967,
-      "n": 1591,
-      "nll_improvement": -0.02021112262279967,
-      "passes_gate": false,
-      "seasons_nll_improved": 1,
-      "win_brier": 0.19370962450367937,
-      "worst_season_nll_delta": 0.04660347985531654
-    }
-  ],
+  "development_gate": [],
   "development_seasons": [
     2018,
     2019,
@@ -119,26 +84,26 @@
     "history_prior_2026": "0b3454a09288019e17739869c42aed3123fdda2163694f52f63bca65baf37f90"
   },
   "production_hashes_unchanged": true,
-  "recommendation": "Stage 0 does not show convincing distinct component persistence and no OD candidate clears the development gate.",
+  "recommendation": "Stage 0 does not show convincing distinct component persistence; Stage 1 was not run.",
   "recommendation_class": "C",
-  "runtime_seconds": 341.0213701930479,
+  "runtime_seconds": 56.254356435034424,
   "selected_candidate": null,
   "stage0": {
     "early_late_by_period": {
       "development": {
-        "defense_correlation": 0.28171907563750875,
+        "defense_correlation": 0.4698785595098772,
         "n": 988,
-        "offense_correlation": 0.32655145732975216
+        "offense_correlation": 0.46878112313371634
       },
       "evaluation": {
-        "defense_correlation": 0.2222893809936147,
+        "defense_correlation": 0.437363469250746,
         "n": 1050,
-        "offense_correlation": 0.2483725802230971
+        "offense_correlation": 0.5357564634537221
       },
       "training": {
-        "defense_correlation": 0.3232208438377502,
+        "defense_correlation": 0.4915488833154392,
         "n": 2474,
-        "offense_correlation": 0.3214061625464359
+        "offense_correlation": 0.5587745232650057
       }
     },
     "n_focal_team_games": 52140,
@@ -146,12 +111,90 @@
     "null_permutations": 10,
     "null_seed": 40
   },
+  "stage0_evaluation_signal": {
+    "cross_component_mean_lag1": -0.0024100837590663045,
+    "cross_minus_shuffle_order_null": 0.0037981783484208184,
+    "period": "evaluation",
+    "relation_effects": {
+      "defense->defense": {
+        "observed": -0.0653308599776496,
+        "observed_minus_shuffle_order": 0.025910403926609732,
+        "observed_minus_unrelated_team": -0.07067513868637144,
+        "shuffle_order_null": -0.09124126390425934,
+        "unrelated_team_null": 0.00534427870872184
+      },
+      "defense->offense": {
+        "observed": -0.0018085778068791425,
+        "observed_minus_shuffle_order": 0.007339810201326685,
+        "observed_minus_unrelated_team": -0.004038526219261413,
+        "shuffle_order_null": -0.009148388008205827,
+        "unrelated_team_null": 0.00222994841238227
+      },
+      "offense->defense": {
+        "observed": -0.0030115897112534666,
+        "observed_minus_shuffle_order": 0.0002565464955149514,
+        "observed_minus_unrelated_team": -0.006951578291218837,
+        "shuffle_order_null": -0.003268136206768418,
+        "unrelated_team_null": 0.003939988579965371
+      },
+      "offense->offense": {
+        "observed": -0.06728553323708811,
+        "observed_minus_shuffle_order": 0.022331528737271802,
+        "observed_minus_unrelated_team": -0.06628679755462294,
+        "shuffle_order_null": -0.08961706197435991,
+        "unrelated_team_null": -0.0009987356824651664
+      }
+    },
+    "same_component_mean_lag1": -0.06630819660736886,
+    "same_minus_cross": -0.06389811284830256,
+    "same_minus_cross_excess": 0.020322787983519948,
+    "same_minus_shuffle_order_null": 0.024120966331940767,
+    "same_minus_unrelated_team_null": -0.0684809681204972,
+    "supports_component_persistence": true
+  },
+  "stage0_gate_passed": false,
   "stage0_signal": {
-    "cross_component_mean_lag1": 0.020471405116477635,
-    "same_component_mean_lag1": -0.08544320128223684,
-    "same_minus_cross": -0.10591460639871447,
+    "cross_component_mean_lag1": 0.02730747741134803,
+    "cross_minus_shuffle_order_null": 0.03446680396999115,
+    "period": "development",
+    "relation_effects": {
+      "defense->defense": {
+        "observed": -0.07932330122695576,
+        "observed_minus_shuffle_order": 0.0235047760360398,
+        "observed_minus_unrelated_team": -0.07683471050766846,
+        "shuffle_order_null": -0.10282807726299556,
+        "unrelated_team_null": -0.002488590719287296
+      },
+      "defense->offense": {
+        "observed": 0.03349545083309127,
+        "observed_minus_shuffle_order": 0.038555885685078305,
+        "observed_minus_unrelated_team": 0.033630721868681414,
+        "shuffle_order_null": -0.00506043485198703,
+        "unrelated_team_null": -0.000135271035590144
+      },
+      "offense->defense": {
+        "observed": 0.02111950398960479,
+        "observed_minus_shuffle_order": 0.030377722254903997,
+        "observed_minus_unrelated_team": 0.024090730510413706,
+        "shuffle_order_null": -0.009258218265299207,
+        "unrelated_team_null": -0.0029712265208089164
+      },
+      "offense->offense": {
+        "observed": -0.07934168935646468,
+        "observed_minus_shuffle_order": 0.023318215405052856,
+        "observed_minus_unrelated_team": -0.07431976029639087,
+        "shuffle_order_null": -0.10265990476151754,
+        "unrelated_team_null": -0.005021929060073819
+      }
+    },
+    "same_component_mean_lag1": -0.07933249529171021,
+    "same_minus_cross": -0.10663997270305825,
+    "same_minus_cross_excess": -0.011055308249444819,
+    "same_minus_shuffle_order_null": 0.02341149572054633,
+    "same_minus_unrelated_team_null": -0.07557723540202967,
     "supports_component_persistence": false
   },
+  "stage1_ran": false,
   "stage2_triggered": false,
   "training_seasons": [
     2008,
