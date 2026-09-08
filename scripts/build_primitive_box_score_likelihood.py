@@ -2288,6 +2288,41 @@ def write_plots(
     plt.close(figure)
 
 
+def rolling_report_section(
+    original_rows: Sequence[Mapping[str, object]],
+    prior_sensitivity: Mapping[str, object],
+) -> list[str]:
+    """Render the gate-bearing and sensitivity rolling panels separately."""
+
+    sensitivity_rows = prior_sensitivity.get("rolling_sensitivity_rows", [])
+    exclusions = prior_sensitivity.get("rolling_excluded_targets", [])
+    lines = [
+        "",
+        "## Original rolling robustness",
+        "",
+        "This is the original 18-season panel using a uniform ordinal prior. It is the panel used by the frozen promotion assessment and its original 9/18 rolling gate.",
+        "",
+        "| target season | fit through | prior | candidate | NLL | CRPS | 80% coverage |",
+        "|--:|:--|:--|:--|--:|--:|--:|",
+    ]
+    for row in original_rows:
+        lines.append(f"| {row['target_season']} | {row['fit_seasons']} | uniform ordinal | {row['candidate']} | {_report_number(row['nll'])} | {_report_number(row['crps'])} | {_report_number(row['interval_80_coverage'])} |")
+    lines.extend([
+        "",
+        "## Reconstructed History-prior sensitivity",
+        "",
+        "This sensitivity panel contains only successfully reconstructed History-prior targets. It is methodology sensitivity evidence only; the original 9/18 gate is not applied to this reduced panel.",
+        "",
+        "| target season | fit through | prior | candidate | NLL | CRPS | 80% coverage |",
+        "|--:|:--|:--|:--|--:|--:|--:|",
+    ])
+    for row in sensitivity_rows:
+        lines.append(f"| {row['target_season']} | {row['fit_seasons']} | reconstructed History 1.1 | {row['candidate']} | {_report_number(row['nll'])} | {_report_number(row['crps'])} | {_report_number(row['interval_80_coverage'])} |")
+    for exclusion in exclusions:
+        lines.extend(["", f"Excluded reconstructed target **{exclusion['target_season']}**: {exclusion['reason']}."])
+    return lines
+
+
 def write_report(
     *,
     spec: Mapping[str, object],
@@ -2420,18 +2455,9 @@ def write_report(
             "",
             "These examples are observations of conditional disagreement, not claims that turnovers are luck or skill and not direct turnover ratings.",
             "",
-            "## Rolling robustness",
-            "",
-            "The original rolling panel used a uniform ordinal selection prior. It is therefore not directly comparable to the final H/C evaluation. The corrected History-prior rolling rows below use reconstructed H 1.1 PMFs from information through each target's prior season; no target-season outcomes enter prior construction.",
-            "",
-            "| target season | fit through | candidate | NLL | CRPS | 80% coverage |",
-            "|--:|:--|:--|--:|--:|--:|",
         ]
     )
-    for row in rolling_rows:
-        lines.append(
-            f"| {row['target_season']} | {row['fit_seasons']} | {row['candidate']} | {_report_number(row['nll'])} | {_report_number(row['crps'])} | {_report_number(row['interval_80_coverage'])} |"
-        )
+    lines.extend(rolling_report_section(rolling_rows, prior_sensitivity))
     lines.extend(
         [
             "",

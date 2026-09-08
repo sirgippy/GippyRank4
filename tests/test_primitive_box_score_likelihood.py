@@ -449,6 +449,18 @@ def test_reconstructed_rolling_consumer_excludes_unsupported_targets() -> None:
     supported = script.supported_reconstructed_target_seasons(teams)
     assert len(supported) == 17
     assert 2012 not in supported
+
+
+def test_rolling_report_separates_uniform_and_reconstructed_panels() -> None:
+    script = _script()
+    original = [{"target_season": 2012, "fit_seasons": "2004-2011", "candidate": "a", "nll": 1.0, "crps": 0.1, "interval_80_coverage": 0.8}]
+    sensitivity = [{"target_season": 2013, "fit_seasons": "2004-2012", "candidate": "a", "nll": 0.9, "crps": 0.09, "interval_80_coverage": 0.81}]
+    section = "\n".join(script.rolling_report_section(original, {"rolling_sensitivity_rows": sensitivity, "rolling_excluded_targets": [{"target_season": 2012, "reason": "unsupported"}]}))
+    assert "Original rolling robustness" in section
+    assert "uniform ordinal" in section
+    assert "Reconstructed History-prior sensitivity" in section
+    assert "reconstructed History 1.1" in section
+    assert "Excluded reconstructed target **2012**" in section
     assert script.RECONSTRUCTED_PRIOR_FAMILIES == (
         "context_reconstructed",
         "history_reconstructed",
