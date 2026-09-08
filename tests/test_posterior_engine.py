@@ -138,3 +138,30 @@ def test_invalid_factor_references_are_rejected() -> None:
             [Game("x", "a", "missing", "fbs", "fbs", 1, 0)],
             likelihood(),
         )
+
+
+def test_static_factor_weights_are_exact_production_semantics() -> None:
+    teams = [
+        Team("a", "A", "fbs", np.array([0.7, 0.3])),
+        Team("b", "B", "fbs", np.array([0.4, 0.6])),
+    ]
+    games = [Game("g", "a", "b", "fbs", "fbs", 28, 10)]
+    production = infer_posterior(teams, games, likelihood(), tolerance=1e-12)
+    explicit_static = infer_posterior(
+        teams, games, likelihood(), factor_weights={"g": 1.0}, tolerance=1e-12
+    )
+    assert production.pmfs.keys() == explicit_static.pmfs.keys()
+    for team_id in production.pmfs:
+        assert np.array_equal(production.pmfs[team_id], explicit_static.pmfs[team_id])
+
+
+def test_factor_weights_must_be_positive_and_known() -> None:
+    teams = [
+        Team("a", "A", "fbs", np.array([0.5, 0.5])),
+        Team("b", "B", "fbs", np.array([0.5, 0.5])),
+    ]
+    game = Game("g", "a", "b", "fbs", "fbs", 14, 7)
+    with pytest.raises(ValueError, match="unknown games"):
+        infer_posterior(teams, [game], likelihood(), factor_weights={"other": 0.5})
+    with pytest.raises(ValueError, match="strictly positive"):
+        infer_posterior(teams, [game], likelihood(), factor_weights={"g": 0.0})

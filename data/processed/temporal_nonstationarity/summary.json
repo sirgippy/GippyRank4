@@ -1,0 +1,245 @@
+{
+  "candidate_grid": [
+    {
+      "half_life_days": null,
+      "name": "Static V1"
+    },
+    {
+      "half_life_days": 14.0,
+      "name": "R14"
+    },
+    {
+      "half_life_days": 28.0,
+      "name": "R28"
+    },
+    {
+      "half_life_days": 56.0,
+      "name": "R56"
+    },
+    {
+      "half_life_days": 112.0,
+      "name": "R112"
+    }
+  ],
+  "development_gate": {
+    "R112": {
+      "next_game_brier": 0.19041703671252508,
+      "next_game_mae": 13.814963741501348,
+      "next_game_nll": 4.280974450080098,
+      "season_deltas": [
+        -0.004593768462633818,
+        -0.0025206484467261703,
+        0.0025033143245432043,
+        -0.001491614945002162
+      ],
+      "seasons_nll_improved": 3,
+      "worst_season_nll_delta": 0.0025033143245432043
+    },
+    "R14": {
+      "next_game_brier": 0.19236216513268922,
+      "next_game_mae": 14.009840323777658,
+      "next_game_nll": 4.29148179616947,
+      "season_deltas": [
+        -0.005802060511983953,
+        0.007311246544733585,
+        0.023487054939510976,
+        0.01688526234948462
+      ],
+      "seasons_nll_improved": 1,
+      "worst_season_nll_delta": 0.023487054939510976
+    },
+    "R28": {
+      "next_game_brier": 0.19050634852172124,
+      "next_game_mae": 13.857255017774962,
+      "next_game_nll": 4.281819195117642,
+      "season_deltas": [
+        -0.00995089599032184,
+        -0.002396533310338178,
+        0.012043937339044852,
+        0.002556424622140341
+      ],
+      "seasons_nll_improved": 2,
+      "worst_season_nll_delta": 0.012043937339044852
+    },
+    "R56": {
+      "next_game_brier": 0.1902685775539627,
+      "next_game_mae": 13.813394781477818,
+      "next_game_nll": 4.280259291896537,
+      "season_deltas": [
+        -0.007577202359273727,
+        -0.0035435290381000684,
+        0.0056643355734573575,
+        -0.001284613123307743
+      ],
+      "seasons_nll_improved": 3,
+      "worst_season_nll_delta": 0.0056643355734573575
+    },
+    "Static V1": {
+      "next_game_brier": 0.19082266954185148,
+      "next_game_mae": 13.838513963428703,
+      "next_game_nll": 4.283174811206167,
+      "season_deltas": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "seasons_nll_improved": 0,
+      "worst_season_nll_delta": 0.0
+    }
+  },
+  "development_seasons": [
+    2018,
+    2019,
+    2020,
+    2021
+  ],
+  "evaluation_seasons": [
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "excluded_seasons": [
+    2026
+  ],
+  "focal_residual_count": 52140,
+  "game_count": 26070,
+  "input_artifacts": {
+    "context_priors": "data/processed/preseason/context/predictions.csv",
+    "historical_games": "data/processed/modeling/historical_modeling_games.csv",
+    "historical_likelihood": "data/processed/posterior/historical_likelihood_v1.json",
+    "rank_distributions": "data/processed/modeling/team_season_rank_distributions.csv"
+  },
+  "production_integrity": {
+    "after": {
+      "context_prior_2026": "641182890ec88ea8bc6150cc97047ddc688d0c680486d9fcc63a58d7bfae9132",
+      "context_prior_backtest": "dd6fa583822d3bc6d887f4a52952d35aa5f2310822a5b934a015d7e1f8c9ecb6",
+      "historical_likelihood_v1": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+      "history_prior_2026": "0b3454a09288019e17739869c42aed3123fdda2163694f52f63bca65baf37f90",
+      "history_prior_backtest": "474f5587b8db44847bc375931e4f4937e7e8029077d5814af3f6b6e55056a706"
+    },
+    "before": {
+      "context_prior_2026": "641182890ec88ea8bc6150cc97047ddc688d0c680486d9fcc63a58d7bfae9132",
+      "context_prior_backtest": "dd6fa583822d3bc6d887f4a52952d35aa5f2310822a5b934a015d7e1f8c9ecb6",
+      "historical_likelihood_v1": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+      "history_prior_2026": "0b3454a09288019e17739869c42aed3123fdda2163694f52f63bca65baf37f90",
+      "history_prior_backtest": "474f5587b8db44847bc375931e4f4937e7e8029077d5814af3f6b6e55056a706"
+    },
+    "identical": true
+  },
+  "recommendation": "C",
+  "recommendation_reason": "Neither residual persistence nor future-game validation provides compelling evidence of nonstationarity.",
+  "runtime_seconds": 433.897,
+  "selected_half_life": null,
+  "selection_used_seasons_only": [
+    2018,
+    2019,
+    2020,
+    2021
+  ],
+  "stage0": {
+    "early_late_by_period": {
+      "development": {
+        "correlation": -0.1122472572239914,
+        "mean_late_minus_early": -0.23472455835286749,
+        "n": 988
+      },
+      "evaluation": {
+        "correlation": -0.2384392497574092,
+        "mean_late_minus_early": -0.07998133735849124,
+        "n": 1050
+      },
+      "training": {
+        "correlation": -0.18325607565185553,
+        "mean_late_minus_early": -0.06649352544899602,
+        "n": 2474
+      }
+    },
+    "early_late_rows": 4512,
+    "n_focal_team_games": 52140,
+    "n_team_seasons_with_at_least_3_games": 4512,
+    "null_permutations_per_group": 25,
+    "null_seed": 340,
+    "predictor_metrics": [
+      {
+        "correlation": 0.00595697662202859,
+        "mean_next_residual": 0.0030149335476407518,
+        "n": 9789,
+        "predictor": "development",
+        "slope": 0.005931932399477316
+      },
+      {
+        "correlation": -0.0013140094612003978,
+        "mean_next_residual": 0.0030149335476407518,
+        "n": 9789,
+        "predictor": "development:ewma",
+        "slope": -0.002153141342727858
+      },
+      {
+        "correlation": -0.0013736900981800948,
+        "mean_next_residual": 0.0030149335476407518,
+        "n": 9789,
+        "predictor": "development:rolling",
+        "slope": -0.0024500484885292806
+      },
+      {
+        "correlation": -0.009371172792994606,
+        "mean_next_residual": -0.016567174333065187,
+        "n": 11594,
+        "predictor": "evaluation",
+        "slope": -0.009382581013780745
+      },
+      {
+        "correlation": -0.003021582478380743,
+        "mean_next_residual": -0.016567174333065187,
+        "n": 11594,
+        "predictor": "evaluation:ewma",
+        "slope": -0.005070753072105266
+      },
+      {
+        "correlation": -0.006833206622157229,
+        "mean_next_residual": -0.016567174333065187,
+        "n": 11594,
+        "predictor": "evaluation:rolling",
+        "slope": -0.012502551912984033
+      },
+      {
+        "correlation": -0.0011741234411734283,
+        "mean_next_residual": -0.0025512911959762663,
+        "n": 26205,
+        "predictor": "training",
+        "slope": -0.0011724623916073756
+      },
+      {
+        "correlation": -0.00846193389740845,
+        "mean_next_residual": -0.0025512911959762663,
+        "n": 26205,
+        "predictor": "training:ewma",
+        "slope": -0.014255822161350443
+      },
+      {
+        "correlation": -0.015624809055996912,
+        "mean_next_residual": -0.0025512911959762663,
+        "n": 26205,
+        "predictor": "training:rolling",
+        "slope": -0.02881361204595307
+      }
+    ]
+  },
+  "stage0_early_late_count": 4512,
+  "stage2_triggered": false,
+  "study": "issue_34_temporal_nonstationarity",
+  "train_seasons": [
+    2008,
+    2009,
+    2010,
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017
+  ]
+}

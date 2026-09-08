@@ -278,6 +278,7 @@ def infer_posterior(
     games: list[Game],
     likelihood: LikelihoodV1,
     *,
+    factor_weights: dict[str, float] | None = None,
     max_iterations: int = 500,
     tolerance: float = 1e-9,
     damping: float = 0.35,
@@ -291,6 +292,15 @@ def infer_posterior(
     by_id = {team.team_id: team for team in teams}
     if len(by_id) != len(teams):
         raise ValueError("team IDs must be unique")
+    if factor_weights is not None:
+        unknown = set(factor_weights) - {game.game_id for game in games}
+        if unknown:
+            raise ValueError(f"factor weights reference unknown games: {sorted(unknown)}")
+        if any(
+            not np.isfinite(weight) or weight <= 0
+            for weight in factor_weights.values()
+        ):
+            raise ValueError("factor weights must be finite and strictly positive")
     grouped: dict[tuple[str, str], tuple[np.ndarray, list[str]]] = {}
     # Canonical orientation means rematches do not introduce a trivial
     # two-variable cycle. Individual IDs remain available for provenance.
@@ -320,6 +330,8 @@ def infer_posterior(
         if (game.home_id, game.away_id) != key:
             values = values.T
         log_values = np.log(np.maximum(values, np.finfo(float).tiny))
+        if factor_weights is not None:
+            log_values *= factor_weights.get(game.game_id, 1.0)
         if key in grouped:
             prior_log_values, game_ids = grouped[key]
             grouped[key] = (prior_log_values + log_values, [*game_ids, game.game_id])
