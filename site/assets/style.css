@@ -159,7 +159,7 @@ button {
   border-color: var(--green);
 }
 
-.prior-select button:hover:not(:disabled),
+.prior-select button:hover:not(:disabled):not(.is-active),
 .table-toggle button:hover:not(.is-active) {
   background: var(--wash);
 }
