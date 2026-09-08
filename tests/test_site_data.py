@@ -44,6 +44,7 @@ def _config_for(source: Path, tmp_path: Path, *, slot: str = "test") -> Path:
         json.dumps(
             {
                 "schema_version": "1.0",
+                "publication_slots": [{"id": slot, "status": "official"}],
                 "snapshots": [
                     {
                         "source": str(source.relative_to(tmp_path)),
@@ -111,6 +112,21 @@ def _write_pmf_rows(path: Path, fields: list[str], rows: list[dict[str, str]]) -
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
         writer.writerows(rows)
+
+
+def test_publication_slot_status_is_required_and_closed(tmp_path: Path) -> None:
+    source = _copied_snapshot(tmp_path)
+    config = _config_for(source, tmp_path)
+    payload = json.loads(config.read_text(encoding="utf-8"))
+    del payload["publication_slots"]
+    config.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(SiteDataValidationError, match="publication_slots"):
+        build_site_data(root=tmp_path, config_path=config, output_directory=tmp_path / "data")
+
+    payload["publication_slots"] = [{"id": "test", "status": "unknown"}]
+    config.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(SiteDataValidationError, match="official or temporary"):
+        build_site_data(root=tmp_path, config_path=config, output_directory=tmp_path / "data")
 
 
 def test_logo_url_uses_canonical_handle_and_supports_template_override() -> None:
@@ -430,6 +446,136 @@ def test_site_data_publishes_all_initial_h_c_preseason_and_current_snapshots(
     assert {entry["effective_cutoff"] for entry in weekly} == {
         performance[0]["effective_cutoff"]
     }
+
+
+def test_publication_status_and_official_comparison_chain(tmp_path: Path) -> None:
+    manifest = build_site_data(
+        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
+    )
+    status_by_slot = {
+        entry["publication_slot"]: entry["publication_status"]
+        for entry in manifest["snapshots"]
+        if entry["ranking_family"] == "predictive" and entry["prior_family"] == "context"
+    }
+    assert status_by_slot == {
+        "2026-preseason": "official",
+        "2026-sep-05": "temporary",
+        "2026-09-06": "temporary",
+        "2026-09-07": "temporary",
+        "2026-09-08": "official",
+    }
+
+    def entry(slot: str, family: str = "context", ranking_family: str = "predictive"):
+        return next(
+            item
+            for item in manifest["snapshots"]
+            if item["publication_slot"] == slot
+            and item["ranking_family"] == ranking_family
+            and item.get("prior_family") == (family if ranking_family == "predictive" else None)
+        )
+
+    preseason = entry("2026-preseason")
+    sep_5 = entry("2026-sep-05")
+    sep_7 = entry("2026-09-07")
+    week_2 = entry("2026-09-08")
+    performance = entry("2026-09-08", ranking_family="performance")
+    assert preseason["comparison_snapshot_id"] is None
+    assert sep_5["comparison_snapshot_id"] == preseason["snapshot_id"]
+    assert sep_7["comparison_snapshot_id"] == preseason["snapshot_id"]
+    assert week_2["comparison_snapshot_id"] == preseason["snapshot_id"]
+    assert performance["comparison_snapshot_id"] is None
+
+
+def test_comparison_resolution_uses_explicit_order_and_compatible_family() -> None:
+    def prepared(
+        slot: str,
+        order: int,
+        status: str,
+        *,
+        family: str = "context",
+        ranking_family: str = "predictive",
+    ) -> site_data.PreparedSnapshot:
+        selected = site_data.PublishedSnapshot(
+            Path(slot), slot, slot, status, order
+        )
+        metadata = {
+            "season": 2026,
+            "ranking_family": ranking_family,
+            "prior_family": family,
+        }
+        return site_data.PreparedSnapshot(selected, metadata, slot, [], {}, {}, {})
+
+    preseason = prepared("week-z", 0, "official")
+    temporary = prepared("week-a", 1, "temporary")
+    history = prepared("week-b", 2, "official", family="history")
+    current = prepared("week-c", 3, "official")
+    performance = prepared(
+        "week-d", 4, "official", ranking_family="performance", family="context"
+    )
+    week_2_performance = prepared(
+        "week-e", 5, "official", ranking_family="performance", family="context"
+    )
+    later_performance = prepared(
+        "week-f", 6, "temporary", ranking_family="performance", family="context"
+    )
+    assert site_data._previous_official_snapshot(
+        temporary,
+        [preseason, temporary, history, current, performance, week_2_performance, later_performance],
+    ) is preseason
+    assert site_data._previous_official_snapshot(
+        current,
+        [preseason, temporary, history, current, performance, week_2_performance, later_performance],
+    ) is preseason
+    assert site_data._previous_official_snapshot(
+        performance,
+        [preseason, temporary, history, current, performance, week_2_performance, later_performance],
+    ) is None
+    assert site_data._previous_official_snapshot(
+        later_performance,
+        [preseason, temporary, history, current, performance, week_2_performance, later_performance],
+    ) is week_2_performance
+
+
+def test_rank_change_uses_display_rank_and_handles_nr_transitions() -> None:
+    previous = site_data.PreparedSnapshot(
+        site_data.PublishedSnapshot(Path("old"), "Preseason", "old", "official", 0),
+        {"season": 2026, "ranking_family": "performance"},
+        "old",
+        [
+            {"team_id": "up", "rated": True, "display_rank": 17},
+            {"team_id": "same", "rated": True, "display_rank": 4},
+            {"team_id": "new", "rated": False, "display_rank": "NR"},
+            {"team_id": "gone", "rated": True, "display_rank": 35},
+            {"team_id": "still-nr", "rated": False, "display_rank": "NR"},
+        ],
+        {},
+        {},
+        {},
+    )
+    current = site_data.PreparedSnapshot(
+        site_data.PublishedSnapshot(Path("new"), "Week 2", "new", "official", 1),
+        {"season": 2026, "ranking_family": "performance"},
+        "new",
+        [
+            {"team_id": "up", "rated": True, "display_rank": 12},
+            {"team_id": "same", "rated": True, "display_rank": 4},
+            {"team_id": "new", "rated": True, "display_rank": 22},
+            {"team_id": "gone", "rated": False, "display_rank": "NR"},
+            {"team_id": "still-nr", "rated": False, "display_rank": "NR"},
+        ],
+        {},
+        {},
+        {},
+    )
+    site_data._apply_rank_changes(current, previous)
+    rows = {row["team_id"]: row for row in current.rankings}
+    assert (rows["up"]["rank_change"], rows["up"]["rank_change_status"]) == (5, "ranked")
+    assert rows["same"]["rank_change_display"] == "—"
+    assert rows["new"]["rank_change_status"] == "newly_rated"
+    assert rows["new"]["rank_change"] is None
+    assert rows["gone"]["rank_change_status"] == "became_unrated"
+    assert rows["gone"]["rank_change"] is None
+    assert rows["still-nr"]["rank_change_status"] == "unrated"
 
 
 @pytest.mark.parametrize(
@@ -790,6 +936,10 @@ def test_site_uses_base_safe_relative_paths() -> None:
     assert "distributionCache" in app
     assert "selectedEntry()?.snapshot_id !== entry.snapshot_id" in app
     assert "publication_slot" in app
+    assert "publication_status" in app
+    assert "rank_change_accessible" in app
+    assert "Change vs" in app
+    assert "rank-change-inline" in app
     assert "staying on" in app
     assert 'state.family === "performance"' in app
     assert "No eligible games played" in app

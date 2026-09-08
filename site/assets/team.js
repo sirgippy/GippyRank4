@@ -54,6 +54,10 @@ function rank(value) {
   return `#${Number(value).toFixed(1)}`;
 }
 
+function publicationStatusLabel(entry) {
+  return entry.publication_status === "official" ? "Official" : "Interim";
+}
+
 function entryFor(manifest) {
   const family = params.get("family") === "performance" ? "performance" : "predictive";
   const season = Number(params.get("season")) || manifest.seasons[0];
@@ -86,7 +90,7 @@ function renderSummary(entry, snapshot, row) {
   const rankLabel = row.rated === false ? "NR" : `#${row.display_rank}`;
   const logo = teamLogo(row.team_id, "team-logo team-logo-card");
   $("#team-page-logo").replaceChildren(...(logo ? [logo] : []));
-  $("#team-page-kind").textContent = `${entry.season} ${entry.display_label} · ${entry.snapshot_type === "preseason" ? "Preseason" : "Snapshot"}`;
+  $("#team-page-kind").textContent = `${entry.season} ${entry.display_label} · ${publicationStatusLabel(entry)} publication`;
   $("#team-page-title").textContent = row.team_name;
   $("#team-page-meta").textContent = `${row.conference || "Independent"} · ${entry.snapshot_type === "preseason" ? "Before game evidence" : `Through ${formatDate(entry.effective_cutoff)}`} · ${rankLabel} ${entry.ranking_family === "performance" ? "Performance" : `Predictive ${entry.prior_family === "history" ? "History" : "Context"}`}`;
   $("#schedule-context").textContent = entry.snapshot_type === "preseason"
@@ -95,6 +99,7 @@ function renderSummary(entry, snapshot, row) {
   const summary = node("div", "team-summary-grid");
   summary.append(
     node("div", "team-summary-item", `${rankLabel} · expected ${rank(row.expected_rank)}`),
+    node("div", "team-summary-item", row.rank_change_accessible || "No earlier official ranking baseline"),
     node("div", "team-summary-item", `Median ${row.median_rank} · 80% ${row.interval_80[0]}–${row.interval_80[1]}`),
     node("div", "team-summary-item", `${row.record} modeled record · ${percentage(row.top25_probability)} Top 25 probability`),
   );

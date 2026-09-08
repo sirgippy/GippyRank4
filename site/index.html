@@ -36,13 +36,14 @@
           <p class="snapshot-kind" id="snapshot-kind"></p>
           <h2 id="snapshot-title">Loading rankings…</h2>
           <p id="snapshot-freshness"></p>
+          <p id="snapshot-comparison"></p>
         </div>
         <p id="snapshot-evidence" class="evidence"></p>
       </section>
 
       <section class="rankings" aria-labelledby="rankings-title">
         <div class="section-heading">
-          <div><h2 id="rankings-title">Top 25</h2><p class="section-context">FBS rankings · sorted by expected rank</p></div>
+          <div><h2 id="rankings-title">Top 25</h2><p id="section-context" class="section-context">FBS rankings · sorted by expected rank</p></div>
           <div class="table-toggle" role="group" aria-label="Ranking depth">
             <button type="button" data-depth="25" class="is-active">Top 25</button>
             <button type="button" data-depth="all">All FBS</button>
@@ -50,7 +51,7 @@
         </div>
         <div class="table-wrap" tabindex="0">
           <table>
-            <thead><tr><th>Rank</th><th>Team</th><th class="record-column"><abbr title="Includes only FBS/FCS games eligible for the ranking model.">Modeled record</abbr></th><th>Expected</th><th class="median-column">Median</th><th>80% interval</th><th class="uncertainty-column">Uncertainty<span class="sr-only"> (80% interval on a shared rank scale; dot is expected rank)</span></th><th class="top25-column">Top 25</th><th>Details</th></tr></thead>
+            <thead><tr><th>Rank</th><th class="change-column">Change</th><th class="team-column">Team</th><th class="record-column"><abbr title="Includes only FBS/FCS games eligible for the ranking model.">Modeled record</abbr></th><th class="expected-column">Expected</th><th class="median-column">Median</th><th class="interval-column">80% interval</th><th class="uncertainty-column">Uncertainty<span class="sr-only"> (80% interval on a shared rank scale; dot is expected rank)</span></th><th class="top25-column">Top 25</th><th>Details</th></tr></thead>
             <tbody id="rankings-body"></tbody>
           </table>
         </div>

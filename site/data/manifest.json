@@ -3,7 +3,7 @@
   "payload_stats": {
     "lazy_rank_distribution_bytes": 5877006,
     "lazy_team_season_bytes": 7121534,
-    "published_ranking_snapshot_bytes": 1414122,
+    "published_ranking_snapshot_bytes": 1785971,
     "published_snapshot_count": 13
   },
   "ranking_families": [
@@ -22,6 +22,8 @@
   ],
   "snapshots": [
     {
+      "comparison_display_label": null,
+      "comparison_snapshot_id": null,
       "data_path": "data/snapshots/2026-preseason-context.json",
       "display_label": "Preseason",
       "distribution_path": "data/distributions/2026-preseason-context.json",
@@ -36,6 +38,7 @@
       },
       "prior_family": "context",
       "publication_slot": "2026-preseason",
+      "publication_status": "official",
       "rank_count": 138,
       "ranking_family": "predictive",
       "rated_count": 138,
@@ -50,6 +53,8 @@
       "valid": true
     },
     {
+      "comparison_display_label": null,
+      "comparison_snapshot_id": null,
       "data_path": "data/snapshots/2026-preseason-history.json",
       "display_label": "Preseason",
       "distribution_path": "data/distributions/2026-preseason-history.json",
@@ -64,6 +69,7 @@
       },
       "prior_family": "history",
       "publication_slot": "2026-preseason",
+      "publication_status": "official",
       "rank_count": 138,
       "ranking_family": "predictive",
       "rated_count": 138,
@@ -78,6 +84,8 @@
       "valid": true
     },
     {
+      "comparison_display_label": "Preseason",
+      "comparison_snapshot_id": "2026-preseason-context",
       "data_path": "data/snapshots/2026-live-2026-09-05T23-59-59Z-context.json",
       "display_label": "Sep. 5",
       "distribution_path": "data/distributions/2026-live-2026-09-05T23-59-59Z-context.json",
@@ -92,6 +100,7 @@
       },
       "prior_family": "context",
       "publication_slot": "2026-sep-05",
+      "publication_status": "temporary",
       "rank_count": 138,
       "ranking_family": "predictive",
       "rated_count": 138,
@@ -106,6 +115,8 @@
       "valid": true
     },
     {
+      "comparison_display_label": "Preseason",
+      "comparison_snapshot_id": "2026-preseason-history",
       "data_path": "data/snapshots/2026-live-2026-09-05T23-59-59Z-history.json",
       "display_label": "Sep. 5",
       "distribution_path": "data/distributions/2026-live-2026-09-05T23-59-59Z-history.json",
@@ -120,6 +131,7 @@
       },
       "prior_family": "history",
       "publication_slot": "2026-sep-05",
+      "publication_status": "temporary",
       "rank_count": 138,
       "ranking_family": "predictive",
       "rated_count": 138,
@@ -134,6 +146,8 @@
       "valid": true
     },
     {
+      "comparison_display_label": "Preseason",
+      "comparison_snapshot_id": "2026-preseason-context",
       "data_path": "data/snapshots/2026-weekly-2026-09-06T17-34-56.895103Z-context.json",
       "display_label": "20260906",
       "distribution_path": "data/distributions/2026-weekly-2026-09-06T17-34-56.895103Z-context.json",
@@ -148,6 +162,7 @@
       },
       "prior_family": "context",
       "publication_slot": "2026-09-06",
+      "publication_status": "temporary",
       "rank_count": 138,
       "ranking_family": "predictive",
       "rated_count": 138,
@@ -162,6 +177,8 @@
       "valid": true
     },
     {
+      "comparison_display_label": "Preseason",
+      "comparison_snapshot_id": "2026-preseason-history",
       "data_path": "data/snapshots/2026-weekly-2026-09-06T17-34-56.895103Z-history.json",
       "display_label": "20260906",
       "distribution_path": "data/distributions/2026-weekly-2026-09-06T17-34-56.895103Z-history.json",
@@ -176,6 +193,7 @@
       },
       "prior_family": "history",
       "publication_slot": "2026-09-06",
+      "publication_status": "temporary",
       "rank_count": 138,
       "ranking_family": "predictive",
       "rated_count": 138,
@@ -191,6 +209,8 @@
     },
     {
       "anchor_family": "context",
+      "comparison_display_label": null,
+      "comparison_snapshot_id": null,
       "data_path": "data/snapshots/2026-weekly-2026-09-06T17-34-56.895103Z-performance.json",
       "display_label": "20260906",
       "distribution_path": "data/distributions/2026-weekly-2026-09-06T17-34-56.895103Z-performance.json",
@@ -204,6 +224,7 @@
         "performance": "1.0"
       },
       "publication_slot": "2026-09-06",
+      "publication_status": "temporary",
       "rank_count": 138,
       "ranking_family": "performance",
       "rated_count": 131,
@@ -218,6 +239,8 @@
       "valid": true
     },
     {
+      "comparison_display_label": "Preseason",
+      "comparison_snapshot_id": "2026-preseason-context",
       "data_path": "data/snapshots/2026-weekly-2026-09-07T13-42-50.853587Z-context.json",
       "display_label": "Sep. 7",
       "distribution_path": "data/distributions/2026-weekly-2026-09-07T13-42-50.853587Z-context.json",
@@ -232,6 +255,7 @@
       },
       "prior_family": "context",
       "publication_slot": "2026-09-07",
+      "publication_status": "temporary",
       "rank_count": 138,
       "ranking_family": "predictive",
       "rated_count": 138,
@@ -246,6 +270,8 @@
       "valid": true
     },
     {
+      "comparison_display_label": "Preseason",
+      "comparison_snapshot_id": "2026-preseason-history",
       "data_path": "data/snapshots/2026-weekly-2026-09-07T13-42-50.853587Z-history.json",
       "display_label": "Sep. 7",
       "distribution_path": "data/distributions/2026-weekly-2026-09-07T13-42-50.853587Z-history.json",
@@ -260,6 +286,7 @@
       },
       "prior_family": "history",
       "publication_slot": "2026-09-07",
+      "publication_status": "temporary",
       "rank_count": 138,
       "ranking_family": "predictive",
       "rated_count": 138,
@@ -275,6 +302,8 @@
     },
     {
       "anchor_family": "context",
+      "comparison_display_label": null,
+      "comparison_snapshot_id": null,
       "data_path": "data/snapshots/2026-weekly-2026-09-07T13-42-50.853587Z-performance.json",
       "display_label": "Sep. 7",
       "distribution_path": "data/distributions/2026-weekly-2026-09-07T13-42-50.853587Z-performance.json",
@@ -288,6 +317,7 @@
         "performance": "1.0"
       },
       "publication_slot": "2026-09-07",
+      "publication_status": "temporary",
       "rank_count": 138,
       "ranking_family": "performance",
       "rated_count": 137,
@@ -302,6 +332,8 @@
       "valid": true
     },
     {
+      "comparison_display_label": "Preseason",
+      "comparison_snapshot_id": "2026-preseason-context",
       "data_path": "data/snapshots/2026-weekly-2026-09-08T11-43-00.275833Z-context.json",
       "display_label": "Week 2",
       "distribution_path": "data/distributions/2026-weekly-2026-09-08T11-43-00.275833Z-context.json",
@@ -316,6 +348,7 @@
       },
       "prior_family": "context",
       "publication_slot": "2026-09-08",
+      "publication_status": "official",
       "rank_count": 138,
       "ranking_family": "predictive",
       "rated_count": 138,
@@ -330,6 +363,8 @@
       "valid": true
     },
     {
+      "comparison_display_label": "Preseason",
+      "comparison_snapshot_id": "2026-preseason-history",
       "data_path": "data/snapshots/2026-weekly-2026-09-08T11-43-00.275833Z-history.json",
       "display_label": "Week 2",
       "distribution_path": "data/distributions/2026-weekly-2026-09-08T11-43-00.275833Z-history.json",
@@ -344,6 +379,7 @@
       },
       "prior_family": "history",
       "publication_slot": "2026-09-08",
+      "publication_status": "official",
       "rank_count": 138,
       "ranking_family": "predictive",
       "rated_count": 138,
@@ -359,6 +395,8 @@
     },
     {
       "anchor_family": "context",
+      "comparison_display_label": null,
+      "comparison_snapshot_id": null,
       "data_path": "data/snapshots/2026-weekly-2026-09-08T11-43-00.275833Z-performance.json",
       "display_label": "Week 2",
       "distribution_path": "data/distributions/2026-weekly-2026-09-08T11-43-00.275833Z-performance.json",
@@ -372,6 +410,7 @@
         "performance": "1.0"
       },
       "publication_slot": "2026-09-08",
+      "publication_status": "official",
       "rank_count": 138,
       "ranking_family": "performance",
       "rated_count": 138,

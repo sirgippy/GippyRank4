@@ -197,6 +197,19 @@ def _upsert_publication(
     slot: str, label: str, performance: Snapshot | None = None,
 ) -> None:
     config = _load_json(config_path)
+    slot_entries = config.get("publication_slots")
+    if not isinstance(slot_entries, list):
+        raise TypeError(
+            "Publish configuration needs explicit publication_slots metadata before updates"
+        )
+    slot_ids = {
+        entry.get("id")
+        for entry in slot_entries
+        if isinstance(entry, dict) and isinstance(entry.get("id"), str)
+    }
+    if slot not in slot_ids:
+        slot_entries.append({"id": slot, "status": "temporary"})
+    config["publication_slots"] = slot_entries
     retained = [
         entry for entry in config["snapshots"]
         if entry.get("publication_slot") != slot

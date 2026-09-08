@@ -39,6 +39,21 @@ class PublishedSnapshot:
     source: Path
     display_label: str
     publication_slot: str
+    publication_status: str
+    publication_order: int
+
+
+@dataclass(frozen=True)
+class PreparedSnapshot:
+    """Validated source data held until publication comparisons are resolved."""
+
+    selected: PublishedSnapshot
+    metadata: dict[str, Any]
+    snapshot_id: str
+    rankings: list[dict[str, Any]]
+    distribution: dict[str, Any]
+    team_seasons: dict[str, Any]
+    records: dict[str, str]
 
 
 def build_fbs_conference_map(
@@ -124,14 +139,42 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 
 def load_publish_config(path: Path, root: Path) -> tuple[list[PublishedSnapshot], str | None]:
-    """Load an explicit, ordered list of snapshot directories to publish."""
+    """Load explicitly ordered snapshots and their slot-level status metadata.
+
+    ``publication_slots`` is an ordered list.  Its order is the publication
+    chronology used for comparison resolution; slot IDs are intentionally not
+    parsed or sorted because they are presentation/configuration identifiers.
+    """
     config = _read_json(path)
     if config.get("schema_version") != SITE_SCHEMA_VERSION:
         raise SiteDataValidationError("Unsupported publish configuration schema")
+    slot_entries = config.get("publication_slots")
+    if not isinstance(slot_entries, list) or not slot_entries:
+        raise SiteDataValidationError(
+            "Publish configuration needs a non-empty publication_slots list"
+        )
+    slots: dict[str, tuple[str, int]] = {}
+    for order, entry in enumerate(slot_entries):
+        if not isinstance(entry, dict):
+            raise SiteDataValidationError("Each publication slot must be an object")
+        slot = entry.get("id")
+        status = entry.get("status")
+        if not isinstance(slot, str) or not slot:
+            raise SiteDataValidationError(
+                "Each publication slot needs a non-empty id string"
+            )
+        if slot in slots:
+            raise SiteDataValidationError(f"Duplicate publication slot metadata: {slot}")
+        if status not in {"official", "temporary"}:
+            raise SiteDataValidationError(
+                f"{slot}: publication status must be official or temporary"
+            )
+        slots[slot] = (status, order)
     snapshots = config.get("snapshots")
     if not isinstance(snapshots, list) or not snapshots:
         raise SiteDataValidationError("Publish configuration needs a non-empty snapshots list")
     selected: list[PublishedSnapshot] = []
+    referenced_slots: set[str] = set()
     for entry in snapshots:
         if not isinstance(entry, dict):
             raise SiteDataValidationError("Each publish configuration entry must be an object")
@@ -142,10 +185,21 @@ def load_publish_config(path: Path, root: Path) -> tuple[list[PublishedSnapshot]
             raise SiteDataValidationError(
                 "Each entry needs source, display_label, and publication_slot strings"
             )
+        if slot not in slots:
+            raise SiteDataValidationError(
+                f"Snapshot {source} references a publication slot without status: {slot}"
+            )
         source_path = root / source
         if not source_path.is_dir():
             raise SiteDataValidationError(f"Selected snapshot directory does not exist: {source}")
-        selected.append(PublishedSnapshot(source_path, label, slot))
+        status, order = slots[slot]
+        referenced_slots.add(slot)
+        selected.append(PublishedSnapshot(source_path, label, slot, status, order))
+    if referenced_slots != set(slots):
+        missing = sorted(set(slots) - referenced_slots)
+        raise SiteDataValidationError(
+            f"Publication slot metadata does not match configured snapshots: {missing}"
+        )
     default_slot = config.get("default_publication_slot")
     if default_slot is not None:
         if not isinstance(default_slot, str) or not default_slot:
@@ -306,6 +360,90 @@ def _ranking_rows(path: Path, metadata: dict[str, Any]) -> list[dict[str, Any]]:
             str(row["team_name"]),
         ),
     )
+
+
+def _comparison_key(snapshot: PreparedSnapshot) -> tuple[int, str, str | None]:
+    metadata = snapshot.metadata
+    return (
+        int(metadata["season"]),
+        str(metadata["ranking_family"]),
+        str(metadata["prior_family"]) if metadata["ranking_family"] == "predictive" else None,
+    )
+
+
+def _previous_official_snapshot(
+    current: PreparedSnapshot, snapshots: list[PreparedSnapshot]
+) -> PreparedSnapshot | None:
+    """Resolve the latest strictly earlier compatible official publication."""
+    compatible = [
+        snapshot
+        for snapshot in snapshots
+        if snapshot.selected.publication_status == "official"
+        and snapshot.selected.publication_order < current.selected.publication_order
+        and _comparison_key(snapshot) == _comparison_key(current)
+    ]
+    return max(compatible, key=lambda snapshot: snapshot.selected.publication_order, default=None)
+
+
+def _rank_change_text(
+    *,
+    current: dict[str, Any],
+    previous: dict[str, Any] | None,
+    baseline_label: str | None,
+    has_baseline: bool,
+) -> tuple[str, str, int | None, int | None, str]:
+    """Return machine status, compact display, numeric delta, old rank, and prose."""
+    if not has_baseline or previous is None:
+        return (
+            "no_comparison",
+            "—",
+            None,
+            None,
+            "No earlier official ranking baseline",
+        )
+
+    current_rated = bool(current["rated"])
+    previous_rated = bool(previous["rated"])
+    baseline = f" since {baseline_label}" if baseline_label else ""
+    previous_rank = previous["display_rank"] if previous_rated else None
+    if current_rated and previous_rated:
+        change = int(previous["display_rank"]) - int(current["display_rank"])
+        if change > 0:
+            return "ranked", f"↑{change}", change, previous_rank, f"Up {change}{baseline}"
+        if change < 0:
+            return "ranked", f"↓{abs(change)}", change, previous_rank, f"Down {abs(change)}{baseline}"
+        return "ranked", "—", 0, previous_rank, f"Unchanged{baseline}"
+    if current_rated:
+        return "newly_rated", "NEW", None, None, f"Newly rated{baseline}"
+    if previous_rated:
+        return "became_unrated", "NR", None, previous_rank, f"Became unrated{baseline}"
+    return "unrated", "—", None, None, "Unrated in both snapshots"
+
+
+def _apply_rank_changes(
+    current: PreparedSnapshot, previous: PreparedSnapshot | None
+) -> None:
+    """Attach build-time movement metadata to every current ranking row."""
+    previous_by_team = (
+        {row["team_id"]: row for row in previous.rankings} if previous is not None else {}
+    )
+    baseline_label = previous.selected.display_label if previous is not None else None
+    for row in current.rankings:
+        status, display, change, previous_rank, accessible = _rank_change_text(
+            current=row,
+            previous=previous_by_team.get(row["team_id"]),
+            baseline_label=baseline_label,
+            has_baseline=previous is not None,
+        )
+        row.update(
+            {
+                "previous_official_rank": previous_rank,
+                "rank_change": change,
+                "rank_change_status": status,
+                "rank_change_display": display,
+                "rank_change_accessible": accessible,
+            }
+        )
 
 
 def _rank(value: str, field: str, snapshot_id: str) -> int:
@@ -791,6 +929,7 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
     selected, default_slot = load_publish_config(config_path, root)
     logo_url_template = _logo_url_template(config_path)
     manifest_entries: list[dict[str, Any]] = []
+    prepared_snapshots: list[PreparedSnapshot] = []
     seen_ids: set[str] = set()
     seen_publications: set[tuple[int, str, str, str]] = set()
     published_fbs_identities: set[tuple[str, str]] = set()
@@ -874,9 +1013,33 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
                     "top25_probability": summary["top25_probability"],
                 }
             )
+        prepared_snapshots.append(
+            PreparedSnapshot(
+                selected_snapshot,
+                metadata,
+                snapshot_id,
+                rankings,
+                distribution,
+                team_seasons,
+                records,
+            )
+        )
+    for prepared in prepared_snapshots:
+        _apply_rank_changes(
+            prepared,
+            _previous_official_snapshot(prepared, prepared_snapshots),
+        )
+    for prepared in prepared_snapshots:
+        selected_snapshot = prepared.selected
+        metadata = prepared.metadata
+        snapshot_id = prepared.snapshot_id
+        rankings = prepared.rankings
+        distribution = prepared.distribution
+        team_seasons = prepared.team_seasons
         relative_data_path = f"data/snapshots/{snapshot_id}.json"
         relative_distribution_path = f"data/distributions/{snapshot_id}.json"
         relative_team_seasons_path = f"data/team-seasons/{snapshot_id}.json"
+        previous = _previous_official_snapshot(prepared, prepared_snapshots)
         consumer_snapshot = {
             "schema_version": SITE_SCHEMA_VERSION,
             "snapshot_id": snapshot_id,
@@ -884,6 +1047,7 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             "snapshot_type": metadata["snapshot_type"],
             "ranking_family": metadata["ranking_family"],
             "publication_slot": selected_snapshot.publication_slot,
+            "publication_status": selected_snapshot.publication_status,
             "requested_cutoff": metadata.get("requested_cutoff"),
             "effective_cutoff": metadata.get("effective_cutoff"),
             "generation_timestamp": metadata["generation_timestamp"],
@@ -898,6 +1062,10 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             "rated_count": metadata.get("rated_count", sum(row["rated"] for row in rankings)),
             "unrated_count": metadata.get(
                 "unrated_count", sum(not row["rated"] for row in rankings)
+            ),
+            "comparison_snapshot_id": previous.snapshot_id if previous is not None else None,
+            "comparison_display_label": (
+                previous.selected.display_label if previous is not None else None
             ),
             "rankings": rankings,
         }
@@ -923,49 +1091,53 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             team_seasons,
             compact=True,
         )
-        manifest_entries.append(
-            {
-                "season": metadata["season"],
-                "snapshot_id": snapshot_id,
-                "snapshot_type": metadata["snapshot_type"],
-                "ranking_family": metadata["ranking_family"],
-                "publication_slot": selected_snapshot.publication_slot,
-                "requested_cutoff": metadata.get("requested_cutoff"),
-                "effective_cutoff": metadata.get("effective_cutoff"),
-                "generation_timestamp": metadata["generation_timestamp"],
-                "source_retrieved_at": metadata.get("source_retrieved_at"),
-                "included_game_count": metadata.get("included_game_count", 0),
-                "excluded_lower_division_games": metadata.get(
-                    "excluded_lower_division_games", 0
-                ),
-                "display_label": selected_snapshot.display_label,
-                "data_path": relative_data_path,
-                "distribution_path": relative_distribution_path,
-                "team_seasons_path": relative_team_seasons_path,
-                "team_seasons_bytes": (
-                    output_directory / "team-seasons" / f"{snapshot_id}.json"
-                ).stat().st_size,
-                "rank_count": distribution["rank_count"],
-                "model_versions": metadata.get(
-                    "model_versions", {"performance": metadata.get("model_version", "unknown")}
-                ),
-                "rated_count": metadata.get("rated_count", sum(row["rated"] for row in rankings)),
-                "unrated_count": metadata.get(
-                    "unrated_count", sum(not row["rated"] for row in rankings)
-                ),
-                "valid": True,
-            }
-        )
+        manifest_entry = {
+            "season": metadata["season"],
+            "snapshot_id": snapshot_id,
+            "snapshot_type": metadata["snapshot_type"],
+            "ranking_family": metadata["ranking_family"],
+            "publication_slot": selected_snapshot.publication_slot,
+            "publication_status": selected_snapshot.publication_status,
+            "requested_cutoff": metadata.get("requested_cutoff"),
+            "effective_cutoff": metadata.get("effective_cutoff"),
+            "generation_timestamp": metadata["generation_timestamp"],
+            "source_retrieved_at": metadata.get("source_retrieved_at"),
+            "included_game_count": metadata.get("included_game_count", 0),
+            "excluded_lower_division_games": metadata.get(
+                "excluded_lower_division_games", 0
+            ),
+            "display_label": selected_snapshot.display_label,
+            "comparison_snapshot_id": previous.snapshot_id if previous is not None else None,
+            "comparison_display_label": (
+                previous.selected.display_label if previous is not None else None
+            ),
+            "data_path": relative_data_path,
+            "distribution_path": relative_distribution_path,
+            "team_seasons_path": relative_team_seasons_path,
+            "team_seasons_bytes": (
+                output_directory / "team-seasons" / f"{snapshot_id}.json"
+            ).stat().st_size,
+            "rank_count": distribution["rank_count"],
+            "model_versions": metadata.get(
+                "model_versions", {"performance": metadata.get("model_version", "unknown")}
+            ),
+            "rated_count": metadata.get("rated_count", sum(row["rated"] for row in rankings)),
+            "unrated_count": metadata.get(
+                "unrated_count", sum(not row["rated"] for row in rankings)
+            ),
+            "valid": True,
+        }
         if metadata["ranking_family"] != "performance":
-            manifest_entries[-1]["prior_family"] = metadata["prior_family"]
+            manifest_entry["prior_family"] = metadata["prior_family"]
         else:
-            manifest_entries[-1].update(
+            manifest_entry.update(
                 {
                     "model_version": metadata["model_version"],
                     "method": metadata["method"],
                     "anchor_family": metadata["anchor_family"],
                 }
             )
+        manifest_entries.append(manifest_entry)
     published_families = {entry["ranking_family"] for entry in manifest_entries}
     published_fbs_logo_audit = _logo_audit(published_fbs_identities)
     rendered_logo_audit = _logo_audit(rendered_team_identities)
