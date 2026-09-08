@@ -494,7 +494,11 @@ def make_reconstructed_teams(
 
 
 def reconstructed_prior_audit_row(
-    target_season: int, family: str, pmf_count: int, context_features: Sequence[str]
+    target_season: int, family: str, pmf_count: int, context_features: Sequence[str],
+    *, supported: bool = True, reason: str | None = None,
+    cold_start_reasons: Mapping[str, int] | None = None,
+    eligible_promotion_rows: int | None = None,
+    eligible_generic_rows: int | None = None,
 ) -> dict[str, object]:
     """Record the temporal boundary used by one reconstructed prior family."""
 
@@ -503,8 +507,13 @@ def reconstructed_prior_audit_row(
         "prior_family": family,
         "trained_through_season": target_season - 1,
         "target_outcomes_used": False,
+        "supported": supported,
+        "reason": reason,
         "pmf_count": pmf_count,
         "context_features": list(context_features),
+        "cold_start_reasons": dict(cold_start_reasons or {}),
+        "eligible_promotion_rows": eligible_promotion_rows,
+        "eligible_generic_rows": eligible_generic_rows,
     }
 
 
@@ -569,8 +578,19 @@ def reconstruct_historical_priors(
             for row in inference
             if (target_season, "fbs", row.team_id) in targets
         ]
-        needs_cold_start = any(row.cold_start_reason is not None for row in inference)
-        if needs_cold_start:
+        needs_promotion = any(row.cold_start_reason == "fcs_to_fbs_transition" for row in inference)
+        needs_generic = any(row.cold_start_reason == "no_prior_rank_distribution" for row in inference)
+        eligible_promotion = [x for x in history_prior.cold_start_teams(cold) if x.season <= trained_through]
+        eligible_generic = [x for x in cold if x.subdivision == "fbs" and x.reason == "no_prior_rank_distribution" and x.season <= trained_through]
+        if needs_promotion and not eligible_promotion:
+            for family in families:
+                audit.append(reconstructed_prior_audit_row(target_season, family, 0, context_features if family == "context_reconstructed" else [], supported=False, reason="required FCS-to-FBS promotion fallback has zero pre-target training rows", cold_start_reasons={"fcs_to_fbs_transition": sum(row.cold_start_reason == "fcs_to_fbs_transition" for row in inference)}, eligible_promotion_rows=0, eligible_generic_rows=len(eligible_generic)))
+            continue
+        if needs_generic and not eligible_generic:
+            for family in families:
+                audit.append(reconstructed_prior_audit_row(target_season, family, 0, context_features if family == "context_reconstructed" else [], supported=False, reason="required generic FBS cold-start fallback has zero pre-target training rows", cold_start_reasons={"no_prior_rank_distribution": sum(row.cold_start_reason == "no_prior_rank_distribution" for row in inference)}, eligible_promotion_rows=len(eligible_promotion), eligible_generic_rows=0))
+            continue
+        if needs_promotion or needs_generic:
             promotion, generic = context_prior.annual_cold_start_models(
                 cold, trained_through_season=trained_through
             )
