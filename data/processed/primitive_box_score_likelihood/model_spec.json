@@ -1,0 +1,166 @@
+{
+  "candidate_selection": {
+    "aggregate_nll_gain_nats_per_team": 0.02,
+    "comparison": "sequential A vs V1, B vs A, C vs B",
+    "forced_reporting_candidate": "A when no A/B/C clears its predecessor; this does not imply promotion",
+    "maximum_80pct_coverage_drop": 0.03,
+    "maximum_crps_degradation": 0.002,
+    "maximum_single_season_nll_degradation": 0.1,
+    "minimum_of_four_development_seasons_with_nll_improvement": 3,
+    "tie_break": "simpler candidate"
+  },
+  "conditioning_variables": {
+    "all_components": [
+      "oriented margin",
+      "pairing",
+      "site"
+    ],
+    "candidate_c_only": [
+      "interceptions_thrown_diff",
+      "interceptions_thrown_total",
+      "fumbles_lost_diff",
+      "fumbles_lost_total"
+    ],
+    "plays_component": [
+      "overall plays_total context"
+    ],
+    "yards_component": [
+      "plays_diff",
+      "plays_total",
+      "yards_total context"
+    ]
+  },
+  "distribution": {
+    "df_grid": [
+      3.0,
+      5.0,
+      8.0,
+      15.0
+    ],
+    "family": "Student-t",
+    "fit": "equal-total-weight rank-pair pseudo-observations per game; robust IRLS",
+    "iterations": 8,
+    "scale": "one fitted robust residual scale per conditional component; no outcome-dependent retuning"
+  },
+  "experiment": "primitive_box_score_likelihood",
+  "factorization": {
+    "a": "p(margin | ranks, site) * p(yards_diff | plays_diff, plays_total, yards_total, margin, ranks, site, pairing)",
+    "b": "p(margin | ranks, site) * p(plays_diff | plays_total, margin, ranks, site, pairing) * p(yards_diff | plays_diff, plays_total, yards_total, margin, ranks, site, pairing)",
+    "c": "B with separate interceptions_thrown_diff/total and fumbles_lost_diff/total as context covariates in both conditional components; no p(INT,FL | ranks)",
+    "v1": "p(margin | ranks, site)"
+  },
+  "missing_data": {
+    "a": "missing yards or plays -> V1",
+    "b": "missing plays disables play factor; missing yards disables yards factor; if no usable factor remains -> V1",
+    "c": "missing either INT-thrown or fumbles-lost value for either team falls back exactly to B for that game",
+    "rule": "missing is not zero; each factor requires the complete fields it conditions on"
+  },
+  "pairing_support": {
+    "fit": "primitive parameters are fit only on FBS-FBS and FBS-FCS rows",
+    "inference": "FCS-FCS and unsupported/missing primitive evidence use the exact V1 margin factor for that game",
+    "supported": [
+      "fbs-fbs",
+      "fbs-fcs"
+    ],
+    "unsupported": [
+      "fcs-fcs"
+    ]
+  },
+  "primitive_representation": {
+    "lossless_claim": "diff plus total is an invertible representation of each selected pair of team values",
+    "orientation": "same-subdivision home-minus-away; cross-subdivision FBS-minus-FCS regardless of listing order",
+    "selected_fields": [
+      "total_yards",
+      "offensive_plays_derived",
+      "interceptions_thrown",
+      "fumbles_lost"
+    ],
+    "team_pair_coordinates": [
+      "yards_diff",
+      "yards_total",
+      "plays_diff",
+      "plays_total"
+    ],
+    "turnover_coordinates": [
+      "interceptions_thrown_diff",
+      "interceptions_thrown_total",
+      "fumbles_lost_diff",
+      "fumbles_lost_total"
+    ]
+  },
+  "promotion_thresholds": {
+    "aggregate_nll_improvement_nats_per_team": 0.02,
+    "maximum_aggregate_80pct_coverage_drop": 0.03,
+    "maximum_aggregate_crps_degradation": 0.002,
+    "maximum_future_margin_mae_degradation_points": 0.5,
+    "maximum_future_margin_nll_degradation_nats": 0.02,
+    "maximum_single_season_crps_degradation": 0.02,
+    "maximum_single_season_nll_degradation": 0.1,
+    "minimum_evaluation_seasons_with_nll_improvement": 3,
+    "minimum_rolling_seasons_with_nll_improvement": 9
+  },
+  "rank_basis": {
+    "coordinates": "V1 percentile coordinates: same-subdivision rank surface uses odd d, d*mean, d*mean^2, d*abs(d), and d*hinges; cross-subdivision uses FBS/FCS percentile surface and site indicators",
+    "rank_signal_null": "rank coordinates are set to zero in the reserved V1 rank columns; context and margin/site columns remain",
+    "rank_support": "the same rank supports supplied by historical_modeling_games.csv and frozen final PMF supports for scoring"
+  },
+  "research_question": "Does retaining yards and plays separately recover useful latent FBS quality information that YPP collapses?",
+  "response_transforms": {
+    "no_winsorization": true,
+    "plays_diff": "asinh(plays_diff / 10.0)",
+    "plays_total_context": "asinh(plays_total / 80.0)",
+    "turnover_diff_and_total_context": "asinh(value / 1.0), separately for INT thrown and fumbles lost",
+    "yards_diff": "asinh(yards_diff / 100.0)",
+    "yards_total_context": "asinh(yards_total / 200.0)"
+  },
+  "scope_exclusions": [
+    "passing/rushing splits",
+    "sacks",
+    "total fumbles",
+    "first downs",
+    "penalties",
+    "PPA/EPA",
+    "success rate",
+    "explosiveness",
+    "play-by-play",
+    "direct turnover rating likelihood",
+    "production Likelihood V2 and website/publication changes"
+  ],
+  "selected_after_development": {
+    "final_metrics_used": false,
+    "final_seasons_used": [],
+    "selected_candidate": "a",
+    "selection_path": [],
+    "selection_rule": {
+      "aggregate_nll_gain_nats_per_team": 0.02,
+      "comparison": "sequential A vs V1, B vs A, C vs B",
+      "forced_reporting_candidate": "A when no A/B/C clears its predecessor; this does not imply promotion",
+      "maximum_80pct_coverage_drop": 0.03,
+      "maximum_crps_degradation": 0.002,
+      "maximum_single_season_nll_degradation": 0.1,
+      "minimum_of_four_development_seasons_with_nll_improvement": 3,
+      "tie_break": "simpler candidate"
+    }
+  },
+  "selected_component_df": {
+    "a": 15.0,
+    "b": 15.0,
+    "c": 15.0
+  },
+  "temporal_design": {
+    "development": "2018-2021",
+    "evaluation": "2022-2025 leakage-safe historical evaluation/prospective-style validation; not independent confirmation",
+    "rolling": "target seasons 2008-2025 fit primitive components only on earlier seasons; no 2026 outcomes",
+    "training": "2004-2017"
+  },
+  "ypp_comparator": {
+    "name": "ypp_supported",
+    "pairings": [
+      "fbs-fbs",
+      "fbs-fcs"
+    ],
+    "retuning": "none; fit specification and df are fixed to the merged PR #17 result",
+    "source": "PR #17 final supported-pairing YPP candidate",
+    "student_t_df": 15.0
+  }
+}
