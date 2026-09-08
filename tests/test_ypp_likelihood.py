@@ -1,11 +1,10 @@
-"""Semantic tests for the research-only conditional YPP implementation."""
+"""Semantic tests for the conditional YPP implementation."""
 
 from __future__ import annotations
 
 import importlib.util
 import json
 from datetime import UTC, datetime
-from hashlib import sha256
 from pathlib import Path
 
 import numpy as np
@@ -13,7 +12,6 @@ import pytest
 
 from gippyrank.posterior.engine import Game, LikelihoodV1, Team, infer_posterior
 from gippyrank.research.ypp_likelihood import (
-    DF_GRID,
     SUPPORTED_YPP_PAIRINGS,
     build_ypp_data,
     conditional_design,
@@ -26,8 +24,6 @@ from gippyrank.research.ypp_likelihood import (
     ypp_factor,
     ypp_pairing_supported,
 )
-
-pytestmark = pytest.mark.research
 
 
 def _research_script():
@@ -293,13 +289,6 @@ def test_build_ypp_data_uses_equal_total_game_weight_and_missing_ypp_is_skipped(
     assert len(data) == 2
     assert np.sum(data.weight) == pytest.approx(1.0)
     assert np.all(data.target == pytest.approx(2.0))
-
-
-def test_naive_independent_diagnostic_is_not_a_candidate_name() -> None:
-    # This mirrors the research build's promotion boundary: the diagnostic is
-    # deliberately not in the candidate set evaluated for selection.
-    assert "naive_independent_diagnostic" not in {"v1", "y1", "y2"}
-    assert len(DF_GRID) == 4
 
 
 def test_disagreement_artifact_selector_restricts_pairings(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -573,30 +562,3 @@ def test_cutoff_future_selection_is_strictly_after_cutoff() -> None:
 def test_production_engine_has_no_research_ypp_dependency() -> None:
     source = Path("src/gippyrank/posterior/engine.py").read_text(encoding="utf-8")
     assert "research.ypp_likelihood" not in source
-
-
-def test_production_v1_artifacts_remain_unchanged() -> None:
-    paths = [
-        Path("data/processed/posterior/historical_likelihood_v1.json"),
-        Path("data/processed/preseason/context/predictions.csv"),
-        Path("data/processed/preseason/history/predictions.csv"),
-    ]
-    if not all(path.exists() for path in paths):
-        pytest.skip("frozen production artifacts are not present in this checkout")
-    before = {
-        str(path): sha256(path.read_bytes()).hexdigest()
-        for path in paths
-    }
-    teams = _teams()
-    infer_posterior_with_ypp(
-        teams,
-        [Game("g", "home", "away", "fbs", "fbs", 21, 14, False)],
-        _likelihood(),
-        {"g": (None, None)},
-        _y2_model(),
-    )
-    after = {
-        str(path): sha256(path.read_bytes()).hexdigest()
-        for path in paths
-    }
-    assert before == after

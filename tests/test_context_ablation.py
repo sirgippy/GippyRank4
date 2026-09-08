@@ -1,8 +1,3 @@
-import csv
-import hashlib
-import sys
-from pathlib import Path
-
 import numpy as np
 import pytest
 
@@ -17,10 +12,6 @@ from gippyrank.context_ablation import (
     training_rows,
 )
 from gippyrank.preseason import TeamSeason
-
-ROOT = Path(__file__).parents[1]
-
-pytestmark = pytest.mark.research
 
 
 def row(season: int, team: str, left: float | None, right: float | None) -> TeamSeason:
@@ -92,118 +83,3 @@ def test_interaction_beating_h_but_losing_parent_is_not_useful() -> None:
     assert interaction_nll - h_nll < 0
     assert interaction_nll - parent_nll > 0
     assert not interaction_is_useful([interaction_nll - parent_nll])
-
-
-def test_report_interaction_claims_use_parent_summary_fields() -> None:
-    sys.path.insert(0, str(ROOT / "scripts"))
-    try:
-        from investigate_context_ablation import report_interaction_lines
-
-        line = report_interaction_lines(
-            [
-                {
-                    "interaction": "Talent × total",
-                    "parent": "H + Talent + total",
-                    "mean_interaction_minus_parent_nll": 0.0014,
-                    "wins": 2,
-                    "losses": 6,
-                }
-            ]
-        )[0]
-    finally:
-        sys.path.pop(0)
-    assert "versus H + Talent + total +0.0014" in line
-
-
-def test_production_specs_and_frozen_2026_pmfs_remain_guarded() -> None:
-    root = Path(__file__).parents[1]
-    source = (root / "scripts/investigate_context_ablation.py").read_text()
-    assert (
-        "data/processed/preseason/history/annual/2026/predictions.csv"
-        not in source.split("write_csv")[0]
-    )
-    expected = {
-        "history/annual/2026/predictions.csv": "0b3454a09288019e17739869c42aed3123fdda2163694f52f63bca65baf37f90",
-        "context/annual/2026/predictions.csv": "641182890ec88ea8bc6150cc97047ddc688d0c680486d9fcc63a58d7bfae9132",
-    }
-    for relative, digest in expected.items():
-        assert (
-            hashlib.sha256(
-                (root / "data/processed/preseason" / relative).read_bytes()
-            ).hexdigest()
-            == digest
-        )
-
-
-def test_stored_ablation_metrics_recompute_from_paired_team_losses() -> None:
-    root = Path(__file__).parents[1]
-    artifact = root / "data/processed/context_ablation"
-    annual = list(csv.DictReader((artifact / "annual_ablation_metrics.csv").open()))
-    losses = list(csv.DictReader((artifact / "per_team_losses.csv").open()))
-    assert annual and losses
-    assert all(row["same_population_keys"] == "True" for row in annual)
-    for row in annual:
-        paired = [
-            float(item["candidate_minus_h_nll"])
-            for item in losses
-            if item["population"] == row["population"]
-            and item["candidate"] == row["candidate"]
-            and item["season"] == row["target_season"]
-        ]
-        assert paired
-        assert float(row["delta_nll"]) == pytest.approx(np.mean(paired))
-
-
-def test_2025_decomposition_is_the_full_c_paired_aggregate() -> None:
-    root = Path(__file__).parents[1]
-    artifact = root / "data/processed/context_ablation"
-    decomposition = list(csv.DictReader((artifact / "decomposition_2025.csv").open()))
-    annual = list(csv.DictReader((artifact / "annual_ablation_metrics.csv").open()))
-    target = next(
-        row
-        for row in annual
-        if row["population"] == "same_all_context"
-        and row["candidate"] == "same_full_c"
-        and row["target_season"] == "2025"
-    )
-    assert aggregate_difference(
-        [float(row["candidate_minus_h_nll"]) for row in decomposition]
-    ) == pytest.approx(float(target["delta_nll"]))
-
-
-def test_missingness_control_records_raw_absence_separately() -> None:
-    root = Path(__file__).parents[1]
-    rows = list(
-        csv.DictReader(
-            (root / "data/processed/context_ablation/missingness_results.csv").open()
-        )
-    )
-    for family in ("recruiting", "talent", "returning"):
-        forms = {row["formulation"] for row in rows if row["family"] == family}
-        assert forms == {"with_indicators", "without_indicators"}
-
-
-def test_generated_interaction_artifacts_remain_parent_relative() -> None:
-    artifact = ROOT / "data/processed/context_ablation"
-    annual = list(csv.DictReader((artifact / "annual_ablation_metrics.csv").open()))
-    interactions = list(csv.DictReader((artifact / "interaction_results.csv").open()))
-    summaries = list(csv.DictReader((artifact / "interaction_summary.csv").open()))
-    assert interactions and summaries
-    assert all(row["same_population_keys"] == "True" for row in interactions)
-    assert all(row["same_training_keys"] == "True" for row in interactions)
-    assert all("interaction_minus_parent_nll" in row for row in interactions)
-    # This guards against restoring the generic candidate-vs-H CSV writer.
-    assert "candidate" not in interactions[0]
-    for summary in summaries:
-        rows = [
-            float(row["interaction_minus_parent_nll"])
-            for row in interactions
-            if row["interaction"] == summary["interaction"]
-        ]
-        assert float(summary["mean_interaction_minus_parent_nll"]) == pytest.approx(
-            np.mean(rows)
-        )
-    report = (artifact / "report.md").read_text()
-    assert "## Interaction parent comparisons" in report
-    assert "mean ΔNLL versus H + talent_composite" in report
-    assert any("interaction_talent_total" in row["candidate"] for row in annual)

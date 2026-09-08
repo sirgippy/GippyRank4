@@ -69,24 +69,15 @@ secrets beyond GitHub Pages' standard permissions.
 For the posterior snapshot contract and math, see
 [Posterior Snapshot V1](docs/posterior_v1.md).
 
-## Test suites
+## Test suite
 
-The default developer/CI command exercises production and shared scientific
-contracts:
+The default developer/CI command runs every retained test:
 
 ```bash
 uv run pytest -q
 ```
 
-Frozen research investigations are marked `research` and are excluded from
-that default loop. To run the complete suite, including those investigations,
-use:
-
-```bash
-uv run pytest -q -o addopts=""
-```
-
-The classification and timing inventory is maintained in
+The test inventory, pruning rationale, and timing report are maintained in
 [docs/test_suite.md](docs/test_suite.md).
 
 ## Weekly ranking update

@@ -1,8 +1,7 @@
-"""Semantic tests for the research-only primitive box-score likelihood."""
+"""Semantic tests for the primitive box-score likelihood implementation."""
 
 from __future__ import annotations
 
-import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -24,8 +23,6 @@ from gippyrank.research.primitive_box_score_likelihood import (
     pairing_for,
     primitive_factor,
 )
-
-pytestmark = pytest.mark.research
 
 
 def _script():
@@ -455,18 +452,6 @@ def test_reconstructed_rolling_consumer_excludes_unsupported_targets() -> None:
     assert 2012 not in supported
 
 
-def test_rolling_report_separates_uniform_and_reconstructed_panels() -> None:
-    script = _script()
-    original = [{"target_season": 2012, "fit_seasons": "2004-2011", "candidate": "a", "nll": 1.0, "crps": 0.1, "interval_80_coverage": 0.8}]
-    sensitivity = [{"target_season": 2013, "fit_seasons": "2004-2012", "candidate": "a", "nll": 0.9, "crps": 0.09, "interval_80_coverage": 0.81}]
-    section = "\n".join(script.rolling_report_section(original, {"rolling_sensitivity_rows": sensitivity, "rolling_excluded_targets": [{"target_season": 2012, "reason": "unsupported"}]}))
-    assert "Original rolling robustness" in section
-    assert "uniform ordinal" in section
-    assert "Reconstructed History-prior sensitivity" in section
-    assert "reconstructed History 1.1" in section
-    assert "Excluded reconstructed target **2012**" in section
-
-
 def test_historical_promotion_adapter_returns_teamseason_and_preserves_cross_lag() -> None:
     script = _script()
     import sys
@@ -487,16 +472,6 @@ def test_historical_promotion_adapter_returns_teamseason_and_preserves_cross_lag
         "context_reconstructed",
         "history_reconstructed",
     )
-
-
-def test_candidate_definitions_thresholds_and_comparison_keys_are_frozen() -> None:
-    script = _script()
-    assert script.PRIMITIVE_CANDIDATES == ("a", "b", "c")
-    assert script.SELECTION_CANDIDATES == ("v1", "a", "b", "c")
-    assert script.DEVELOPMENT_SELECTION_RULE["comparison"] == (
-        "sequential A vs V1, B vs A, C vs B"
-    )
-    assert script.PROMOTION_CRITERIA["aggregate_nll_improvement_nats_per_team"] == 0.02
 
 
 def test_fit_is_deterministic() -> None:
@@ -547,28 +522,6 @@ def test_fit_is_deterministic() -> None:
     )
     assert first["scale"] == second["scale"]
     assert np.array_equal(first["beta"], second["beta"])
-
-
-def test_production_v1_artifact_hash_is_not_changed_by_research_inference() -> None:
-    path = Path("data/processed/posterior/historical_likelihood_v1.json")
-    if not path.exists():
-        pytest.skip("frozen production artifact is not present")
-    before = hashlib.sha256(path.read_bytes()).hexdigest()
-    teams = _teams()
-    home, away = _evidence()
-    infer_posterior_with_primitives(
-        teams,
-        [_game()],
-        _likelihood(),
-        {"g": (home, away)},
-        {"a_yards": _model("yards")},
-        variant="a",
-        tolerance=1e-12,
-    )
-    after = hashlib.sha256(path.read_bytes()).hexdigest()
-    assert before == after
-
-
 def test_primitive_data_type_is_explicitly_structured() -> None:
     assert set(PrimitiveData.__dataclass_fields__) >= {
         "yards_diff",

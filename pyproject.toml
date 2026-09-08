@@ -33,7 +33,3 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-m 'not research'"
-markers = [
-    "research: frozen research-investigation coverage excluded from the default loop",
-]

@@ -1,146 +1,103 @@
 # Test-suite inventory
 
-This inventory records the Issue #24 audit of the pytest suite. The distinction
-is about edit-loop cost, not about whether research tests are valuable: every
-research test remains runnable through the complete-suite command.
-
-## Commands
-
-Default production/shared suite:
+This is the Issue #24 audit of the pytest suite. The final policy is simple:
 
 ```bash
 uv run pytest -q
 ```
 
-Complete suite, including frozen research investigations:
-
-```bash
-uv run pytest -q -o addopts=""
-```
-
-The `research` marker is declared in `pyproject.toml`; the configured default
-exclusion is `-m 'not research'`. `-o addopts=""` intentionally clears that
-default for reproducibility runs.
-
-## Baseline
-
-Baseline was collected from the 2026-09-08 `origin/main` snapshot at
-`71db6ea` before the suite was changed.
-
-- 270 tests collected
-- 267 passed and 3 failed
-- 87.38 seconds wall time for the complete suite
-- The three failures were test-fixture failures, not production failures: two
-  tests referenced ignored/generated files absent from a clean checkout, and
-  one referenced an obsolete generated path.
-
-The slowest baseline test cases were:
-
-| Test | Runtime |
-| --- | ---: |
-| `test_context_ablation.py::test_stored_ablation_metrics_recompute_from_paired_team_losses` | 9.28 s |
-| `test_performance_v1.py::test_loopy_diagnostic_separates_tree_feedback_from_cycle_feedback` | 8.66 s |
-| `test_site_data.py::test_site_data_is_byte_deterministic` | 6.33 s |
-| `test_site_data.py::test_exported_80_percent_interval_remains_the_ranking_interval` | 3.40 s |
-| `test_site_data.py::test_logical_publication_slots_pair_context_and_history[2026-09-06-context-history]` | 3.40 s |
-
-The full baseline module inventory is below. Counts are declared test
-functions; parametrized cases are included in the collected totals above and
-in the before/after timing commands reported with the change.
+That command runs every retained test. Research-origin tests remain in the
+normal suite when they protect reusable code, leakage prevention, scientific
+correctness, or a durable production contract. Completed investigations no
+longer get a separate opt-in test class merely because they were once useful.
 
 ## Classification
 
-| Test module | Declared tests | Classification | Invariant or rationale |
-| --- | ---: | --- | --- |
-| `test_box_score_audit.py` | 5 | `KEEP_RESEARCH` | Offline primitive box-score audit parsing, coverage, duplicate handling, and reproducibility. |
-| `test_cfbd_corpus.py` | 6 | `KEEP_DEFAULT` | CFBD raw ingestion, provenance sidecars, deterministic discovery, and protection against fake rows. |
-| `test_context_ablation.py` | 14 | `KEEP_RESEARCH` | Frozen context-ablation populations, paired losses, interaction claims, and generated research artifacts. |
-| `test_context_prior.py` | 16 | Mixed | Production H/C prior construction, leakage guards, cold starts, and artifact contracts stay default; three exact frozen report/backtest assertions are `KEEP_RESEARCH`. |
-| `test_current_season_cfbd.py` | 3 | `KEEP_DEFAULT` | Current-season FBS/FCS acquisition, deduplication, conflict handling, and processed corpus behavior. |
-| `test_fcs_fallback.py` | 7 | `KEEP_DEFAULT` | Full-universe FCS fallback semantics, cutoff independence, and fail-closed population handling. |
-| `test_historical_likelihood_artifact.py` | 1 | `KEEP_DEFAULT` | Frozen Historical Likelihood V1 production artifact schema and provenance. |
-| `test_lean_context_validation.py` | 9 | `KEEP_RESEARCH` | Frozen Lean Context candidate selection and validation investigation. |
-| `test_margin_likelihood.py` | 12 | `KEEP_RESEARCH` | Issue #26 margin-likelihood candidate investigation and mathematical diagnostics. |
-| `test_massey.py` | 2 | `KEEP_DEFAULT` | Source normalization, alias matching, and long-form export semantics. |
-| `test_modeling.py` | 12 | `KEEP_DEFAULT` | Shared historical modeling primitives, rank-coordinate orientation, coverage, and marginalized scoring invariants. |
-| `test_performance_snapshot.py` | 6 | `KEEP_DEFAULT` | Production performance snapshot construction, validation, and fail-closed evidence contracts. |
-| `test_performance_v1.py` | 16 | `KEEP_DEFAULT` | Production Performance V1 inference, neutralization, diagnostics, and deterministic artifact inventory. |
-| `test_posterior_engine.py` | 7 | `KEEP_DEFAULT` | Core factor graph/message-passing correctness and cross-subdivision evidence semantics. |
-| `test_posterior_snapshots.py` | 8 | `KEEP_DEFAULT` | Snapshot schema, cutoff/provenance rules, FCS support, determinism, and publication-facing metadata. |
-| `test_posterior_validation_artifact.py` | 1 | `KEEP_DEFAULT` | Exact belief-propagation validation acceptance contract for the posterior engine. |
-| `test_preseason.py` | 23 | `KEEP_DEFAULT` | Production prior distributions, leakage-safe fitting, cold starts, and coverage invariants. |
-| `test_primitive_box_score_likelihood.py` | 23 | `KEEP_RESEARCH` | Frozen primitive box-score likelihood investigation and explicit V1 fallback comparisons. |
-| `test_regime_stability.py` | 7 | `KEEP_RESEARCH` | Frozen regime-stability and nested-selection investigation. |
-| `test_site_data.py` | 33 | `KEEP_DEFAULT` | Static site export schema, publication pairing, deterministic output, and fail-closed validation. |
-| `test_weekly_update.py` | 10 | `KEEP_DEFAULT` | Reviewed weekly update/publication workflow, idempotence, staging, and workflow safety. |
-| `test_ypp_likelihood.py` | 26 | `KEEP_RESEARCH` | Frozen conditional YPP likelihood investigation and explicit production-engine isolation checks. |
+### `KEEP_DEFAULT`
 
-There are no `DUPLICATE_REMOVE` or `OBSOLETE_REMOVE` tests in this audit. The
-three baseline fixture failures were repaired in place: the FCS population
-test now supplies a minimal durable-source fixture, the Massey parser test
-uses a minimal export fixture, and the context-prior test follows the current
-annual fitted-instance artifact path. No production or published artifact was
-changed.
+All tests remaining in these modules run under `uv run pytest -q`:
 
-## Timing report
+| Test module | Retained scope |
+| --- | --- |
+| `test_box_score_audit.py` | CFBD stat parsing, provenance-sidecar discovery, duplicate/conflict handling, coverage, and deterministic audit output. |
+| `test_cfbd_corpus.py` | Raw CFBD ingestion, provenance, deterministic discovery, and protection against fabricated rows. |
+| `test_context_ablation.py` | Observed-population construction, leakage-safe rolling training, same-population pairing, standardization, imputation, and interaction semantics. |
+| `test_context_prior.py` | H/C prior metadata, feature gating, leakage-safe construction, cold starts, annual inference, and canonical frozen-prior artifact integrity. |
+| `test_current_season_cfbd.py` | FBS/FCS acquisition, deduplication, conflict handling, and processed-corpus behavior. |
+| `test_fcs_fallback.py` | Full-universe FCS fallback semantics, cutoff independence, and fail-closed population handling. |
+| `test_game_evidence.py` | Focal-game evidence factors, prior separation, rematch cavities, and cross-subdivision orientation. |
+| `test_historical_likelihood_artifact.py` | Historical Likelihood V1 artifact schema and provenance. |
+| `test_lean_context_validation.py` | Leakage-safe observed/training populations, nested selection, calibration decisions, and synthetic validation workflow. |
+| `test_margin_likelihood.py` | Reusable margin-coordinate, scale, Jacobian, comparison, and leakage-safe selection mathematics. |
+| `test_massey.py` | Source normalization, alias matching, and long-form export semantics. |
+| `test_modeling.py` | Shared historical modeling primitives, rank-coordinate orientation, coverage, and marginalized scoring. |
+| `test_performance_snapshot.py` | Production performance snapshot construction and fail-closed evidence validation. |
+| `test_performance_v1.py` | Performance inference, neutralization, diagnostics, and deterministic artifact inventory. |
+| `test_posterior_engine.py` | Factor-graph/message-passing correctness and cross-subdivision evidence semantics. |
+| `test_posterior_snapshots.py` | Snapshot schema, cutoff/provenance rules, FCS support, determinism, and publication metadata. |
+| `test_posterior_validation_artifact.py` | Exact belief-propagation validation acceptance contract. |
+| `test_preseason.py` | Production rank distributions, leakage-safe fitting, cold starts, and coverage invariants. |
+| `test_primitive_box_score_likelihood.py` | Primitive evidence orientation, rank-neutrality, fallback behavior, target-driven cold starts, strict comparisons, and deterministic fitting. |
+| `test_regime_stability.py` | Target-excluded training windows, family-specific nested selection, key matching, and score decomposition. |
+| `test_site_data.py` | Static site export schema, publication pairing, deterministic output, and fail-closed validation. |
+| `test_team_season_artifact.py` | Team-season evidence redaction, provenance validation, and retained historical artifacts. |
+| `test_weekly_update.py` | Reviewed weekly publication workflow, idempotence, staging, and workflow safety. |
+| `test_ypp_likelihood.py` | YPP orientation, missing-evidence/rank-neutrality fallbacks, supported populations, strict comparisons, and deterministic fitting. |
 
-The measured before/after results are:
+`KEEP_RESEARCH` has zero retained tests as a separate category. Research-origin
+tests that still matter are included in `KEEP_DEFAULT` above.
 
-| Suite | Baseline on `main` | After change |
-| --- | --- | --- |
-| Default command (`uv run pytest -q`) | 270 collected; 267 passed, 3 failed; 87.38 s | 161 passed, 109 deselected; 66.52 s |
-| Complete command (`uv run pytest -q -o addopts=""`) | 270 collected; 267 passed, 3 failed; 87.38 s | 270 passed; 71.40 s |
+### `DUPLICATE_REMOVE`
 
-The baseline command necessarily ran the complete population because the
-default/research distinction did not yet exist. Wall time includes normal
-`uv`/filesystem startup and is therefore an operational comparison rather
-than a benchmark; repeated runs varied materially with filesystem and CPU
-cache state.
+Removed repeated protection for the same frozen 2026 H/C PMF hashes from the
+context-ablation, Lean-context, and regime-stability investigations. The
+canonical hash check remains in `test_context_prior.py`. Also removed the
+primitive/YPP tests that rechecked unchanged production artifacts already
+covered by production artifact and snapshot contracts.
 
-The slowest remaining default cases were:
+### `OBSOLETE_REMOVE`
 
-| Test | Runtime |
-| --- | ---: |
-| `test_performance_v1.py::test_loopy_diagnostic_separates_tree_feedback_from_cycle_feedback` | 8.58 s |
-| `test_site_data.py::test_site_data_publishes_all_initial_h_c_preseason_and_current_snapshots` | 4.74 s |
-| `test_site_data.py::test_logical_publication_slots_pair_context_and_history[2026-preseason-context-history]` | 3.89 s |
-| `test_site_data.py::test_all_ranking_families_receive_consistent_season_conferences` | 3.27 s |
-| `test_site_data.py::test_logical_publication_slots_pair_context_and_history[2026-09-06-history-context]` | 3.23 s |
+Removed tests whose only value was preserving completed-investigation output:
 
-The final validation used these exact commands:
+- Context-ablation report wording, stored CSV recomputation, 2025 decomposition,
+  missingness-report inventory, and generated interaction-report contents.
+- Frozen context-prior development/model-selection/C6 report assertions.
+- Lean-context validation's duplicate frozen-artifact/source-literal check.
+- Primitive-likelihood rolling-report wording and frozen candidate-definition
+  thresholds.
+- YPP's frozen diagnostic candidate-name assertion.
+
+No tests were classified `DUPLICATE_REMOVE` or `OBSOLETE_REMOVE` merely to
+reduce the headline count. The remaining tests exercise code paths or
+invariants that can regress in future changes.
+
+## Baseline and timing
+
+The initial audit baseline was the 2026-09-08 `origin/main` snapshot at
+`71db6ea`:
+
+- 270 tests collected
+- 267 passed and 3 failed
+- 87.38 seconds wall time
+- Slowest cases: context-ablation stored-metric recomputation (9.28 s),
+  Performance V1 loopy diagnostics (8.66 s), and site-data deterministic or
+  publication-slot tests (6.33 s and about 3.4 s each).
+
+The three failures were clean-checkout fixture/path problems. The FCS
+population and Massey parser tests now use minimal isolated fixtures, and the
+context-prior test follows the current annual fitted-instance artifact path.
+
+After rebasing onto current `main` and pruning, the final complete retained
+suite was measured with:
 
 ```bash
-time uv run pytest -q
-time uv run pytest -q -o addopts=""
+uv run pytest -q --durations=25
 ```
 
-The default suite excludes only tests marked `research`; the complete suite
-still runs all collected tests and is the reproducibility path for the frozen
-investigations.
-
-The measured complete-suite call-time breakdown after the change was:
-
-| Module | Call time |
-| --- | ---: |
-| `test_box_score_audit.py` | 0.02 s |
-| `test_cfbd_corpus.py` | 0.00 s |
-| `test_context_ablation.py` | 5.10 s |
-| `test_context_prior.py` | 0.55 s |
-| `test_current_season_cfbd.py` | 0.00 s |
-| `test_fcs_fallback.py` | 0.01 s |
-| `test_historical_likelihood_artifact.py` | 0.00 s |
-| `test_lean_context_validation.py` | 0.01 s |
-| `test_margin_likelihood.py` | 0.00 s |
-| `test_massey.py` | 0.00 s |
-| `test_modeling.py` | 0.02 s |
-| `test_performance_snapshot.py` | 0.73 s |
-| `test_performance_v1.py` | 4.62 s |
-| `test_posterior_engine.py` | 0.02 s |
-| `test_posterior_snapshots.py` | 0.06 s |
-| `test_posterior_validation_artifact.py` | 0.00 s |
-| `test_preseason.py` | 0.30 s |
-| `test_primitive_box_score_likelihood.py` | 0.05 s |
-| `test_regime_stability.py` | 0.01 s |
-| `test_site_data.py` | 25.71 s |
-| `test_weekly_update.py` | 0.27 s |
-| `test_ypp_likelihood.py` | 0.21 s |
+The result was 265 passed in 67.85 seconds. The slowest retained cases were
+Performance V1 loopy diagnostics (10.72 s), site-data byte determinism (6.30
+s), site-data publication (4.14 s), and site-data publication-slot/conference
+contracts (about 3.5-3.9 s each). Filesystem and CPU cache state made repeated
+site-export runs vary materially. `ruff check .` and `git diff --check` are
+also required validation commands. No production or published artifact is
+changed by this test-suite work.
