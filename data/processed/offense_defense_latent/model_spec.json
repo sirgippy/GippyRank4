@@ -1,0 +1,31 @@
+{
+  "additive_margin_limitation": "OD margin equals environment margin plus (O+D)_home-(O+D)_away, so margin metrics primarily test scalar O+D rather than separate composition",
+  "artifact_kind": "offense_defense_latent_research",
+  "candidate_grid": [
+    {
+      "name": "OD0",
+      "prior_correlation": 0.0,
+      "prior_sd": 8.0
+    },
+    {
+      "name": "OD1",
+      "prior_correlation": 0.25,
+      "prior_sd": 8.0
+    }
+  ],
+  "confounds": "pace and scoring-environment variation can affect residuals and component diagnostics",
+  "context_primary": true,
+  "expected_margin_decomposition": "Stage 0 uses an outcome-free preseason Context scalar PMF; Stage 1 V1 uses pregame posterior PMFs. Training-only pairing/site total gives expected first/second scores=(total +/- margin)/2; FBS-first cross-subdivision orientation",
+  "identifiability": "offense and defense each have population sum zero; fixed pairing/site score environment is the intercept",
+  "issue": 40,
+  "matched_scalar_control": "one centered Q scoreboard model using the same environment, Normal likelihood, prior SD, regularization, score scale, and cutoffs as OD",
+  "production_path_unchanged": true,
+  "residual_definitions": {
+    "defense": "expected opponent points - opponent points scored",
+    "offense": "points scored - expected points scored",
+    "stage0_source": "Context preseason scalar expectation; historical rank_pairs are excluded to prevent end-of-season leakage"
+  },
+  "score_model": "independent Normal scores with training-frozen scale; OD mean=environment+O_team-D_opponent",
+  "selection": "Stage 0 development-only null-relative gate; if passed, development 2018-2021 compares Posterior V1, matched scalar scoreboard, OD0, and OD1; evaluation 2022-2025 cannot influence candidate choice",
+  "stage1_gate": "Stage 1 is skipped when Stage 0 fails; evaluation is skipped unless an OD candidate clears development and matched-scalar gates"
+}
