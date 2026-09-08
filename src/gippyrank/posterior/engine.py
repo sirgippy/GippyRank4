@@ -81,6 +81,12 @@ class PosteriorResult:
     unique_pair_factor_count: int
     max_team_degree: int
     warnings: tuple[str, ...] = ()
+    bp_state: BeliefPropagationState | None = None
+
+    @property
+    def state(self) -> BeliefPropagationState | None:
+        """Compatibility alias for callers that refer to the BP state plainly."""
+        return self.bp_state
 
 
 @dataclass(frozen=True)
@@ -91,6 +97,33 @@ class PairFactor:
     second_id: str
     values: np.ndarray
     game_ids: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class BeliefPropagationState:
+    """Read-only converged state used by explanatory downstream features.
+
+    ``cavity_beliefs[(factor_index, team_id)]`` is the belief for ``team_id``
+    with the whole grouped pair factor removed. Keeping this state alongside
+    the posterior makes it possible to interpret one member of a rematch
+    without accidentally using the other member to establish opponent quality.
+    """
+
+    factors: tuple[PairFactor, ...]
+    messages: dict[tuple[int, str], np.ndarray]
+    cavity_beliefs: dict[tuple[int, str], np.ndarray]
+    pair_indices: dict[tuple[str, str], int]
+
+    def pair_cavity(
+        self, first_id: str, second_id: str, team_id: str
+    ) -> np.ndarray:
+        """Return the normalized cavity belief for a grouped team pair."""
+        key = tuple(sorted((first_id, second_id)))
+        try:
+            index = self.pair_indices[key]
+            return self.cavity_beliefs[index, team_id].copy()
+        except KeyError as error:
+            raise KeyError(f"No cavity belief for pair {key} and team {team_id}") from error
 
 
 def _student_t_logpdf(
@@ -307,6 +340,7 @@ def infer_posterior(
         messages[index, factor.first_id] = np.ones(len(by_id[factor.first_id].prior))
         messages[index, factor.second_id] = np.ones(len(by_id[factor.second_id].prior))
     if not factors:
+        state = BeliefPropagationState((), {}, {}, {})
         return PosteriorResult(
             {team.team_id: team.prior.copy() for team in teams},
             True,
@@ -316,6 +350,7 @@ def infer_posterior(
             0,
             0,
             0,
+            bp_state=state,
         )
 
     max_delta = np.inf
@@ -345,6 +380,15 @@ def infer_posterior(
         messages.update(updates)
         if max_delta <= tolerance:
             break
+    cavity_beliefs: dict[tuple[int, str], np.ndarray] = {}
+    for index, factor in enumerate(factors):
+        for team_id in (factor.first_id, factor.second_id):
+            belief = by_id[team_id].prior.copy()
+            for neighbor in adjacency[team_id]:
+                if neighbor != index:
+                    belief *= messages[neighbor, team_id]
+            cavity_beliefs[index, team_id] = _normalise(belief)
+
     pmfs = {}
     for team in teams:
         belief = team.prior.copy()
@@ -353,6 +397,15 @@ def infer_posterior(
         pmfs[team.team_id] = _normalise(belief)
     # A finite surrogate objective useful for diagnostics, not a Bethe free energy.
     objective = float(sum(np.log(pmf.max()) for pmf in pmfs.values()))
+    state = BeliefPropagationState(
+        tuple(factors),
+        {key: value.copy() for key, value in messages.items()},
+        {key: value.copy() for key, value in cavity_beliefs.items()},
+        {
+            (factor.first_id, factor.second_id): index
+            for index, factor in enumerate(factors)
+        },
+    )
     return PosteriorResult(
         pmfs,
         max_delta <= tolerance,
@@ -362,4 +415,45 @@ def infer_posterior(
         len(games),
         len(factors),
         max(map(len, adjacency.values()), default=0),
+        bp_state=state,
     )
+
+
+def game_evidence_pmf(
+    game: Game,
+    focal_team_id: str,
+    teams: list[Team] | tuple[Team, ...],
+    likelihood: LikelihoodV1,
+    posterior: PosteriorResult,
+) -> np.ndarray:
+    """Return a single game's normalized factor-to-focal-team evidence.
+
+    The opponent belief comes from the grouped pair cavity in ``posterior``.
+    Therefore every rematch shares a cavity that excludes the entire grouped
+    head-to-head factor, while each individual game likelihood is applied
+    separately. The focal team's prior is never multiplied into this PMF.
+    """
+    state = posterior.bp_state
+    if state is None:
+        raise ValueError("posterior does not expose BP cavity state")
+    by_id = {team.team_id: team for team in teams}
+    if game.home_id not in by_id or game.away_id not in by_id:
+        raise ValueError(f"game {game.game_id} references a team without a prior")
+    if focal_team_id not in {game.home_id, game.away_id}:
+        raise ValueError("focal team must participate in the game")
+    key = tuple(sorted((game.home_id, game.away_id)))
+    factor_index = state.pair_indices.get(key)
+    if factor_index is None:
+        raise ValueError(f"game {game.game_id} is absent from the posterior pair factors")
+    factor = state.factors[factor_index]
+    if game.game_id not in factor.game_ids:
+        raise ValueError(f"game {game.game_id} is absent from its posterior pair factor")
+    opponent_id = game.away_id if focal_team_id == game.home_id else game.home_id
+    opponent_cavity = state.cavity_beliefs[factor_index, opponent_id]
+    values = game_factor(game, by_id[game.home_id], by_id[game.away_id], likelihood)
+    raw = (
+        values @ opponent_cavity
+        if focal_team_id == game.home_id
+        else values.T @ opponent_cavity
+    )
+    return _normalise(raw)

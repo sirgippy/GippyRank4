@@ -463,4 +463,13 @@ def build_performance_snapshot(
         writer.writeheader()
         writer.writerows(pmf_rows)
     shutil.copyfile(included_games, directory / "included_games.csv")
+    team_seasons = source_dir / "team_seasons.json"
+    if team_seasons.is_file():
+        shutil.copyfile(team_seasons, directory / "team_seasons.json")
+        performance_metadata["team_season_path"] = "team_seasons.json"
+        performance_metadata["team_season_schema_version"] = "1.0"
+        (directory / "metadata.json").write_text(
+            json.dumps(performance_metadata, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
     return Snapshot(performance_snapshot_id, directory, performance_metadata)

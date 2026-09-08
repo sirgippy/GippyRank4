@@ -476,7 +476,9 @@ footer a {
 button:focus-visible,
 select:focus-visible,
 summary:focus-visible,
-.team-button:focus-visible {
+.team-button:focus-visible,
+.team-link:focus-visible,
+.back-link a:focus-visible {
   outline: 3px solid var(--gold);
   outline-offset: 2px;
 }
@@ -751,6 +753,232 @@ summary:focus-visible,
   color: var(--danger);
 }
 
+.team-page {
+  padding-bottom: 28px;
+}
+
+.back-link {
+  margin: 22px 0 0;
+  font-size: 13px;
+}
+
+.back-link a {
+  color: var(--green);
+  font-weight: 750;
+}
+
+.team-page-header {
+  padding: 22px 0 18px;
+}
+
+.team-page-header h1 {
+  margin: 0;
+  font-size: clamp(30px, 5vw, 48px);
+  line-height: 1.05;
+  letter-spacing: -0.05em;
+}
+
+.team-page-meta {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+.team-ranking-summary {
+  margin-top: 18px;
+}
+
+.team-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.team-summary-item {
+  padding: 13px 14px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--gold);
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.team-rating-explainer {
+  margin: 4px 0 20px;
+  padding: 16px 18px;
+  background: var(--wash);
+  border-left: 3px solid var(--green);
+}
+
+.team-rating-explainer h2 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.team-rating-explainer p {
+  max-width: 780px;
+  margin: 7px 0 0;
+  color: #40534c;
+  font-size: 13px;
+}
+
+.team-rating-explainer .team-rating-note {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.team-schedule-heading {
+  margin-top: 0;
+}
+
+.team-page-status {
+  margin: 12px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.team-page-error {
+  color: var(--danger);
+}
+
+.schedule-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.game-card {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.8fr) minmax(150px, 1fr) minmax(260px, 1.5fr);
+  gap: 8px 18px;
+  align-items: start;
+  padding: 14px 16px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.game-card-header,
+.game-card-body {
+  grid-row: span 2;
+}
+
+.game-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.game-date,
+.game-site,
+.game-meta,
+.game-outcome {
+  margin: 0;
+}
+
+.game-date,
+.game-site {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.game-site {
+  color: var(--green);
+  text-transform: capitalize;
+}
+
+.game-opponent {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.15;
+}
+
+.game-meta {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.game-outcome {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.game-rating {
+  padding: 11px 13px;
+  background: #f5f8f5;
+  border: 1px solid #c9d8cf;
+  border-radius: 5px;
+}
+
+.game-rating-title {
+  display: block;
+  color: var(--green);
+  font-size: 16px;
+}
+
+.game-rating-interval {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.game-rating-details {
+  display: grid;
+  grid-template-columns: repeat(4, auto);
+  gap: 3px 10px;
+  margin: 9px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.game-rating-details dd {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 750;
+}
+
+.game-not-modeled {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.team-link {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: rgb(194 138 38 / 65%);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.team-link:hover {
+  color: var(--green);
+}
+
+.team-cell-content {
+  display: block;
+}
+
+.team-cell-content .team-conference,
+.team-cell-content .team-status {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.team-cell-content .team-status {
+  color: var(--green);
+  font-size: 10px;
+}
+
 @media (max-width: 760px) {
   .masthead,
   .snapshot-summary,
@@ -831,6 +1059,22 @@ summary:focus-visible,
   .detail-content {
     padding-right: 18px;
     padding-left: 18px;
+  }
+
+  .team-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .game-card {
+    display: block;
+  }
+
+  .game-card-header {
+    margin-bottom: 5px;
+  }
+
+  .game-card-body {
+    margin-top: 12px;
   }
 }
 

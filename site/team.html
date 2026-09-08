@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="GippyRank team-season page with snapshot-aware game ratings.">
+    <title>Team season · GippyRank 4.0</title>
+    <link rel="stylesheet" href="./assets/style.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="shell masthead">
+        <a class="wordmark" href="./" aria-label="GippyRank 4.0 rankings">GippyRank <span>4.0</span></a>
+        <p>College football rankings, built from the games.</p>
+      </div>
+    </header>
+    <main class="shell team-page" aria-labelledby="team-page-title">
+      <p class="back-link"><a id="back-to-rankings" href="./">← Back to rankings</a></p>
+      <section class="team-page-header">
+        <p class="snapshot-kind" id="team-page-kind">Loading team season…</p>
+        <h1 id="team-page-title">Team season</h1>
+        <p id="team-page-meta" class="team-page-meta"></p>
+        <div id="team-ranking-summary" class="team-ranking-summary" aria-live="polite"></div>
+      </section>
+      <section class="team-rating-explainer" aria-labelledby="game-ratings-title">
+        <h2 id="game-ratings-title">Game ratings</h2>
+        <p>Game ratings estimate the quality implied by that single performance using what GippyRank knows about the opponent at this snapshot. Because opponent estimates evolve, a past game's rating can change later in the season.</p>
+        <p class="team-rating-note">Ratings are always Context-anchored, even when the header shows Predictive History or Performance. Each rematch is rated separately from the same pair-cavity opponent evidence.</p>
+      </section>
+      <section aria-labelledby="schedule-title">
+        <div class="section-heading team-schedule-heading">
+          <div><h2 id="schedule-title">Season schedule</h2><p id="schedule-context" class="section-context"></p></div>
+        </div>
+        <p id="team-page-status" class="team-page-status" aria-live="polite">Loading schedule…</p>
+        <ol id="schedule-list" class="schedule-list"></ol>
+      </section>
+    </main>
+    <footer><div class="shell"><p>GippyRank rankings are model outputs, not AP, Coaches, or CFP poll inputs.</p><a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/posterior_v1.md">Methodology</a></div></footer>
+    <script type="module" src="./assets/team.js"></script>
+  </body>
+</html>

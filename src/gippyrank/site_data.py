@@ -13,10 +13,12 @@ import json
 import math
 from collections import defaultdict
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 SITE_SCHEMA_VERSION = "1.0"
+TEAM_SEASON_SCHEMA_VERSION = "1.0"
 SUPPORTED_SNAPSHOT_SCHEMA_VERSIONS = {"1.0"}
 PMF_SUM_TOLERANCE = 1e-9
 SUMMARY_TOLERANCE = 1e-8
@@ -511,6 +513,213 @@ def _write_json(path: Path, value: Any, *, compact: bool = False) -> None:
     path.write_text(encoded + "\n", encoding="utf-8")
 
 
+def _empty_team_season_artifact(
+    metadata: dict[str, Any], rankings: list[dict[str, Any]]
+) -> dict[str, Any]:
+    """Keep pre-team-page fixture snapshots readable during schema migration."""
+    return {
+        "schema_version": TEAM_SEASON_SCHEMA_VERSION,
+        "artifact_kind": "team_season",
+        "snapshot_id": metadata["snapshot_id"],
+        "season": metadata["season"],
+        "snapshot_type": metadata["snapshot_type"],
+        "anchor_family": "context",
+        "source_context_snapshot_id": metadata["snapshot_id"],
+        "requested_cutoff": metadata.get("requested_cutoff"),
+        "effective_cutoff": metadata.get("effective_cutoff"),
+        "source_retrieved_at": metadata.get("source_retrieved_at"),
+        "source_retrieval_times": metadata.get("source_retrieval_times", {}),
+        "source_response_hashes": metadata.get("source_response_hashes", {}),
+        "game_corpus_sha256": metadata.get("game_corpus_sha256"),
+        "included_game_ids": sorted(str(value) for value in metadata.get("included_game_ids", [])),
+        "historical_likelihood_version": "V1",
+        "rank_count": metadata.get("rank_count"),
+        "rating_definition": "normalize(single-game Historical Likelihood × opponent pair-cavity belief)",
+        "loopy_bp_caveat": "The focal preseason prior is absent as a direct factor; loopy cycles can leave indirect feedback.",
+        "rematch_definition": "All games in a grouped head-to-head pair use the same pair cavity; each game is rated independently.",
+        "teams": {
+            row["team_id"]: {
+                "team_id": row["team_id"],
+                "team_name": row["team_name"],
+                "conference": row["conference"],
+                "games": [],
+            }
+            for row in rankings
+        },
+    }
+
+
+def _validate_team_season_artifact(
+    artifact: dict[str, Any],
+    metadata: dict[str, Any],
+    rankings: list[dict[str, Any]],
+    *,
+    anchor_metadata: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Validate provenance, cutoff redaction, and compact game-rating fields."""
+    snapshot_id = str(metadata["snapshot_id"])
+    if artifact.get("schema_version") != TEAM_SEASON_SCHEMA_VERSION:
+        raise SiteDataValidationError(f"{snapshot_id}: unsupported team-season schema")
+    if artifact.get("artifact_kind") != "team_season":
+        raise SiteDataValidationError(f"{snapshot_id}: invalid team-season artifact kind")
+    source_metadata = anchor_metadata or metadata
+    schedule_source = artifact.get("schedule_source")
+    if not isinstance(schedule_source, dict) or (
+        schedule_source.get("kind") != "current_processed_schedule"
+        or schedule_source.get("path") != "data/processed/cfbd/games.csv"
+        or not isinstance(schedule_source.get("sha256"), str)
+        or len(schedule_source.get("sha256", "")) != 64
+        or not all(
+            character in "0123456789abcdefABCDEF"
+            for character in schedule_source.get("sha256", "")
+        )
+    ):
+        raise SiteDataValidationError(f"{snapshot_id}: schedule provenance is missing or invalid")
+    for field in (
+        "season", "snapshot_type", "requested_cutoff", "effective_cutoff",
+        "game_corpus_sha256", "source_retrieved_at", "source_retrieval_times",
+        "source_response_hashes",
+    ):
+        if artifact.get(field) != source_metadata.get(field):
+            raise SiteDataValidationError(
+                f"{snapshot_id}: team-season provenance mismatch: {field}"
+            )
+    if anchor_metadata is not None:
+        for field in (
+            "season", "snapshot_type", "requested_cutoff", "effective_cutoff",
+            "game_corpus_sha256", "source_retrieved_at", "source_retrieval_times",
+            "source_response_hashes", "included_game_ids",
+        ):
+            if metadata.get(field) != anchor_metadata.get(field):
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: Context/team-season evidence mismatch: {field}"
+                )
+    expected_ids = {str(value) for value in source_metadata.get("included_game_ids", [])}
+    actual_ids = [str(value) for value in artifact.get("included_game_ids", [])]
+    if len(actual_ids) != len(set(actual_ids)) or set(actual_ids) != expected_ids:
+        raise SiteDataValidationError(f"{snapshot_id}: team-season included game IDs mismatch")
+    if artifact.get("anchor_family") != "context":
+        raise SiteDataValidationError(f"{snapshot_id}: game ratings must be Context anchored")
+    source_context_id = artifact.get("source_context_snapshot_id")
+    if not isinstance(source_context_id, str) or not source_context_id:
+        raise SiteDataValidationError(f"{snapshot_id}: team-season Context source is missing")
+    if source_context_id != str(source_metadata["snapshot_id"]):
+        raise SiteDataValidationError(f"{snapshot_id}: team-season Context source ID mismatch")
+    by_team = artifact.get("teams")
+    if not isinstance(by_team, dict):
+        raise SiteDataValidationError(f"{snapshot_id}: team-season teams must be an object")
+    ranking_ids = {str(row["team_id"]) for row in rankings}
+    if not ranking_ids <= set(by_team):
+        raise SiteDataValidationError(f"{snapshot_id}: team-season is missing an FBS team")
+    rating_fields = (
+        "rank_count", "expected_rank", "median_rank", "mode_rank", "interval_50", "interval_80",
+        "interval_95", "top5_probability", "top10_probability", "top25_probability",
+    )
+    for team_id in ranking_ids:
+        team = by_team[team_id]
+        games = team.get("games")
+        if not isinstance(games, list):
+            raise SiteDataValidationError(f"{snapshot_id}: games for {team_id} must be a list")
+        for game in games:
+            if not isinstance(game, dict) or not game.get("game_id"):
+                raise SiteDataValidationError(f"{snapshot_id}: invalid team-season game for {team_id}")
+            try:
+                datetime.fromisoformat(str(game.get("date")))
+            except (TypeError, ValueError) as error:
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: invalid team-season date for {team_id}"
+                ) from error
+            known_by_snapshot = str(game["game_id"]) in expected_ids
+            if not known_by_snapshot and (
+                game.get("result") is not None
+                or game.get("score") is not None
+                or game.get("game_rating") is not None
+                or game.get("modeled")
+            ):
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: game {game['game_id']} has result or rating without snapshot evidence"
+                )
+            rating = game.get("game_rating")
+            if rating is None:
+                continue
+            if not game.get("modeled"):
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: ineligible game {game['game_id']} has a rating"
+                )
+            missing_rating = [field for field in rating_fields if field not in rating]
+            if missing_rating:
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: game rating missing {missing_rating}"
+                )
+            if rating["rank_count"] != artifact.get("rank_count"):
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: game rating rank support disagrees with artifact"
+                )
+            for field in rating_fields:
+                value = rating[field]
+                values = value if isinstance(value, list) else [value]
+                if not all(isinstance(item, (int, float)) and math.isfinite(item) for item in values):
+                    raise SiteDataValidationError(
+                        f"{snapshot_id}: game rating {field} must be finite"
+                    )
+            for field in ("top5_probability", "top10_probability", "top25_probability"):
+                if not 0 <= rating[field] <= 1:
+                    raise SiteDataValidationError(
+                        f"{snapshot_id}: game rating {field} must be between 0 and 1"
+                    )
+    adapted = dict(artifact)
+    adapted["snapshot_id"] = snapshot_id
+    adapted["season"] = metadata["season"]
+    adapted["snapshot_type"] = metadata["snapshot_type"]
+    return adapted
+
+
+def _team_season_artifact(
+    *,
+    source: Path,
+    metadata: dict[str, Any],
+    rankings: list[dict[str, Any]],
+    context_source: tuple[Path, dict[str, Any]] | None,
+) -> dict[str, Any]:
+    """Load the Context artifact for any published family in a slot."""
+    candidate = source / str(metadata.get("team_season_path") or "team_seasons.json")
+    anchor_metadata = metadata
+    requires_context = metadata.get("ranking_family") == "performance" or (
+        metadata.get("ranking_family") == "predictive"
+        and metadata.get("prior_family") == "history"
+    )
+    if requires_context and context_source is None:
+        raise SiteDataValidationError(
+            f"{metadata['snapshot_id']}: no paired Context snapshot for team-season ratings"
+        )
+    if requires_context:
+        # Performance snapshots intentionally copy the Context artifact, so
+        # validate the underlying source ID against the paired Context bundle.
+        # History also consumes Context-anchored game ratings by contract.
+        if context_source is not None:
+            candidate, anchor_metadata = context_source
+            candidate = candidate / str(anchor_metadata.get("team_season_path") or "team_seasons.json")
+    elif not candidate.is_file() and context_source is not None:
+        candidate, anchor_metadata = context_source
+        candidate = candidate / str(anchor_metadata.get("team_season_path") or "team_seasons.json")
+    if not candidate.is_file():
+        declared_path = metadata.get("team_season_path") or (
+            anchor_metadata.get("team_season_path") if anchor_metadata else None
+        )
+        if declared_path:
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: declared team-season artifact is unavailable"
+            )
+        return _empty_team_season_artifact(metadata, rankings)
+    artifact = _read_json(candidate)
+    return _validate_team_season_artifact(
+        artifact,
+        metadata,
+        rankings,
+        anchor_metadata=anchor_metadata,
+    )
+
+
 def build_site_data(*, root: Path, config_path: Path, output_directory: Path) -> dict[str, Any]:
     """Validate configured artifacts and write deterministic consumer JSON."""
     selected, default_slot = load_publish_config(config_path, root)
@@ -519,9 +728,24 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
     seen_publications: set[tuple[int, str, str, str]] = set()
     schedule_path = root / "data/processed/cfbd/games.csv"
     conference_maps: dict[int, dict[tuple[int, str], str]] = {}
+    metadata_by_source = {
+        selected_snapshot.source: _read_json(selected_snapshot.source / "metadata.json")
+        for selected_snapshot in selected
+    }
+    context_sources: dict[tuple[int, str], tuple[Path, dict[str, Any]]] = {}
+    for selected_snapshot in selected:
+        metadata = metadata_by_source[selected_snapshot.source]
+        if (
+            metadata.get("ranking_family") == "predictive"
+            and metadata.get("prior_family") == "context"
+        ):
+            context_sources[(metadata["season"], selected_snapshot.publication_slot)] = (
+                selected_snapshot.source,
+                metadata,
+            )
     for selected_snapshot in selected:
         source = selected_snapshot.source
-        metadata = _read_json(source / "metadata.json")
+        metadata = metadata_by_source[source]
         _validate_metadata(metadata, source)
         if metadata["ranking_family"] == "performance":
             _validate_performance_source(metadata, root)
@@ -555,6 +779,12 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
                 )
             row["conference"] = conference
         distribution = _distribution_artifact(source / "posterior_pmfs.csv", metadata, rankings)
+        team_seasons = _team_season_artifact(
+            source=source,
+            metadata=metadata,
+            rankings=rankings,
+            context_source=context_sources.get((season, selected_snapshot.publication_slot)),
+        )
         records = _records(source / "included_games.csv")
         for row in rankings:
             row["record"] = records.get(row["team_id"], "0-0")
@@ -573,6 +803,7 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             )
         relative_data_path = f"data/snapshots/{snapshot_id}.json"
         relative_distribution_path = f"data/distributions/{snapshot_id}.json"
+        relative_team_seasons_path = f"data/team-seasons/{snapshot_id}.json"
         consumer_snapshot = {
             "schema_version": SITE_SCHEMA_VERSION,
             "snapshot_id": snapshot_id,
@@ -589,6 +820,7 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             "model_versions": metadata.get(
                 "model_versions", {"performance": metadata.get("model_version", "unknown")}
             ),
+            "team_seasons_path": relative_team_seasons_path,
             "rank_count": distribution["rank_count"],
             "rated_count": metadata.get("rated_count", sum(row["rated"] for row in rankings)),
             "unrated_count": metadata.get(
@@ -613,6 +845,11 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             distribution,
             compact=True,
         )
+        _write_json(
+            output_directory / "team-seasons" / f"{snapshot_id}.json",
+            team_seasons,
+            compact=True,
+        )
         manifest_entries.append(
             {
                 "season": metadata["season"],
@@ -631,6 +868,10 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
                 "display_label": selected_snapshot.display_label,
                 "data_path": relative_data_path,
                 "distribution_path": relative_distribution_path,
+                "team_seasons_path": relative_team_seasons_path,
+                "team_seasons_bytes": (
+                    output_directory / "team-seasons" / f"{snapshot_id}.json"
+                ).stat().st_size,
                 "rank_count": distribution["rank_count"],
                 "model_versions": metadata.get(
                     "model_versions", {"performance": metadata.get("model_version", "unknown")}
@@ -653,6 +894,15 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
                 }
             )
     published_families = {entry["ranking_family"] for entry in manifest_entries}
+    ranking_snapshot_bytes = sum(
+        (output_directory / entry["data_path"].removeprefix("data/")).stat().st_size
+        for entry in manifest_entries
+    )
+    distribution_bytes = sum(
+        (output_directory / entry["distribution_path"].removeprefix("data/")).stat().st_size
+        for entry in manifest_entries
+    )
+    team_season_bytes = sum(int(entry["team_seasons_bytes"]) for entry in manifest_entries)
     manifest = {
         "schema_version": SITE_SCHEMA_VERSION,
         "seasons": sorted({entry["season"] for entry in manifest_entries}, reverse=True),
@@ -663,6 +913,13 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
         ],
         "snapshots": manifest_entries,
         "default_publication_slot": default_slot,
+        "team_season_schema_version": TEAM_SEASON_SCHEMA_VERSION,
+        "payload_stats": {
+            "published_snapshot_count": len(manifest_entries),
+            "published_ranking_snapshot_bytes": ranking_snapshot_bytes,
+            "lazy_rank_distribution_bytes": distribution_bytes,
+            "lazy_team_season_bytes": team_season_bytes,
+        },
     }
     _write_json(output_directory / "manifest.json", manifest)
     return manifest

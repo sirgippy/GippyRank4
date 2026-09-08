@@ -701,6 +701,19 @@ def test_site_uses_base_safe_relative_paths() -> None:
     assert "No eligible games played" in app
 
 
+def test_bare_rankings_url_defaults_to_a_published_season() -> None:
+    """Keep the dependency-free site bootstrap safe when the URL has no query."""
+    app = (ROOT / "site/assets/app.js").read_text(encoding="utf-8")
+    manifest = json.loads((ROOT / "site/data/manifest.json").read_text(encoding="utf-8"))
+    assert 'pageParams.has("season") ? Number(pageParams.get("season")) : null' in app
+    assert "Number.isSafeInteger(requestedSeason) && requestedSeason > 0" in app
+    assert "if (!seasons.includes(state.season)) state.season = seasons[0];" in app
+    assert manifest["seasons"]
+    assert manifest["default_publication_slot"] in {
+        entry["publication_slot"] for entry in manifest["snapshots"]
+    }
+
+
 def test_uncertainty_copy_uses_central_interval_language() -> None:
     app = (ROOT / "site/assets/app.js").read_text(encoding="utf-8")
     assert "The central 50% interval spans" in app
