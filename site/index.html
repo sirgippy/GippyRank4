@@ -16,9 +16,8 @@
     </header>
     <main class="shell">
       <section class="intro" aria-labelledby="page-title">
-        <p class="eyebrow">EXPERIMENTAL PROBABILISTIC RANKINGS</p>
-        <h1 id="page-title">Every rank comes with a range.</h1>
-        <p>GippyRank displays predictive distributions, not a single claim of certainty.</p>
+        <h1 id="page-title">College football rankings</h1>
+        <p>Expected rank and an 80% interval for every team.</p>
       </section>
 
       <section class="controls" aria-label="Ranking controls">
@@ -26,7 +25,7 @@
         <label>Season<select id="season-select" aria-label="Season"></select></label>
         <label>Snapshot<select id="snapshot-select" aria-label="Snapshot"></select></label>
         <fieldset id="prior-select" class="prior-select">
-          <legend>Predictive view</legend>
+          <legend>Predictive prior</legend>
           <button type="button" data-prior="context">Context</button>
           <button type="button" data-prior="history">History</button>
         </fieldset>
@@ -34,7 +33,7 @@
 
       <section class="snapshot-summary" aria-live="polite">
         <div>
-          <p class="eyebrow" id="snapshot-kind"></p>
+          <p class="snapshot-kind" id="snapshot-kind"></p>
           <h2 id="snapshot-title">Loading rankings…</h2>
           <p id="snapshot-freshness"></p>
         </div>
@@ -43,7 +42,7 @@
 
       <section class="rankings" aria-labelledby="rankings-title">
         <div class="section-heading">
-          <div><p class="eyebrow">FBS</p><h2 id="rankings-title">Top 25</h2></div>
+          <div><h2 id="rankings-title">Top 25</h2><p class="section-context">FBS rankings · sorted by expected rank</p></div>
           <div class="table-toggle" role="group" aria-label="Ranking depth">
             <button type="button" data-depth="25" class="is-active">Top 25</button>
             <button type="button" data-depth="all">All FBS</button>
@@ -59,18 +58,21 @@
 
       <dialog id="team-detail" class="team-detail" aria-labelledby="detail-team-name">
         <div class="detail-header">
-          <div><p class="eyebrow">TEAM DETAIL</p><h2 id="detail-team-name">Rank uncertainty</h2><p id="detail-team-meta" class="detail-meta"></p></div>
+          <div><h2 id="detail-team-name">Rank uncertainty</h2><p id="detail-team-meta" class="detail-meta"></p></div>
           <button type="button" id="detail-close" class="close-button" aria-label="Close team detail">Close</button>
         </div>
         <div id="detail-content" class="detail-content" aria-live="polite"></div>
       </dialog>
 
-      <section class="explain-grid">
-        <article><p class="eyebrow">PREDICTIVE</p><h2>Beliefs updated by games.</h2><p>Predictive combines preseason beliefs with eligible game results to estimate current team quality. Context starts from history plus offseason roster and recruiting information; History starts from prior program performance only.</p></article>
-        <article><p class="eyebrow">PERFORMANCE</p><h2>What the games say.</h2><p>Performance removes the team's own preseason prior and asks what quality is implied by the football it has played. Predictive Context estimates still help interpret opponent strength.</p><p>Performance is not strength of record, standings, or postseason deservingness. It begins after eligible games have been played; teams without one are shown as NR.</p><p><a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/performance_v1.md">Read the Performance V1 documentation</a> · <a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/posterior_v1.md">Read the Posterior V1 documentation</a></p></article>
-      </section>
+      <details class="about-rankings">
+        <summary>About these rankings</summary>
+        <div class="explain-grid">
+          <article><h3>Predictive</h3><p>Combines preseason information with eligible game results to estimate current rank distributions. Context includes roster and recruiting information; History starts from prior program performance.</p></article>
+          <article><h3>Performance</h3><p>Uses eligible games to estimate the quality implied by a team's schedule and results, with Predictive Context estimates for opponent quality.</p><p>Performance is not standings, strength of record, or postseason deservingness. Teams without an eligible game are shown as NR.</p><p><a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/performance_v1.md">Performance V1 documentation</a> · <a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/posterior_v1.md">Posterior V1 documentation</a></p></article>
+        </div>
+      </details>
     </main>
-    <footer><div class="shell"><p>GippyRank 4.0 is an experimental probabilistic ranking system. Rankings shown here are model outputs, not AP, Coaches, or CFP poll inputs.</p><a href="https://github.com/sirgippy/GippyRank4">Source &amp; methodology</a></div></footer>
+    <footer><div class="shell"><p>GippyRank rankings are model outputs, not AP, Coaches, or CFP poll inputs.</p><a href="https://github.com/sirgippy/GippyRank4">Source &amp; methodology</a></div></footer>
     <script type="module" src="./assets/app.js"></script>
   </body>
 </html>
