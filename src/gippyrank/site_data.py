@@ -17,6 +17,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from gippyrank.team_logos import TEAM_LOGO_URL_TEMPLATE, logo_url, team_logo_handle
+
 SITE_SCHEMA_VERSION = "1.0"
 TEAM_SEASON_SCHEMA_VERSION = "1.0"
 SUPPORTED_SNAPSHOT_SCHEMA_VERSIONS = {"1.0"}
@@ -151,6 +153,24 @@ def load_publish_config(path: Path, root: Path) -> tuple[list[PublishedSnapshot]
         if default_slot not in {item.publication_slot for item in selected}:
             raise SiteDataValidationError("default_publication_slot is not a published slot")
     return selected, default_slot
+
+
+def _logo_url_template(path: Path) -> str:
+    """Read and validate the single browser-visible logo URL configuration."""
+    config = _read_json(path)
+    team_logos = config.get("team_logos", {})
+    if team_logos is None:
+        team_logos = {}
+    if not isinstance(team_logos, dict):
+        raise SiteDataValidationError("team_logos configuration must be an object")
+    template = team_logos.get("url_template", TEAM_LOGO_URL_TEMPLATE)
+    if not isinstance(template, str):
+        raise SiteDataValidationError("team_logos.url_template must be a string")
+    try:
+        logo_url("example", template)
+    except ValueError as error:
+        raise SiteDataValidationError(f"Invalid team logo URL template: {error}") from error
+    return template
 
 
 def _finite_number(value: str, field: str, snapshot_id: str) -> float:
@@ -712,20 +732,69 @@ def _team_season_artifact(
             )
         return _empty_team_season_artifact(metadata, rankings)
     artifact = _read_json(candidate)
-    return _validate_team_season_artifact(
+    artifact = _validate_team_season_artifact(
         artifact,
         metadata,
         rankings,
         anchor_metadata=anchor_metadata,
     )
+    return artifact
+
+
+def _rendered_team_identities(artifact: dict[str, Any]) -> set[tuple[str, str]]:
+    """Collect every team identity that the team-season pages can render."""
+    identities: set[tuple[str, str]] = set()
+    for team in artifact.get("teams", {}).values():
+        team_id = str(team.get("team_id", ""))
+        team_name = str(team.get("team_name", ""))
+        if team_id and team_name:
+            identities.add((team_id, team_name))
+        for game in team.get("games", []):
+            opponent_id = str(game.get("opponent_id", ""))
+            opponent_name = str(game.get("opponent_name", ""))
+            if opponent_id and opponent_name:
+                identities.add((opponent_id, opponent_name))
+    return identities
+
+
+def _logo_audit(identities: set[tuple[str, str]]) -> dict[str, Any]:
+    """Summarize exact logo coverage for a set of rendered identities."""
+    missing = [
+        {"team_id": team_id, "team_name": team_name}
+        for team_id, team_name in sorted(identities)
+        if team_logo_handle(team_id, team_name) is None
+    ]
+    return {
+        "mapped": len(identities) - len(missing),
+        "total": len(identities),
+        "missing": missing,
+    }
+
+
+def _logo_handles(identities: set[tuple[str, str]]) -> dict[str, str]:
+    """Build the manifest's stable-ID-to-handle map without guessing names."""
+    names_by_id: defaultdict[str, set[str]] = defaultdict(set)
+    for team_id, team_name in identities:
+        names_by_id[team_id].add(team_name)
+    handles: dict[str, str] = {}
+    for team_id, names in names_by_id.items():
+        if len(names) != 1:
+            continue
+        handle = team_logo_handle(team_id, next(iter(names)))
+        if handle is not None:
+            handles[team_id] = handle
+    return handles
 
 
 def build_site_data(*, root: Path, config_path: Path, output_directory: Path) -> dict[str, Any]:
     """Validate configured artifacts and write deterministic consumer JSON."""
     selected, default_slot = load_publish_config(config_path, root)
+    logo_url_template = _logo_url_template(config_path)
     manifest_entries: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
     seen_publications: set[tuple[int, str, str, str]] = set()
+    published_fbs_identities: set[tuple[str, str]] = set()
+    rendered_team_identities: set[tuple[str, str]] = set()
     schedule_path = root / "data/processed/cfbd/games.csv"
     conference_maps: dict[int, dict[tuple[int, str], str]] = {}
     metadata_by_source = {
@@ -765,6 +834,9 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             )
         seen_publications.add(publication)
         rankings = _ranking_rows(source / "rankings.csv", metadata)
+        published_fbs_identities.update(
+            (str(row["team_id"]), str(row["team_name"])) for row in rankings
+        )
         season = metadata["season"]
         conference_map = conference_maps.get(season)
         if conference_map is None:
@@ -785,6 +857,7 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             rankings=rankings,
             context_source=context_sources.get((season, selected_snapshot.publication_slot)),
         )
+        rendered_team_identities.update(_rendered_team_identities(team_seasons))
         records = _records(source / "included_games.csv")
         for row in rankings:
             row["record"] = records.get(row["team_id"], "0-0")
@@ -894,6 +967,8 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
                 }
             )
     published_families = {entry["ranking_family"] for entry in manifest_entries}
+    published_fbs_logo_audit = _logo_audit(published_fbs_identities)
+    rendered_logo_audit = _logo_audit(rendered_team_identities)
     ranking_snapshot_bytes = sum(
         (output_directory / entry["data_path"].removeprefix("data/")).stat().st_size
         for entry in manifest_entries
@@ -914,6 +989,25 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
         "snapshots": manifest_entries,
         "default_publication_slot": default_slot,
         "team_season_schema_version": TEAM_SEASON_SCHEMA_VERSION,
+        "team_logos": {
+            "source": "RedditCFB",
+            "url_template": logo_url_template,
+            "handles": _logo_handles(rendered_team_identities),
+            "fallback": "text",
+        },
+        "team_logo_audit": {
+            "published_fbs": {
+                key: value
+                for key, value in published_fbs_logo_audit.items()
+                if key != "missing"
+            },
+            "all_rendered_team_identities": {
+                key: value
+                for key, value in rendered_logo_audit.items()
+                if key != "missing"
+            },
+            "missing": rendered_logo_audit["missing"],
+        },
         "payload_stats": {
             "published_snapshot_count": len(manifest_entries),
             "published_ranking_snapshot_bytes": ranking_snapshot_bytes,

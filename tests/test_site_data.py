@@ -14,6 +14,7 @@ from gippyrank.site_data import (
     build_fbs_conference_map,
     build_site_data,
 )
+from gippyrank.team_logos import logo_url, missing_team_logos, team_logo_handle
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "site/publish_config.json"
@@ -110,6 +111,99 @@ def _write_pmf_rows(path: Path, fields: list[str], rows: list[dict[str, str]]) -
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
         writer.writerows(rows)
+
+
+def test_logo_url_uses_canonical_handle_and_supports_template_override() -> None:
+    assert team_logo_handle("194", "Ohio State") == "ohiostate"
+    assert logo_url("ohiostate") == "https://cdn.redditcfb.com/60x40/cfb/ohiostate.png"
+    assert logo_url("ohiostate", "https://assets.example/{handle}/mark.svg") == (
+        "https://assets.example/ohiostate/mark.svg"
+    )
+
+
+def test_logo_mapping_fails_closed_on_unknown_or_renamed_identity() -> None:
+    assert team_logo_handle("194", "The Ohio State University") is None
+    assert team_logo_handle("not-a-team", "Ohio State") is None
+    assert missing_team_logos([("194", "Ohio State"), ("194", "Renamed")]) == [
+        ("194", "Renamed")
+    ]
+
+
+def test_exported_team_logos_are_canonical_and_audited(tmp_path: Path) -> None:
+    manifest = build_site_data(
+        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
+    )
+    assert manifest["team_logos"]["source"] == "RedditCFB"
+    assert manifest["team_logos"]["url_template"] == (
+        "https://cdn.redditcfb.com/60x40/cfb/{handle}.png"
+    )
+    assert manifest["team_logos"]["handles"]["194"] == "ohiostate"
+    assert manifest["team_logos"]["handles"]["311"] == "maine"
+    assert "2277" not in manifest["team_logos"]["handles"]
+    audit = manifest["team_logo_audit"]
+    assert audit["published_fbs"] == {"mapped": 138, "total": 138}
+    assert audit["all_rendered_team_identities"] == {"mapped": 235, "total": 238}
+    assert audit["missing"] == [
+        {"team_id": "2277", "team_name": "Houston Christian"},
+        {"team_id": "2546", "team_name": "Southeast Missouri State"},
+        {"team_id": "2837", "team_name": "East Texas A&M"},
+    ]
+    entry = manifest["snapshots"][0]
+    snapshot = json.loads(
+        (tmp_path / "data" / entry["data_path"].removeprefix("data/")).read_text()
+    )
+    assert "logo_handle" not in snapshot["rankings"][0]
+
+
+def test_publish_config_logo_template_override_is_manifest_visible(
+    tmp_path: Path,
+) -> None:
+    source = _copied_snapshot(tmp_path)
+    config = _config_for(source, tmp_path)
+    payload = json.loads(config.read_text())
+    payload["team_logos"] = {
+        "url_template": "https://static.example/logos/{handle}.svg"
+    }
+    config.write_text(json.dumps(payload), encoding="utf-8")
+    manifest = build_site_data(
+        root=tmp_path, config_path=config, output_directory=tmp_path / "output"
+    )
+    assert manifest["team_logos"]["url_template"] == (
+        "https://static.example/logos/{handle}.svg"
+    )
+
+
+def test_team_season_export_uses_manifest_logo_handles(tmp_path: Path) -> None:
+    manifest = build_site_data(
+        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
+    )
+    entry = manifest["snapshots"][0]
+    artifact = json.loads(
+        (tmp_path / "data" / entry["team_seasons_path"].removeprefix("data/")).read_text()
+    )
+    ohio_state = artifact["teams"]["194"]
+    assert "logo_handle" not in ohio_state
+    assert all("opponent_logo_handle" not in game for game in ohio_state["games"])
+    assert manifest["team_logos"]["handles"]["194"] == "ohiostate"
+    assert manifest["team_logos"]["handles"]["311"] == "maine"
+
+
+def test_static_site_uses_manifest_logo_config_and_decorative_fallback() -> None:
+    app = (ROOT / "site/assets/app.js").read_text(encoding="utf-8")
+    team = (ROOT / "site/assets/team.js").read_text(encoding="utf-8")
+    css = (ROOT / "site/assets/style.css").read_text(encoding="utf-8")
+    assert 'state.manifest?.team_logos?.url_template' in app
+    assert 'state.manifest?.team_logos?.handles?.[teamId]' in app
+    assert 'teamLogo(row.team_id' in app
+    assert 'image.alt = ""' in app
+    assert 'image.addEventListener("error", () => frame.remove()' in app
+    assert 'logoUrlTemplate = manifest.team_logos?.url_template || null' in team
+    assert 'logoHandles = manifest.team_logos?.handles || {}' in team
+    assert 'teamLogo(game.opponent_id)' in team
+    assert 'row.logo_handle' not in app + team
+    assert 'opponent_logo_handle' not in app + team
+    assert ".team-logo-frame" in css
+    assert "loading = \"lazy\"" in app
 
 
 def _counterpart(

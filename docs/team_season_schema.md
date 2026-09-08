@@ -45,6 +45,12 @@ schedule metadata but have null result, score, and rating fields. Ineligible
 completed games remain visible as `modeled: false` and never receive a
 fabricated rating.
 
+Stable `team_id` and `opponent_id` values are resolved at render time through
+the manifest-level `team_logos.handles` map. The team-season artifact does not
+repeat logo handles on every team or schedule entry. Missing identities are
+omitted from that map and listed in the manifest audit; the browser keeps the
+text name when no logo is available.
+
 The artifact repeats the historical inference provenance (`effective_cutoff`,
 `game_corpus_sha256`, included game IDs, and source retrieval evidence). Because
 backfilled historical artifacts may use a newer schedule corpus for display
