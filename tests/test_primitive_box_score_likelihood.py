@@ -398,6 +398,23 @@ def test_historical_prior_audit_declares_pre_target_boundary() -> None:
         row = script.reconstructed_prior_audit_row(season, "history_reconstructed", 10, [])
         assert row["trained_through_season"] == season - 1
         assert row["target_outcomes_used"] is False
+        assert row["supported"] is True
+    excluded = script.reconstructed_prior_audit_row(
+        2012,
+        "history_reconstructed",
+        0,
+        [],
+        supported=False,
+        reason="required FCS-to-FBS promotion fallback has zero pre-target training rows",
+        cold_start_reasons={"fcs_to_fbs_transition": 4},
+        eligible_promotion_rows=0,
+        eligible_generic_rows=120,
+    )
+    assert excluded["supported"] is False
+    assert excluded["target_outcomes_used"] is False
+    assert excluded["cold_start_reasons"] == {"fcs_to_fbs_transition": 4}
+    assert excluded["eligible_promotion_rows"] == 0
+    assert excluded["eligible_generic_rows"] == 120
     assert script.RECONSTRUCTED_PRIOR_FAMILIES == (
         "context_reconstructed",
         "history_reconstructed",
