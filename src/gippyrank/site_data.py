@@ -17,6 +17,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from gippyrank.team_logos import TEAM_LOGO_URL_TEMPLATE, logo_url, team_logo_handle
+
 SITE_SCHEMA_VERSION = "1.0"
 TEAM_SEASON_SCHEMA_VERSION = "1.0"
 SUPPORTED_SNAPSHOT_SCHEMA_VERSIONS = {"1.0"}
@@ -151,6 +153,24 @@ def load_publish_config(path: Path, root: Path) -> tuple[list[PublishedSnapshot]
         if default_slot not in {item.publication_slot for item in selected}:
             raise SiteDataValidationError("default_publication_slot is not a published slot")
     return selected, default_slot
+
+
+def _logo_url_template(path: Path) -> str:
+    """Read and validate the single browser-visible logo URL configuration."""
+    config = _read_json(path)
+    team_logos = config.get("team_logos", {})
+    if team_logos is None:
+        team_logos = {}
+    if not isinstance(team_logos, dict):
+        raise SiteDataValidationError("team_logos configuration must be an object")
+    template = team_logos.get("url_template", TEAM_LOGO_URL_TEMPLATE)
+    if not isinstance(template, str):
+        raise SiteDataValidationError("team_logos.url_template must be a string")
+    try:
+        logo_url("example", template)
+    except ValueError as error:
+        raise SiteDataValidationError(f"Invalid team logo URL template: {error}") from error
+    return template
 
 
 def _finite_number(value: str, field: str, snapshot_id: str) -> float:
@@ -542,6 +562,7 @@ def _empty_team_season_artifact(
                 "team_id": row["team_id"],
                 "team_name": row["team_name"],
                 "conference": row["conference"],
+                "logo_handle": team_logo_handle(row["team_id"], row["team_name"]),
                 "games": [],
             }
             for row in rankings
@@ -674,6 +695,31 @@ def _validate_team_season_artifact(
     return adapted
 
 
+def _add_logo_handles(
+    artifact: dict[str, Any], rankings: list[dict[str, Any]]
+) -> dict[str, Any]:
+    """Attach canonical team and opponent handles without changing game evidence."""
+    ranking_by_id = {str(row["team_id"]): row for row in rankings}
+    adapted = dict(artifact)
+    adapted_teams: dict[str, Any] = {}
+    for team_id, original_team in artifact.get("teams", {}).items():
+        team = dict(original_team)
+        ranking = ranking_by_id.get(str(team_id))
+        team_name = str(ranking["team_name"]) if ranking else str(team.get("team_name", ""))
+        team["logo_handle"] = team_logo_handle(str(team_id), team_name)
+        games: list[dict[str, Any]] = []
+        for original_game in team.get("games", []):
+            game = dict(original_game)
+            opponent_id = str(game.get("opponent_id", ""))
+            opponent_name = str(game.get("opponent_name", ""))
+            game["opponent_logo_handle"] = team_logo_handle(opponent_id, opponent_name)
+            games.append(game)
+        team["games"] = games
+        adapted_teams[str(team_id)] = team
+    adapted["teams"] = adapted_teams
+    return adapted
+
+
 def _team_season_artifact(
     *,
     source: Path,
@@ -710,22 +756,25 @@ def _team_season_artifact(
             raise SiteDataValidationError(
                 f"{metadata['snapshot_id']}: declared team-season artifact is unavailable"
             )
-        return _empty_team_season_artifact(metadata, rankings)
+        return _add_logo_handles(_empty_team_season_artifact(metadata, rankings), rankings)
     artifact = _read_json(candidate)
-    return _validate_team_season_artifact(
+    artifact = _validate_team_season_artifact(
         artifact,
         metadata,
         rankings,
         anchor_metadata=anchor_metadata,
     )
+    return _add_logo_handles(artifact, rankings)
 
 
 def build_site_data(*, root: Path, config_path: Path, output_directory: Path) -> dict[str, Any]:
     """Validate configured artifacts and write deterministic consumer JSON."""
     selected, default_slot = load_publish_config(config_path, root)
+    logo_url_template = _logo_url_template(config_path)
     manifest_entries: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
     seen_publications: set[tuple[int, str, str, str]] = set()
+    active_team_identities: set[tuple[str, str]] = set()
     schedule_path = root / "data/processed/cfbd/games.csv"
     conference_maps: dict[int, dict[tuple[int, str], str]] = {}
     metadata_by_source = {
@@ -765,6 +814,9 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             )
         seen_publications.add(publication)
         rankings = _ranking_rows(source / "rankings.csv", metadata)
+        active_team_identities.update(
+            (str(row["team_id"]), str(row["team_name"])) for row in rankings
+        )
         season = metadata["season"]
         conference_map = conference_maps.get(season)
         if conference_map is None:
@@ -801,6 +853,7 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
                     "top25_probability": summary["top25_probability"],
                 }
             )
+            row["logo_handle"] = team_logo_handle(row["team_id"], row["team_name"])
         relative_data_path = f"data/snapshots/{snapshot_id}.json"
         relative_distribution_path = f"data/distributions/{snapshot_id}.json"
         relative_team_seasons_path = f"data/team-seasons/{snapshot_id}.json"
@@ -914,6 +967,28 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
         "snapshots": manifest_entries,
         "default_publication_slot": default_slot,
         "team_season_schema_version": TEAM_SEASON_SCHEMA_VERSION,
+        "team_logos": {
+            "source": "RedditCFB",
+            "url_template": logo_url_template,
+            "handle_field": "logo_handle",
+            "fallback": "text",
+        },
+        "team_logo_audit": {
+            "active_team_count": len(active_team_identities),
+            "verified_count": len(active_team_identities)
+            - len(
+                [
+                    identity
+                    for identity in active_team_identities
+                    if team_logo_handle(*identity) is None
+                ]
+            ),
+            "missing": [
+                {"team_id": team_id, "team_name": team_name}
+                for team_id, team_name in sorted(active_team_identities)
+                if team_logo_handle(team_id, team_name) is None
+            ],
+        },
         "payload_stats": {
             "published_snapshot_count": len(manifest_entries),
             "published_ranking_snapshot_bytes": ranking_snapshot_bytes,

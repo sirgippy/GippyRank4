@@ -45,6 +45,11 @@ schedule metadata but have null result, score, and rating fields. Ineligible
 completed games remain visible as `modeled: false` and never receive a
 fabricated rating.
 
+Published team records also carry the verified RedditCFB `logo_handle`; each
+schedule entry carries `opponent_logo_handle` when the opponent is in the
+published logo namespace. Missing handles are `null`, never guessed from a
+display name.
+
 The artifact repeats the historical inference provenance (`effective_cutoff`,
 `game_corpus_sha256`, included game IDs, and source retrieval evidence). Because
 backfilled historical artifacts may use a newer schedule corpus for display

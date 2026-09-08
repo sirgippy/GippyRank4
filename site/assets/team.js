@@ -1,11 +1,28 @@
 const $ = (selector) => document.querySelector(selector);
 const params = new URLSearchParams(window.location.search);
+let logoUrlTemplate = null;
 
 function node(name, className, text) {
   const value = document.createElement(name);
   if (className) value.className = className;
   if (text !== undefined) value.textContent = text;
   return value;
+}
+
+function teamLogo(handle, className = "team-logo") {
+  if (!handle || !logoUrlTemplate || logoUrlTemplate.split("{handle}").length !== 2) return null;
+  const frame = node("span", "team-logo-frame");
+  frame.setAttribute("aria-hidden", "true");
+  const image = node("img", className);
+  image.src = logoUrlTemplate.replace("{handle}", encodeURIComponent(handle));
+  image.alt = "";
+  image.width = 60;
+  image.height = 40;
+  image.loading = "lazy";
+  image.decoding = "async";
+  image.addEventListener("error", () => frame.remove(), { once: true });
+  frame.append(image);
+  return frame;
 }
 
 function formatDate(value, includeYear = true) {
@@ -65,6 +82,8 @@ function updateBackLink(entry) {
 
 function renderSummary(entry, snapshot, row) {
   const rankLabel = row.rated === false ? "NR" : `#${row.display_rank}`;
+  const logo = teamLogo(row.logo_handle, "team-logo team-logo-card");
+  $("#team-page-logo").replaceChildren(...(logo ? [logo] : []));
   $("#team-page-kind").textContent = `${entry.season} ${entry.display_label} · ${entry.snapshot_type === "preseason" ? "Preseason" : "Snapshot"}`;
   $("#team-page-title").textContent = row.team_name;
   $("#team-page-meta").textContent = `${row.conference || "Independent"} · ${entry.snapshot_type === "preseason" ? "Before game evidence" : `Through ${formatDate(entry.effective_cutoff)}`} · ${rankLabel} ${entry.ranking_family === "performance" ? "Performance" : `Predictive ${entry.prior_family === "history" ? "History" : "Context"}`}`;
@@ -98,6 +117,10 @@ function gameCard(game, cutoff) {
   const week = game.week === null ? "" : `Week ${game.week} · `;
   header.append(node("p", "game-date", `${week}${formatDate(game.date, false)}`), node("span", "game-site", game.site));
   const opponent = node("h3", "game-opponent", game.opponent_name || game.opponent_id || "Unknown opponent");
+  const opponentHeading = node("div", "game-opponent-row");
+  const logo = teamLogo(game.opponent_logo_handle);
+  if (logo) opponentHeading.append(logo);
+  opponentHeading.append(opponent);
   const meta = node("p", "game-meta", `${game.opponent_classification.toUpperCase()}${game.opponent_conference ? ` · ${game.opponent_conference}` : ""}`);
   const outcome = node("p", "game-outcome");
   const future = cutoff === null || new Date(game.date) > cutoff;
@@ -114,7 +137,7 @@ function gameCard(game, cutoff) {
   } else {
     body.append(node("p", "game-not-modeled", "Not modeled — no completed evidence was available at the cutoff."));
   }
-  item.append(header, opponent, meta, outcome, body);
+  item.append(header, opponentHeading, meta, outcome, body);
   return item;
 }
 
@@ -132,6 +155,7 @@ async function load() {
   const manifestResponse = await fetch("./data/manifest.json");
   if (!manifestResponse.ok) throw new Error("Could not load the published manifest.");
   const manifest = await manifestResponse.json();
+  logoUrlTemplate = manifest.team_logos?.url_template || null;
   const entry = entryFor(manifest);
   updateBackLink(entry);
   if (!entry) throw new Error("No published snapshot matches this team page.");

@@ -25,6 +25,23 @@ function element(name, className, text) {
   return node;
 }
 
+function teamLogo(handle, className = "team-logo") {
+  const template = state.manifest?.team_logos?.url_template;
+  if (!handle || !template || template.split("{handle}").length !== 2) return null;
+  const frame = element("span", "team-logo-frame");
+  frame.setAttribute("aria-hidden", "true");
+  const image = element("img", className);
+  image.src = template.replace("{handle}", encodeURIComponent(handle));
+  image.alt = "";
+  image.width = 60;
+  image.height = 40;
+  image.loading = "lazy";
+  image.decoding = "async";
+  image.addEventListener("error", () => frame.remove(), { once: true });
+  frame.append(image);
+  return frame;
+}
+
 function svgElement(name, attributes = {}) {
   const node = document.createElementNS("http://www.w3.org/2000/svg", name);
   Object.entries(attributes).forEach(([key, value]) => node.setAttribute(key, String(value)));
@@ -146,8 +163,12 @@ function teamCell(row, entry) {
   const link = element("a", "team-link", row.team_name);
   link.href = teamPageUrl(row, entry);
   link.setAttribute("aria-label", `Open ${row.team_name} season page`);
-  wrapper.append(link, element("span", "team-conference", row.conference || "Independent"));
-  if (row.rated === false) wrapper.append(element("span", "team-status", "No eligible games played"));
+  const text = element("span", "team-cell-text");
+  text.append(link, element("span", "team-conference", row.conference || "Independent"));
+  if (row.rated === false) text.append(element("span", "team-status", "No eligible games played"));
+  const logo = teamLogo(row.logo_handle);
+  if (logo) wrapper.append(logo);
+  wrapper.append(text);
   return wrapper;
 }
 
@@ -258,6 +279,8 @@ function renderDetail(row, entry, distribution) {
   if (!team || !Array.isArray(team.pmf) || team.pmf.length !== distribution.rank_count) throw new Error("The selected team's distribution is unavailable.");
   const summary = team.summary;
   const rankLabel = row.rated === false ? "NR (not rated)" : `#${row.display_rank}`;
+  const logo = teamLogo(row.logo_handle, "team-logo team-logo-selector");
+  $("#detail-team-logo").replaceChildren(...(logo ? [logo] : []));
   $("#detail-team-name").textContent = row.team_name;
   $("#detail-team-meta").textContent = `${rankLabel} by expected rank · ${row.conference || "Independent"} · ${row.record} modeled record · ${familyLabel()}${state.family === "predictive" ? ` · ${entry.prior_family === "context" ? "Context" : "History"}` : ""}`;
   const heading = element("h3", "detail-section-title", "Rank uncertainty");
@@ -291,6 +314,8 @@ function closeDetail() { state.selectedTeamId = null; state.detailVersion += 1; 
 async function loadDetail(row, entry, snapshot) {
   const version = ++state.detailVersion;
   showDetail();
+  const logo = teamLogo(row.logo_handle, "team-logo team-logo-selector");
+  $("#detail-team-logo").replaceChildren(...(logo ? [logo] : []));
   $("#detail-team-name").textContent = row.team_name;
   $("#detail-team-meta").textContent = "Loading the selected publication's rank distribution…";
   $("#detail-content").replaceChildren(element("p", "detail-loading", "Loading rank uncertainty…"));

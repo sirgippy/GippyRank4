@@ -518,6 +518,17 @@ summary:focus-visible,
   border-bottom: 1px solid var(--line);
 }
 
+.detail-title {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 11px;
+  align-items: center;
+}
+
+.detail-title .detail-meta {
+  grid-column: 2;
+}
+
 .detail-header h2 {
   margin: 0;
   font-size: clamp(26px, 5vw, 40px);
@@ -778,6 +789,12 @@ summary:focus-visible,
   letter-spacing: -0.05em;
 }
 
+.team-page-title {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
 .team-page-meta {
   margin: 8px 0 0;
   color: var(--muted);
@@ -897,6 +914,13 @@ summary:focus-visible,
   line-height: 1.15;
 }
 
+.game-opponent-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
 .game-meta {
   color: var(--muted);
   font-size: 11px;
@@ -963,7 +987,54 @@ summary:focus-visible,
 }
 
 .team-cell-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  text-align: left;
+}
+
+.team-cell-text {
+  min-width: 0;
+}
+
+.team-logo-frame {
+  display: grid;
+  flex: 0 0 36px;
+  place-items: center;
+  width: 36px;
+  height: 28px;
+}
+
+.team-logo {
   display: block;
+  width: auto;
+  max-width: 36px;
+  height: auto;
+  max-height: 28px;
+  object-fit: contain;
+}
+
+.team-logo-card {
+  max-width: 60px;
+  max-height: 40px;
+}
+
+.team-page-title .team-logo-frame {
+  flex-basis: 60px;
+  width: 60px;
+  height: 40px;
+}
+
+.detail-title .team-logo-frame {
+  flex-basis: 48px;
+  width: 48px;
+  height: 34px;
+}
+
+.detail-title .team-logo {
+  max-width: 48px;
+  max-height: 34px;
 }
 
 .team-cell-content .team-conference,
