@@ -45,10 +45,11 @@ schedule metadata but have null result, score, and rating fields. Ineligible
 completed games remain visible as `modeled: false` and never receive a
 fabricated rating.
 
-Published team records also carry the verified RedditCFB `logo_handle`; each
-schedule entry carries `opponent_logo_handle` when the opponent is in the
-published logo namespace. Missing handles are `null`, never guessed from a
-display name.
+Stable `team_id` and `opponent_id` values are resolved at render time through
+the manifest-level `team_logos.handles` map. The team-season artifact does not
+repeat logo handles on every team or schedule entry. Missing identities are
+omitted from that map and listed in the manifest audit; the browser keeps the
+text name when no logo is available.
 
 The artifact repeats the historical inference provenance (`effective_cutoff`,
 `game_corpus_sha256`, included game IDs, and source retrieval evidence). Because

@@ -562,7 +562,6 @@ def _empty_team_season_artifact(
                 "team_id": row["team_id"],
                 "team_name": row["team_name"],
                 "conference": row["conference"],
-                "logo_handle": team_logo_handle(row["team_id"], row["team_name"]),
                 "games": [],
             }
             for row in rankings
@@ -695,31 +694,6 @@ def _validate_team_season_artifact(
     return adapted
 
 
-def _add_logo_handles(
-    artifact: dict[str, Any], rankings: list[dict[str, Any]]
-) -> dict[str, Any]:
-    """Attach canonical team and opponent handles without changing game evidence."""
-    ranking_by_id = {str(row["team_id"]): row for row in rankings}
-    adapted = dict(artifact)
-    adapted_teams: dict[str, Any] = {}
-    for team_id, original_team in artifact.get("teams", {}).items():
-        team = dict(original_team)
-        ranking = ranking_by_id.get(str(team_id))
-        team_name = str(ranking["team_name"]) if ranking else str(team.get("team_name", ""))
-        team["logo_handle"] = team_logo_handle(str(team_id), team_name)
-        games: list[dict[str, Any]] = []
-        for original_game in team.get("games", []):
-            game = dict(original_game)
-            opponent_id = str(game.get("opponent_id", ""))
-            opponent_name = str(game.get("opponent_name", ""))
-            game["opponent_logo_handle"] = team_logo_handle(opponent_id, opponent_name)
-            games.append(game)
-        team["games"] = games
-        adapted_teams[str(team_id)] = team
-    adapted["teams"] = adapted_teams
-    return adapted
-
-
 def _team_season_artifact(
     *,
     source: Path,
@@ -756,7 +730,7 @@ def _team_season_artifact(
             raise SiteDataValidationError(
                 f"{metadata['snapshot_id']}: declared team-season artifact is unavailable"
             )
-        return _add_logo_handles(_empty_team_season_artifact(metadata, rankings), rankings)
+        return _empty_team_season_artifact(metadata, rankings)
     artifact = _read_json(candidate)
     artifact = _validate_team_season_artifact(
         artifact,
@@ -764,7 +738,52 @@ def _team_season_artifact(
         rankings,
         anchor_metadata=anchor_metadata,
     )
-    return _add_logo_handles(artifact, rankings)
+    return artifact
+
+
+def _rendered_team_identities(artifact: dict[str, Any]) -> set[tuple[str, str]]:
+    """Collect every team identity that the team-season pages can render."""
+    identities: set[tuple[str, str]] = set()
+    for team in artifact.get("teams", {}).values():
+        team_id = str(team.get("team_id", ""))
+        team_name = str(team.get("team_name", ""))
+        if team_id and team_name:
+            identities.add((team_id, team_name))
+        for game in team.get("games", []):
+            opponent_id = str(game.get("opponent_id", ""))
+            opponent_name = str(game.get("opponent_name", ""))
+            if opponent_id and opponent_name:
+                identities.add((opponent_id, opponent_name))
+    return identities
+
+
+def _logo_audit(identities: set[tuple[str, str]]) -> dict[str, Any]:
+    """Summarize exact logo coverage for a set of rendered identities."""
+    missing = [
+        {"team_id": team_id, "team_name": team_name}
+        for team_id, team_name in sorted(identities)
+        if team_logo_handle(team_id, team_name) is None
+    ]
+    return {
+        "mapped": len(identities) - len(missing),
+        "total": len(identities),
+        "missing": missing,
+    }
+
+
+def _logo_handles(identities: set[tuple[str, str]]) -> dict[str, str]:
+    """Build the manifest's stable-ID-to-handle map without guessing names."""
+    names_by_id: defaultdict[str, set[str]] = defaultdict(set)
+    for team_id, team_name in identities:
+        names_by_id[team_id].add(team_name)
+    handles: dict[str, str] = {}
+    for team_id, names in names_by_id.items():
+        if len(names) != 1:
+            continue
+        handle = team_logo_handle(team_id, next(iter(names)))
+        if handle is not None:
+            handles[team_id] = handle
+    return handles
 
 
 def build_site_data(*, root: Path, config_path: Path, output_directory: Path) -> dict[str, Any]:
@@ -774,7 +793,8 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
     manifest_entries: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
     seen_publications: set[tuple[int, str, str, str]] = set()
-    active_team_identities: set[tuple[str, str]] = set()
+    published_fbs_identities: set[tuple[str, str]] = set()
+    rendered_team_identities: set[tuple[str, str]] = set()
     schedule_path = root / "data/processed/cfbd/games.csv"
     conference_maps: dict[int, dict[tuple[int, str], str]] = {}
     metadata_by_source = {
@@ -814,7 +834,7 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             )
         seen_publications.add(publication)
         rankings = _ranking_rows(source / "rankings.csv", metadata)
-        active_team_identities.update(
+        published_fbs_identities.update(
             (str(row["team_id"]), str(row["team_name"])) for row in rankings
         )
         season = metadata["season"]
@@ -837,6 +857,7 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             rankings=rankings,
             context_source=context_sources.get((season, selected_snapshot.publication_slot)),
         )
+        rendered_team_identities.update(_rendered_team_identities(team_seasons))
         records = _records(source / "included_games.csv")
         for row in rankings:
             row["record"] = records.get(row["team_id"], "0-0")
@@ -853,7 +874,6 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
                     "top25_probability": summary["top25_probability"],
                 }
             )
-            row["logo_handle"] = team_logo_handle(row["team_id"], row["team_name"])
         relative_data_path = f"data/snapshots/{snapshot_id}.json"
         relative_distribution_path = f"data/distributions/{snapshot_id}.json"
         relative_team_seasons_path = f"data/team-seasons/{snapshot_id}.json"
@@ -947,6 +967,8 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
                 }
             )
     published_families = {entry["ranking_family"] for entry in manifest_entries}
+    published_fbs_logo_audit = _logo_audit(published_fbs_identities)
+    rendered_logo_audit = _logo_audit(rendered_team_identities)
     ranking_snapshot_bytes = sum(
         (output_directory / entry["data_path"].removeprefix("data/")).stat().st_size
         for entry in manifest_entries
@@ -970,24 +992,21 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
         "team_logos": {
             "source": "RedditCFB",
             "url_template": logo_url_template,
-            "handle_field": "logo_handle",
+            "handles": _logo_handles(rendered_team_identities),
             "fallback": "text",
         },
         "team_logo_audit": {
-            "active_team_count": len(active_team_identities),
-            "verified_count": len(active_team_identities)
-            - len(
-                [
-                    identity
-                    for identity in active_team_identities
-                    if team_logo_handle(*identity) is None
-                ]
-            ),
-            "missing": [
-                {"team_id": team_id, "team_name": team_name}
-                for team_id, team_name in sorted(active_team_identities)
-                if team_logo_handle(team_id, team_name) is None
-            ],
+            "published_fbs": {
+                key: value
+                for key, value in published_fbs_logo_audit.items()
+                if key != "missing"
+            },
+            "all_rendered_team_identities": {
+                key: value
+                for key, value in rendered_logo_audit.items()
+                if key != "missing"
+            },
+            "missing": rendered_logo_audit["missing"],
         },
         "payload_stats": {
             "published_snapshot_count": len(manifest_entries),

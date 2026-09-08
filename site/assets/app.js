@@ -25,8 +25,9 @@ function element(name, className, text) {
   return node;
 }
 
-function teamLogo(handle, className = "team-logo") {
+function teamLogo(teamId, className = "team-logo") {
   const template = state.manifest?.team_logos?.url_template;
+  const handle = state.manifest?.team_logos?.handles?.[teamId];
   if (!handle || !template || template.split("{handle}").length !== 2) return null;
   const frame = element("span", "team-logo-frame");
   frame.setAttribute("aria-hidden", "true");
@@ -166,7 +167,7 @@ function teamCell(row, entry) {
   const text = element("span", "team-cell-text");
   text.append(link, element("span", "team-conference", row.conference || "Independent"));
   if (row.rated === false) text.append(element("span", "team-status", "No eligible games played"));
-  const logo = teamLogo(row.logo_handle);
+  const logo = teamLogo(row.team_id);
   if (logo) wrapper.append(logo);
   wrapper.append(text);
   return wrapper;
@@ -279,7 +280,7 @@ function renderDetail(row, entry, distribution) {
   if (!team || !Array.isArray(team.pmf) || team.pmf.length !== distribution.rank_count) throw new Error("The selected team's distribution is unavailable.");
   const summary = team.summary;
   const rankLabel = row.rated === false ? "NR (not rated)" : `#${row.display_rank}`;
-  const logo = teamLogo(row.logo_handle, "team-logo team-logo-selector");
+  const logo = teamLogo(row.team_id, "team-logo team-logo-selector");
   $("#detail-team-logo").replaceChildren(...(logo ? [logo] : []));
   $("#detail-team-name").textContent = row.team_name;
   $("#detail-team-meta").textContent = `${rankLabel} by expected rank · ${row.conference || "Independent"} · ${row.record} modeled record · ${familyLabel()}${state.family === "predictive" ? ` · ${entry.prior_family === "context" ? "Context" : "History"}` : ""}`;
@@ -314,7 +315,7 @@ function closeDetail() { state.selectedTeamId = null; state.detailVersion += 1; 
 async function loadDetail(row, entry, snapshot) {
   const version = ++state.detailVersion;
   showDetail();
-  const logo = teamLogo(row.logo_handle, "team-logo team-logo-selector");
+  const logo = teamLogo(row.team_id, "team-logo team-logo-selector");
   $("#detail-team-logo").replaceChildren(...(logo ? [logo] : []));
   $("#detail-team-name").textContent = row.team_name;
   $("#detail-team-meta").textContent = "Loading the selected publication's rank distribution…";

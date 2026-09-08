@@ -1,6 +1,7 @@
 const $ = (selector) => document.querySelector(selector);
 const params = new URLSearchParams(window.location.search);
 let logoUrlTemplate = null;
+let logoHandles = {};
 
 function node(name, className, text) {
   const value = document.createElement(name);
@@ -9,7 +10,8 @@ function node(name, className, text) {
   return value;
 }
 
-function teamLogo(handle, className = "team-logo") {
+function teamLogo(teamId, className = "team-logo") {
+  const handle = logoHandles[teamId];
   if (!handle || !logoUrlTemplate || logoUrlTemplate.split("{handle}").length !== 2) return null;
   const frame = node("span", "team-logo-frame");
   frame.setAttribute("aria-hidden", "true");
@@ -82,7 +84,7 @@ function updateBackLink(entry) {
 
 function renderSummary(entry, snapshot, row) {
   const rankLabel = row.rated === false ? "NR" : `#${row.display_rank}`;
-  const logo = teamLogo(row.logo_handle, "team-logo team-logo-card");
+  const logo = teamLogo(row.team_id, "team-logo team-logo-card");
   $("#team-page-logo").replaceChildren(...(logo ? [logo] : []));
   $("#team-page-kind").textContent = `${entry.season} ${entry.display_label} · ${entry.snapshot_type === "preseason" ? "Preseason" : "Snapshot"}`;
   $("#team-page-title").textContent = row.team_name;
@@ -118,7 +120,7 @@ function gameCard(game, cutoff) {
   header.append(node("p", "game-date", `${week}${formatDate(game.date, false)}`), node("span", "game-site", game.site));
   const opponent = node("h3", "game-opponent", game.opponent_name || game.opponent_id || "Unknown opponent");
   const opponentHeading = node("div", "game-opponent-row");
-  const logo = teamLogo(game.opponent_logo_handle);
+  const logo = teamLogo(game.opponent_id);
   if (logo) opponentHeading.append(logo);
   opponentHeading.append(opponent);
   const meta = node("p", "game-meta", `${game.opponent_classification.toUpperCase()}${game.opponent_conference ? ` · ${game.opponent_conference}` : ""}`);
@@ -156,6 +158,7 @@ async function load() {
   if (!manifestResponse.ok) throw new Error("Could not load the published manifest.");
   const manifest = await manifestResponse.json();
   logoUrlTemplate = manifest.team_logos?.url_template || null;
+  logoHandles = manifest.team_logos?.handles || {};
   const entry = entryFor(manifest);
   updateBackLink(entry);
   if (!entry) throw new Error("No published snapshot matches this team page.");
