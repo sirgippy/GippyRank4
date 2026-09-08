@@ -35,6 +35,23 @@ Selection used only 2018--2021. Because frozen H/C prior predictions in this che
 | b_vs_a | 0.001 | -0.000 | 0.002 | 2 | False |
 | c_vs_b | 0.001 | -0.000 | 0.002 | 3 | False |
 
+## Development prior sensitivity
+
+The original uniform choice was explicit: frozen H/C PMFs in this checkout begin in 2022, while the 2018--2021 posterior labels remain available. A uniform ordinal PMF therefore supplied a reproducible, model-neutral starting state without pretending that a later frozen artifact was historically available. This matters because BP combines each team's prior with the V1 and optional primitive likelihood factors; an informative prior can change both the posterior rank weights and the nonlinear message-passing state, so it can change relative candidate scores even when candidate likelihood factors are identical.
+
+For the sensitivity, H 1.1 and C 1.2 were reconstructed separately for each target season using only completed rank distributions through the prior season and preseason-semantic feature fields. No 2022--2025 row or outcome was read. The candidate definitions, fitted component df choices, comparison keys, and gates are unchanged.
+
+| prior family | comparison | NLL gain | CRPS delta | 80% coverage delta | seasons improved | passed |
+|:--|:--|--:|--:|--:|--:|:--|
+| context_reconstructed | a_vs_v1 | -0.008 | 0.000 | -0.005 | 0 | False |
+| context_reconstructed | b_vs_a | -0.002 | 0.000 | -0.001 | 0 | False |
+| context_reconstructed | c_vs_b | 0.002 | 0.000 | 0.001 | 3 | False |
+| history_reconstructed | a_vs_v1 | -0.007 | 0.000 | -0.005 | 0 | False |
+| history_reconstructed | b_vs_a | -0.000 | 0.000 | 0.001 | 1 | False |
+| history_reconstructed | c_vs_b | 0.001 | -0.000 | 0.002 | 2 | False |
+
+Informative-prior selection paths: {"context_reconstructed": "a", "history_reconstructed": "a"}. Stability classification: **Stable**. This is a sensitivity of the pre-2022 selection question, not a reselection using the final evaluation.
+
 The selected reporting candidate is **A**; selection path `none`. Candidate df selection details are in `candidate_selection.csv`.
 
 ## 2022--2025 final-rank evaluation
@@ -2101,48 +2118,92 @@ Representative real corpus disagreement games:
 
 These examples are observations of conditional disagreement, not claims that turnovers are luck or skill and not direct turnover ratings.
 
-## Rolling robustness
 
-The rolling panel fits the selected primitive architecture using only seasons before each target season (2008--2025; no 2026 outcomes). It uses a uniform ordinal selection prior so the panel does not invent unavailable historical H/C artifacts.
+## Original rolling robustness
 
-| target season | fit through | candidate | NLL | CRPS | 80% coverage |
-|--:|:--|:--|--:|--:|--:|
-| 2008 | 2004-2007 | v1 | 3.739 | 0.020 | 0.800 |
-| 2008 | 2004-2007 | a | 3.746 | 0.020 | 0.793 |
-| 2009 | 2004-2008 | v1 | 3.666 | 0.017 | 0.831 |
-| 2009 | 2004-2008 | a | 3.667 | 0.017 | 0.827 |
-| 2010 | 2004-2009 | v1 | 3.626 | 0.014 | 0.848 |
-| 2010 | 2004-2009 | a | 3.627 | 0.014 | 0.845 |
-| 2011 | 2004-2010 | v1 | 3.727 | 0.019 | 0.804 |
-| 2011 | 2004-2010 | a | 3.731 | 0.019 | 0.800 |
-| 2012 | 2004-2011 | v1 | 3.695 | 0.013 | 0.829 |
-| 2012 | 2004-2011 | a | 3.705 | 0.014 | 0.821 |
-| 2013 | 2004-2012 | v1 | 3.644 | 0.013 | 0.847 |
-| 2013 | 2004-2012 | a | 3.643 | 0.012 | 0.844 |
-| 2014 | 2004-2013 | v1 | 3.697 | 0.013 | 0.855 |
-| 2014 | 2004-2013 | a | 3.701 | 0.014 | 0.849 |
-| 2015 | 2004-2014 | v1 | 3.734 | 0.017 | 0.834 |
-| 2015 | 2004-2014 | a | 3.739 | 0.017 | 0.830 |
-| 2016 | 2004-2015 | v1 | 3.777 | 0.017 | 0.811 |
-| 2016 | 2004-2015 | a | 3.788 | 0.017 | 0.808 |
-| 2017 | 2004-2016 | v1 | 3.652 | 0.013 | 0.873 |
-| 2017 | 2004-2016 | a | 3.649 | 0.013 | 0.872 |
-| 2018 | 2004-2017 | v1 | 3.713 | 0.014 | 0.838 |
-| 2018 | 2004-2017 | a | 3.716 | 0.014 | 0.834 |
-| 2019 | 2004-2018 | v1 | 3.691 | 0.016 | 0.842 |
-| 2019 | 2004-2018 | a | 3.689 | 0.016 | 0.840 |
-| 2020 | 2004-2019 | v1 | 4.167 | 0.028 | 0.725 |
-| 2020 | 2004-2019 | a | 4.165 | 0.027 | 0.727 |
-| 2021 | 2004-2020 | v1 | 3.763 | 0.018 | 0.822 |
-| 2021 | 2004-2020 | a | 3.771 | 0.018 | 0.812 |
-| 2022 | 2004-2021 | v1 | 3.786 | 0.018 | 0.806 |
-| 2022 | 2004-2021 | a | 3.786 | 0.019 | 0.806 |
-| 2023 | 2004-2022 | v1 | 3.743 | 0.016 | 0.846 |
-| 2023 | 2004-2022 | a | 3.745 | 0.016 | 0.843 |
-| 2024 | 2004-2023 | v1 | 3.717 | 0.013 | 0.856 |
-| 2024 | 2004-2023 | a | 3.724 | 0.013 | 0.851 |
-| 2025 | 2004-2024 | v1 | 3.749 | 0.014 | 0.847 |
-| 2025 | 2004-2024 | a | 3.759 | 0.015 | 0.842 |
+This is the original 18-season panel using a uniform ordinal prior. It is the panel used by the frozen promotion assessment and its original 9/18 rolling gate.
+
+| target season | fit through | prior | candidate | NLL | CRPS | 80% coverage |
+|--:|:--|:--|:--|--:|--:|--:|
+| 2008 | 2004-2007 | uniform ordinal | v1 | 3.739 | 0.020 | 0.800 |
+| 2008 | 2004-2007 | uniform ordinal | a | 3.746 | 0.020 | 0.793 |
+| 2009 | 2004-2008 | uniform ordinal | v1 | 3.666 | 0.017 | 0.831 |
+| 2009 | 2004-2008 | uniform ordinal | a | 3.667 | 0.017 | 0.827 |
+| 2010 | 2004-2009 | uniform ordinal | v1 | 3.626 | 0.014 | 0.848 |
+| 2010 | 2004-2009 | uniform ordinal | a | 3.627 | 0.014 | 0.845 |
+| 2011 | 2004-2010 | uniform ordinal | v1 | 3.727 | 0.019 | 0.804 |
+| 2011 | 2004-2010 | uniform ordinal | a | 3.731 | 0.019 | 0.800 |
+| 2012 | 2004-2011 | uniform ordinal | v1 | 3.695 | 0.013 | 0.829 |
+| 2012 | 2004-2011 | uniform ordinal | a | 3.705 | 0.014 | 0.821 |
+| 2013 | 2004-2012 | uniform ordinal | v1 | 3.644 | 0.013 | 0.847 |
+| 2013 | 2004-2012 | uniform ordinal | a | 3.643 | 0.012 | 0.844 |
+| 2014 | 2004-2013 | uniform ordinal | v1 | 3.697 | 0.013 | 0.855 |
+| 2014 | 2004-2013 | uniform ordinal | a | 3.701 | 0.014 | 0.849 |
+| 2015 | 2004-2014 | uniform ordinal | v1 | 3.734 | 0.017 | 0.834 |
+| 2015 | 2004-2014 | uniform ordinal | a | 3.739 | 0.017 | 0.830 |
+| 2016 | 2004-2015 | uniform ordinal | v1 | 3.777 | 0.017 | 0.811 |
+| 2016 | 2004-2015 | uniform ordinal | a | 3.788 | 0.017 | 0.808 |
+| 2017 | 2004-2016 | uniform ordinal | v1 | 3.652 | 0.013 | 0.873 |
+| 2017 | 2004-2016 | uniform ordinal | a | 3.649 | 0.013 | 0.872 |
+| 2018 | 2004-2017 | uniform ordinal | v1 | 3.713 | 0.014 | 0.838 |
+| 2018 | 2004-2017 | uniform ordinal | a | 3.716 | 0.014 | 0.834 |
+| 2019 | 2004-2018 | uniform ordinal | v1 | 3.691 | 0.016 | 0.842 |
+| 2019 | 2004-2018 | uniform ordinal | a | 3.689 | 0.016 | 0.840 |
+| 2020 | 2004-2019 | uniform ordinal | v1 | 4.167 | 0.028 | 0.725 |
+| 2020 | 2004-2019 | uniform ordinal | a | 4.165 | 0.027 | 0.727 |
+| 2021 | 2004-2020 | uniform ordinal | v1 | 3.763 | 0.018 | 0.822 |
+| 2021 | 2004-2020 | uniform ordinal | a | 3.771 | 0.018 | 0.812 |
+| 2022 | 2004-2021 | uniform ordinal | v1 | 3.786 | 0.018 | 0.806 |
+| 2022 | 2004-2021 | uniform ordinal | a | 3.786 | 0.019 | 0.806 |
+| 2023 | 2004-2022 | uniform ordinal | v1 | 3.743 | 0.016 | 0.846 |
+| 2023 | 2004-2022 | uniform ordinal | a | 3.745 | 0.016 | 0.843 |
+| 2024 | 2004-2023 | uniform ordinal | v1 | 3.717 | 0.013 | 0.856 |
+| 2024 | 2004-2023 | uniform ordinal | a | 3.724 | 0.013 | 0.851 |
+| 2025 | 2004-2024 | uniform ordinal | v1 | 3.749 | 0.014 | 0.847 |
+| 2025 | 2004-2024 | uniform ordinal | a | 3.759 | 0.015 | 0.842 |
+
+## Reconstructed History-prior sensitivity
+
+This sensitivity panel contains only successfully reconstructed History-prior targets. It is methodology sensitivity evidence only; the original 9/18 gate is not applied to this reduced panel.
+
+| target season | fit through | prior | candidate | NLL | CRPS | 80% coverage |
+|--:|:--|:--|:--|--:|--:|--:|
+| 2008 | 2004-2007 | reconstructed History 1.1 | v1 | 3.686 | 0.017 | 0.811 |
+| 2008 | 2004-2007 | reconstructed History 1.1 | a | 3.691 | 0.017 | 0.804 |
+| 2009 | 2004-2008 | reconstructed History 1.1 | v1 | 3.686 | 0.018 | 0.798 |
+| 2009 | 2004-2008 | reconstructed History 1.1 | a | 3.687 | 0.018 | 0.792 |
+| 2010 | 2004-2009 | reconstructed History 1.1 | v1 | 3.724 | 0.018 | 0.793 |
+| 2010 | 2004-2009 | reconstructed History 1.1 | a | 3.726 | 0.018 | 0.787 |
+| 2011 | 2004-2010 | reconstructed History 1.1 | v1 | 3.736 | 0.019 | 0.779 |
+| 2011 | 2004-2010 | reconstructed History 1.1 | a | 3.740 | 0.019 | 0.780 |
+| 2013 | 2004-2012 | reconstructed History 1.1 | v1 | 3.718 | 0.015 | 0.794 |
+| 2013 | 2004-2012 | reconstructed History 1.1 | a | 3.723 | 0.015 | 0.789 |
+| 2014 | 2004-2013 | reconstructed History 1.1 | v1 | 3.697 | 0.014 | 0.820 |
+| 2014 | 2004-2013 | reconstructed History 1.1 | a | 3.703 | 0.014 | 0.817 |
+| 2015 | 2004-2014 | reconstructed History 1.1 | v1 | 3.812 | 0.020 | 0.784 |
+| 2015 | 2004-2014 | reconstructed History 1.1 | a | 3.818 | 0.020 | 0.778 |
+| 2016 | 2004-2015 | reconstructed History 1.1 | v1 | 3.818 | 0.018 | 0.784 |
+| 2016 | 2004-2015 | reconstructed History 1.1 | a | 3.830 | 0.019 | 0.779 |
+| 2017 | 2004-2016 | reconstructed History 1.1 | v1 | 3.716 | 0.016 | 0.828 |
+| 2017 | 2004-2016 | reconstructed History 1.1 | a | 3.714 | 0.016 | 0.822 |
+| 2018 | 2004-2017 | reconstructed History 1.1 | v1 | 3.719 | 0.015 | 0.812 |
+| 2018 | 2004-2017 | reconstructed History 1.1 | a | 3.729 | 0.015 | 0.809 |
+| 2019 | 2004-2018 | reconstructed History 1.1 | v1 | 3.726 | 0.018 | 0.819 |
+| 2019 | 2004-2018 | reconstructed History 1.1 | a | 3.727 | 0.018 | 0.814 |
+| 2020 | 2004-2019 | reconstructed History 1.1 | v1 | 3.987 | 0.015 | 0.779 |
+| 2020 | 2004-2019 | reconstructed History 1.1 | a | 3.987 | 0.014 | 0.776 |
+| 2021 | 2004-2020 | reconstructed History 1.1 | v1 | 3.743 | 0.018 | 0.822 |
+| 2021 | 2004-2020 | reconstructed History 1.1 | a | 3.756 | 0.018 | 0.815 |
+| 2022 | 2004-2021 | reconstructed History 1.1 | v1 | 3.777 | 0.017 | 0.804 |
+| 2022 | 2004-2021 | reconstructed History 1.1 | a | 3.779 | 0.018 | 0.803 |
+| 2023 | 2004-2022 | reconstructed History 1.1 | v1 | 3.799 | 0.019 | 0.809 |
+| 2023 | 2004-2022 | reconstructed History 1.1 | a | 3.801 | 0.019 | 0.806 |
+| 2024 | 2004-2023 | reconstructed History 1.1 | v1 | 3.731 | 0.014 | 0.839 |
+| 2024 | 2004-2023 | reconstructed History 1.1 | a | 3.738 | 0.014 | 0.832 |
+| 2025 | 2004-2024 | reconstructed History 1.1 | v1 | 3.816 | 0.017 | 0.809 |
+| 2025 | 2004-2024 | reconstructed History 1.1 | a | 3.828 | 0.018 | 0.802 |
+
+Excluded reconstructed target **2012**: required FCS-to-FBS promotion fallback has zero pre-target training rows.
 
 ## Calibration and future-game validation
 
