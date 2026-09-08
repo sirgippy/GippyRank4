@@ -49,8 +49,9 @@ The artifact repeats the historical inference provenance (`effective_cutoff`,
 `game_corpus_sha256`, included game IDs, and source retrieval evidence). Because
 backfilled historical artifacts may use a newer schedule corpus for display
 metadata, `schedule_source` separately records that corpus's kind, repository
-path, and SHA-256. Static export validates both the paired Context provenance
-and the schedule-source hash.
+path, and SHA-256. Static export validates the provenance object's structure
+and the paired Context provenance; it does not compare a retained artifact's
+schedule hash with a later mutable schedule corpus.
 
 Results and scores are shown only when the game ID is in the snapshot's durable
 `included_game_ids` evidence. A kickoff before the cutoff is not enough: a game

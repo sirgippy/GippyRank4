@@ -555,7 +555,6 @@ def _validate_team_season_artifact(
     rankings: list[dict[str, Any]],
     *,
     anchor_metadata: dict[str, Any] | None = None,
-    schedule_corpus_sha256: str | None = None,
 ) -> dict[str, Any]:
     """Validate provenance, cutoff redaction, and compact game-rating fields."""
     snapshot_id = str(metadata["snapshot_id"])
@@ -569,13 +568,13 @@ def _validate_team_season_artifact(
         schedule_source.get("kind") != "current_processed_schedule"
         or schedule_source.get("path") != "data/processed/cfbd/games.csv"
         or not isinstance(schedule_source.get("sha256"), str)
+        or len(schedule_source.get("sha256", "")) != 64
+        or not all(
+            character in "0123456789abcdefABCDEF"
+            for character in schedule_source.get("sha256", "")
+        )
     ):
         raise SiteDataValidationError(f"{snapshot_id}: schedule provenance is missing or invalid")
-    if (
-        schedule_corpus_sha256 is not None
-        and schedule_source["sha256"] != schedule_corpus_sha256
-    ):
-        raise SiteDataValidationError(f"{snapshot_id}: schedule provenance mismatch")
     for field in (
         "season", "snapshot_type", "requested_cutoff", "effective_cutoff",
         "game_corpus_sha256", "source_retrieved_at", "source_retrieval_times",
@@ -681,7 +680,6 @@ def _team_season_artifact(
     metadata: dict[str, Any],
     rankings: list[dict[str, Any]],
     context_source: tuple[Path, dict[str, Any]] | None,
-    schedule_corpus_sha256: str | None,
 ) -> dict[str, Any]:
     """Load the Context artifact for any published family in a slot."""
     candidate = source / str(metadata.get("team_season_path") or "team_seasons.json")
@@ -719,7 +717,6 @@ def _team_season_artifact(
         metadata,
         rankings,
         anchor_metadata=anchor_metadata,
-        schedule_corpus_sha256=schedule_corpus_sha256,
     )
 
 
@@ -730,7 +727,6 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
     seen_ids: set[str] = set()
     seen_publications: set[tuple[int, str, str, str]] = set()
     schedule_path = root / "data/processed/cfbd/games.csv"
-    schedule_corpus_sha256 = _file_sha256(schedule_path)
     conference_maps: dict[int, dict[tuple[int, str], str]] = {}
     metadata_by_source = {
         selected_snapshot.source: _read_json(selected_snapshot.source / "metadata.json")
@@ -788,7 +784,6 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             metadata=metadata,
             rankings=rankings,
             context_source=context_sources.get((season, selected_snapshot.publication_slot)),
-            schedule_corpus_sha256=schedule_corpus_sha256,
         )
         records = _records(source / "included_games.csv")
         for row in rankings:

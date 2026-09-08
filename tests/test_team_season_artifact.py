@@ -197,3 +197,35 @@ def test_validator_rejects_unincluded_completed_result(tmp_path: Path) -> None:
     config.write_text(json.dumps({"schema_version": "1.0", "snapshots": [{"source": snapshot.directory.relative_to(root).as_posix(), "display_label": "Test", "publication_slot": "2026-09-01"}]}))
     with pytest.raises(SiteDataValidationError, match="without snapshot evidence"):
         build_site_data(root=root, config_path=config, output_directory=root / "site/data")
+
+
+def test_historical_artifact_survives_later_schedule_refresh(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    snapshot = build_snapshot(
+        season=2026,
+        cutoff=date(2026, 9, 1),
+        prior_family="context",
+        snapshot_type="weekly",
+        root=root,
+        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
+    )
+    artifact_path = snapshot.directory / "team_seasons.json"
+    original_artifact = artifact_path.read_bytes()
+    original_schedule_source = json.loads(original_artifact)["schedule_source"]
+    schedule_path = root / "data/processed/cfbd/games.csv"
+    with schedule_path.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    for row in rows:
+        if row["id"] == "later":
+            row["homePoints"] = "8"
+    _write(schedule_path, list(rows[0]), rows)
+    config = root / "site/publish_config.json"
+    config.parent.mkdir(parents=True, exist_ok=True)
+    config.write_text(json.dumps({"schema_version": "1.0", "snapshots": [{"source": snapshot.directory.relative_to(root).as_posix(), "display_label": "Test", "publication_slot": "2026-09-01"}]}))
+
+    manifest = build_site_data(root=root, config_path=config, output_directory=root / "site/data")
+
+    assert manifest["snapshots"][0]["team_seasons_bytes"] > 0
+    assert artifact_path.read_bytes() == original_artifact
+    exported = json.loads((root / "site" / manifest["snapshots"][0]["team_seasons_path"]).read_text())
+    assert exported["schedule_source"] == original_schedule_source
