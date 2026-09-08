@@ -693,7 +693,10 @@ def _team_season_artifact(
         candidate, anchor_metadata = context_source
         candidate = candidate / str(anchor_metadata.get("team_season_path") or "team_seasons.json")
     if not candidate.is_file():
-        if metadata.get("team_season_path"):
+        declared_path = metadata.get("team_season_path") or (
+            anchor_metadata.get("team_season_path") if anchor_metadata else None
+        )
+        if declared_path:
             raise SiteDataValidationError(
                 f"{metadata['snapshot_id']}: declared team-season artifact is unavailable"
             )

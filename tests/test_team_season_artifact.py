@@ -90,3 +90,21 @@ def test_team_artifact_provenance_mismatch_fails_closed(tmp_path: Path) -> None:
     config.write_text(json.dumps({"schema_version": "1.0", "snapshots": [{"source": snapshot.directory.relative_to(root).as_posix(), "display_label": "Test", "publication_slot": "2026-09-01"}]}))
     with pytest.raises(SiteDataValidationError, match="provenance mismatch"):
         build_site_data(root=root, config_path=config, output_directory=root / "site/data")
+
+
+def test_declared_team_artifact_missing_fails_closed(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    snapshot = build_snapshot(
+        season=2026,
+        cutoff=date(2026, 9, 1),
+        prior_family="context",
+        snapshot_type="weekly",
+        root=root,
+        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
+    )
+    (snapshot.directory / "team_seasons.json").unlink()
+    config = root / "site/publish_config.json"
+    config.parent.mkdir(parents=True, exist_ok=True)
+    config.write_text(json.dumps({"schema_version": "1.0", "snapshots": [{"source": snapshot.directory.relative_to(root).as_posix(), "display_label": "Test", "publication_slot": "2026-09-01"}]}))
+    with pytest.raises(SiteDataValidationError, match="declared team-season artifact is unavailable"):
+        build_site_data(root=root, config_path=config, output_directory=root / "site/data")

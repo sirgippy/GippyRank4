@@ -1,9 +1,9 @@
 const pageParams = new URLSearchParams(window.location.search);
-const requestedSeason = Number(pageParams.get("season"));
+const requestedSeason = pageParams.has("season") ? Number(pageParams.get("season")) : null;
 const state = {
   manifest: null,
   family: pageParams.get("family") === "performance" ? "performance" : "predictive",
-  season: Number.isInteger(requestedSeason) ? requestedSeason : null,
+  season: Number.isSafeInteger(requestedSeason) && requestedSeason > 0 ? requestedSeason : null,
   slot: pageParams.get("snapshot") || pageParams.get("slot") || null,
   prior: pageParams.get("prior") === "history" ? "history" : "context",
   depth: 25,
@@ -87,7 +87,7 @@ function populate() {
   const families = state.manifest.ranking_families;
   $("#family-select").replaceChildren(...families.map((family) => new Option(family.label, family.id, family.id === state.family, family.id === state.family)));
   const seasons = state.manifest.seasons;
-  state.season ??= seasons[0];
+  if (!seasons.includes(state.season)) state.season = seasons[0];
   $("#season-select").replaceChildren(...seasons.map((season) => new Option(season, season, season === state.season, season === state.season)));
   const entry = selectedEntry() ?? chooseDefault();
   const available = choices();
