@@ -16,6 +16,7 @@ from gippyrank.data.cfbd import GAME_FIELDS, CurrentSeasonAcquisition
 from gippyrank.posterior.snapshots import Snapshot
 from gippyrank.weekly_update import (
     _github_output_lines,
+    _previous_rows,
     _upsert_publication,
     prepare_weekly_update,
 )
@@ -159,6 +160,32 @@ def test_upserting_a_slot_preserves_preseason_and_older_slots(tmp_path: Path) ->
     value = json.loads(config.read_text())
     assert value["default_publication_slot"] == "2026-09-12"
     assert {entry["publication_slot"] for entry in value["snapshots"]} == {"2026-preseason", "2026-old", "2026-09-12"}
+
+
+def test_weekly_report_movers_use_latest_earlier_official_slot() -> None:
+    config = json.loads((ROOT / "site/publish_config.json").read_text(encoding="utf-8"))
+    config["publication_slots"].append(
+        {"id": "2026-09-09", "status": "temporary"}
+    )
+    rows = _previous_rows(
+        ROOT,
+        config,
+        "context",
+        season=2026,
+        publication_slot="2026-09-09",
+    )
+    expected_source = (
+        ROOT
+        / "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context"
+        / "predictive/context/rankings.csv"
+    )
+    with expected_source.open(newline="", encoding="utf-8") as handle:
+        expected_ids = [
+            row["team_id"]
+            for row in csv.DictReader(handle)
+            if row["subdivision"] == "fbs"
+        ]
+    assert [row["team_id"] for row in rows] == expected_ids
 
 
 def test_update_workflow_is_manual_and_pages_stays_model_and_cfbd_free() -> None:

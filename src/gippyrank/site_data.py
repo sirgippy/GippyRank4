@@ -44,6 +44,20 @@ class PublishedSnapshot:
 
 
 @dataclass(frozen=True)
+class PublicationComparison:
+    """The publication metadata needed to resolve an official baseline."""
+
+    season: int
+    ranking_family: str
+    prior_family: str | None
+    publication_slot: str
+    publication_status: str
+    publication_order: int
+    snapshot_id: str
+    display_label: str
+
+
+@dataclass(frozen=True)
 class PreparedSnapshot:
     """Validated source data held until publication comparisons are resolved."""
 
@@ -138,20 +152,12 @@ def _read_json(path: Path) -> dict[str, Any]:
     return value
 
 
-def load_publish_config(path: Path, root: Path) -> tuple[list[PublishedSnapshot], str | None]:
-    """Load explicitly ordered snapshots and their slot-level status metadata.
-
-    ``publication_slots`` is an ordered list.  Its order is the publication
-    chronology used for comparison resolution; slot IDs are intentionally not
-    parsed or sorted because they are presentation/configuration identifiers.
-    """
-    config = _read_json(path)
-    if config.get("schema_version") != SITE_SCHEMA_VERSION:
-        raise SiteDataValidationError("Unsupported publish configuration schema")
+def publication_slot_metadata(config: dict[str, Any]) -> dict[str, tuple[str, int]]:
+    """Validate and index the explicitly ordered publication-slot metadata."""
     slot_entries = config.get("publication_slots")
-    if not isinstance(slot_entries, list) or not slot_entries:
+    if not isinstance(slot_entries, list):
         raise SiteDataValidationError(
-            "Publish configuration needs a non-empty publication_slots list"
+            "Publish configuration needs a publication_slots list"
         )
     slots: dict[str, tuple[str, int]] = {}
     for order, entry in enumerate(slot_entries):
@@ -170,6 +176,24 @@ def load_publish_config(path: Path, root: Path) -> tuple[list[PublishedSnapshot]
                 f"{slot}: publication status must be official or temporary"
             )
         slots[slot] = (status, order)
+    return slots
+
+
+def load_publish_config(path: Path, root: Path) -> tuple[list[PublishedSnapshot], str | None]:
+    """Load explicitly ordered snapshots and their slot-level status metadata.
+
+    ``publication_slots`` is an ordered list.  Its order is the publication
+    chronology used for comparison resolution; slot IDs are intentionally not
+    parsed or sorted because they are presentation/configuration identifiers.
+    """
+    config = _read_json(path)
+    if config.get("schema_version") != SITE_SCHEMA_VERSION:
+        raise SiteDataValidationError("Unsupported publish configuration schema")
+    slots = publication_slot_metadata(config)
+    if not slots:
+        raise SiteDataValidationError(
+            "Publish configuration needs a non-empty publication_slots list"
+        )
     snapshots = config.get("snapshots")
     if not isinstance(snapshots, list) or not snapshots:
         raise SiteDataValidationError("Publish configuration needs a non-empty snapshots list")
@@ -362,27 +386,57 @@ def _ranking_rows(path: Path, metadata: dict[str, Any]) -> list[dict[str, Any]]:
     )
 
 
-def _comparison_key(snapshot: PreparedSnapshot) -> tuple[int, str, str | None]:
-    metadata = snapshot.metadata
+def _comparison_key(snapshot: PublicationComparison) -> tuple[int, str, str | None]:
     return (
-        int(metadata["season"]),
-        str(metadata["ranking_family"]),
-        str(metadata["prior_family"]) if metadata["ranking_family"] == "predictive" else None,
+        snapshot.season,
+        snapshot.ranking_family,
+        snapshot.prior_family if snapshot.ranking_family == "predictive" else None,
     )
+
+
+def _comparison_descriptor(snapshot: PreparedSnapshot) -> PublicationComparison:
+    metadata = snapshot.metadata
+    return PublicationComparison(
+        season=int(metadata["season"]),
+        ranking_family=str(metadata["ranking_family"]),
+        prior_family=(
+            str(metadata["prior_family"])
+            if metadata["ranking_family"] == "predictive"
+            else None
+        ),
+        publication_slot=snapshot.selected.publication_slot,
+        publication_status=snapshot.selected.publication_status,
+        publication_order=snapshot.selected.publication_order,
+        snapshot_id=snapshot.snapshot_id,
+        display_label=snapshot.selected.display_label,
+    )
+
+
+def resolve_previous_official(
+    current: PublicationComparison,
+    snapshots: list[PublicationComparison],
+) -> PublicationComparison | None:
+    """Resolve the latest strictly earlier compatible official publication."""
+    compatible = [
+        snapshot
+        for snapshot in snapshots
+        if snapshot.publication_status == "official"
+        and snapshot.publication_order < current.publication_order
+        and _comparison_key(snapshot) == _comparison_key(current)
+    ]
+    return max(compatible, key=lambda snapshot: snapshot.publication_order, default=None)
 
 
 def _previous_official_snapshot(
     current: PreparedSnapshot, snapshots: list[PreparedSnapshot]
 ) -> PreparedSnapshot | None:
-    """Resolve the latest strictly earlier compatible official publication."""
-    compatible = [
-        snapshot
-        for snapshot in snapshots
-        if snapshot.selected.publication_status == "official"
-        and snapshot.selected.publication_order < current.selected.publication_order
-        and _comparison_key(snapshot) == _comparison_key(current)
-    ]
-    return max(compatible, key=lambda snapshot: snapshot.selected.publication_order, default=None)
+    previous = resolve_previous_official(
+        _comparison_descriptor(current),
+        [_comparison_descriptor(snapshot) for snapshot in snapshots],
+    )
+    if previous is None:
+        return None
+    return next(snapshot for snapshot in snapshots if snapshot.snapshot_id == previous.snapshot_id)
 
 
 def _rank_change_text(

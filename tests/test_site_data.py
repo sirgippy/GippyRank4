@@ -536,6 +536,29 @@ def test_comparison_resolution_uses_explicit_order_and_compatible_family() -> No
     ) is week_2_performance
 
 
+def test_future_predictive_temporary_and_week3_compare_to_week2() -> None:
+    def prepared(slot: str, order: int, status: str) -> site_data.PublicationComparison:
+        return site_data.PublicationComparison(
+            season=2026,
+            ranking_family="predictive",
+            prior_family="context",
+            publication_slot=slot,
+            publication_status=status,
+            publication_order=order,
+            snapshot_id=slot,
+            display_label=slot,
+        )
+
+    preseason = prepared("2026-preseason", 0, "official")
+    week_2 = prepared("2026-09-08", 1, "official")
+    later_temporary = prepared("2026-09-09", 2, "temporary")
+    week_3 = prepared("2026-09-15", 3, "official")
+    snapshots = [preseason, week_2, later_temporary, week_3]
+
+    assert site_data.resolve_previous_official(later_temporary, snapshots) is week_2
+    assert site_data.resolve_previous_official(week_3, snapshots) is week_2
+
+
 def test_rank_change_uses_display_rank_and_handles_nr_transitions() -> None:
     previous = site_data.PreparedSnapshot(
         site_data.PublishedSnapshot(Path("old"), "Preseason", "old", "official", 0),
