@@ -3,23 +3,18 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="GippyRank 4.0 probabilistic college football rankings.">
-    <title>GippyRank 4.0</title>
+    <meta name="description" content="Probabilistic rankings from GippyRank4.">
+    <title>GippyRank4</title>
     <link rel="stylesheet" href="./assets/style.css">
   </head>
   <body>
     <header class="site-header">
-      <div class="shell masthead">
-        <a class="wordmark" href="./" aria-label="GippyRank 4.0 home">GippyRank <span>4.0</span></a>
-        <p>College football rankings, built from the games.</p>
+      <div class="shell masthead rankings-masthead">
+        <a class="wordmark" href="./" aria-label="GippyRank4 home">GippyRank4</a>
+        <a class="about-link" href="#about-rankings">About these rankings</a>
       </div>
     </header>
     <main class="shell">
-      <section class="intro" aria-labelledby="page-title">
-        <h1 id="page-title">College football rankings</h1>
-        <p>Expected rank and an 80% interval for every team.</p>
-      </section>
-
       <section class="controls" aria-label="Ranking controls">
         <label>Ranking family<select id="family-select" aria-label="Ranking family"></select></label>
         <label>Season<select id="season-select" aria-label="Season"></select></label>
@@ -65,7 +60,7 @@
         <div id="detail-content" class="detail-content" aria-live="polite"></div>
       </dialog>
 
-      <details class="about-rankings">
+      <details id="about-rankings" class="about-rankings">
         <summary>About these rankings</summary>
         <div class="explain-grid">
           <article><h3>Predictive</h3><p>Combines preseason information with eligible game results to estimate current rank distributions. Context includes roster and recruiting information; History starts from prior program performance.</p></article>
