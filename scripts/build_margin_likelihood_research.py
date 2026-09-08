@@ -20,7 +20,7 @@ from pathlib import Path
 
 import numpy as np
 
-from gippyrank.modeling import read_csv
+from gippyrank.modeling import fit_robust_surface, read_csv
 from gippyrank.posterior.snapshots import load_likelihood
 from gippyrank.research.margin_likelihood import (
     CANDIDATES,
@@ -29,7 +29,6 @@ from gippyrank.research.margin_likelihood import (
     build_margin_data,
     development_gate,
     fit_candidate,
-    fit_constant_scale,
     game_key_sha256,
     mean_design,
     mixture_interval_approx,
@@ -78,6 +77,12 @@ def _sha256(path: Path) -> str:
         for block in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def _path_label(path: Path) -> str:
+    """Use a repository-relative label when possible, otherwise the full path."""
+
+    return str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path)
 
 
 def _jsonable(value: object) -> object:
@@ -140,16 +145,31 @@ def _load_rows(path: Path) -> list[dict[str, object]]:
     return rows
 
 
-def _frozen_v1_model(likelihood) -> dict[str, object]:
+def _leakage_safe_v1_model(
+    data: MarginData,
+    X: np.ndarray,
+    fit_mask: np.ndarray,
+) -> dict[str, object]:
+    """Fit the V1 comparator only on the predeclared training seasons."""
+
+    fit = fit_robust_surface(
+        X[fit_mask],
+        data.margin[fit_mask],
+        data.weight[fit_mask],
+        df=DF,
+    )
     return {
         "name": "v1",
         "kind": "v1",
-        "beta": likelihood.beta.copy(),
-        "scale": float(likelihood.scale),
-        "df": float(likelihood.degrees_of_freedom),
-        "scale_model": "frozen_production_historical_likelihood_v1",
+        "beta": np.asarray(fit["beta"], dtype=float),
+        "scale": float(fit["scale"]),
+        "df": float(fit["df"]),
+        "scale_model": "leakage_safe_training_v1",
         "scale_feature_names": [],
-        "fit_seasons": "2003-2021 (frozen production artifact)",
+        "fit_seasons": list(TRAIN_YEARS),
+        "mean_fit": "production_style_student_t_irls",
+        "fit_rows": int(np.count_nonzero(fit_mask)),
+        "fit_games": len(np.unique(data.game_id[fit_mask])),
     }
 
 
@@ -341,9 +361,9 @@ def _development_rows(
     rows: list[dict[str, object]] = []
     for name in CANDIDATES:
         metrics = aggregate[name]
-        predecessor = "v1" if name == "a" else "a" if name == "b" else "b" if name.startswith("c") else None
+        predecessor = "v1" if name != "v1" else None
         gate = (
-            development_gate(metrics, aggregate[predecessor], seasons[name], seasons[predecessor])
+            development_gate(metrics, aggregate["v1"], seasons[name], seasons["v1"])
             if predecessor is not None
             else {
                 "primary_pass": False,
@@ -357,7 +377,7 @@ def _development_rows(
             {
                 "candidate": name,
                 "evaluation_period": "development_2018_2021",
-                "fit_period": "training_2003_2017" if name != "v1" else "frozen_2003_2021",
+                "fit_period": "training_2003_2017",
                 "marginalized_nll": metrics["marginalized_nll"],
                 "delta_nll_vs_v1": float(metrics["marginalized_nll"]) - float(baseline["marginalized_nll"]),
                 "expected_margin_mae": metrics["expected_margin_mae"],
@@ -369,12 +389,13 @@ def _development_rows(
                 "interval_width_95": metrics["interval_width_95"],
                 "n_games": metrics["n_games"],
                 "n_pseudo_observations": metrics["n_pseudo_observations"],
-                "predecessor": predecessor,
-                "primary_pass_vs_predecessor": gate["primary_pass"],
-                "alternative_calibration_pass_vs_predecessor": gate["alternative_calibration_pass"],
-                "qualifies_vs_predecessor": gate["qualifies"],
-                "complexity_gain_over_predecessor": (
-                    float(aggregate[predecessor]["marginalized_nll"]) - float(metrics["marginalized_nll"])
+                "comparison_baseline": predecessor,
+                "primary_pass_vs_v1": gate["primary_pass"],
+                "alternative_calibration_pass_vs_v1": gate["alternative_calibration_pass"],
+                "qualifies_vs_v1": gate["qualifies"] if predecessor is not None else False,
+                "complexity_gain_over_v1": (
+                    float(aggregate["v1"]["marginalized_nll"])
+                    - float(metrics["marginalized_nll"])
                     if predecessor is not None
                     else None
                 ),
@@ -405,9 +426,7 @@ def _rolling_likelihood(
         target_mask = data.season == target_season
         if not fit_mask.any() or not target_mask.any():
             continue
-        rolling_v1 = fit_constant_scale(
-            X[fit_mask], data.margin[fit_mask], data.weight[fit_mask], degrees_of_freedom=DF
-        )
+        rolling_v1 = _leakage_safe_v1_model(data, X, fit_mask)
         rolling_location = model_location(rolling_v1, X)
         selected_model = fit_candidate(
             selected,
@@ -415,6 +434,7 @@ def _rolling_likelihood(
             X,
             rolling_location,
             fit_mask,
+            baseline_beta=np.asarray(rolling_v1["beta"], dtype=float),
             degrees_of_freedom=DF,
         )
         v1_metrics = score_model(rolling_v1, data, X, rolling_location, target_mask, intervals=True)
@@ -479,13 +499,13 @@ def _write_report(
         "",
         "## Development selection",
         "",
-        "| Candidate | NLL | Δ NLL vs V1 | Margin MAE | 50% | 80% | 95% | Gate vs predecessor |",
+        "| Candidate | NLL | Δ NLL vs V1 | Margin MAE | 50% | 80% | 95% | Qualifies vs V1 |",
         "|:--|--:|--:|--:|--:|--:|--:|:--|",
     ]
     for name in CANDIDATES:
         row = by_candidate[name]
         lines.append(
-            f"| {name.upper()} | {_report_number(row['marginalized_nll'])} | {_report_number(row['delta_nll_vs_v1'])} | {_report_number(row['expected_margin_mae'])} | {_report_number(row['coverage_50'])} | {_report_number(row['coverage_80'])} | {_report_number(row['coverage_95'])} | {row['qualifies_vs_predecessor']} |"
+            f"| {name.upper()} | {_report_number(row['marginalized_nll'])} | {_report_number(row['delta_nll_vs_v1'])} | {_report_number(row['expected_margin_mae'])} | {_report_number(row['coverage_50'])} | {_report_number(row['coverage_80'])} | {_report_number(row['coverage_95'])} | {row['qualifies_vs_v1']} |"
         )
     lines.extend(
         [
@@ -550,7 +570,7 @@ def main() -> None:
     ]
     production_paths = [path for path in production_paths if path.exists()]
     production_hashes_before = {
-        str(path.relative_to(ROOT)): _sha256(path) for path in production_paths
+        _path_label(path): _sha256(path) for path in production_paths
     }
 
     rows = _load_rows(args.historical_rows)
@@ -559,12 +579,12 @@ def main() -> None:
     likelihood = load_likelihood(args.likelihood)
     if len(likelihood.beta) != X.shape[1]:
         raise ValueError(f"frozen V1 beta has {len(likelihood.beta)} coefficients; data design has {X.shape[1]}")
-    baseline_location = X @ likelihood.beta
-    baseline = _frozen_v1_model(likelihood)
+    train_mask = _mask_for_seasons(data, TRAIN_YEARS)
+    baseline = _leakage_safe_v1_model(data, X, train_mask)
+    baseline_location = model_location(baseline, X)
 
     diagnostics, stage0_summary = build_residual_diagnostics(data, baseline_location, baseline)
 
-    train_mask = _mask_for_seasons(data, TRAIN_YEARS)
     models: dict[str, dict[str, object]] = {"v1": baseline}
     for name in ("a", "b", "c14", "c21", "c28", "c42"):
         models[name] = fit_candidate(
@@ -573,6 +593,7 @@ def main() -> None:
             X,
             baseline_location,
             train_mask,
+            baseline_beta=np.asarray(baseline["beta"], dtype=float),
             degrees_of_freedom=DF,
         )
 
@@ -594,8 +615,15 @@ def main() -> None:
             "name": "v1",
             "artifact": str(args.likelihood.relative_to(ROOT)) if args.likelihood.is_relative_to(ROOT) else str(args.likelihood),
             "unchanged": True,
+            "role": "integrity_reference_only",
             "df": float(likelihood.degrees_of_freedom),
             "mean_feature_count": int(X.shape[1]),
+        },
+        "leakage_safe_comparator": {
+            "name": "v1",
+            "fit_seasons": list(TRAIN_YEARS),
+            "mean_fit": "production_style_student_t_irls",
+            "used_for": ["development_baseline", "candidate_a_b_mean", "candidate_scale_mismatch"],
         },
         "data_split": {
             "training": list(TRAIN_YEARS),
@@ -622,7 +650,7 @@ def main() -> None:
         rolling_rows = _rolling_likelihood(selected, data, X, baseline_location)
 
     production_hashes_after = {
-        str(path.relative_to(ROOT)): _sha256(path) for path in production_paths
+        _path_label(path): _sha256(path) for path in production_paths
     }
     comparison_audit = strict_comparison_key_audit(
         {name: common_dev_ids for name in CANDIDATES}

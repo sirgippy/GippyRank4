@@ -19,15 +19,15 @@ The diagnostics use 26137 training/development games (20743 training and 5394 de
 
 ## Development selection
 
-| Candidate | NLL | Δ NLL vs V1 | Margin MAE | 50% | 80% | 95% | Gate vs predecessor |
+| Candidate | NLL | Δ NLL vs V1 | Margin MAE | 50% | 80% | 95% | Qualifies vs V1 |
 |:--|--:|--:|--:|--:|--:|--:|:--|
-| V1 | 4.065 | 0.000 | 11.146 | 0.506 | 0.810 | 0.960 | False |
-| A | 4.068 | 0.003 | 11.176 | 0.502 | 0.809 | 0.958 | False |
-| B | 4.065 | 0.000 | 11.176 | 0.501 | 0.810 | 0.958 | False |
-| C14 | 4.110 | 0.045 | 11.276 | 0.476 | 0.808 | 0.968 | False |
-| C21 | 4.088 | 0.023 | 11.225 | 0.481 | 0.807 | 0.966 | False |
-| C28 | 4.078 | 0.013 | 11.202 | 0.484 | 0.806 | 0.964 | False |
-| C42 | 4.070 | 0.005 | 11.185 | 0.492 | 0.805 | 0.961 | False |
+| V1 | 4.067 | 0.000 | 11.175 | 0.502 | 0.807 | 0.956 | False |
+| A | 4.068 | 0.000 | 11.175 | 0.501 | 0.808 | 0.958 | False |
+| B | 4.065 | -0.002 | 11.175 | 0.501 | 0.809 | 0.958 | False |
+| C14 | 4.109 | 0.042 | 11.250 | 0.478 | 0.811 | 0.967 | False |
+| C21 | 4.088 | 0.020 | 11.211 | 0.482 | 0.808 | 0.965 | False |
+| C28 | 4.078 | 0.011 | 11.194 | 0.486 | 0.806 | 0.964 | False |
+| C42 | 4.070 | 0.003 | 11.182 | 0.493 | 0.805 | 0.961 | False |
 
 The development-only selection returned `none`. Selection metadata and all frozen parameters are in `model_spec.json`; no 2022–2025 row was used to choose the candidate or C k. The decision trace is in `summary.json`.
 

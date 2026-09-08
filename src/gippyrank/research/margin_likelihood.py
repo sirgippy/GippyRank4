@@ -23,7 +23,7 @@ from scipy.optimize import brentq, minimize
 from scipy.special import gammaln
 from scipy.stats import t as student_t
 
-from gippyrank.modeling import PAIRINGS, design_matrix
+from gippyrank.modeling import PAIRINGS, design_matrix, fit_robust_surface
 
 DF = 15.0
 BLOWOUT_KS = (14.0, 21.0, 28.0, 42.0)
@@ -316,10 +316,17 @@ def fit_variable_scale(
     weights: np.ndarray,
     scale_features: np.ndarray,
     *,
+    fixed_beta: np.ndarray | None = None,
     degrees_of_freedom: float = DF,
     maxiter: int = 120,
 ) -> dict[str, object]:
-    """Fit a weighted Student-t mean surface with a positive log-scale model."""
+    """Fit a positive log-scale model around a fixed or refit mean surface.
+
+    Candidate A/B pass the leakage-safe V1 beta through ``fixed_beta`` so that
+    their comparison tests heteroskedastic scale only.  Candidate C leaves it
+    unset and refits the same mean-feature family on its transformed response
+    with the production-style Student-t IRLS fit.
+    """
 
     X = np.asarray(X, dtype=float)
     target = np.asarray(target, dtype=float)
@@ -332,14 +339,22 @@ def fit_variable_scale(
     if np.any(weights < 0) or not np.isfinite(weights).all() or weights.sum() <= 0:
         raise ValueError("candidate weights must be finite and non-negative")
 
+    if fixed_beta is None:
+        mean_fit = fit_robust_surface(
+            X,
+            target,
+            weights,
+            iterations=8,
+            df=degrees_of_freedom,
+        )
+        beta = np.asarray(mean_fit["beta"], dtype=float)
+        mean_fit_description = "student_t_irls_refit_on_candidate_response"
+    else:
+        beta = np.asarray(fixed_beta, dtype=float)
+        if beta.ndim != 1 or len(beta) != X.shape[1] or not np.isfinite(beta).all():
+            raise ValueError("fixed beta must be a finite vector matching the mean design")
+        mean_fit_description = "leakage_safe_v1_beta_fixed"
     total_weight = float(weights.sum())
-    # The investigation freezes the V1 mean-feature family.  Estimate its
-    # response-specific location once, then optimize only the small scale
-    # model.  This is both auditable and substantially cheaper than repeatedly
-    # differentiating a 34+parameter objective over millions of pseudo rows.
-    weighted_X = X * np.sqrt(weights)[:, None]
-    weighted_target = target * np.sqrt(weights)
-    beta = np.linalg.lstsq(weighted_X, weighted_target, rcond=None)[0]
     residual = target - X @ beta
     initial_scale = max(float(np.sqrt(np.average(residual * residual, weights=weights))), 1.0)
     alpha = np.zeros(scale_features.shape[1], dtype=float)
@@ -393,6 +408,7 @@ def fit_variable_scale(
         "optimizer_success": bool(result.success),
         "optimizer_message": str(result.message),
         "optimizer_iterations": int(result.nit),
+        "mean_fit": mean_fit_description,
         "objective": "weighted_pseudo_student_t",
     }
 
@@ -436,6 +452,7 @@ def fit_candidate(
     baseline_location: np.ndarray,
     fit_mask: np.ndarray,
     *,
+    baseline_beta: np.ndarray | None = None,
     degrees_of_freedom: float = DF,
     total_points_normalization: Mapping[str, float] | None = None,
 ) -> dict[str, object]:
@@ -466,11 +483,15 @@ def fit_candidate(
             "scale_model": "frozen_v1",
             "scale_feature_names": [],
         }
+    fixed_beta = baseline_beta if kind in {"a", "b"} else None
+    if kind in {"a", "b"} and fixed_beta is None:
+        raise ValueError("Candidate A/B require the leakage-safe V1 beta")
     fit = fit_variable_scale(
         X[fit_mask],
         target[fit_mask],
         data.weight[fit_mask],
         features,
+        fixed_beta=fixed_beta,
         degrees_of_freedom=degrees_of_freedom,
     )
     fit.update(
@@ -745,57 +766,122 @@ def development_gate(
     }
 
 
+def _alternative_calibration_move(
+    candidate: Mapping[str, object],
+    simpler: Mapping[str, object],
+) -> bool:
+    """Return whether calibration justifies a complexity step."""
+
+    return bool(
+        float(candidate["marginalized_nll"])
+        - float(simpler["marginalized_nll"])
+        <= 0.002
+        and _coverage_error(simpler) - _coverage_error(candidate) >= 0.02
+        and float(candidate["expected_margin_mae"])
+        - float(simpler["expected_margin_mae"])
+        <= 0.10
+    )
+
+
 def select_development_candidate(
     aggregate: Mapping[str, Mapping[str, object]],
     seasons: Mapping[str, Sequence[Mapping[str, object]]],
 ) -> tuple[str | None, dict[str, object]]:
-    """Select only from development metrics, preferring the simplest model."""
+    """Qualify every candidate against V1, then apply complexity preferences."""
+
+    candidate_names = tuple(name for name in CANDIDATES if name != "v1")
+    qualification: dict[str, dict[str, object]] = {}
+    for candidate in candidate_names:
+        gate = development_gate(
+            aggregate[candidate],
+            aggregate["v1"],
+            seasons[candidate],
+            seasons["v1"],
+        )
+        qualification[candidate] = {
+            **gate,
+            "qualifies_vs_v1": bool(gate["qualifies"]),
+        }
 
     decisions: dict[str, object] = {}
     current = "v1"
-    current_aggregate = aggregate["v1"]
-    current_seasons = seasons["v1"]
-    for candidate in ("a", "b"):
-        gate = development_gate(
-            aggregate[candidate],
-            current_aggregate,
-            seasons[candidate],
-            current_seasons,
-        )
-        gain = float(current_aggregate["marginalized_nll"]) - float(
+
+    def consider(candidate: str, *, requires_complexity: bool) -> None:
+        nonlocal current
+        gate = qualification[candidate]
+        simpler = aggregate[current]
+        gain = float(simpler["marginalized_nll"]) - float(
             aggregate[candidate]["marginalized_nll"]
         )
-        accepted = bool(gate["qualifies"] and gain >= 0.003)
-        decisions[candidate] = {**gate, "complexity_gain_over_current": gain, "accepted": accepted}
+        calibration_move = _alternative_calibration_move(aggregate[candidate], simpler)
+        complexity_ok = not requires_complexity or gain >= 0.003 or calibration_move
+        accepted = bool(gate["qualifies_vs_v1"] and complexity_ok)
+        decisions[candidate] = {
+            **gate,
+            "comparison_baseline": current,
+            "complexity_gain_over_current": gain,
+            "alternative_calibration_move_over_current": calibration_move,
+            "complexity_requirement_applied": requires_complexity,
+            "accepted": accepted,
+        }
         if accepted:
             current = candidate
-            current_aggregate = aggregate[candidate]
-            current_seasons = seasons[candidate]
 
-    c_candidates = [name for name in CANDIDATES if name.startswith("c")]
-    best_c = min(c_candidates, key=lambda name: float(aggregate[name]["marginalized_nll"]))
-    gate = development_gate(
-        aggregate[best_c],
-        current_aggregate,
-        seasons[best_c],
-        current_seasons,
-    )
-    gain = float(current_aggregate["marginalized_nll"]) - float(
-        aggregate[best_c]["marginalized_nll"]
-    )
-    accepted = bool(gate["qualifies"] and gain >= 0.003)
-    decisions["c"] = {
-        **gate,
-        "chosen_k": float(best_c[1:]),
-        "complexity_gain_over_current": gain,
-        "accepted": accepted,
-    }
-    if accepted:
-        current = best_c
+    # A is the simplest research extension.  Once it qualifies against V1 it
+    # becomes the starting point for the complexity comparison; its
+    # qualification itself does not need the later .003 complexity hurdle.
+    consider("a", requires_complexity=False)
+    consider("b", requires_complexity=True)
+
+    c_candidates = [name for name in candidate_names if name.startswith("c")]
+    qualifying_c = [name for name in c_candidates if qualification[name]["qualifies_vs_v1"]]
+    for candidate in c_candidates:
+        if candidate not in qualifying_c:
+            decisions[candidate] = {
+                **qualification[candidate],
+                "comparison_baseline": current,
+                "complexity_gain_over_current": None,
+                "alternative_calibration_move_over_current": False,
+                "complexity_requirement_applied": True,
+                "accepted": False,
+            }
+    if qualifying_c:
+        best_c = min(
+            qualifying_c,
+            key=lambda name: (float(aggregate[name]["marginalized_nll"]), float(name[1:])),
+        )
+        c_comparison_baseline = current
+        consider(best_c, requires_complexity=True)
+        for candidate in qualifying_c:
+            if candidate == best_c:
+                continue
+            decisions[candidate] = {
+                **qualification[candidate],
+                "comparison_baseline": c_comparison_baseline,
+                "complexity_gain_over_current": None,
+                "alternative_calibration_move_over_current": False,
+                "complexity_requirement_applied": True,
+                "accepted": False,
+                "selected_as_c_variant": False,
+            }
+        decisions["c"] = {
+            **decisions[best_c],
+            "chosen_k": float(best_c[1:]),
+            "candidate": best_c,
+            "selected_as_c_variant": True,
+        }
+    else:
+        decisions["c"] = {
+            "candidate": None,
+            "chosen_k": None,
+            "qualifies_vs_v1": False,
+            "accepted": False,
+        }
     return (None if current == "v1" else current), {
         "selected_candidate": None if current == "v1" else current,
         "simplest_current_after_gate": current,
         "decisions": decisions,
+        "qualification_baseline": "v1",
         "selection_metric_period": "development_2018_2021_only",
         "final_2022_2025_used": False,
     }

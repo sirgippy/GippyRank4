@@ -11,6 +11,7 @@ from gippyrank.research.margin_likelihood import (
     blowout_log_jacobian,
     blowout_transform,
     build_margin_data,
+    fit_variable_scale,
     model_location,
     scale_design,
     scale_values,
@@ -102,6 +103,22 @@ def test_total_points_alone_cannot_create_rank_evidence() -> None:
     assert np.all(features[:, :4] == features[0, :4])
 
 
+def test_variable_scale_can_hold_the_leakage_safe_v1_beta_fixed() -> None:
+    design = np.eye(3)
+    target = np.asarray([10.0, 2.0, -4.0])
+    beta = np.asarray([9.0, 3.0, -5.0])
+    fit = fit_variable_scale(
+        design,
+        target,
+        np.ones(3),
+        np.ones((3, 4)),
+        fixed_beta=beta,
+        maxiter=10,
+    )
+    assert np.array_equal(fit["beta"], beta)
+    assert fit["mean_fit"] == "leakage_safe_v1_beta_fixed"
+
+
 @pytest.mark.parametrize("k", BLOWOUT_KS)
 def test_blowout_transform_is_symmetric_monotonic_and_invertible(k: float) -> None:
     values = np.asarray([-100.0, -14.0, 0.0, 14.0, 100.0])
@@ -165,3 +182,68 @@ def test_candidate_selection_is_development_only() -> None:
     assert selected == "c14"
     assert trace["selection_metric_period"] == "development_2018_2021_only"
     assert trace["final_2022_2025_used"] is False
+
+
+def test_alternative_qualification_does_not_require_primary_nll_gain() -> None:
+    def metrics(nll: float, coverage: float) -> dict[str, float]:
+        return {
+            "marginalized_nll": nll,
+            "expected_margin_mae": 10.0,
+            "coverage_80": coverage,
+        }
+
+    aggregate = {
+        "v1": metrics(4.0, 0.75),
+        "a": metrics(4.001, 0.8),
+        "b": metrics(4.1, 0.8),
+        "c14": metrics(4.1, 0.8),
+        "c21": metrics(4.1, 0.8),
+        "c28": metrics(4.1, 0.8),
+        "c42": metrics(4.1, 0.8),
+    }
+    seasons = {
+        name: [
+            {"season": season, "marginalized_nll": nll}
+            for season, nll in zip((2018, 2019, 2020, 2021), (nll, nll, nll, nll))
+        ]
+        for name, nll in ((name, values["marginalized_nll"]) for name, values in aggregate.items())
+    }
+    selected, trace = select_development_candidate(aggregate, seasons)
+    assert selected == "a"
+    assert trace["decisions"]["a"]["qualifies_vs_v1"] is True
+    assert trace["decisions"]["a"]["complexity_gain_over_current"] == pytest.approx(-0.001)
+
+
+def test_candidate_is_qualified_against_v1_before_complexity_comparison() -> None:
+    def metrics(nll: float) -> dict[str, float]:
+        return {
+            "marginalized_nll": nll,
+            "expected_margin_mae": 10.0,
+            "coverage_80": 0.8,
+        }
+
+    aggregate = {
+        "v1": metrics(4.0),
+        "a": metrics(4.08),
+        "b": metrics(3.994),
+        "c14": metrics(4.2),
+        "c21": metrics(4.2),
+        "c28": metrics(4.2),
+        "c42": metrics(4.2),
+    }
+    seasons = {
+        "v1": [{"season": season, "marginalized_nll": 4.0} for season in (2018, 2019, 2020, 2021)],
+        "a": [
+            {"season": season, "marginalized_nll": value}
+            for season, value in zip((2018, 2019, 2020, 2021), (3.98, 3.98, 4.18, 4.18))
+        ],
+        "b": [{"season": season, "marginalized_nll": 3.994} for season in (2018, 2019, 2020, 2021)],
+        "c14": [{"season": season, "marginalized_nll": 4.2} for season in (2018, 2019, 2020, 2021)],
+        "c21": [{"season": season, "marginalized_nll": 4.2} for season in (2018, 2019, 2020, 2021)],
+        "c28": [{"season": season, "marginalized_nll": 4.2} for season in (2018, 2019, 2020, 2021)],
+        "c42": [{"season": season, "marginalized_nll": 4.2} for season in (2018, 2019, 2020, 2021)],
+    }
+    selected, trace = select_development_candidate(aggregate, seasons)
+    assert selected == "b"
+    assert trace["decisions"]["a"]["qualifies_vs_v1"] is False
+    assert trace["decisions"]["b"]["qualifies_vs_v1"] is True
