@@ -441,6 +441,14 @@ def test_cold_start_requirements_are_target_driven(
     assert (actual.get("fcs_to_fbs_transition", 0) > 0) is expected_promotion
     assert (actual.get("no_prior_rank_distribution", 0) > 0) is expected_generic
     assert promotion and generic
+
+
+def test_reconstructed_rolling_consumer_excludes_unsupported_targets() -> None:
+    script = _script()
+    teams = {(season, "history_reconstructed"): [] for season in range(2008, 2026) if season != 2012}
+    supported = script.supported_reconstructed_target_seasons(teams)
+    assert len(supported) == 17
+    assert 2012 not in supported
     assert script.RECONSTRUCTED_PRIOR_FAMILIES == (
         "context_reconstructed",
         "history_reconstructed",
