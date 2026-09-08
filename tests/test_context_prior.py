@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from gippyrank.context_prior import (
     PRODUCTION_SAFE_BY_SEMANTICS,
@@ -61,10 +62,11 @@ def test_specification_and_annual_fit_are_separate() -> None:
     fit = AnnualFittedInstance("context_prior", "1.2", 2025, 2026, "2026-08-15")
     assert "trained_through_season" not in spec.metadata()
     assert fit.metadata()["target_season"] == 2026
-    assert (
-        json.loads((PRESEASON / "history/fitted_backtest.json").read_text())["kind"]
-        == "evaluation/backtest"
+    history_fit = json.loads(
+        (PRESEASON / "history/annual/2026/fitted_instance.json").read_text()
     )
+    assert history_fit["artifact_kind"] == "frozen_preseason_forecast"
+    assert history_fit["target_season"] == 2026
     assert (
         json.loads(
             (PRESEASON / "context/annual/2026/fitted_instance.json").read_text()
@@ -120,6 +122,7 @@ def test_builder_is_annual_and_context_attachment_preserves_h_features() -> None
     assert "coach_tenure_seasons" in attached[0].features
 
 
+@pytest.mark.research
 def test_development_report_is_same_population_and_algebraically_consistent() -> None:
     report = json.loads((PRESEASON / "context/model_report.json").read_text())
     c0 = report["development"]["C0_history_only"]["comparison"]
@@ -142,6 +145,7 @@ def test_development_report_is_same_population_and_algebraically_consistent() ->
     assert "| C0_history_only | exact H |" in markdown
 
 
+@pytest.mark.research
 def test_model_selection_is_frozen_before_the_temporally_held_out_backtest() -> None:
     report = json.loads((PRESEASON / "context/model_report.json").read_text())
     selection = report["selection"]
@@ -321,6 +325,7 @@ def test_annual_helpers_have_no_fixed_2025_or_2026_dependency() -> None:
         assert "2026" not in source
 
 
+@pytest.mark.research
 def test_c6_record_and_backtest_metrics_remain_frozen() -> None:
     report = json.loads((PRESEASON / "context/model_report.json").read_text())
     assert report["selection"]["selected"] == "C6_roster_context_with_coaching_location"

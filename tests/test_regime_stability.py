@@ -14,6 +14,8 @@ from gippyrank.regime_stability import (
     training_plan,
 )
 
+pytestmark = pytest.mark.research
+
 
 def row(season: int) -> TeamSeason:
     return TeamSeason(

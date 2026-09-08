@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from gippyrank.data.cfbd import raw_stat_payload_paths
 from gippyrank.research.box_score_audit import (
     build_audit,
@@ -14,6 +16,8 @@ from gippyrank.research.box_score_audit import (
     parse_compound,
     parse_number,
 )
+
+pytestmark = pytest.mark.research
 
 
 def _team(team_id: int, name: str, stats: list[dict[str, object]]) -> dict[str, object]:

@@ -79,8 +79,20 @@ def test_cross_factor_uses_full_fcs_rank_coordinate_support() -> None:
     assert factor.shape == (2, 129)
 
 
-def test_historical_fcs_population_comes_from_durable_full_universe() -> None:
-    assert subdivision_population_size(Path("."), 2025, "fcs") == 129
+def test_historical_fcs_population_comes_from_durable_full_universe(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "data/processed/modeling/team_season_rank_distributions.csv"
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        "season,subdivision,team_population\n2025,fcs,129\n",
+        encoding="utf-8",
+    )
+    assert subdivision_population_size(tmp_path, 2025, "fcs") == 129
+    assert (
+        subdivision_population_source(tmp_path, 2025, "fcs")
+        == "massey_team_season_rank_distributions"
+    )
 
 
 def test_current_fcs_population_uses_full_cached_schedule_not_cutoff(

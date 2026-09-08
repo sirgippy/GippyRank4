@@ -21,6 +21,8 @@ from gippyrank.research.margin_likelihood import (
     student_t_logpdf,
 )
 
+pytestmark = pytest.mark.research
+
 
 def _row(
     *,

@@ -22,6 +22,8 @@ from gippyrank.preseason import TeamSeason
 
 ROOT = Path(__file__).parents[1]
 
+pytestmark = pytest.mark.research
+
 
 def row(season: int, team: str, complete: bool = True) -> TeamSeason:
     features = {name: 1.0 for name in LEAN_CONTEXT_FEATURES}

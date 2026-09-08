@@ -25,6 +25,8 @@ from gippyrank.research.primitive_box_score_likelihood import (
     primitive_factor,
 )
 
+pytestmark = pytest.mark.research
+
 
 def _script():
     spec = importlib.util.spec_from_file_location(

@@ -27,6 +27,8 @@ from gippyrank.research.ypp_likelihood import (
     ypp_pairing_supported,
 )
 
+pytestmark = pytest.mark.research
+
 
 def _research_script():
     spec = importlib.util.spec_from_file_location(

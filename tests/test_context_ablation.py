@@ -20,6 +20,8 @@ from gippyrank.preseason import TeamSeason
 
 ROOT = Path(__file__).parents[1]
 
+pytestmark = pytest.mark.research
+
 
 def row(season: int, team: str, left: float | None, right: float | None) -> TeamSeason:
     return TeamSeason(
