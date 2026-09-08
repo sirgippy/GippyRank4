@@ -1,0 +1,291 @@
+{
+  "artifact_inventory": {
+    "development_metrics.csv": "aggregate 2018-2021 candidate metrics",
+    "development_season_metrics.csv": "per-season 2018-2021 candidate metrics",
+    "model_spec.json": "frozen candidate specifications and development-only selection",
+    "report.md": "human-readable research conclusion",
+    "residual_diagnostics.csv": "Stage 0 residual scale/calibration bins",
+    "rolling_likelihood_metrics.csv": "earlier-season direct-likelihood robustness when selected",
+    "summary.json": "machine-readable metrics, selection, provenance, and integrity"
+  },
+  "candidate_family": {
+    "a": "V1 mean surface with mismatch-dependent positive Student-t scale",
+    "b": "A plus total-points context in scale only",
+    "c": "B plus smooth blowout transform; one k selected on development only",
+    "v1": "frozen Historical Likelihood V1"
+  },
+  "data_split": {
+    "2026_outcomes_used": false,
+    "development": "2018-2021",
+    "final_evaluation": "2022-2025",
+    "final_independent_confirmation": false,
+    "training": "2003-2017"
+  },
+  "development_aggregate": {
+    "a": {
+      "coverage_50": 0.5018539117538006,
+      "coverage_80": 0.8086763070077865,
+      "coverage_95": 0.9575454208379681,
+      "expected_margin_mae": 11.176057340765054,
+      "game_key_sha256": "63efdca50cbd2868164663175d8384be1fd5ed408d8ce9873c0f284ba0fefccb",
+      "interval_width_50": 18.767619216261522,
+      "interval_width_80": 36.40058829141789,
+      "interval_width_95": 57.87385709675912,
+      "marginalized_nll": 4.067700755022004,
+      "n_games": 5394,
+      "n_pseudo_observations": 322818
+    },
+    "b": {
+      "coverage_50": 0.5005561735261401,
+      "coverage_80": 0.8096032628846866,
+      "coverage_95": 0.9582869855394883,
+      "expected_margin_mae": 11.176057340765054,
+      "game_key_sha256": "63efdca50cbd2868164663175d8384be1fd5ed408d8ce9873c0f284ba0fefccb",
+      "interval_width_50": 18.92012296521722,
+      "interval_width_80": 36.69637573865171,
+      "interval_width_95": 58.3441341240197,
+      "marginalized_nll": 4.065130984951051,
+      "n_games": 5394,
+      "n_pseudo_observations": 322818
+    },
+    "c14": {
+      "coverage_50": 0.4760845383759733,
+      "coverage_80": 0.8083055246570263,
+      "coverage_95": 0.9679273266592511,
+      "expected_margin_mae": 11.275688119864975,
+      "game_key_sha256": "63efdca50cbd2868164663175d8384be1fd5ed408d8ce9873c0f284ba0fefccb",
+      "interval_width_50": 17.64535826524155,
+      "interval_width_80": 37.44697031251985,
+      "interval_width_95": 71.23641326316626,
+      "marginalized_nll": 4.110064410481997,
+      "n_games": 5394,
+      "n_pseudo_observations": 322818
+    },
+    "c21": {
+      "coverage_50": 0.4814608824619948,
+      "coverage_80": 0.807193177604746,
+      "coverage_95": 0.9655172413793104,
+      "expected_margin_mae": 11.225041492654869,
+      "game_key_sha256": "63efdca50cbd2868164663175d8384be1fd5ed408d8ce9873c0f284ba0fefccb",
+      "interval_width_50": 17.859949890193572,
+      "interval_width_80": 36.56994588786365,
+      "interval_width_95": 64.87688441300811,
+      "marginalized_nll": 4.0881466727828455,
+      "n_games": 5394,
+      "n_pseudo_observations": 322818
+    },
+    "c28": {
+      "coverage_50": 0.4840563589173155,
+      "coverage_80": 0.8062662217278458,
+      "coverage_95": 0.9638487208008899,
+      "expected_margin_mae": 11.202386741399456,
+      "game_key_sha256": "63efdca50cbd2868164663175d8384be1fd5ed408d8ce9873c0f284ba0fefccb",
+      "interval_width_50": 18.06442774465792,
+      "interval_width_80": 36.323691047960324,
+      "interval_width_95": 62.16000345214159,
+      "marginalized_nll": 4.078306769428593,
+      "n_games": 5394,
+      "n_pseudo_observations": 322818
+    },
+    "c42": {
+      "coverage_50": 0.4923989618094179,
+      "coverage_80": 0.8053392658509455,
+      "coverage_95": 0.9612532443455691,
+      "expected_margin_mae": 11.185320577557725,
+      "game_key_sha256": "63efdca50cbd2868164663175d8384be1fd5ed408d8ce9873c0f284ba0fefccb",
+      "interval_width_50": 18.358736155658107,
+      "interval_width_80": 36.29201464866284,
+      "interval_width_95": 60.00719689204918,
+      "marginalized_nll": 4.070427424125615,
+      "n_games": 5394,
+      "n_pseudo_observations": 322818
+    },
+    "v1": {
+      "coverage_50": 0.5055617352614016,
+      "coverage_80": 0.8103448275862069,
+      "coverage_95": 0.9597701149425287,
+      "expected_margin_mae": 11.145675267143451,
+      "game_key_sha256": "63efdca50cbd2868164663175d8384be1fd5ed408d8ce9873c0f284ba0fefccb",
+      "interval_width_50": 18.88742330591117,
+      "interval_width_80": 36.632953371544104,
+      "interval_width_95": 58.243297923754554,
+      "marginalized_nll": 4.065046422540164,
+      "n_games": 5394,
+      "n_pseudo_observations": 322818
+    }
+  },
+  "development_season_count": {
+    "a": 4,
+    "b": 4,
+    "c14": 4,
+    "c21": 4,
+    "c28": 4,
+    "c42": 4,
+    "v1": 4
+  },
+  "frozen_production_integrity": {
+    "hashes_after": {
+      "data/processed/posterior/historical_likelihood_v1.json": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+      "data/processed/preseason/context/predictions.csv": "dd6fa583822d3bc6d887f4a52952d35aa5f2310822a5b934a015d7e1f8c9ecb6",
+      "data/processed/preseason/history/predictions.csv": "474f5587b8db44847bc375931e4f4937e7e8029077d5814af3f6b6e55056a706",
+      "site/data/manifest.json": "44e8d227e8128f47b988c4d62fd5cf8fc2552d3ce6399e12970a18fa914499e2",
+      "site/index.html": "fa4dd75c226332a72d6edd8cdb4c9d5d08bba357ea79c919b4ddf1b2fea6b338"
+    },
+    "hashes_before": {
+      "data/processed/posterior/historical_likelihood_v1.json": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+      "data/processed/preseason/context/predictions.csv": "dd6fa583822d3bc6d887f4a52952d35aa5f2310822a5b934a015d7e1f8c9ecb6",
+      "data/processed/preseason/history/predictions.csv": "474f5587b8db44847bc375931e4f4937e7e8029077d5814af3f6b6e55056a706",
+      "site/data/manifest.json": "44e8d227e8128f47b988c4d62fd5cf8fc2552d3ce6399e12970a18fa914499e2",
+      "site/index.html": "fa4dd75c226332a72d6edd8cdb4c9d5d08bba357ea79c919b4ddf1b2fea6b338"
+    },
+    "unchanged": true
+  },
+  "input_sha256": {
+    "historical_likelihood_v1.json": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+    "historical_modeling_games.csv": "1c38f3e6c38d66d49593f842b89a21c87c97be5104d258c67575214140438e40",
+    "team_season_rank_distributions.csv": "03e4e372017aedb45392ff7d790cea25f461db9b6dc846514c762ff46e2cab00"
+  },
+  "recommendation": "C",
+  "research_question": "Can GippyRank extract better evidence from final score margin without a new football statistic?",
+  "rolling": {
+    "target_seasons": [],
+    "triggered": false,
+    "uses_only_earlier_seasons": true
+  },
+  "selected_candidate": null,
+  "selection": {
+    "decisions": {
+      "a": {
+        "accepted": false,
+        "alternative_calibration_pass": false,
+        "complexity_gain_over_current": -0.002654332481839994,
+        "coverage_80_error_delta": -0.0016685205784203738,
+        "development_nll_delta": 0.002654332481839994,
+        "expected_margin_mae_delta": 0.0303820736216025,
+        "primary_pass": false,
+        "qualifies": false,
+        "season_nll_deltas": {
+          "2018": 0.0022597939808584044,
+          "2019": 0.0008132991369782516,
+          "2020": 0.009428644537050168,
+          "2021": 0.001258499403944846
+        },
+        "seasons_with_nll_improvement": 0
+      },
+      "b": {
+        "accepted": false,
+        "alternative_calibration_pass": false,
+        "complexity_gain_over_current": -8.456241088694583e-05,
+        "coverage_80_error_delta": -0.0007415647015202032,
+        "development_nll_delta": 8.456241088694583e-05,
+        "expected_margin_mae_delta": 0.0303820736216025,
+        "primary_pass": false,
+        "qualifies": false,
+        "season_nll_deltas": {
+          "2018": -0.0006729452282323578,
+          "2019": -0.0021555424976007487,
+          "2020": 0.008344137235018145,
+          "2021": -0.001350413365714509
+        },
+        "seasons_with_nll_improvement": 3
+      },
+      "c": {
+        "accepted": false,
+        "alternative_calibration_pass": false,
+        "chosen_k": 42.0,
+        "complexity_gain_over_current": -0.00538100158545074,
+        "coverage_80_error_delta": -0.0050055617352613435,
+        "development_nll_delta": 0.00538100158545074,
+        "expected_margin_mae_delta": 0.03964531041427399,
+        "primary_pass": false,
+        "qualifies": false,
+        "season_nll_deltas": {
+          "2018": 0.006161477226005907,
+          "2019": 0.0015527280590692527,
+          "2020": 0.00981790363532209,
+          "2021": 0.006123942183561937
+        },
+        "seasons_with_nll_improvement": 0
+      }
+    },
+    "final_2022_2025_used": false,
+    "selected_candidate": null,
+    "selection_metric_period": "development_2018_2021_only",
+    "simplest_current_after_gate": "v1"
+  },
+  "selection_rule": {
+    "alternative_calibration": {
+      "maximum_aggregate_nll_worsening": 0.002,
+      "maximum_expected_margin_mae_worsening": 0.1,
+      "minimum_absolute_80pct_coverage_error_improvement": 0.02
+    },
+    "complexity": {
+      "minimum_nll_gain_over_simpler_candidate": 0.003,
+      "order": [
+        "v1",
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    "primary": {
+      "aggregate_nll_improvement": 0.005,
+      "maximum_absolute_80pct_coverage_error_worsening": 0.01,
+      "maximum_expected_margin_mae_worsening": 0.1,
+      "maximum_season_nll_worsening": 0.01,
+      "minimum_seasons_with_nll_improvement": 3
+    }
+  },
+  "stage0": {
+    "bin_edges_training_only": {
+      "abs_v1_expected_margin": [
+        0.0006180785681770065,
+        6.176546780178574,
+        12.370563484522044,
+        20.0850005264709,
+        62.017114341088856
+      ],
+      "observed_margin_magnitude": [
+        0.9999999999999996,
+        6.999999999999998,
+        14.000000000000007,
+        26.000000000000014,
+        84.0
+      ],
+      "total_points": [
+        3.0,
+        41.0,
+        52.0,
+        65.0,
+        141.0
+      ]
+    },
+    "development_games": 5394,
+    "n_games": 26137,
+    "residual_definition": "observed oriented margin minus equal-rank-pair V1 expected margin",
+    "training_games": 20743
+  },
+  "stage2_triggered": false,
+  "strict_comparison_keys": {
+    "candidate_count": 7,
+    "game_counts": {
+      "a": 5394,
+      "b": 5394,
+      "c14": 5394,
+      "c21": 5394,
+      "c28": 5394,
+      "c42": 5394,
+      "v1": 5394
+    },
+    "hashes": {
+      "a": "63efdca50cbd2868164663175d8384be1fd5ed408d8ce9873c0f284ba0fefccb",
+      "b": "63efdca50cbd2868164663175d8384be1fd5ed408d8ce9873c0f284ba0fefccb",
+      "c14": "63efdca50cbd2868164663175d8384be1fd5ed408d8ce9873c0f284ba0fefccb",
+      "c21": "63efdca50cbd2868164663175d8384be1fd5ed408d8ce9873c0f284ba0fefccb",
+      "c28": "63efdca50cbd2868164663175d8384be1fd5ed408d8ce9873c0f284ba0fefccb",
+      "c42": "63efdca50cbd2868164663175d8384be1fd5ed408d8ce9873c0f284ba0fefccb",
+      "v1": "63efdca50cbd2868164663175d8384be1fd5ed408d8ce9873c0f284ba0fefccb"
+    },
+    "identical": true
+  }
+}
