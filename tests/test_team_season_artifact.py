@@ -66,7 +66,7 @@ def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path:
 
     config = root / "site/publish_config.json"
     config.parent.mkdir(parents=True)
-    config.write_text(json.dumps({"schema_version": "1.0", "snapshots": [{"source": snapshot.directory.relative_to(root).as_posix(), "display_label": "Test", "publication_slot": "2026-09-01"}]}))
+    config.write_text(json.dumps({"schema_version": "1.0", "publication_slots": [{"id": "2026-09-01", "status": "official"}], "snapshots": [{"source": snapshot.directory.relative_to(root).as_posix(), "display_label": "Test", "publication_slot": "2026-09-01"}]}))
     manifest = build_site_data(root=root, config_path=config, output_directory=root / "site/data")
     entry = manifest["snapshots"][0]
     assert entry["team_seasons_path"] == "data/team-seasons/2026-weekly-2026-09-01-context.json"
@@ -89,7 +89,7 @@ def test_team_artifact_provenance_mismatch_fails_closed(tmp_path: Path) -> None:
     artifact_path.write_text(json.dumps(artifact), encoding="utf-8")
     config = root / "site/publish_config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
-    config.write_text(json.dumps({"schema_version": "1.0", "snapshots": [{"source": snapshot.directory.relative_to(root).as_posix(), "display_label": "Test", "publication_slot": "2026-09-01"}]}))
+    config.write_text(json.dumps({"schema_version": "1.0", "publication_slots": [{"id": "2026-09-01", "status": "official"}], "snapshots": [{"source": snapshot.directory.relative_to(root).as_posix(), "display_label": "Test", "publication_slot": "2026-09-01"}]}))
     with pytest.raises(SiteDataValidationError, match="provenance mismatch"):
         build_site_data(root=root, config_path=config, output_directory=root / "site/data")
 
@@ -107,7 +107,7 @@ def test_declared_team_artifact_missing_fails_closed(tmp_path: Path) -> None:
     (snapshot.directory / "team_seasons.json").unlink()
     config = root / "site/publish_config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
-    config.write_text(json.dumps({"schema_version": "1.0", "snapshots": [{"source": snapshot.directory.relative_to(root).as_posix(), "display_label": "Test", "publication_slot": "2026-09-01"}]}))
+    config.write_text(json.dumps({"schema_version": "1.0", "publication_slots": [{"id": "2026-09-01", "status": "official"}], "snapshots": [{"source": snapshot.directory.relative_to(root).as_posix(), "display_label": "Test", "publication_slot": "2026-09-01"}]}))
     with pytest.raises(SiteDataValidationError, match="declared team-season artifact is unavailable"):
         build_site_data(root=root, config_path=config, output_directory=root / "site/data")
 
@@ -194,7 +194,7 @@ def test_validator_rejects_unincluded_completed_result(tmp_path: Path) -> None:
     artifact_path.write_text(json.dumps(artifact), encoding="utf-8")
     config = root / "site/publish_config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
-    config.write_text(json.dumps({"schema_version": "1.0", "snapshots": [{"source": snapshot.directory.relative_to(root).as_posix(), "display_label": "Test", "publication_slot": "2026-09-01"}]}))
+    config.write_text(json.dumps({"schema_version": "1.0", "publication_slots": [{"id": "2026-09-01", "status": "official"}], "snapshots": [{"source": snapshot.directory.relative_to(root).as_posix(), "display_label": "Test", "publication_slot": "2026-09-01"}]}))
     with pytest.raises(SiteDataValidationError, match="without snapshot evidence"):
         build_site_data(root=root, config_path=config, output_directory=root / "site/data")
 
@@ -221,7 +221,7 @@ def test_historical_artifact_survives_later_schedule_refresh(tmp_path: Path) -> 
     _write(schedule_path, list(rows[0]), rows)
     config = root / "site/publish_config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
-    config.write_text(json.dumps({"schema_version": "1.0", "snapshots": [{"source": snapshot.directory.relative_to(root).as_posix(), "display_label": "Test", "publication_slot": "2026-09-01"}]}))
+    config.write_text(json.dumps({"schema_version": "1.0", "publication_slots": [{"id": "2026-09-01", "status": "official"}], "snapshots": [{"source": snapshot.directory.relative_to(root).as_posix(), "display_label": "Test", "publication_slot": "2026-09-01"}]}))
 
     manifest = build_site_data(root=root, config_path=config, output_directory=root / "site/data")
 

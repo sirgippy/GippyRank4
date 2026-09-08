@@ -14,11 +14,14 @@ CFBD. The publication boundary is:
 existing validated snapshot bundles -> scripts/build_site_data.py -> site/data -> GitHub Pages
 ```
 
-`site/publish_config.json` is the explicit, ordered list of snapshot directories
-approved for publication. The publisher refuses invalid or incompatible
-snapshots, copies display-level summaries only, and derives records solely from
-each snapshot's `included_games.csv`. Raw posterior PMFs remain research
-artifacts and are not sent to the browser.
+`site/publish_config.json` is the explicit list of snapshot directories approved
+for publication. Its ordered `publication_slots` list is the publication
+chronology, and each slot must be explicitly marked `official` or `temporary`.
+All Context, History, and Performance snapshots in a slot inherit that one
+status. The publisher refuses missing or incompatible metadata, copies
+display-level summaries only, and derives records solely from each snapshot's
+`included_games.csv`. Raw posterior PMFs remain research artifacts and are not
+sent to the browser.
 
 Team names link to a deep-linkable `site/team.html` view. It lazy-loads a
 snapshot-scoped team-season artifact containing schedule metadata and compact,
@@ -32,6 +35,15 @@ entries in the same slot represent the same logical publication, so changing
 views preserves (for example) Sep. 5 rather than jumping to Preseason. The
 visible **Modeled record** likewise includes only FBS/FCS games eligible for the
 ranking model, not a conventional all-games standings record.
+
+Official snapshots are the historical comparison checkpoints. The static export
+resolves each snapshot's movement baseline as the latest strictly earlier
+official slot with the same season, ranking family, and predictive prior family.
+Temporary snapshots remain selectable but never reset that baseline. The
+current 2026 configuration marks Preseason and Week 2 official; Sep. 5, Sep. 6,
+and Sep. 7 are temporary. To promote a future candidate, change only its slot
+status to `official` in `publication_slots` and regenerate `site/data`; no model
+rebuild is required.
 
 Publication families are registered in `RANKING_FAMILIES` in
 `src/gippyrank/site_data.py`. To publish a future family, add its label to that

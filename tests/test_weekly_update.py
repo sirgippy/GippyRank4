@@ -16,6 +16,7 @@ from gippyrank.data.cfbd import GAME_FIELDS, CurrentSeasonAcquisition
 from gippyrank.posterior.snapshots import Snapshot
 from gippyrank.weekly_update import (
     _github_output_lines,
+    _previous_rows,
     _upsert_publication,
     prepare_weekly_update,
 )
@@ -56,7 +57,7 @@ def _root(tmp_path: Path) -> Path:
     )
     _write_csv(tmp_path / "data/processed/cfbd/games.csv", GAME_FIELDS, [])
     (tmp_path / "site").mkdir()
-    (tmp_path / "site/publish_config.json").write_text(json.dumps({"schema_version": "1.0", "snapshots": []}))
+    (tmp_path / "site/publish_config.json").write_text(json.dumps({"schema_version": "1.0", "publication_slots": [], "snapshots": []}))
     return tmp_path
 
 
@@ -88,6 +89,10 @@ def test_weekly_update_pairs_h_c_preserves_preseason_and_is_idempotent(tmp_path:
     assert first.context.metadata["included_game_ids"] == ["100"]  # future game cannot enter inference
     config = json.loads((root / "site/publish_config.json").read_text())
     assert config["default_publication_slot"] == "2026-09-12"
+    assert config["publication_slots"][-1] == {
+        "id": "2026-09-12",
+        "status": "temporary",
+    }
     entries = config["snapshots"]
     assert len(entries) == 3 and {entry["publication_slot"] for entry in entries} == {"2026-09-12"}
     assert {entry["source"].rsplit("/", 1)[-1] for entry in entries} == {"context", "history", "performance"}
@@ -138,7 +143,10 @@ def test_snapshot_failure_never_reaches_publication_configuration(tmp_path: Path
 
 def test_upserting_a_slot_preserves_preseason_and_older_slots(tmp_path: Path) -> None:
     config = tmp_path / "publish.json"
-    config.write_text(json.dumps({"schema_version": "1.0", "default_publication_slot": "2026-old", "snapshots": [
+    config.write_text(json.dumps({"schema_version": "1.0", "default_publication_slot": "2026-old", "publication_slots": [
+        {"id": "2026-preseason", "status": "official"},
+        {"id": "2026-old", "status": "temporary"}
+    ], "snapshots": [
         {"source": "old/preseason/context", "display_label": "Preseason", "publication_slot": "2026-preseason"},
         {"source": "old/preseason/history", "display_label": "Preseason", "publication_slot": "2026-preseason"},
         {"source": "old/weekly/context", "display_label": "Sep. 5", "publication_slot": "2026-old"},
@@ -152,6 +160,32 @@ def test_upserting_a_slot_preserves_preseason_and_older_slots(tmp_path: Path) ->
     value = json.loads(config.read_text())
     assert value["default_publication_slot"] == "2026-09-12"
     assert {entry["publication_slot"] for entry in value["snapshots"]} == {"2026-preseason", "2026-old", "2026-09-12"}
+
+
+def test_weekly_report_movers_use_latest_earlier_official_slot() -> None:
+    config = json.loads((ROOT / "site/publish_config.json").read_text(encoding="utf-8"))
+    config["publication_slots"].append(
+        {"id": "2026-09-09", "status": "temporary"}
+    )
+    rows = _previous_rows(
+        ROOT,
+        config,
+        "context",
+        season=2026,
+        publication_slot="2026-09-09",
+    )
+    expected_source = (
+        ROOT
+        / "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context"
+        / "predictive/context/rankings.csv"
+    )
+    with expected_source.open(newline="", encoding="utf-8") as handle:
+        expected_ids = [
+            row["team_id"]
+            for row in csv.DictReader(handle)
+            if row["subdivision"] == "fbs"
+        ]
+    assert [row["team_id"] for row in rows] == expected_ids
 
 
 def test_update_workflow_is_manual_and_pages_stays_model_and_cfbd_free() -> None:
