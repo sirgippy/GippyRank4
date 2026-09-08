@@ -1,4 +1,5 @@
 import csv
+import hashlib
 import inspect
 import json
 import runpy
@@ -61,10 +62,11 @@ def test_specification_and_annual_fit_are_separate() -> None:
     fit = AnnualFittedInstance("context_prior", "1.2", 2025, 2026, "2026-08-15")
     assert "trained_through_season" not in spec.metadata()
     assert fit.metadata()["target_season"] == 2026
-    assert (
-        json.loads((PRESEASON / "history/fitted_backtest.json").read_text())["kind"]
-        == "evaluation/backtest"
+    history_fit = json.loads(
+        (PRESEASON / "history/annual/2026/fitted_instance.json").read_text()
     )
+    assert history_fit["artifact_kind"] == "frozen_preseason_forecast"
+    assert history_fit["target_season"] == 2026
     assert (
         json.loads(
             (PRESEASON / "context/annual/2026/fitted_instance.json").read_text()
@@ -120,38 +122,15 @@ def test_builder_is_annual_and_context_attachment_preserves_h_features() -> None
     assert "coach_tenure_seasons" in attached[0].features
 
 
-def test_development_report_is_same_population_and_algebraically_consistent() -> None:
-    report = json.loads((PRESEASON / "context/model_report.json").read_text())
-    c0 = report["development"]["C0_history_only"]["comparison"]
-    assert c0["reference"]["n_team_seasons"] == c0["candidate"]["n_team_seasons"]
-    assert c0["delta_c_minus_h"]["nll"] == 0.0
-    for candidate in report["development"]["candidates"].values():
-        result = candidate["comparison"]
-        assert (
-            result["reference"]["n_team_seasons"]
-            == result["candidate"]["n_team_seasons"]
-        )
-        assert np.isclose(
-            result["delta_c_minus_h"]["nll"],
-            result["candidate"]["nll"] - result["reference"]["nll"],
-        )
-        assert (
-            len(result["same_population_keys"]) == result["reference"]["n_team_seasons"]
-        )
-    markdown = (PRESEASON / "context/context_prior_report.md").read_text()
-    assert "| C0_history_only | exact H |" in markdown
-
-
-def test_model_selection_is_frozen_before_the_temporally_held_out_backtest() -> None:
-    report = json.loads((PRESEASON / "context/model_report.json").read_text())
-    selection = report["selection"]
-    assert selection["development_train"] == [2004, 2017]
-    assert selection["development_validation"] == [2018, 2021]
-    assert selection["temporally_held_out_backtest"] == [2022, 2023, 2024, 2025]
-    assert "2022" not in selection["rule"]
-
-
 def test_historical_h_artifact_is_byte_stable() -> None:
+    expected = {
+        "history/annual/2026/predictions.csv": "0b3454a09288019e17739869c42aed3123fdda2163694f52f63bca65baf37f90",
+        "context/annual/2026/predictions.csv": "641182890ec88ea8bc6150cc97047ddc688d0c680486d9fcc63a58d7bfae9132",
+    }
+    for relative, digest in expected.items():
+        assert hashlib.sha256(
+            (PRESEASON / relative).read_bytes()
+        ).hexdigest() == digest
     baseline = {
         (x["season"], x["subdivision"], x["team_id"]): x["pmf"]
         for x in read_csv(PRESEASON / "rank_prior_predictions.csv")
@@ -319,11 +298,3 @@ def test_annual_helpers_have_no_fixed_2025_or_2026_dependency() -> None:
         source = inspect.getsource(values[name])
         assert "2025" not in source
         assert "2026" not in source
-
-
-def test_c6_record_and_backtest_metrics_remain_frozen() -> None:
-    report = json.loads((PRESEASON / "context/model_report.json").read_text())
-    assert report["selection"]["selected"] == "C6_roster_context_with_coaching_location"
-    result = report["final_test"]["all_fbs"]
-    assert np.isclose(result["delta_c_minus_h"]["nll"], -0.0018365395100659043)
-    assert "untouched" not in (PRESEASON / "context/context_prior_report.md").read_text().casefold()

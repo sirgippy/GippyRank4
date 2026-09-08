@@ -69,6 +69,17 @@ secrets beyond GitHub Pages' standard permissions.
 For the posterior snapshot contract and math, see
 [Posterior Snapshot V1](docs/posterior_v1.md).
 
+## Test suite
+
+The default developer/CI command runs every retained test:
+
+```bash
+uv run pytest -q
+```
+
+The test inventory, pruning rationale, and timing report are maintained in
+[docs/test_suite.md](docs/test_suite.md).
+
 ## Weekly ranking update
 
 The reviewed publication path is deliberately separate from Pages deployment:

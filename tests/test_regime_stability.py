@@ -1,5 +1,3 @@
-import hashlib
-from pathlib import Path
 
 import numpy as np
 import pytest
@@ -97,16 +95,3 @@ def test_score_decomposition_sums_to_paired_aggregate_difference() -> None:
     h_loss = np.asarray([2.0, 4.0, 1.0])
     c_loss = np.asarray([3.5, 2.0, 1.75])
     assert np.isclose(decomposition_total(c_loss - h_loss), c_loss.sum() - h_loss.sum())
-
-
-def test_frozen_2026_preseason_pmfs_are_byte_identical() -> None:
-    root = Path(__file__).parents[1]
-    expected = {
-        "history/annual/2026/predictions.csv": "0b3454a09288019e17739869c42aed3123fdda2163694f52f63bca65baf37f90",
-        "context/annual/2026/predictions.csv": "641182890ec88ea8bc6150cc97047ddc688d0c680486d9fcc63a58d7bfae9132",
-    }
-    for relative, digest in expected.items():
-        actual = hashlib.sha256(
-            (root / "data/processed/preseason" / relative).read_bytes()
-        ).hexdigest()
-        assert actual == digest

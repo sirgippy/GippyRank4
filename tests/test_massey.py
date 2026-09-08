@@ -17,10 +17,14 @@ def test_alias_matching_does_not_use_rank_heuristics() -> None:
     assert unmapped == ["Unknown"]
 
 
-def test_export_is_long_form_and_omits_missing_values() -> None:
-    observations, _ = read_export_observations(
-        Path("data/raw/massey_composite/fcs2022.csv")
+def test_export_is_long_form_and_omits_missing_values(tmp_path: Path) -> None:
+    export = tmp_path / "fcs2022.csv"
+    export.write_text(
+        "Team,Conf,W-L,&Delta;,CMP,Sort,MAS\n"
+        "Example FCS, ,0-0, ,1,--,2\n",
+        encoding="utf-8",
     )
+    observations, _ = read_export_observations(export)
     assert observations
     assert all(item.subdivision == "fcs" for item in observations)
     assert all(item.team_source_id is None for item in observations)

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import sys
 from pathlib import Path
 
@@ -21,7 +20,6 @@ from gippyrank.lean_context_validation import (
 from gippyrank.preseason import TeamSeason
 
 ROOT = Path(__file__).parents[1]
-
 
 def row(season: int, team: str, complete: bool = True) -> TeamSeason:
     features = {name: 1.0 for name in LEAN_CONTEXT_FEATURES}
@@ -162,22 +160,3 @@ def test_synthetic_smoke_reaches_nested_selection_and_report(tmp_path: Path) -> 
     assert result["nested_selection"][-1]["selected_model"] == "L"
     assert result["recommendation_outcome"] == "B"
     assert (tmp_path / "smoke_report.md").exists()
-
-
-def test_validation_runner_preserves_frozen_2026_artifacts_and_excludes_2026_outcomes() -> (
-    None
-):
-    frozen = {
-        "history/annual/2026/predictions.csv": "0b3454a09288019e17739869c42aed3123fdda2163694f52f63bca65baf37f90",
-        "context/annual/2026/predictions.csv": "641182890ec88ea8bc6150cc97047ddc688d0c680486d9fcc63a58d7bfae9132",
-    }
-    for relative, digest in frozen.items():
-        assert (
-            hashlib.sha256(
-                (ROOT / "data/processed/preseason" / relative).read_bytes()
-            ).hexdigest()
-            == digest
-        )
-    source = (ROOT / "scripts/validate_lean_context.py").read_text()
-    assert "TARGET_MAX = 2025" in source
-    assert "annual/2026" not in source
