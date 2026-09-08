@@ -9,10 +9,23 @@ from pathlib import Path
 import pytest
 
 from gippyrank import site_data
-from gippyrank.site_data import SiteDataValidationError, build_site_data
+from gippyrank.site_data import (
+    SiteDataValidationError,
+    build_fbs_conference_map,
+    build_site_data,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "site/publish_config.json"
+SCHEDULE_FIELDS = [
+    "season",
+    "homeId",
+    "homeClassification",
+    "homeConference",
+    "awayId",
+    "awayClassification",
+    "awayConference",
+]
 
 
 def _hash_tree(directory: Path) -> str:
@@ -51,7 +64,37 @@ def _copied_snapshot(tmp_path: Path, relative_source: str | None = None) -> Path
     )
     destination = tmp_path / "snapshot"
     shutil.copytree(source, destination)
+    schedule = tmp_path / "data/processed/cfbd/games.csv"
+    schedule.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(ROOT / "data/processed/cfbd/games.csv", schedule)
     return destination
+
+
+def _schedule_row(
+    season: int,
+    home_id: str,
+    home_classification: str,
+    home_conference: str,
+    away_id: str,
+    away_classification: str,
+    away_conference: str,
+) -> dict[str, str]:
+    return {
+        "season": str(season),
+        "homeId": home_id,
+        "homeClassification": home_classification,
+        "homeConference": home_conference,
+        "awayId": away_id,
+        "awayClassification": away_classification,
+        "awayConference": away_conference,
+    }
+
+
+def _write_schedule(path: Path, rows: list[dict[str, str]]) -> None:
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=SCHEDULE_FIELDS)
+        writer.writeheader()
+        writer.writerows(rows)
 
 
 def _pmf_rows(source: Path) -> tuple[Path, list[str], list[dict[str, str]]]:
@@ -84,6 +127,167 @@ def _counterpart(
         ),
         current,
     )
+
+
+def test_conference_map_uses_both_home_and_away_appearances(tmp_path: Path) -> None:
+    schedule = tmp_path / "games.csv"
+    _write_schedule(
+        schedule,
+        [_schedule_row(2026, "1", "fbs", "Home League", "2", "fbs", "Away League")],
+    )
+
+    assert build_fbs_conference_map(schedule) == {
+        (2026, "1"): "Home League",
+        (2026, "2"): "Away League",
+    }
+
+
+def test_conference_map_is_season_specific(tmp_path: Path) -> None:
+    schedule = tmp_path / "games.csv"
+    _write_schedule(
+        schedule,
+        [
+            _schedule_row(2025, "1", "fbs", "Old League", "2", "fbs", "Other"),
+            _schedule_row(2026, "1", "fbs", "New League", "3", "fbs", "Other"),
+        ],
+    )
+
+    conference_map = build_fbs_conference_map(schedule)
+
+    assert conference_map[(2025, "1")] == "Old League"
+    assert conference_map[(2026, "1")] == "New League"
+
+
+def test_fcs_conference_values_cannot_overwrite_fbs_metadata(tmp_path: Path) -> None:
+    schedule = tmp_path / "games.csv"
+    _write_schedule(
+        schedule,
+        [
+            _schedule_row(2026, "1", "fbs", "FBS League", "1", "fcs", "FCS League"),
+        ],
+    )
+
+    assert build_fbs_conference_map(schedule) == {(2026, "1"): "FBS League"}
+
+
+def test_conflicting_fbs_conferences_fail_closed(tmp_path: Path) -> None:
+    schedule = tmp_path / "games.csv"
+    _write_schedule(
+        schedule,
+        [
+            _schedule_row(2026, "1", "fbs", "First League", "2", "fbs", "Other"),
+            _schedule_row(2026, "3", "fbs", "Other", "1", "fbs", "Second League"),
+        ],
+    )
+
+    with pytest.raises(SiteDataValidationError, match="Conflicting nonblank FBS conferences"):
+        build_fbs_conference_map(schedule)
+
+
+def test_preseason_zero_game_team_uses_schedule_conference(tmp_path: Path) -> None:
+    schedule = tmp_path / "games.csv"
+    _write_schedule(
+        schedule,
+        [_schedule_row(2026, "1", "fbs", "Future League", "2", "fcs", "FCS League")],
+    )
+
+    conference_map = build_fbs_conference_map(schedule, seasons={2026})
+
+    assert conference_map[(2026, "1")] == "Future League"
+
+
+def test_blank_ranking_conferences_are_enriched_from_schedule(tmp_path: Path) -> None:
+    source = _copied_snapshot(tmp_path)
+    with (source / "rankings.csv").open(newline="", encoding="utf-8") as handle:
+        source_rows = list(csv.DictReader(handle))
+    assert all(row["conference"] == "" for row in source_rows)
+
+    manifest = build_site_data(
+        root=tmp_path,
+        config_path=_config_for(source, tmp_path),
+        output_directory=tmp_path / "data",
+    )
+    entry = manifest["snapshots"][0]
+    snapshot = json.loads(
+        (tmp_path / entry["data_path"]).read_text(encoding="utf-8")
+    )
+    conference_map = build_fbs_conference_map(
+        tmp_path / "data/processed/cfbd/games.csv", seasons={2026}
+    )
+
+    assert all(
+        row["conference"] == conference_map[(2026, row["team_id"])]
+        for row in snapshot["rankings"]
+    )
+
+
+def test_all_ranking_families_receive_consistent_season_conferences(tmp_path: Path) -> None:
+    manifest = build_site_data(
+        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
+    )
+    conferences_by_team: dict[tuple[int, str], set[str]] = {}
+    for entry in manifest["snapshots"]:
+        snapshot = json.loads(
+            (tmp_path / "data" / entry["data_path"].removeprefix("data/")).read_text(
+                encoding="utf-8"
+            )
+        )
+        for row in snapshot["rankings"]:
+            conferences_by_team.setdefault((entry["season"], row["team_id"]), set()).add(
+                row["conference"]
+            )
+
+    assert conferences_by_team
+    assert all(len(conferences) == 1 for conferences in conferences_by_team.values())
+
+
+def test_conference_enrichment_preserves_ranking_pmf_and_record_values(
+    tmp_path: Path,
+) -> None:
+    source = _copied_snapshot(tmp_path)
+    with (source / "rankings.csv").open(newline="", encoding="utf-8") as handle:
+        source_rows = {row["team_id"]: row for row in csv.DictReader(handle)}
+    source_records = site_data._records(source / "included_games.csv")
+    source_pmfs: dict[str, dict[int, float]] = {}
+    with (source / "posterior_pmfs.csv").open(newline="", encoding="utf-8") as handle:
+        for row in csv.DictReader(handle):
+            if row["team_id"] in source_rows:
+                source_pmfs.setdefault(row["team_id"], {})[int(row["rank"])] = float(
+                    row["probability"]
+                )
+
+    manifest = build_site_data(
+        root=tmp_path,
+        config_path=_config_for(source, tmp_path),
+        output_directory=tmp_path / "data",
+    )
+    entry = manifest["snapshots"][0]
+    snapshot = json.loads(
+        (tmp_path / entry["data_path"]).read_text(encoding="utf-8")
+    )
+    distribution = json.loads(
+        (tmp_path / entry["distribution_path"]).read_text(encoding="utf-8")
+    )
+
+    numeric_fields = (
+        "expected_rank",
+        "median_rank",
+        "top5_probability",
+        "top10_probability",
+        "top25_probability",
+    )
+    for row in snapshot["rankings"]:
+        original = source_rows[row["team_id"]]
+        for field in numeric_fields:
+            assert row[field] == pytest.approx(float(original[field]))
+        assert str(row["display_rank"]) == original["display_rank"]
+        assert row["record"] == source_records.get(row["team_id"], "0-0")
+        assert distribution["teams"][row["team_id"]]["pmf"] == pytest.approx(
+            [
+                source_pmfs[row["team_id"]][rank]
+                for rank in range(1, len(source_pmfs[row["team_id"]]) + 1)
+            ]
+        )
 
 
 def test_site_data_publishes_all_initial_h_c_preseason_and_current_snapshots(
