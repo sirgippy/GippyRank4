@@ -61,7 +61,12 @@ def _root(tmp_path: Path) -> Path:
 
 
 def _acquisition(root: Path, timestamp: datetime, fcs_timestamp: datetime | None = None) -> CurrentSeasonAcquisition:
-    schedules = {"fbs": [_game("100"), _game("101", completed=False)], "fcs": [_game("100")]}
+    team_two_future = _game("102", completed=False)
+    team_two_future.update({"homeId": "2", "homeTeam": "Two"})
+    schedules = {
+        "fbs": [_game("100"), _game("101", completed=False), team_two_future],
+        "fcs": [_game("100")],
+    }
     raw = root / "data/raw/cfbd/games"
     raw.mkdir(parents=True, exist_ok=True)
     fcs_timestamp = timestamp if fcs_timestamp is None else fcs_timestamp

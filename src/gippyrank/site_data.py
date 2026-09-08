@@ -11,6 +11,7 @@ import csv
 import hashlib
 import json
 import math
+from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -34,6 +35,78 @@ class PublishedSnapshot:
     source: Path
     display_label: str
     publication_slot: str
+
+
+def build_fbs_conference_map(
+    schedule_path: Path, *, seasons: set[int] | None = None
+) -> dict[tuple[int, str], str]:
+    """Build season-specific FBS conference metadata from all schedule rows.
+
+    Conference labels are presentation metadata, so this deliberately reads
+    the complete processed CFBD corpus rather than a snapshot's included-game
+    subset.  Only FBS team sides contribute to the map; an FCS appearance with
+    a reused or malformed ID cannot overwrite FBS metadata.  Missing labels
+    are not converted to ``Independent`` because CFBD's explicit independent
+    convention (``FBS Independents`` in this corpus) is evidence-bearing.
+    """
+    required = {
+        "season",
+        "homeId",
+        "homeClassification",
+        "homeConference",
+        "awayId",
+        "awayClassification",
+        "awayConference",
+    }
+    try:
+        handle = schedule_path.open(newline="", encoding="utf-8")
+    except OSError as error:
+        raise SiteDataValidationError(
+            f"Cannot read CFBD schedule corpus {schedule_path}: {error}"
+        ) from error
+
+    observed: defaultdict[tuple[int, str], set[str]] = defaultdict(set)
+    with handle:
+        reader = csv.DictReader(handle)
+        missing = required - set(reader.fieldnames or [])
+        if missing:
+            raise SiteDataValidationError(
+                f"{schedule_path}: schedule missing {sorted(missing)}"
+            )
+        for row in reader:
+            season_value = (row.get("season") or "").strip()
+            try:
+                season = int(season_value)
+            except ValueError as error:
+                raise SiteDataValidationError(
+                    f"{schedule_path}: invalid schedule season {season_value!r}"
+                ) from error
+            if seasons is not None and season not in seasons:
+                continue
+            for side in ("home", "away"):
+                if (row.get(f"{side}Classification") or "").strip().casefold() != "fbs":
+                    continue
+                team_id = (row.get(f"{side}Id") or "").strip()
+                if not team_id:
+                    raise SiteDataValidationError(
+                        f"{schedule_path}: blank {side} FBS team ID in season {season}"
+                    )
+                conference = (row.get(f"{side}Conference") or "").strip()
+                if conference:
+                    observed[(season, team_id)].add(conference)
+
+    conflicts = [
+        (season, team_id, sorted(conferences))
+        for (season, team_id), conferences in observed.items()
+        if len(conferences) > 1
+    ]
+    if conflicts:
+        season, team_id, conferences = min(conflicts)
+        raise SiteDataValidationError(
+            f"Conflicting nonblank FBS conferences for team {team_id} in season "
+            f"{season}: {conferences}"
+        )
+    return {key: next(iter(conferences)) for key, conferences in observed.items()}
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -444,6 +517,8 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
     manifest_entries: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
     seen_publications: set[tuple[int, str, str, str]] = set()
+    schedule_path = root / "data/processed/cfbd/games.csv"
+    conference_maps: dict[int, dict[tuple[int, str], str]] = {}
     for selected_snapshot in selected:
         source = selected_snapshot.source
         metadata = _read_json(source / "metadata.json")
@@ -466,6 +541,19 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             )
         seen_publications.add(publication)
         rankings = _ranking_rows(source / "rankings.csv", metadata)
+        season = metadata["season"]
+        conference_map = conference_maps.get(season)
+        if conference_map is None:
+            conference_map = build_fbs_conference_map(schedule_path, seasons={season})
+            conference_maps[season] = conference_map
+        for row in rankings:
+            conference = conference_map.get((season, row["team_id"]))
+            if conference is None:
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: no nonblank FBS conference evidence for team "
+                    f"{row['team_id']} in season {season}"
+                )
+            row["conference"] = conference
         distribution = _distribution_artifact(source / "posterior_pmfs.csv", metadata, rankings)
         records = _records(source / "included_games.csv")
         for row in rankings:
