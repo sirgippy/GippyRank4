@@ -6,6 +6,7 @@ import hashlib
 import importlib.util
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -415,6 +416,31 @@ def test_historical_prior_audit_declares_pre_target_boundary() -> None:
     assert excluded["cold_start_reasons"] == {"fcs_to_fbs_transition": 4}
     assert excluded["eligible_promotion_rows"] == 0
     assert excluded["eligible_generic_rows"] == 120
+
+
+@pytest.mark.parametrize(
+    ("reasons", "expected_promotion", "expected_generic"),
+    [
+        ({"no_prior_rank_distribution": 1}, False, True),
+        ({"fcs_to_fbs_transition": 1}, True, False),
+        ({"fcs_to_fbs_transition": 1, "no_prior_rank_distribution": 1}, True, True),
+        ({}, False, False),
+    ],
+)
+def test_cold_start_requirements_are_target_driven(
+    reasons: dict[str, int], expected_promotion: bool, expected_generic: bool
+) -> None:
+    script = _script()
+    inference = [SimpleNamespace(cold_start_reason=reason) for reason, count in reasons.items() for _ in range(count)]
+    cold = [
+        SimpleNamespace(reason="fcs_to_fbs_transition", season=2011, subdivision="fbs"),
+        SimpleNamespace(reason="no_prior_rank_distribution", season=2011, subdivision="fbs"),
+    ]
+    actual, promotion, generic = script.cold_start_requirements(inference, cold, 2011)
+    assert actual == reasons
+    assert (actual.get("fcs_to_fbs_transition", 0) > 0) is expected_promotion
+    assert (actual.get("no_prior_rank_distribution", 0) > 0) is expected_generic
+    assert promotion and generic
     assert script.RECONSTRUCTED_PRIOR_FAMILIES == (
         "context_reconstructed",
         "history_reconstructed",
