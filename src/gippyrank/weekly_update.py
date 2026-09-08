@@ -20,7 +20,12 @@ from gippyrank.performance_snapshot import (
     validate_performance_against_context,
 )
 from gippyrank.posterior.snapshots import Snapshot, build_snapshot
-from gippyrank.site_data import build_site_data
+from gippyrank.site_data import (
+    PublicationComparison,
+    build_site_data,
+    publication_slot_metadata,
+    resolve_previous_official,
+)
 
 SLOT_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -197,6 +202,19 @@ def _upsert_publication(
     slot: str, label: str, performance: Snapshot | None = None,
 ) -> None:
     config = _load_json(config_path)
+    slot_entries = config.get("publication_slots")
+    if not isinstance(slot_entries, list):
+        raise TypeError(
+            "Publish configuration needs explicit publication_slots metadata before updates"
+        )
+    slot_ids = {
+        entry.get("id")
+        for entry in slot_entries
+        if isinstance(entry, dict) and isinstance(entry.get("id"), str)
+    }
+    if slot not in slot_ids:
+        slot_entries.append({"id": slot, "status": "temporary"})
+    config["publication_slots"] = slot_entries
     retained = [
         entry for entry in config["snapshots"]
         if entry.get("publication_slot") != slot
@@ -326,12 +344,83 @@ def _report(
     }
 
 
-def _previous_rows(root: Path, config: dict[str, Any], family: str) -> list[dict[str, str]]:
-    previous = _configured_snapshot(root, config, family)
-    if previous is None or not previous.exists():
+def _publication_comparisons(
+    root: Path, config: dict[str, Any]
+) -> tuple[list[PublicationComparison], dict[str, Path]]:
+    slots = publication_slot_metadata(config)
+    comparisons: list[PublicationComparison] = []
+    sources: dict[str, Path] = {}
+    for entry in config.get("snapshots", []):
+        source = root / entry["source"]
+        metadata = _load_json(source / "metadata.json")
+        status, order = slots[entry["publication_slot"]]
+        snapshot_id = str(metadata["snapshot_id"])
+        comparisons.append(
+            PublicationComparison(
+                season=int(metadata["season"]),
+                ranking_family=str(metadata["ranking_family"]),
+                prior_family=(
+                    str(metadata["prior_family"])
+                    if metadata["ranking_family"] == "predictive"
+                    else None
+                ),
+                publication_slot=entry["publication_slot"],
+                publication_status=status,
+                publication_order=order,
+                snapshot_id=snapshot_id,
+                display_label=entry["display_label"],
+            )
+        )
+        sources[snapshot_id] = source
+    return comparisons, sources
+
+
+def _previous_rows(
+    root: Path,
+    config: dict[str, Any],
+    family: str,
+    *,
+    season: int,
+    publication_slot: str,
+) -> list[dict[str, str]]:
+    previous_comparison = _previous_official_comparison(
+        root, config, family, season=season, publication_slot=publication_slot
+    )
+    if previous_comparison is None:
         return []
+    _, sources = _publication_comparisons(root, config)
+    previous = sources[previous_comparison.snapshot_id]
     with (previous / "rankings.csv").open(newline="", encoding="utf-8") as handle:
         return [row for row in csv.DictReader(handle) if row["subdivision"] == "fbs"]
+
+
+def _previous_official_comparison(
+    root: Path,
+    config: dict[str, Any],
+    family: str,
+    *,
+    season: int,
+    publication_slot: str,
+) -> PublicationComparison | None:
+    comparisons, _ = _publication_comparisons(root, config)
+    slot_metadata = publication_slot_metadata(config)
+    if publication_slot in slot_metadata:
+        status, order = slot_metadata[publication_slot]
+    else:
+        status, order = "temporary", len(slot_metadata)
+    ranking_family = "performance" if family == "performance" else "predictive"
+    prior_family = None if ranking_family == "performance" else family
+    current = PublicationComparison(
+        season=season,
+        ranking_family=ranking_family,
+        prior_family=prior_family,
+        publication_slot=publication_slot,
+        publication_status=status,
+        publication_order=order,
+        snapshot_id=f"candidate:{publication_slot}:{ranking_family}:{prior_family}",
+        display_label=publication_slot,
+    )
+    return resolve_previous_official(current, comparisons)
 
 
 def _movement(current: Snapshot, previous: list[dict[str, str]]) -> list[dict[str, object]]:
@@ -396,9 +485,9 @@ def render_review_markdown(report: dict[str, Any]) -> str:
         + "\n\n### Newly rated teams\n\n"
         + newly_rated_summary
         + "\n## Review diagnostics\n\n"
-        + "### Context biggest movers\n\n"
+        + f"### Context biggest movers (vs {report.get('context_movement_baseline') or 'no earlier official baseline'})\n\n"
         + "\n".join(f"- {item['team']}: {item['rank_change']:+d} display ranks" for item in report["context_movers"])
-        + "\n\n### History biggest movers\n\n"
+        + f"\n\n### History biggest movers (vs {report.get('history_movement_baseline') or 'no earlier official baseline'})\n\n"
         + "\n".join(f"- {item['team']}: {item['rank_change']:+d} display ranks" for item in report["history_movers"])
         + "\n\n### Largest Context/History disagreements\n\n"
         + "\n".join(f"- {item['team']}: Context {item['context_rank']}, History {item['history_rank']} (Δ {item['difference']})" for item in report["h_c_disagreements"])
@@ -450,9 +539,27 @@ def prepare_weekly_update(
         )
         validate_performance_against_context(context, performance)
         report = _report(context, history, performance, slot=slot, label=label, corpus=corpus)
-        previous_context = _previous_rows(root, config, "context")
-        previous_history = _previous_rows(root, config, "history")
-        previous_performance = _previous_rows(root, config, "performance")
+        previous_context = _previous_rows(
+            root, config, "context", season=season, publication_slot=slot
+        )
+        previous_history = _previous_rows(
+            root, config, "history", season=season, publication_slot=slot
+        )
+        previous_performance = _previous_rows(
+            root, config, "performance", season=season, publication_slot=slot
+        )
+        context_baseline = _previous_official_comparison(
+            root, config, "context", season=season, publication_slot=slot
+        )
+        history_baseline = _previous_official_comparison(
+            root, config, "history", season=season, publication_slot=slot
+        )
+        report["context_movement_baseline"] = (
+            context_baseline.display_label if context_baseline else None
+        )
+        report["history_movement_baseline"] = (
+            history_baseline.display_label if history_baseline else None
+        )
         previous_games = _configured_snapshot(root, config, "context")
         previous_ids: set[str] = set()
         if previous_games is not None and previous_games.exists():
@@ -507,6 +614,18 @@ def prepare_weekly_update(
     report["history_movers"] = _movement(history, previous_history)
     report["h_c_disagreements"] = _disagreements(context, history)
     report["newly_rated_teams"] = _newly_rated(performance, previous_performance)
+    context_baseline = _previous_official_comparison(
+        root, config, "context", season=season, publication_slot=slot
+    )
+    history_baseline = _previous_official_comparison(
+        root, config, "history", season=season, publication_slot=slot
+    )
+    report["context_movement_baseline"] = (
+        context_baseline.display_label if context_baseline else None
+    )
+    report["history_movement_baseline"] = (
+        history_baseline.display_label if history_baseline else None
+    )
     report_dir = root / "data/processed/weekly_updates"
     report_dir.mkdir(parents=True, exist_ok=True)
     (report_dir / f"{slot}.json").write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")

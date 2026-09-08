@@ -49,7 +49,8 @@ function svgElement(name, attributes = {}) {
   return node;
 }
 
-function labelFor(entry) { return `${entry.display_label} · ${entry.snapshot_type === "preseason" ? "Preseason" : "Current"}`; }
+function publicationStatusLabel(entry) { return entry.publication_status === "official" ? "Official" : "Interim"; }
+function labelFor(entry) { return `${entry.display_label} · ${publicationStatusLabel(entry)}`; }
 function choices() { return state.manifest.snapshots.filter((entry) => entry.ranking_family === state.family && entry.season === state.season); }
 function selectedEntry() { return choices().find((entry) => entry.publication_slot === state.slot && (state.family === "performance" || entry.prior_family === state.prior)); }
 function familyLabel() { return state.family === "performance" ? "Performance" : "Predictive"; }
@@ -121,9 +122,14 @@ function populate() {
 
 function updateSnapshotSummary(entry, snapshot) {
   const current = entry.snapshot_type !== "preseason";
-  $("#snapshot-kind").textContent = current ? "Current snapshot" : "Preseason snapshot";
+  $("#snapshot-kind").textContent = `${publicationStatusLabel(entry)} publication`;
   $("#snapshot-title").textContent = `${entry.season} ${entry.display_label} · ${familyLabel()}${state.family === "predictive" ? ` · ${entry.prior_family === "context" ? "Context" : "History"}` : ""}`;
   $("#snapshot-freshness").textContent = current ? `Rankings through ${formatDate(entry.effective_cutoff)}.` : "Frozen before any game evidence.";
+  const baseline = entry.comparison_display_label
+    ? `Change vs ${entry.comparison_display_label}.`
+    : `No earlier official ${familyLabel()} baseline; movement is not shown.`;
+  $("#snapshot-comparison").textContent = baseline;
+  $("#section-context").textContent = `FBS rankings · sorted by expected rank · ${baseline}`;
   const evidence = current ? `Effective cutoff: ${formatTimestamp(snapshot.effective_cutoff)} · ${snapshot.included_game_count} eligible games included · ${snapshot.excluded_lower_division_games ?? 0} lower-division games excluded.${state.family === "performance" ? ` ${snapshot.rated_count} rated, ${snapshot.unrated_count} NR.` : ""}` : `Snapshot generated ${formatTimestamp(snapshot.generation_timestamp)} · 0 eligible games included.`;
   $("#snapshot-evidence").textContent = state.notice ? `${evidence} ${state.notice}` : evidence;
 }
@@ -173,6 +179,23 @@ function teamCell(row, entry) {
   return wrapper;
 }
 
+function rankCell(row) {
+  const cell = element("td", "rank");
+  cell.append(element("span", "rank-value", row.display_rank));
+  const inline = element("span", "rank-change-inline", row.rank_change_display ?? "—");
+  inline.setAttribute("aria-hidden", "true");
+  cell.append(inline, element("span", "sr-only", row.rank_change_accessible ?? "No earlier official ranking baseline"));
+  return cell;
+}
+
+function rankChangeCell(row) {
+  const cell = element("td", "change-column");
+  const visual = element("span", "rank-change-visual", row.rank_change_display ?? "—");
+  visual.setAttribute("aria-hidden", "true");
+  cell.append(visual);
+  return cell;
+}
+
 function detailsButton(row) {
   const button = element("button", "details-button", "View");
   button.type = "button";
@@ -195,7 +218,7 @@ function renderRankings(snapshot) {
     const details = element("td", "details-cell");
     details.append(detailsButton(row));
     tr.append(
-      element("td", "rank", row.display_rank), team, element("td", "record-column", row.record),
+      rankCell(row), rankChangeCell(row), team, element("td", "record-column", row.record),
       element("td", "expected-rank", row.expected_rank.toFixed(1)), element("td", "median-column", row.median_rank),
       element("td", "interval-column", `${row.interval_80[0]}–${row.interval_80[1]}`), uncertainty,
       element("td", "top25-column", percentage(row.top25_probability)), details,

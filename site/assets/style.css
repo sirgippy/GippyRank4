@@ -258,8 +258,8 @@ th {
   white-space: nowrap;
 }
 
-th:nth-child(2),
-td:nth-child(2) {
+th.team-column,
+td.team {
   text-align: left;
 }
 
@@ -275,6 +275,29 @@ tbody tr:hover {
 }
 
 td.rank {
+  color: var(--green);
+  font-weight: 800;
+}
+
+.rank-value,
+.rank-change-inline,
+.rank-change-visual {
+  display: inline-block;
+}
+
+.rank-change-inline {
+  display: none;
+  margin-left: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.change-column {
+  min-width: 68px;
+}
+
+.rank-change-visual {
   color: var(--green);
   font-weight: 800;
 }
@@ -806,7 +829,7 @@ summary:focus-visible,
 
 .team-summary-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -1094,8 +1117,13 @@ summary:focus-visible,
 
   .record-column,
   .median-column,
-  .top25-column {
+  .top25-column,
+  .change-column {
     display: none;
+  }
+
+  .rank-change-inline {
+    display: inline-block;
   }
 
   footer a {
@@ -1184,9 +1212,9 @@ summary:focus-visible,
   }
 
   .expected-rank,
-  th:nth-child(4),
+  th.expected-column,
   .interval-column,
-  th:nth-child(6) {
+  th.interval-column {
     display: none;
   }
 
