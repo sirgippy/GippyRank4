@@ -1,0 +1,26 @@
+{
+  "artifact_kind": "offense_defense_latent_research",
+  "candidate_grid": [
+    {
+      "name": "OD0",
+      "prior_correlation": 0.0,
+      "prior_sd": 8.0
+    },
+    {
+      "name": "OD1",
+      "prior_correlation": 0.25,
+      "prior_sd": 8.0
+    }
+  ],
+  "context_primary": true,
+  "expected_margin_decomposition": "V1 rank-pair expected margin; training-only pairing/site total; expected first/second scores=(total +/- margin)/2; FBS-first cross-subdivision orientation",
+  "identifiability": "offense and defense each have population sum zero; fixed pairing/site score environment is the intercept",
+  "issue": 40,
+  "production_path_unchanged": true,
+  "residual_definitions": {
+    "defense": "expected opponent points - opponent points scored",
+    "offense": "points scored - expected points scored"
+  },
+  "score_model": "independent Normal scores with training-frozen scale; OD mean=environment+O_team-D_opponent",
+  "selection": "development 2018-2021 only; evaluation 2022-2025 cannot influence candidate choice"
+}

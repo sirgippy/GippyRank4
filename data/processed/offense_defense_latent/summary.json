@@ -1,0 +1,168 @@
+{
+  "development_gate": [
+    {
+      "baseline_margin_mae": 13.838513963428703,
+      "baseline_margin_nll": 4.283174811206167,
+      "baseline_n": 1591,
+      "baseline_win_brier": 0.19082266954185148,
+      "brier_delta": 0.003499525864458841,
+      "candidate": "OD0",
+      "mae_improvement": -0.1488306007331648,
+      "margin_mae": 13.987344564161868,
+      "margin_nll": 4.3059020046951,
+      "n": 1591,
+      "nll_improvement": -0.02272719348893304,
+      "passes_gate": false,
+      "seasons_nll_improved": 1,
+      "win_brier": 0.19432219540631032,
+      "worst_season_nll_delta": 0.05118640713917699
+    },
+    {
+      "baseline_margin_mae": 13.838513963428703,
+      "baseline_margin_nll": 4.283174811206167,
+      "baseline_n": 1591,
+      "baseline_win_brier": 0.19082266954185148,
+      "brier_delta": 0.0028869549618278922,
+      "candidate": "OD1",
+      "mae_improvement": -0.08770718746062833,
+      "margin_mae": 13.926221150889331,
+      "margin_nll": 4.303385933828967,
+      "n": 1591,
+      "nll_improvement": -0.02021112262279967,
+      "passes_gate": false,
+      "seasons_nll_improved": 1,
+      "win_brier": 0.19370962450367937,
+      "worst_season_nll_delta": 0.04660347985531654
+    }
+  ],
+  "development_seasons": [
+    2018,
+    2019,
+    2020,
+    2021
+  ],
+  "environment": {
+    "fallback_mean": [
+      29.897519855092657,
+      24.139821652501045
+    ],
+    "score_means": {
+      "('fbs-fbs', False, False)": [
+        30.0516081871345,
+        25.44956140350877
+      ],
+      "('fbs-fbs', True, False)": [
+        28.91696750902527,
+        27.142599277978338
+      ],
+      "('fbs-fcs', False, False)": [
+        25.333333333333332,
+        39.333333333333336
+      ],
+      "('fbs-fcs', False, True)": [
+        42.83940042826553,
+        13.933618843683083
+      ],
+      "('fbs-fcs', True, False)": [
+        39.863013698630134,
+        14.753424657534246
+      ],
+      "('fcs-fcs', False, False)": [
+        27.578524743230627,
+        24.034733893557423
+      ],
+      "('fcs-fcs', True, False)": [
+        28.394957983193276,
+        24.32941176470588
+      ]
+    },
+    "score_scale": 13.875186961363278,
+    "training_seasons": [
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2017
+    ]
+  },
+  "evaluation_seasons": [
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "games_loaded": 26070,
+  "input_artifacts": {
+    "context_priors": "data/processed/preseason/context/predictions.csv",
+    "historical_games": "data/processed/modeling/historical_modeling_games.csv",
+    "historical_likelihood": "data/processed/posterior/historical_likelihood_v1.json",
+    "rank_distributions": "data/processed/modeling/team_season_rank_distributions.csv"
+  },
+  "issue": 40,
+  "production_hashes_after": {
+    "context_prior": "dd6fa583822d3bc6d887f4a52952d35aa5f2310822a5b934a015d7e1f8c9ecb6",
+    "context_prior_2026": "641182890ec88ea8bc6150cc97047ddc688d0c680486d9fcc63a58d7bfae9132",
+    "historical_likelihood_v1": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+    "history_prior": "474f5587b8db44847bc375931e4f4937e7e8029077d5814af3f6b6e55056a706",
+    "history_prior_2026": "0b3454a09288019e17739869c42aed3123fdda2163694f52f63bca65baf37f90"
+  },
+  "production_hashes_before": {
+    "context_prior": "dd6fa583822d3bc6d887f4a52952d35aa5f2310822a5b934a015d7e1f8c9ecb6",
+    "context_prior_2026": "641182890ec88ea8bc6150cc97047ddc688d0c680486d9fcc63a58d7bfae9132",
+    "historical_likelihood_v1": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+    "history_prior": "474f5587b8db44847bc375931e4f4937e7e8029077d5814af3f6b6e55056a706",
+    "history_prior_2026": "0b3454a09288019e17739869c42aed3123fdda2163694f52f63bca65baf37f90"
+  },
+  "production_hashes_unchanged": true,
+  "recommendation": "Stage 0 does not show convincing distinct component persistence and no OD candidate clears the development gate.",
+  "recommendation_class": "C",
+  "runtime_seconds": 341.0213701930479,
+  "selected_candidate": null,
+  "stage0": {
+    "early_late_by_period": {
+      "development": {
+        "defense_correlation": 0.28171907563750875,
+        "n": 988,
+        "offense_correlation": 0.32655145732975216
+      },
+      "evaluation": {
+        "defense_correlation": 0.2222893809936147,
+        "n": 1050,
+        "offense_correlation": 0.2483725802230971
+      },
+      "training": {
+        "defense_correlation": 0.3232208438377502,
+        "n": 2474,
+        "offense_correlation": 0.3214061625464359
+      }
+    },
+    "n_focal_team_games": 52140,
+    "n_team_seasons_with_at_least_3_games": 4512,
+    "null_permutations": 10,
+    "null_seed": 40
+  },
+  "stage0_signal": {
+    "cross_component_mean_lag1": 0.020471405116477635,
+    "same_component_mean_lag1": -0.08544320128223684,
+    "same_minus_cross": -0.10591460639871447,
+    "supports_component_persistence": false
+  },
+  "stage2_triggered": false,
+  "training_seasons": [
+    2008,
+    2009,
+    2010,
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017
+  ]
+}
