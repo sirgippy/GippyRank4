@@ -18,6 +18,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v6
@@ -36,5 +38,11 @@ jobs:
       - name: Run Ruff
         run: uv run ruff check .
 
-      - name: Check whitespace errors
-        run: git diff --check
+      - name: Check committed diff whitespace
+        env:
+          DIFF_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          DIFF_HEAD: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: git diff --check "$DIFF_BASE" "$DIFF_HEAD"
+
+      - name: Check validation side effects
+        run: git diff --exit-code
