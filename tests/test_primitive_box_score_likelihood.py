@@ -436,7 +436,9 @@ def test_cold_start_requirements_are_target_driven(
         SimpleNamespace(reason="fcs_to_fbs_transition", season=2011, subdivision="fbs"),
         SimpleNamespace(reason="no_prior_rank_distribution", season=2011, subdivision="fbs"),
     ]
-    actual, promotion, generic = script.cold_start_requirements(inference, cold, 2011)
+    actual, promotion, generic = script.cold_start_requirements(
+        inference, cold, cold, 2011
+    )
     assert actual == reasons
     assert (actual.get("fcs_to_fbs_transition", 0) > 0) is expected_promotion
     assert (actual.get("no_prior_rank_distribution", 0) > 0) is expected_generic
@@ -461,6 +463,24 @@ def test_rolling_report_separates_uniform_and_reconstructed_panels() -> None:
     assert "Reconstructed History-prior sensitivity" in section
     assert "reconstructed History 1.1" in section
     assert "Excluded reconstructed target **2012**" in section
+
+
+def test_historical_promotion_adapter_returns_teamseason_and_preserves_cross_lag() -> None:
+    script = _script()
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).parents[1] / "scripts"))
+    import build_preseason_prior as history
+
+    cold = history.ColdStartSeason(
+        2013, "fbs", "team", "Team", 3,
+        np.asarray([0.0]), np.asarray([2.0]),
+        np.asarray([-0.4, 0.2]), "fcs_to_fbs_transition",
+    )
+    adapted = history.cold_start_teams([cold])
+    assert isinstance(adapted[0], history.TeamSeason)
+    assert adapted[0].lag1_z is cold.cross_subdivision_lag_z
+    assert adapted[0].features == {}
     assert script.RECONSTRUCTED_PRIOR_FAMILIES == (
         "context_reconstructed",
         "history_reconstructed",
