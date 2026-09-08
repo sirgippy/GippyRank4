@@ -99,7 +99,7 @@ function populate() {
 
 function updateSnapshotSummary(entry, snapshot) {
   const current = entry.snapshot_type !== "preseason";
-  $("#snapshot-kind").textContent = current ? "IN-SEASON / CURRENT" : "PRESEASON";
+  $("#snapshot-kind").textContent = current ? "Current snapshot" : "Preseason snapshot";
   $("#snapshot-title").textContent = `${entry.season} ${entry.display_label} · ${familyLabel()}${state.family === "predictive" ? ` · ${entry.prior_family === "context" ? "Context" : "History"}` : ""}`;
   $("#snapshot-freshness").textContent = current ? `Rankings through ${formatDate(entry.effective_cutoff)}.` : "Frozen before any game evidence.";
   const evidence = current ? `Effective cutoff: ${formatTimestamp(snapshot.effective_cutoff)} · ${snapshot.included_game_count} eligible games included · ${snapshot.excluded_lower_division_games ?? 0} lower-division games excluded.${state.family === "performance" ? ` ${snapshot.rated_count} rated, ${snapshot.unrated_count} NR.` : ""}` : `Snapshot generated ${formatTimestamp(snapshot.generation_timestamp)} · 0 eligible games included.`;
