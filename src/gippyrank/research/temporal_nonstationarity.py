@@ -199,15 +199,15 @@ def select_recency_candidate(
             qualifying.append((candidate.name, float(metrics["next_game_nll"])))
     if not qualifying:
         return None
-    # Candidate grid order is the tie-breaker after the explicit longer-half-
-    # life preference.  The half-life is unique in this frozen grid.
+    # First identify the best aggregate NLL.  The issue's frozen rule treats
+    # candidates within 0.002 NLL of that best value as practically tied and
+    # prefers the longer half-life (weaker decay) within that band.
     by_name = {candidate.name: candidate for candidate in candidate_grid()}
-    return min(
-        qualifying,
-        key=lambda item: (
-            item[1],
-            -(by_name[item[0]].half_life_days or float("inf")),
-        ),
+    best_nll = min(nll for _name, nll in qualifying)
+    within_tie = [item for item in qualifying if item[1] - best_nll <= 0.002]
+    return max(
+        within_tie,
+        key=lambda item: by_name[item[0]].half_life_days or float("inf"),
     )[0]
 
 
@@ -928,9 +928,10 @@ def evaluate_candidates(
     tolerance: float = 1e-3,
 ) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
     """Run identical cutoff/target keys for all requested candidates."""
+    season_set = set(seasons)
     by_season: dict[int, list[HistoricalGame]] = defaultdict(list)
     for game in games:
-        if game.season in set(seasons):
+        if game.season in season_set:
             by_season[game.season].append(game)
     prediction_rows: list[dict[str, object]] = []
     example_rows: list[dict[str, object]] = []
@@ -1040,6 +1041,23 @@ def evaluate_candidates(
                                     "static_join_key": "|".join(map(str, static_key)),
                                 }
                             )
+    # A candidate is allowed to change only inference weights, never which
+    # cutoff or target is scored.  Keep this as an executable contract so a
+    # future refactor cannot silently compare different scoring keys.
+    keys_by_candidate: dict[str, set[tuple[object, ...]]] = defaultdict(set)
+    for row in prediction_rows:
+        keys_by_candidate[str(row["candidate"])].add(
+            (
+                row["season"],
+                row["cutoff"],
+                row["target_kind"],
+                row["target_game_id"],
+            )
+        )
+    if keys_by_candidate:
+        reference = next(iter(keys_by_candidate.values()))
+        if any(keys != reference for keys in keys_by_candidate.values()):
+            raise RuntimeError("candidate scoring keys differ")
     return prediction_rows, example_rows
 
 
@@ -1054,6 +1072,31 @@ def aggregate_metrics(rows: Sequence[dict[str, object]]) -> dict[str, dict[str, 
             "candidate": candidate,
             "target_kind": target_kind,
             "season": int(season),
+            "n": len(values),
+            "margin_nll": float(np.mean([float(row["margin_nll"]) for row in values])),
+            "margin_mae": float(np.mean([float(row["margin_mae"]) for row in values])),
+            "win_brier": float(np.mean([float(row["win_brier"]) for row in values])),
+        }
+    return result
+
+
+def aggregate_phase_metrics(rows: Sequence[dict[str, object]]) -> dict[str, dict[str, object]]:
+    """Aggregate prediction metrics by candidate and early/mid/late phase."""
+    grouped: dict[tuple[str, str, str], list[dict[str, object]]] = defaultdict(list)
+    for row in rows:
+        grouped[
+            (
+                str(row["candidate"]),
+                str(row["target_kind"]),
+                str(row["phase"]),
+            )
+        ].append(row)
+    result = {}
+    for (candidate, target_kind, phase), values in sorted(grouped.items()):
+        result[f"{candidate}|{target_kind}|{phase}"] = {
+            "candidate": candidate,
+            "target_kind": target_kind,
+            "phase": phase,
             "n": len(values),
             "margin_nll": float(np.mean([float(row["margin_nll"]) for row in values])),
             "margin_mae": float(np.mean([float(row["margin_mae"]) for row in values])),

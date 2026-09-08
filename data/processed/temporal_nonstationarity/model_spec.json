@@ -28,7 +28,9 @@
     "maximum_win_brier_worsening": 0.001,
     "minimum_seasons_with_nll_improvement": 3,
     "next_game_mae_improvement": 0.1,
-    "next_game_nll_improvement": 0.01
+    "next_game_nll_improvement": 0.01,
+    "selection_tie_break": "longer half-life / weaker decay",
+    "selection_tie_nll_band": 0.002
   },
   "factor_tempering": "L_g_tempered = L_g ^ 2 ^ (-age_days / half_life_days)",
   "no_production_changes": true,
@@ -69,6 +71,64 @@
       2016,
       2017
     ]
+  },
+  "strict_numerics_sensitivity": {
+    "approximate_metrics": {
+      "R112": {
+        "margin_mae": 13.363083280840407,
+        "margin_nll": 4.3011803894334735,
+        "n": 196.0,
+        "win_brier": 0.23001307167594723
+      },
+      "R14": {
+        "margin_mae": 13.44676896724666,
+        "margin_nll": 4.322164130048441,
+        "n": 196.0,
+        "win_brier": 0.23155741981367464
+      },
+      "R28": {
+        "margin_mae": 13.416316400434544,
+        "margin_nll": 4.310721012447975,
+        "n": 196.0,
+        "win_brier": 0.23055211838195788
+      },
+      "R56": {
+        "margin_mae": 13.379848619831495,
+        "margin_nll": 4.304341410682388,
+        "n": 196.0,
+        "win_brier": 0.2302507380595655
+      },
+      "Static V1": {
+        "margin_mae": 13.381746710089155,
+        "margin_nll": 4.29867707510893,
+        "n": 196.0,
+        "win_brier": 0.22967760672681445
+      }
+    },
+    "approximate_r56_delta_nll_vs_static": 0.0056643355734573575,
+    "candidates": [
+      "Static V1",
+      "R56"
+    ],
+    "max_iterations": 500,
+    "relative_nll_order_unchanged": true,
+    "season": 2020,
+    "strict_metrics": {
+      "R56": {
+        "margin_mae": 13.380089135100503,
+        "margin_nll": 4.303544403152937,
+        "n": 196.0,
+        "win_brier": 0.2302305117931753
+      },
+      "Static V1": {
+        "margin_mae": 13.378391529819789,
+        "margin_nll": 4.298158743486366,
+        "n": 196.0,
+        "win_brier": 0.22986165993720875
+      }
+    },
+    "strict_r56_delta_nll_vs_static": 0.005385659666571563,
+    "tolerance": 1e-09
   },
   "study": "issue_34_temporal_nonstationarity",
   "target_keys": "identical completed-week cutoffs and target game IDs across candidates; future games strictly after cutoff"

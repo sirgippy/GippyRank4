@@ -128,9 +128,9 @@
     },
     "identical": true
   },
-  "recommendation": "C",
-  "recommendation_reason": "Neither residual persistence nor future-game validation provides compelling evidence of nonstationarity.",
-  "runtime_seconds": 433.897,
+  "recommendation": "B",
+  "recommendation_reason": "Observed ordering exceeds the demeaned within-team-season shuffle null, but the effect is small and no frozen recency candidate clears the development gate.",
+  "runtime_seconds": 407.37,
   "selected_half_life": null,
   "selection_used_seasons_only": [
     2018,
@@ -228,7 +228,88 @@
     ]
   },
   "stage0_early_late_count": 4512,
+  "stage0_relative_null_effects": [
+    {
+      "lag": 1,
+      "observed_correlation": -0.0679993276081468,
+      "observed_minus_shuffle": 0.028231614620521234,
+      "period": "training",
+      "shuffle_correlation": -0.09623094222866803
+    },
+    {
+      "lag": 1,
+      "observed_correlation": -0.07601619325779568,
+      "observed_minus_shuffle": 0.024947695702470754,
+      "period": "development",
+      "shuffle_correlation": -0.10096388896026644
+    },
+    {
+      "lag": 1,
+      "observed_correlation": -0.07322535229887353,
+      "observed_minus_shuffle": 0.018423576420004112,
+      "period": "evaluation",
+      "shuffle_correlation": -0.09164892871887764
+    }
+  ],
   "stage2_triggered": false,
+  "strict_numerics_sensitivity": {
+    "approximate_metrics": {
+      "R112": {
+        "margin_mae": 13.363083280840407,
+        "margin_nll": 4.3011803894334735,
+        "n": 196.0,
+        "win_brier": 0.23001307167594723
+      },
+      "R14": {
+        "margin_mae": 13.44676896724666,
+        "margin_nll": 4.322164130048441,
+        "n": 196.0,
+        "win_brier": 0.23155741981367464
+      },
+      "R28": {
+        "margin_mae": 13.416316400434544,
+        "margin_nll": 4.310721012447975,
+        "n": 196.0,
+        "win_brier": 0.23055211838195788
+      },
+      "R56": {
+        "margin_mae": 13.379848619831495,
+        "margin_nll": 4.304341410682388,
+        "n": 196.0,
+        "win_brier": 0.2302507380595655
+      },
+      "Static V1": {
+        "margin_mae": 13.381746710089155,
+        "margin_nll": 4.29867707510893,
+        "n": 196.0,
+        "win_brier": 0.22967760672681445
+      }
+    },
+    "approximate_r56_delta_nll_vs_static": 0.0056643355734573575,
+    "candidates": [
+      "Static V1",
+      "R56"
+    ],
+    "max_iterations": 500,
+    "relative_nll_order_unchanged": true,
+    "season": 2020,
+    "strict_metrics": {
+      "R56": {
+        "margin_mae": 13.380089135100503,
+        "margin_nll": 4.303544403152937,
+        "n": 196.0,
+        "win_brier": 0.2302305117931753
+      },
+      "Static V1": {
+        "margin_mae": 13.378391529819789,
+        "margin_nll": 4.298158743486366,
+        "n": 196.0,
+        "win_brier": 0.22986165993720875
+      }
+    },
+    "strict_r56_delta_nll_vs_static": 0.005385659666571563,
+    "tolerance": 1e-09
+  },
   "study": "issue_34_temporal_nonstationarity",
   "train_seasons": [
     2008,

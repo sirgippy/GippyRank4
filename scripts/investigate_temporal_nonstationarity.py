@@ -22,7 +22,10 @@ from gippyrank.research.temporal_nonstationarity import (
     DEVELOPMENT_SEASONS,
     EVALUATION_SEASONS,
     TRAIN_SEASONS,
+    HistoricalGame,
+    PriorInput,
     aggregate_metrics,
+    aggregate_phase_metrics,
     build_context_priors,
     candidate_grid,
     development_gate_metrics,
@@ -160,6 +163,71 @@ def _development_deltas(
     return result
 
 
+def _strict_sensitivity(
+    games: list[HistoricalGame],
+    priors: dict[tuple[int, str], PriorInput],
+    likelihood: LikelihoodV1,
+    development_rows: list[dict[str, object]],
+) -> dict[str, object]:
+    """Run a deterministic strict-BP check on one representative dev season."""
+    season = 2020
+    candidates = (candidate_grid()[0], candidate_grid()[3])
+    strict_rows, _ = evaluate_candidates(
+        games,
+        priors,
+        likelihood,
+        candidates,
+        (season,),
+        max_iterations=500,
+        tolerance=1e-9,
+    )
+    strict_metrics = aggregate_metrics(
+        [row for row in strict_rows if row["target_kind"] == "next_game"]
+    )
+    approximate_metrics = aggregate_metrics(
+        [
+            row
+            for row in development_rows
+            if row["target_kind"] == "next_game" and int(row["season"]) == season
+        ]
+    )
+
+    def by_candidate(values: dict[str, dict[str, object]]) -> dict[str, dict[str, float]]:
+        return {
+            str(item["candidate"]): {
+                "n": float(item["n"]),
+                "margin_nll": float(item["margin_nll"]),
+                "margin_mae": float(item["margin_mae"]),
+                "win_brier": float(item["win_brier"]),
+            }
+            for item in values.values()
+        }
+
+    strict_by_candidate = by_candidate(strict_metrics)
+    approximate_by_candidate = by_candidate(approximate_metrics)
+    strict_delta = (
+        strict_by_candidate["R56"]["margin_nll"]
+        - strict_by_candidate["Static V1"]["margin_nll"]
+    )
+    approximate_delta = (
+        approximate_by_candidate["R56"]["margin_nll"]
+        - approximate_by_candidate["Static V1"]["margin_nll"]
+    )
+    return {
+        "season": season,
+        "candidates": [candidate.name for candidate in candidates],
+        "max_iterations": 500,
+        "tolerance": 1e-9,
+        "strict_metrics": strict_by_candidate,
+        "approximate_metrics": approximate_by_candidate,
+        "strict_r56_delta_nll_vs_static": strict_delta,
+        "approximate_r56_delta_nll_vs_static": approximate_delta,
+        "relative_nll_order_unchanged": bool(
+            np.sign(strict_delta) == np.sign(approximate_delta)
+        ),
+    }
+
+
 def _stage0_lookup(metrics: list[dict[str, object]], period: str, dimension: str, control: str, lag: int) -> dict[str, object]:
     for row in metrics:
         if (
@@ -171,6 +239,29 @@ def _stage0_lookup(metrics: list[dict[str, object]], period: str, dimension: str
         ):
             return row
     return {}
+
+
+def _stage0_relative_effects(
+    metrics: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    """Compare observed ordering with the mechanically negative shuffle null."""
+    result = []
+    for period in ("training", "development", "evaluation"):
+        observed = _stage0_lookup(metrics, period, "demeaned", "observed", 1)
+        shuffled = _stage0_lookup(metrics, period, "demeaned", "shuffle_order", 1)
+        if observed.get("correlation") is None or shuffled.get("correlation") is None:
+            continue
+        result.append(
+            {
+                "period": period,
+                "lag": 1,
+                "observed_correlation": float(observed["correlation"]),
+                "shuffle_correlation": float(shuffled["correlation"]),
+                "observed_minus_shuffle": float(observed["correlation"])
+                - float(shuffled["correlation"]),
+            }
+        )
+    return result
 
 
 def _make_examples(
@@ -248,18 +339,17 @@ def _recommendation(
 ) -> tuple[str, str]:
     observed = _stage0_lookup(stage0_metrics, "development", "demeaned", "observed", 1)
     shuffled = _stage0_lookup(stage0_metrics, "development", "demeaned", "shuffle_order", 1)
-    unrelated = _stage0_lookup(stage0_metrics, "development", "demeaned", "unrelated_team", 1)
-    persistence = (
-        observed.get("correlation") is not None
-        and float(observed["correlation"]) > 0
-        and float(observed["correlation"]) > max(
-            float(shuffled.get("correlation", 0.0) or 0.0),
-            float(unrelated.get("correlation", 0.0) or 0.0),
+    observed_minus_shuffle = None
+    if observed.get("correlation") is not None and shuffled.get("correlation") is not None:
+        observed_minus_shuffle = float(observed["correlation"]) - float(
+            shuffled["correlation"]
         )
+    persistence = (
+        observed_minus_shuffle is not None and observed_minus_shuffle > 0
     )
     if selected is None:
         if persistence:
-            return "B", "Stage 0 has residual persistence, but no frozen recency candidate clears the development gate."
+            return "B", "Observed ordering exceeds the demeaned within-team-season shuffle null, but the effect is small and no frozen recency candidate clears the development gate."
         return "C", "Neither residual persistence nor future-game validation provides compelling evidence of nonstationarity."
     if not evaluation_rows:
         return "B", "A recency candidate cleared development, but Stage 2 was not run because the evaluation panel was unavailable."
@@ -293,6 +383,7 @@ def render_report(
     summary: dict[str, object],
     stage0_metrics: list[dict[str, object]],
     development_metrics: list[dict[str, object]],
+    development_phase_metrics: list[dict[str, object]],
     evaluation_metrics: list[dict[str, object]],
 ) -> str:
     lines = [
@@ -306,7 +397,7 @@ def render_report(
         "- Context is the primary prior family. Existing 2022–2025 Context PMFs are consumed; missing 2018–2021 PMFs apply the repository's frozen, predeclared Context development fit trained through 2017 to outcome-free historical rank and preseason-context rows.",
         "- For a cutoff `c`, only games with `game_time < c` enter inference. A target is strictly after `c`; the next-game panel uses the first future game for each team at four deterministic, evenly spaced completed-week cutoffs per season, deduplicated by game. An all-future panel was omitted because it repeatedly scores the same games at every cutoff and is not inexpensive on this loopy graph.",
         "- Residual = oriented observed margin − the V1 likelihood location averaged over the paired historical rank-observation PMFs. Positive focal-team residual means better than expected. Demeaned residuals subtract each team-season mean.",
-        "- Recency candidates temper only the existing factor: `L_g_tempered = L_g ^ 2^(-age_days / h)`. Static V1 uses the unchanged production call semantics.",
+        "- Recency candidates temper only the existing factor: `L_g_tempered = L_g ^ 2^(-age_days / h)`. Static V1 uses unchanged production factor semantics, while the staged panel uses approximate BP (`max_iterations=75`, `tolerance=1e-3`) for tractability; a strict sensitivity check is reported below.",
         "",
         "## Stage 0",
         "",
@@ -320,6 +411,17 @@ def render_report(
             lines.append(
                 f"| {row['period']} | {row['dimension']} | {row['control']} | {row['lag']} | {row['n_pairs']} | {row['correlation'] if row['correlation'] is not None else 'NA'} |"
             )
+    lines += [
+        "",
+        "Observed-minus-shuffle is the relevant demeaned Stage 0 effect because finite within-team-season demeaning makes the shuffle null mechanically negative:",
+        "",
+        "| Period | Observed lag-1 r | Shuffle lag-1 r | Observed − shuffle |",
+        "|---|---:|---:|---:|",
+    ]
+    for row in summary["stage0_relative_null_effects"]:
+        lines.append(
+            f"| {row['period']} | {row['observed_correlation']:.6f} | {row['shuffle_correlation']:.6f} | {row['observed_minus_shuffle']:+.6f} |"
+        )
     lines += [
         "",
         "Elapsed-time, game-count, early/late, recent-history, and deterministic shuffle/unrelated-team controls are in `residual_lag_metrics.csv` and `summary.json`.",
@@ -344,6 +446,25 @@ def render_report(
             f"| {row['candidate']} | {row['target_kind']} {row['season']} | {row['n']} | {row['margin_nll']:.4f} | {row['margin_mae']:.4f} | {row['win_brier']:.4f} | {delta:+.4f} |"
         )
     lines += [
+        "",
+        "### Development phase breakdown",
+        "",
+        "The same next-game scoring rows are grouped by the deterministic cutoff phase:",
+        "",
+        "| Candidate | Phase | N | Margin NLL | Margin MAE | Win Brier |",
+        "|---|---|---:|---:|---:|---:|",
+    ]
+    for row in development_phase_metrics:
+        if row["target_kind"] == "next_game":
+            lines.append(
+                f"| {row['candidate']} | {row['phase']} | {row['n']} | {row['margin_nll']:.4f} | {row['margin_mae']:.4f} | {row['win_brier']:.4f} |"
+            )
+    sensitivity = summary["strict_numerics_sensitivity"]
+    lines += [
+        "",
+        "### Numerical sensitivity",
+        "",
+        f"A deterministic strict-BP sensitivity check on development season {sensitivity['season']} compared Static V1 and R56 with `max_iterations={sensitivity['max_iterations']}` and `tolerance={sensitivity['tolerance']}`. The approximate-panel R56 ΔNLL versus static was {sensitivity['approximate_r56_delta_nll_vs_static']:+.6f}; strict BP was {sensitivity['strict_r56_delta_nll_vs_static']:+.6f}; relative ordering unchanged: **{sensitivity['relative_nll_order_unchanged']}**.",
         "",
         "## Stage 2 evaluation",
         "",
@@ -371,7 +492,7 @@ def render_report(
         "",
         f"The completed deterministic run took {summary['runtime_seconds']:.3f} seconds. History-prior sensitivity was not run because Context is primary and no candidate cleared the development gate.",
         "",
-        "Artifacts: `residual_persistence.csv`, `residual_lag_metrics.csv`, `development_future_metrics.csv`, `development_season_metrics.csv`, `model_spec.json`, and `summary.json`; `evaluation_*` and `team_examples.csv` are present only when Stage 2 triggers.",
+        "Artifacts: `residual_persistence.csv`, `residual_lag_metrics.csv`, `development_future_metrics.csv`, `development_season_metrics.csv`, `development_phase_metrics.csv`, `strict_numerics_sensitivity.json`, `model_spec.json`, and `summary.json`; `evaluation_*` and `team_examples.csv` are present only when Stage 2 triggers.",
     ]
     return "\n".join(lines) + "\n"
 
@@ -394,6 +515,7 @@ def main() -> None:
     before = _production_hashes(input_root)
     residuals = residual_rows(games, likelihood)
     lag_metrics, early_late, stage0_summary = stage0_persistence(residuals)
+    stage0_relative_null_effects = _stage0_relative_effects(lag_metrics)
     priors = build_context_priors(input_root, (*DEVELOPMENT_SEASONS, *EVALUATION_SEASONS))
     development_rows, _development_examples = evaluate_candidates(
         games,
@@ -403,6 +525,9 @@ def main() -> None:
         DEVELOPMENT_SEASONS,
         max_iterations=args.max_iterations,
         tolerance=args.tolerance,
+    )
+    strict_sensitivity = _strict_sensitivity(
+        games, priors, likelihood, development_rows
     )
     gate = development_gate_metrics(development_rows)
     selected = select_recency_candidate(gate)
@@ -441,6 +566,7 @@ def main() -> None:
         "game_count": len(games),
         "focal_residual_count": len(residuals),
         "stage0": stage0_summary,
+        "stage0_relative_null_effects": stage0_relative_null_effects,
         "stage0_early_late_count": len(early_late),
         "candidate_grid": [
             {"name": candidate.name, "half_life_days": candidate.half_life_days}
@@ -450,6 +576,7 @@ def main() -> None:
         "selected_half_life": selected,
         "selection_used_seasons_only": list(DEVELOPMENT_SEASONS),
         "stage2_triggered": stage2_triggered,
+        "strict_numerics_sensitivity": strict_sensitivity,
         "recommendation": recommendation,
         "recommendation_reason": recommendation_reason,
         "production_integrity": {"before": before, "after": after, "identical": before == after},
@@ -478,6 +605,15 @@ def main() -> None:
         output / "development_season_metrics.csv",
         _flat_metric_rows(development_rows, include_season=True),
         ["candidate", "target_kind", "season", "n", "margin_nll", "margin_mae", "win_brier"],
+    )
+    write_csv(
+        output / "development_phase_metrics.csv",
+        [
+            item
+            for item in aggregate_phase_metrics(development_rows).values()
+            if item["target_kind"] == "next_game"
+        ],
+        ["candidate", "target_kind", "phase", "n", "margin_nll", "margin_mae", "win_brier"],
     )
     if evaluation_rows:
         write_csv(
@@ -522,6 +658,8 @@ def main() -> None:
             "maximum_win_brier_worsening": 0.001,
             "minimum_seasons_with_nll_improvement": 3,
             "maximum_single_season_nll_worsening": 0.015,
+            "selection_tie_nll_band": 0.002,
+            "selection_tie_break": "longer half-life / weaker decay",
         },
         "target_keys": "identical completed-week cutoffs and target game IDs across candidates; future games strictly after cutoff",
         "cutoff_schedule": "four evenly spaced completed-week cutoffs per season, excluding the first and last available week",
@@ -530,17 +668,20 @@ def main() -> None:
             "tolerance": args.tolerance,
             "note": "research cutoffs use a fixed approximate-BP computational tolerance to keep the staged diagnostic tractable; production snapshot calls and artifacts are unchanged",
         },
+        "strict_numerics_sensitivity": strict_sensitivity,
         "residual_definition": "oriented observed margin minus V1 likelihood location averaged over paired historical rank-observation PMFs",
         "null_controls": ["within-team-season order shuffle", "unrelated team sequence pairing in same season"],
         "no_production_changes": True,
     }
     write_json(output / "model_spec.json", model_spec)
+    write_json(output / "strict_numerics_sensitivity.json", strict_sensitivity)
     write_json(output / "summary.json", summary)
     (output / "report.md").write_text(
         render_report(
             summary,
             lag_metrics,
             _flat_metric_rows(development_rows, include_season=True),
+            list(aggregate_phase_metrics(development_rows).values()),
             _flat_metric_rows(evaluation_rows, include_season=True),
         ),
         encoding="utf-8",

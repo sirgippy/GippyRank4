@@ -8,7 +8,7 @@ Issue #34 is a research diagnostic. Historical Likelihood V1, the Context/Histor
 - Context is the primary prior family. Existing 2022–2025 Context PMFs are consumed; missing 2018–2021 PMFs apply the repository's frozen, predeclared Context development fit trained through 2017 to outcome-free historical rank and preseason-context rows.
 - For a cutoff `c`, only games with `game_time < c` enter inference. A target is strictly after `c`; the next-game panel uses the first future game for each team at four deterministic, evenly spaced completed-week cutoffs per season, deduplicated by game. An all-future panel was omitted because it repeatedly scores the same games at every cutoff and is not inexpensive on this loopy graph.
 - Residual = oriented observed margin − the V1 likelihood location averaged over the paired historical rank-observation PMFs. Positive focal-team residual means better than expected. Demeaned residuals subtract each team-season mean.
-- Recency candidates temper only the existing factor: `L_g_tempered = L_g ^ 2^(-age_days / h)`. Static V1 uses the unchanged production call semantics.
+- Recency candidates temper only the existing factor: `L_g_tempered = L_g ^ 2^(-age_days / h)`. Static V1 uses unchanged production factor semantics, while the staged panel uses approximate BP (`max_iterations=75`, `tolerance=1e-3`) for tractability; a strict sensitivity check is reported below.
 
 ## Stage 0
 
@@ -34,6 +34,14 @@ The residual panel contains 52,140 focal-team games and 4,512 team-seasons with 
 | training | raw | observed | 1 | 26205 | -0.0011741234411734283 |
 | training | raw | shuffle_order | 1 | 655125 | -0.028067389336074427 |
 | training | raw | unrelated_team | 1 | 597871 | -0.0011155817111629302 |
+
+Observed-minus-shuffle is the relevant demeaned Stage 0 effect because finite within-team-season demeaning makes the shuffle null mechanically negative:
+
+| Period | Observed lag-1 r | Shuffle lag-1 r | Observed − shuffle |
+|---|---:|---:|---:|
+| training | -0.067999 | -0.096231 | +0.028232 |
+| development | -0.076016 | -0.100964 | +0.024948 |
+| evaluation | -0.073225 | -0.091649 | +0.018424 |
 
 Elapsed-time, game-count, early/late, recent-history, and deterministic shuffle/unrelated-team controls are in `residual_lag_metrics.csv` and `summary.json`.
 
@@ -65,11 +73,37 @@ Selected half-life: **none**. Selection used only 2018–2021; 2022–2025 could
 | Static V1 | next_game 2020 | 196 | 4.2987 | 13.3817 | 0.2297 | +0.0000 |
 | Static V1 | next_game 2021 | 463 | 4.2580 | 13.4074 | 0.1756 | +0.0000 |
 
+### Development phase breakdown
+
+The same next-game scoring rows are grouped by the deterministic cutoff phase:
+
+| Candidate | Phase | N | Margin NLL | Margin MAE | Win Brier |
+|---|---|---:|---:|---:|---:|
+| R112 | early | 855 | 4.2936 | 14.0621 | 0.1781 |
+| R112 | late | 244 | 4.3357 | 14.2400 | 0.2358 |
+| R112 | mid | 492 | 4.2319 | 13.1747 | 0.1893 |
+| R14 | early | 855 | 4.2965 | 14.1488 | 0.1781 |
+| R14 | late | 244 | 4.3397 | 14.3225 | 0.2399 |
+| R14 | mid | 492 | 4.2588 | 13.6134 | 0.1937 |
+| R28 | early | 855 | 4.2915 | 14.0643 | 0.1773 |
+| R28 | late | 244 | 4.3355 | 14.2458 | 0.2372 |
+| R28 | mid | 492 | 4.2384 | 13.3048 | 0.1903 |
+| R56 | early | 855 | 4.2921 | 14.0531 | 0.1777 |
+| R56 | late | 244 | 4.3349 | 14.2289 | 0.2360 |
+| R56 | mid | 492 | 4.2326 | 13.1908 | 0.1895 |
+| Static V1 | early | 855 | 4.2960 | 14.0839 | 0.1788 |
+| Static V1 | late | 244 | 4.3387 | 14.2835 | 0.2361 |
+| Static V1 | mid | 492 | 4.2334 | 13.1914 | 0.1894 |
+
+### Numerical sensitivity
+
+A deterministic strict-BP sensitivity check on development season 2020 compared Static V1 and R56 with `max_iterations=500` and `tolerance=1e-09`. The approximate-panel R56 ΔNLL versus static was +0.005664; strict BP was +0.005386; relative ordering unchanged: **True**.
+
 ## Stage 2 evaluation
 
 Stage 2 was not triggered because no candidate cleared the frozen development gate.
 
-## Recommendation: C — Neither residual persistence nor future-game validation provides compelling evidence of nonstationarity.
+## Recommendation: B — Observed ordering exceeds the demeaned within-team-season shuffle null, but the effect is small and no frozen recency candidate clears the development gate.
 
 Any recency gain reported here is diagnostic only. It is not a production recommendation to down-weight old games. If the recommendation is A, the next step is a separate explicit latent-state/state-space Posterior V2 design investigation.
 
@@ -79,6 +113,6 @@ Opponent adjustment remains in every V1 rank-pair likelihood location; site indi
 
 Production artifact SHA-256 values before and after the run are identical; see `summary.json`. The 2022–2025 evaluation window is leakage-safe under the frozen cutoff construction but is not untouched independent confirmation because it has been used in earlier GippyRank research.
 
-The completed deterministic run took 433.897 seconds. History-prior sensitivity was not run because Context is primary and no candidate cleared the development gate.
+The completed deterministic run took 407.370 seconds. History-prior sensitivity was not run because Context is primary and no candidate cleared the development gate.
 
-Artifacts: `residual_persistence.csv`, `residual_lag_metrics.csv`, `development_future_metrics.csv`, `development_season_metrics.csv`, `model_spec.json`, and `summary.json`; `evaluation_*` and `team_examples.csv` are present only when Stage 2 triggers.
+Artifacts: `residual_persistence.csv`, `residual_lag_metrics.csv`, `development_future_metrics.csv`, `development_season_metrics.csv`, `development_phase_metrics.csv`, `strict_numerics_sensitivity.json`, `model_spec.json`, and `summary.json`; `evaluation_*` and `team_examples.csv` are present only when Stage 2 triggers.
