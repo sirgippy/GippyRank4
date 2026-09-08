@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import csv
-from datetime import UTC, date, datetime
+import hashlib
 from pathlib import Path
 from typing import Any
 
@@ -59,14 +59,6 @@ def game_evidence_summary(pmf: np.ndarray) -> dict[str, Any]:
 
 def _bool(value: object) -> bool:
     return str(value).strip().casefold() in {"true", "1", "yes"}
-
-
-def _utc(value: datetime | date | None) -> datetime | None:
-    if value is None:
-        return None
-    if isinstance(value, date) and not isinstance(value, datetime):
-        value = datetime.combine(value, datetime.max.time(), tzinfo=UTC)
-    return value if value.tzinfo is not None else value.replace(tzinfo=UTC)
 
 
 def _int_or_none(value: object) -> int | None:
@@ -132,9 +124,12 @@ def build_team_season_artifact(
                         game_evidence_pmf(game, focal_id, list(teams), likelihood, posterior)
                     )
 
-    effective_cutoff = metadata.get("effective_cutoff")
-    cutoff = _utc(datetime.fromisoformat(str(effective_cutoff))) if effective_cutoff else None
     schedule_path = root / "data/processed/cfbd/games.csv"
+    schedule_corpus_sha256 = (
+        hashlib.sha256(schedule_path.read_bytes()).hexdigest()
+        if schedule_path.is_file()
+        else None
+    )
     schedule: list[dict[str, str]] = []
     if schedule_path.is_file():
         with schedule_path.open(newline="", encoding="utf-8") as handle:
@@ -149,26 +144,22 @@ def build_team_season_artifact(
             (home_id, away_id, "homeTeam", "awayTeam", "awayClassification", "awayConference"),
             (away_id, home_id, "awayTeam", "homeTeam", "homeClassification", "homeConference"),
         ]
-        try:
-            start = datetime.fromisoformat(row["startDate"])
-        except (KeyError, TypeError, ValueError) as error:
-            raise ValueError(f"Invalid schedule startDate for game {row.get('id')}") from error
-        start = _utc(start)
-        reveal = cutoff is not None and start is not None and start <= cutoff
-        modeled = (
-            str(row.get("id", "")) in included_ids
-            and _bool(row.get("completed"))
-            and row.get("homeClassification", "").casefold() in {"fbs", "fcs"}
+        game_id = str(row.get("id", ""))
+        eligible_matchup = (
+            row.get("homeClassification", "").casefold() in {"fbs", "fcs"}
             and row.get("awayClassification", "").casefold() in {"fbs", "fcs"}
-            and str(row.get("id", "")) in game_by_id
-            and reveal
+        )
+        modeled = (
+            game_id in included_ids
+            and eligible_matchup
+            and game_id in game_by_id
         )
         for focal_id, opponent_id, focal_name_field, opponent_name_field, opponent_class_field, opponent_conf_field in focal_sides:
             if focal_id not in fbs_teams:
                 continue
-            result, score = _result_and_score(row, focal_id, reveal=reveal)
+            result, score = _result_and_score(row, focal_id, reveal=modeled)
             entry: dict[str, Any] = {
-                "game_id": str(row.get("id", "")),
+                "game_id": game_id,
                 "week": _week(row.get("week")),
                 "date": row.get("startDate"),
                 "opponent_id": opponent_id,
@@ -179,7 +170,7 @@ def build_team_season_artifact(
                 "result": result,
                 "score": score,
                 "modeled": modeled,
-                "game_rating": ratings.get((str(row.get("id", "")), focal_id)) if modeled else None,
+                "game_rating": ratings.get((game_id, focal_id)) if modeled else None,
                 "season_type": row.get("seasonType", ""),
                 "conference_game": _bool(row.get("conferenceGame")),
             }
@@ -203,6 +194,11 @@ def build_team_season_artifact(
         "source_retrieval_times": metadata.get("source_retrieval_times"),
         "source_response_hashes": metadata.get("source_response_hashes", {}),
         "game_corpus_sha256": metadata.get("game_corpus_sha256"),
+        "schedule_source": {
+            "kind": "current_processed_schedule",
+            "path": "data/processed/cfbd/games.csv",
+            "sha256": schedule_corpus_sha256,
+        },
         "included_game_ids": sorted(included_ids),
         "historical_likelihood_version": metadata.get("historical_likelihood_version", "V1"),
         "rank_count": rank_count,

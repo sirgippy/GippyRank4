@@ -555,6 +555,7 @@ def _validate_team_season_artifact(
     rankings: list[dict[str, Any]],
     *,
     anchor_metadata: dict[str, Any] | None = None,
+    schedule_corpus_sha256: str | None = None,
 ) -> dict[str, Any]:
     """Validate provenance, cutoff redaction, and compact game-rating fields."""
     snapshot_id = str(metadata["snapshot_id"])
@@ -563,6 +564,18 @@ def _validate_team_season_artifact(
     if artifact.get("artifact_kind") != "team_season":
         raise SiteDataValidationError(f"{snapshot_id}: invalid team-season artifact kind")
     source_metadata = anchor_metadata or metadata
+    schedule_source = artifact.get("schedule_source")
+    if not isinstance(schedule_source, dict) or (
+        schedule_source.get("kind") != "current_processed_schedule"
+        or schedule_source.get("path") != "data/processed/cfbd/games.csv"
+        or not isinstance(schedule_source.get("sha256"), str)
+    ):
+        raise SiteDataValidationError(f"{snapshot_id}: schedule provenance is missing or invalid")
+    if (
+        schedule_corpus_sha256 is not None
+        and schedule_source["sha256"] != schedule_corpus_sha256
+    ):
+        raise SiteDataValidationError(f"{snapshot_id}: schedule provenance mismatch")
     for field in (
         "season", "snapshot_type", "requested_cutoff", "effective_cutoff",
         "game_corpus_sha256", "source_retrieved_at", "source_retrieval_times",
@@ -599,8 +612,6 @@ def _validate_team_season_artifact(
     ranking_ids = {str(row["team_id"]) for row in rankings}
     if not ranking_ids <= set(by_team):
         raise SiteDataValidationError(f"{snapshot_id}: team-season is missing an FBS team")
-    cutoff_value = source_metadata.get("effective_cutoff")
-    cutoff = datetime.fromisoformat(str(cutoff_value)) if cutoff_value else None
     rating_fields = (
         "rank_count", "expected_rank", "median_rank", "mode_rank", "interval_50", "interval_80",
         "interval_95", "top5_probability", "top10_probability", "top25_probability",
@@ -614,27 +625,27 @@ def _validate_team_season_artifact(
             if not isinstance(game, dict) or not game.get("game_id"):
                 raise SiteDataValidationError(f"{snapshot_id}: invalid team-season game for {team_id}")
             try:
-                game_date = datetime.fromisoformat(str(game.get("date")))
+                datetime.fromisoformat(str(game.get("date")))
             except (TypeError, ValueError) as error:
                 raise SiteDataValidationError(
                     f"{snapshot_id}: invalid team-season date for {team_id}"
                 ) from error
-            future = cutoff is None or game_date > cutoff
-            if future and (
+            known_by_snapshot = str(game["game_id"]) in expected_ids
+            if not known_by_snapshot and (
                 game.get("result") is not None
                 or game.get("score") is not None
                 or game.get("game_rating") is not None
                 or game.get("modeled")
             ):
                 raise SiteDataValidationError(
-                    f"{snapshot_id}: future game {game['game_id']} leaks result or rating"
+                    f"{snapshot_id}: game {game['game_id']} has result or rating without snapshot evidence"
                 )
             rating = game.get("game_rating")
             if rating is None:
                 continue
-            if not game.get("modeled") or future:
+            if not game.get("modeled"):
                 raise SiteDataValidationError(
-                    f"{snapshot_id}: ineligible or future game {game['game_id']} has a rating"
+                    f"{snapshot_id}: ineligible game {game['game_id']} has a rating"
                 )
             missing_rating = [field for field in rating_fields if field not in rating]
             if missing_rating:
@@ -670,6 +681,7 @@ def _team_season_artifact(
     metadata: dict[str, Any],
     rankings: list[dict[str, Any]],
     context_source: tuple[Path, dict[str, Any]] | None,
+    schedule_corpus_sha256: str | None,
 ) -> dict[str, Any]:
     """Load the Context artifact for any published family in a slot."""
     candidate = source / str(metadata.get("team_season_path") or "team_seasons.json")
@@ -707,6 +719,7 @@ def _team_season_artifact(
         metadata,
         rankings,
         anchor_metadata=anchor_metadata,
+        schedule_corpus_sha256=schedule_corpus_sha256,
     )
 
 
@@ -717,6 +730,7 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
     seen_ids: set[str] = set()
     seen_publications: set[tuple[int, str, str, str]] = set()
     schedule_path = root / "data/processed/cfbd/games.csv"
+    schedule_corpus_sha256 = _file_sha256(schedule_path)
     conference_maps: dict[int, dict[tuple[int, str], str]] = {}
     metadata_by_source = {
         selected_snapshot.source: _read_json(selected_snapshot.source / "metadata.json")
@@ -774,6 +788,7 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             metadata=metadata,
             rankings=rankings,
             context_source=context_sources.get((season, selected_snapshot.publication_slot)),
+            schedule_corpus_sha256=schedule_corpus_sha256,
         )
         records = _records(source / "included_games.csv")
         for row in rankings:

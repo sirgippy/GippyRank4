@@ -45,6 +45,14 @@ schedule metadata but have null result, score, and rating fields. Ineligible
 completed games remain visible as `modeled: false` and never receive a
 fabricated rating.
 
-The artifact repeats snapshot provenance (`effective_cutoff`, corpus hash,
-included game IDs, and source retrieval evidence). Static export validates the
-artifact against its paired Context snapshot and rejects mismatches.
+The artifact repeats the historical inference provenance (`effective_cutoff`,
+`game_corpus_sha256`, included game IDs, and source retrieval evidence). Because
+backfilled historical artifacts may use a newer schedule corpus for display
+metadata, `schedule_source` separately records that corpus's kind, repository
+path, and SHA-256. Static export validates both the paired Context provenance
+and the schedule-source hash.
+
+Results and scores are shown only when the game ID is in the snapshot's durable
+`included_game_ids` evidence. A kickoff before the cutoff is not enough: a game
+that was in progress or otherwise absent from that evidence remains redacted,
+even if the current schedule corpus now contains a final score.
