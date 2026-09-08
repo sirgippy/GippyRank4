@@ -517,6 +517,35 @@ def reconstructed_prior_audit_row(
     }
 
 
+def cold_start_requirements(
+    inference: Sequence[object], cold: Sequence[object], trained_through: int
+) -> tuple[dict[str, int], list[object], list[object]]:
+    """Return target requirements and independently eligible H fallback rows."""
+
+    reasons = Counter(
+        str(row.cold_start_reason)
+        for row in inference
+        if row.cold_start_reason is not None
+    )
+    promotion_rows = [
+        row for row in cold_start_teams(cold) if row.season <= trained_through
+    ]
+    generic_rows = [
+        row
+        for row in cold
+        if row.subdivision == "fbs"
+        and row.reason == "no_prior_rank_distribution"
+        and row.season <= trained_through
+    ]
+    return dict(reasons), promotion_rows, generic_rows
+
+
+def cold_start_teams(cold: Sequence[object]) -> list[object]:
+    """Use H 1.1's promotion population without fitting either fallback."""
+
+    return [row for row in cold if getattr(row, "reason", None) == "fcs_to_fbs_transition"]
+
+
 def reconstruct_historical_priors(
     targets: Mapping[tuple[int, str, str], Mapping[str, object]],
     rows: Sequence[Mapping[str, object]],
@@ -578,10 +607,11 @@ def reconstruct_historical_priors(
             for row in inference
             if (target_season, "fbs", row.team_id) in targets
         ]
-        needs_promotion = any(row.cold_start_reason == "fcs_to_fbs_transition" for row in inference)
-        needs_generic = any(row.cold_start_reason == "no_prior_rank_distribution" for row in inference)
-        eligible_promotion = [x for x in history_prior.cold_start_teams(cold) if x.season <= trained_through]
-        eligible_generic = [x for x in cold if x.subdivision == "fbs" and x.reason == "no_prior_rank_distribution" and x.season <= trained_through]
+        reasons, eligible_promotion, eligible_generic = cold_start_requirements(
+            inference, cold, trained_through
+        )
+        needs_promotion = reasons.get("fcs_to_fbs_transition", 0) > 0
+        needs_generic = reasons.get("no_prior_rank_distribution", 0) > 0
         if needs_promotion and not eligible_promotion:
             for family in families:
                 audit.append(reconstructed_prior_audit_row(target_season, family, 0, context_features if family == "context_reconstructed" else [], supported=False, reason="required FCS-to-FBS promotion fallback has zero pre-target training rows", cold_start_reasons={"fcs_to_fbs_transition": sum(row.cold_start_reason == "fcs_to_fbs_transition" for row in inference)}, eligible_promotion_rows=0, eligible_generic_rows=len(eligible_generic)))
@@ -590,12 +620,22 @@ def reconstruct_historical_priors(
             for family in families:
                 audit.append(reconstructed_prior_audit_row(target_season, family, 0, context_features if family == "context_reconstructed" else [], supported=False, reason="required generic FBS cold-start fallback has zero pre-target training rows", cold_start_reasons={"no_prior_rank_distribution": sum(row.cold_start_reason == "no_prior_rank_distribution" for row in inference)}, eligible_promotion_rows=len(eligible_promotion), eligible_generic_rows=0))
             continue
-        if needs_promotion or needs_generic:
-            promotion, generic = context_prior.annual_cold_start_models(
-                cold, trained_through_season=trained_through
+        promotion = generic = None
+        if needs_promotion:
+            promotion = context_prior.DirectRankModel.fit(
+                eligible_promotion, [], penalty=0.25
             )
-        else:
-            promotion, generic = None, None
+        if needs_generic:
+            generic = context_prior.GenericRankPrior.fit(
+                [
+                    context_prior.TeamSeason(
+                        row.season, row.subdivision, row.team_id, row.team_name,
+                        row.population, np.asarray([0.0]), row.target_z,
+                        row.target_ranks, {},
+                    )
+                    for row in eligible_generic
+                ]
+            )
         history_predictions, context_predictions = context_prior.future_predictions(
             inference,
             h_model,
@@ -2419,12 +2459,41 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, default=OUT)
     parser.add_argument("--skip-plots", action="store_true")
+    parser.add_argument("--prior-preflight", action="store_true")
     args = parser.parse_args()
     OUT = args.output
     required = [HISTORICAL_ROWS_PATH, RANK_DISTRIBUTIONS_PATH, AUDIT_ROWS_PATH, LIKELIHOOD_PATH]
     missing = [str(path) for path in required if not path.exists()]
     if missing:
         raise FileNotFoundError("required frozen research inputs are missing: " + ", ".join(missing))
+
+    if args.prior_preflight:
+        started = datetime.now(UTC)
+        if not RANK_DISTRIBUTIONS_PATH.exists():
+            raise FileNotFoundError(str(RANK_DISTRIBUTIONS_PATH))
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import build_preseason_context_prior_v1_2 as context_prior
+        import build_preseason_prior as history_prior
+        index, tenures = context_prior.feature_index(), context_prior.cached_tenures()
+        rows_out: list[dict[str, object]] = []
+        requests = [(season, RECONSTRUCTED_PRIOR_FAMILIES) for season in DEVELOPMENT_YEARS]
+        requests.extend((season, ("history_reconstructed",)) for season in ROLLING_YEARS)
+        for target, families in requests:
+            _historical, cold, _ = history_prior.load_rows(max_season=target - 1)
+            inference = context_prior.inference_rows(target, target - 1, index, tenures)
+            reasons, promotion, generic = cold_start_requirements(inference, cold, target - 1)
+            for family in families:
+                unsupported_promotion = reasons.get("fcs_to_fbs_transition", 0) > 0 and not promotion
+                unsupported_generic = reasons.get("no_prior_rank_distribution", 0) > 0 and not generic
+                unsupported = unsupported_promotion or unsupported_generic
+                reason = None
+                if unsupported_promotion:
+                    reason = "required FCS-to-FBS promotion fallback has zero pre-target training rows"
+                elif unsupported_generic:
+                    reason = "required generic FBS cold-start fallback has zero pre-target training rows"
+                rows_out.append({"target_season": target, "family": family, "inference_team_count": len(inference), "generic_cold_start_count": reasons.get("no_prior_rank_distribution", 0), "promotion_cold_start_count": reasons.get("fcs_to_fbs_transition", 0), "generic_training_row_count": len(generic) if reasons.get("no_prior_rank_distribution", 0) else None, "promotion_training_row_count": len(promotion) if reasons.get("fcs_to_fbs_transition", 0) else None, "supported": not unsupported, "reason": reason, "target_outcomes_used": False})
+        print(json.dumps({"runtime_seconds": (datetime.now(UTC) - started).total_seconds(), "rows": rows_out}, indent=2, sort_keys=True))
+        return
 
     production_before: dict[str, str] = {}
     for path in _production_paths():
