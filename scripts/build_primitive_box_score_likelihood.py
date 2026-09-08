@@ -1907,11 +1907,15 @@ def run_rolling_robustness(
     selected_df: float,
     reconstructed_teams: Mapping[tuple[int, str], Sequence[Team]] | None = None,
     prior_family: str = "uniform_selection_prior",
+    target_seasons: Sequence[int] | None = None,
 ) -> list[dict[str, object]]:
     """Fit the selected architecture only on seasons before each target."""
 
     output: list[dict[str, object]] = []
-    for target_season in ROLLING_YEARS:
+    if reconstructed_teams is not None:
+        available = set(supported_reconstructed_target_seasons(reconstructed_teams, prior_family))
+        target_seasons = tuple(season for season in (target_seasons or ROLLING_YEARS) if season in available)
+    for target_season in target_seasons or ROLLING_YEARS:
         prior_seasons = tuple(year for year in range(2004, target_season) if year <= 2025)
         if not prior_seasons:
             continue
@@ -1951,6 +1955,17 @@ def run_rolling_robustness(
                 }
             )
     return output
+
+
+def supported_reconstructed_target_seasons(
+    reconstructed_teams: Mapping[tuple[int, str], Sequence[Team]],
+    prior_family: str = "history_reconstructed",
+) -> tuple[int, ...]:
+    """Return only reconstructed targets consumable by the rolling panel."""
+
+    return tuple(
+        sorted(season for season, family in reconstructed_teams if family == prior_family)
+    )
 
 
 def _aggregate_final_metrics(
@@ -2492,7 +2507,9 @@ def main() -> None:
                 elif unsupported_generic:
                     reason = "required generic FBS cold-start fallback has zero pre-target training rows"
                 rows_out.append({"target_season": target, "family": family, "inference_team_count": len(inference), "generic_cold_start_count": reasons.get("no_prior_rank_distribution", 0), "promotion_cold_start_count": reasons.get("fcs_to_fbs_transition", 0), "generic_training_row_count": len(generic) if reasons.get("no_prior_rank_distribution", 0) else None, "promotion_training_row_count": len(promotion) if reasons.get("fcs_to_fbs_transition", 0) else None, "supported": not unsupported, "reason": reason, "target_outcomes_used": False})
-        print(json.dumps({"runtime_seconds": (datetime.now(UTC) - started).total_seconds(), "rows": rows_out}, indent=2, sort_keys=True))
+        rolling_supported = sorted({int(row["target_season"]) for row in rows_out if row["family"] == "history_reconstructed" and row["supported"]})
+        rolling_excluded = [row for row in rows_out if row["family"] == "history_reconstructed" and not row["supported"]]
+        print(json.dumps({"runtime_seconds": (datetime.now(UTC) - started).total_seconds(), "rows": rows_out, "rolling_consumer_preflight": {"supported_seasons": rolling_supported, "supported_count": len(rolling_supported), "excluded": rolling_excluded, "missing_key_risk": False}}, indent=2, sort_keys=True))
         return
 
     production_before: dict[str, str] = {}
@@ -2630,7 +2647,10 @@ def main() -> None:
     rolling_reconstructed_teams, rolling_prior_audit = reconstruct_historical_priors(
         targets, enriched, ROLLING_YEARS, families=("history_reconstructed",)
     )
-    rolling_rows = run_rolling_robustness(
+    original_rolling_rows = run_rolling_robustness(
+        enriched, targets, data, likelihood, selected_candidate, selected_df
+    )
+    rolling_sensitivity_rows = run_rolling_robustness(
         enriched,
         targets,
         data,
@@ -2640,7 +2660,11 @@ def main() -> None:
         reconstructed_teams=rolling_reconstructed_teams,
         prior_family="history_reconstructed",
     )
+    rolling_rows = original_rolling_rows
     prior_sensitivity["rolling_prior_audit"] = rolling_prior_audit
+    prior_sensitivity["rolling_sensitivity_rows"] = rolling_sensitivity_rows
+    prior_sensitivity["rolling_supported_seasons"] = sorted({int(row["target_season"]) for row in rolling_sensitivity_rows})
+    prior_sensitivity["rolling_excluded_targets"] = [row for row in rolling_prior_audit if not row["supported"]]
     play_signal, play_summary = build_play_signal(
         enriched,
         data,
