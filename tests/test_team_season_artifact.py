@@ -370,6 +370,66 @@ def test_started_but_unincluded_game_stays_redacted(tmp_path: Path) -> None:
         assert not game["modeled"]
 
 
+def test_completed_lower_division_game_without_snapshot_evidence_stays_redacted(
+    tmp_path: Path,
+) -> None:
+    root = _root(tmp_path)
+    schedule_path = root / "data/processed/cfbd/games.csv"
+    with schedule_path.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    lower = dict(rows[0])
+    lower.update(
+        {
+            "id": "lower-division",
+            "homeId": "1",
+            "homeTeam": "One",
+            "homeClassification": "fbs",
+            "homePoints": "31",
+            "awayId": "3",
+            "awayTeam": "Three",
+            "awayClassification": "ii",
+            "awayConference": "Division II",
+            "awayPoints": "7",
+        }
+    )
+    rows.append(lower)
+    _write(schedule_path, list(rows[0]), rows)
+    teams = [
+        Team("1", "One", "fbs", np.array([0.7, 0.3])),
+        Team("2", "Two", "fbs", np.array([0.3, 0.7])),
+    ]
+    posterior = infer_posterior(teams, [], LikelihoodV1(np.zeros(34), 1.0, 15.0))
+    artifact = build_team_season_artifact(
+        root=root,
+        metadata={
+            "snapshot_id": "2026-weekly-lower-division-context",
+            "season": 2026,
+            "snapshot_type": "weekly",
+            "requested_cutoff": "2026-09-01T23:59:59+00:00",
+            "effective_cutoff": "2026-09-01T23:59:59+00:00",
+            "source_retrieved_at": None,
+            "source_retrieval_times": {},
+            "source_response_hashes": {},
+            "game_corpus_sha256": "historical-evidence-corpus",
+            "included_game_ids": [],
+        },
+        teams=teams,
+        team_rows={"1": {"conference": "A"}, "2": {"conference": "A"}},
+        games=[],
+        included_rows=[],
+        posterior=posterior,
+        likelihood=None,
+    )
+    game = next(
+        game for game in artifact["teams"]["1"]["games"] if game["game_id"] == "lower-division"
+    )
+    assert game["game_state"] == "unresolved"
+    assert game["result"] is None
+    assert game["score"] is None
+    assert game["game_rating"] is None
+    assert not game["modeled"]
+
+
 def test_validator_rejects_unincluded_completed_result(tmp_path: Path) -> None:
     root = _root(tmp_path)
     schedule_path = root / "data/processed/cfbd/games.csv"
@@ -396,7 +456,13 @@ def test_validator_rejects_unincluded_completed_result(tmp_path: Path) -> None:
     artifact = json.loads(artifact_path.read_text())
     artifact["schedule_source"]["sha256"] = hashlib.sha256(schedule_path.read_bytes()).hexdigest()
     game = next(game for game in artifact["teams"]["1"]["games"] if game["game_id"] == "later")
-    game.update({"result": "L", "score": {"team": 7, "opponent": 24}})
+    game.update(
+        {
+            "game_state": "completed",
+            "result": "L",
+            "score": {"team": 7, "opponent": 24},
+        }
+    )
     artifact_path.write_text(json.dumps(artifact), encoding="utf-8")
     config = root / "site/publish_config.json"
     config.parent.mkdir(parents=True, exist_ok=True)

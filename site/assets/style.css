@@ -67,6 +67,30 @@ button {
   font-size: 13px;
 }
 
+.site-nav {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.site-nav a {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 750;
+  text-underline-offset: 3px;
+}
+
+.site-nav a:hover {
+  color: #fff;
+  text-decoration-thickness: 2px;
+}
+
+.site-nav a:focus-visible,
+.weekly-team-link:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+}
+
 .about-link {
   color: #fff;
   font-size: 13px;
@@ -963,6 +987,308 @@ summary:focus-visible,
   list-style: none;
 }
 
+.week-page {
+  padding-bottom: 28px;
+}
+
+.week-heading {
+  padding: 24px 0 18px;
+}
+
+.week-heading h1 {
+  margin: 0;
+  font-size: clamp(30px, 5vw, 48px);
+  line-height: 1.05;
+  letter-spacing: -0.05em;
+}
+
+.week-picker {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.week-picker label {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.week-picker select,
+.week-picker button {
+  min-height: 34px;
+  padding: 6px 10px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+.week-picker select {
+  min-width: 190px;
+  border-bottom: 2px solid var(--ink);
+}
+
+.week-picker button {
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.week-picker button:hover:not(:disabled) {
+  background: var(--wash);
+}
+
+.week-picker button:disabled {
+  color: #9aa9a1;
+  cursor: not-allowed;
+}
+
+.week-summary {
+  margin-bottom: 22px;
+}
+
+.week-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.week-summary-card {
+  display: grid;
+  gap: 2px;
+  padding: 13px 14px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--gold);
+  border-radius: 5px;
+}
+
+.week-summary-card strong {
+  font-size: 23px;
+  line-height: 1;
+}
+
+.week-summary-card span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.weekly-schedule {
+  display: grid;
+  gap: 20px;
+}
+
+.weekly-date-group {
+  display: grid;
+  gap: 8px;
+}
+
+.weekly-date-heading {
+  margin: 0;
+  color: var(--green);
+  font-size: 16px;
+  letter-spacing: -0.02em;
+}
+
+.weekly-game-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.weekly-game-card {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px 16px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+
+.weekly-game-header,
+.weekly-team-row,
+.weekly-game-context {
+  margin: 0;
+}
+
+.weekly-game-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.weekly-game-date {
+  display: grid;
+  gap: 1px;
+}
+
+.weekly-game-date strong {
+  font-size: 13px;
+}
+
+.weekly-game-date span,
+.weekly-game-context,
+.weekly-game-state {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.weekly-game-state {
+  text-align: right;
+}
+
+.weekly-game-completed .weekly-game-state {
+  color: var(--green);
+}
+
+.weekly-game-future .weekly-game-state {
+  color: var(--gold);
+}
+
+.weekly-matchup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  padding: 10px 0 8px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.weekly-team-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+  min-width: 0;
+}
+
+.weekly-team-row:last-child {
+  text-align: right;
+}
+
+.weekly-team-row:last-child .weekly-team-identity {
+  flex-direction: row-reverse;
+}
+
+.weekly-team-identity {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 7px;
+}
+
+.weekly-team-identity .team-conference {
+  display: none;
+}
+
+.weekly-team-link {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 800;
+  text-decoration-color: rgb(194 138 38 / 65%);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.weekly-team-link:hover {
+  color: var(--green);
+}
+
+.weekly-score {
+  flex: 0 0 auto;
+  font-size: 19px;
+}
+
+.weekly-at {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.weekly-game-context {
+  text-transform: capitalize;
+}
+
+.weekly-game-body {
+  min-width: 0;
+}
+
+.weekly-result {
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.weekly-performance-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.weekly-performance-panel,
+.weekly-prediction-panel {
+  min-width: 0;
+  padding: 10px 11px;
+  background: #f5f8f5;
+  border: 1px solid #c9d8cf;
+  border-radius: 5px;
+}
+
+.weekly-prediction-panel {
+  background: #fbf7eb;
+  border-color: #e1cc94;
+}
+
+.weekly-performance-panel .game-rating-title,
+.weekly-prediction-panel .game-prediction-title {
+  display: block;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.weekly-performance-panel .game-distribution,
+.weekly-prediction-panel .game-distribution {
+  margin-top: 7px;
+}
+
+.weekly-prediction-panel .game-rating-details {
+  grid-template-columns: repeat(4, auto);
+}
+
+.week-method-note {
+  margin: 22px 0 0;
+  border-top: 1px solid var(--line);
+}
+
+.week-method-note summary {
+  width: fit-content;
+  padding: 12px 0;
+  color: var(--green);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.week-method-note p {
+  max-width: 800px;
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .game-card {
   display: grid;
   grid-template-columns: minmax(150px, 0.8fr) minmax(150px, 1fr) minmax(260px, 1.5fr);
@@ -1272,6 +1598,10 @@ summary:focus-visible,
     margin-top: 3px;
   }
 
+  .site-nav {
+    gap: 10px;
+  }
+
   .intro {
     padding-top: 24px;
   }
@@ -1366,6 +1696,28 @@ summary:focus-visible,
 
   .game-card-body {
     margin-top: 12px;
+  }
+
+  .week-summary-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .weekly-game-grid,
+  .weekly-performance-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .week-picker {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .week-picker label {
+    flex: 1 1 180px;
+  }
+
+  .week-picker select {
+    min-width: 0;
   }
 }
 

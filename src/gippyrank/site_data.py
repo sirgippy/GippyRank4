@@ -21,6 +21,7 @@ from gippyrank.team_logos import TEAM_LOGO_URL_TEMPLATE, logo_url, team_logo_han
 
 SITE_SCHEMA_VERSION = "1.0"
 TEAM_SEASON_SCHEMA_VERSION = "1.0"
+WEEKLY_GAME_SCHEMA_VERSION = "1.0"
 PREDICTION_SCHEMA_VERSION = "1.0"
 PREDICTION_SOURCE_CONTEXT = "predictive_context"
 PREDICTION_SOURCE_HISTORY = "predictive_history"
@@ -76,6 +77,7 @@ class PreparedSnapshot:
     distribution: dict[str, Any]
     team_seasons: dict[str, Any]
     records: dict[str, str]
+    weekly_games: dict[str, Any] | None = None
 
 
 def build_fbs_conference_map(
@@ -1397,6 +1399,369 @@ def _browser_team_season_artifact(artifact: dict[str, Any]) -> dict[str, Any]:
     return exported
 
 
+def _weekly_week_sort_key(value: object) -> tuple[int, int | str, str]:
+    """Sort numeric weeks before named or missing schedule weeks."""
+    if isinstance(value, bool):
+        return (2, str(value), "")
+    try:
+        return (0, int(value), "")
+    except (TypeError, ValueError):
+        if value is None or str(value).strip() == "":
+            return (2, "", "")
+        return (1, str(value), "")
+
+
+def _weekly_game_state(game: dict[str, Any], cutoff: datetime | None) -> str:
+    """Resolve state for old artifacts that predate the explicit game_state."""
+    state = game.get("game_state")
+    if state in {"completed", "future", "unresolved", "cancelled", "out_of_scope"}:
+        return state
+    if game.get("result") is not None or game.get("score") is not None:
+        return "completed"
+    game_date = _iso_datetime(game.get("date"))
+    if game.get("future_prediction_id") is not None or (
+        cutoff is not None and game_date is not None and game_date > cutoff
+    ):
+        return "future"
+    return "unresolved"
+
+
+def default_week_key(
+    weekly_games: dict[str, Any], metadata: dict[str, Any] | None = None
+) -> str | None:
+    """Choose the week relevant to a snapshot when no week is in the URL."""
+    weeks = weekly_games.get("weeks", [])
+    if not isinstance(weeks, list) or not weeks:
+        return None
+    metadata = metadata or weekly_games
+    if metadata.get("snapshot_type") == "preseason":
+        return str(weeks[0]["key"])
+    display_label = str(metadata.get("display_label", "")).strip().casefold()
+    if display_label:
+        labeled_week = next(
+            (
+                week
+                for week in weeks
+                if str(week.get("label", "")).strip().casefold() == display_label
+            ),
+            None,
+        )
+        if labeled_week is not None:
+            return str(labeled_week["key"])
+    cutoff = _iso_datetime(metadata.get("effective_cutoff"))
+    if cutoff is None:
+        return str(weeks[0]["key"])
+
+    relevant = []
+    for week in weeks:
+        if not isinstance(week, dict):
+            continue
+        games = week.get("games", [])
+        if any(
+            isinstance(game, dict)
+            and (game_date := _iso_datetime(game.get("date"))) is not None
+            and game_date <= cutoff
+            for game in games
+        ):
+            relevant.append(week)
+    return str((relevant[-1] if relevant else weeks[0])["key"])
+
+
+def _weekly_team_descriptor(
+    team_id: str,
+    team_name: str,
+    subdivision: str,
+    conference: str,
+) -> dict[str, str]:
+    return {
+        "team_id": str(team_id),
+        "team_name": str(team_name),
+        "subdivision": str(subdivision or "").casefold(),
+        "conference": str(conference or ""),
+    }
+
+
+def _weekly_performance_summary(
+    rating: dict[str, Any] | None,
+    *,
+    display_ref: str | None,
+) -> dict[str, Any] | None:
+    """Keep exact rating summaries while referencing, rather than copying, bins."""
+    if not isinstance(rating, dict):
+        return None
+    summary = {key: value for key, value in rating.items() if key != "display_pmf"}
+    if display_ref is not None:
+        summary["display_pmf_ref"] = display_ref
+    return summary
+
+
+def build_weekly_game_artifact(
+    team_season_artifact: dict[str, Any],
+    metadata: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Build one canonical, game-centric view from a team-season artifact.
+
+    Team-season data intentionally stores a schedule entry from each FBS
+    team's perspective.  This function folds those entries by stable game ID,
+    so a weekly page renders each scheduled game once while retaining the
+    existing rating and prediction sources.  Display PMFs live in keyed maps;
+    cards carry references to them rather than serializing another copy in
+    each performance summary.
+    """
+    metadata = metadata or team_season_artifact
+    cutoff = _iso_datetime(team_season_artifact.get("effective_cutoff"))
+    if cutoff is None:
+        cutoff = _iso_datetime(metadata.get("effective_cutoff"))
+    teams = team_season_artifact.get("teams", {})
+    if not isinstance(teams, dict):
+        raise SiteDataValidationError("weekly game source teams must be an object")
+    future_predictions = team_season_artifact.get("future_predictions", {})
+    if not isinstance(future_predictions, dict):
+        raise SiteDataValidationError("weekly game source future_predictions must be an object")
+
+    games_by_id: dict[str, dict[str, Any]] = {}
+    performance_displays: dict[str, list[int]] = {}
+    for team_id in sorted(teams, key=str):
+        team = teams[team_id]
+        if not isinstance(team, dict):
+            continue
+        team_id = str(team_id)
+        team_name = str(team.get("team_name", team_id))
+        team_conference = str(team.get("conference", ""))
+        entries = team.get("games", [])
+        if not isinstance(entries, list):
+            raise SiteDataValidationError(f"weekly game source games for {team_id} must be a list")
+        for entry in entries:
+            if not isinstance(entry, dict) or not entry.get("game_id"):
+                raise SiteDataValidationError(f"weekly game source has an invalid game for {team_id}")
+            game_id = str(entry["game_id"])
+            opponent_id = str(entry.get("opponent_id", ""))
+            if not opponent_id:
+                raise SiteDataValidationError(f"weekly game {game_id} is missing its opponent")
+            site = str(entry.get("site", "")).casefold()
+            prediction_id_value = entry.get("future_prediction_id")
+            prediction = (
+                future_predictions.get(str(prediction_id_value))
+                if prediction_id_value is not None
+                else None
+            )
+            if isinstance(prediction, dict) and prediction.get("home_team_id") is not None:
+                # Future predictions own the canonical home-minus-away
+                # orientation, including neutral-site games whose schedule
+                # entries intentionally do not privilege either team.
+                home_id = str(prediction["home_team_id"])
+                away_id = str(prediction["away_team_id"])
+            elif site == "away":
+                home_id, away_id = opponent_id, team_id
+            elif site == "neutral":
+                home_id, away_id = sorted((team_id, opponent_id))
+            else:
+                home_id, away_id = team_id, opponent_id
+            home_is_focal = home_id == team_id
+            prediction_home = prediction.get("home_team_name") if isinstance(prediction, dict) else None
+            prediction_away = prediction.get("away_team_name") if isinstance(prediction, dict) else None
+            home_name = prediction_home or (team_name if home_is_focal else str(entry.get("opponent_name", opponent_id)))
+            away_name = prediction_away or (str(entry.get("opponent_name", opponent_id)) if home_is_focal else team_name)
+            home_conference = team_conference if home_is_focal else str(entry.get("opponent_conference", ""))
+            away_conference = str(entry.get("opponent_conference", "")) if home_is_focal else team_conference
+            home_subdivision = (
+                str(prediction.get("home_subdivision", ""))
+                if isinstance(prediction, dict) and prediction.get("home_subdivision")
+                else "fbs" if home_is_focal else str(entry.get("opponent_classification", ""))
+            )
+            away_subdivision = (
+                str(prediction.get("away_subdivision", ""))
+                if isinstance(prediction, dict) and prediction.get("away_subdivision")
+                else str(entry.get("opponent_classification", "")) if home_is_focal else "fbs"
+            )
+            state = _weekly_game_state(entry, cutoff)
+            record = games_by_id.get(game_id)
+            if record is None:
+                home = _weekly_team_descriptor(home_id, home_name, home_subdivision, home_conference)
+                away = _weekly_team_descriptor(away_id, away_name, away_subdivision, away_conference)
+                record = {
+                    "game_id": game_id,
+                    "week": entry.get("week"),
+                    "date": entry.get("date"),
+                    "season_type": entry.get("season_type", ""),
+                    "conference_game": bool(entry.get("conference_game", False)),
+                    "neutral_site": site == "neutral",
+                    "state": state,
+                    "home_team": home,
+                    "away_team": away,
+                    "home_team_id": home_id,
+                    "away_team_id": away_id,
+                    "score": None,
+                    "winner_team_id": None,
+                    "home_performance": None,
+                    "away_performance": None,
+                    "home_performance_ref": None,
+                    "away_performance_ref": None,
+                    "future_prediction_id": None,
+                }
+                games_by_id[game_id] = record
+            else:
+                if (record["home_team_id"], record["away_team_id"]) != (home_id, away_id):
+                    raise SiteDataValidationError(f"weekly game {game_id} has inconsistent home/away sides")
+                if record["week"] != entry.get("week") or record["date"] != entry.get("date"):
+                    raise SiteDataValidationError(f"weekly game {game_id} has inconsistent schedule metadata")
+                if record["state"] != state:
+                    raise SiteDataValidationError(f"weekly game {game_id} has inconsistent snapshot state")
+
+            score = entry.get("score")
+            if isinstance(score, dict) and score.get("team") is not None and score.get("opponent") is not None:
+                focal_score = int(score["team"])
+                opponent_score = int(score["opponent"])
+                home_score, away_score = (
+                    (focal_score, opponent_score) if home_is_focal else (opponent_score, focal_score)
+                )
+                canonical_score = {"home": home_score, "away": away_score}
+                if record["score"] is not None and record["score"] != canonical_score:
+                    raise SiteDataValidationError(f"weekly game {game_id} has inconsistent scores")
+                record["score"] = canonical_score
+                record["winner_team_id"] = (
+                    record["home_team_id"] if home_score > away_score
+                    else record["away_team_id"] if away_score > home_score
+                    else None
+                )
+
+            rating = entry.get("game_rating")
+            if rating is not None:
+                side = "home" if home_is_focal else "away"
+                display_ref = f"{game_id}:{team_id}"
+                display = rating.get("display_pmf") if isinstance(rating, dict) else None
+                if isinstance(display, list):
+                    performance_displays[display_ref] = list(display)
+                else:
+                    display_ref = None
+                record[f"{side}_performance"] = _weekly_performance_summary(
+                    rating, display_ref=display_ref
+                )
+                record[f"{side}_performance_ref"] = display_ref
+
+            prediction_id = entry.get("future_prediction_id")
+            if prediction_id is not None:
+                prediction_id = str(prediction_id)
+                if record["future_prediction_id"] not in {None, prediction_id}:
+                    raise SiteDataValidationError(f"weekly game {game_id} has inconsistent prediction references")
+                record["future_prediction_id"] = prediction_id
+
+    games = sorted(
+        games_by_id.values(),
+        key=lambda game: (
+            _weekly_week_sort_key(game.get("week")),
+            str(game.get("date") or ""),
+            str(game.get("game_id")),
+            str(game["home_team_id"]),
+            str(game["away_team_id"]),
+        ),
+    )
+    weeks_by_key: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    week_values: dict[str, object] = {}
+    for game in games:
+        week = game.get("week")
+        key = "unknown" if week is None or str(week).strip() == "" else str(week)
+        weeks_by_key[key].append(game)
+        week_values[key] = week
+    weeks: list[dict[str, Any]] = []
+    for key in sorted(weeks_by_key, key=lambda value: _weekly_week_sort_key(week_values[value])):
+        grouped = weeks_by_key[key]
+        counts = defaultdict(int)
+        for game in grouped:
+            counts[game["state"]] += 1
+        week = week_values[key]
+        label = f"Week {week}" if week is not None and str(week).strip() else "Unscheduled"
+        weeks.append(
+            {
+                "week": week,
+                "key": key,
+                "label": label,
+                "scheduled_game_count": len(grouped),
+                "completed_game_count": counts["completed"],
+                "future_game_count": counts["future"],
+                "unresolved_game_count": counts["unresolved"] + counts["out_of_scope"],
+                "cancelled_game_count": counts["cancelled"],
+                "games": grouped,
+            }
+        )
+    weekly_artifact = {
+        "schema_version": WEEKLY_GAME_SCHEMA_VERSION,
+        "artifact_kind": "weekly_games",
+        "snapshot_id": team_season_artifact.get("snapshot_id"),
+        "season": team_season_artifact.get("season", metadata.get("season")),
+        "snapshot_type": team_season_artifact.get("snapshot_type", metadata.get("snapshot_type")),
+        "ranking_family": metadata.get("ranking_family"),
+        "prior_family": metadata.get("prior_family"),
+        "requested_cutoff": team_season_artifact.get("requested_cutoff"),
+        "effective_cutoff": team_season_artifact.get("effective_cutoff"),
+        "included_game_ids": list(team_season_artifact.get("included_game_ids", [])),
+        "prediction_schema_version": team_season_artifact.get("prediction_schema_version"),
+        "prediction_source": team_season_artifact.get("prediction_source"),
+        "prediction_provenance": team_season_artifact.get("prediction_provenance"),
+        "performance_axis": team_season_artifact.get("performance_axis"),
+        "performance_percentile": team_season_artifact.get("performance_percentile"),
+        "future_margin_axis": team_season_artifact.get("future_margin_axis"),
+        "performance_displays": performance_displays,
+        "future_predictions": future_predictions,
+        "game_count": len(games),
+        "week_count": len(weeks),
+        "weeks": weeks,
+    }
+    weekly_artifact["default_week"] = default_week_key(weekly_artifact, metadata)
+    return weekly_artifact
+
+
+def _validate_weekly_game_artifact(
+    artifact: dict[str, Any],
+    team_season_artifact: dict[str, Any],
+    metadata: dict[str, Any],
+) -> None:
+    """Fail closed if the canonical weekly fold loses source consistency."""
+    snapshot_id = str(metadata.get("snapshot_id", artifact.get("snapshot_id", "unknown")))
+    if artifact.get("schema_version") != WEEKLY_GAME_SCHEMA_VERSION:
+        raise SiteDataValidationError(f"{snapshot_id}: unsupported weekly game schema")
+    if artifact.get("artifact_kind") != "weekly_games":
+        raise SiteDataValidationError(f"{snapshot_id}: invalid weekly game artifact kind")
+    if artifact.get("snapshot_id") != team_season_artifact.get("snapshot_id"):
+        raise SiteDataValidationError(f"{snapshot_id}: weekly artifact snapshot mismatch")
+    weeks = artifact.get("weeks")
+    if not isinstance(weeks, list):
+        raise SiteDataValidationError(f"{snapshot_id}: weekly artifact weeks must be a list")
+    games = [game for week in weeks for game in week.get("games", [])]
+    ids = [str(game.get("game_id")) for game in games]
+    if len(ids) != len(set(ids)):
+        raise SiteDataValidationError(f"{snapshot_id}: a game appears more than once in weekly artifact")
+    source_ids = {
+        str(game.get("game_id"))
+        for team in team_season_artifact.get("teams", {}).values()
+        for game in team.get("games", [])
+    }
+    if set(ids) != source_ids:
+        raise SiteDataValidationError(f"{snapshot_id}: weekly artifact game membership mismatch")
+    predictions = artifact.get("future_predictions", {})
+    if predictions != team_season_artifact.get("future_predictions", {}):
+        raise SiteDataValidationError(f"{snapshot_id}: weekly prediction map mismatch")
+    performance_displays = artifact.get("performance_displays", {})
+    if not isinstance(performance_displays, dict):
+        raise SiteDataValidationError(f"{snapshot_id}: weekly performance displays must be an object")
+    for game in games:
+        if game.get("state") not in {"completed", "future", "unresolved", "cancelled", "out_of_scope"}:
+            raise SiteDataValidationError(f"{snapshot_id}: weekly game state is invalid")
+        prediction_id = game.get("future_prediction_id")
+        if prediction_id is not None and str(prediction_id) not in predictions:
+            raise SiteDataValidationError(f"{snapshot_id}: weekly game references missing prediction")
+        for side in ("home", "away"):
+            performance = game.get(f"{side}_performance")
+            reference = game.get(f"{side}_performance_ref")
+            if performance is None:
+                if reference is not None:
+                    raise SiteDataValidationError(f"{snapshot_id}: weekly performance reference has no summary")
+            elif reference not in performance_displays:
+                raise SiteDataValidationError(f"{snapshot_id}: weekly performance display is missing")
+        if game.get("state") in {"future", "cancelled", "unresolved"} and game.get("score") is not None:
+            raise SiteDataValidationError(f"{snapshot_id}: non-completed weekly game reveals a score")
+
+
 def _validate_team_season_artifact(
     artifact: dict[str, Any],
     metadata: dict[str, Any],
@@ -1479,6 +1844,17 @@ def _validate_team_season_artifact(
                 raise SiteDataValidationError(
                     f"{snapshot_id}: invalid team-season date for {team_id}"
                 ) from error
+            game_state = game.get("game_state")
+            if game_state is not None and game_state not in {
+                "completed",
+                "future",
+                "unresolved",
+                "cancelled",
+                "out_of_scope",
+            }:
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: unsupported game state for {team_id}"
+                )
             known_by_snapshot = str(game["game_id"]) in expected_ids
             if not known_by_snapshot and (
                 game.get("result") is not None
@@ -1488,6 +1864,12 @@ def _validate_team_season_artifact(
             ):
                 raise SiteDataValidationError(
                     f"{snapshot_id}: game {game['game_id']} has result or rating without snapshot evidence"
+                )
+            if game_state == "future" and (
+                game.get("result") is not None or game.get("score") is not None
+            ):
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: future game {game['game_id']} reveals completed evidence"
                 )
             rating = game.get("game_rating")
             if rating is None:
@@ -1790,6 +2172,11 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             rankings=rankings,
             context_source=context_sources.get((season, selected_snapshot.publication_slot)),
         )
+        weekly_games = build_weekly_game_artifact(
+            team_seasons,
+            {**metadata, "display_label": selected_snapshot.display_label},
+        )
+        _validate_weekly_game_artifact(weekly_games, team_seasons, metadata)
         rendered_team_identities.update(_rendered_team_identities(team_seasons))
         records = _records(source / "included_games.csv")
         for row in rankings:
@@ -1816,6 +2203,7 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
                 distribution,
                 team_seasons,
                 records,
+                weekly_games,
             )
         )
     for prepared in prepared_snapshots:
@@ -1830,9 +2218,14 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
         rankings = prepared.rankings
         distribution = prepared.distribution
         team_seasons = prepared.team_seasons
+        weekly_games = prepared.weekly_games or build_weekly_game_artifact(
+            team_seasons, metadata
+        )
+        _validate_weekly_game_artifact(weekly_games, team_seasons, metadata)
         relative_data_path = f"data/snapshots/{snapshot_id}.json"
         relative_distribution_path = f"data/distributions/{snapshot_id}.json"
         relative_team_seasons_path = f"data/team-seasons/{snapshot_id}.json"
+        relative_weekly_games_path = f"data/week-games/{snapshot_id}.json"
         previous = _previous_official_snapshot(prepared, prepared_snapshots)
         consumer_snapshot = {
             "schema_version": SITE_SCHEMA_VERSION,
@@ -1928,6 +2321,11 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             browser_team_seasons,
             compact=True,
         )
+        _write_json(
+            output_directory / "week-games" / f"{snapshot_id}.json",
+            weekly_games,
+            compact=True,
+        )
         future_predictions = team_seasons.get("future_predictions", {})
         future_prediction_bytes = len(
             json.dumps(
@@ -1984,9 +2382,16 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             "data_path": relative_data_path,
             "distribution_path": relative_distribution_path,
             "team_seasons_path": relative_team_seasons_path,
+            "week_games_path": relative_weekly_games_path,
+            "default_week": weekly_games.get("default_week"),
             "team_seasons_bytes": (
                 output_directory / "team-seasons" / f"{snapshot_id}.json"
             ).stat().st_size,
+            "week_games_bytes": (
+                output_directory / "week-games" / f"{snapshot_id}.json"
+            ).stat().st_size,
+            "week_game_count": weekly_games["game_count"],
+            "week_count": weekly_games["week_count"],
             "season_simulation_bytes": simulation_bytes,
             "season_simulation_browser_bytes": browser_simulation_bytes,
             "season_simulation_incremental_lazy_bytes": browser_simulation_bytes,
@@ -2045,6 +2450,7 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
         for entry in manifest_entries
     )
     team_season_bytes = sum(int(entry["team_seasons_bytes"]) for entry in manifest_entries)
+    weekly_game_bytes = sum(int(entry["week_games_bytes"]) for entry in manifest_entries)
     future_prediction_bytes = sum(
         int(entry["future_prediction_bytes"]) for entry in manifest_entries
     )
@@ -2071,6 +2477,7 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
         "snapshots": manifest_entries,
         "default_publication_slot": default_slot,
         "team_season_schema_version": TEAM_SEASON_SCHEMA_VERSION,
+        "weekly_game_schema_version": WEEKLY_GAME_SCHEMA_VERSION,
         "team_logos": {
             "source": "RedditCFB",
             "url_template": logo_url_template,
@@ -2095,6 +2502,7 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             "published_ranking_snapshot_bytes": ranking_snapshot_bytes,
             "lazy_rank_distribution_bytes": distribution_bytes,
             "lazy_team_season_bytes": team_season_bytes,
+            "lazy_week_games_bytes": weekly_game_bytes,
             "lazy_future_prediction_bytes": future_prediction_bytes,
             "lazy_completed_visualization_bytes": completed_visualization_bytes,
             "lazy_future_visualization_bytes": future_visualization_bytes,

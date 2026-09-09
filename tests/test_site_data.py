@@ -4,7 +4,9 @@ import csv
 import hashlib
 import json
 import shutil
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -202,6 +204,153 @@ def test_team_season_export_uses_manifest_logo_handles(tmp_path: Path) -> None:
     assert all("opponent_logo_handle" not in game for game in ohio_state["games"])
     assert manifest["team_logos"]["handles"]["194"] == "ohiostate"
     assert manifest["team_logos"]["handles"]["311"] == "maine"
+
+
+def test_weekly_artifact_deduplicates_games_and_reuses_canonical_sources(
+    tmp_path: Path,
+) -> None:
+    manifest = build_site_data(
+        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
+    )
+    entry = next(
+        item
+        for item in manifest["snapshots"]
+        if item["ranking_family"] == "predictive"
+        and item["prior_family"] == "context"
+        and item["snapshot_type"] == "weekly"
+    )
+    weekly = json.loads(
+        (tmp_path / "data" / entry["week_games_path"].removeprefix("data/")).read_text()
+    )
+    team_seasons = json.loads(
+        (tmp_path / "data" / entry["team_seasons_path"].removeprefix("data/")).read_text()
+    )
+    games = [game for week in weekly["weeks"] for game in week["games"]]
+    assert weekly["artifact_kind"] == "weekly_games"
+    assert weekly["game_count"] == len(games) == len({game["game_id"] for game in games})
+    assert weekly["week_count"] == len(weekly["weeks"])
+    assert weekly["future_predictions"] == team_seasons["future_predictions"]
+    assert entry["week_game_count"] == weekly["game_count"]
+    assert entry["week_count"] == weekly["week_count"]
+    completed = next(game for game in games if game["state"] == "completed")
+    assert completed["home_performance"] or completed["away_performance"]
+    for side in ("home", "away"):
+        performance = completed[f"{side}_performance"]
+        if performance is not None:
+            assert performance["display_pmf_ref"] in weekly["performance_displays"]
+    future = next(game for game in games if game["state"] == "future")
+    assert future["future_prediction_id"] in weekly["future_predictions"]
+    assert future["home_performance"] is None
+    assert future["away_performance"] is None
+
+
+def test_weekly_builder_orders_week_zero_and_named_weeks_once() -> None:
+    artifact = {
+        "schema_version": "1.0",
+        "artifact_kind": "team_season",
+        "snapshot_id": "2026-weekly-test-context",
+        "season": 2026,
+        "snapshot_type": "weekly",
+        "effective_cutoff": "2026-08-20T00:00:00+00:00",
+        "included_game_ids": [],
+        "prediction_schema_version": "1.0",
+        "prediction_source": "predictive_context",
+        "future_predictions": {
+            "week-0": {
+                "game_id": "week-0",
+                "home_team_id": "3",
+                "away_team_id": "1",
+                "home_team_name": "Three",
+                "away_team_name": "One",
+                "home_subdivision": "fcs",
+                "away_subdivision": "fbs",
+            }
+        },
+        "teams": {
+            "1": {
+                "team_id": "1",
+                "team_name": "One",
+                "conference": "A",
+                "games": [
+                    {
+                        "game_id": "week-1",
+                        "week": 1,
+                        "date": "2026-08-29T12:00:00Z",
+                        "opponent_id": "2",
+                        "opponent_name": "Two",
+                        "opponent_classification": "fbs",
+                        "site": "home",
+                        "game_state": "future",
+                        "future_prediction_id": None,
+                    },
+                    {
+                        "game_id": "week-0",
+                        "week": 0,
+                        "date": "2026-08-22T12:00:00Z",
+                        "opponent_id": "3",
+                        "opponent_name": "Three",
+                        "opponent_classification": "fcs",
+                        "site": "home",
+                        "game_state": "future",
+                        "future_prediction_id": "week-0",
+                    },
+                ],
+            }
+        },
+    }
+    weekly = site_data.build_weekly_game_artifact(artifact)
+    assert [week["week"] for week in weekly["weeks"]] == [0, 1]
+    assert [game["game_id"] for week in weekly["weeks"] for game in week["games"]] == [
+        "week-0",
+        "week-1",
+    ]
+    assert weekly["weeks"][0]["games"][0]["home_team_id"] == "3"
+    assert weekly["weeks"][0]["games"][0]["away_team_id"] == "1"
+
+
+def test_default_week_key_follows_snapshot_cutoff() -> None:
+    weekly = {
+        "weeks": [
+            {"key": "1", "games": [{"date": "2026-08-29T12:00:00Z"}]},
+            {"key": "2", "games": [{"date": "2026-09-05T12:00:00Z"}]},
+        ]
+    }
+    assert site_data.default_week_key(
+        weekly,
+        {"snapshot_type": "preseason", "effective_cutoff": "2026-09-08T00:00:00Z"},
+    ) == "1"
+    assert site_data.default_week_key(
+        weekly,
+        {"snapshot_type": "weekly", "effective_cutoff": "2026-09-08T00:00:00Z"},
+    ) == "2"
+
+
+def test_weekly_browser_preserves_matchup_order_and_accessible_labels() -> None:
+    week = (ROOT / "site/assets/week.js").read_text(encoding="utf-8")
+    assert "function ordinal(rank)" in week
+    assert "ordinal(rating.performance_percentile)" in week
+    assert "const firstTeam = game.neutral_site ? game.home_team : game.away_team;" in week
+    assert "const secondTeam = game.neutral_site ? game.away_team : game.home_team;" in week
+    assert "const firstScore = game.neutral_site ? homeScore : awayScore;" in week
+    assert 'const link = node("a", "weekly-team-link", team.team_name);' in week
+    assert 'const label = node("span", "weekly-team-link", team.team_name);' in week
+    assert "const defaultWeek = weeks.find((week) => week.key === String(entry?.default_week));" in week
+
+
+def test_weekly_kickoff_labels_and_groups_use_browser_local_time() -> None:
+    week = (ROOT / "site/assets/week.js").read_text(encoding="utf-8")
+    kickoff = datetime.fromisoformat("2026-09-13T02:15:00+00:00")
+    assert kickoff.astimezone(ZoneInfo("America/Chicago")).date().isoformat() == "2026-09-12"
+    assert "function localDateKey(value)" in week
+    assert "date.getFullYear()" in week
+    assert "date.getMonth() + 1" in week
+    assert "date.getDate()" in week
+    assert "const key = game.date ? localDateKey(game.date) : \"unknown\";" in week
+    assert "formatDate(group.date, true)" in week
+    date_formatter = week[week.index("function formatDate"):week.index("function formatTime")]
+    time_formatter = week[week.index("function formatTime"):week.index("function localDateKey")]
+    assert 'timeZone: "UTC"' not in date_formatter
+    assert 'timeZone: "UTC"' not in time_formatter
 
 
 def test_static_site_uses_manifest_logo_config_and_decorative_fallback() -> None:
@@ -494,6 +643,14 @@ def test_site_data_publishes_all_initial_h_c_preseason_and_current_snapshots(
     assert {entry["effective_cutoff"] for entry in weekly} == {
         performance[0]["effective_cutoff"]
     }
+    assert next(
+        entry for entry in predictive if entry["snapshot_type"] == "preseason"
+    )["default_week"] == "1"
+    assert next(
+        entry
+        for entry in predictive
+        if entry["snapshot_type"] == "weekly" and entry["publication_slot"] == "2026-09-08"
+    )["default_week"] == "2"
 
 
 def test_publication_status_and_official_comparison_chain(tmp_path: Path) -> None:
