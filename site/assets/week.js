@@ -34,6 +34,13 @@ function percentage(value) {
   return `${Math.round(percent)}%`;
 }
 
+function ordinal(rank) {
+  const rounded = Math.round(Number(rank));
+  const remainder = rounded % 100;
+  const suffix = remainder >= 11 && remainder <= 13 ? "th" : ({ 1: "st", 2: "nd", 3: "rd" }[rounded % 10] ?? "th");
+  return `${rounded}${suffix}`;
+}
+
 function formatDate(value, includeYear = false) {
   if (!value) return "Date unavailable";
   return new Intl.DateTimeFormat("en-US", {
@@ -182,7 +189,7 @@ function performancePanel(rating, display, axis, teamName) {
   if (!rating) return node("p", "game-not-modeled", `${teamName}: performance unavailable.`);
   const panel = node("div", "weekly-performance-panel");
   const grade = rating.performance_grade ? `${rating.performance_grade} · ` : "";
-  panel.append(node("strong", "game-rating-title", `${teamName}: ${grade}${Math.round(Number(rating.performance_percentile ?? 0))}th percentile`));
+  panel.append(node("strong", "game-rating-title", `${teamName}: ${grade}${ordinal(rating.performance_percentile)} percentile`));
   if (Array.isArray(display) && axis) {
     const label = `${teamName} inferred performance distribution from rank 1 through rank ${axis.max_rank}; rank 1 is best.`;
     const description = `The central 80 percent interval is ranks ${rating.interval_80[0]} through ${rating.interval_80[1]}.`;
@@ -193,7 +200,7 @@ function performancePanel(rating, display, axis, teamName) {
     figure.append(caption);
     panel.append(figure);
   }
-  panel.append(node("p", "sr-only", `${teamName} performance grade ${rating.performance_grade || "unavailable"}; ${Math.round(Number(rating.performance_percentile ?? 0))}th percentile. Central 80 percent interval: ranks ${rating.interval_80[0]} through ${rating.interval_80[1]}.`));
+  panel.append(node("p", "sr-only", `${teamName} performance grade ${rating.performance_grade || "unavailable"}; ${ordinal(rating.performance_percentile)} percentile. Central 80 percent interval: ranks ${rating.interval_80[0]} through ${rating.interval_80[1]}.`));
   const details = node("details", "game-rating-details-disclosure");
   details.append(node("summary", "", "More performance detail"));
   const list = node("dl", "game-rating-details");
@@ -248,14 +255,16 @@ function predictionPanel(prediction, axis) {
 }
 
 function teamLink(team, entry, week) {
-  const link = node("a", "weekly-team-link", team.team_name);
   if (team.subdivision === "fbs") {
+    const link = node("a", "weekly-team-link", team.team_name);
     link.href = teamPageUrl(team, entry, week);
     link.setAttribute("aria-label", `Open ${team.team_name} season page at this snapshot`);
+    return link;
   } else {
-    link.setAttribute("aria-label", `${team.team_name}, ${team.subdivision.toUpperCase()} opponent`);
+    const label = node("span", "weekly-team-link", team.team_name);
+    label.setAttribute("aria-label", `${team.team_name}, ${team.subdivision.toUpperCase()} opponent`);
+    return label;
   }
-  return link;
 }
 
 function teamRow(team, score, entry, week) {
@@ -289,7 +298,11 @@ function gameCard(game, artifact, entry, week) {
   const matchup = node("div", "weekly-matchup");
   const homeScore = game.score ? game.score.home : null;
   const awayScore = game.score ? game.score.away : null;
-  matchup.append(teamRow(game.home_team, homeScore, entry, week), node("span", "weekly-at", game.neutral_site ? "neutral" : "at"), teamRow(game.away_team, awayScore, entry, week));
+  const firstTeam = game.neutral_site ? game.home_team : game.away_team;
+  const secondTeam = game.neutral_site ? game.away_team : game.home_team;
+  const firstScore = game.neutral_site ? homeScore : awayScore;
+  const secondScore = game.neutral_site ? awayScore : homeScore;
+  matchup.append(teamRow(firstTeam, firstScore, entry, week), node("span", "weekly-at", game.neutral_site ? "neutral" : "at"), teamRow(secondTeam, secondScore, entry, week));
   const context = node("p", "weekly-game-context", `${game.neutral_site ? "Neutral site" : `${game.home_team.team_name} home`} · ${game.conference_game ? "Conference game" : "Non-conference"}`);
   const body = node("div", "weekly-game-body");
   if (game.state === "completed") {
@@ -339,14 +352,15 @@ function populateControls(entry) {
   document.querySelectorAll("[data-prior]").forEach((button) => { button.disabled = performance; button.classList.toggle("is-active", button.dataset.prior === state.prior); });
 }
 
-function renderWeekPicker(artifact) {
+function renderWeekPicker(artifact, entry) {
   const weeks = artifact.weeks || [];
   if (!weeks.length) {
     $("#week-select").replaceChildren(new Option("No weeks available", ""));
     return null;
   }
   const requested = weeks.find((week) => week.key === state.weekKey);
-  const selected = requested || weeks[0];
+  const defaultWeek = weeks.find((week) => week.key === String(entry?.default_week));
+  const selected = requested || defaultWeek || weeks[0];
   state.weekKey = selected.key;
   $("#week-select").replaceChildren(...weeks.map((week) => new Option(`${week.label} · ${week.scheduled_game_count} games`, week.key, week.key === selected.key, week.key === selected.key)));
   $("#week-select").value = selected.key;
@@ -409,7 +423,7 @@ async function load() {
   if (!artifactResponse.ok) throw new Error("The selected weekly game artifact is unavailable.");
   const artifact = await artifactResponse.json();
   if (artifact.snapshot_id !== entry.snapshot_id || artifact.season !== entry.season) throw new Error("The weekly artifact does not match the selected snapshot.");
-  const week = renderWeekPicker(artifact);
+  const week = renderWeekPicker(artifact, entry);
   if (!week) throw new Error("No schedule weeks are available for this snapshot.");
   if (!params.has("week")) {
     const canonicalUrl = new URL(window.location.href);

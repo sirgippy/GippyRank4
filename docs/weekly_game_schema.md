@@ -17,6 +17,10 @@ the browser date.  Numeric weeks, including Week 0, sort before named or
 missing weeks.  Games sort by week, UTC kickoff timestamp, stable game ID, and
 team IDs, so a rebuild is deterministic.  Within a selected week the browser
 groups cards by UTC calendar date and preserves that order.
+The manifest's `default_week` selects the earliest available week for preseason
+snapshots, the publication-labeled week when one is present, and otherwise the
+latest week represented by the snapshot cutoff.  An explicit browser `week`
+query parameter always takes precedence.
 
 The selected snapshot controls game state:
 
@@ -29,9 +33,12 @@ The selected snapshot controls game state:
 - `cancelled`: a cancellation or postponement is explicit and never receives a
   prediction.
 
-Started-but-unincluded games remain redacted.  A completed game outside the
-Historical Likelihood eligibility boundary may retain its score and is marked
-not modeled, so FCS/lower-division schedule context is not silently dropped.
+Started-but-unincluded games remain redacted.  Games outside the Historical
+Likelihood eligibility boundary remain visible as schedule context, but their
+scores are shown only when the snapshot explicitly includes durable completion
+evidence; otherwise they remain unresolved and marked not modeled.  This
+prevents current-corpus lower-division results from leaking into older
+snapshots.
 
 ## Canonical game shape
 

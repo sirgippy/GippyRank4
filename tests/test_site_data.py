@@ -306,6 +306,35 @@ def test_weekly_builder_orders_week_zero_and_named_weeks_once() -> None:
     assert weekly["weeks"][0]["games"][0]["away_team_id"] == "1"
 
 
+def test_default_week_key_follows_snapshot_cutoff() -> None:
+    weekly = {
+        "weeks": [
+            {"key": "1", "games": [{"date": "2026-08-29T12:00:00Z"}]},
+            {"key": "2", "games": [{"date": "2026-09-05T12:00:00Z"}]},
+        ]
+    }
+    assert site_data.default_week_key(
+        weekly,
+        {"snapshot_type": "preseason", "effective_cutoff": "2026-09-08T00:00:00Z"},
+    ) == "1"
+    assert site_data.default_week_key(
+        weekly,
+        {"snapshot_type": "weekly", "effective_cutoff": "2026-09-08T00:00:00Z"},
+    ) == "2"
+
+
+def test_weekly_browser_preserves_matchup_order_and_accessible_labels() -> None:
+    week = (ROOT / "site/assets/week.js").read_text(encoding="utf-8")
+    assert "function ordinal(rank)" in week
+    assert "ordinal(rating.performance_percentile)" in week
+    assert "const firstTeam = game.neutral_site ? game.home_team : game.away_team;" in week
+    assert "const secondTeam = game.neutral_site ? game.away_team : game.home_team;" in week
+    assert "const firstScore = game.neutral_site ? homeScore : awayScore;" in week
+    assert 'const link = node("a", "weekly-team-link", team.team_name);' in week
+    assert 'const label = node("span", "weekly-team-link", team.team_name);' in week
+    assert "const defaultWeek = weeks.find((week) => week.key === String(entry?.default_week));" in week
+
+
 def test_static_site_uses_manifest_logo_config_and_decorative_fallback() -> None:
     app = (ROOT / "site/assets/app.js").read_text(encoding="utf-8")
     team = (ROOT / "site/assets/team.js").read_text(encoding="utf-8")
@@ -596,6 +625,14 @@ def test_site_data_publishes_all_initial_h_c_preseason_and_current_snapshots(
     assert {entry["effective_cutoff"] for entry in weekly} == {
         performance[0]["effective_cutoff"]
     }
+    assert next(
+        entry for entry in predictive if entry["snapshot_type"] == "preseason"
+    )["default_week"] == "1"
+    assert next(
+        entry
+        for entry in predictive
+        if entry["snapshot_type"] == "weekly" and entry["publication_slot"] == "2026-09-08"
+    )["default_week"] == "2"
 
 
 def test_publication_status_and_official_comparison_chain(tmp_path: Path) -> None:

@@ -1426,6 +1426,47 @@ def _weekly_game_state(game: dict[str, Any], cutoff: datetime | None) -> str:
     return "unresolved"
 
 
+def default_week_key(
+    weekly_games: dict[str, Any], metadata: dict[str, Any] | None = None
+) -> str | None:
+    """Choose the week relevant to a snapshot when no week is in the URL."""
+    weeks = weekly_games.get("weeks", [])
+    if not isinstance(weeks, list) or not weeks:
+        return None
+    metadata = metadata or weekly_games
+    if metadata.get("snapshot_type") == "preseason":
+        return str(weeks[0]["key"])
+    display_label = str(metadata.get("display_label", "")).strip().casefold()
+    if display_label:
+        labeled_week = next(
+            (
+                week
+                for week in weeks
+                if str(week.get("label", "")).strip().casefold() == display_label
+            ),
+            None,
+        )
+        if labeled_week is not None:
+            return str(labeled_week["key"])
+    cutoff = _iso_datetime(metadata.get("effective_cutoff"))
+    if cutoff is None:
+        return str(weeks[0]["key"])
+
+    relevant = []
+    for week in weeks:
+        if not isinstance(week, dict):
+            continue
+        games = week.get("games", [])
+        if any(
+            isinstance(game, dict)
+            and (game_date := _iso_datetime(game.get("date"))) is not None
+            and game_date <= cutoff
+            for game in games
+        ):
+            relevant.append(week)
+    return str((relevant[-1] if relevant else weeks[0])["key"])
+
+
 def _weekly_team_descriptor(
     team_id: str,
     team_name: str,
@@ -1643,7 +1684,7 @@ def build_weekly_game_artifact(
                 "games": grouped,
             }
         )
-    return {
+    weekly_artifact = {
         "schema_version": WEEKLY_GAME_SCHEMA_VERSION,
         "artifact_kind": "weekly_games",
         "snapshot_id": team_season_artifact.get("snapshot_id"),
@@ -1666,6 +1707,8 @@ def build_weekly_game_artifact(
         "week_count": len(weeks),
         "weeks": weeks,
     }
+    weekly_artifact["default_week"] = default_week_key(weekly_artifact, metadata)
+    return weekly_artifact
 
 
 def _validate_weekly_game_artifact(
@@ -2129,7 +2172,10 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             rankings=rankings,
             context_source=context_sources.get((season, selected_snapshot.publication_slot)),
         )
-        weekly_games = build_weekly_game_artifact(team_seasons, metadata)
+        weekly_games = build_weekly_game_artifact(
+            team_seasons,
+            {**metadata, "display_label": selected_snapshot.display_label},
+        )
         _validate_weekly_game_artifact(weekly_games, team_seasons, metadata)
         rendered_team_identities.update(_rendered_team_identities(team_seasons))
         records = _records(source / "included_games.csv")
@@ -2337,9 +2383,7 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             "distribution_path": relative_distribution_path,
             "team_seasons_path": relative_team_seasons_path,
             "week_games_path": relative_weekly_games_path,
-            "default_week": (
-                weekly_games["weeks"][0]["key"] if weekly_games["weeks"] else None
-            ),
+            "default_week": weekly_games.get("default_week"),
             "team_seasons_bytes": (
                 output_directory / "team-seasons" / f"{snapshot_id}.json"
             ).stat().st_size,

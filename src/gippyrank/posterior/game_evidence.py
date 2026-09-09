@@ -482,9 +482,12 @@ def build_team_season_artifact(
             and eligible_matchup
             and game_id in game_by_id
         )
-        reveal_completed_result = schedule_state == "completed" and (
-            modeled or not eligible_matchup
-        )
+        # The processed schedule is current-corpus data and may contain a
+        # final score that was unavailable at this snapshot cutoff.  Only an
+        # explicitly included game is durable snapshot evidence; fail closed
+        # for unsupported games rather than leaking a later lower-division
+        # result into an older artifact.
+        reveal_completed_result = schedule_state == "completed" and game_id in included_ids
         display_state = (
             schedule_state
             if reveal_completed_result or schedule_state != "completed"
@@ -493,10 +496,8 @@ def build_team_season_artifact(
         for focal_id, opponent_id, focal_name_field, opponent_name_field, opponent_class_field, opponent_conf_field in focal_sides:
             if focal_id not in fbs_teams:
                 continue
-            # A scheduled game can be known to have completed without being
-            # eligible for Historical Likelihood V1 (for example an FCS
-            # matchup).  Preserve that score for the weekly narrative while
-            # keeping ``modeled`` and ``game_rating`` strictly evidence-based.
+            # Unsupported schedule context remains visible, but its result is
+            # redacted unless the snapshot explicitly included the game.
             result, score = _result_and_score(
                 row,
                 focal_id,

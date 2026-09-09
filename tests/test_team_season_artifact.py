@@ -370,7 +370,7 @@ def test_started_but_unincluded_game_stays_redacted(tmp_path: Path) -> None:
         assert not game["modeled"]
 
 
-def test_completed_lower_division_game_keeps_score_without_modeling(
+def test_completed_lower_division_game_without_snapshot_evidence_stays_redacted(
     tmp_path: Path,
 ) -> None:
     root = _root(tmp_path)
@@ -423,9 +423,9 @@ def test_completed_lower_division_game_keeps_score_without_modeling(
     game = next(
         game for game in artifact["teams"]["1"]["games"] if game["game_id"] == "lower-division"
     )
-    assert game["game_state"] == "completed"
-    assert game["result"] == "W"
-    assert game["score"] == {"team": 31, "opponent": 7}
+    assert game["game_state"] == "unresolved"
+    assert game["result"] is None
+    assert game["score"] is None
     assert game["game_rating"] is None
     assert not game["modeled"]
 
