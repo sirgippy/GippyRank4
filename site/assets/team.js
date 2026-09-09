@@ -173,6 +173,62 @@ function futureChart(prediction, team, axis, oriented) {
   return figure;
 }
 
+function seasonWinChart(summary) {
+  const distribution = summary.final_win_distribution;
+  if (!distribution || typeof distribution !== "object") return null;
+  const wins = Object.keys(distribution).map(Number).sort((left, right) => left - right);
+  const values = wins.map((value) => Number(distribution[String(value)]) || 0);
+  const label = "Probability distribution over final regular-season wins.";
+  const description = wins.map((value, index) => `${value} wins ${percentage(values[index])}`).join(", ");
+  const figure = node("figure", "season-outlook-chart");
+  figure.append(densitySvg(values, { className: "season-win-distribution-chart", label, description }));
+  const caption = node("figcaption", "distribution-axis");
+  caption.append(node("span", "axis-start", `${wins[0]} wins`), node("span", "axis-label", "Final regular-season wins"), node("span", "axis-end", `${wins[wins.length - 1]} wins`));
+  figure.append(caption);
+  return figure;
+}
+
+function renderSeasonOutlook(simulation, team) {
+  const section = $("#season-outlook-section");
+  const content = $("#season-outlook");
+  const summary = team && simulation?.teams?.[team.team_id];
+  if (!summary) {
+    section.hidden = true;
+    content.replaceChildren();
+    return;
+  }
+  section.hidden = false;
+  if (summary.forecast_status !== "available") {
+    content.replaceChildren(node("p", "season-outlook-unavailable", "Season forecast unavailable because one or more remaining regular-season games lack a supported model representation."));
+    return;
+  }
+  const records = Object.entries(summary.record_probabilities || {})
+    .sort((left, right) => Number(right[1]) - Number(left[1]) || left[0].localeCompare(right[0]))
+    .slice(0, 5);
+  const mostLikely = records[0];
+  const details = node("dl", "season-outlook-details");
+  const thresholds = Object.entries(summary.threshold_probabilities || {})
+    .filter(([label]) => label.startsWith("wins_"))
+    .map(([label, probability]) => `${label.replace(/^wins_(\d+)_plus$/, "$1+")} ${percentage(probability)}`)
+    .join(" · ");
+  [
+    ["Expected finish", `${Number(summary.expected_final_wins).toFixed(1)} wins`],
+    ["Most likely record", mostLikely ? `${mostLikely[0]} (${percentage(mostLikely[1])})` : "Unavailable"],
+    ["Central 50%", `${summary.final_win_interval_50[0]}–${summary.final_win_interval_50[1]} wins`],
+    ["Central 80%", `${summary.final_win_interval_80[0]}–${summary.final_win_interval_80[1]} wins`],
+    ...(thresholds ? [["Win milestones", thresholds]] : []),
+  ].forEach(([label, value]) => details.append(node("dt", "", label), node("dd", "", value)));
+  const quality = summary.variance_decomposition?.team_quality_fraction;
+  const game = summary.variance_decomposition?.game_randomness_fraction;
+  if (Number.isFinite(quality) && Number.isFinite(game)) {
+    details.append(node("dt", "", "Uncertainty sources"), node("dd", "", `${percentage(quality)} team quality · ${percentage(game)} game randomness`));
+  }
+  const recordList = node("ul", "season-outlook-records");
+  records.forEach(([record, probability]) => recordList.append(node("li", "", `${record} · ${percentage(probability)}`)));
+  const chart = seasonWinChart(summary);
+  content.replaceChildren(...(chart ? [chart] : []), details, recordList);
+}
+
 function orientedPrediction(prediction, team) {
   const focalIsHome = prediction.home_team_id === team.team_id;
   const opponentName = focalIsHome ? prediction.away_team_name : prediction.home_team_name;
@@ -378,6 +434,7 @@ async function load() {
   const row = snapshot.rankings.find((item) => item.team_id === teamId);
   if (!row) throw new Error("This team is not available in the selected ranking snapshot.");
   renderSummary(entry, snapshot, row);
+  renderSeasonOutlook(artifact.season_simulation, artifact.teams[teamId]);
   renderSchedule(artifact, entry);
 }
 

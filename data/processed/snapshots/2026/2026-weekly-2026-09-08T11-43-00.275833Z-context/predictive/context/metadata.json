@@ -314,6 +314,18 @@
   "requested_cutoff": "2026-09-08T11:43:00.275833+00:00",
   "schema_version": "1.0",
   "season": 2026,
+  "season_simulation_configuration": {
+    "conditional_distribution_method": "exact_poisson_binomial",
+    "inner_rollout_count": 0,
+    "joint_posterior_approximation": "sample_each_team_marginal_independently; no permutation enforcement",
+    "latent_sampling_method": "independent_marginal_pmf",
+    "likelihood_version": "V1",
+    "outer_draw_count": 2000,
+    "seed": 49049,
+    "simulation_version": "hierarchical_latent_state_v1"
+  },
+  "season_simulation_schema_version": "1.0",
+  "season_simulation_version": "hierarchical_latent_state_v1",
   "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-context",
   "snapshot_type": "weekly",
   "source_kind": "cfbd_api_schedule",

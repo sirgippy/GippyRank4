@@ -5,6 +5,19 @@ artifact for each ranking snapshot. The rankings page loads only its compact
 snapshot table; `team.html?team=<stable-id>&season=<season>&snapshot=<snapshot-id>`
 loads this artifact on direct navigation.
 
+The artifact also contains one canonical `season_simulation` object for
+supported predictive snapshots. Its method and provenance are documented in
+[`season_simulation.md`](season_simulation.md); team pages read the team
+summary from this object and never run Monte Carlo in the browser.
+
+The simulation object is required whenever snapshot metadata declares
+`season_simulation_version` and `season_simulation_configuration`. Legacy
+retained artifacts may omit it only when those metadata declarations are also
+absent. Static export compares the full simulation configuration and
+provenance to snapshot metadata, validates the schedule-state partition and
+per-team accounting invariant, and fails closed on a missing or mismatched
+artifact.
+
 ## Game-rating definition
 
 For a focal team `i`, opponent `j`, and game `g`, the rating PMF is:
@@ -112,6 +125,13 @@ future row has `future_prediction_id`; the ID resolves into the single
 canonical `future_predictions` map entry. Ineligible completed games remain
 visible as `modeled: false` and never receive a fabricated rating or
 prediction.
+
+The durable `season_simulation` object includes exact supported-game
+single-game marginals and diagnostic decompositions. The browser-facing copy
+retains the FBS team summaries, distributions, thresholds, variance fractions,
+and schedule accounting, but removes game marginals, cross-game dependence,
+validation, Monte Carlo, and per-event decomposition fields. The manifest
+records both sizes so the lazy payload impact remains measurable.
 
 The prediction map contains compact summaries, not sampled distributions:
 

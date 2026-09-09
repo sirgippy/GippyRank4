@@ -1,0 +1,46 @@
+{
+  "fields": [
+    "game_id",
+    "season",
+    "week",
+    "season_type",
+    "start_date",
+    "completed",
+    "status",
+    "neutral_site",
+    "home_team_id",
+    "home_team_name",
+    "home_subdivision",
+    "home_conference",
+    "home_points",
+    "away_team_id",
+    "away_team_name",
+    "away_subdivision",
+    "away_conference",
+    "away_points"
+  ],
+  "materialized_path": "data/validation/season_forecast_schedule.csv",
+  "materialized_row_count": 6345,
+  "materialized_schedule_sha256": "a90ca3de478997170a9f69fed8c746033b383b39ab913b20b9409c94b44049d6",
+  "materializer": "scripts/materialize_historical_forecast_schedule.py",
+  "raw_source_sha256": {
+    "data/raw/cfbd/games/2022-fcs.json": "a20030838476f73d1f3aea63bba57ed1ecfa03f99e95cee5c2a780deeee05816",
+    "data/raw/cfbd/games/2022.json": "3b4d9d353faa8ca9312534ded0747bdaa1cdcca21e89fcff1458980ab9f00747",
+    "data/raw/cfbd/games/2023-fcs.json": "df5bb461fe8f3e302eb1d5f52896b509d7f5660364d3d43643c5c540e5476817",
+    "data/raw/cfbd/games/2023.json": "417fb8191bec11e20fb2370e5510a2ff8a85cc67f07ec4371e873a935f9af35f",
+    "data/raw/cfbd/games/2024-fcs.json": "3cb6327c61d807fd4b8dfe669f0905694afa67164770ab2e997773ea2aaa72c5",
+    "data/raw/cfbd/games/2024.json": "9aeccada4e63f4ddf22d676eb55dbded71fd9bdb3ac07202ee44ed8f47d93f93",
+    "data/raw/cfbd/games/2025-fcs.json": "38329f854c0df38d17b34d5f7841753d6638d7377592dcf743cb4e27cbd9d32f",
+    "data/raw/cfbd/games/2025.json": "6312d8406be09dee0064069668fc40879dd0736ed3e49946c6c72192e6a0e4fc"
+  },
+  "schema_version": "1.0",
+  "seasons": [
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "source_endpoint": "/games",
+  "source_kind": "cfbd_api_schedule",
+  "source_selection": "For each season, read <season>.json then <season>-fcs.json, keep the first row for each game ID, and retain regular-season rows."
+}

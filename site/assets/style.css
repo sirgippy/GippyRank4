@@ -883,6 +883,64 @@ summary:focus-visible,
   font-size: 12px;
 }
 
+.season-outlook-section {
+  margin: 4px 0 22px;
+  padding: 16px 18px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.season-outlook {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.2fr) minmax(260px, 1fr) minmax(130px, 0.65fr);
+  gap: 14px 22px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.season-outlook-chart {
+  margin: 0;
+}
+
+.season-outlook-details,
+.season-outlook-records {
+  margin: 0;
+}
+
+.season-outlook-details {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 5px 14px;
+  font-size: 13px;
+}
+
+.season-outlook-details dt {
+  color: var(--muted);
+}
+
+.season-outlook-details dd {
+  margin: 0;
+  font-weight: 750;
+}
+
+.season-outlook-records {
+  padding-left: 18px;
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.season-outlook-records li::marker {
+  color: var(--gold);
+}
+
+.season-outlook-unavailable {
+  margin: 0;
+  color: var(--danger);
+  font-size: 13px;
+}
+
 .team-schedule-heading {
   margin-top: 0;
 }
@@ -1296,6 +1354,10 @@ summary:focus-visible,
 
   .game-card {
     display: block;
+  }
+
+  .season-outlook {
+    grid-template-columns: 1fr;
   }
 
   .game-card-header {

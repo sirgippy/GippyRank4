@@ -29,6 +29,8 @@ Context-anchored game-rating summaries with uncertainty; future results are
 redacted relative to the selected cutoff. See
 [the team-season artifact contract](docs/team_season_schema.md) for the
 mathematical definition and provenance checks.
+The artifact's regular-season outlook uses the hierarchical latent-state
+engine described in [Season Simulation V1](docs/season_simulation.md).
 
 Each approved item has a deterministic `publication_slot`. Context and History
 entries in the same slot represent the same logical publication, so changing

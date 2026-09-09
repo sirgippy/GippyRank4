@@ -50,6 +50,18 @@ def test_fallback_support_is_cutoff_and_encounter_count_invariant() -> None:
     assert len(next(team for team in later if team.team_id == "fcs-2").prior) == 127
 
 
+def test_scheduled_future_fcs_opponent_is_added_before_it_appears_in_evidence() -> None:
+    teams, fallbacks = add_fcs_fallbacks(
+        [Team("fbs", "FBS", "fbs", np.array([0.5, 0.5]))],
+        {},
+        [],
+        129,
+        [_row("fcs-future", "FCS future")],
+    )
+    assert fallbacks == ("fcs-future",)
+    assert next(team for team in teams if team.team_id == "fcs-future").prior.size == 129
+
+
 def test_frozen_fcs_prior_precedes_fallback() -> None:
     fcs_prior = Team("fcs-1", "FCS 1", "fcs", np.array([0.2, 0.3, 0.5]))
     teams, fallbacks = add_fcs_fallbacks(
@@ -109,3 +121,21 @@ def test_current_fcs_population_uses_full_cached_schedule_not_cutoff(
     )
     assert subdivision_population_size(tmp_path, 2026, "fcs") == 3
     assert subdivision_population_source(tmp_path, 2026, "fcs") == "cfbd_full_season_schedule"
+
+
+def test_current_fcs_population_uses_committed_processed_schedule(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "data/processed/cfbd/games.csv"
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        "season,homeId,homeClassification,awayId,awayClassification\n"
+        "2026,1,fcs,2,fbs\n"
+        "2026,3,fcs,4,fcs\n",
+        encoding="utf-8",
+    )
+    assert subdivision_population_size(tmp_path, 2026, "fcs") == 3
+    assert (
+        subdivision_population_source(tmp_path, 2026, "fcs")
+        == "cfbd_full_season_schedule"
+    )

@@ -34,6 +34,11 @@ from gippyrank.posterior.predictive import (
     posterior_prediction_teams,
     predict_game,
 )
+from gippyrank.posterior.season_simulation import (
+    CompletedRecord,
+    SeasonSimulationConfig,
+    simulate_season,
+)
 
 TEAM_SEASON_SCHEMA_VERSION = "1.0"
 PERFORMANCE_DISPLAY_BINS = 40
@@ -166,6 +171,30 @@ def _future_at_snapshot(row: dict[str, str], metadata: dict[str, Any]) -> bool:
     return cutoff is not None and when > cutoff
 
 
+def _schedule_state(row: dict[str, str], metadata: dict[str, Any]) -> str:
+    """Classify a regular schedule row without consulting later results."""
+    season_type = str(row.get("seasonType", "regular") or "regular").casefold()
+    if season_type not in {"", "regular"}:
+        return "out_of_scope"
+    status = str(row.get("status", row.get("gameStatus", "")) or "").casefold()
+    if "cancel" in status or "postpon" in status:
+        return "cancelled"
+    if metadata.get("snapshot_type") == "preseason":
+        return "future"
+    when = _schedule_datetime(row.get("startDate"))
+    cutoff = _schedule_datetime(metadata.get("effective_cutoff"))
+    if when is None or cutoff is None:
+        return "unresolved"
+    if when > cutoff:
+        return "future"
+    if _bool(row.get("completed")):
+        home_points = _int_or_none(row.get("homePoints"))
+        away_points = _int_or_none(row.get("awayPoints"))
+        if home_points is not None and away_points is not None:
+            return "completed"
+    return "unresolved"
+
+
 def _prediction_source(metadata: dict[str, Any]) -> str:
     family = str(metadata.get("prior_family", "context"))
     if family == "history":
@@ -186,6 +215,46 @@ def _result_and_score(
     )
     result = "W" if focal_points > opponent_points else "L" if focal_points < opponent_points else "T"
     return result, {"team": focal_points, "opponent": opponent_points}
+
+
+def _completed_regular_records(
+    rows: list[dict[str, str]], fbs_team_ids: set[str]
+) -> dict[str, CompletedRecord]:
+    """Count durably fixed regular-season records for known FBS teams."""
+    counts = {team_id: [0, 0, 0] for team_id in fbs_team_ids}
+    for row in rows:
+        season_type = str(row.get("seasonType", "regular") or "regular").casefold()
+        if season_type not in {"", "regular"}:
+            continue
+        home_id, away_id = row.get("homeId", ""), row.get("awayId", "")
+        home_points = _int_or_none(row.get("homePoints"))
+        away_points = _int_or_none(row.get("awayPoints"))
+        if home_points is None or away_points is None:
+            continue
+        # Record truth is separate from model-evidence membership. A known FBS
+        # team gets credit for a durably scored regular-season game even when
+        # that game was excluded from Historical Likelihood evidence.
+        home_is_fbs = home_id in fbs_team_ids
+        away_is_fbs = away_id in fbs_team_ids
+        if home_points == away_points:
+            if home_is_fbs:
+                counts[home_id][2] += 1
+            if away_is_fbs:
+                counts[away_id][2] += 1
+        elif home_points > away_points:
+            if home_is_fbs:
+                counts[home_id][0] += 1
+            if away_is_fbs:
+                counts[away_id][1] += 1
+        else:
+            if home_is_fbs:
+                counts[home_id][1] += 1
+            if away_is_fbs:
+                counts[away_id][0] += 1
+    return {
+        team_id: CompletedRecord(wins, losses, ties)
+        for team_id, (wins, losses, ties) in counts.items()
+    }
 
 
 def _future_prediction_record(
@@ -229,6 +298,7 @@ def build_team_season_artifact(
     posterior: PosteriorResult,
     likelihood: LikelihoodV1 | None,
     prediction_source: str | None = None,
+    season_simulation_config: SeasonSimulationConfig | None = None,
 ) -> dict[str, Any]:
     """Build the compact, snapshot-aware team-season source artifact.
 
@@ -278,6 +348,51 @@ def build_team_season_artifact(
         with schedule_path.open(newline="", encoding="utf-8") as handle:
             schedule = list(csv.DictReader(handle))
 
+    future_simulation_games: list[ScheduledGame] = []
+    fixed_regular_rows: list[dict[str, str]] = []
+    excluded_schedule_games: list[dict[str, Any]] = []
+    for row in schedule:
+        if str(row.get("season", "")) != str(metadata["season"]):
+            continue
+        state = _schedule_state(row, metadata)
+        if state == "out_of_scope":
+            continue
+        game_id = str(row.get("id", ""))
+        involves_fbs = (
+            row.get("homeId", "") in fbs_teams
+            or row.get("awayId", "") in fbs_teams
+            or row.get("homeClassification", "").casefold() == "fbs"
+            or row.get("awayClassification", "").casefold() == "fbs"
+        )
+        if not involves_fbs:
+            continue
+        if state == "completed":
+            fixed_regular_rows.append(row)
+            continue
+        if state == "cancelled":
+            excluded_schedule_games.append(
+                {
+                    "game_id": game_id,
+                    "home_team_id": row.get("homeId", ""),
+                    "away_team_id": row.get("awayId", ""),
+                    "reason": "cancelled_or_postponed",
+                }
+            )
+            continue
+        future_simulation_games.append(
+            ScheduledGame(
+                game_id=game_id,
+                home_id=row.get("homeId", ""),
+                away_id=row.get("awayId", ""),
+                home_subdivision=row.get("homeClassification", "").casefold(),
+                away_subdivision=row.get("awayClassification", "").casefold(),
+                neutral_site=_bool(row.get("neutralSite")),
+                season_type=row.get("seasonType", "regular") or "regular",
+                date=row.get("startDate"),
+                schedule_status=state,
+            )
+        )
+
     future_predictions: dict[str, dict[str, Any]] = {}
     if likelihood is not None:
         prediction_inputs: list[
@@ -321,6 +436,8 @@ def build_team_season_artifact(
                 home_subdivision=home_subdivision,
                 away_subdivision=away_subdivision,
                 neutral_site=_bool(row.get("neutralSite")),
+                season_type=row.get("seasonType", "regular") or "regular",
+                date=row.get("startDate"),
             )
             seen_future_ids.add(game_id)
             prediction_inputs.append(
@@ -391,6 +508,36 @@ def build_team_season_artifact(
     for entries in team_games.values():
         entries.sort(key=lambda entry: (str(entry["date"]), str(entry["game_id"])))
 
+    season_simulation = None
+    if likelihood is not None:
+        simulation_config = season_simulation_config or SeasonSimulationConfig()
+        completed_records = _completed_regular_records(fixed_regular_rows, set(fbs_teams))
+        season_simulation = simulate_season(
+            teams,
+            posterior.pmfs,
+            future_simulation_games,
+            completed_records,
+            likelihood,
+            config=simulation_config,
+            prediction_source=source,
+            provenance={
+                "source_snapshot_id": metadata["snapshot_id"],
+                "season": metadata["season"],
+                "snapshot_type": metadata["snapshot_type"],
+                "prior_family": metadata.get("prior_family"),
+                "prior_model_version": metadata.get("prior_model_version"),
+                "prior_artifact_sha256": metadata.get("prior_artifact_sha256"),
+                "requested_cutoff": metadata.get("requested_cutoff"),
+                "effective_cutoff": metadata.get("effective_cutoff"),
+                "game_corpus_sha256": metadata.get("game_corpus_sha256"),
+                "historical_likelihood_version": metadata.get(
+                    "historical_likelihood_version", "V1"
+                ),
+                "prediction_source": source,
+            },
+            excluded_schedule_games=excluded_schedule_games,
+        )
+
     return {
         "schema_version": TEAM_SEASON_SCHEMA_VERSION,
         "artifact_kind": "team_season",
@@ -426,6 +573,7 @@ def build_team_season_artifact(
                 "historical_likelihood_version", "V1"
             ),
         },
+        "season_simulation": season_simulation,
         "future_predictions": future_predictions,
         "performance_axis": {
             "min_rank": 1,
