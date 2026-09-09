@@ -239,6 +239,8 @@ def test_team_schedule_uses_distinct_accessible_performance_and_margin_plots() -
     assert ".game-distribution-future .distribution-bar" in css
     assert "More performance detail" in team
     assert "More predictive detail" in team
+    assert 'node("p", "sr-only", accessible)' in team
+    assert 'node("p", "game-distribution-text", accessible)' not in team
     assert "Expected performance rank" in team
     assert "expectedPrimary" in team
     assert "Played like" not in team

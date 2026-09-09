@@ -305,7 +305,7 @@ function ratingPanel(rating, axis) {
   const accessible = percentile
     ? `Performance grade ${rating.performance_grade}. ${percentile} among eligible FBS team-game performances at this snapshot. The inferred performance distribution has ${uncertaintyLabel(rating.interval_80, rating.rank_count)} uncertainty.`
     : `Inferred performance distribution; central 80 percent interval is ranks ${rating.interval_80[0]} through ${rating.interval_80[1]}.`;
-  panel.append(node("p", "game-distribution-text", accessible));
+  panel.append(node("p", "sr-only", accessible));
   const details = node("details", "game-rating-details-disclosure");
   details.append(node("summary", "", "More performance detail"));
   const list = node("dl", "game-rating-details");
