@@ -9,6 +9,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from gippyrank.performance_snapshot import build_performance_snapshot
 from gippyrank.posterior.engine import LikelihoodV1, Team, infer_posterior
 from gippyrank.posterior.game_evidence import build_team_season_artifact
 from gippyrank.posterior.snapshots import build_snapshot
@@ -63,6 +64,14 @@ def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path:
     early, later = games
     assert early["modeled"] and early["game_rating"] is not None
     assert later["result"] is None and later["score"] is None and later["game_rating"] is None
+    assert early["future_prediction_id"] is None
+    assert later["future_prediction_id"] == "later"
+    prediction = artifact["future_predictions"]["later"]
+    assert prediction["prediction_source"] == "predictive_context"
+    assert prediction["home_team_id"] == "1"
+    assert prediction["away_team_id"] == "2"
+    assert prediction["margin_interval_50"][0] <= prediction["margin_interval_50"][1]
+    assert prediction["home_win_probability"] + prediction["away_win_probability"] == pytest.approx(1.0)
 
     config = root / "site/publish_config.json"
     config.parent.mkdir(parents=True)
@@ -71,6 +80,40 @@ def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path:
     entry = manifest["snapshots"][0]
     assert entry["team_seasons_path"] == "data/team-seasons/2026-weekly-2026-09-01-context.json"
     assert (root / "site" / entry["team_seasons_path"]).is_file()
+
+
+def test_future_predictions_use_posterior_after_completed_evidence(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    likelihood = LikelihoodV1(np.r_[10.0, np.zeros(33)], 1.0, 15.0)
+    before_evidence = build_snapshot(
+        season=2026,
+        cutoff=date(2026, 8, 28),
+        prior_family="context",
+        snapshot_type="weekly",
+        root=root,
+        likelihood=likelihood,
+    )
+    after_evidence = build_snapshot(
+        season=2026,
+        cutoff=date(2026, 9, 1),
+        prior_family="context",
+        snapshot_type="weekly",
+        root=root,
+        likelihood=likelihood,
+    )
+
+    before = json.loads(
+        (before_evidence.directory / "team_seasons.json").read_text(encoding="utf-8")
+    )
+    after = json.loads(
+        (after_evidence.directory / "team_seasons.json").read_text(encoding="utf-8")
+    )
+    before_margin = before["future_predictions"]["later"]["expected_home_margin"]
+    after_margin = after["future_predictions"]["later"]["expected_home_margin"]
+
+    assert before["included_game_ids"] == []
+    assert after["included_game_ids"] == ["early"]
+    assert after_margin != pytest.approx(before_margin)
 
 
 def test_team_artifact_provenance_mismatch_fails_closed(tmp_path: Path) -> None:
@@ -229,3 +272,81 @@ def test_historical_artifact_survives_later_schedule_refresh(tmp_path: Path) -> 
     assert artifact_path.read_bytes() == original_artifact
     exported = json.loads((root / "site" / manifest["snapshots"][0]["team_seasons_path"]).read_text())
     assert exported["schedule_source"] == original_schedule_source
+
+
+def test_context_history_and_performance_use_declared_prediction_sources(
+    tmp_path: Path,
+) -> None:
+    root = _root(tmp_path)
+    history_prior = root / "data/processed/preseason/history/annual/2026/predictions.csv"
+    with history_prior.open(newline="", encoding="utf-8") as handle:
+        history_rows = list(csv.DictReader(handle))
+        history_fields = list(history_rows[0])
+    history_rows[0]["pmf"] = "[0.1,0.9]"
+    history_rows[1]["pmf"] = "[0.9,0.1]"
+    _write(history_prior, history_fields, history_rows)
+
+    beta = np.zeros(34)
+    beta[0] = 10.0
+    likelihood = LikelihoodV1(beta, 1.0, 15.0)
+    context = build_snapshot(
+        season=2026,
+        cutoff=date(2026, 9, 1),
+        prior_family="context",
+        snapshot_type="weekly",
+        root=root,
+        likelihood=likelihood,
+    )
+    history = build_snapshot(
+        season=2026,
+        cutoff=date(2026, 9, 1),
+        prior_family="history",
+        snapshot_type="weekly",
+        root=root,
+        likelihood=likelihood,
+    )
+    performance = build_performance_snapshot(
+        context,
+        root=root,
+        output_root=root / "data/processed/snapshots",
+    )
+    config = root / "site/publish_config.json"
+    config.parent.mkdir(parents=True, exist_ok=True)
+    config.write_text(
+        json.dumps(
+            {
+                "schema_version": "1.0",
+                "publication_slots": [{"id": "2026-09-01", "status": "official"}],
+                "snapshots": [
+                    {
+                        "source": snapshot.directory.relative_to(root).as_posix(),
+                        "display_label": "Test",
+                        "publication_slot": "2026-09-01",
+                    }
+                    for snapshot in (context, history, performance)
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    manifest = build_site_data(root=root, config_path=config, output_directory=root / "site/data")
+    entries = {entry["ranking_family"] + ":" + entry.get("prior_family", ""): entry for entry in manifest["snapshots"]}
+    artifacts = {
+        key: json.loads(
+            (root / "site" / entry["team_seasons_path"]).read_text(encoding="utf-8")
+        )
+        for key, entry in entries.items()
+    }
+
+    assert artifacts["predictive:context"]["prediction_source"] == "predictive_context"
+    assert artifacts["predictive:history"]["prediction_source"] == "predictive_history"
+    assert artifacts["performance:"]["prediction_source"] == "predictive_context"
+    assert artifacts["predictive:context"]["future_predictions"]["later"]["expected_home_margin"] != pytest.approx(
+        artifacts["predictive:history"]["future_predictions"]["later"]["expected_home_margin"]
+    )
+    for artifact in artifacts.values():
+        prediction = artifact["future_predictions"]["later"]
+        assert prediction["home_win_probability"] + prediction["away_win_probability"] == pytest.approx(1.0)
+        assert artifact["teams"]["1"]["games"][1]["future_prediction_id"] == "later"
+        assert artifact["teams"]["2"]["games"][1]["future_prediction_id"] == "later"

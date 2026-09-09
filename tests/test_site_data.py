@@ -222,6 +222,27 @@ def test_static_site_uses_manifest_logo_config_and_decorative_fallback() -> None
     assert "loading = \"lazy\"" in app
 
 
+def test_future_prediction_range_labels_follow_focal_margin_sign() -> None:
+    team = (ROOT / "site/assets/team.js").read_text(encoding="utf-8")
+
+    assert (
+        'if (high < 0) return `${marginSide(oriented.opponentName, -high)} '
+        'to ${marginSide(oriented.opponentName, -low)}`;' in team
+    )
+    assert (
+        'if (low > 0) return `${marginSide(oriented.focalName, low)} '
+        'to ${marginSide(oriented.focalName, high)}`;' in team
+    )
+    assert (
+        'const lower = low < 0 ? marginSide(oriented.opponentName, -low) : "Even";'
+        in team
+    )
+    assert (
+        'const upper = high > 0 ? marginSide(oriented.focalName, high) : "Even";'
+        in team
+    )
+
+
 def _counterpart(
     entries: list[dict[str, object]], current: dict[str, object], prior: str
 ) -> dict[str, object]:

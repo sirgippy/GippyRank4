@@ -13,7 +13,7 @@ import json
 import math
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +21,9 @@ from gippyrank.team_logos import TEAM_LOGO_URL_TEMPLATE, logo_url, team_logo_han
 
 SITE_SCHEMA_VERSION = "1.0"
 TEAM_SEASON_SCHEMA_VERSION = "1.0"
+PREDICTION_SCHEMA_VERSION = "1.0"
+PREDICTION_SOURCE_CONTEXT = "predictive_context"
+PREDICTION_SOURCE_HISTORY = "predictive_history"
 SUPPORTED_SNAPSHOT_SCHEMA_VERSIONS = {"1.0"}
 PMF_SUM_TOLERANCE = 1e-9
 SUMMARY_TOLERANCE = 1e-8
@@ -761,6 +764,204 @@ def _empty_team_season_artifact(
     }
 
 
+def _prediction_source(metadata: dict[str, Any]) -> str:
+    family = str(metadata.get("prior_family", metadata.get("anchor_family", "context")))
+    return PREDICTION_SOURCE_HISTORY if family == "history" else PREDICTION_SOURCE_CONTEXT
+
+
+def _iso_datetime(value: object) -> datetime | None:
+    if value is None or str(value).strip() == "":
+        return None
+    try:
+        parsed = datetime.fromisoformat(str(value))
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=UTC)
+
+
+def _validate_future_predictions(
+    artifact: dict[str, Any],
+    metadata: dict[str, Any],
+    source_metadata: dict[str, Any],
+    by_team: dict[str, Any],
+    expected_ids: set[str],
+) -> None:
+    """Validate canonical future predictions and their snapshot provenance."""
+
+    prediction_map = artifact.get("future_predictions")
+    prediction_schema = artifact.get("prediction_schema_version")
+    referenced_ids: dict[str, list[tuple[str, dict[str, Any]]]] = defaultdict(list)
+    for team_id, team in by_team.items():
+        for game in team.get("games", []):
+            prediction_id = game.get("future_prediction_id")
+            if prediction_id is not None:
+                referenced_ids[str(prediction_id)].append((team_id, game))
+    if prediction_map is None and not referenced_ids:
+        return
+    if prediction_schema != PREDICTION_SCHEMA_VERSION:
+        raise SiteDataValidationError(
+            f"{metadata['snapshot_id']}: unsupported future-prediction schema"
+        )
+    if not isinstance(prediction_map, dict):
+        raise SiteDataValidationError(
+            f"{metadata['snapshot_id']}: future_predictions must be an object"
+        )
+    expected_source = _prediction_source(source_metadata)
+    if artifact.get("prediction_source") != expected_source:
+        raise SiteDataValidationError(
+            f"{metadata['snapshot_id']}: future-prediction source mismatch"
+        )
+    provenance = artifact.get("prediction_provenance")
+    if not isinstance(provenance, dict):
+        raise SiteDataValidationError(
+            f"{metadata['snapshot_id']}: future-prediction provenance is missing"
+        )
+    provenance_fields = (
+        "source_snapshot_id",
+        "season",
+        "snapshot_type",
+        "effective_cutoff",
+        "game_corpus_sha256",
+        "included_game_ids",
+        "historical_likelihood_version",
+    )
+    for field in provenance_fields:
+        expected_value = (
+            source_metadata.get("snapshot_id")
+            if field == "source_snapshot_id"
+            else source_metadata.get(field)
+        )
+        if provenance.get(field) != expected_value:
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: future-prediction provenance mismatch: {field}"
+            )
+    if provenance.get("prior_family") != source_metadata.get("prior_family"):
+        raise SiteDataValidationError(
+            f"{metadata['snapshot_id']}: future-prediction provenance mismatch: prior_family"
+        )
+
+    required_prediction_fields = {
+        "game_id",
+        "prediction_source",
+        "source_snapshot_id",
+        "home_team_id",
+        "home_team_name",
+        "home_subdivision",
+        "away_team_id",
+        "away_team_name",
+        "away_subdivision",
+        "neutral_site",
+        "expected_home_margin",
+        "median_home_margin",
+        "home_win_probability",
+        "away_win_probability",
+        "tie_probability",
+        "margin_interval_50",
+        "margin_interval_80",
+        "margin_interval_95",
+    }
+    for key, prediction in prediction_map.items():
+        if not isinstance(prediction, dict):
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: prediction {key} must be an object"
+            )
+        missing = required_prediction_fields - prediction.keys()
+        if missing:
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: prediction {key} missing {sorted(missing)}"
+            )
+        if str(key) != str(prediction["game_id"]):
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: prediction key does not match game ID"
+            )
+        if prediction["prediction_source"] != expected_source:
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: prediction source mismatch for {key}"
+            )
+        if prediction["source_snapshot_id"] != provenance["source_snapshot_id"]:
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: prediction snapshot mismatch for {key}"
+            )
+        for field in ("expected_home_margin", "median_home_margin"):
+            _finite_number(prediction[field], field, str(metadata["snapshot_id"]))
+        probabilities = [
+            _probability(prediction[field], field, str(metadata["snapshot_id"]))
+            for field in ("home_win_probability", "away_win_probability", "tie_probability")
+        ]
+        if abs(probabilities[0] + probabilities[1] - 1.0) > 1.0e-8:
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: prediction probabilities are not complementary"
+            )
+        intervals: dict[str, tuple[float, float]] = {}
+        for field in ("margin_interval_50", "margin_interval_80", "margin_interval_95"):
+            value = prediction[field]
+            if not isinstance(value, list) or len(value) != 2:
+                raise SiteDataValidationError(
+                    f"{metadata['snapshot_id']}: {field} must contain two endpoints"
+                )
+            endpoints = tuple(
+                _finite_number(item, f"{field} endpoint", str(metadata["snapshot_id"]))
+                for item in value
+            )
+            if endpoints[0] > endpoints[1]:
+                raise SiteDataValidationError(
+                    f"{metadata['snapshot_id']}: {field} endpoints are reversed"
+                )
+            intervals[field] = endpoints
+        if not (
+            intervals["margin_interval_80"][0] <= intervals["margin_interval_50"][0]
+            and intervals["margin_interval_50"][1] <= intervals["margin_interval_80"][1]
+            and intervals["margin_interval_95"][0] <= intervals["margin_interval_80"][0]
+            and intervals["margin_interval_80"][1] <= intervals["margin_interval_95"][1]
+        ):
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: predictive intervals are not nested"
+            )
+        if str(prediction["home_subdivision"]).casefold() not in {"fbs", "fcs"} or str(
+            prediction["away_subdivision"]
+        ).casefold() not in {"fbs", "fcs"}:
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: prediction subdivision is unsupported"
+            )
+
+    cutoff = _iso_datetime(source_metadata.get("effective_cutoff"))
+    for prediction_id, references in referenced_ids.items():
+        if prediction_id not in prediction_map:
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: schedule references missing prediction {prediction_id}"
+            )
+        prediction = prediction_map[prediction_id]
+        if prediction_id in expected_ids:
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: completed evidence has a future prediction"
+            )
+        for team_id, game in references:
+            if team_id not in {prediction["home_team_id"], prediction["away_team_id"]}:
+                raise SiteDataValidationError(
+                    f"{metadata['snapshot_id']}: prediction is attached to the wrong team"
+                )
+            opponent_id = prediction["away_team_id"] if team_id == prediction["home_team_id"] else prediction["home_team_id"]
+            if str(game.get("opponent_id")) != str(opponent_id):
+                raise SiteDataValidationError(
+                    f"{metadata['snapshot_id']}: prediction opponent mismatch"
+                )
+            if game.get("result") is not None or game.get("score") is not None or game.get("game_rating") is not None or game.get("modeled"):
+                raise SiteDataValidationError(
+                    f"{metadata['snapshot_id']}: future prediction reveals completed evidence"
+                )
+            if cutoff is not None:
+                game_date = _iso_datetime(game.get("date"))
+                if game_date is None or game_date <= cutoff:
+                    raise SiteDataValidationError(
+                        f"{metadata['snapshot_id']}: future prediction is not strictly after cutoff"
+                    )
+    for prediction_id in prediction_map:
+        if str(prediction_id) not in referenced_ids:
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: unreferenced future prediction {prediction_id}"
+            )
+
+
 def _validate_team_season_artifact(
     artifact: dict[str, Any],
     metadata: dict[str, Any],
@@ -879,6 +1080,13 @@ def _validate_team_season_artifact(
                     raise SiteDataValidationError(
                         f"{snapshot_id}: game rating {field} must be between 0 and 1"
                     )
+    _validate_future_predictions(
+        artifact,
+        metadata,
+        source_metadata,
+        by_team,
+        expected_ids,
+    )
     adapted = dict(artifact)
     adapted["snapshot_id"] = snapshot_id
     adapted["season"] = metadata["season"]
@@ -893,44 +1101,116 @@ def _team_season_artifact(
     rankings: list[dict[str, Any]],
     context_source: tuple[Path, dict[str, Any]] | None,
 ) -> dict[str, Any]:
-    """Load the Context artifact for any published family in a slot."""
-    candidate = source / str(metadata.get("team_season_path") or "team_seasons.json")
-    anchor_metadata = metadata
-    requires_context = metadata.get("ranking_family") == "performance" or (
-        metadata.get("ranking_family") == "predictive"
-        and metadata.get("prior_family") == "history"
-    )
-    if requires_context and context_source is None:
-        raise SiteDataValidationError(
-            f"{metadata['snapshot_id']}: no paired Context snapshot for team-season ratings"
+    """Load ratings and the family-specific future-prediction artifact.
+
+    Completed-game ratings remain Context-anchored for compatibility with the
+    existing team-page contract.  A History artifact, when available, is
+    therefore merged onto the Context schedule only for its canonical future
+    prediction map and references.  Performance continues to consume the
+    same-slot Context artifact for both purposes.
+    """
+
+    def candidate_for(path: Path, source_metadata: dict[str, Any]) -> Path:
+        return path / str(source_metadata.get("team_season_path") or "team_seasons.json")
+
+    def load_candidate(
+        candidate: Path,
+        validation_metadata: dict[str, Any],
+        *,
+        anchor_metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        artifact = _read_json(candidate)
+        return _validate_team_season_artifact(
+            artifact,
+            validation_metadata,
+            rankings,
+            anchor_metadata=anchor_metadata,
         )
-    if requires_context:
-        # Performance snapshots intentionally copy the Context artifact, so
-        # validate the underlying source ID against the paired Context bundle.
-        # History also consumes Context-anchored game ratings by contract.
-        if context_source is not None:
-            candidate, anchor_metadata = context_source
-            candidate = candidate / str(anchor_metadata.get("team_season_path") or "team_seasons.json")
-    elif not candidate.is_file() and context_source is not None:
-        candidate, anchor_metadata = context_source
-        candidate = candidate / str(anchor_metadata.get("team_season_path") or "team_seasons.json")
-    if not candidate.is_file():
-        declared_path = metadata.get("team_season_path") or (
-            anchor_metadata.get("team_season_path") if anchor_metadata else None
-        )
-        if declared_path:
+
+    is_performance = metadata.get("ranking_family") == "performance"
+    is_history = metadata.get("ranking_family") == "predictive" and metadata.get(
+        "prior_family"
+    ) == "history"
+    selected_candidate = candidate_for(source, metadata)
+
+    if is_performance:
+        if context_source is None:
             raise SiteDataValidationError(
-                f"{metadata['snapshot_id']}: declared team-season artifact is unavailable"
+                f"{metadata['snapshot_id']}: no paired Context snapshot for team-season ratings"
             )
-        return _empty_team_season_artifact(metadata, rankings)
-    artifact = _read_json(candidate)
-    artifact = _validate_team_season_artifact(
-        artifact,
-        metadata,
-        rankings,
-        anchor_metadata=anchor_metadata,
-    )
-    return artifact
+        context_path, context_metadata = context_source
+        selected_candidate = candidate_for(context_path, context_metadata)
+        if not selected_candidate.is_file():
+            if metadata.get("team_season_path"):
+                raise SiteDataValidationError(
+                    f"{metadata['snapshot_id']}: declared team-season artifact is unavailable"
+                )
+            return _empty_team_season_artifact(metadata, rankings)
+        return load_candidate(
+            selected_candidate,
+            metadata,
+            anchor_metadata=context_metadata,
+        )
+
+    if is_history and selected_candidate.is_file() and context_source is not None:
+        # Validate the History prediction artifact against its own posterior
+        # provenance before merging it with the Context-anchored ratings.
+        history_artifact = load_candidate(selected_candidate, metadata)
+        context_path, context_metadata = context_source
+        context_candidate = candidate_for(context_path, context_metadata)
+        if not context_candidate.is_file():
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: paired Context team-season artifact is unavailable"
+            )
+        context_artifact = load_candidate(
+            context_candidate,
+            metadata,
+            anchor_metadata=context_metadata,
+        )
+        merged = dict(context_artifact)
+        merged["prediction_schema_version"] = history_artifact.get(
+            "prediction_schema_version"
+        )
+        merged["prediction_source"] = history_artifact.get("prediction_source")
+        merged["prediction_provenance"] = history_artifact.get("prediction_provenance")
+        merged["future_predictions"] = history_artifact.get("future_predictions", {})
+        history_teams = history_artifact.get("teams", {})
+        merged_teams: dict[str, Any] = {}
+        for team_id, context_team in context_artifact.get("teams", {}).items():
+            history_games = {
+                str(game.get("game_id")): game
+                for game in history_teams.get(team_id, {}).get("games", [])
+            }
+            team = dict(context_team)
+            team["games"] = []
+            for context_game in context_team.get("games", []):
+                game = dict(context_game)
+                history_game = history_games.get(str(game.get("game_id")))
+                game["future_prediction_id"] = (
+                    history_game.get("future_prediction_id") if history_game else None
+                )
+                team["games"].append(game)
+            merged_teams[team_id] = team
+        merged["teams"] = merged_teams
+        return merged
+
+    if selected_candidate.is_file():
+        return load_candidate(selected_candidate, metadata)
+    if context_source is not None:
+        context_path, context_metadata = context_source
+        context_candidate = candidate_for(context_path, context_metadata)
+        if context_candidate.is_file():
+            return load_candidate(
+                context_candidate,
+                metadata,
+                anchor_metadata=context_metadata,
+            )
+    declared_path = metadata.get("team_season_path")
+    if declared_path:
+        raise SiteDataValidationError(
+            f"{metadata['snapshot_id']}: declared team-season artifact is unavailable"
+        )
+    return _empty_team_season_artifact(metadata, rankings)
 
 
 def _rendered_team_identities(artifact: dict[str, Any]) -> set[tuple[str, str]]:
@@ -1145,6 +1425,14 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             team_seasons,
             compact=True,
         )
+        future_predictions = team_seasons.get("future_predictions", {})
+        future_prediction_bytes = len(
+            json.dumps(
+                future_predictions,
+                separators=(",", ":"),
+                sort_keys=True,
+            ).encode("utf-8")
+        )
         manifest_entry = {
             "season": metadata["season"],
             "snapshot_id": snapshot_id,
@@ -1171,6 +1459,8 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             "team_seasons_bytes": (
                 output_directory / "team-seasons" / f"{snapshot_id}.json"
             ).stat().st_size,
+            "future_prediction_count": len(future_predictions),
+            "future_prediction_bytes": future_prediction_bytes,
             "rank_count": distribution["rank_count"],
             "model_versions": metadata.get(
                 "model_versions", {"performance": metadata.get("model_version", "unknown")}
@@ -1204,6 +1494,9 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
         for entry in manifest_entries
     )
     team_season_bytes = sum(int(entry["team_seasons_bytes"]) for entry in manifest_entries)
+    future_prediction_bytes = sum(
+        int(entry["future_prediction_bytes"]) for entry in manifest_entries
+    )
     manifest = {
         "schema_version": SITE_SCHEMA_VERSION,
         "seasons": sorted({entry["season"] for entry in manifest_entries}, reverse=True),
@@ -1239,6 +1532,8 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             "published_ranking_snapshot_bytes": ranking_snapshot_bytes,
             "lazy_rank_distribution_bytes": distribution_bytes,
             "lazy_team_season_bytes": team_season_bytes,
+            "lazy_future_prediction_bytes": future_prediction_bytes,
+            "initial_rankings_page_bytes": ranking_snapshot_bytes,
         },
     }
     _write_json(output_directory / "manifest.json", manifest)

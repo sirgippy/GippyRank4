@@ -30,6 +30,48 @@ Predictive History and Performance pages. Under loopy BP, the focal prior is
 absent as a direct factor, but indirect feedback through schedule cycles can
 remain.
 
+## Future-game prediction definition
+
+An eligible scheduled game has one canonical entry in the artifact's
+`future_predictions` object.  Its margin is home-oriented, even though the
+Historical Likelihood V1 cross-subdivision response is FBS-minus-FCS.  For a
+home/away rank pair `(r_h, r_a)`:
+
+```text
+P(M | snapshot) = Σ P(M | r_h, r_a, site, pairing)
+                       P(r_h | snapshot) P(r_a | snapshot)
+```
+
+Each conditional component is the exact V1 Student-t margin distribution with
+the frozen V1 location surface, scale, and 15 degrees of freedom.  The
+published expected margin is the mixture mean; median and central 50%, 80%,
+and 95% intervals are deterministic mixture quantiles found by bracketing and
+solving the finite-mixture CDF.  No expected-rank plug-in or sampled Monte
+Carlo distribution is used.
+
+The continuous Student-t mixture has no point mass at zero.  The artifact
+still records the explicit football tie convention:
+
+```text
+P(home wins) = P(M > 0) + 0.5 P(M = 0)
+P(away wins) = P(M < 0) + 0.5 P(M = 0)
+```
+
+The two stored win probabilities are complements from that same distribution.
+
+Future predictions use `predictive_context` on Predictive Context pages,
+`predictive_history` on Predictive History pages, and the same-slot
+`predictive_context` artifact on Performance pages.  A Performance page labels
+that source in the browser.  Completed-game ratings remain Context-anchored.
+
+Eligibility is strict: the scheduled kickoff must be after the selected
+snapshot's effective cutoff, the game must not be in the included evidence,
+and both teams must have supported V1 rank representations.  Existing FCS
+fallback variables are reused when present; unsupported matchups remain
+visible without a prediction.  Neutral games use the neutral V1 site row, and
+FBS/FCS games use the stable FBS-first V1 coordinate orientation before the
+stored home-oriented margin is restored.
+
 ## JSON shape
 
 Each team contains schedule entries with stable IDs, date/week, opponent
@@ -41,9 +83,44 @@ completed game has a compact `game_rating` summary containing:
 - Top 5, Top 10, and Top 25 probabilities.
 
 No full per-game PMF is serialized. Games after the selected cutoff retain
-schedule metadata but have null result, score, and rating fields. Ineligible
-completed games remain visible as `modeled: false` and never receive a
-fabricated rating.
+schedule metadata but have null result, score, and rating fields. An eligible
+future row has `future_prediction_id`; the ID resolves into the single
+canonical `future_predictions` map entry. Ineligible completed games remain
+visible as `modeled: false` and never receive a fabricated rating or
+prediction.
+
+The prediction map contains compact summaries, not sampled distributions:
+
+```json
+{
+  "prediction_schema_version": "1.0",
+  "prediction_source": "predictive_context",
+  "prediction_provenance": {
+    "source_snapshot_id": "2026-weekly-...-context",
+    "effective_cutoff": "2026-09-08T11:43:00+00:00",
+    "included_game_ids": ["..."],
+    "historical_likelihood_version": "V1"
+  },
+  "future_predictions": {
+    "401752680": {
+      "home_team_id": "61",
+      "away_team_id": "333",
+      "expected_home_margin": 5.8,
+      "median_home_margin": 5.6,
+      "home_win_probability": 0.67,
+      "away_win_probability": 0.33,
+      "tie_probability": 0.0,
+      "margin_interval_50": [-1.2, 12.8],
+      "margin_interval_80": [-8.1, 19.9],
+      "margin_interval_95": [-17.4, 29.3]
+    }
+  }
+}
+```
+
+The values above are illustrative.  Static export validates the prediction
+source, provenance, complementarity, nested interval ordering, strict cutoff,
+and cross-team references before publishing.
 
 Stable `team_id` and `opponent_id` values are resolved at render time through
 the manifest-level `team_logos.handles` map. The team-season artifact does not

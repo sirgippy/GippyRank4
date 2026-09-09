@@ -35,6 +35,7 @@ All tests remaining in these modules run under `uv run pytest -q`:
 | `test_performance_snapshot.py` | Production performance snapshot construction and fail-closed evidence validation. |
 | `test_performance_v1.py` | Performance inference, neutralization, diagnostics, and deterministic artifact inventory. |
 | `test_posterior_engine.py` | Factor-graph/message-passing correctness and cross-subdivision evidence semantics. |
+| `test_predictive.py` | Exact posterior-predictive margin mixtures, tie handling, and site orientation. |
 | `test_posterior_snapshots.py` | Snapshot schema, cutoff/provenance rules, FCS support, determinism, and publication metadata. |
 | `test_posterior_validation_artifact.py` | Exact belief-propagation validation acceptance contract. |
 | `test_preseason.py` | Production rank distributions, leakage-safe fitting, cold starts, and coverage invariants. |
