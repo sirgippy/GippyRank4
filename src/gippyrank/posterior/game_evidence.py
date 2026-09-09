@@ -23,6 +23,7 @@ from gippyrank.posterior.predictive import (
     PREDICTION_SOURCE_CONTEXT,
     PREDICTION_SOURCE_HISTORY,
     ScheduledGame,
+    posterior_prediction_teams,
     predict_game,
 )
 
@@ -184,6 +185,7 @@ def build_team_season_artifact(
     """
     fbs_teams = {team.team_id: team for team in teams if team.subdivision == "fbs"}
     teams_by_id = {team.team_id: team for team in teams}
+    prediction_teams_by_id = posterior_prediction_teams(teams, posterior.pmfs)
     included_ids = {str(row["id"]) for row in included_rows}
     game_by_id = {game.game_id: game for game in games}
     source = prediction_source or _prediction_source(metadata)
@@ -258,8 +260,8 @@ def build_team_season_artifact(
                 (
                     row,
                     scheduled,
-                    teams_by_id[home_id],
-                    teams_by_id[away_id],
+                    prediction_teams_by_id[home_id],
+                    prediction_teams_by_id[away_id],
                     likelihood,
                     source,
                     str(metadata["snapshot_id"]),

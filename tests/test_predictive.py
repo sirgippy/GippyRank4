@@ -7,6 +7,7 @@ from scipy.stats import t as student_t
 from gippyrank.posterior.engine import LikelihoodV1, Team
 from gippyrank.posterior.predictive import (
     ScheduledGame,
+    posterior_prediction_team,
     predict_game,
     predictive_components,
     win_probabilities,
@@ -66,6 +67,16 @@ def test_delta_pmfs_reduce_to_the_corresponding_student_t_game_distribution() ->
         ),
         abs=1e-9,
     )
+
+
+def test_prediction_team_uses_explicit_posterior_and_preserves_metadata() -> None:
+    preseason = Team("home", "Home", "fbs", np.array([1.0, 0.0]))
+    posterior = posterior_prediction_team(preseason, {"home": np.array([0.0, 1.0])})
+
+    assert posterior.team_id == preseason.team_id
+    assert posterior.name == preseason.name
+    assert posterior.subdivision == preseason.subdivision
+    assert posterior.prior.tolist() == [0.0, 1.0]
 
 
 def test_posterior_uncertainty_is_marginalized_not_replaced_by_expected_rank() -> None:

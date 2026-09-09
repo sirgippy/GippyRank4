@@ -85,10 +85,10 @@ function orientedPrediction(prediction, team) {
 
 function predictionRange(oriented, interval) {
   const [low, high] = interval;
-  if (high < 0) return `${marginSide(oriented.focalName, high)} to ${marginSide(oriented.focalName, low)}`;
-  if (low > 0) return `${marginSide(oriented.opponentName, low)} to ${marginSide(oriented.opponentName, high)}`;
-  const lower = low < 0 ? marginSide(oriented.focalName, low) : "Even";
-  const upper = high > 0 ? marginSide(oriented.opponentName, high) : "Even";
+  if (high < 0) return `${marginSide(oriented.opponentName, -high)} to ${marginSide(oriented.opponentName, -low)}`;
+  if (low > 0) return `${marginSide(oriented.focalName, low)} to ${marginSide(oriented.focalName, high)}`;
+  const lower = low < 0 ? marginSide(oriented.opponentName, -low) : "Even";
+  const upper = high > 0 ? marginSide(oriented.focalName, high) : "Even";
   return `${lower} to ${upper}`;
 }
 

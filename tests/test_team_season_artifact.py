@@ -82,6 +82,40 @@ def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path:
     assert (root / "site" / entry["team_seasons_path"]).is_file()
 
 
+def test_future_predictions_use_posterior_after_completed_evidence(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    likelihood = LikelihoodV1(np.r_[10.0, np.zeros(33)], 1.0, 15.0)
+    before_evidence = build_snapshot(
+        season=2026,
+        cutoff=date(2026, 8, 28),
+        prior_family="context",
+        snapshot_type="weekly",
+        root=root,
+        likelihood=likelihood,
+    )
+    after_evidence = build_snapshot(
+        season=2026,
+        cutoff=date(2026, 9, 1),
+        prior_family="context",
+        snapshot_type="weekly",
+        root=root,
+        likelihood=likelihood,
+    )
+
+    before = json.loads(
+        (before_evidence.directory / "team_seasons.json").read_text(encoding="utf-8")
+    )
+    after = json.loads(
+        (after_evidence.directory / "team_seasons.json").read_text(encoding="utf-8")
+    )
+    before_margin = before["future_predictions"]["later"]["expected_home_margin"]
+    after_margin = after["future_predictions"]["later"]["expected_home_margin"]
+
+    assert before["included_game_ids"] == []
+    assert after["included_game_ids"] == ["early"]
+    assert after_margin != pytest.approx(before_margin)
+
+
 def test_team_artifact_provenance_mismatch_fails_closed(tmp_path: Path) -> None:
     root = _root(tmp_path)
     snapshot = build_snapshot(

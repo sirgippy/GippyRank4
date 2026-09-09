@@ -10,6 +10,7 @@ exporter so the same canonical result can be used by publication and tests.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -75,6 +76,33 @@ def _pairing(home_subdivision: str, away_subdivision: str) -> tuple[str, bool]:
         )
     cross = home != away
     return ("fbs-fcs" if cross else f"{home}-{away}"), cross
+
+
+def posterior_prediction_team(
+    team: Team, posterior_pmfs: Mapping[str, np.ndarray]
+) -> Team:
+    """Return prediction metadata paired with an explicit posterior PMF.
+
+    ``Team.prior`` stores whichever rank PMF was used to construct a snapshot,
+    so prediction callers must replace it explicitly with the snapshot
+    posterior rather than relying on the field's historical name.
+    """
+
+    try:
+        posterior_pmf = posterior_pmfs[team.team_id]
+    except KeyError as error:
+        raise KeyError(f"posterior PMF is missing team {team.team_id}") from error
+    return Team(team.team_id, team.name, team.subdivision, posterior_pmf)
+
+
+def posterior_prediction_teams(
+    teams: Sequence[Team], posterior_pmfs: Mapping[str, np.ndarray]
+) -> dict[str, Team]:
+    """Build prediction-side teams with metadata and posterior PMFs."""
+
+    return {
+        team.team_id: posterior_prediction_team(team, posterior_pmfs) for team in teams
+    }
 
 
 def _location_surface(

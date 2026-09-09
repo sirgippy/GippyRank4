@@ -14,9 +14,10 @@ from scipy.stats import t as student_t
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import build_performance_v1 as study
 
-from gippyrank.posterior.engine import LikelihoodV1, Team
+from gippyrank.posterior.engine import LikelihoodV1
 from gippyrank.posterior.predictive import (
     ScheduledGame,
+    posterior_prediction_teams,
     predict_game,
     predictive_components,
 )
@@ -31,7 +32,7 @@ def _score_model(
     likelihood: LikelihoodV1,
 ) -> dict[str, float | int]:
     posterior = inference.anchor_result.pmfs
-    teams = {team.team_id: team for team in inference.teams}
+    teams = posterior_prediction_teams(inference.teams, posterior)
     totals = {
         "n": 0,
         "mae": 0.0,
@@ -44,19 +45,7 @@ def _score_model(
     for game in run.prepared.future_games:
         if game.home_id not in posterior or game.away_id not in posterior:
             continue
-        home_base, away_base = teams[game.home_id], teams[game.away_id]
-        home = Team(
-            home_base.team_id,
-            home_base.name,
-            home_base.subdivision,
-            posterior[game.home_id],
-        )
-        away = Team(
-            away_base.team_id,
-            away_base.name,
-            away_base.subdivision,
-            posterior[game.away_id],
-        )
+        home, away = teams[game.home_id], teams[game.away_id]
         scheduled = ScheduledGame(
             game.game_id,
             game.home_id,
