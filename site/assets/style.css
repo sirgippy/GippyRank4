@@ -67,6 +67,19 @@ button {
   font-size: 13px;
 }
 
+.about-link {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration-color: var(--gold);
+  text-underline-offset: 3px;
+}
+
+.about-link:hover {
+  color: #fff;
+  text-decoration-thickness: 2px;
+}
+
 .intro {
   padding: 28px 0 16px;
 }
@@ -427,6 +440,7 @@ td.team {
 .about-rankings {
   margin: 18px 0 28px;
   border-top: 1px solid var(--line);
+  scroll-margin-top: 16px;
 }
 
 .about-rankings summary {
@@ -499,6 +513,7 @@ footer a {
 button:focus-visible,
 select:focus-visible,
 summary:focus-visible,
+.about-link:focus-visible,
 .team-button:focus-visible,
 .team-link:focus-visible,
 .back-link a:focus-visible {
@@ -1110,6 +1125,12 @@ summary:focus-visible,
   .snapshot-summary,
   footer .shell {
     display: block;
+  }
+
+  .rankings-masthead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
   }
 
   .masthead p {

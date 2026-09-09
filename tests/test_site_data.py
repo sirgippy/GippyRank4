@@ -989,6 +989,21 @@ def test_site_uses_base_safe_relative_paths() -> None:
     assert "No eligible games played" in app
 
 
+def test_rankings_header_is_compact_and_links_to_existing_about_disclosure() -> None:
+    index = (ROOT / "site/index.html").read_text(encoding="utf-8")
+    app = (ROOT / "site/assets/app.js").read_text(encoding="utf-8")
+
+    assert "<title>GippyRank4</title>" in index
+    assert 'aria-label="GippyRank4 home">GippyRank4</a>' in index
+    assert '<a class="about-link" href="#about-rankings">About these rankings</a>' in index
+    assert '<details id="about-rankings" class="about-rankings">' in index
+    assert '<section class="intro"' not in index
+    assert "GippyRank 4.0" not in index
+    assert "College football rankings, built from the games." not in index
+    assert "Expected rank and an 80% interval for every team." not in index
+    assert 'aboutRankings.open = true' in app
+
+
 def test_bare_rankings_url_defaults_to_a_published_season() -> None:
     """Keep the dependency-free site bootstrap safe when the URL has no query."""
     app = (ROOT / "site/assets/app.js").read_text(encoding="utf-8")
