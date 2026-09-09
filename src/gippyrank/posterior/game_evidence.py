@@ -171,6 +171,30 @@ def _future_at_snapshot(row: dict[str, str], metadata: dict[str, Any]) -> bool:
     return cutoff is not None and when > cutoff
 
 
+def _schedule_state(row: dict[str, str], metadata: dict[str, Any]) -> str:
+    """Classify a regular schedule row without consulting later results."""
+    season_type = str(row.get("seasonType", "regular") or "regular").casefold()
+    if season_type not in {"", "regular"}:
+        return "out_of_scope"
+    status = str(row.get("status", row.get("gameStatus", "")) or "").casefold()
+    if "cancel" in status or "postpon" in status:
+        return "cancelled"
+    if metadata.get("snapshot_type") == "preseason":
+        return "future"
+    when = _schedule_datetime(row.get("startDate"))
+    cutoff = _schedule_datetime(metadata.get("effective_cutoff"))
+    if when is None or cutoff is None:
+        return "unresolved"
+    if when > cutoff:
+        return "future"
+    if _bool(row.get("completed")):
+        home_points = _int_or_none(row.get("homePoints"))
+        away_points = _int_or_none(row.get("awayPoints"))
+        if home_points is not None and away_points is not None:
+            return "completed"
+    return "unresolved"
+
+
 def _prediction_source(metadata: dict[str, Any]) -> str:
     family = str(metadata.get("prior_family", "context"))
     if family == "history":
@@ -196,7 +220,7 @@ def _result_and_score(
 def _completed_regular_records(
     rows: list[dict[str, str]], fbs_team_ids: set[str]
 ) -> dict[str, CompletedRecord]:
-    """Count only fixed regular-season evidence included by this snapshot."""
+    """Count durably fixed regular-season records for known FBS teams."""
     counts = {team_id: [0, 0, 0] for team_id in fbs_team_ids}
     for row in rows:
         season_type = str(row.get("seasonType", "regular") or "regular").casefold()
@@ -207,14 +231,11 @@ def _completed_regular_records(
         away_points = _int_or_none(row.get("awayPoints"))
         if home_points is None or away_points is None:
             continue
-        home_is_fbs = (
-            home_id in fbs_team_ids
-            and row.get("homeClassification", "").casefold() == "fbs"
-        )
-        away_is_fbs = (
-            away_id in fbs_team_ids
-            and row.get("awayClassification", "").casefold() == "fbs"
-        )
+        # Record truth is separate from model-evidence membership. A known FBS
+        # team gets credit for a durably scored regular-season game even when
+        # that game was excluded from Historical Likelihood evidence.
+        home_is_fbs = home_id in fbs_team_ids
+        away_is_fbs = away_id in fbs_team_ids
         if home_points == away_points:
             if home_is_fbs:
                 counts[home_id][2] += 1
@@ -328,21 +349,35 @@ def build_team_season_artifact(
             schedule = list(csv.DictReader(handle))
 
     future_simulation_games: list[ScheduledGame] = []
+    fixed_regular_rows: list[dict[str, str]] = []
+    excluded_schedule_games: list[dict[str, Any]] = []
     for row in schedule:
         if str(row.get("season", "")) != str(metadata["season"]):
             continue
+        state = _schedule_state(row, metadata)
+        if state == "out_of_scope":
+            continue
         game_id = str(row.get("id", ""))
-        if (
-            not game_id
-            or game_id in included_ids
-            or not _future_at_snapshot(row, metadata)
-            or not (
-                row.get("homeClassification", "").casefold() == "fbs"
-                or row.get("awayClassification", "").casefold() == "fbs"
-                or row.get("homeId", "") in fbs_teams
-                or row.get("awayId", "") in fbs_teams
+        involves_fbs = (
+            row.get("homeId", "") in fbs_teams
+            or row.get("awayId", "") in fbs_teams
+            or row.get("homeClassification", "").casefold() == "fbs"
+            or row.get("awayClassification", "").casefold() == "fbs"
+        )
+        if not involves_fbs:
+            continue
+        if state == "completed":
+            fixed_regular_rows.append(row)
+            continue
+        if state == "cancelled":
+            excluded_schedule_games.append(
+                {
+                    "game_id": game_id,
+                    "home_team_id": row.get("homeId", ""),
+                    "away_team_id": row.get("awayId", ""),
+                    "reason": "cancelled_or_postponed",
+                }
             )
-        ):
             continue
         future_simulation_games.append(
             ScheduledGame(
@@ -354,6 +389,7 @@ def build_team_season_artifact(
                 neutral_site=_bool(row.get("neutralSite")),
                 season_type=row.get("seasonType", "regular") or "regular",
                 date=row.get("startDate"),
+                schedule_status=state,
             )
         )
 
@@ -475,7 +511,7 @@ def build_team_season_artifact(
     season_simulation = None
     if likelihood is not None:
         simulation_config = season_simulation_config or SeasonSimulationConfig()
-        completed_records = _completed_regular_records(included_rows, set(fbs_teams))
+        completed_records = _completed_regular_records(fixed_regular_rows, set(fbs_teams))
         season_simulation = simulate_season(
             teams,
             posterior.pmfs,
@@ -499,6 +535,7 @@ def build_team_season_artifact(
                 ),
                 "prediction_source": source,
             },
+            excluded_schedule_games=excluded_schedule_games,
         )
 
     return {

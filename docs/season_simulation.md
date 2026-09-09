@@ -80,6 +80,24 @@ converted to probabilities. A team whose final forecast depends on an
 unsupported future game has `forecast_status: "unavailable"` and a structured
 reason in `unsupported_games`.
 
+Schedule accounting is explicit. Every regular-season row involving a known
+FBS team is classified as durably completed, strictly future, unresolved, or
+cancelled/postponed. Durably completed rows contribute to the fixed record;
+future and unresolved rows remain in the forecast scope; cancelled/postponed
+rows are recorded in `excluded_schedule_games`; and lower-division games are
+kept in the fixed record when their score is known but cannot be forecast by
+Historical Likelihood V1. Each FBS summary carries the invariant
+`completed_regular_season_games + remaining_games = forecast_scope_games`.
+An in-progress or otherwise non-durable row is therefore fail-closed rather
+than silently omitted.
+
+When an FCS opponent is scheduled but absent from the frozen prior, the
+snapshot builder adds a uniform PMF over the authoritative full-season FCS
+rank universe. For the current cached season that universe comes from the
+full-season schedule, so future FBS/FCS games are represented before the FCS
+team appears in completed evidence. If no authoritative universe is
+available, the snapshot fails closed.
+
 ## Determinism and validation
 
 The PRNG is a local `numpy.random.default_rng` initialized from the published
@@ -100,3 +118,11 @@ The raw helper `simulate_shared_game_outcomes` is available for development
 validation of the shared-game contract. It returns one canonical home-result
 matrix per game; the away result for the same outer/inner cell is its logical
 complement.
+
+Durable artifacts retain `game_marginals`, single-game equivalence checks,
+event/dependence diagnostics, and Monte Carlo diagnostics for auditability.
+The static browser export strips those diagnostic fields from the lazy
+team-season payload while retaining team win distributions and summaries;
+manifest entries report the durable size, browser increment, and diagnostic
+component sizes. Historical validation results are recorded in
+[`season_forecast_validation.md`](season_forecast_validation.md).

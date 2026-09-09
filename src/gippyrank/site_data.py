@@ -1111,6 +1111,12 @@ def _validate_season_simulation(
     """Validate the canonical snapshot-level regular-season forecast."""
     simulation = artifact.get("season_simulation")
     if simulation is None:
+        if metadata.get("season_simulation_version") is not None or metadata.get(
+            "season_simulation_configuration"
+        ) is not None:
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: Season Simulation V1 is declared but missing"
+            )
         return  # Retain compatibility with pre-issue-49 retained artifacts.
     snapshot_id = str(metadata["snapshot_id"])
     if not isinstance(simulation, dict):
@@ -1130,6 +1136,9 @@ def _validate_season_simulation(
         raise SiteDataValidationError(f"{snapshot_id}: season simulation configuration is missing")
     if configuration.get("simulation_version") != simulation.get("simulation_version"):
         raise SiteDataValidationError(f"{snapshot_id}: season simulation configuration version mismatch")
+    declared_configuration = metadata.get("season_simulation_configuration")
+    if declared_configuration is not None and configuration != declared_configuration:
+        raise SiteDataValidationError(f"{snapshot_id}: season simulation configuration mismatch")
     if configuration.get("likelihood_version") != metadata.get(
         "historical_likelihood_version", "V1"
     ):
@@ -1186,21 +1195,48 @@ def _validate_season_simulation(
     if scope.get("unsupported_behavior") != "fail_closed":
         raise SiteDataValidationError(f"{snapshot_id}: unsupported-game behavior is not fail-closed")
     future_values = scope.get("future_game_ids")
+    unresolved_values = scope.get("unresolved_game_ids")
+    forecast_scope_values = scope.get("forecast_scope_game_ids")
     supported_values = scope.get("supported_future_game_ids")
-    if not isinstance(future_values, list) or not isinstance(supported_values, list):
+    if not all(
+        isinstance(value, list)
+        for value in (future_values, unresolved_values, forecast_scope_values, supported_values)
+    ):
         raise SiteDataValidationError(f"{snapshot_id}: season game scope IDs are invalid")
     future_ids = {str(value) for value in future_values}
+    unresolved_ids = {str(value) for value in unresolved_values}
+    forecast_scope_ids = {str(value) for value in forecast_scope_values}
     supported_ids = {str(value) for value in supported_values}
+    if any(
+        len(values) != len({str(value) for value in values})
+        for values in (future_values, unresolved_values, forecast_scope_values, supported_values)
+    ):
+        raise SiteDataValidationError(f"{snapshot_id}: season scope IDs contain duplicates")
+    if future_ids & unresolved_ids or future_ids | unresolved_ids != forecast_scope_ids:
+        raise SiteDataValidationError(f"{snapshot_id}: season scope state partition is invalid")
     if not supported_ids <= future_ids:
         raise SiteDataValidationError(f"{snapshot_id}: supported season games are not a subset")
+    if scope.get("future_game_count") != len(future_ids) or scope.get(
+        "unresolved_game_count"
+    ) != len(unresolved_ids) or scope.get("forecast_scope_game_count") != len(
+        forecast_scope_ids
+    ):
+        raise SiteDataValidationError(f"{snapshot_id}: season scope counts are inconsistent")
     unsupported = scope.get("unsupported_future_games", [])
     if not isinstance(unsupported, list):
         raise SiteDataValidationError(f"{snapshot_id}: unsupported season games are invalid")
     unsupported_ids = {str(item.get("game_id")) for item in unsupported if isinstance(item, dict)}
-    if not unsupported_ids <= future_ids:
+    if not unsupported_ids <= forecast_scope_ids:
         raise SiteDataValidationError(f"{snapshot_id}: unsupported season games are outside scope")
     if supported_ids & unsupported_ids:
         raise SiteDataValidationError(f"{snapshot_id}: season game is both supported and unsupported")
+    excluded = scope.get("excluded_schedule_games")
+    if not isinstance(excluded, list) or any(
+        not isinstance(item, dict) or not item.get("game_id") for item in excluded
+    ):
+        raise SiteDataValidationError(f"{snapshot_id}: excluded schedule games are invalid")
+    if {str(item["game_id"]) for item in excluded} & forecast_scope_ids:
+        raise SiteDataValidationError(f"{snapshot_id}: excluded schedule game is in forecast scope")
 
     latent_quality = simulation.get("latent_quality")
     if not isinstance(latent_quality, dict) or latent_quality.get(
@@ -1231,6 +1267,16 @@ def _validate_season_simulation(
         status = summary.get("forecast_status")
         if status not in {"available", "unavailable"}:
             raise SiteDataValidationError(f"{snapshot_id}: invalid season status for {team_id}")
+        completed_games = summary.get("completed_regular_season_games")
+        remaining_games = summary.get("remaining_games")
+        forecast_scope_games = summary.get("forecast_scope_games")
+        if not all(
+            isinstance(value, int) and not isinstance(value, bool) and value >= 0
+            for value in (completed_games, remaining_games, forecast_scope_games)
+        ) or completed_games + remaining_games != forecast_scope_games:
+            raise SiteDataValidationError(
+                f"{snapshot_id}: season schedule accounting is invalid for {team_id}"
+            )
         if status == "unavailable":
             unavailable_team_ids.add(team_id)
             if not summary.get("unsupported_games"):
@@ -1284,6 +1330,23 @@ def _validate_season_simulation(
     expected_status = "partial" if unavailable_team_ids else "available"
     if simulation.get("forecast_status") != expected_status:
         raise SiteDataValidationError(f"{snapshot_id}: season forecast status is inconsistent")
+    accounting = simulation.get("schedule_accounting")
+    if not isinstance(accounting, dict) or set(accounting) != ranking_ids:
+        raise SiteDataValidationError(f"{snapshot_id}: season schedule accounting is missing")
+    for team_id, item in accounting.items():
+        if not isinstance(item, dict):
+            raise SiteDataValidationError(f"{snapshot_id}: invalid season accounting for {team_id}")
+        if item.get("invariant") != "completed + remaining = forecast scope":
+            raise SiteDataValidationError(f"{snapshot_id}: season accounting invariant is missing")
+        if any(
+            item.get(key) != by_team[team_id].get(summary_key)
+            for key, summary_key in (
+                ("completed_regular_season_games", "completed_regular_season_games"),
+                ("remaining_regular_season_games", "remaining_games"),
+                ("forecast_scope_games", "forecast_scope_games"),
+            )
+        ):
+            raise SiteDataValidationError(f"{snapshot_id}: season accounting disagrees for {team_id}")
 
     game_marginals = simulation.get("game_marginals")
     if not isinstance(game_marginals, dict) or set(game_marginals) != supported_ids:
@@ -1303,6 +1366,35 @@ def _validate_season_simulation(
             "expected_home_margin_error",
         ):
             _finite_number(marginal.get(field), field, snapshot_id)
+
+
+def _browser_team_season_artifact(artifact: dict[str, Any]) -> dict[str, Any]:
+    """Remove durable forecast diagnostics from the browser-facing copy."""
+    exported = dict(artifact)
+    simulation = artifact.get("season_simulation")
+    if not isinstance(simulation, dict):
+        return exported
+    browser_simulation = dict(simulation)
+    for field in (
+        "game_marginals",
+        "cross_game_dependence",
+        "validation",
+        "monte_carlo",
+    ):
+        browser_simulation.pop(field, None)
+    browser_teams = browser_simulation.get("teams")
+    if isinstance(browser_teams, dict):
+        browser_simulation["teams"] = {
+            team_id: {
+                key: value
+                for key, value in summary.items()
+                if key not in {"event_probability_decomposition", "monte_carlo"}
+            }
+            for team_id, summary in browser_teams.items()
+            if isinstance(summary, dict)
+        }
+    exported["season_simulation"] = browser_simulation
+    return exported
 
 
 def _validate_team_season_artifact(
@@ -1788,9 +1880,52 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             distribution,
             compact=True,
         )
+        browser_team_seasons = _browser_team_season_artifact(team_seasons)
+        simulation = team_seasons.get("season_simulation")
+        if isinstance(simulation, dict):
+            simulation_bytes = len(
+                json.dumps(simulation, separators=(",", ":"), sort_keys=True).encode(
+                    "utf-8"
+                )
+            )
+            browser_simulation = browser_team_seasons["season_simulation"]
+            browser_simulation_bytes = len(
+                json.dumps(
+                    browser_simulation, separators=(",", ":"), sort_keys=True
+                ).encode("utf-8")
+            )
+            team_summary_sizes = [
+                len(json.dumps(summary, separators=(",", ":"), sort_keys=True).encode("utf-8"))
+                for summary in simulation.get("teams", {}).values()
+                if isinstance(summary, dict)
+            ]
+            game_marginal_bytes = len(
+                json.dumps(
+                    simulation.get("game_marginals", {}),
+                    separators=(",", ":"),
+                    sort_keys=True,
+                ).encode("utf-8")
+            )
+            event_decomposition_bytes = sum(
+                len(
+                    json.dumps(
+                        summary.get("event_probability_decomposition", {}),
+                        separators=(",", ":"),
+                        sort_keys=True,
+                    ).encode("utf-8")
+                )
+                for summary in simulation.get("teams", {}).values()
+                if isinstance(summary, dict)
+            )
+        else:
+            simulation_bytes = 0
+            browser_simulation_bytes = 0
+            team_summary_sizes = []
+            game_marginal_bytes = 0
+            event_decomposition_bytes = 0
         _write_json(
             output_directory / "team-seasons" / f"{snapshot_id}.json",
-            team_seasons,
+            browser_team_seasons,
             compact=True,
         )
         future_predictions = team_seasons.get("future_predictions", {})
@@ -1852,6 +1987,16 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             "team_seasons_bytes": (
                 output_directory / "team-seasons" / f"{snapshot_id}.json"
             ).stat().st_size,
+            "season_simulation_bytes": simulation_bytes,
+            "season_simulation_browser_bytes": browser_simulation_bytes,
+            "season_simulation_incremental_lazy_bytes": browser_simulation_bytes,
+            "season_simulation_average_team_summary_bytes": (
+                sum(team_summary_sizes) / len(team_summary_sizes)
+                if team_summary_sizes
+                else 0
+            ),
+            "season_simulation_game_marginals_bytes": game_marginal_bytes,
+            "season_simulation_event_decomposition_bytes": event_decomposition_bytes,
             "future_prediction_count": len(future_predictions),
             "future_prediction_bytes": future_prediction_bytes,
             "completed_game_count": len(completed_displays),
@@ -1909,6 +2054,12 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
     future_visualization_bytes = sum(
         int(entry["future_visualization_bytes"]) for entry in manifest_entries
     )
+    season_simulation_bytes = sum(
+        int(entry["season_simulation_bytes"]) for entry in manifest_entries
+    )
+    season_simulation_browser_bytes = sum(
+        int(entry["season_simulation_browser_bytes"]) for entry in manifest_entries
+    )
     manifest = {
         "schema_version": SITE_SCHEMA_VERSION,
         "seasons": sorted({entry["season"] for entry in manifest_entries}, reverse=True),
@@ -1947,6 +2098,8 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             "lazy_future_prediction_bytes": future_prediction_bytes,
             "lazy_completed_visualization_bytes": completed_visualization_bytes,
             "lazy_future_visualization_bytes": future_visualization_bytes,
+            "season_simulation_bytes": season_simulation_bytes,
+            "season_simulation_browser_bytes": season_simulation_browser_bytes,
             "initial_rankings_page_bytes": ranking_snapshot_bytes,
         },
     }

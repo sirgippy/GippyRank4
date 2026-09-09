@@ -178,6 +178,72 @@ def test_unresolved_future_schedule_is_fail_closed_for_season_forecast(tmp_path:
     assert artifact["season_simulation"]["teams"]["1"]["unsupported_games"][0]["reason"] == "unsupported_subdivision"
 
 
+def test_schedule_accounting_keeps_unresolved_and_excluded_completed_games(
+    tmp_path: Path,
+) -> None:
+    root = _root(tmp_path)
+    schedule_path = root / "data/processed/cfbd/games.csv"
+    with schedule_path.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    rows.extend(
+        [
+            {
+                **rows[0],
+                "id": "excluded-completed",
+                "startDate": "2026-08-30T00:00:00Z",
+                "completed": "True",
+                "homeId": "1",
+                "homeTeam": "One",
+                "homeClassification": "fbs",
+                "homePoints": "17",
+                "awayId": "99",
+                "awayTeam": "Lower",
+                "awayClassification": "dii",
+                "awayConference": "Lower",
+                "awayPoints": "3",
+            },
+            {
+                **rows[0],
+                "id": "unresolved-before-cutoff",
+                "startDate": "2026-08-31T00:00:00Z",
+                "completed": "False",
+                "homeId": "1",
+                "homeTeam": "One",
+                "homeClassification": "fbs",
+                "homePoints": "",
+                "awayId": "2",
+                "awayTeam": "Two",
+                "awayClassification": "fbs",
+                "awayPoints": "",
+            },
+        ]
+    )
+    _write(schedule_path, list(rows[0]), rows)
+
+    snapshot = build_snapshot(
+        season=2026,
+        cutoff=date(2026, 9, 1),
+        prior_family="context",
+        snapshot_type="weekly",
+        root=root,
+        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
+    )
+    simulation = json.loads((snapshot.directory / "team_seasons.json").read_text())[
+        "season_simulation"
+    ]
+    scope = simulation["season_scope"]
+    summary = simulation["teams"]["1"]
+
+    assert scope["future_game_ids"] == ["later"]
+    assert scope["unresolved_game_ids"] == ["unresolved-before-cutoff"]
+    assert scope["forecast_scope_game_count"] == 2
+    assert summary["completed_wins"] == 2
+    assert summary["completed_regular_season_games"] == 2
+    assert summary["remaining_games"] == 2
+    assert summary["forecast_scope_games"] == 4
+    assert summary["forecast_status"] == "unavailable"
+
+
 def test_team_artifact_provenance_mismatch_fails_closed(tmp_path: Path) -> None:
     root = _root(tmp_path)
     snapshot = build_snapshot(
@@ -196,6 +262,41 @@ def test_team_artifact_provenance_mismatch_fails_closed(tmp_path: Path) -> None:
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(json.dumps({"schema_version": "1.0", "publication_slots": [{"id": "2026-09-01", "status": "official"}], "snapshots": [{"source": snapshot.directory.relative_to(root).as_posix(), "display_label": "Test", "publication_slot": "2026-09-01"}]}))
     with pytest.raises(SiteDataValidationError, match="provenance mismatch"):
+        build_site_data(root=root, config_path=config, output_directory=root / "site/data")
+
+
+def test_declared_season_simulation_missing_fails_closed(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    snapshot = build_snapshot(
+        season=2026,
+        cutoff=date(2026, 9, 1),
+        prior_family="context",
+        snapshot_type="weekly",
+        root=root,
+        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
+    )
+    artifact_path = snapshot.directory / "team_seasons.json"
+    artifact = json.loads(artifact_path.read_text())
+    artifact["season_simulation"] = None
+    artifact_path.write_text(json.dumps(artifact), encoding="utf-8")
+    config = root / "site/publish_config.json"
+    config.parent.mkdir(parents=True, exist_ok=True)
+    config.write_text(
+        json.dumps(
+            {
+                "schema_version": "1.0",
+                "publication_slots": [{"id": "2026-09-01", "status": "official"}],
+                "snapshots": [
+                    {
+                        "source": snapshot.directory.relative_to(root).as_posix(),
+                        "display_label": "Test",
+                        "publication_slot": "2026-09-01",
+                    }
+                ],
+            }
+        )
+    )
+    with pytest.raises(SiteDataValidationError, match="declared but missing"):
         build_site_data(root=root, config_path=config, output_directory=root / "site/data")
 
 

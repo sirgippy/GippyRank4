@@ -161,7 +161,13 @@ def filter_games(
         for row in csv.DictReader(handle):
             if int(row["season"]) != season or not _parse_completed(row["completed"]):
                 continue
-            when = datetime.fromisoformat(row["startDate"])
+            try:
+                when = datetime.fromisoformat(row["startDate"])
+            except (KeyError, TypeError, ValueError):
+                # Keep malformed completed rows out of inference. The team
+                # season builder will classify them as unresolved schedule
+                # state rather than silently dropping them.
+                continue
             if snapshot_type == "preseason" or (
                 cutoff_dt is not None and when > cutoff_dt
             ):
@@ -195,29 +201,31 @@ def add_fcs_fallbacks(
     team_rows: dict[str, dict[str, str]],
     included: list[dict[str, str]],
     fcs_population_size: int | None,
+    scheduled_future: list[dict[str, str]] | None = None,
 ) -> tuple[list[Team], tuple[str, ...]]:
     """Add weak FCS PMFs when the frozen upstream prior has no FCS rows.
 
     The current frozen H/C artifacts contain only FBS forecasts. A uniform FCS
     PMF is deliberately conservative but remains a real graph variable rather
-    than a fixed anonymous-strength placeholder. It is created only for FCS
-    teams that have appeared by this snapshot's cutoff.
+    than a fixed anonymous-strength placeholder. It is created for FCS teams
+    that appeared by this snapshot's cutoff or are scheduled future opponents.
     """
     known = {team.team_id for team in teams}
-    fcs_rows: dict[str, tuple[str, dict[str, str]]] = {}
-    for row in included:
+    fcs_rows: dict[str, tuple[str, dict[str, str], str]] = {}
+    for row in [*included, *(scheduled_future or [])]:
         for side in ("home", "away"):
             if row[f"{side}Classification"].lower() == "fcs":
-                fcs_rows[row[f"{side}Id"]] = (row[f"{side}Team"], row)
-    if fcs_rows and fcs_population_size is None:
+                fcs_rows[row[f"{side}Id"]] = (row[f"{side}Team"], row, side)
+    missing_fcs_rows = {
+        team_id: value for team_id, value in fcs_rows.items() if team_id not in known
+    }
+    if missing_fcs_rows and fcs_population_size is None:
         raise ValueError(
             "Cannot create an FCS fallback without an authoritative full-season "
             "FCS population size. Add durable season/subdivision coverage first."
         )
     fallbacks = []
-    for team_id, (name, row) in sorted(fcs_rows.items()):
-        if team_id in known:
-            continue
+    for team_id, (name, row, side) in sorted(missing_fcs_rows.items()):
         teams.append(
             Team(
                 team_id,
@@ -226,9 +234,54 @@ def add_fcs_fallbacks(
                 np.full(fcs_population_size, 1 / fcs_population_size),
             )
         )
-        team_rows[team_id] = {"conference": row.get("homeConference", "")}
+        team_rows[team_id] = {
+            "conference": row.get(f"{side}Conference", ""),
+        }
         fallbacks.append(team_id)
     return teams, tuple(fallbacks)
+
+
+def _scheduled_future_fcs_rows(
+    root: Path,
+    season: int,
+    cutoff: datetime | date | None,
+    snapshot_type: SnapshotType,
+) -> list[dict[str, str]]:
+    """Return scheduled FCS opponents visible from this snapshot onward."""
+    path = root / "data/processed/cfbd/games.csv"
+    if not path.is_file():
+        return []
+    cutoff_dt = _as_utc_datetime(cutoff) if cutoff is not None else None
+    rows: list[dict[str, str]] = []
+    with path.open(newline="", encoding="utf-8") as handle:
+        for row in csv.DictReader(handle):
+            if int(row.get("season", -1)) != season:
+                continue
+            if str(row.get("seasonType", "regular") or "regular").casefold() not in {
+                "",
+                "regular",
+            }:
+                continue
+            if not any(
+                str(row.get(f"{side}Classification", "")).casefold() == "fcs"
+                for side in ("home", "away")
+            ):
+                continue
+            status = str(row.get("status", row.get("gameStatus", "")) or "").casefold()
+            if "cancel" in status or "postpon" in status:
+                continue
+            if snapshot_type == "preseason":
+                rows.append(row)
+                continue
+            try:
+                when = datetime.fromisoformat(row["startDate"])
+            except (KeyError, TypeError, ValueError):
+                rows.append(row)
+                continue
+            when = when if when.tzinfo is not None else when.replace(tzinfo=UTC)
+            if cutoff_dt is None or when > cutoff_dt:
+                rows.append(row)
+    return rows
 
 
 def subdivision_population_size(
@@ -356,18 +409,27 @@ def build_snapshot(
     games, included, excluded_lower, corpus_path = filter_games(
         root, season, effective_cutoff, snapshot_type
     )
+    scheduled_future_fcs = _scheduled_future_fcs_rows(
+        root, season, effective_cutoff, snapshot_type
+    )
     has_included_fcs = any(
         row[f"{side}Classification"].lower() == "fcs"
         for row in included
         for side in ("home", "away")
-    )
+    ) or bool(scheduled_future_fcs)
     fcs_population = (
         subdivision_population_size(root, season, "fcs") if has_included_fcs else None
     )
     fcs_population_source = (
         subdivision_population_source(root, season, "fcs") if has_included_fcs else None
     )
-    teams, fcs_fallbacks = add_fcs_fallbacks(teams, team_rows, included, fcs_population)
+    teams, fcs_fallbacks = add_fcs_fallbacks(
+        teams,
+        team_rows,
+        included,
+        fcs_population,
+        scheduled_future_fcs,
+    )
     likelihood_path = root / "data/processed/posterior/historical_likelihood_v1.json"
     if likelihood is None and likelihood_path.exists():
         # A preseason snapshot still needs the frozen likelihood to publish

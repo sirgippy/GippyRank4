@@ -47,6 +47,7 @@ class ScheduledGame:
     neutral_site: bool = False
     season_type: str = "regular"
     date: str | None = None
+    schedule_status: str = "future"
 
 
 @dataclass(frozen=True)

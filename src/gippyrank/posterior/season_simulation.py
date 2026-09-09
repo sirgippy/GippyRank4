@@ -260,6 +260,8 @@ def _game_descriptor(game: ScheduledGame, reason: str) -> dict[str, Any]:
         "away_subdivision": str(game.away_subdivision).casefold(),
         "neutral_site": bool(game.neutral_site),
         "season_type": str(getattr(game, "season_type", "regular") or "regular"),
+        "date": getattr(game, "date", None),
+        "schedule_status": str(getattr(game, "schedule_status", "future") or "future"),
         "reason": reason,
     }
 
@@ -317,7 +319,12 @@ def _prepare_simulation(
             candidate_games_by_team[team_id].append(game)
 
         reason: str | None = None
-        if game.home_id == game.away_id:
+        schedule_status = str(
+            getattr(game, "schedule_status", "future") or "unresolved"
+        ).casefold()
+        if schedule_status != "future":
+            reason = "unresolved_schedule"
+        elif game.home_id == game.away_id:
             reason = "same_team_on_both_sides"
         elif home_subdivision not in {"fbs", "fcs"} or away_subdivision not in {
             "fbs",
@@ -615,8 +622,10 @@ def _team_summary(
         "completed_wins": record.wins,
         "completed_losses": record.losses,
         "completed_ties": record.ties,
+        "completed_regular_season_games": record.wins + record.losses + record.ties,
         "remaining_games": len(candidate_games),
         "simulated_remaining_games": int(team_probabilities.shape[1]),
+        "forecast_scope_games": record.wins + record.losses + record.ties + len(candidate_games),
         "forecast_status": "unavailable" if unsupported_games else "available",
     }
     if unsupported_games:
@@ -726,6 +735,7 @@ def simulate_season(
     config: SeasonSimulationConfig | None = None,
     provenance: Mapping[str, Any] | None = None,
     prediction_source: str | None = None,
+    excluded_schedule_games: Sequence[Mapping[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Build one canonical regular-season forecast artifact for a snapshot.
 
@@ -740,6 +750,7 @@ def simulate_season(
     if config.likelihood_version != "V1":
         raise ValueError("Season Simulation V1 requires Historical Likelihood V1")
     prepared = _prepare_simulation(teams, future_games)
+    excluded = tuple(dict(item) for item in (excluded_schedule_games or ()))
     generator = np.random.default_rng(config.seed)
     latent = sample_latent_qualities(
         prepared.teams,
@@ -830,6 +841,19 @@ def simulate_season(
         for game in games
     ]
     candidate_ids = sorted(set(candidate_ids))
+    future_ids = sorted(
+        {
+            game.game_id
+            for game in prepared.supported_games + tuple(
+                game
+                for games in prepared.candidate_games_by_team.values()
+                for game in games
+                if str(getattr(game, "schedule_status", "future") or "future").casefold()
+                == "future"
+            )
+        }
+    )
+    unresolved_ids = sorted(set(candidate_ids) - set(future_ids))
     supported_ids = [game.game_id for game in prepared.supported_games]
     unavailable_team_ids = [
         team_id for team_id, games in prepared.unsupported_by_team.items() if games
@@ -846,13 +870,29 @@ def simulate_season(
             "season_type": "regular",
             "future_rule": "strictly after selected snapshot cutoff",
             "completed_games_are_fixed": True,
-            "future_game_count": len(candidate_ids),
+            "future_game_count": len(future_ids),
+            "unresolved_game_count": len(unresolved_ids),
+            "forecast_scope_game_count": len(candidate_ids),
             "supported_future_game_count": len(supported_ids),
-            "future_game_ids": candidate_ids,
+            "future_game_ids": future_ids,
+            "unresolved_game_ids": unresolved_ids,
+            "forecast_scope_game_ids": candidate_ids,
             "supported_future_game_ids": sorted(supported_ids),
             "unsupported_future_games": list(prepared.unsupported_games),
             "unsupported_team_ids": unavailable_team_ids,
             "unsupported_behavior": "fail_closed",
+            "excluded_schedule_games": list(excluded),
+        },
+        "schedule_accounting": {
+            team_id: {
+                "completed_regular_season_games": summaries[team_id][
+                    "completed_regular_season_games"
+                ],
+                "remaining_regular_season_games": summaries[team_id]["remaining_games"],
+                "forecast_scope_games": summaries[team_id]["forecast_scope_games"],
+                "invariant": "completed + remaining = forecast scope",
+            }
+            for team_id in prepared.fbs_team_ids
         },
         "latent_quality": {
             "draw_unit": "one rank per modeled team per outer universe",
