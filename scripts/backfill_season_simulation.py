@@ -123,13 +123,44 @@ def _game(row: dict[str, str], state: str) -> ScheduledGame:
     )
 
 
-def backfill(source: Path, config: SeasonSimulationConfig) -> None:
-    metadata_path = source / "metadata.json"
-    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+def _simulation_provenance(
+    metadata: dict[str, Any],
+    prediction_source: str,
+    fallback_team_ids: list[str],
+    fcs_population: int,
+    fcs_population_source: str,
+) -> dict[str, Any]:
+    """Describe both the retained posterior and simulation-only additions."""
+    return {
+        "source_snapshot_id": metadata["snapshot_id"],
+        "season": metadata["season"],
+        "snapshot_type": metadata["snapshot_type"],
+        "requested_cutoff": metadata.get("requested_cutoff"),
+        "effective_cutoff": metadata.get("effective_cutoff"),
+        "game_corpus_sha256": metadata.get("game_corpus_sha256"),
+        "historical_likelihood_version": metadata.get(
+            "historical_likelihood_version", "V1"
+        ),
+        "prediction_source": prediction_source,
+        "season_simulation_fcs_fallback_count": len(fallback_team_ids),
+        "season_simulation_fcs_fallback_team_ids": fallback_team_ids,
+        "season_simulation_fcs_fallback_kind": (
+            "uniform_full_subdivision_rank" if fallback_team_ids else None
+        ),
+        "season_simulation_fcs_fallback_pmf_semantics": (
+            "uniform ranks 1..N_FCS" if fallback_team_ids else None
+        ),
+        "season_simulation_fcs_population_size": fcs_population,
+        "season_simulation_fcs_population_source": fcs_population_source,
+    }
+
+
+def build_simulation_inputs(source: Path) -> dict[str, Any]:
+    """Load retained posterior inputs without mutating the snapshot."""
+    metadata = json.loads((source / "metadata.json").read_text(encoding="utf-8"))
     season = int(metadata["season"])
     family = str(metadata.get("prior_family", "context"))
     teams, team_rows, _prior_path = load_teams(ROOT, season, family)
-    included_rows: list[dict[str, str]] = []
     with (source / "included_games.csv").open(newline="", encoding="utf-8") as handle:
         included_rows = list(csv.DictReader(handle))
     included_ids = {str(value) for value in metadata.get("included_game_ids", [])}
@@ -164,9 +195,10 @@ def backfill(source: Path, config: SeasonSimulationConfig) -> None:
         fcs_population,
         scheduled_fcs,
     )
+    fallback_team_ids = sorted(set(fallbacks))
     fbs_ids = {team.team_id for team in teams if team.subdivision == "fbs"}
-    future_games = []
-    excluded = []
+    future_games: list[ScheduledGame] = []
+    excluded: list[dict[str, str]] = []
     seen: set[str] = set()
     for row in schedule:
         if not _involves_fbs(row, fbs_ids):
@@ -200,65 +232,85 @@ def backfill(source: Path, config: SeasonSimulationConfig) -> None:
         if metadata.get("prior_family") == "history"
         else "predictive_context"
     )
+    fcs_population_source = subdivision_population_source(ROOT, season, "fcs")
+    return {
+        "metadata": metadata,
+        "teams": teams,
+        "posterior": posterior,
+        "future_games": future_games,
+        "completed_records": _completed_regular_records(included_rows, fbs_ids),
+        "likelihood": load_likelihood(
+            ROOT / "data/processed/posterior/historical_likelihood_v1.json"
+        ),
+        "prediction_source": prediction_source,
+        "provenance": _simulation_provenance(
+            metadata,
+            prediction_source,
+            fallback_team_ids,
+            fcs_population,
+            fcs_population_source,
+        ),
+        "excluded_schedule_games": excluded,
+        "fallback_team_ids": fallback_team_ids,
+    }
+
+
+def backfill(source: Path, config: SeasonSimulationConfig) -> None:
+    inputs = build_simulation_inputs(source)
     simulation = simulate_season(
-        teams,
-        posterior,
-        future_games,
-        _completed_regular_records(included_rows, fbs_ids),
-        load_likelihood(ROOT / "data/processed/posterior/historical_likelihood_v1.json"),
+        inputs["teams"],
+        inputs["posterior"],
+        inputs["future_games"],
+        inputs["completed_records"],
+        inputs["likelihood"],
         config=config,
-        prediction_source=prediction_source,
-        provenance={
-            "source_snapshot_id": metadata["snapshot_id"],
-            "season": metadata["season"],
-            "snapshot_type": metadata["snapshot_type"],
-            "requested_cutoff": metadata.get("requested_cutoff"),
-            "effective_cutoff": metadata.get("effective_cutoff"),
-            "game_corpus_sha256": metadata.get("game_corpus_sha256"),
-            "historical_likelihood_version": metadata.get("historical_likelihood_version", "V1"),
-            "prediction_source": prediction_source,
-        },
-        excluded_schedule_games=excluded,
+        prediction_source=inputs["prediction_source"],
+        provenance=inputs["provenance"],
+        excluded_schedule_games=inputs["excluded_schedule_games"],
     )
     artifact_path = source / "team_seasons.json"
     artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
     artifact["season_simulation"] = simulation
-    artifact_path.write_text(json.dumps(artifact, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    artifact_path.write_text(
+        json.dumps(artifact, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    metadata_path = source / "metadata.json"
+    metadata = inputs["metadata"]
     metadata.update(
         {
-            "fcs_fallback_team_ids": sorted(set(fallbacks)),
-            "fcs_fallback_count": len(set(fallbacks)),
-            "fcs_fallback_kind": "uniform_full_subdivision_rank" if fallbacks else None,
-            "fcs_fallback_pmf_semantics": "uniform ranks 1..N_FCS" if fallbacks else None,
-            "fcs_population_size": fcs_population if fallbacks else metadata.get("fcs_population_size"),
-            "fcs_population_source": (
-                subdivision_population_source(ROOT, season, "fcs") if fallbacks else metadata.get("fcs_population_source")
-            ),
             "season_simulation_schema_version": "1.0",
             "season_simulation_version": config.simulation_version,
             "season_simulation_configuration": config.as_dict(),
         }
     )
-    metadata_path.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    metadata_path.write_text(
+        json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
 
 def sync_performance_team_seasons() -> None:
     """Copy refreshed Context simulations and update their pairing hashes."""
-    for metadata_path in sorted(ROOT.glob("data/processed/snapshots/2026/*/performance/metadata.json")):
+    for metadata_path in sorted(
+        ROOT.glob("data/processed/snapshots/2026/*/performance/metadata.json")
+    ):
         metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
         context = ROOT / metadata["source_context_path"]
         metadata["source_context_metadata_sha256"] = _sha256(context / "metadata.json")
         metadata_path.write_text(
             json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
-        shutil.copyfile(context / "team_seasons.json", metadata_path.parent / "team_seasons.json")
+        shutil.copyfile(
+            context / "team_seasons.json", metadata_path.parent / "team_seasons.json"
+        )
 
 
 def main() -> None:
     config = SeasonSimulationConfig()
     sources = sorted(
         path.parent
-        for path in ROOT.glob("data/processed/snapshots/2026/*/predictive/*/metadata.json")
+        for path in ROOT.glob(
+            "data/processed/snapshots/2026/*/predictive/*/metadata.json"
+        )
     )
     for source in sources:
         backfill(source, config)

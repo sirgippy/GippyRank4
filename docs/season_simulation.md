@@ -98,6 +98,13 @@ full-season schedule, so future FBS/FCS games are represented before the FCS
 team appears in completed evidence. If no authoritative universe is
 available, the snapshot fails closed.
 
+Retained snapshots keep the posterior's original `fcs_fallback_*` and
+`fcs_population_*` metadata: those fields describe the team universe that
+produced the stored posterior PMFs. The backfill command may add FCS teams only
+for future simulation; that separate provenance is recorded under
+`season_simulation.provenance` as `season_simulation_fcs_*` fields and does not
+rewrite the posterior provenance.
+
 ## Determinism and validation
 
 The PRNG is a local `numpy.random.default_rng` initialized from the published
