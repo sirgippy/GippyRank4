@@ -30,6 +30,26 @@ Predictive History and Performance pages. Under loopy BP, the focal prior is
 absent as a direct factor, but indirect feedback through schedule cycles can
 remain.
 
+## Completed-game presentation data
+
+Each modeled completed game keeps the exact game-evidence summaries above and
+adds `display_pmf`, a deterministic 40-bin compression of that same rank PMF.
+The artifact-level `performance_axis` is shared by every game in the season:
+rank 1 (best) is on the left and `max_rank` (worst) is on the right. The
+display PMF is normalized and is not used to recompute any exact summary.
+
+`performance_percentile` is an empirical percentile of
+`game_rating.expected_rank` among all eligible FBS team-game performance
+distributions included by the selected snapshot. Lower expected rank is
+better; a value receives credit for every reference performance with a worse
+expected rank and half credit for exact ties. Consequently, a historical
+percentile never uses a later game. The frozen presentation grade mapping is
+`A >= 90`, `B >= 70`, `C >= 30`, `D >= 10`, and `F < 10`; grades are display
+sugar and never enter inference.
+
+The artifact records the statistic, direction, reference population, tie
+rule, and reference count in `performance_percentile`.
+
 ## Future-game prediction definition
 
 An eligible scheduled game has one canonical entry in the artifact's
@@ -80,7 +100,9 @@ completed game has a compact `game_rating` summary containing:
 
 - expected rank, median, and mode;
 - central 50%, 80%, and 95% intervals;
-- Top 5, Top 10, and Top 25 probabilities.
+- Top 5, Top 10, and Top 25 probabilities;
+- the normalized 40-bin `display_pmf`, empirical `performance_percentile`, and
+  presentation-only `performance_grade`.
 
 No full per-game PMF is serialized. Games after the selected cutoff retain
 schedule metadata but have null result, score, and rating fields. An eligible
@@ -121,6 +143,18 @@ The prediction map contains compact summaries, not sampled distributions:
 The values above are illustrative.  Static export validates the prediction
 source, provenance, complementarity, nested interval ordering, strict cutoff,
 and cross-team references before publishing.
+
+The `future_margin_axis` is fixed at `-40` through `+40` points in 40 bins,
+with the home-oriented convention `margin = home points - away points`.
+Each prediction also contains `display_distribution` with the exact-mixture
+CDF mass in each visible bin and explicit lower/upper tail probabilities. The
+display is clipped only for chart space; its three mass components sum to one.
+The exact expected margin, median, win probabilities, and 50/80/95% intervals
+remain authoritative and are not derived from display bins. For large
+posterior mixtures, export aggregates nearby component locations into a
+deterministic maximum-256-component representation before evaluating the
+display CDF; this approximation affects presentation bins only, never the
+exact predictive summaries.
 
 Stable `team_id` and `opponent_id` values are resolved at render time through
 the manifest-level `team_logos.handles` map. The team-season artifact does not

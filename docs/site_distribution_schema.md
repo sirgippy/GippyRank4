@@ -56,4 +56,13 @@ Future-game predictions are intentionally absent from the initial ranking
 snapshot JSON.  They remain in the lazy team-season payload; the manifest
 reports `future_prediction_count`, `future_prediction_bytes`, and aggregate
 `payload_stats.lazy_future_prediction_bytes` so publication reviews can track
-the incremental payload separately from the rankings-page payload.
+the incremental payload separately from the rankings-page payload. Issue-46
+adds fixed-grid display data inside that same lazy payload; exact predictive
+summaries remain the source of truth and are not reconstructed from bins.
+
+The completed-game display adds 40 normalized rank bins per modeled FBS
+team-game. The future-game display uses 40 exact CDF masses on the fixed
+`-40 ... +40` home-minus-away margin axis plus explicit lower and upper tail
+probabilities. The manifest's `future_prediction_bytes` includes the display
+representation, and `payload_stats.initial_rankings_page_bytes` remains the
+ranking snapshot total, so the rankings page does not load these data.

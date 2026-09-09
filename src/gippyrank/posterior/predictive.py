@@ -24,6 +24,10 @@ from gippyrank.posterior.engine import LikelihoodV1, Team
 PREDICTION_SCHEMA_VERSION = "1.0"
 PREDICTION_SOURCE_CONTEXT = "predictive_context"
 PREDICTION_SOURCE_HISTORY = "predictive_history"
+FUTURE_MARGIN_DISPLAY_MIN = -40.0
+FUTURE_MARGIN_DISPLAY_MAX = 40.0
+FUTURE_MARGIN_DISPLAY_BINS = 40
+FUTURE_MARGIN_DISPLAY_COMPONENT_BINS = 256
 _LOCATION_SURFACE_CACHE: dict[tuple[object, ...], np.ndarray] = {}
 
 
@@ -334,6 +338,90 @@ def mixture_quantile(
         if upper - lower <= 1.0e-10:
             return (lower + upper) / 2.0
     raise FloatingPointError("predictive mixture quantile did not converge")
+
+
+def margin_display_distribution(
+    game: ScheduledGame,
+    home: Team,
+    away: Team,
+    likelihood: LikelihoodV1,
+    *,
+    minimum: float = FUTURE_MARGIN_DISPLAY_MIN,
+    maximum: float = FUTURE_MARGIN_DISPLAY_MAX,
+    bins: int = FUTURE_MARGIN_DISPLAY_BINS,
+) -> dict[str, Any]:
+    """Return deterministic fixed-grid masses for the exact margin mixture.
+
+    The finite grid is presentation data only.  Mass outside the visible
+    domain is retained in explicit tail fields, so the browser can show a
+    clipped distribution without treating the endpoints as hard limits.
+    Exact summaries must continue to come from :func:`predict_game`.
+    """
+    if not np.isfinite(minimum) or not np.isfinite(maximum) or minimum >= maximum:
+        raise ValueError("margin display bounds must be finite and ordered")
+    if bins < 1:
+        raise ValueError("margin display needs at least one bin")
+    locations, weights = predictive_components(game, home, away, likelihood)
+    edges = np.linspace(float(minimum), float(maximum), bins + 1)
+    # A full rank-pair mixture can contain tens of thousands of components.
+    # Aggregating nearby component locations preserves the analytic mixture's
+    # weights and mean while keeping publication-time display generation small.
+    # Small test mixtures remain exact.
+    if len(locations) > FUTURE_MARGIN_DISPLAY_COMPONENT_BINS:
+        location_min = float(locations.min())
+        location_max = float(locations.max())
+        location_span = location_max - location_min
+        if location_span > 0:
+            component_bins = np.minimum(
+                (
+                    (locations - location_min)
+                    / location_span
+                    * FUTURE_MARGIN_DISPLAY_COMPONENT_BINS
+                ).astype(int),
+                FUTURE_MARGIN_DISPLAY_COMPONENT_BINS - 1,
+            )
+            component_weights = np.bincount(
+                component_bins,
+                weights=weights,
+                minlength=FUTURE_MARGIN_DISPLAY_COMPONENT_BINS,
+            )
+            component_locations = np.bincount(
+                component_bins,
+                weights=weights * locations,
+                minlength=FUTURE_MARGIN_DISPLAY_COMPONENT_BINS,
+            )
+            populated = component_weights > 0
+            locations = component_locations[populated] / component_weights[populated]
+            weights = component_weights[populated]
+    standardized = (edges[:, None] - locations[None, :]) / likelihood.scale
+    cdf = np.asarray(
+        np.dot(
+            stdtr(likelihood.degrees_of_freedom, standardized),
+            weights,
+        ),
+        dtype=float,
+    )
+    masses = np.diff(cdf)
+    lower_tail = float(cdf[0])
+    upper_tail = float(1.0 - cdf[-1])
+    if (
+        not np.isfinite(masses).all()
+        or np.any(masses < -1.0e-12)
+        or not 0 <= lower_tail <= 1
+        or not 0 <= upper_tail <= 1
+        or not np.isclose(
+            float(masses.sum()) + lower_tail + upper_tail,
+            1.0,
+            atol=1.0e-10,
+            rtol=0.0,
+        )
+    ):
+        raise FloatingPointError("predictive margin display masses are invalid")
+    return {
+        "masses": [max(0.0, float(mass)) for mass in masses],
+        "lower_tail_probability": lower_tail,
+        "upper_tail_probability": upper_tail,
+    }
 
 
 def win_probabilities(

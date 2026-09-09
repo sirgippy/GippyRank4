@@ -63,7 +63,22 @@ def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path:
     assert [game["game_id"] for game in games] == ["early", "later"]
     early, later = games
     assert early["modeled"] and early["game_rating"] is not None
+    assert len(early["game_rating"]["display_pmf"]) == 40
+    assert sum(early["game_rating"]["display_pmf"]) == pytest.approx(1.0)
+    assert 0 <= early["game_rating"]["performance_percentile"] <= 100
+    assert early["game_rating"]["performance_grade"] in {"A", "B", "C", "D", "F"}
+    assert artifact["performance_axis"] == {
+        "bins": 40,
+        "direction": "best_to_worst",
+        "label": "inferred performance quality",
+        "max_rank": 2,
+        "min_rank": 1,
+    }
+    assert artifact["performance_percentile"]["reference_count"] == 2
     assert later["result"] is None and later["score"] is None and later["game_rating"] is None
+    prediction = artifact["future_predictions"][later["future_prediction_id"]]
+    assert len(prediction["display_distribution"]["masses"]) == 40
+    assert sum(prediction["display_distribution"]["masses"]) + prediction["display_distribution"]["lower_tail_probability"] + prediction["display_distribution"]["upper_tail_probability"] == pytest.approx(1.0)
     assert early["future_prediction_id"] is None
     assert later["future_prediction_id"] == "later"
     prediction = artifact["future_predictions"]["later"]
@@ -80,6 +95,14 @@ def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path:
     entry = manifest["snapshots"][0]
     assert entry["team_seasons_path"] == "data/team-seasons/2026-weekly-2026-09-01-context.json"
     assert (root / "site" / entry["team_seasons_path"]).is_file()
+    assert entry["completed_visualization_bytes"] > 0
+    assert entry["completed_visualization_bytes_per_game"] > 0
+    assert entry["future_visualization_bytes"] > 0
+    assert entry["future_visualization_bytes_per_game"] > 0
+    assert manifest["payload_stats"]["initial_rankings_page_bytes"] == sum(
+        (root / "site" / item["data_path"]).stat().st_size
+        for item in manifest["snapshots"]
+    )
 
 
 def test_future_predictions_use_posterior_after_completed_evidence(tmp_path: Path) -> None:

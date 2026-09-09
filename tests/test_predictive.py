@@ -6,7 +6,9 @@ from scipy.stats import t as student_t
 
 from gippyrank.posterior.engine import LikelihoodV1, Team
 from gippyrank.posterior.predictive import (
+    FUTURE_MARGIN_DISPLAY_BINS,
     ScheduledGame,
+    margin_display_distribution,
     posterior_prediction_team,
     predict_game,
     predictive_components,
@@ -151,3 +153,19 @@ def test_home_away_neutral_and_fbs_fcs_site_semantics() -> None:
     assert predict_game(
         _game("fcs", "fbs", neutral=True), fcs_home, fbs_away, likelihood
     ).expected_home_margin == pytest.approx(0.0)
+
+
+def test_margin_display_is_fixed_grid_deterministic_and_keeps_tail_mass() -> None:
+    beta = np.zeros(34)
+    beta[0] = 8.0
+    likelihood = LikelihoodV1(beta, 9.0, 15.0)
+    home, away = _teams([0.75, 0.25], [0.25, 0.75])
+
+    first = margin_display_distribution(_game(), home, away, likelihood)
+    second = margin_display_distribution(_game(), home, away, likelihood)
+
+    assert first == second
+    assert len(first["masses"]) == FUTURE_MARGIN_DISPLAY_BINS
+    assert sum(first["masses"]) + first["lower_tail_probability"] + first["upper_tail_probability"] == pytest.approx(1.0)
+    assert first["lower_tail_probability"] > 0
+    assert first["upper_tail_probability"] > 0

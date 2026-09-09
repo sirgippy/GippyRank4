@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from gippyrank.posterior.engine import (
     Game,
@@ -9,6 +10,11 @@ from gippyrank.posterior.engine import (
     game_evidence_pmf,
     game_factor,
     infer_posterior,
+)
+from gippyrank.posterior.game_evidence import (
+    game_evidence_summary,
+    performance_grade,
+    performance_percentile,
 )
 
 
@@ -89,3 +95,20 @@ def test_cross_subdivision_focal_support_and_orientation() -> None:
     assert away.shape == home.shape == (3,)
     assert away[0] > away[-1]
     assert home[0] > home[-1]
+
+
+def test_performance_display_and_percentile_are_snapshot_derived() -> None:
+    summary = game_evidence_summary(np.array([0.7, 0.2, 0.1]))
+
+    assert len(summary["display_pmf"]) == 40
+    assert sum(summary["display_pmf"]) == pytest.approx(1.0)
+    assert performance_percentile(1.0, [1.0, 2.0, 3.0]) == pytest.approx(83.3333333333)
+    assert performance_percentile(2.0, [1.0, 2.0, 3.0]) == pytest.approx(50.0)
+
+
+@pytest.mark.parametrize(
+    ("percentile", "grade"),
+    [(0, "F"), (9.99, "F"), (10, "D"), (29.99, "D"), (30, "C"), (70, "B"), (90, "A"), (100, "A")],
+)
+def test_performance_grade_uses_frozen_boundaries(percentile: float, grade: str) -> None:
+    assert performance_grade(percentile) == grade
