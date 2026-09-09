@@ -93,6 +93,13 @@ def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path:
     assert prediction["away_team_id"] == "2"
     assert prediction["margin_interval_50"][0] <= prediction["margin_interval_50"][1]
     assert prediction["home_win_probability"] + prediction["away_win_probability"] == pytest.approx(1.0)
+    simulation = artifact["season_simulation"]
+    assert simulation["artifact_kind"] == "season_simulation"
+    assert simulation["configuration"]["conditional_distribution_method"] == "exact_poisson_binomial"
+    assert simulation["latent_quality"]["held_fixed_throughout_universe"]
+    assert simulation["teams"]["1"]["forecast_status"] == "available"
+    assert sum(simulation["teams"]["1"]["record_probabilities"].values()) == pytest.approx(1.0)
+    assert simulation["teams"]["1"]["variance_decomposition"]["team_quality_fraction"] + simulation["teams"]["1"]["variance_decomposition"]["game_randomness_fraction"] == pytest.approx(1.0)
 
     config = root / "site/publish_config.json"
     config.parent.mkdir(parents=True)
@@ -143,6 +150,32 @@ def test_future_predictions_use_posterior_after_completed_evidence(tmp_path: Pat
     assert before["included_game_ids"] == []
     assert after["included_game_ids"] == ["early"]
     assert after_margin != pytest.approx(before_margin)
+
+
+def test_unresolved_future_schedule_is_fail_closed_for_season_forecast(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    schedule_path = root / "data/processed/cfbd/games.csv"
+    with schedule_path.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    for row in rows:
+        if row["id"] == "later":
+            row["awayClassification"] = ""
+    _write(schedule_path, list(rows[0]), rows)
+
+    snapshot = build_snapshot(
+        season=2026,
+        cutoff=date(2026, 9, 1),
+        prior_family="context",
+        snapshot_type="weekly",
+        root=root,
+        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
+    )
+    artifact = json.loads((snapshot.directory / "team_seasons.json").read_text())
+
+    assert artifact["season_simulation"]["season_scope"]["future_game_count"] == 1
+    assert artifact["season_simulation"]["game_marginals"] == {}
+    assert artifact["season_simulation"]["teams"]["1"]["forecast_status"] == "unavailable"
+    assert artifact["season_simulation"]["teams"]["1"]["unsupported_games"][0]["reason"] == "unsupported_subdivision"
 
 
 def test_team_artifact_provenance_mismatch_fails_closed(tmp_path: Path) -> None:
@@ -371,6 +404,9 @@ def test_context_history_and_performance_use_declared_prediction_sources(
     assert artifacts["predictive:context"]["prediction_source"] == "predictive_context"
     assert artifacts["predictive:history"]["prediction_source"] == "predictive_history"
     assert artifacts["performance:"]["prediction_source"] == "predictive_context"
+    assert artifacts["predictive:context"]["season_simulation"]["prediction_source"] == "predictive_context"
+    assert artifacts["predictive:history"]["season_simulation"]["prediction_source"] == "predictive_history"
+    assert artifacts["performance:"]["season_simulation"]["prediction_source"] == "predictive_context"
     assert artifacts["predictive:context"]["future_predictions"]["later"]["expected_home_margin"] != pytest.approx(
         artifacts["predictive:history"]["future_predictions"]["later"]["expected_home_margin"]
     )

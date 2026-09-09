@@ -1103,6 +1103,208 @@ def _validate_future_predictions(
     _validate_future_display(artifact, str(metadata["snapshot_id"]))
 
 
+def _validate_season_simulation(
+    artifact: dict[str, Any],
+    metadata: dict[str, Any],
+    rankings: list[dict[str, Any]],
+) -> None:
+    """Validate the canonical snapshot-level regular-season forecast."""
+    simulation = artifact.get("season_simulation")
+    if simulation is None:
+        return  # Retain compatibility with pre-issue-49 retained artifacts.
+    snapshot_id = str(metadata["snapshot_id"])
+    if not isinstance(simulation, dict):
+        raise SiteDataValidationError(f"{snapshot_id}: season_simulation must be an object")
+    if simulation.get("schema_version") != "1.0" or simulation.get(
+        "artifact_kind"
+    ) != "season_simulation":
+        raise SiteDataValidationError(f"{snapshot_id}: unsupported season simulation schema")
+    if simulation.get("simulation_version") != metadata.get(
+        "season_simulation_version", simulation.get("simulation_version")
+    ):
+        raise SiteDataValidationError(f"{snapshot_id}: season simulation version mismatch")
+    if simulation.get("prediction_source") != artifact.get("prediction_source"):
+        raise SiteDataValidationError(f"{snapshot_id}: season simulation source mismatch")
+    configuration = simulation.get("configuration")
+    if not isinstance(configuration, dict):
+        raise SiteDataValidationError(f"{snapshot_id}: season simulation configuration is missing")
+    if configuration.get("simulation_version") != simulation.get("simulation_version"):
+        raise SiteDataValidationError(f"{snapshot_id}: season simulation configuration version mismatch")
+    if configuration.get("likelihood_version") != metadata.get(
+        "historical_likelihood_version", "V1"
+    ):
+        raise SiteDataValidationError(f"{snapshot_id}: season simulation likelihood version mismatch")
+    if configuration.get("latent_sampling_method") != "independent_marginal_pmf":
+        raise SiteDataValidationError(f"{snapshot_id}: season latent sampling method is invalid")
+
+    provenance = simulation.get("provenance")
+    if not isinstance(provenance, dict):
+        raise SiteDataValidationError(f"{snapshot_id}: season simulation provenance is missing")
+    provenance_fields = (
+        "source_snapshot_id",
+        "season",
+        "snapshot_type",
+        "requested_cutoff",
+        "effective_cutoff",
+        "game_corpus_sha256",
+        "historical_likelihood_version",
+        "prediction_source",
+    )
+    for field in provenance_fields:
+        if field == "source_snapshot_id":
+            expected = metadata.get("snapshot_id")
+        elif field == "prediction_source":
+            expected = artifact.get("prediction_source")
+        else:
+            expected = metadata.get(field)
+        if field in provenance and provenance[field] != expected:
+            raise SiteDataValidationError(
+                f"{snapshot_id}: season simulation provenance mismatch: {field}"
+            )
+
+    if configuration.get("conditional_distribution_method") != "exact_poisson_binomial":
+        raise SiteDataValidationError(f"{snapshot_id}: season simulation conditional method is invalid")
+    outer_count = configuration.get("outer_draw_count")
+    inner_count = configuration.get("inner_rollout_count")
+    seed = configuration.get("seed")
+    if (
+        isinstance(outer_count, bool)
+        or not isinstance(outer_count, int)
+        or outer_count < 1
+        or isinstance(inner_count, bool)
+        or not isinstance(inner_count, int)
+        or inner_count < 0
+        or isinstance(seed, bool)
+        or not isinstance(seed, int)
+        or seed < 0
+    ):
+        raise SiteDataValidationError(f"{snapshot_id}: season simulation configuration is invalid")
+
+    scope = simulation.get("season_scope")
+    if not isinstance(scope, dict) or scope.get("season_type") != "regular":
+        raise SiteDataValidationError(f"{snapshot_id}: season simulation scope is invalid")
+    if scope.get("unsupported_behavior") != "fail_closed":
+        raise SiteDataValidationError(f"{snapshot_id}: unsupported-game behavior is not fail-closed")
+    future_values = scope.get("future_game_ids")
+    supported_values = scope.get("supported_future_game_ids")
+    if not isinstance(future_values, list) or not isinstance(supported_values, list):
+        raise SiteDataValidationError(f"{snapshot_id}: season game scope IDs are invalid")
+    future_ids = {str(value) for value in future_values}
+    supported_ids = {str(value) for value in supported_values}
+    if not supported_ids <= future_ids:
+        raise SiteDataValidationError(f"{snapshot_id}: supported season games are not a subset")
+    unsupported = scope.get("unsupported_future_games", [])
+    if not isinstance(unsupported, list):
+        raise SiteDataValidationError(f"{snapshot_id}: unsupported season games are invalid")
+    unsupported_ids = {str(item.get("game_id")) for item in unsupported if isinstance(item, dict)}
+    if not unsupported_ids <= future_ids:
+        raise SiteDataValidationError(f"{snapshot_id}: unsupported season games are outside scope")
+    if supported_ids & unsupported_ids:
+        raise SiteDataValidationError(f"{snapshot_id}: season game is both supported and unsupported")
+
+    latent_quality = simulation.get("latent_quality")
+    if not isinstance(latent_quality, dict) or latent_quality.get(
+        "held_fixed_throughout_universe"
+    ) is not True:
+        raise SiteDataValidationError(f"{snapshot_id}: latent quality is not held fixed")
+    conditional_model = simulation.get("conditional_game_model")
+    if not isinstance(conditional_model, dict) or conditional_model.get(
+        "games_conditionally_independent"
+    ) is not True or conditional_model.get("posterior_updates_from_simulated_games") is not False:
+        raise SiteDataValidationError(f"{snapshot_id}: conditional game model is invalid")
+
+    by_team = simulation.get("teams")
+    if not isinstance(by_team, dict):
+        raise SiteDataValidationError(f"{snapshot_id}: season simulation teams are missing")
+    ranking_ids = {str(row["team_id"]) for row in rankings}
+    if not ranking_ids <= set(by_team):
+        raise SiteDataValidationError(f"{snapshot_id}: season simulation is missing an FBS team")
+    probability_fields = (
+        "expected_final_wins",
+        "expected_remaining_wins",
+    )
+    unavailable_team_ids: set[str] = set()
+    for team_id in ranking_ids:
+        summary = by_team[team_id]
+        if not isinstance(summary, dict) or summary.get("team_id") != team_id:
+            raise SiteDataValidationError(f"{snapshot_id}: invalid season summary for {team_id}")
+        status = summary.get("forecast_status")
+        if status not in {"available", "unavailable"}:
+            raise SiteDataValidationError(f"{snapshot_id}: invalid season status for {team_id}")
+        if status == "unavailable":
+            unavailable_team_ids.add(team_id)
+            if not summary.get("unsupported_games"):
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: unavailable season summary has no unsupported games for {team_id}"
+                )
+            continue
+        for field in probability_fields:
+            _finite_number(summary.get(field), field, snapshot_id)
+        for field in (
+            "final_win_distribution",
+            "remaining_win_distribution",
+            "record_probabilities",
+        ):
+            distribution = summary.get(field)
+            if not isinstance(distribution, dict) or not distribution:
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: season summary {field} is missing for {team_id}"
+                )
+            values = [_finite_number(value, field, snapshot_id) for value in distribution.values()]
+            if any(value < 0 for value in values) or not math.isclose(
+                sum(values), 1.0, rel_tol=0.0, abs_tol=1.0e-8
+            ):
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: season summary {field} is not normalized for {team_id}"
+                )
+        thresholds = summary.get("threshold_probabilities")
+        if not isinstance(thresholds, dict) or any(
+            not 0 <= _probability(value, "threshold probability", snapshot_id) <= 1
+            for value in thresholds.values()
+        ):
+            raise SiteDataValidationError(f"{snapshot_id}: invalid season thresholds for {team_id}")
+        variance = summary.get("variance_decomposition")
+        if not isinstance(variance, dict):
+            raise SiteDataValidationError(f"{snapshot_id}: season variance decomposition is missing")
+        total = _finite_number(variance.get("total"), "season variance", snapshot_id)
+        quality_fraction = _probability(
+            variance.get("team_quality_fraction"), "team quality fraction", snapshot_id
+        )
+        game_fraction = _probability(
+            variance.get("game_randomness_fraction"), "game randomness fraction", snapshot_id
+        )
+        if total > 1.0e-12 and not math.isclose(
+            quality_fraction + game_fraction, 1.0, rel_tol=0.0, abs_tol=1.0e-8
+        ):
+                raise SiteDataValidationError(f"{snapshot_id}: season variance fractions do not sum to one")
+
+    declared_unavailable = {str(value) for value in scope.get("unsupported_team_ids", [])}
+    if declared_unavailable != unavailable_team_ids:
+        raise SiteDataValidationError(f"{snapshot_id}: season unavailable-team scope is inconsistent")
+    expected_status = "partial" if unavailable_team_ids else "available"
+    if simulation.get("forecast_status") != expected_status:
+        raise SiteDataValidationError(f"{snapshot_id}: season forecast status is inconsistent")
+
+    game_marginals = simulation.get("game_marginals")
+    if not isinstance(game_marginals, dict) or set(game_marginals) != supported_ids:
+        raise SiteDataValidationError(f"{snapshot_id}: season game marginals do not match scope")
+    for game_id, marginal in game_marginals.items():
+        if not isinstance(marginal, dict) or marginal.get("game_id") != game_id:
+            raise SiteDataValidationError(f"{snapshot_id}: invalid season game marginal {game_id}")
+        for field in (
+            "exact_home_win_probability",
+            "outer_home_win_probability",
+        ):
+            _probability(marginal.get(field), field, snapshot_id)
+        for field in (
+            "home_win_probability_error",
+            "exact_expected_home_margin",
+            "outer_expected_home_margin",
+            "expected_home_margin_error",
+        ):
+            _finite_number(marginal.get(field), field, snapshot_id)
+
+
 def _validate_team_season_artifact(
     artifact: dict[str, Any],
     metadata: dict[str, Any],
@@ -1251,6 +1453,7 @@ def _validate_team_season_artifact(
         by_team,
         expected_ids,
     )
+    _validate_season_simulation(artifact, source_metadata, rankings)
     adapted = dict(artifact)
     adapted["snapshot_id"] = snapshot_id
     adapted["season"] = metadata["season"]
@@ -1338,6 +1541,7 @@ def _team_season_artifact(
         merged["prediction_source"] = history_artifact.get("prediction_source")
         merged["prediction_provenance"] = history_artifact.get("prediction_provenance")
         merged["future_predictions"] = history_artifact.get("future_predictions", {})
+        merged["season_simulation"] = history_artifact.get("season_simulation")
         history_teams = history_artifact.get("teams", {})
         merged_teams: dict[str, Any] = {}
         for team_id, context_team in context_artifact.get("teams", {}).items():

@@ -5,6 +5,11 @@ artifact for each ranking snapshot. The rankings page loads only its compact
 snapshot table; `team.html?team=<stable-id>&season=<season>&snapshot=<snapshot-id>`
 loads this artifact on direct navigation.
 
+The artifact also contains one canonical `season_simulation` object for
+supported predictive snapshots. Its method and provenance are documented in
+[`season_simulation.md`](season_simulation.md); team pages read the team
+summary from this object and never run Monte Carlo in the browser.
+
 ## Game-rating definition
 
 For a focal team `i`, opponent `j`, and game `g`, the rating PMF is:

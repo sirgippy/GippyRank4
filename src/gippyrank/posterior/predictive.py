@@ -45,6 +45,8 @@ class ScheduledGame:
     home_subdivision: str
     away_subdivision: str
     neutral_site: bool = False
+    season_type: str = "regular"
+    date: str | None = None
 
 
 @dataclass(frozen=True)
@@ -209,6 +211,62 @@ def predictive_components(
             "posterior rank PMFs must produce positive finite mixture weight"
         )
     return locations, weights / total
+
+
+def conditional_margin_location_surface(
+    game: ScheduledGame,
+    home: Team,
+    away: Team,
+    likelihood: LikelihoodV1,
+) -> np.ndarray:
+    """Return the frozen V1 home-margin surface for fixed rank states.
+
+    The matrix is indexed by the canonical home and away rank coordinates.
+    Unlike :func:`predictive_components`, this helper does not average over
+    either team's posterior PMF.  It is the primitive used by season
+    simulation after one latent rank has been sampled for each team.
+    """
+
+    return _location_surface(game, home, away, likelihood)
+
+
+def conditional_margin_location(
+    game: ScheduledGame,
+    home: Team,
+    away: Team,
+    likelihood: LikelihoodV1,
+    home_rank: int,
+    away_rank: int,
+) -> float:
+    """Return the V1 expected home margin for one fixed rank pair."""
+
+    if isinstance(home_rank, bool) or isinstance(away_rank, bool):
+        raise TypeError("rank states must be integers")
+    locations = conditional_margin_location_surface(game, home, away, likelihood)
+    if not 1 <= home_rank <= locations.shape[0] or not 1 <= away_rank <= locations.shape[1]:
+        raise ValueError("rank states are outside the teams' supported coordinates")
+    return float(locations[home_rank - 1, away_rank - 1])
+
+
+def conditional_home_win_probability(
+    game: ScheduledGame,
+    home: Team,
+    away: Team,
+    likelihood: LikelihoodV1,
+    home_rank: int,
+    away_rank: int,
+) -> float:
+    """Return ``P(home wins | fixed latent ranks)`` under Historical V1."""
+
+    location = conditional_margin_location(
+        game, home, away, likelihood, home_rank, away_rank
+    )
+    return float(
+        student_t.sf(
+            (0.0 - location) / likelihood.scale,
+            likelihood.degrees_of_freedom,
+        )
+    )
 
 
 def mixture_cdf(

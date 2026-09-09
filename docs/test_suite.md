@@ -42,6 +42,7 @@ All tests remaining in these modules run under `uv run pytest -q`:
 | `test_primitive_box_score_likelihood.py` | Primitive evidence orientation, rank-neutrality, fallback behavior, target-driven cold starts, strict comparisons, and deterministic fitting. |
 | `test_regime_stability.py` | Target-excluded training windows, family-specific nested selection, key matching, and score decomposition. |
 | `test_site_data.py` | Static site export schema, publication pairing, deterministic output, and fail-closed validation. |
+| `test_season_simulation.py` | Hierarchical latent-state sampling, shared-game dependence, Poisson-binomial forecasts, decomposition, determinism, and fail-closed schedule handling. |
 | `test_team_season_artifact.py` | Team-season evidence redaction, provenance validation, and retained historical artifacts. |
 | `test_weekly_update.py` | Reviewed weekly publication workflow, idempotence, staging, and workflow safety. |
 | `test_ypp_likelihood.py` | YPP orientation, missing-evidence/rank-neutrality fallbacks, supported populations, strict comparisons, and deterministic fitting. |

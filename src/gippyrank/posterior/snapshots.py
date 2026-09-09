@@ -15,6 +15,10 @@ import numpy as np
 
 from gippyrank.posterior.engine import Game, LikelihoodV1, Team, infer_posterior
 from gippyrank.posterior.game_evidence import build_team_season_artifact
+from gippyrank.posterior.season_simulation import (
+    SEASON_SIMULATION_SCHEMA_VERSION,
+    SeasonSimulationConfig,
+)
 from gippyrank.preseason import pmf_summaries
 
 SCHEMA_VERSION = "1.0"
@@ -329,11 +333,13 @@ def build_snapshot(
     inference_max_iterations: int = 500,
     inference_tolerance: float = 1e-9,
     inference_damping: float = 0.35,
+    season_simulation_config: SeasonSimulationConfig | None = None,
     generation_timestamp: datetime | None = None,
 ) -> Snapshot:
     """Build an atomic-on-success schema-v1 bundle without any publishing logic."""
     started = time.perf_counter()
     root = _root() if root is None else root
+    season_simulation_config = season_simulation_config or SeasonSimulationConfig()
     output_root = (
         root / "data/processed/snapshots" if output_root is None else output_root
     )
@@ -441,6 +447,9 @@ def build_snapshot(
         "prior_model_version": "1.2" if prior_family == "context" else "1.1",
         "prior_artifact_sha256": sha256(prior_path),
         "historical_likelihood_version": "V1",
+        "season_simulation_schema_version": SEASON_SIMULATION_SCHEMA_VERSION,
+        "season_simulation_version": season_simulation_config.simulation_version,
+        "season_simulation_configuration": season_simulation_config.as_dict(),
         "requested_cutoff": requested_cutoff.isoformat() if requested_cutoff else None,
         "effective_cutoff": effective_cutoff.isoformat() if effective_cutoff else None,
         "source_mode": provenance.source_mode,
@@ -492,6 +501,7 @@ def build_snapshot(
             included_rows=included,
             posterior=result,
             likelihood=likelihood,
+            season_simulation_config=season_simulation_config,
             prediction_source=(
                 "predictive_history" if prior_family == "history" else "predictive_context"
             ),
