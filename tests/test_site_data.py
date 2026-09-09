@@ -222,6 +222,33 @@ def test_static_site_uses_manifest_logo_config_and_decorative_fallback() -> None
     assert "loading = \"lazy\"" in app
 
 
+def test_team_schedule_uses_distinct_accessible_performance_and_margin_plots() -> None:
+    team = (ROOT / "site/assets/team.js").read_text(encoding="utf-8")
+    css = (ROOT / "site/assets/style.css").read_text(encoding="utf-8")
+    html = (ROOT / "site/team.html").read_text(encoding="utf-8")
+
+    assert "performanceChart" in team
+    assert "futureChart" in team
+    assert "performance_axis" in team
+    assert "future_margin_axis" in team
+    assert "probability_encoding" in team
+    assert "role: \"img\"" in team
+    assert "aria-label" in team
+    assert "Central 80% range" in team
+    assert ".game-distribution-chart" in css
+    assert ".game-distribution-future .distribution-bar" in css
+    assert "More performance detail" in team
+    assert "More predictive detail" in team
+    assert 'node("p", "sr-only", accessible)' in team
+    assert 'node("p", "game-distribution-text", accessible)' not in team
+    assert "Expected performance rank" in team
+    assert "expectedPrimary" in team
+    assert "Played like" not in team
+    assert "game-prediction-interval" not in team
+    assert "best FBS performance is on the left" in html
+    assert "Even in the middle" in html
+
+
 def test_future_prediction_range_labels_follow_focal_margin_sign() -> None:
     team = (ROOT / "site/assets/team.js").read_text(encoding="utf-8")
 

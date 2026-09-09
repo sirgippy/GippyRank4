@@ -24,6 +24,11 @@ TEAM_SEASON_SCHEMA_VERSION = "1.0"
 PREDICTION_SCHEMA_VERSION = "1.0"
 PREDICTION_SOURCE_CONTEXT = "predictive_context"
 PREDICTION_SOURCE_HISTORY = "predictive_history"
+PERFORMANCE_DISPLAY_BINS = 40
+FUTURE_MARGIN_DISPLAY_MIN = -40.0
+FUTURE_MARGIN_DISPLAY_MAX = 40.0
+FUTURE_MARGIN_DISPLAY_BINS = 40
+DISPLAY_PROBABILITY_SCALE = 1000
 SUPPORTED_SNAPSHOT_SCHEMA_VERSIONS = {"1.0"}
 PMF_SUM_TOLERANCE = 1e-9
 SUMMARY_TOLERANCE = 1e-8
@@ -779,6 +784,141 @@ def _iso_datetime(value: object) -> datetime | None:
     return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=UTC)
 
 
+def _validate_display_encoding(axis: dict[str, Any], snapshot_id: str) -> None:
+    encoding = axis.get("probability_encoding")
+    if not isinstance(encoding, dict) or any(
+        encoding.get(field) != expected
+        for field, expected in (
+            ("type", "fixed_scale_integer"),
+            ("scale", DISPLAY_PROBABILITY_SCALE),
+            ("normalization", "divide weights by scale"),
+            ("total_weight", DISPLAY_PROBABILITY_SCALE),
+        )
+    ):
+        raise SiteDataValidationError(
+            f"{snapshot_id}: display probability encoding is invalid"
+        )
+
+
+def _validate_display_masses(
+    value: object,
+    *,
+    expected_length: int,
+    label: str,
+    allow_partial: bool = False,
+) -> list[int]:
+    """Validate fixed-scale integer display weights without changing values."""
+    if not isinstance(value, list) or len(value) != expected_length:
+        raise SiteDataValidationError(
+            f"{label} must contain exactly {expected_length} display bins"
+        )
+    if any(isinstance(item, bool) or not isinstance(item, int) for item in value):
+        raise SiteDataValidationError(f"{label} bins must be fixed-scale integers")
+    values = list(value)
+    if any(item < 0 or item > DISPLAY_PROBABILITY_SCALE for item in values):
+        raise SiteDataValidationError(f"{label} bins must be nonnegative")
+    total = sum(values)
+    if allow_partial:
+        if total > DISPLAY_PROBABILITY_SCALE:
+            raise SiteDataValidationError(f"{label} bins contain more than the encoded total")
+    elif total != DISPLAY_PROBABILITY_SCALE:
+        raise SiteDataValidationError(
+            f"{label} bins sum to {total}, not {DISPLAY_PROBABILITY_SCALE}"
+        )
+    return values
+
+
+def _validate_performance_display(
+    artifact: dict[str, Any],
+    snapshot_id: str,
+    ratings_count: int,
+) -> None:
+    """Validate the shared completed-game rank display contract when present."""
+    axis = artifact.get("performance_axis")
+    if axis is None:
+        return  # Retain compatibility with pre-issue-46 retained artifacts.
+    if not isinstance(axis, dict):
+        raise SiteDataValidationError(f"{snapshot_id}: performance_axis must be an object")
+    if axis.get("min_rank") != 1 or axis.get("max_rank") != artifact.get("rank_count"):
+        raise SiteDataValidationError(f"{snapshot_id}: performance display axis disagrees with rank support")
+    if axis.get("bins") != PERFORMANCE_DISPLAY_BINS:
+        raise SiteDataValidationError(f"{snapshot_id}: unsupported performance display bin count")
+    if axis.get("direction") != "best_to_worst":
+        raise SiteDataValidationError(f"{snapshot_id}: performance display direction is invalid")
+    _validate_display_encoding(axis, snapshot_id)
+    percentile = artifact.get("performance_percentile")
+    if not isinstance(percentile, dict):
+        raise SiteDataValidationError(f"{snapshot_id}: performance percentile metadata is missing")
+    if percentile.get("statistic") != "game_rating.expected_rank":
+        raise SiteDataValidationError(f"{snapshot_id}: performance percentile statistic is invalid")
+    if percentile.get("direction") != "lower_is_better":
+        raise SiteDataValidationError(f"{snapshot_id}: performance percentile direction is invalid")
+    reference_count = percentile.get("reference_count")
+    if (
+        isinstance(reference_count, bool)
+        or not isinstance(reference_count, int)
+        or reference_count != ratings_count
+    ):
+        raise SiteDataValidationError(f"{snapshot_id}: performance percentile reference count is invalid")
+
+
+def _performance_grade_for_percentile(percentile: float) -> str:
+    if percentile >= 90:
+        return "A"
+    if percentile >= 70:
+        return "B"
+    if percentile >= 30:
+        return "C"
+    if percentile >= 10:
+        return "D"
+    return "F"
+
+
+def _validate_future_display(artifact: dict[str, Any], snapshot_id: str) -> None:
+    """Validate fixed-grid predictive display data and explicit tail mass."""
+    axis = artifact.get("future_margin_axis")
+    if axis is None:
+        return  # Retain compatibility with issue-41 artifacts until republished.
+    if not isinstance(axis, dict):
+        raise SiteDataValidationError(f"{snapshot_id}: future_margin_axis must be an object")
+    if (
+        axis.get("min_margin") != FUTURE_MARGIN_DISPLAY_MIN
+        or axis.get("max_margin") != FUTURE_MARGIN_DISPLAY_MAX
+        or axis.get("bins") != FUTURE_MARGIN_DISPLAY_BINS
+        or axis.get("direction") != "home_minus_away"
+        or axis.get("unit") != "points"
+    ):
+        raise SiteDataValidationError(f"{snapshot_id}: future margin display axis is invalid")
+    _validate_display_encoding(axis, snapshot_id)
+    prediction_map = artifact.get("future_predictions") or {}
+    if not isinstance(prediction_map, dict):
+        raise SiteDataValidationError(f"{snapshot_id}: future_predictions must be an object")
+    for prediction_id, prediction in prediction_map.items():
+        display = prediction.get("display_distribution") if isinstance(prediction, dict) else None
+        if not isinstance(display, dict):
+            raise SiteDataValidationError(
+                f"{snapshot_id}: prediction {prediction_id} display distribution is missing"
+            )
+        values = _validate_display_masses(
+            display.get("masses"),
+            expected_length=FUTURE_MARGIN_DISPLAY_BINS,
+            label=f"{snapshot_id}: prediction {prediction_id} display",
+            allow_partial=True,
+        )
+        tail_values = []
+        for field in ("lower_tail_probability", "upper_tail_probability"):
+            value = display.get(field)
+            if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= DISPLAY_PROBABILITY_SCALE:
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: prediction {prediction_id} {field} is invalid"
+                )
+            tail_values.append(value)
+        if sum(values) + sum(tail_values) != DISPLAY_PROBABILITY_SCALE:
+            raise SiteDataValidationError(
+                f"{snapshot_id}: prediction {prediction_id} display mass is not normalized"
+            )
+
+
 def _validate_future_predictions(
     artifact: dict[str, Any],
     metadata: dict[str, Any],
@@ -960,6 +1100,7 @@ def _validate_future_predictions(
             raise SiteDataValidationError(
                 f"{metadata['snapshot_id']}: unreferenced future prediction {prediction_id}"
             )
+    _validate_future_display(artifact, str(metadata["snapshot_id"]))
 
 
 def _validate_team_season_artifact(
@@ -1028,6 +1169,8 @@ def _validate_team_season_artifact(
         "rank_count", "expected_rank", "median_rank", "mode_rank", "interval_50", "interval_80",
         "interval_95", "top5_probability", "top10_probability", "top25_probability",
     )
+    performance_display = artifact.get("performance_axis") is not None
+    ratings_count = 0
     for team_id in ranking_ids:
         team = by_team[team_id]
         games = team.get("games")
@@ -1055,6 +1198,7 @@ def _validate_team_season_artifact(
             rating = game.get("game_rating")
             if rating is None:
                 continue
+            ratings_count += 1
             if not game.get("modeled"):
                 raise SiteDataValidationError(
                     f"{snapshot_id}: ineligible game {game['game_id']} has a rating"
@@ -1080,6 +1224,26 @@ def _validate_team_season_artifact(
                     raise SiteDataValidationError(
                         f"{snapshot_id}: game rating {field} must be between 0 and 1"
                     )
+            if performance_display:
+                _validate_display_masses(
+                    rating.get("display_pmf"),
+                    expected_length=PERFORMANCE_DISPLAY_BINS,
+                    label=f"{snapshot_id}: game rating display",
+                )
+                percentile = rating.get("performance_percentile")
+                if not isinstance(percentile, (int, float)) or not math.isfinite(percentile) or not 0 <= percentile <= 100:
+                    raise SiteDataValidationError(
+                        f"{snapshot_id}: game rating performance percentile is invalid"
+                    )
+                if rating.get("performance_grade") not in {"A", "B", "C", "D", "F"}:
+                    raise SiteDataValidationError(
+                        f"{snapshot_id}: game rating performance grade is invalid"
+                    )
+                if rating["performance_grade"] != _performance_grade_for_percentile(percentile):
+                    raise SiteDataValidationError(
+                        f"{snapshot_id}: game rating performance grade disagrees with percentile"
+                    )
+    _validate_performance_display(artifact, snapshot_id, ratings_count)
     _validate_future_predictions(
         artifact,
         metadata,
@@ -1433,6 +1597,31 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
                 sort_keys=True,
             ).encode("utf-8")
         )
+        completed_displays = {
+            f"{team_id}:{game['game_id']}": game["game_rating"]["display_pmf"]
+            for team_id, team in team_seasons.get("teams", {}).items()
+            for game in team.get("games", [])
+            if (game.get("game_rating") or {}).get("display_pmf") is not None
+        }
+        completed_visualization_bytes = len(
+            json.dumps(
+                completed_displays,
+                separators=(",", ":"),
+                sort_keys=True,
+            ).encode("utf-8")
+        )
+        future_displays = {
+            str(game_id): prediction.get("display_distribution")
+            for game_id, prediction in future_predictions.items()
+            if prediction.get("display_distribution") is not None
+        }
+        future_visualization_bytes = len(
+            json.dumps(
+                future_displays,
+                separators=(",", ":"),
+                sort_keys=True,
+            ).encode("utf-8")
+        )
         manifest_entry = {
             "season": metadata["season"],
             "snapshot_id": snapshot_id,
@@ -1461,6 +1650,19 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             ).stat().st_size,
             "future_prediction_count": len(future_predictions),
             "future_prediction_bytes": future_prediction_bytes,
+            "completed_game_count": len(completed_displays),
+            "completed_visualization_bytes": completed_visualization_bytes,
+            "completed_visualization_bytes_per_game": (
+                completed_visualization_bytes / len(completed_displays)
+                if completed_displays
+                else 0
+            ),
+            "future_visualization_bytes": future_visualization_bytes,
+            "future_visualization_bytes_per_game": (
+                future_visualization_bytes / len(future_displays)
+                if future_displays
+                else 0
+            ),
             "rank_count": distribution["rank_count"],
             "model_versions": metadata.get(
                 "model_versions", {"performance": metadata.get("model_version", "unknown")}
@@ -1496,6 +1698,12 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
     team_season_bytes = sum(int(entry["team_seasons_bytes"]) for entry in manifest_entries)
     future_prediction_bytes = sum(
         int(entry["future_prediction_bytes"]) for entry in manifest_entries
+    )
+    completed_visualization_bytes = sum(
+        int(entry["completed_visualization_bytes"]) for entry in manifest_entries
+    )
+    future_visualization_bytes = sum(
+        int(entry["future_visualization_bytes"]) for entry in manifest_entries
     )
     manifest = {
         "schema_version": SITE_SCHEMA_VERSION,
@@ -1533,6 +1741,8 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             "lazy_rank_distribution_bytes": distribution_bytes,
             "lazy_team_season_bytes": team_season_bytes,
             "lazy_future_prediction_bytes": future_prediction_bytes,
+            "lazy_completed_visualization_bytes": completed_visualization_bytes,
+            "lazy_future_visualization_bytes": future_visualization_bytes,
             "initial_rankings_page_bytes": ranking_snapshot_bytes,
         },
     }

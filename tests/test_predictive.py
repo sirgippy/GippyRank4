@@ -6,7 +6,10 @@ from scipy.stats import t as student_t
 
 from gippyrank.posterior.engine import LikelihoodV1, Team
 from gippyrank.posterior.predictive import (
+    FUTURE_MARGIN_DISPLAY_BINS,
     ScheduledGame,
+    margin_display_approximation_metrics,
+    margin_display_distribution,
     posterior_prediction_team,
     predict_game,
     predictive_components,
@@ -151,3 +154,37 @@ def test_home_away_neutral_and_fbs_fcs_site_semantics() -> None:
     assert predict_game(
         _game("fcs", "fbs", neutral=True), fcs_home, fbs_away, likelihood
     ).expected_home_margin == pytest.approx(0.0)
+
+
+def test_margin_display_is_fixed_grid_deterministic_and_keeps_tail_mass() -> None:
+    beta = np.zeros(34)
+    beta[0] = 8.0
+    likelihood = LikelihoodV1(beta, 9.0, 15.0)
+    home, away = _teams([0.75, 0.25], [0.25, 0.75])
+
+    first = margin_display_distribution(
+        _game(), home, away, likelihood, minimum=-5.0, maximum=5.0
+    )
+    second = margin_display_distribution(
+        _game(), home, away, likelihood, minimum=-5.0, maximum=5.0
+    )
+
+    assert first == second
+    assert len(first["masses"]) == FUTURE_MARGIN_DISPLAY_BINS
+    assert sum(first["masses"]) + first["lower_tail_probability"] + first["upper_tail_probability"] == 1000
+    assert first["lower_tail_probability"] > 0
+    assert first["upper_tail_probability"] > 0
+
+
+def test_margin_display_approximation_is_bounded_and_component_limited() -> None:
+    beta = np.zeros(34)
+    beta[3] = 100.0
+    likelihood = LikelihoodV1(beta, 2.0, 15.0)
+    home, away = _teams([1 / 17] * 17, [1 / 17] * 17)
+
+    metrics = margin_display_approximation_metrics(_game(), home, away, likelihood)
+
+    assert metrics["exact_component_count"] == 289
+    assert metrics["display_component_count"] <= 256
+    assert metrics["max_absolute_cdf_error"] >= 0
+    assert metrics["mean_absolute_bin_mass_error"] >= 0

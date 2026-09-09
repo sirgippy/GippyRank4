@@ -11,6 +11,10 @@ from typing import Any
 
 import numpy as np
 
+from gippyrank.posterior.display import (
+    DISPLAY_PROBABILITY_SCALE,
+    quantize_display_probabilities,
+)
 from gippyrank.posterior.engine import (
     Game,
     LikelihoodV1,
@@ -19,15 +23,20 @@ from gippyrank.posterior.engine import (
     game_evidence_pmf,
 )
 from gippyrank.posterior.predictive import (
+    FUTURE_MARGIN_DISPLAY_BINS,
+    FUTURE_MARGIN_DISPLAY_MAX,
+    FUTURE_MARGIN_DISPLAY_MIN,
     PREDICTION_SCHEMA_VERSION,
     PREDICTION_SOURCE_CONTEXT,
     PREDICTION_SOURCE_HISTORY,
     ScheduledGame,
+    margin_display_distribution,
     posterior_prediction_teams,
     predict_game,
 )
 
 TEAM_SEASON_SCHEMA_VERSION = "1.0"
+PERFORMANCE_DISPLAY_BINS = 40
 
 
 def _normalise(pmf: np.ndarray) -> np.ndarray:
@@ -40,6 +49,50 @@ def _normalise(pmf: np.ndarray) -> np.ndarray:
 
 def _quantile(pmf: np.ndarray, probability: float) -> int:
     return int(np.searchsorted(np.cumsum(pmf), probability, side="left") + 1)
+
+
+def _display_pmf(pmf: np.ndarray, bins: int = PERFORMANCE_DISPLAY_BINS) -> list[int]:
+    """Compress a rank PMF into deterministic equal-count display bins."""
+    values = _normalise(pmf)
+    result = np.zeros(bins, dtype=float)
+    for index, probability in enumerate(values):
+        bin_index = min(bins - 1, index * bins // len(values))
+        result[bin_index] += probability
+    return quantize_display_probabilities(result, scale=DISPLAY_PROBABILITY_SCALE)
+
+
+def performance_percentile(value: float, reference: list[float] | tuple[float, ...]) -> float:
+    """Return an empirical lower-rank-is-better percentile.
+
+    Ties receive half credit. The reference is supplied by the snapshot
+    builder, so historical artifacts never consult later team-game results.
+    """
+    reference_array = np.asarray(reference, dtype=float)
+    if (
+        not np.isfinite(value)
+        or reference_array.ndim != 1
+        or not len(reference_array)
+        or not np.isfinite(reference_array).all()
+    ):
+        raise ValueError("performance percentile needs a finite nonempty reference")
+    better = int(np.count_nonzero(reference_array > value))
+    ties = int(np.count_nonzero(reference_array == value))
+    return 100.0 * (better + 0.5 * ties) / len(reference_array)
+
+
+def performance_grade(percentile: float) -> str:
+    """Map the canonical percentile to frozen presentation-only buckets."""
+    if not 0 <= percentile <= 100:
+        raise ValueError("performance percentile must be between zero and one hundred")
+    if percentile >= 90:
+        return "A"
+    if percentile >= 70:
+        return "B"
+    if percentile >= 30:
+        return "C"
+    if percentile >= 10:
+        return "D"
+    return "F"
 
 
 def game_evidence_summary(pmf: np.ndarray) -> dict[str, Any]:
@@ -64,6 +117,7 @@ def game_evidence_summary(pmf: np.ndarray) -> dict[str, Any]:
         "top5_probability": float(pmf[:5].sum()),
         "top10_probability": float(pmf[:10].sum()),
         "top25_probability": float(pmf[:25].sum()),
+        "display_pmf": _display_pmf(pmf),
     }
 
 
@@ -147,6 +201,7 @@ def _future_prediction_record(
 ) -> tuple[str, dict[str, Any]]:
     row, scheduled, home, away, likelihood, source, snapshot_id = item
     summary = predict_game(scheduled, home, away, likelihood)
+    display = margin_display_distribution(scheduled, home, away, likelihood)
     return scheduled.game_id, {
         "game_id": scheduled.game_id,
         "prediction_source": source,
@@ -158,6 +213,7 @@ def _future_prediction_record(
         "away_team_name": row.get("awayTeam", scheduled.away_id),
         "away_subdivision": scheduled.away_subdivision,
         "neutral_site": scheduled.neutral_site,
+        "display_distribution": display,
         **summary.as_dict(),
     }
 
@@ -184,6 +240,7 @@ def build_team_season_artifact(
     reference it by game ID rather than duplicating the summary.
     """
     fbs_teams = {team.team_id: team for team in teams if team.subdivision == "fbs"}
+    rank_count = len(next(iter(fbs_teams.values())).prior) if fbs_teams else 0
     teams_by_id = {team.team_id: team for team in teams}
     prediction_teams_by_id = posterior_prediction_teams(teams, posterior.pmfs)
     included_ids = {str(row["id"]) for row in included_rows}
@@ -199,6 +256,16 @@ def build_team_season_artifact(
                     ratings[game.game_id, focal_id] = game_evidence_summary(
                         game_evidence_pmf(game, focal_id, list(teams), likelihood, posterior)
                     )
+
+    performance_reference = [
+        float(rating["expected_rank"]) for rating in ratings.values()
+    ]
+    for rating in ratings.values():
+        percentile = performance_percentile(
+            float(rating["expected_rank"]), performance_reference
+        )
+        rating["performance_percentile"] = percentile
+        rating["performance_grade"] = performance_grade(percentile)
 
     schedule_path = root / "data/processed/cfbd/games.csv"
     schedule_corpus_sha256 = (
@@ -324,7 +391,6 @@ def build_team_season_artifact(
     for entries in team_games.values():
         entries.sort(key=lambda entry: (str(entry["date"]), str(entry["game_id"])))
 
-    rank_count = len(next(iter(fbs_teams.values())).prior) if fbs_teams else 0
     return {
         "schema_version": TEAM_SEASON_SCHEMA_VERSION,
         "artifact_kind": "team_season",
@@ -361,6 +427,40 @@ def build_team_season_artifact(
             ),
         },
         "future_predictions": future_predictions,
+        "performance_axis": {
+            "min_rank": 1,
+            "max_rank": rank_count,
+            "bins": PERFORMANCE_DISPLAY_BINS,
+            "direction": "best_to_worst",
+            "label": "inferred performance quality",
+            "probability_encoding": {
+                "type": "fixed_scale_integer",
+                "scale": DISPLAY_PROBABILITY_SCALE,
+                "normalization": "divide weights by scale",
+                "total_weight": DISPLAY_PROBABILITY_SCALE,
+            },
+        },
+        "performance_percentile": {
+            "statistic": "game_rating.expected_rank",
+            "direction": "lower_is_better",
+            "reference_population": "eligible FBS team-game performances included by this snapshot",
+            "reference_count": len(performance_reference),
+            "tie_handling": "half credit for equal expected rank",
+        },
+        "future_margin_axis": {
+            "min_margin": FUTURE_MARGIN_DISPLAY_MIN,
+            "max_margin": FUTURE_MARGIN_DISPLAY_MAX,
+            "bins": FUTURE_MARGIN_DISPLAY_BINS,
+            "direction": "home_minus_away",
+            "unit": "points",
+            "tail_handling": "tail mass is retained separately from visible bins",
+            "probability_encoding": {
+                "type": "fixed_scale_integer",
+                "scale": DISPLAY_PROBABILITY_SCALE,
+                "normalization": "divide weights by scale",
+                "total_weight": DISPLAY_PROBABILITY_SCALE,
+            },
+        },
         "rank_count": rank_count,
         "rating_definition": "normalize(single-game Historical Likelihood × opponent pair-cavity belief)",
         "loopy_bp_caveat": "The focal preseason prior is absent as a direct factor; loopy cycles can leave indirect feedback.",
