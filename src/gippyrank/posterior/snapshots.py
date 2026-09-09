@@ -312,6 +312,20 @@ def subdivision_population_size(
         return populations.pop()
 
     participants: set[str] = set()
+    processed_schedule = root / "data/processed/cfbd/games.csv"
+    if processed_schedule.exists():
+        with processed_schedule.open(newline="", encoding="utf-8") as handle:
+            for game in csv.DictReader(handle):
+                if int(game["season"]) != season:
+                    continue
+                for side in ("home", "away"):
+                    if game.get(f"{side}Classification") == subdivision:
+                        team_id = game.get(f"{side}Id")
+                        if team_id:
+                            participants.add(str(team_id))
+        if participants:
+            return len(participants)
+
     games_directory = root / "data/raw/cfbd/games"
     for suffix in ("", "-fcs"):
         schedule_path = games_directory / f"{season}{suffix}.json"
@@ -339,6 +353,19 @@ def subdivision_population_source(
                 for row in csv.DictReader(handle)
             ):
                 return "massey_team_season_rank_distributions"
+    processed_schedule = root / "data/processed/cfbd/games.csv"
+    if processed_schedule.exists():
+        with processed_schedule.open(newline="", encoding="utf-8") as handle:
+            if any(
+                int(row["season"]) == season
+                and any(
+                    row.get(f"{side}Classification") == subdivision
+                    for side in ("home", "away")
+                )
+                for row in csv.DictReader(handle)
+            ):
+                return "cfbd_full_season_schedule"
+
     games_directory = root / "data/raw/cfbd/games"
     if any(
         (games_directory / f"{season}{suffix}.json").exists()

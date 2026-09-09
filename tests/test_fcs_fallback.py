@@ -121,3 +121,21 @@ def test_current_fcs_population_uses_full_cached_schedule_not_cutoff(
     )
     assert subdivision_population_size(tmp_path, 2026, "fcs") == 3
     assert subdivision_population_source(tmp_path, 2026, "fcs") == "cfbd_full_season_schedule"
+
+
+def test_current_fcs_population_uses_committed_processed_schedule(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "data/processed/cfbd/games.csv"
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        "season,homeId,homeClassification,awayId,awayClassification\n"
+        "2026,1,fcs,2,fbs\n"
+        "2026,3,fcs,4,fcs\n",
+        encoding="utf-8",
+    )
+    assert subdivision_population_size(tmp_path, 2026, "fcs") == 3
+    assert (
+        subdivision_population_source(tmp_path, 2026, "fcs")
+        == "cfbd_full_season_schedule"
+    )
