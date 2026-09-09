@@ -122,6 +122,8 @@ function populate() {
   priorSelector.hidden = performance;
   priorSelector.disabled = performance;
   document.querySelectorAll("[data-prior]").forEach((button) => { button.classList.toggle("is-active", button.dataset.prior === state.prior); button.disabled = performance; });
+  const weekLink = $("#week-view-link");
+  if (weekLink) weekLink.href = weekPageUrl(entry, entry?.default_week);
 }
 
 function updateSnapshotSummary(entry, snapshot) {
@@ -166,6 +168,17 @@ function teamPageUrl(row, entry) {
   url.searchParams.set("snapshot", entry.snapshot_id);
   url.searchParams.set("family", state.family);
   if (state.family === "predictive") url.searchParams.set("prior", entry.prior_family);
+  return `${url.pathname}${url.search}`;
+}
+
+function weekPageUrl(entry, week = null) {
+  const url = new URL("./week.html", document.baseURI);
+  if (!entry) return url.pathname;
+  url.searchParams.set("season", String(entry.season));
+  url.searchParams.set("snapshot", entry.snapshot_id);
+  url.searchParams.set("family", state.family);
+  if (state.family === "predictive") url.searchParams.set("prior", entry.prior_family);
+  if (week !== null && week !== undefined) url.searchParams.set("week", String(week));
   return `${url.pathname}${url.search}`;
 }
 

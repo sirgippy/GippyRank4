@@ -204,6 +204,96 @@ def test_team_season_export_uses_manifest_logo_handles(tmp_path: Path) -> None:
     assert manifest["team_logos"]["handles"]["311"] == "maine"
 
 
+def test_weekly_artifact_deduplicates_games_and_reuses_canonical_sources(
+    tmp_path: Path,
+) -> None:
+    manifest = build_site_data(
+        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
+    )
+    entry = next(
+        item
+        for item in manifest["snapshots"]
+        if item["ranking_family"] == "predictive"
+        and item["prior_family"] == "context"
+        and item["snapshot_type"] == "weekly"
+    )
+    weekly = json.loads(
+        (tmp_path / "data" / entry["week_games_path"].removeprefix("data/")).read_text()
+    )
+    team_seasons = json.loads(
+        (tmp_path / "data" / entry["team_seasons_path"].removeprefix("data/")).read_text()
+    )
+    games = [game for week in weekly["weeks"] for game in week["games"]]
+    assert weekly["artifact_kind"] == "weekly_games"
+    assert weekly["game_count"] == len(games) == len({game["game_id"] for game in games})
+    assert weekly["week_count"] == len(weekly["weeks"])
+    assert weekly["future_predictions"] == team_seasons["future_predictions"]
+    assert entry["week_game_count"] == weekly["game_count"]
+    assert entry["week_count"] == weekly["week_count"]
+    completed = next(game for game in games if game["state"] == "completed")
+    assert completed["home_performance"] or completed["away_performance"]
+    for side in ("home", "away"):
+        performance = completed[f"{side}_performance"]
+        if performance is not None:
+            assert performance["display_pmf_ref"] in weekly["performance_displays"]
+    future = next(game for game in games if game["state"] == "future")
+    assert future["future_prediction_id"] in weekly["future_predictions"]
+    assert future["home_performance"] is None
+    assert future["away_performance"] is None
+
+
+def test_weekly_builder_orders_week_zero_and_named_weeks_once() -> None:
+    artifact = {
+        "schema_version": "1.0",
+        "artifact_kind": "team_season",
+        "snapshot_id": "2026-weekly-test-context",
+        "season": 2026,
+        "snapshot_type": "weekly",
+        "effective_cutoff": "2026-08-20T00:00:00+00:00",
+        "included_game_ids": [],
+        "prediction_schema_version": "1.0",
+        "prediction_source": "predictive_context",
+        "future_predictions": {},
+        "teams": {
+            "1": {
+                "team_id": "1",
+                "team_name": "One",
+                "conference": "A",
+                "games": [
+                    {
+                        "game_id": "week-1",
+                        "week": 1,
+                        "date": "2026-08-29T12:00:00Z",
+                        "opponent_id": "2",
+                        "opponent_name": "Two",
+                        "opponent_classification": "fbs",
+                        "site": "home",
+                        "game_state": "future",
+                        "future_prediction_id": None,
+                    },
+                    {
+                        "game_id": "week-0",
+                        "week": 0,
+                        "date": "2026-08-22T12:00:00Z",
+                        "opponent_id": "3",
+                        "opponent_name": "Three",
+                        "opponent_classification": "fcs",
+                        "site": "home",
+                        "game_state": "future",
+                        "future_prediction_id": None,
+                    },
+                ],
+            }
+        },
+    }
+    weekly = site_data.build_weekly_game_artifact(artifact)
+    assert [week["week"] for week in weekly["weeks"]] == [0, 1]
+    assert [game["game_id"] for week in weekly["weeks"] for game in week["games"]] == [
+        "week-0",
+        "week-1",
+    ]
+
+
 def test_static_site_uses_manifest_logo_config_and_decorative_fallback() -> None:
     app = (ROOT / "site/assets/app.js").read_text(encoding="utf-8")
     team = (ROOT / "site/assets/team.js").read_text(encoding="utf-8")

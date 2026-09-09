@@ -7,6 +7,7 @@
     "lazy_future_visualization_bytes": 1947734,
     "lazy_rank_distribution_bytes": 5877006,
     "lazy_team_season_bytes": 22655882,
+    "lazy_week_games_bytes": 16379624,
     "published_ranking_snapshot_bytes": 1785971,
     "published_snapshot_count": 13,
     "season_simulation_browser_bytes": 5392072,
@@ -34,6 +35,7 @@
       "completed_visualization_bytes": 2,
       "completed_visualization_bytes_per_game": 0,
       "data_path": "data/snapshots/2026-preseason-context.json",
+      "default_week": "1",
       "display_label": "Preseason",
       "distribution_path": "data/distributions/2026-preseason-context.json",
       "effective_cutoff": null,
@@ -69,7 +71,11 @@
       "team_seasons_bytes": 1669839,
       "team_seasons_path": "data/team-seasons/2026-preseason-context.json",
       "unrated_count": 0,
-      "valid": true
+      "valid": true,
+      "week_count": 14,
+      "week_game_count": 888,
+      "week_games_bytes": 1161038,
+      "week_games_path": "data/week-games/2026-preseason-context.json"
     },
     {
       "comparison_display_label": null,
@@ -78,6 +84,7 @@
       "completed_visualization_bytes": 2,
       "completed_visualization_bytes_per_game": 0,
       "data_path": "data/snapshots/2026-preseason-history.json",
+      "default_week": "1",
       "display_label": "Preseason",
       "distribution_path": "data/distributions/2026-preseason-history.json",
       "effective_cutoff": null,
@@ -113,7 +120,11 @@
       "team_seasons_bytes": 1669926,
       "team_seasons_path": "data/team-seasons/2026-preseason-history.json",
       "unrated_count": 0,
-      "valid": true
+      "valid": true,
+      "week_count": 14,
+      "week_game_count": 888,
+      "week_games_bytes": 1161274,
+      "week_games_path": "data/week-games/2026-preseason-history.json"
     },
     {
       "comparison_display_label": "Preseason",
@@ -122,6 +133,7 @@
       "completed_visualization_bytes": 7858,
       "completed_visualization_bytes_per_game": 130.96666666666667,
       "data_path": "data/snapshots/2026-live-2026-09-05T23-59-59Z-context.json",
+      "default_week": "1",
       "display_label": "Sep. 5",
       "distribution_path": "data/distributions/2026-live-2026-09-05T23-59-59Z-context.json",
       "effective_cutoff": "2026-09-05T20:11:12.864212+00:00",
@@ -157,7 +169,11 @@
       "team_seasons_bytes": 1693019,
       "team_seasons_path": "data/team-seasons/2026-live-2026-09-05T23-59-59Z-context.json",
       "unrated_count": 0,
-      "valid": true
+      "valid": true,
+      "week_count": 14,
+      "week_game_count": 888,
+      "week_games_bytes": 1253740,
+      "week_games_path": "data/week-games/2026-live-2026-09-05T23-59-59Z-context.json"
     },
     {
       "comparison_display_label": "Preseason",
@@ -166,6 +182,7 @@
       "completed_visualization_bytes": 7858,
       "completed_visualization_bytes_per_game": 130.96666666666667,
       "data_path": "data/snapshots/2026-live-2026-09-05T23-59-59Z-history.json",
+      "default_week": "1",
       "display_label": "Sep. 5",
       "distribution_path": "data/distributions/2026-live-2026-09-05T23-59-59Z-history.json",
       "effective_cutoff": "2026-09-05T20:11:12.864212+00:00",
@@ -201,7 +218,11 @@
       "team_seasons_bytes": 1693229,
       "team_seasons_path": "data/team-seasons/2026-live-2026-09-05T23-59-59Z-history.json",
       "unrated_count": 0,
-      "valid": true
+      "valid": true,
+      "week_count": 14,
+      "week_game_count": 888,
+      "week_games_bytes": 1254057,
+      "week_games_path": "data/week-games/2026-live-2026-09-05T23-59-59Z-history.json"
     },
     {
       "comparison_display_label": "Preseason",
@@ -210,6 +231,7 @@
       "completed_visualization_bytes": 18570,
       "completed_visualization_bytes_per_game": 130.77464788732394,
       "data_path": "data/snapshots/2026-weekly-2026-09-06T17-34-56.895103Z-context.json",
+      "default_week": "1",
       "display_label": "20260906",
       "distribution_path": "data/distributions/2026-weekly-2026-09-06T17-34-56.895103Z-context.json",
       "effective_cutoff": "2026-09-06T17:34:56.895103+00:00",
@@ -245,7 +267,11 @@
       "team_seasons_bytes": 1769731,
       "team_seasons_path": "data/team-seasons/2026-weekly-2026-09-06T17-34-56.895103Z-context.json",
       "unrated_count": 0,
-      "valid": true
+      "valid": true,
+      "week_count": 14,
+      "week_game_count": 888,
+      "week_games_bytes": 1282394,
+      "week_games_path": "data/week-games/2026-weekly-2026-09-06T17-34-56.895103Z-context.json"
     },
     {
       "comparison_display_label": "Preseason",
@@ -254,6 +280,7 @@
       "completed_visualization_bytes": 18570,
       "completed_visualization_bytes_per_game": 130.77464788732394,
       "data_path": "data/snapshots/2026-weekly-2026-09-06T17-34-56.895103Z-history.json",
+      "default_week": "1",
       "display_label": "20260906",
       "distribution_path": "data/distributions/2026-weekly-2026-09-06T17-34-56.895103Z-history.json",
       "effective_cutoff": "2026-09-06T17:34:56.895103+00:00",
@@ -289,7 +316,11 @@
       "team_seasons_bytes": 1769932,
       "team_seasons_path": "data/team-seasons/2026-weekly-2026-09-06T17-34-56.895103Z-history.json",
       "unrated_count": 0,
-      "valid": true
+      "valid": true,
+      "week_count": 14,
+      "week_game_count": 888,
+      "week_games_bytes": 1282666,
+      "week_games_path": "data/week-games/2026-weekly-2026-09-06T17-34-56.895103Z-history.json"
     },
     {
       "anchor_family": "context",
@@ -299,6 +330,7 @@
       "completed_visualization_bytes": 18570,
       "completed_visualization_bytes_per_game": 130.77464788732394,
       "data_path": "data/snapshots/2026-weekly-2026-09-06T17-34-56.895103Z-performance.json",
+      "default_week": "1",
       "display_label": "20260906",
       "distribution_path": "data/distributions/2026-weekly-2026-09-06T17-34-56.895103Z-performance.json",
       "effective_cutoff": "2026-09-06T17:34:56.895103+00:00",
@@ -333,7 +365,11 @@
       "team_seasons_bytes": 1769735,
       "team_seasons_path": "data/team-seasons/2026-weekly-2026-09-06T17-34-56.895103Z-performance.json",
       "unrated_count": 7,
-      "valid": true
+      "valid": true,
+      "week_count": 14,
+      "week_game_count": 888,
+      "week_games_bytes": 1282394,
+      "week_games_path": "data/week-games/2026-weekly-2026-09-06T17-34-56.895103Z-performance.json"
     },
     {
       "comparison_display_label": "Preseason",
@@ -342,6 +378,7 @@
       "completed_visualization_bytes": 19361,
       "completed_visualization_bytes_per_game": 130.81756756756758,
       "data_path": "data/snapshots/2026-weekly-2026-09-07T13-42-50.853587Z-context.json",
+      "default_week": "1",
       "display_label": "Sep. 7",
       "distribution_path": "data/distributions/2026-weekly-2026-09-07T13-42-50.853587Z-context.json",
       "effective_cutoff": "2026-09-07T13:42:50.853587+00:00",
@@ -377,7 +414,11 @@
       "team_seasons_bytes": 1770519,
       "team_seasons_path": "data/team-seasons/2026-weekly-2026-09-07T13-42-50.853587Z-context.json",
       "unrated_count": 0,
-      "valid": true
+      "valid": true,
+      "week_count": 14,
+      "week_game_count": 888,
+      "week_games_bytes": 1283885,
+      "week_games_path": "data/week-games/2026-weekly-2026-09-07T13-42-50.853587Z-context.json"
     },
     {
       "comparison_display_label": "Preseason",
@@ -386,6 +427,7 @@
       "completed_visualization_bytes": 19361,
       "completed_visualization_bytes_per_game": 130.81756756756758,
       "data_path": "data/snapshots/2026-weekly-2026-09-07T13-42-50.853587Z-history.json",
+      "default_week": "1",
       "display_label": "Sep. 7",
       "distribution_path": "data/distributions/2026-weekly-2026-09-07T13-42-50.853587Z-history.json",
       "effective_cutoff": "2026-09-07T13:42:50.853587+00:00",
@@ -421,7 +463,11 @@
       "team_seasons_bytes": 1770426,
       "team_seasons_path": "data/team-seasons/2026-weekly-2026-09-07T13-42-50.853587Z-history.json",
       "unrated_count": 0,
-      "valid": true
+      "valid": true,
+      "week_count": 14,
+      "week_game_count": 888,
+      "week_games_bytes": 1284038,
+      "week_games_path": "data/week-games/2026-weekly-2026-09-07T13-42-50.853587Z-history.json"
     },
     {
       "anchor_family": "context",
@@ -431,6 +477,7 @@
       "completed_visualization_bytes": 19361,
       "completed_visualization_bytes_per_game": 130.81756756756758,
       "data_path": "data/snapshots/2026-weekly-2026-09-07T13-42-50.853587Z-performance.json",
+      "default_week": "1",
       "display_label": "Sep. 7",
       "distribution_path": "data/distributions/2026-weekly-2026-09-07T13-42-50.853587Z-performance.json",
       "effective_cutoff": "2026-09-07T13:42:50.853587+00:00",
@@ -465,7 +512,11 @@
       "team_seasons_bytes": 1770523,
       "team_seasons_path": "data/team-seasons/2026-weekly-2026-09-07T13-42-50.853587Z-performance.json",
       "unrated_count": 1,
-      "valid": true
+      "valid": true,
+      "week_count": 14,
+      "week_game_count": 888,
+      "week_games_bytes": 1283885,
+      "week_games_path": "data/week-games/2026-weekly-2026-09-07T13-42-50.853587Z-performance.json"
     },
     {
       "comparison_display_label": "Preseason",
@@ -474,6 +525,7 @@
       "completed_visualization_bytes": 19628,
       "completed_visualization_bytes_per_game": 130.85333333333332,
       "data_path": "data/snapshots/2026-weekly-2026-09-08T11-43-00.275833Z-context.json",
+      "default_week": "1",
       "display_label": "Week 2",
       "distribution_path": "data/distributions/2026-weekly-2026-09-08T11-43-00.275833Z-context.json",
       "effective_cutoff": "2026-09-08T11:43:00.275833+00:00",
@@ -509,7 +561,11 @@
       "team_seasons_bytes": 1769636,
       "team_seasons_path": "data/team-seasons/2026-weekly-2026-09-08T11-43-00.275833Z-context.json",
       "unrated_count": 0,
-      "valid": true
+      "valid": true,
+      "week_count": 14,
+      "week_game_count": 888,
+      "week_games_bytes": 1283330,
+      "week_games_path": "data/week-games/2026-weekly-2026-09-08T11-43-00.275833Z-context.json"
     },
     {
       "comparison_display_label": "Preseason",
@@ -518,6 +574,7 @@
       "completed_visualization_bytes": 19628,
       "completed_visualization_bytes_per_game": 130.85333333333332,
       "data_path": "data/snapshots/2026-weekly-2026-09-08T11-43-00.275833Z-history.json",
+      "default_week": "1",
       "display_label": "Week 2",
       "distribution_path": "data/distributions/2026-weekly-2026-09-08T11-43-00.275833Z-history.json",
       "effective_cutoff": "2026-09-08T11:43:00.275833+00:00",
@@ -553,7 +610,11 @@
       "team_seasons_bytes": 1769727,
       "team_seasons_path": "data/team-seasons/2026-weekly-2026-09-08T11-43-00.275833Z-history.json",
       "unrated_count": 0,
-      "valid": true
+      "valid": true,
+      "week_count": 14,
+      "week_game_count": 888,
+      "week_games_bytes": 1283593,
+      "week_games_path": "data/week-games/2026-weekly-2026-09-08T11-43-00.275833Z-history.json"
     },
     {
       "anchor_family": "context",
@@ -563,6 +624,7 @@
       "completed_visualization_bytes": 19628,
       "completed_visualization_bytes_per_game": 130.85333333333332,
       "data_path": "data/snapshots/2026-weekly-2026-09-08T11-43-00.275833Z-performance.json",
+      "default_week": "1",
       "display_label": "Week 2",
       "distribution_path": "data/distributions/2026-weekly-2026-09-08T11-43-00.275833Z-performance.json",
       "effective_cutoff": "2026-09-08T11:43:00.275833+00:00",
@@ -597,7 +659,11 @@
       "team_seasons_bytes": 1769640,
       "team_seasons_path": "data/team-seasons/2026-weekly-2026-09-08T11-43-00.275833Z-performance.json",
       "unrated_count": 0,
-      "valid": true
+      "valid": true,
+      "week_count": 14,
+      "week_game_count": 888,
+      "week_games_bytes": 1283330,
+      "week_games_path": "data/week-games/2026-weekly-2026-09-08T11-43-00.275833Z-performance.json"
     }
   ],
   "team_logo_audit": {
@@ -866,5 +932,6 @@
     "source": "RedditCFB",
     "url_template": "https://cdn.redditcfb.com/60x40/cfb/{handle}.png"
   },
-  "team_season_schema_version": "1.0"
+  "team_season_schema_version": "1.0",
+  "weekly_game_schema_version": "1.0"
 }

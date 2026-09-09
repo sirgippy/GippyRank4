@@ -316,6 +316,7 @@ function updateBackLink(entry) {
   const url = new URL("./", document.baseURI);
   if (!entry) {
     $("#back-to-rankings").href = url.pathname;
+    $("#back-to-week").href = new URL("./week.html", document.baseURI).pathname;
     return;
   }
   url.searchParams.set("season", String(entry.season));
@@ -323,6 +324,10 @@ function updateBackLink(entry) {
   url.searchParams.set("family", entry.ranking_family);
   if (entry.ranking_family === "predictive") url.searchParams.set("prior", entry.prior_family);
   $("#back-to-rankings").href = `${url.pathname}${url.search}`;
+  const weekUrl = new URL("./week.html", document.baseURI);
+  weekUrl.search = url.search;
+  weekUrl.searchParams.set("week", params.get("week") ?? entry.default_week);
+  $("#back-to-week").href = `${weekUrl.pathname}${weekUrl.search}`;
 }
 
 function renderSummary(entry, snapshot, row) {
@@ -383,8 +388,9 @@ function gameCard(game, cutoff, artifact, team) {
   opponentHeading.append(opponent);
   const meta = node("p", "game-meta", `${game.opponent_classification.toUpperCase()}${game.opponent_conference ? ` · ${game.opponent_conference}` : ""}`);
   const outcome = node("p", "game-outcome");
-  const future = cutoff === null || new Date(game.date) > cutoff;
+  const future = game.game_state ? game.game_state === "future" : cutoff === null || new Date(game.date) > cutoff;
   if (game.result && game.score) outcome.textContent = `${game.result} ${game.score.team}–${game.score.opponent}`;
+  else if (game.game_state === "cancelled") outcome.textContent = "Cancelled or postponed";
   else if (future) outcome.textContent = "Future at this snapshot";
   else outcome.textContent = "Not completed by this snapshot";
   const body = node("div", "game-card-body");
@@ -394,7 +400,7 @@ function gameCard(game, cutoff, artifact, team) {
     const prediction = artifact.future_predictions?.[game.future_prediction_id];
     if (prediction) body.append(predictionPanel(prediction, team, artifact.future_margin_axis));
     else body.append(node("p", "game-not-modeled", "Prediction unavailable — the matchup lacks sufficient supported model representation."));
-  } else if (game.result) {
+  } else if (game.result || game.game_state === "completed") {
     body.append(node("p", "game-not-modeled", "Not modeled — this game is outside the eligible Historical Likelihood evidence."));
   } else {
     body.append(node("p", "game-not-modeled", "Not modeled — no completed evidence was available at the cutoff."));

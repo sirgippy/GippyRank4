@@ -411,6 +411,7 @@ def build_team_season_artifact(
             if str(row.get("season", "")) != str(metadata["season"]):
                 continue
             game_id = str(row.get("id", ""))
+            schedule_state = _schedule_state(row, metadata)
             home_id, away_id = row.get("homeId", ""), row.get("awayId", "")
             home_subdivision = row.get("homeClassification", "").casefold()
             away_subdivision = row.get("awayClassification", "").casefold()
@@ -422,7 +423,7 @@ def build_team_season_artifact(
                 not game_id
                 or game_id in included_ids
                 or not eligible_matchup
-                or not _future_at_snapshot(row, metadata)
+                or schedule_state != "future"
                 or not (home_id in teams_by_id and away_id in teams_by_id)
                 or not (home_id in fbs_teams or away_id in fbs_teams)
             ):
@@ -471,6 +472,7 @@ def build_team_season_artifact(
             (away_id, home_id, "awayTeam", "homeTeam", "homeClassification", "homeConference"),
         ]
         game_id = str(row.get("id", ""))
+        schedule_state = _schedule_state(row, metadata)
         eligible_matchup = (
             row.get("homeClassification", "").casefold() in {"fbs", "fcs"}
             and row.get("awayClassification", "").casefold() in {"fbs", "fcs"}
@@ -480,14 +482,31 @@ def build_team_season_artifact(
             and eligible_matchup
             and game_id in game_by_id
         )
+        reveal_completed_result = schedule_state == "completed" and (
+            modeled or not eligible_matchup
+        )
+        display_state = (
+            schedule_state
+            if reveal_completed_result or schedule_state != "completed"
+            else "unresolved"
+        )
         for focal_id, opponent_id, focal_name_field, opponent_name_field, opponent_class_field, opponent_conf_field in focal_sides:
             if focal_id not in fbs_teams:
                 continue
-            result, score = _result_and_score(row, focal_id, reveal=modeled)
+            # A scheduled game can be known to have completed without being
+            # eligible for Historical Likelihood V1 (for example an FCS
+            # matchup).  Preserve that score for the weekly narrative while
+            # keeping ``modeled`` and ``game_rating`` strictly evidence-based.
+            result, score = _result_and_score(
+                row,
+                focal_id,
+                reveal=reveal_completed_result,
+            )
             entry: dict[str, Any] = {
                 "game_id": game_id,
                 "week": _week(row.get("week")),
                 "date": row.get("startDate"),
+                "game_state": display_state,
                 "opponent_id": opponent_id,
                 "opponent_name": row.get(opponent_name_field, ""),
                 "opponent_classification": row.get(opponent_class_field, "").lower(),

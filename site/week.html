@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="GippyRank weekly college football game view with snapshot-aware performances and predictions.">
+    <title>Week games · GippyRank 4.0</title>
+    <link rel="stylesheet" href="./assets/style.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="shell masthead">
+        <a class="wordmark" href="./" aria-label="GippyRank 4.0 rankings">GippyRank <span>4.0</span></a>
+        <nav class="site-nav" aria-label="Site navigation">
+          <a href="./">Rankings</a>
+          <a href="./week.html" aria-current="page">Week games</a>
+        </nav>
+      </div>
+    </header>
+    <main class="shell week-page" aria-labelledby="week-page-title">
+      <p class="back-link"><a id="back-to-rankings" href="./">← Back to rankings</a></p>
+      <section class="controls" aria-label="Weekly view controls">
+        <label>Ranking family<select id="family-select" aria-label="Ranking family"></select></label>
+        <label>Season<select id="season-select" aria-label="Season"></select></label>
+        <label>Snapshot<select id="snapshot-select" aria-label="Snapshot"></select></label>
+        <fieldset id="prior-select" class="prior-select">
+          <legend>Predictive prior</legend>
+          <button type="button" data-prior="context">Context</button>
+          <button type="button" data-prior="history">History</button>
+        </fieldset>
+      </section>
+
+      <section class="week-heading" aria-live="polite">
+        <p class="snapshot-kind" id="week-kind">Loading weekly games…</p>
+        <h1 id="week-page-title">Week games</h1>
+        <p id="week-context" class="section-context"></p>
+        <div class="week-picker" aria-label="Week selection">
+          <button type="button" id="previous-week">← Previous</button>
+          <label>Selected week<select id="week-select" aria-label="Selected week"></select></label>
+          <button type="button" id="next-week">Next →</button>
+        </div>
+      </section>
+
+      <section class="week-summary" aria-labelledby="week-summary-title">
+        <h2 id="week-summary-title" class="sr-only">Week summary</h2>
+        <div id="week-summary-cards" class="week-summary-cards"></div>
+      </section>
+
+      <section aria-labelledby="weekly-schedule-title">
+        <div class="section-heading">
+          <div><h2 id="weekly-schedule-title">Games</h2><p id="weekly-schedule-context" class="section-context"></p></div>
+        </div>
+        <p id="week-status" class="team-page-status" aria-live="polite">Loading schedule…</p>
+        <div id="weekly-schedule" class="weekly-schedule"></div>
+      </section>
+
+      <details class="week-method-note">
+        <summary>How to read this week</summary>
+        <p>Completed games show both teams' inferred performance distributions: rank 1 is the best performance and rank N is the worst. Future games show one canonical home-minus-away predictive margin distribution with win probabilities and expected margin. The selected snapshot determines what was known; the schedule's week number determines where a game appears.</p>
+      </details>
+    </main>
+    <footer><div class="shell"><p>GippyRank rankings are model outputs, not AP, Coaches, or CFP poll inputs.</p><a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/posterior_v1.md">Methodology</a></div></footer>
+    <script type="module" src="./assets/week.js"></script>
+  </body>
+</html>
