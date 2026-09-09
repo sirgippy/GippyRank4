@@ -253,7 +253,17 @@ def test_weekly_builder_orders_week_zero_and_named_weeks_once() -> None:
         "included_game_ids": [],
         "prediction_schema_version": "1.0",
         "prediction_source": "predictive_context",
-        "future_predictions": {},
+        "future_predictions": {
+            "week-0": {
+                "game_id": "week-0",
+                "home_team_id": "3",
+                "away_team_id": "1",
+                "home_team_name": "Three",
+                "away_team_name": "One",
+                "home_subdivision": "fcs",
+                "away_subdivision": "fbs",
+            }
+        },
         "teams": {
             "1": {
                 "team_id": "1",
@@ -280,7 +290,7 @@ def test_weekly_builder_orders_week_zero_and_named_weeks_once() -> None:
                         "opponent_classification": "fcs",
                         "site": "home",
                         "game_state": "future",
-                        "future_prediction_id": None,
+                        "future_prediction_id": "week-0",
                     },
                 ],
             }
@@ -292,6 +302,8 @@ def test_weekly_builder_orders_week_zero_and_named_weeks_once() -> None:
         "week-0",
         "week-1",
     ]
+    assert weekly["weeks"][0]["games"][0]["home_team_id"] == "3"
+    assert weekly["weeks"][0]["games"][0]["away_team_id"] == "1"
 
 
 def test_static_site_uses_manifest_logo_config_and_decorative_fallback() -> None:

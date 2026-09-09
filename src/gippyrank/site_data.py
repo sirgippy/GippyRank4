@@ -1498,19 +1498,41 @@ def build_weekly_game_artifact(
             if not opponent_id:
                 raise SiteDataValidationError(f"weekly game {game_id} is missing its opponent")
             site = str(entry.get("site", "")).casefold()
-            if site == "away":
+            prediction_id_value = entry.get("future_prediction_id")
+            prediction = (
+                future_predictions.get(str(prediction_id_value))
+                if prediction_id_value is not None
+                else None
+            )
+            if isinstance(prediction, dict) and prediction.get("home_team_id") is not None:
+                # Future predictions own the canonical home-minus-away
+                # orientation, including neutral-site games whose schedule
+                # entries intentionally do not privilege either team.
+                home_id = str(prediction["home_team_id"])
+                away_id = str(prediction["away_team_id"])
+            elif site == "away":
                 home_id, away_id = opponent_id, team_id
             elif site == "neutral":
                 home_id, away_id = sorted((team_id, opponent_id))
             else:
                 home_id, away_id = team_id, opponent_id
             home_is_focal = home_id == team_id
-            home_name = team_name if home_is_focal else str(entry.get("opponent_name", opponent_id))
-            away_name = str(entry.get("opponent_name", opponent_id)) if home_is_focal else team_name
+            prediction_home = prediction.get("home_team_name") if isinstance(prediction, dict) else None
+            prediction_away = prediction.get("away_team_name") if isinstance(prediction, dict) else None
+            home_name = prediction_home or (team_name if home_is_focal else str(entry.get("opponent_name", opponent_id)))
+            away_name = prediction_away or (str(entry.get("opponent_name", opponent_id)) if home_is_focal else team_name)
             home_conference = team_conference if home_is_focal else str(entry.get("opponent_conference", ""))
             away_conference = str(entry.get("opponent_conference", "")) if home_is_focal else team_conference
-            home_subdivision = "fbs" if home_is_focal else str(entry.get("opponent_classification", ""))
-            away_subdivision = str(entry.get("opponent_classification", "")) if home_is_focal else "fbs"
+            home_subdivision = (
+                str(prediction.get("home_subdivision", ""))
+                if isinstance(prediction, dict) and prediction.get("home_subdivision")
+                else "fbs" if home_is_focal else str(entry.get("opponent_classification", ""))
+            )
+            away_subdivision = (
+                str(prediction.get("away_subdivision", ""))
+                if isinstance(prediction, dict) and prediction.get("away_subdivision")
+                else str(entry.get("opponent_classification", "")) if home_is_focal else "fbs"
+            )
             state = _weekly_game_state(entry, cutoff)
             record = games_by_id.get(game_id)
             if record is None:
