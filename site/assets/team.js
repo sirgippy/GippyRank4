@@ -50,6 +50,68 @@ function percentage(value) {
   return `${Math.round(percent)}%`;
 }
 
+function marginValue(value) {
+  return Math.abs(Number(value)).toFixed(1);
+}
+
+function marginSide(teamName, value) {
+  const amount = Number(value);
+  if (Math.abs(amount) < 0.05) return "Even";
+  return `${teamName} by ${marginValue(amount)}`;
+}
+
+function orientedPrediction(prediction, team) {
+  const focalIsHome = prediction.home_team_id === team.team_id;
+  const opponentName = focalIsHome ? prediction.away_team_name : prediction.home_team_name;
+  const focalWin = focalIsHome ? prediction.home_win_probability : prediction.away_win_probability;
+  const opponentWin = focalIsHome ? prediction.away_win_probability : prediction.home_win_probability;
+  const expected = focalIsHome ? prediction.expected_home_margin : -prediction.expected_home_margin;
+  const median = focalIsHome ? prediction.median_home_margin : -prediction.median_home_margin;
+  const orientInterval = (interval) => focalIsHome
+    ? [interval[0], interval[1]]
+    : [-interval[1], -interval[0]];
+  return {
+    focalName: team.team_name,
+    opponentName,
+    focalWin,
+    opponentWin,
+    expected,
+    median,
+    interval50: orientInterval(prediction.margin_interval_50),
+    interval80: orientInterval(prediction.margin_interval_80),
+    interval95: orientInterval(prediction.margin_interval_95),
+  };
+}
+
+function predictionRange(oriented, interval) {
+  const [low, high] = interval;
+  if (high < 0) return `${marginSide(oriented.focalName, high)} to ${marginSide(oriented.focalName, low)}`;
+  if (low > 0) return `${marginSide(oriented.opponentName, low)} to ${marginSide(oriented.opponentName, high)}`;
+  const lower = low < 0 ? marginSide(oriented.focalName, low) : "Even";
+  const upper = high > 0 ? marginSide(oriented.opponentName, high) : "Even";
+  return `${lower} to ${upper}`;
+}
+
+function predictionPanel(prediction, team) {
+  const oriented = orientedPrediction(prediction, team);
+  const favorite = oriented.focalWin >= oriented.opponentWin
+    ? [oriented.focalName, oriented.focalWin]
+    : [oriented.opponentName, oriented.opponentWin];
+  const panel = node("div", "game-prediction");
+  const title = node("strong", "game-prediction-title", `${favorite[0]} ${percentage(favorite[1])}`);
+  const expected = node("p", "game-prediction-expected", `Expected margin: ${oriented.expected >= 0 ? marginSide(oriented.focalName, oriented.expected) : marginSide(oriented.opponentName, -oriented.expected)}`);
+  const interval = node("p", "game-prediction-interval", `Central 80% range: ${predictionRange(oriented, oriented.interval80)}`);
+  const accessible = node("p", "sr-only", `${oriented.focalName} has a ${percentage(oriented.focalWin)} win probability. ${oriented.opponentName} has a ${percentage(oriented.opponentWin)} win probability. Expected margin is ${oriented.expected >= 0 ? marginSide(oriented.focalName, oriented.expected) : marginSide(oriented.opponentName, -oriented.expected)}. The central 80 percent predictive interval ranges from ${predictionRange(oriented, oriented.interval80)}.`);
+  const details = node("details", "game-prediction-details");
+  const summary = node("summary", "", "More predictive detail");
+  const list = node("dl", "game-rating-details");
+  [["Focal win probability", percentage(oriented.focalWin)], ["Opponent win probability", percentage(oriented.opponentWin)], ["Median margin", oriented.median >= 0 ? marginSide(oriented.focalName, oriented.median) : marginSide(oriented.opponentName, -oriented.median)], ["Central 50% range", predictionRange(oriented, oriented.interval50)], ["Central 95% range", predictionRange(oriented, oriented.interval95)], ["Prediction source", prediction.prediction_source === "predictive_history" ? "Predictive History" : "Predictive Context"]].forEach(([label, value]) => list.append(node("dt", "", label), node("dd", "", value)));
+  details.append(summary, list);
+  panel.append(title, expected, interval, accessible, details);
+  panel.setAttribute("aria-label", `${favorite[0]} has a ${percentage(favorite[1])} win probability. Expected margin: ${oriented.expected >= 0 ? marginSide(oriented.focalName, oriented.expected) : marginSide(oriented.opponentName, -oriented.expected)}. Central 80% range: ${predictionRange(oriented, oriented.interval80)}.`);
+  return panel;
+}
+
 function rank(value) {
   return `#${Number(value).toFixed(1)}`;
 }
@@ -96,6 +158,7 @@ function renderSummary(entry, snapshot, row) {
   $("#schedule-context").textContent = entry.snapshot_type === "preseason"
     ? "Schedule metadata is shown without any season results."
     : `Results and ratings are shown only through ${timestamp(entry.effective_cutoff)}.`;
+  $("#prediction-source").textContent = `Future prediction source: ${entry.ranking_family === "performance" ? "Predictive Context" : entry.prior_family === "history" ? "Predictive History" : "Predictive Context"}. Predictions use the posterior available at this snapshot.`;
   const summary = node("div", "team-summary-grid");
   summary.append(
     node("div", "team-summary-item", `${rankLabel} · expected ${rank(row.expected_rank)}`),
@@ -118,7 +181,7 @@ function ratingPanel(rating) {
   return panel;
 }
 
-function gameCard(game, cutoff) {
+function gameCard(game, cutoff, artifact, team) {
   const item = node("li", "game-card");
   const header = node("div", "game-card-header");
   const week = game.week === null ? "" : `Week ${game.week} · `;
@@ -138,7 +201,9 @@ function gameCard(game, cutoff) {
   if (game.game_rating) {
     body.append(ratingPanel(game.game_rating));
   } else if (future) {
-    body.append(node("p", "game-not-modeled", "No result or game rating is shown after the selected snapshot cutoff."));
+    const prediction = artifact.future_predictions?.[game.future_prediction_id];
+    if (prediction) body.append(predictionPanel(prediction, team));
+    else body.append(node("p", "game-not-modeled", "Prediction unavailable — the matchup lacks sufficient supported model representation."));
   } else if (game.result) {
     body.append(node("p", "game-not-modeled", "Not modeled — this game is outside the eligible Historical Likelihood evidence."));
   } else {
@@ -154,8 +219,8 @@ function renderSchedule(artifact, entry) {
   if (!team) throw new Error("This team is not available in the selected season snapshot.");
   const cutoff = artifact.effective_cutoff ? new Date(artifact.effective_cutoff) : null;
   const games = Array.isArray(team.games) ? team.games : [];
-  $("#team-page-status").textContent = games.length ? `${games.length} scheduled games · game ratings include uncertainty` : "No schedule entries are available for this team.";
-  $("#schedule-list").replaceChildren(...games.map((game) => gameCard(game, cutoff)));
+  $("#team-page-status").textContent = games.length ? `${games.length} scheduled games · completed ratings and future predictions include uncertainty` : "No schedule entries are available for this team.";
+  $("#schedule-list").replaceChildren(...games.map((game) => gameCard(game, cutoff, artifact, team)));
 }
 
 async function load() {

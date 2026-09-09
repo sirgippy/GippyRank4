@@ -1,8 +1,10 @@
 {
   "default_publication_slot": "2026-09-08",
   "payload_stats": {
+    "initial_rankings_page_bytes": 1785971,
+    "lazy_future_prediction_bytes": 7027363,
     "lazy_rank_distribution_bytes": 5877006,
-    "lazy_team_season_bytes": 7121534,
+    "lazy_team_season_bytes": 14912752,
     "published_ranking_snapshot_bytes": 1785971,
     "published_snapshot_count": 13
   },
@@ -29,6 +31,8 @@
       "distribution_path": "data/distributions/2026-preseason-context.json",
       "effective_cutoff": null,
       "excluded_lower_division_games": 0,
+      "future_prediction_bytes": 506682,
+      "future_prediction_count": 761,
       "generation_timestamp": "2026-09-05T20:12:56.196105+00:00",
       "included_game_count": 0,
       "model_versions": {
@@ -47,7 +51,7 @@
       "snapshot_id": "2026-preseason-context",
       "snapshot_type": "preseason",
       "source_retrieved_at": null,
-      "team_seasons_bytes": 514232,
+      "team_seasons_bytes": 1078148,
       "team_seasons_path": "data/team-seasons/2026-preseason-context.json",
       "unrated_count": 0,
       "valid": true
@@ -60,6 +64,8 @@
       "distribution_path": "data/distributions/2026-preseason-history.json",
       "effective_cutoff": null,
       "excluded_lower_division_games": 0,
+      "future_prediction_bytes": 506624,
+      "future_prediction_count": 761,
       "generation_timestamp": "2026-09-05T20:12:57.082967+00:00",
       "included_game_count": 0,
       "model_versions": {
@@ -78,7 +84,7 @@
       "snapshot_id": "2026-preseason-history",
       "snapshot_type": "preseason",
       "source_retrieved_at": null,
-      "team_seasons_bytes": 514232,
+      "team_seasons_bytes": 1078090,
       "team_seasons_path": "data/team-seasons/2026-preseason-history.json",
       "unrated_count": 0,
       "valid": true
@@ -91,6 +97,8 @@
       "distribution_path": "data/distributions/2026-live-2026-09-05T23-59-59Z-context.json",
       "effective_cutoff": "2026-09-05T20:11:12.864212+00:00",
       "excluded_lower_division_games": 27,
+      "future_prediction_bytes": 556413,
+      "future_prediction_count": 816,
       "generation_timestamp": "2026-09-05T20:12:08.549822+00:00",
       "included_game_count": 86,
       "model_versions": {
@@ -109,7 +117,7 @@
       "snapshot_id": "2026-live-2026-09-05T23-59-59Z-context",
       "snapshot_type": "live",
       "source_retrieved_at": "2026-09-05T20:11:12.864212+00:00",
-      "team_seasons_bytes": 532736,
+      "team_seasons_bytes": 1147609,
       "team_seasons_path": "data/team-seasons/2026-live-2026-09-05T23-59-59Z-context.json",
       "unrated_count": 0,
       "valid": true
@@ -122,6 +130,8 @@
       "distribution_path": "data/distributions/2026-live-2026-09-05T23-59-59Z-history.json",
       "effective_cutoff": "2026-09-05T20:11:12.864212+00:00",
       "excluded_lower_division_games": 27,
+      "future_prediction_bytes": 556458,
+      "future_prediction_count": 816,
       "generation_timestamp": "2026-09-05T20:12:14.410283+00:00",
       "included_game_count": 86,
       "model_versions": {
@@ -140,7 +150,7 @@
       "snapshot_id": "2026-live-2026-09-05T23-59-59Z-history",
       "snapshot_type": "live",
       "source_retrieved_at": "2026-09-05T20:11:12.864212+00:00",
-      "team_seasons_bytes": 532736,
+      "team_seasons_bytes": 1147654,
       "team_seasons_path": "data/team-seasons/2026-live-2026-09-05T23-59-59Z-history.json",
       "unrated_count": 0,
       "valid": true
@@ -153,6 +163,8 @@
       "distribution_path": "data/distributions/2026-weekly-2026-09-06T17-34-56.895103Z-context.json",
       "effective_cutoff": "2026-09-06T17:34:56.895103+00:00",
       "excluded_lower_division_games": 37,
+      "future_prediction_bytes": 545678,
+      "future_prediction_count": 790,
       "generation_timestamp": "2026-09-06T17:34:56.895103+00:00",
       "included_game_count": 165,
       "model_versions": {
@@ -171,7 +183,7 @@
       "snapshot_id": "2026-weekly-2026-09-06T17-34-56.895103Z-context",
       "snapshot_type": "weekly",
       "source_retrieved_at": "2026-09-06T17:34:56.895103+00:00",
-      "team_seasons_bytes": 557236,
+      "team_seasons_bytes": 1162053,
       "team_seasons_path": "data/team-seasons/2026-weekly-2026-09-06T17-34-56.895103Z-context.json",
       "unrated_count": 0,
       "valid": true
@@ -184,6 +196,8 @@
       "distribution_path": "data/distributions/2026-weekly-2026-09-06T17-34-56.895103Z-history.json",
       "effective_cutoff": "2026-09-06T17:34:56.895103+00:00",
       "excluded_lower_division_games": 37,
+      "future_prediction_bytes": 545764,
+      "future_prediction_count": 790,
       "generation_timestamp": "2026-09-06T17:34:56.895103+00:00",
       "included_game_count": 165,
       "model_versions": {
@@ -202,7 +216,7 @@
       "snapshot_id": "2026-weekly-2026-09-06T17-34-56.895103Z-history",
       "snapshot_type": "weekly",
       "source_retrieved_at": "2026-09-06T17:34:56.895103+00:00",
-      "team_seasons_bytes": 557236,
+      "team_seasons_bytes": 1162139,
       "team_seasons_path": "data/team-seasons/2026-weekly-2026-09-06T17-34-56.895103Z-history.json",
       "unrated_count": 0,
       "valid": true
@@ -216,6 +230,8 @@
       "distribution_path": "data/distributions/2026-weekly-2026-09-06T17-34-56.895103Z-performance.json",
       "effective_cutoff": "2026-09-06T17:34:56.895103+00:00",
       "excluded_lower_division_games": 0,
+      "future_prediction_bytes": 545678,
+      "future_prediction_count": 790,
       "generation_timestamp": "2026-09-06T17:34:56.895103+00:00",
       "included_game_count": 165,
       "method": "prior_stripping",
@@ -233,7 +249,7 @@
       "snapshot_id": "2026-weekly-2026-09-06T17-34-56.895103Z-performance",
       "snapshot_type": "weekly",
       "source_retrieved_at": "2026-09-06T17:34:56.895103+00:00",
-      "team_seasons_bytes": 557240,
+      "team_seasons_bytes": 1162057,
       "team_seasons_path": "data/team-seasons/2026-weekly-2026-09-06T17-34-56.895103Z-performance.json",
       "unrated_count": 7,
       "valid": true
@@ -246,6 +262,8 @@
       "distribution_path": "data/distributions/2026-weekly-2026-09-07T13-42-50.853587Z-context.json",
       "effective_cutoff": "2026-09-07T13:42:50.853587+00:00",
       "excluded_lower_division_games": 37,
+      "future_prediction_bytes": 544400,
+      "future_prediction_count": 788,
       "generation_timestamp": "2026-09-07T13:42:50.853587+00:00",
       "included_game_count": 171,
       "model_versions": {
@@ -264,7 +282,7 @@
       "snapshot_id": "2026-weekly-2026-09-07T13-42-50.853587Z-context",
       "snapshot_type": "weekly",
       "source_retrieved_at": "2026-09-07T13:42:50.853587+00:00",
-      "team_seasons_bytes": 559021,
+      "team_seasons_bytes": 1162597,
       "team_seasons_path": "data/team-seasons/2026-weekly-2026-09-07T13-42-50.853587Z-context.json",
       "unrated_count": 0,
       "valid": true
@@ -277,6 +295,8 @@
       "distribution_path": "data/distributions/2026-weekly-2026-09-07T13-42-50.853587Z-history.json",
       "effective_cutoff": "2026-09-07T13:42:50.853587+00:00",
       "excluded_lower_division_games": 37,
+      "future_prediction_bytes": 544366,
+      "future_prediction_count": 788,
       "generation_timestamp": "2026-09-07T13:42:50.853587+00:00",
       "included_game_count": 171,
       "model_versions": {
@@ -295,7 +315,7 @@
       "snapshot_id": "2026-weekly-2026-09-07T13-42-50.853587Z-history",
       "snapshot_type": "weekly",
       "source_retrieved_at": "2026-09-07T13:42:50.853587+00:00",
-      "team_seasons_bytes": 559021,
+      "team_seasons_bytes": 1162563,
       "team_seasons_path": "data/team-seasons/2026-weekly-2026-09-07T13-42-50.853587Z-history.json",
       "unrated_count": 0,
       "valid": true
@@ -309,6 +329,8 @@
       "distribution_path": "data/distributions/2026-weekly-2026-09-07T13-42-50.853587Z-performance.json",
       "effective_cutoff": "2026-09-07T13:42:50.853587+00:00",
       "excluded_lower_division_games": 0,
+      "future_prediction_bytes": 544400,
+      "future_prediction_count": 788,
       "generation_timestamp": "2026-09-07T13:42:50.853587+00:00",
       "included_game_count": 171,
       "method": "prior_stripping",
@@ -326,7 +348,7 @@
       "snapshot_id": "2026-weekly-2026-09-07T13-42-50.853587Z-performance",
       "snapshot_type": "weekly",
       "source_retrieved_at": "2026-09-07T13:42:50.853587+00:00",
-      "team_seasons_bytes": 559025,
+      "team_seasons_bytes": 1162601,
       "team_seasons_path": "data/team-seasons/2026-weekly-2026-09-07T13-42-50.853587Z-performance.json",
       "unrated_count": 1,
       "valid": true
@@ -339,6 +361,8 @@
       "distribution_path": "data/distributions/2026-weekly-2026-09-08T11-43-00.275833Z-context.json",
       "effective_cutoff": "2026-09-08T11:43:00.275833+00:00",
       "excluded_lower_division_games": 37,
+      "future_prediction_bytes": 543598,
+      "future_prediction_count": 787,
       "generation_timestamp": "2026-09-08T11:43:00.275833+00:00",
       "included_game_count": 172,
       "model_versions": {
@@ -357,7 +381,7 @@
       "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-context",
       "snapshot_type": "weekly",
       "source_retrieved_at": "2026-09-08T11:43:00.275833+00:00",
-      "team_seasons_bytes": 559605,
+      "team_seasons_bytes": 1162377,
       "team_seasons_path": "data/team-seasons/2026-weekly-2026-09-08T11-43-00.275833Z-context.json",
       "unrated_count": 0,
       "valid": true
@@ -370,6 +394,8 @@
       "distribution_path": "data/distributions/2026-weekly-2026-09-08T11-43-00.275833Z-history.json",
       "effective_cutoff": "2026-09-08T11:43:00.275833+00:00",
       "excluded_lower_division_games": 37,
+      "future_prediction_bytes": 543704,
+      "future_prediction_count": 787,
       "generation_timestamp": "2026-09-08T11:43:00.275833+00:00",
       "included_game_count": 172,
       "model_versions": {
@@ -388,7 +414,7 @@
       "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-history",
       "snapshot_type": "weekly",
       "source_retrieved_at": "2026-09-08T11:43:00.275833+00:00",
-      "team_seasons_bytes": 559605,
+      "team_seasons_bytes": 1162483,
       "team_seasons_path": "data/team-seasons/2026-weekly-2026-09-08T11-43-00.275833Z-history.json",
       "unrated_count": 0,
       "valid": true
@@ -402,6 +428,8 @@
       "distribution_path": "data/distributions/2026-weekly-2026-09-08T11-43-00.275833Z-performance.json",
       "effective_cutoff": "2026-09-08T11:43:00.275833+00:00",
       "excluded_lower_division_games": 0,
+      "future_prediction_bytes": 543598,
+      "future_prediction_count": 787,
       "generation_timestamp": "2026-09-08T11:43:00.275833+00:00",
       "included_game_count": 172,
       "method": "prior_stripping",
@@ -419,7 +447,7 @@
       "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-performance",
       "snapshot_type": "weekly",
       "source_retrieved_at": "2026-09-08T11:43:00.275833+00:00",
-      "team_seasons_bytes": 559609,
+      "team_seasons_bytes": 1162381,
       "team_seasons_path": "data/team-seasons/2026-weekly-2026-09-08T11-43-00.275833Z-performance.json",
       "unrated_count": 0,
       "valid": true

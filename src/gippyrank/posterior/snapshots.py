@@ -362,10 +362,15 @@ def build_snapshot(
         subdivision_population_source(root, season, "fcs") if has_included_fcs else None
     )
     teams, fcs_fallbacks = add_fcs_fallbacks(teams, team_rows, included, fcs_population)
+    likelihood_path = root / "data/processed/posterior/historical_likelihood_v1.json"
+    if likelihood is None and likelihood_path.exists():
+        # A preseason snapshot still needs the frozen likelihood to publish
+        # future-game predictions.  Small fixture roots used for prior-only
+        # tests may intentionally omit the artifact, so retain the historical
+        # prior-only fallback when no game evidence or prediction is possible.
+        likelihood = load_likelihood(likelihood_path)
     if games:
-        likelihood = likelihood or load_likelihood(
-            root / "data/processed/posterior/historical_likelihood_v1.json"
-        )
+        likelihood = likelihood or load_likelihood(likelihood_path)
         result = infer_posterior(
             teams,
             games,
@@ -477,7 +482,7 @@ def build_snapshot(
         "team_season_path": "team_seasons.json" if prior_family == "context" else None,
         "team_season_schema_version": "1.0" if prior_family == "context" else None,
     }
-    if prior_family == "context":
+    if likelihood is not None:
         team_season = build_team_season_artifact(
             root=root,
             metadata=metadata,
@@ -486,7 +491,10 @@ def build_snapshot(
             games=games,
             included_rows=included,
             posterior=result,
-            likelihood=likelihood if games else None,
+            likelihood=likelihood,
+            prediction_source=(
+                "predictive_history" if prior_family == "history" else "predictive_context"
+            ),
         )
         metadata["team_season_path"] = "team_seasons.json"
         metadata["team_season_schema_version"] = team_season["schema_version"]

@@ -51,3 +51,9 @@ The exporter reads `posterior_pmfs.csv` only. It requires one complete,
 normalized PMF for every FBS team in the selected ranking summary and rejects
 missing, duplicate, non-finite, out-of-range, non-contiguous, or inconsistent
 data. It does not infer, alter, or renormalize posterior probabilities.
+
+Future-game predictions are intentionally absent from the initial ranking
+snapshot JSON.  They remain in the lazy team-season payload; the manifest
+reports `future_prediction_count`, `future_prediction_bytes`, and aggregate
+`payload_stats.lazy_future_prediction_bytes` so publication reviews can track
+the incremental payload separately from the rankings-page payload.

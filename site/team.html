@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="GippyRank team-season page with snapshot-aware game ratings.">
+    <meta name="description" content="GippyRank team-season page with snapshot-aware game ratings and future predictions.">
     <title>Team season · GippyRank 4.0</title>
     <link rel="stylesheet" href="./assets/style.css">
   </head>
@@ -23,9 +23,10 @@
         <div id="team-ranking-summary" class="team-ranking-summary" aria-live="polite"></div>
       </section>
       <section class="team-rating-explainer" aria-labelledby="game-ratings-title">
-        <h2 id="game-ratings-title">Game ratings</h2>
-        <p>Game ratings estimate the quality implied by that single performance using what GippyRank knows about the opponent at this snapshot. Because opponent estimates evolve, a past game's rating can change later in the season.</p>
-        <p class="team-rating-note">Ratings are always Context-anchored, even when the header shows Predictive History or Performance. Each rematch is rated separately from the same pair-cavity opponent evidence.</p>
+        <h2 id="game-ratings-title">Game ratings &amp; future predictions</h2>
+        <p>Completed-game ratings estimate the quality implied by that single performance using what GippyRank knows about the opponent at this snapshot. Future predictions show the posterior-predictive distribution for the scheduled matchup, including win probability, expected margin, and central uncertainty intervals.</p>
+        <p id="prediction-source" class="team-rating-note"></p>
+        <p class="team-rating-note">Ratings remain Context-anchored, even when the header shows Predictive History or Performance. Future games use the selected source shown above. No projected final scores are displayed.</p>
       </section>
       <section aria-labelledby="schedule-title">
         <div class="section-heading team-schedule-heading">
