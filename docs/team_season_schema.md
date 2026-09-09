@@ -34,9 +34,11 @@ remain.
 
 Each modeled completed game keeps the exact game-evidence summaries above and
 adds `display_pmf`, a deterministic 40-bin compression of that same rank PMF.
+Display bins are fixed-scale integer weights from 0 through 1000; divide by
+the shared axis `probability_encoding.scale` to recover chart probabilities.
 The artifact-level `performance_axis` is shared by every game in the season:
 rank 1 (best) is on the left and `max_rank` (worst) is on the right. The
-display PMF is normalized and is not used to recompute any exact summary.
+display weights sum to 1000 and are not used to recompute any exact summary.
 
 `performance_percentile` is an empirical percentile of
 `game_rating.expected_rank` among all eligible FBS team-game performance
@@ -101,7 +103,7 @@ completed game has a compact `game_rating` summary containing:
 - expected rank, median, and mode;
 - central 50%, 80%, and 95% intervals;
 - Top 5, Top 10, and Top 25 probabilities;
-- the normalized 40-bin `display_pmf`, empirical `performance_percentile`, and
+- the fixed-scale integer 40-bin `display_pmf`, empirical `performance_percentile`, and
   presentation-only `performance_grade`.
 
 No full per-game PMF is serialized. Games after the selected cutoff retain
@@ -146,9 +148,10 @@ and cross-team references before publishing.
 
 The `future_margin_axis` is fixed at `-40` through `+40` points in 40 bins,
 with the home-oriented convention `margin = home points - away points`.
-Each prediction also contains `display_distribution` with the exact-mixture
-CDF mass in each visible bin and explicit lower/upper tail probabilities. The
-display is clipped only for chart space; its three mass components sum to one.
+Each prediction also contains `display_distribution` with the CDF mass in each
+visible bin and explicit lower/upper tail weights. The display is clipped only
+for chart space; its three encoded mass components sum to 1000 and are decoded
+using `future_margin_axis.probability_encoding`.
 The exact expected margin, median, win probabilities, and 50/80/95% intervals
 remain authoritative and are not derived from display bins. For large
 posterior mixtures, export aggregates nearby component locations into a

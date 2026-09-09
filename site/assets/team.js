@@ -82,6 +82,11 @@ function uncertaintyLabel(interval, rankCount) {
   return "moderate";
 }
 
+function displayScale(axis) {
+  const scale = Number(axis?.probability_encoding?.scale);
+  return Number.isFinite(scale) && scale > 0 ? scale : 1;
+}
+
 function densitySvg(masses, {
   className,
   label,
@@ -157,7 +162,7 @@ function futureChart(prediction, team, axis, oriented) {
   const display = orientedDisplayDistribution(prediction, team, axis);
   if (!display) return null;
   const label = `Predictive margin distribution from ${oriented.opponentName} by ${Math.abs(axis.min_margin)} to ${oriented.focalName} by ${axis.max_margin}; zero is even.`;
-  const tailProbability = display.lowerTail + display.upperTail;
+  const tailProbability = (display.lowerTail + display.upperTail) / displayScale(axis);
   const description = `The distribution is oriented from ${oriented.focalName}'s perspective. ${percentage(oriented.focalWin)} focal-team win probability and ${percentage(oriented.opponentWin)} opponent win probability. ${percentage(tailProbability)} of mass is outside the visible ${axis.min_margin} to ${axis.max_margin} point range.`;
   const figure = node("figure", "game-distribution game-distribution-future");
   figure.append(densitySvg(display.masses, { className: "future-distribution-chart", label, description, zero: true, tail: tailProbability > 0.001 }));
@@ -208,17 +213,22 @@ function predictionPanel(prediction, team, axis) {
   const panel = node("div", "game-prediction");
   const chart = futureChart(prediction, team, axis, oriented);
   if (chart) panel.append(chart);
-  const title = node("strong", "game-prediction-title", `${favorite[0]} ${percentage(favorite[1])}`);
   const expectedText = oriented.expected >= 0 ? marginSide(oriented.focalName, oriented.expected) : marginSide(oriented.opponentName, -oriented.expected);
-  const expected = node("p", "game-prediction-expected", `Expected margin: ${expectedText}`);
-  const interval = node("p", "game-prediction-interval", `Central 80% range: ${predictionRange(oriented, oriented.interval80)}`);
+  const expectedTeam = oriented.expected >= 0 ? oriented.focalName : oriented.opponentName;
+  const expectedAmount = marginValue(oriented.expected);
+  const expectedPrimary = Math.abs(oriented.expected) < 0.05
+    ? "expected Even"
+    : expectedTeam === favorite[0]
+      ? `expected by ${expectedAmount}`
+      : `expected ${expectedTeam} by ${expectedAmount}`;
+  const title = node("strong", "game-prediction-title", `${favorite[0]} ${percentage(favorite[1])} · ${expectedPrimary}`);
   const accessible = node("p", "sr-only", `${oriented.focalName} has a ${percentage(oriented.focalWin)} win probability. ${oriented.opponentName} has a ${percentage(oriented.opponentWin)} win probability. Expected margin is ${oriented.expected >= 0 ? marginSide(oriented.focalName, oriented.expected) : marginSide(oriented.opponentName, -oriented.expected)}. The central 80 percent predictive interval ranges from ${predictionRange(oriented, oriented.interval80)}.`);
   const details = node("details", "game-prediction-details");
   const summary = node("summary", "", "More predictive detail");
   const list = node("dl", "game-rating-details");
   [["Focal win probability", percentage(oriented.focalWin)], ["Opponent win probability", percentage(oriented.opponentWin)], ["Expected margin", expectedText], ["Median margin", oriented.median >= 0 ? marginSide(oriented.focalName, oriented.median) : marginSide(oriented.opponentName, -oriented.median)], ["Central 50% range", predictionRange(oriented, oriented.interval50)], ["Central 80% range", predictionRange(oriented, oriented.interval80)], ["Central 95% range", predictionRange(oriented, oriented.interval95)], ["Prediction source", prediction.prediction_source === "predictive_history" ? "Predictive History" : "Predictive Context"]].forEach(([label, value]) => list.append(node("dt", "", label), node("dd", "", value)));
   details.append(summary, list);
-  panel.append(title, expected, interval, accessible, details);
+  panel.append(title, accessible, details);
   panel.setAttribute("aria-label", `${favorite[0]} has a ${percentage(favorite[1])} win probability. Expected margin: ${oriented.expected >= 0 ? marginSide(oriented.focalName, oriented.expected) : marginSide(oriented.opponentName, -oriented.expected)}. Central 80% range: ${predictionRange(oriented, oriented.interval80)}.`);
   return panel;
 }
@@ -282,11 +292,11 @@ function renderSummary(entry, snapshot, row) {
 
 function ratingPanel(rating, axis) {
   const panel = node("div", "game-rating");
-  const grade = rating.performance_grade ? ` · ${rating.performance_grade}` : "";
-  const title = node("strong", "game-rating-title", `Played like ${rank(rating.expected_rank)}${grade}`);
   const percentile = rating.performance_percentile === undefined ? null : percentileLabel(rating.performance_percentile);
+  const grade = rating.performance_grade ? `${rating.performance_grade} · ` : "";
+  const title = node("strong", "game-rating-title", percentile ? `${grade}${percentile}` : "Inferred performance");
   const interval = node("span", "game-rating-interval", percentile
-    ? `${percentile} · ${uncertaintyLabel(rating.interval_80, rating.rank_count)} uncertainty`
+    ? `${uncertaintyLabel(rating.interval_80, rating.rank_count)} uncertainty`
     : `80% interval: ${rating.interval_80[0]}–${rating.interval_80[1]}`);
   interval.setAttribute("aria-label", `central 80 percent interval from rank ${rating.interval_80[0]} through rank ${rating.interval_80[1]}`);
   const chart = performanceChart(rating, axis);
@@ -299,7 +309,7 @@ function ratingPanel(rating, axis) {
   const details = node("details", "game-rating-details-disclosure");
   details.append(node("summary", "", "More performance detail"));
   const list = node("dl", "game-rating-details");
-  [["Expected rank", rank(rating.expected_rank)], ["Median", `#${rating.median_rank}`], ["Mode", `#${rating.mode_rank}`], ["50% interval", `${rating.interval_50[0]}–${rating.interval_50[1]}`], ["80% interval", `${rating.interval_80[0]}–${rating.interval_80[1]}`], ["95% interval", `${rating.interval_95[0]}–${rating.interval_95[1]}`], ["Top 5", percentage(rating.top5_probability)], ["Top 10", percentage(rating.top10_probability)], ["Top 25", percentage(rating.top25_probability)]].forEach(([label, value]) => list.append(node("dt", "", label), node("dd", "", value)));
+  [["Expected performance rank", rank(rating.expected_rank)], ["Median", `#${rating.median_rank}`], ["Mode", `#${rating.mode_rank}`], ["50% interval", `${rating.interval_50[0]}–${rating.interval_50[1]}`], ["80% interval", `${rating.interval_80[0]}–${rating.interval_80[1]}`], ["95% interval", `${rating.interval_95[0]}–${rating.interval_95[1]}`], ["Top 5", percentage(rating.top5_probability)], ["Top 10", percentage(rating.top10_probability)], ["Top 25", percentage(rating.top25_probability)]].forEach(([label, value]) => list.append(node("dt", "", label), node("dd", "", value)));
   details.append(list);
   panel.append(details);
   return panel;

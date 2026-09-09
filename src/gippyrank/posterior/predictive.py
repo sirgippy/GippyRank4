@@ -19,6 +19,10 @@ from scipy.special import gammaln, stdtr
 from scipy.stats import t as student_t
 
 from gippyrank.modeling import design_matrix
+from gippyrank.posterior.display import (
+    DISPLAY_PROBABILITY_SCALE,
+    quantize_display_probabilities,
+)
 from gippyrank.posterior.engine import LikelihoodV1, Team
 
 PREDICTION_SCHEMA_VERSION = "1.0"
@@ -340,6 +344,95 @@ def mixture_quantile(
     raise FloatingPointError("predictive mixture quantile did not converge")
 
 
+def _display_components(
+    locations: np.ndarray, weights: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
+    """Aggregate a large exact mixture into deterministic display components."""
+    if len(locations) <= FUTURE_MARGIN_DISPLAY_COMPONENT_BINS:
+        return locations, weights
+    location_min = float(locations.min())
+    location_max = float(locations.max())
+    location_span = location_max - location_min
+    if location_span <= 0:
+        return locations, weights
+    component_bins = np.minimum(
+        (
+            (locations - location_min)
+            / location_span
+            * FUTURE_MARGIN_DISPLAY_COMPONENT_BINS
+        ).astype(int),
+        FUTURE_MARGIN_DISPLAY_COMPONENT_BINS - 1,
+    )
+    component_weights = np.bincount(
+        component_bins,
+        weights=weights,
+        minlength=FUTURE_MARGIN_DISPLAY_COMPONENT_BINS,
+    )
+    component_locations = np.bincount(
+        component_bins,
+        weights=weights * locations,
+        minlength=FUTURE_MARGIN_DISPLAY_COMPONENT_BINS,
+    )
+    populated = component_weights > 0
+    return (
+        component_locations[populated] / component_weights[populated],
+        component_weights[populated],
+    )
+
+
+def _display_cdf(
+    edges: np.ndarray,
+    locations: np.ndarray,
+    weights: np.ndarray,
+    likelihood: LikelihoodV1,
+) -> np.ndarray:
+    """Evaluate a vector of CDF edges for a normalized location mixture."""
+    standardized = (edges[:, None] - locations[None, :]) / likelihood.scale
+    return np.asarray(
+        np.dot(
+            stdtr(likelihood.degrees_of_freedom, standardized),
+            weights,
+        ),
+        dtype=float,
+    )
+
+
+def margin_display_approximation_metrics(
+    game: ScheduledGame,
+    home: Team,
+    away: Team,
+    likelihood: LikelihoodV1,
+    *,
+    minimum: float = FUTURE_MARGIN_DISPLAY_MIN,
+    maximum: float = FUTURE_MARGIN_DISPLAY_MAX,
+    bins: int = FUTURE_MARGIN_DISPLAY_BINS,
+) -> dict[str, Any]:
+    """Compare exact and display-approximation CDFs at fixed chart edges."""
+    if not np.isfinite(minimum) or not np.isfinite(maximum) or minimum >= maximum:
+        raise ValueError("margin display bounds must be finite and ordered")
+    if bins < 1:
+        raise ValueError("margin display needs at least one bin")
+    locations, weights = predictive_components(game, home, away, likelihood)
+    edges = np.linspace(float(minimum), float(maximum), bins + 1)
+    display_locations, display_weights = _display_components(locations, weights)
+    exact_cdf = _display_cdf(edges, locations, weights, likelihood)
+    display_cdf = _display_cdf(
+        edges, display_locations, display_weights, likelihood
+    )
+    exact_masses = np.diff(exact_cdf)
+    display_masses = np.diff(display_cdf)
+    cdf_error = np.abs(exact_cdf - display_cdf)
+    mass_error = np.abs(exact_masses - display_masses)
+    return {
+        "exact_component_count": len(locations),
+        "display_component_count": len(display_locations),
+        "max_absolute_cdf_error": float(cdf_error.max()),
+        "mean_absolute_cdf_error": float(cdf_error.mean()),
+        "max_absolute_bin_mass_error": float(mass_error.max()),
+        "mean_absolute_bin_mass_error": float(mass_error.mean()),
+    }
+
+
 def margin_display_distribution(
     game: ScheduledGame,
     home: Team,
@@ -363,44 +456,8 @@ def margin_display_distribution(
         raise ValueError("margin display needs at least one bin")
     locations, weights = predictive_components(game, home, away, likelihood)
     edges = np.linspace(float(minimum), float(maximum), bins + 1)
-    # A full rank-pair mixture can contain tens of thousands of components.
-    # Aggregating nearby component locations preserves the analytic mixture's
-    # weights and mean while keeping publication-time display generation small.
-    # Small test mixtures remain exact.
-    if len(locations) > FUTURE_MARGIN_DISPLAY_COMPONENT_BINS:
-        location_min = float(locations.min())
-        location_max = float(locations.max())
-        location_span = location_max - location_min
-        if location_span > 0:
-            component_bins = np.minimum(
-                (
-                    (locations - location_min)
-                    / location_span
-                    * FUTURE_MARGIN_DISPLAY_COMPONENT_BINS
-                ).astype(int),
-                FUTURE_MARGIN_DISPLAY_COMPONENT_BINS - 1,
-            )
-            component_weights = np.bincount(
-                component_bins,
-                weights=weights,
-                minlength=FUTURE_MARGIN_DISPLAY_COMPONENT_BINS,
-            )
-            component_locations = np.bincount(
-                component_bins,
-                weights=weights * locations,
-                minlength=FUTURE_MARGIN_DISPLAY_COMPONENT_BINS,
-            )
-            populated = component_weights > 0
-            locations = component_locations[populated] / component_weights[populated]
-            weights = component_weights[populated]
-    standardized = (edges[:, None] - locations[None, :]) / likelihood.scale
-    cdf = np.asarray(
-        np.dot(
-            stdtr(likelihood.degrees_of_freedom, standardized),
-            weights,
-        ),
-        dtype=float,
-    )
+    locations, weights = _display_components(locations, weights)
+    cdf = _display_cdf(edges, locations, weights, likelihood)
     masses = np.diff(cdf)
     lower_tail = float(cdf[0])
     upper_tail = float(1.0 - cdf[-1])
@@ -417,10 +474,14 @@ def margin_display_distribution(
         )
     ):
         raise FloatingPointError("predictive margin display masses are invalid")
+    encoded = quantize_display_probabilities(
+        np.concatenate((np.maximum(masses, 0.0), [lower_tail, upper_tail])),
+        scale=DISPLAY_PROBABILITY_SCALE,
+    )
     return {
-        "masses": [max(0.0, float(mass)) for mass in masses],
-        "lower_tail_probability": lower_tail,
-        "upper_tail_probability": upper_tail,
+        "masses": encoded[:-2],
+        "lower_tail_probability": encoded[-2],
+        "upper_tail_probability": encoded[-1],
     }
 
 

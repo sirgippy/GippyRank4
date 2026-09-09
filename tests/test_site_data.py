@@ -231,6 +231,7 @@ def test_team_schedule_uses_distinct_accessible_performance_and_margin_plots() -
     assert "futureChart" in team
     assert "performance_axis" in team
     assert "future_margin_axis" in team
+    assert "probability_encoding" in team
     assert "role: \"img\"" in team
     assert "aria-label" in team
     assert "Central 80% range" in team
@@ -238,6 +239,10 @@ def test_team_schedule_uses_distinct_accessible_performance_and_margin_plots() -
     assert ".game-distribution-future .distribution-bar" in css
     assert "More performance detail" in team
     assert "More predictive detail" in team
+    assert "Expected performance rank" in team
+    assert "expectedPrimary" in team
+    assert "Played like" not in team
+    assert "game-prediction-interval" not in team
     assert "best FBS performance is on the left" in html
     assert "Even in the middle" in html
 

@@ -64,7 +64,7 @@ def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path:
     early, later = games
     assert early["modeled"] and early["game_rating"] is not None
     assert len(early["game_rating"]["display_pmf"]) == 40
-    assert sum(early["game_rating"]["display_pmf"]) == pytest.approx(1.0)
+    assert sum(early["game_rating"]["display_pmf"]) == 1000
     assert 0 <= early["game_rating"]["performance_percentile"] <= 100
     assert early["game_rating"]["performance_grade"] in {"A", "B", "C", "D", "F"}
     assert artifact["performance_axis"] == {
@@ -73,12 +73,18 @@ def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path:
         "label": "inferred performance quality",
         "max_rank": 2,
         "min_rank": 1,
+        "probability_encoding": {
+            "normalization": "divide weights by scale",
+            "scale": 1000,
+            "total_weight": 1000,
+            "type": "fixed_scale_integer",
+        },
     }
     assert artifact["performance_percentile"]["reference_count"] == 2
     assert later["result"] is None and later["score"] is None and later["game_rating"] is None
     prediction = artifact["future_predictions"][later["future_prediction_id"]]
     assert len(prediction["display_distribution"]["masses"]) == 40
-    assert sum(prediction["display_distribution"]["masses"]) + prediction["display_distribution"]["lower_tail_probability"] + prediction["display_distribution"]["upper_tail_probability"] == pytest.approx(1.0)
+    assert sum(prediction["display_distribution"]["masses"]) + prediction["display_distribution"]["lower_tail_probability"] + prediction["display_distribution"]["upper_tail_probability"] == 1000
     assert early["future_prediction_id"] is None
     assert later["future_prediction_id"] == "later"
     prediction = artifact["future_predictions"]["later"]

@@ -28,6 +28,7 @@ PERFORMANCE_DISPLAY_BINS = 40
 FUTURE_MARGIN_DISPLAY_MIN = -40.0
 FUTURE_MARGIN_DISPLAY_MAX = 40.0
 FUTURE_MARGIN_DISPLAY_BINS = 40
+DISPLAY_PROBABILITY_SCALE = 1000
 SUPPORTED_SNAPSHOT_SCHEMA_VERSIONS = {"1.0"}
 PMF_SUM_TOLERANCE = 1e-9
 SUMMARY_TOLERANCE = 1e-8
@@ -783,27 +784,47 @@ def _iso_datetime(value: object) -> datetime | None:
     return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=UTC)
 
 
+def _validate_display_encoding(axis: dict[str, Any], snapshot_id: str) -> None:
+    encoding = axis.get("probability_encoding")
+    if not isinstance(encoding, dict) or any(
+        encoding.get(field) != expected
+        for field, expected in (
+            ("type", "fixed_scale_integer"),
+            ("scale", DISPLAY_PROBABILITY_SCALE),
+            ("normalization", "divide weights by scale"),
+            ("total_weight", DISPLAY_PROBABILITY_SCALE),
+        )
+    ):
+        raise SiteDataValidationError(
+            f"{snapshot_id}: display probability encoding is invalid"
+        )
+
+
 def _validate_display_masses(
     value: object,
     *,
     expected_length: int,
     label: str,
     allow_partial: bool = False,
-) -> list[float]:
-    """Validate a deterministic display vector without changing its values."""
+) -> list[int]:
+    """Validate fixed-scale integer display weights without changing values."""
     if not isinstance(value, list) or len(value) != expected_length:
         raise SiteDataValidationError(
             f"{label} must contain exactly {expected_length} display bins"
         )
-    values = [_finite_number(item, f"{label} bin", label) for item in value]
-    if any(item < 0 for item in values):
+    if any(isinstance(item, bool) or not isinstance(item, int) for item in value):
+        raise SiteDataValidationError(f"{label} bins must be fixed-scale integers")
+    values = list(value)
+    if any(item < 0 or item > DISPLAY_PROBABILITY_SCALE for item in values):
         raise SiteDataValidationError(f"{label} bins must be nonnegative")
-    total = math.fsum(values)
+    total = sum(values)
     if allow_partial:
-        if total > 1.0 + 1.0e-9:
-            raise SiteDataValidationError(f"{label} bins contain more than one probability")
-    elif abs(total - 1.0) > 1.0e-9:
-        raise SiteDataValidationError(f"{label} bins sum to {total}, not 1")
+        if total > DISPLAY_PROBABILITY_SCALE:
+            raise SiteDataValidationError(f"{label} bins contain more than the encoded total")
+    elif total != DISPLAY_PROBABILITY_SCALE:
+        raise SiteDataValidationError(
+            f"{label} bins sum to {total}, not {DISPLAY_PROBABILITY_SCALE}"
+        )
     return values
 
 
@@ -824,6 +845,7 @@ def _validate_performance_display(
         raise SiteDataValidationError(f"{snapshot_id}: unsupported performance display bin count")
     if axis.get("direction") != "best_to_worst":
         raise SiteDataValidationError(f"{snapshot_id}: performance display direction is invalid")
+    _validate_display_encoding(axis, snapshot_id)
     percentile = artifact.get("performance_percentile")
     if not isinstance(percentile, dict):
         raise SiteDataValidationError(f"{snapshot_id}: performance percentile metadata is missing")
@@ -867,6 +889,7 @@ def _validate_future_display(artifact: dict[str, Any], snapshot_id: str) -> None
         or axis.get("unit") != "points"
     ):
         raise SiteDataValidationError(f"{snapshot_id}: future margin display axis is invalid")
+    _validate_display_encoding(axis, snapshot_id)
     prediction_map = artifact.get("future_predictions") or {}
     if not isinstance(prediction_map, dict):
         raise SiteDataValidationError(f"{snapshot_id}: future_predictions must be an object")
@@ -882,17 +905,15 @@ def _validate_future_display(artifact: dict[str, Any], snapshot_id: str) -> None
             label=f"{snapshot_id}: prediction {prediction_id} display",
             allow_partial=True,
         )
-        lower = _probability(
-            display.get("lower_tail_probability"),
-            "lower_tail_probability",
-            snapshot_id,
-        )
-        upper = _probability(
-            display.get("upper_tail_probability"),
-            "upper_tail_probability",
-            snapshot_id,
-        )
-        if abs(math.fsum(values) + lower + upper - 1.0) > 1.0e-9:
+        tail_values = []
+        for field in ("lower_tail_probability", "upper_tail_probability"):
+            value = display.get(field)
+            if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= DISPLAY_PROBABILITY_SCALE:
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: prediction {prediction_id} {field} is invalid"
+                )
+            tail_values.append(value)
+        if sum(values) + sum(tail_values) != DISPLAY_PROBABILITY_SCALE:
             raise SiteDataValidationError(
                 f"{snapshot_id}: prediction {prediction_id} display mass is not normalized"
             )

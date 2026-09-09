@@ -101,7 +101,7 @@ def test_performance_display_and_percentile_are_snapshot_derived() -> None:
     summary = game_evidence_summary(np.array([0.7, 0.2, 0.1]))
 
     assert len(summary["display_pmf"]) == 40
-    assert sum(summary["display_pmf"]) == pytest.approx(1.0)
+    assert sum(summary["display_pmf"]) == 1000
     assert performance_percentile(1.0, [1.0, 2.0, 3.0]) == pytest.approx(83.3333333333)
     assert performance_percentile(2.0, [1.0, 2.0, 3.0]) == pytest.approx(50.0)
 

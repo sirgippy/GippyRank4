@@ -11,6 +11,10 @@ from typing import Any
 
 import numpy as np
 
+from gippyrank.posterior.display import (
+    DISPLAY_PROBABILITY_SCALE,
+    quantize_display_probabilities,
+)
 from gippyrank.posterior.engine import (
     Game,
     LikelihoodV1,
@@ -47,14 +51,14 @@ def _quantile(pmf: np.ndarray, probability: float) -> int:
     return int(np.searchsorted(np.cumsum(pmf), probability, side="left") + 1)
 
 
-def _display_pmf(pmf: np.ndarray, bins: int = PERFORMANCE_DISPLAY_BINS) -> list[float]:
+def _display_pmf(pmf: np.ndarray, bins: int = PERFORMANCE_DISPLAY_BINS) -> list[int]:
     """Compress a rank PMF into deterministic equal-count display bins."""
     values = _normalise(pmf)
     result = np.zeros(bins, dtype=float)
     for index, probability in enumerate(values):
         bin_index = min(bins - 1, index * bins // len(values))
         result[bin_index] += probability
-    return [float(value) for value in result]
+    return quantize_display_probabilities(result, scale=DISPLAY_PROBABILITY_SCALE)
 
 
 def performance_percentile(value: float, reference: list[float] | tuple[float, ...]) -> float:
@@ -429,6 +433,12 @@ def build_team_season_artifact(
             "bins": PERFORMANCE_DISPLAY_BINS,
             "direction": "best_to_worst",
             "label": "inferred performance quality",
+            "probability_encoding": {
+                "type": "fixed_scale_integer",
+                "scale": DISPLAY_PROBABILITY_SCALE,
+                "normalization": "divide weights by scale",
+                "total_weight": DISPLAY_PROBABILITY_SCALE,
+            },
         },
         "performance_percentile": {
             "statistic": "game_rating.expected_rank",
@@ -444,6 +454,12 @@ def build_team_season_artifact(
             "direction": "home_minus_away",
             "unit": "points",
             "tail_handling": "tail mass is retained separately from visible bins",
+            "probability_encoding": {
+                "type": "fixed_scale_integer",
+                "scale": DISPLAY_PROBABILITY_SCALE,
+                "normalization": "divide weights by scale",
+                "total_weight": DISPLAY_PROBABILITY_SCALE,
+            },
         },
         "rank_count": rank_count,
         "rating_definition": "normalize(single-game Historical Likelihood × opponent pair-cavity belief)",

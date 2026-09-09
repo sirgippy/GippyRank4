@@ -18,6 +18,7 @@ from .game_evidence import (
 from .predictive import (
     PredictiveMarginSummary,
     ScheduledGame,
+    margin_display_approximation_metrics,
     margin_display_distribution,
     posterior_prediction_team,
     posterior_prediction_teams,
@@ -38,6 +39,7 @@ __all__ = [
     "game_evidence_pmf",
     "game_evidence_summary",
     "infer_posterior",
+    "margin_display_approximation_metrics",
     "margin_display_distribution",
     "performance_grade",
     "performance_percentile",
