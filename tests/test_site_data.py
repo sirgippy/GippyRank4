@@ -4,7 +4,9 @@ import csv
 import hashlib
 import json
 import shutil
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -333,6 +335,22 @@ def test_weekly_browser_preserves_matchup_order_and_accessible_labels() -> None:
     assert 'const link = node("a", "weekly-team-link", team.team_name);' in week
     assert 'const label = node("span", "weekly-team-link", team.team_name);' in week
     assert "const defaultWeek = weeks.find((week) => week.key === String(entry?.default_week));" in week
+
+
+def test_weekly_kickoff_labels_and_groups_use_browser_local_time() -> None:
+    week = (ROOT / "site/assets/week.js").read_text(encoding="utf-8")
+    kickoff = datetime.fromisoformat("2026-09-13T02:15:00+00:00")
+    assert kickoff.astimezone(ZoneInfo("America/Chicago")).date().isoformat() == "2026-09-12"
+    assert "function localDateKey(value)" in week
+    assert "date.getFullYear()" in week
+    assert "date.getMonth() + 1" in week
+    assert "date.getDate()" in week
+    assert "const key = game.date ? localDateKey(game.date) : \"unknown\";" in week
+    assert "formatDate(group.date, true)" in week
+    date_formatter = week[week.index("function formatDate"):week.index("function formatTime")]
+    time_formatter = week[week.index("function formatTime"):week.index("function localDateKey")]
+    assert 'timeZone: "UTC"' not in date_formatter
+    assert 'timeZone: "UTC"' not in time_formatter
 
 
 def test_static_site_uses_manifest_logo_config_and_decorative_fallback() -> None:

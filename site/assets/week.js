@@ -43,16 +43,28 @@ function ordinal(rank) {
 
 function formatDate(value, includeYear = false) {
   if (!value) return "Date unavailable";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Date unavailable";
   return new Intl.DateTimeFormat("en-US", {
-    month: "short", day: "numeric", ...(includeYear ? { year: "numeric" } : {}), timeZone: "UTC",
-  }).format(new Date(value));
+    month: "short", day: "numeric", ...(includeYear ? { year: "numeric" } : {}),
+  }).format(date);
 }
 
 function formatTime(value) {
   if (!value) return "Kickoff time unavailable";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Kickoff time unavailable";
   return new Intl.DateTimeFormat("en-US", {
-    hour: "numeric", minute: "2-digit", timeZone: "UTC", timeZoneName: "short",
-  }).format(new Date(value));
+    hour: "numeric", minute: "2-digit", timeZoneName: "short",
+  }).format(date);
+}
+
+function localDateKey(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "unknown";
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
 }
 
 function formatTimestamp(value) {
@@ -391,17 +403,17 @@ function renderSummary(week, entry, artifact) {
 function renderSchedule(week, artifact, entry) {
   const groups = [];
   for (const game of week.games || []) {
-    const key = game.date ? new Date(game.date).toISOString().slice(0, 10) : "unknown";
+    const key = game.date ? localDateKey(game.date) : "unknown";
     let group = groups.find((item) => item.key === key);
     if (!group) {
-      group = { key, games: [] };
+      group = { key, date: game.date, games: [] };
       groups.push(group);
     }
     group.games.push(game);
   }
   const sections = groups.map((group) => {
     const section = node("section", "weekly-date-group");
-    section.append(node("h3", "weekly-date-heading", group.key === "unknown" ? "Date unavailable" : formatDate(`${group.key}T00:00:00Z`, true)));
+    section.append(node("h3", "weekly-date-heading", group.key === "unknown" ? "Date unavailable" : formatDate(group.date, true)));
     const cards = node("div", "weekly-game-grid");
     cards.append(...group.games.map((game) => gameCard(game, artifact, entry, week.key)));
     section.append(cards);

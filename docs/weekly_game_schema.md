@@ -16,7 +16,9 @@ rankings page does not load this artifact; its size is reported under
 the browser date.  Numeric weeks, including Week 0, sort before named or
 missing weeks.  Games sort by week, UTC kickoff timestamp, stable game ID, and
 team IDs, so a rebuild is deterministic.  Within a selected week the browser
-groups cards by UTC calendar date and preserves that order.
+groups cards by browser-local calendar date and preserves that order.  Kickoff
+date/time labels and grouping use the same browser-local timezone; snapshot
+cutoff timestamps remain explicitly UTC.
 The manifest's `default_week` selects the earliest available week for preseason
 snapshots, the publication-labeled week when one is present, and otherwise the
 latest week represented by the snapshot cutoff.  An explicit browser `week`
