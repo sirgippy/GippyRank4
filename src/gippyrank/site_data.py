@@ -1861,7 +1861,7 @@ def _validate_team_season_artifact(
                 or game.get("score") is not None
                 or game.get("game_rating") is not None
                 or game.get("modeled")
-            ) and game_state != "completed":
+            ):
                 raise SiteDataValidationError(
                     f"{snapshot_id}: game {game['game_id']} has result or rating without snapshot evidence"
                 )

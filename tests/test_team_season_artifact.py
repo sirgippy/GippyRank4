@@ -456,7 +456,13 @@ def test_validator_rejects_unincluded_completed_result(tmp_path: Path) -> None:
     artifact = json.loads(artifact_path.read_text())
     artifact["schedule_source"]["sha256"] = hashlib.sha256(schedule_path.read_bytes()).hexdigest()
     game = next(game for game in artifact["teams"]["1"]["games"] if game["game_id"] == "later")
-    game.update({"result": "L", "score": {"team": 7, "opponent": 24}})
+    game.update(
+        {
+            "game_state": "completed",
+            "result": "L",
+            "score": {"team": 7, "opponent": 24},
+        }
+    )
     artifact_path.write_text(json.dumps(artifact), encoding="utf-8")
     config = root / "site/publish_config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
