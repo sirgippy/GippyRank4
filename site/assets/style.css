@@ -46,6 +46,7 @@ button {
   align-items: baseline;
   justify-content: space-between;
   gap: 24px;
+  flex-wrap: wrap;
   padding: 18px 0;
 }
 
@@ -69,15 +70,26 @@ button {
 
 .site-nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   align-items: center;
+  margin-left: auto;
 }
 
 .site-nav a {
+  display: inline-block;
+  padding: 3px 0;
   color: #fff;
   font-size: 13px;
   font-weight: 750;
   text-underline-offset: 3px;
+}
+
+.site-nav a[aria-current="page"] {
+  text-decoration: underline;
+  text-decoration-color: var(--gold);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
 }
 
 .site-nav a:hover {
@@ -102,6 +114,18 @@ button {
 .about-link:hover {
   color: #fff;
   text-decoration-thickness: 2px;
+}
+
+.rankings-about-link {
+  margin: 18px 0 0;
+}
+
+.rankings-about-link .about-link {
+  color: var(--green);
+}
+
+.rankings-about-link .about-link:hover {
+  color: var(--green);
 }
 
 .intro {
@@ -1029,15 +1053,20 @@ summary:focus-visible,
   list-style: none;
 }
 
-.week-page {
+.schedule-page {
   padding-bottom: 28px;
 }
 
-.week-heading {
+.compatibility-page {
+  min-height: 280px;
+  padding: 48px 0;
+}
+
+.schedule-heading {
   padding: 24px 0 18px;
 }
 
-.week-heading h1 {
+.schedule-heading h1 {
   margin: 0;
   font-size: clamp(30px, 5vw, 48px);
   line-height: 1.05;
@@ -1090,7 +1119,7 @@ summary:focus-visible,
   cursor: not-allowed;
 }
 
-.week-summary {
+.schedule-summary {
   margin-bottom: 22px;
 }
 
@@ -1310,12 +1339,12 @@ summary:focus-visible,
   grid-template-columns: repeat(4, auto);
 }
 
-.week-method-note {
+.schedule-method-note {
   margin: 22px 0 0;
   border-top: 1px solid var(--line);
 }
 
-.week-method-note summary {
+.schedule-method-note summary {
   width: fit-content;
   padding: 12px 0;
   color: var(--green);
@@ -1324,7 +1353,7 @@ summary:focus-visible,
   font-weight: 750;
 }
 
-.week-method-note p {
+.schedule-method-note p {
   max-width: 800px;
   margin: 0 0 12px;
   color: var(--muted);
@@ -2030,24 +2059,20 @@ summary:focus-visible,
 }
 
 @media (max-width: 760px) {
-  .masthead,
   .snapshot-summary,
   footer .shell {
     display: block;
   }
 
-  .rankings-masthead {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-  }
-
-  .masthead p {
-    margin-top: 3px;
+  .masthead {
+    align-items: center;
+    gap: 8px 18px;
   }
 
   .site-nav {
-    gap: 10px;
+    width: 100%;
+    margin-left: 0;
+    gap: 8px 14px;
   }
 
   .intro {

@@ -12,8 +12,8 @@
       <div class="shell masthead">
         <a class="wordmark" href="./" aria-label="GippyRank4 home">GippyRank4</a>
         <nav class="site-nav" aria-label="Site navigation">
-          <a href="./">Rankings</a>
-          <a href="./week.html">Week games</a>
+          <a id="rankings-view-link" href="./">Rankings</a>
+          <a id="schedule-view-link" class="schedule-link" href="./schedule.html">Schedule</a>
           <a href="./methodology.html" aria-current="page">Methodology</a>
         </nav>
       </div>
@@ -72,7 +72,7 @@
             <p>GippyRank keeps three ideas separate: a team’s underlying quality, the randomness of one game’s result, and the performance implied by one completed game. A dominant win can be evidence about quality, but the game-performance distribution is not itself the team’s season-long posterior.</p>
             <div class="methodology-callout">
               <strong>Interpretive rule</strong>
-              <p>Use Predictive rankings for “who does the model think is strongest?” Use Performance rankings for “who has played best so far?” Use the weekly and team pages to see the uncertainty behind either answer.</p>
+              <p>Use Predictive rankings for “who does the model think is strongest?” Use Performance rankings for “who has played best so far?” Use Schedule and team pages to see the uncertainty behind either answer.</p>
             </div>
           </section>
 
@@ -334,8 +334,8 @@
                 <thead><tr><th scope="col">Distribution</th><th scope="col">Question it answers</th><th scope="col">Where it appears</th></tr></thead>
                 <tbody>
                   <tr><th scope="row">Team posterior</th><td>How good might this team be at this snapshot?</td><td>Rankings and team detail</td></tr>
-                  <tr><th scope="row">Game performance</th><td>How strong does this team’s single completed performance look?</td><td>Team and weekly completed-game views</td></tr>
-                  <tr><th scope="row">Future margin</th><td>What might happen in this scheduled matchup?</td><td>Team and weekly future-game views</td></tr>
+                  <tr><th scope="row">Game performance</th><td>How strong does this team’s single completed performance look?</td><td>Team and Schedule completed-game views</td></tr>
+                  <tr><th scope="row">Future margin</th><td>What might happen in this scheduled matchup?</td><td>Team and Schedule future-game views</td></tr>
                   <tr><th scope="row">Season outcome</th><td>What could this final regular-season win total become?</td><td>Season outlook on team pages</td></tr>
                 </tbody>
               </table>

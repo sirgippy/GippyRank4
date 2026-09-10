@@ -340,12 +340,21 @@ function gameCard(game, artifact, entry, week) {
 function updateBackLink(entry, week) {
   const link = $("#back-to-rankings");
   if (!entry) {
-    link.href = new URL("./", document.baseURI).pathname;
+    const rankingsPath = new URL("./", document.baseURI).pathname;
+    link.href = rankingsPath;
+    $("#rankings-view-link").href = rankingsPath;
+    $("#schedule-view-link").href = new URL("./schedule.html", document.baseURI).pathname;
     return;
   }
   const url = new URL("./", document.baseURI);
-  url.search = contextParams(entry, week).toString();
-  link.href = `${url.pathname}${url.search}`;
+  const context = contextParams(entry, week).toString();
+  url.search = contextParams(entry).toString();
+  const rankingsPath = `${url.pathname}${url.search}`;
+  link.href = rankingsPath;
+  $("#rankings-view-link").href = rankingsPath;
+  const scheduleUrl = new URL("./schedule.html", document.baseURI);
+  scheduleUrl.search = context;
+  $("#schedule-view-link").href = `${scheduleUrl.pathname}${scheduleUrl.search}`;
 }
 
 function populateControls(entry) {
@@ -382,9 +391,9 @@ function renderWeekPicker(artifact, entry) {
 }
 
 function renderSummary(week, entry, artifact) {
-  $("#week-kind").textContent = `${entry.season} ${entry.display_label} · ${publicationStatusLabel(entry)} publication`;
-  $("#week-page-title").textContent = `${week.label} games`;
-  $("#week-context").textContent = `${familyLabel()}${state.family === "predictive" ? ` · ${entry.prior_family === "history" ? "History" : "Context"}` : ""} · selected snapshot through ${formatTimestamp(artifact.effective_cutoff)}`;
+  $("#schedule-kind").textContent = `${entry.season} ${entry.display_label} · ${publicationStatusLabel(entry)} publication`;
+  $("#schedule-page-title").textContent = "Schedule";
+  $("#schedule-context").textContent = `${week.label} · ${familyLabel()}${state.family === "predictive" ? ` · ${entry.prior_family === "history" ? "History" : "Context"}` : ""} · selected snapshot through ${formatTimestamp(artifact.effective_cutoff)}`;
   $("#weekly-schedule-context").textContent = "One card per scheduled game · chronological within date groups · future predictions use one canonical home-minus-away orientation.";
   const cards = [
     ["Scheduled", week.scheduled_game_count],
@@ -396,8 +405,8 @@ function renderSummary(week, entry, artifact) {
     card.append(node("strong", "", String(value)), node("span", "", label));
     return card;
   });
-  $("#week-summary-cards").replaceChildren(...cards);
-  $("#week-status").textContent = `${week.scheduled_game_count} scheduled games · ${week.completed_game_count} completed, ${week.future_game_count} future at ${formatTimestamp(artifact.effective_cutoff)}.`;
+  $("#schedule-summary-cards").replaceChildren(...cards);
+  $("#schedule-status").textContent = `${week.scheduled_game_count} scheduled games · ${week.completed_game_count} completed, ${week.future_game_count} future at ${formatTimestamp(artifact.effective_cutoff)}.`;
 }
 
 function renderSchedule(week, artifact, entry) {
@@ -429,19 +438,20 @@ async function load() {
   if (!state.season || !state.manifest.seasons.includes(state.season)) state.season = state.manifest.seasons[0];
   const entry = selectedEntry() || chooseDefault();
   populateControls(entry);
-  if (!entry) throw new Error("No published snapshot matches this weekly view.");
+  if (!entry) throw new Error("No published snapshot matches this Schedule view.");
   updateBackLink(entry, state.weekKey);
   const artifactResponse = await fetch(`./${entry.week_games_path}`);
-  if (!artifactResponse.ok) throw new Error("The selected weekly game artifact is unavailable.");
+  if (!artifactResponse.ok) throw new Error("The selected Schedule artifact is unavailable.");
   const artifact = await artifactResponse.json();
-  if (artifact.snapshot_id !== entry.snapshot_id || artifact.season !== entry.season) throw new Error("The weekly artifact does not match the selected snapshot.");
+  if (artifact.snapshot_id !== entry.snapshot_id || artifact.season !== entry.season) throw new Error("The selected Schedule artifact does not match the snapshot.");
   const week = renderWeekPicker(artifact, entry);
-  if (!week) throw new Error("No schedule weeks are available for this snapshot.");
+  if (!week) throw new Error("No weeks are available for this Schedule.");
   if (!params.has("week")) {
     const canonicalUrl = new URL(window.location.href);
     canonicalUrl.search = contextParams(entry, week.key).toString();
     window.history.replaceState({}, "", canonicalUrl);
   }
+  updateBackLink(entry, week.key);
   renderSummary(week, entry, artifact);
   renderSchedule(week, artifact, entry);
 }
@@ -454,4 +464,4 @@ $("#week-select").addEventListener("change", (event) => { const next = new URLSe
 $("#previous-week").addEventListener("click", () => { const options = [...$("#week-select").options]; const index = options.findIndex((option) => option.selected); if (index > 0) { const next = new URLSearchParams(params); next.set("week", options[index - 1].value); navigateTo(next); } });
 $("#next-week").addEventListener("click", () => { const options = [...$("#week-select").options]; const index = options.findIndex((option) => option.selected); if (index >= 0 && index < options.length - 1) { const next = new URLSearchParams(params); next.set("week", options[index + 1].value); navigateTo(next); } });
 
-load().catch((error) => { $("#week-status").textContent = error.message; $("#week-status").className = "team-page-status team-page-error"; });
+load().catch((error) => { $("#schedule-status").textContent = error.message; $("#schedule-status").className = "team-page-status team-page-error"; });

@@ -114,7 +114,7 @@ def test_methodology_page_documents_every_production_layer() -> None:
 
 
 def test_methodology_is_linked_from_all_public_site_surfaces() -> None:
-    for filename in ("index.html", "team.html", "week.html"):
+    for filename in ("index.html", "team.html", "schedule.html", "week.html"):
         page = (ROOT / "site" / filename).read_text(encoding="utf-8")
         assert 'href="./methodology.html"' in page
 

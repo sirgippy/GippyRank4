@@ -124,7 +124,7 @@ function overallBallotRationale(entry) {
   const semantics = state.family === "predictive"
     ? "Predictive estimates current underlying team quality using preseason information plus games."
     : "Performance asks what quality is implied by games played, using Context estimates to interpret opponent quality. Performance is not standings, strength of record, or postseason deservingness.";
-  return `Generated from GippyRank 4.0, a probabilistic college-football ranking model that estimates underlying team quality from game performance and expresses uncertainty rather than treating rank as perfectly known. This ballot uses the ${selectedViewLabel(entry)} rankings. ${semantics}\n\nExplore the rankings and uncertainty at: ${state.manifest.site_url}`;
+  return `Generated from GippyRank4, a probabilistic college-football ranking model that estimates underlying team quality from game performance and expresses uncertainty rather than treating rank as perfectly known. This ballot uses the ${selectedViewLabel(entry)} rankings. ${semantics}\n\nExplore the rankings and uncertainty at: ${state.manifest.site_url}`;
 }
 
 function teamBallotRationale(row) {
@@ -228,8 +228,8 @@ function populate() {
   priorSelector.hidden = performance;
   priorSelector.disabled = performance;
   document.querySelectorAll("[data-prior]").forEach((button) => { button.classList.toggle("is-active", button.dataset.prior === state.prior); button.disabled = performance; });
-  const weekLink = $("#week-view-link");
-  if (weekLink) weekLink.href = weekPageUrl(entry, entry?.default_week);
+  const scheduleLink = $("#schedule-view-link");
+  if (scheduleLink) scheduleLink.href = schedulePageUrl(entry, entry?.default_week);
   updateBallotExport(entry, state.snapshot);
 }
 
@@ -279,8 +279,8 @@ function teamPageUrl(row, entry) {
   return `${url.pathname}${url.search}`;
 }
 
-function weekPageUrl(entry, week = null) {
-  const url = new URL("./week.html", document.baseURI);
+function schedulePageUrl(entry, week = null) {
+  const url = new URL("./schedule.html", document.baseURI);
   if (!entry) return url.pathname;
   url.searchParams.set("season", String(entry.season));
   url.searchParams.set("snapshot", entry.snapshot_id);
