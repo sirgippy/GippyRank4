@@ -71,6 +71,112 @@ function percentage(value) {
   if (valueAsPercent >= 95) return `${valueAsPercent.toFixed(1)}%`;
   return `${Math.round(valueAsPercent)}%`;
 }
+
+function displayedRatedRows(snapshot) {
+  return [...(snapshot?.rankings?.filter((row) => row.rated !== false) ?? [])].sort((left, right) => (
+    left.expected_rank - right.expected_rank
+    || left.display_rank - right.display_rank
+    || String(left.team_id).localeCompare(String(right.team_id))
+  ));
+}
+
+function ballotRows(snapshot) {
+  return displayedRatedRows(snapshot).slice(0, 25);
+}
+
+function ballotEligibility(snapshot) {
+  if (!snapshot) return { ok: false, message: "Load a published ranking snapshot to export a ballot." };
+  const rated = displayedRatedRows(snapshot);
+  if (rated.length < 25) {
+    return {
+      ok: false,
+      message: `A ballot requires 25 rated teams. This ${familyLabel()} snapshot currently has only ${rated.length}.`,
+    };
+  }
+  const handles = state.manifest?.redditcfb?.team_handles ?? {};
+  const missing = ballotRows(snapshot).filter((row) => !handles[row.team_id]);
+  if (missing.length) {
+    return {
+      ok: false,
+      message: `Cannot export: canonical r/CFB handles are unavailable for ${missing.map((row) => row.team_name).join(", ")}.`,
+    };
+  }
+  return { ok: true, message: "Ready to download the selected GippyRank Top 25." };
+}
+
+function updateBallotExport(entry, snapshot) {
+  const button = $("#download-ballot");
+  const status = $("#ballot-export-status");
+  if (!button || !status) return;
+  const eligibility = ballotEligibility(snapshot);
+  button.disabled = !eligibility.ok;
+  status.textContent = eligibility.message;
+  status.classList.toggle("is-error", !eligibility.ok && Boolean(snapshot));
+  button.title = entry ? `Export the ${entry.season} ${entry.display_label} ${familyLabel()} Top 25` : "Export the selected GippyRank Top 25";
+}
+
+function selectedViewLabel(entry) {
+  const prior = state.family === "predictive" ? ` ${entry.prior_family === "history" ? "History" : "Context"}` : "";
+  return `${entry.season} ${entry.display_label} ${familyLabel()}${prior}`;
+}
+
+function overallBallotRationale(entry) {
+  const semantics = state.family === "predictive"
+    ? "Predictive estimates current underlying team quality using preseason information plus games."
+    : "Performance asks what quality is implied by games played, using Context estimates to interpret opponent quality. Performance is not standings, strength of record, or postseason deservingness.";
+  return `Generated from GippyRank 4.0, a probabilistic college-football ranking model that estimates underlying team quality from game performance and expresses uncertainty rather than treating rank as perfectly known. This ballot uses the ${selectedViewLabel(entry)} rankings. ${semantics}\n\nExplore the rankings and uncertainty at: ${state.manifest.site_url}`;
+}
+
+function teamBallotRationale(row) {
+  const expectedLabel = state.family === "performance"
+    ? "GippyRank Performance-equivalent expected rank"
+    : "GippyRank expected rank";
+  const probability = Number.isFinite(row.top25_probability)
+    ? ` Top-25 probability: ${percentage(row.top25_probability)}.`
+    : "";
+  return `${expectedLabel}: ${row.expected_rank.toFixed(1)}. Central 80% interval: ${row.interval_80[0]}–${row.interval_80[1]}.${probability}`;
+}
+
+function ballotFilename(entry) {
+  const label = entry.snapshot_type === "preseason"
+    ? "preseason"
+    : String(entry.display_label || entry.snapshot_id)
+      .toLowerCase()
+      .replace(/\./g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+  const family = state.family === "predictive" ? `predictive-${entry.prior_family}` : "performance";
+  return `gippyrank-${entry.season}-${label || "snapshot"}-${family}.json`;
+}
+
+function downloadBallot() {
+  const entry = selectedEntry();
+  const eligibility = ballotEligibility(state.snapshot);
+  if (!entry || !eligibility.ok) {
+    updateBallotExport(entry, state.snapshot);
+    return;
+  }
+  const handles = state.manifest.redditcfb.team_handles;
+  const ballot = {
+    poll_type: "computer",
+    overall_rationale: overallBallotRationale(entry),
+    entries: ballotRows(state.snapshot).map((row, index) => ({
+      rank: index + 1,
+      team_handle: handles[row.team_id],
+      rationale: teamBallotRationale(row),
+    })),
+  };
+  const blob = new Blob([`${JSON.stringify(ballot, null, 2)}\n`], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = ballotFilename(entry);
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
 function ordinal(rank) {
   const rounded = Math.round(rank);
   const remainder = rounded % 100;
@@ -124,6 +230,7 @@ function populate() {
   document.querySelectorAll("[data-prior]").forEach((button) => { button.classList.toggle("is-active", button.dataset.prior === state.prior); button.disabled = performance; });
   const weekLink = $("#week-view-link");
   if (weekLink) weekLink.href = weekPageUrl(entry, entry?.default_week);
+  updateBallotExport(entry, state.snapshot);
 }
 
 function updateSnapshotSummary(entry, snapshot) {
@@ -138,6 +245,7 @@ function updateSnapshotSummary(entry, snapshot) {
   $("#section-context").textContent = `FBS rankings · sorted by expected rank · ${baseline}`;
   const evidence = current ? `Effective cutoff: ${formatTimestamp(snapshot.effective_cutoff)} · ${snapshot.included_game_count} eligible games included · ${snapshot.excluded_lower_division_games ?? 0} lower-division games excluded.${state.family === "performance" ? ` ${snapshot.rated_count} rated, ${snapshot.unrated_count} NR.` : ""}` : `Snapshot generated ${formatTimestamp(snapshot.generation_timestamp)} · 0 eligible games included.`;
   $("#snapshot-evidence").textContent = state.notice ? `${evidence} ${state.notice}` : evidence;
+  updateBallotExport(entry, snapshot);
 }
 
 function sharedRankPosition(rank, rankCount) {
@@ -223,7 +331,7 @@ function detailsButton(row) {
 
 function renderRankings(snapshot) {
   const entry = selectedEntry();
-  const rated = snapshot.rankings.filter((row) => row.rated !== false);
+  const rated = displayedRatedRows(snapshot);
   const rankings = state.depth === "all" ? snapshot.rankings : rated.slice(0, 25);
   $("#rankings-title").textContent = state.depth === "all" ? "All FBS rankings" : "Top 25";
   const rows = rankings.map((row) => {
@@ -427,5 +535,6 @@ $("#season-select").addEventListener("change", (event) => { state.season = Numbe
 $("#snapshot-select").addEventListener("change", (event) => { state.slot = event.target.value; state.notice = ""; prepareSnapshotChange(); void render(); });
 document.querySelectorAll("[data-prior]").forEach((button) => button.addEventListener("click", () => { changePrior(button.dataset.prior); prepareSnapshotChange(); void render(); }));
 document.querySelectorAll("[data-depth]").forEach((button) => button.addEventListener("click", () => { state.depth = button.dataset.depth === "all" ? "all" : 25; document.querySelectorAll("[data-depth]").forEach((item) => item.classList.toggle("is-active", item === button)); if (state.snapshot) renderRankings(state.snapshot); }));
+$("#download-ballot")?.addEventListener("click", downloadBallot);
 
 fetch("./data/manifest.json").then((response) => response.ok ? response.json() : Promise.reject(new Error("Could not load manifest."))).then((manifest) => { state.manifest = manifest; return render(); }).catch((error) => { $("#snapshot-title").textContent = error.message; });
