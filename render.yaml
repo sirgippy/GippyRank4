@@ -10,4 +10,5 @@ services:
     healthCheckPath: /health
     envVars:
       - key: GIPPYRANK_API_CORS_ORIGINS
-        value: https://sirgippy.github.io
+        # V1 is unauthenticated and intentionally supports third-party browser consumers.
+        value: "*"

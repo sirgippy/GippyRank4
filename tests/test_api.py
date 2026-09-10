@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from email.utils import format_datetime
 from hashlib import sha256
 from pathlib import Path
 
@@ -54,6 +55,10 @@ def test_root_health_inventory_and_openapi(client: TestClient) -> None:
     assert health.json()["publication_count"] == len(MANIFEST["snapshots"])
     assert health.headers["cache-control"] == "no-store"
 
+    all_inventory = client.get("/api/v1/publications")
+    assert all_inventory.status_code == 200
+    assert all_inventory.json()["count"] == len(MANIFEST["snapshots"])
+
     inventory = client.get(
         "/api/v1/publications?season=2026&family=predictive&prior=context"
     )
@@ -63,6 +68,37 @@ def test_root_health_inventory_and_openapi(client: TestClient) -> None:
         item["ranking_family"] == "predictive" and item["prior_family"] == "context"
         for item in inventory.json()["publications"]
     )
+
+    store = app.state.publication_store
+    assert store is not None
+    original_publications = store.publications
+    maximum_generation = max(
+        item.metadata.generation_timestamp for item in original_publications
+    )
+    removed = next(
+        item
+        for item in original_publications
+        if item.metadata.generation_timestamp < maximum_generation
+    )
+    store.publications = tuple(
+        item for item in original_publications if item is not removed
+    )
+    try:
+        assert (
+            max(item.metadata.generation_timestamp for item in store.publications)
+            == maximum_generation
+        )
+        changed_inventory = client.get(
+            "/api/v1/publications",
+            headers={
+                "If-Modified-Since": format_datetime(maximum_generation, usegmt=True)
+            },
+        )
+        assert changed_inventory.status_code == 200
+        assert changed_inventory.json()["count"] == all_inventory.json()["count"] - 1
+        assert "last-modified" not in changed_inventory.headers
+    finally:
+        store.publications = original_publications
 
     openapi = client.get("/openapi.json")
     assert openapi.status_code == 200
@@ -199,6 +235,7 @@ def test_exact_publication_responses_are_cacheable_and_cors_is_read_only(
     response = client.get(path, headers={"Origin": "https://example.com"})
     assert response.status_code == 200
     assert response.headers["cache-control"] == "public, max-age=31536000, immutable"
+    assert "last-modified" in response.headers
     assert response.headers["etag"] == f'"{sha256(response.content).hexdigest()}"'
     assert response.headers["access-control-allow-origin"] == "*"
     conditional = client.get(path, headers={"If-None-Match": response.headers["etag"]})

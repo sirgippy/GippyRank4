@@ -31,7 +31,10 @@ uv run uvicorn gippyrank.api.app:app --host 127.0.0.1 --port 8000
 Set `GIPPYRANK_PUBLICATION_DATA` only to choose a different, trusted publication
 directory for a deployment or test. It must contain a manifest-approved data
 set. `GIPPYRANK_API_CORS_ORIGINS` accepts a comma-separated allowlist; the
-default is `*` for public read-only access. Credentials are never allowed.
+default is `*` for public read-only access. The checked-in Render deployment
+keeps that wildcard because V1 is unauthenticated and explicitly supports
+third-party browser consumers; credentials are never allowed. A narrower
+allowlist would be a product-policy change, not a security boundary.
 
 ## Routes
 
@@ -199,10 +202,12 @@ appropriate. Inventory and the API root use a five-minute cache. The slot
 convenience route uses a one-minute cache because its resolution is an alias.
 Health is `no-store`.
 
-CORS permits public GET/OPTIONS requests. The default origin policy is `*`,
-with no credentials; deployments may replace it with an explicit comma-
-separated allowlist via `GIPPYRANK_API_CORS_ORIGINS`. There are no write routes
-in V1.
+CORS permits public GET/OPTIONS requests. V1 intentionally uses `*` with no
+credentials, including in the checked-in Render deployment, so third-party
+browser applications can consume the unauthenticated API. Deployments may
+replace it with an explicit comma-separated allowlist via
+`GIPPYRANK_API_CORS_ORIGINS` if that product policy changes. There are no write
+routes in V1.
 
 ## Representative payload sizes
 

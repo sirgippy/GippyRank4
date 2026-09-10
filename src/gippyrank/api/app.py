@@ -358,16 +358,7 @@ def create_app(data_dir: Path | str | None = None) -> FastAPI:
             count=len(values),
             publications=[item.metadata for item in values],
         )
-        last_modified = max(
-            (item.metadata.generation_timestamp for item in values),
-            default=None,
-        )
-        return _response(
-            result,
-            request,
-            cache_control=LIST_CACHE_CONTROL,
-            last_modified=last_modified,
-        )
+        return _response(result, request, cache_control=LIST_CACHE_CONTROL)
 
     @app.get(
         "/api/v1/rankings/{snapshot_id}",
@@ -613,7 +604,6 @@ def create_app(data_dir: Path | str | None = None) -> FastAPI:
             result,
             request,
             cache_control=ALIAS_CACHE_CONTROL,
-            last_modified=_publication_last_modified(publication),
         )
 
     return app
