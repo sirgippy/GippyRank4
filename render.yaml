@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: gippyrank-api
+    runtime: docker
+    plan: free
+    branch: main
+    autoDeployTrigger: commit
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: GIPPYRANK_API_CORS_ORIGINS
+        # V1 is unauthenticated and intentionally supports third-party browser consumers.
+        value: "*"

@@ -35,6 +35,9 @@ jobs:
       - name: Run retained test suite
         run: uv run pytest -q
 
+      - name: Validate published API contract
+        run: uv run python -c "from gippyrank.api.app import app; assert app.state.publication_store is not None; assert app.openapi()['info']['version'] == 'v1'"
+
       - name: Run Ruff
         run: uv run ruff check .
 
