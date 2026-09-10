@@ -61,12 +61,19 @@ adds fixed-grid display data inside that same lazy payload; exact predictive
 summaries remain the source of truth and are not reconstructed from bins.
 
 The completed-game display adds 40 fixed-scale integer rank weights per
-modeled FBS team-game. The future-game display uses 40 CDF-derived integer
+modeled FBS team-game. It represents the discrete rank support as unit-width
+rank cells and divides the full rank axis into 40 equal-width intervals;
+probability mass is split between display intervals according to cell overlap,
+rather than assigning each rank wholly to one bucket. The future-game display
+uses 40 CDF-derived integer
 weights on the fixed `-40 ... +40` home-minus-away margin axis plus explicit
 lower and upper tail weights. The shared axis metadata declares the scale
 (`1000`) and the convention that weights are divided by that scale. For large
 mixtures, the future CDF values are evaluations of the deterministic
 256-component display approximation; small mixtures are evaluated directly.
+All display weights are presentation-only; exact completed-game summaries,
+percentiles, grades, and ranking outputs remain authoritative outside these
+compressed arrays.
 The manifest's `future_prediction_bytes` includes the display representation,
 and `payload_stats.initial_rankings_page_bytes` remains the ranking snapshot
 total, so the rankings page does not load these data.
