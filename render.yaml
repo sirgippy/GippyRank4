@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: gippyrank-api
+    runtime: docker
+    plan: free
+    branch: main
+    autoDeployTrigger: commit
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: GIPPYRANK_API_CORS_ORIGINS
+        value: https://sirgippy.github.io

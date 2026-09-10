@@ -37,6 +37,27 @@ mathematical definition and provenance checks.
 The artifact's regular-season outlook uses the hierarchical latent-state
 engine described in [Season Simulation V1](docs/season_simulation.md).
 
+## Public API
+
+GippyRank also provides a versioned, read-only FastAPI over the same validated
+`site/data` publication artifacts. It exposes publication inventory, exact
+snapshot rankings, stable-ID team seasons, weekly/game views, and published
+regular-season outlooks. Requests never fetch CFBD data, run inference, or
+mutate artifacts. The [API contract](docs/api.md) documents route semantics,
+schemas, cutoff safety, caching, CORS, and deployment.
+
+Run it locally with:
+
+```bash
+uv run uvicorn gippyrank.api.app:app --host 127.0.0.1 --port 8000
+```
+
+The local base URL is `http://127.0.0.1:8000`; OpenAPI is at
+`/openapi.json` and interactive documentation is at `/docs`. The production
+deployment target is the Render web service described by `render.yaml`; its
+HTTPS URL is assigned when that service is provisioned and is intentionally
+not represented by a fabricated URL in source documentation.
+
 The rankings page can also download the selected published Top 25 as an
 importable r/CFB computer ballot.  This is a browser-only JSON export with
 deterministic uncertainty rationales; it does not authenticate to or submit to
