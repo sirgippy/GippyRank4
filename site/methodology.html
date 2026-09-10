@@ -283,7 +283,7 @@
               </div>
               <figcaption id="future-flow-caption">Text equivalent: combine Team A’s posterior and Team B’s posterior through the Historical Likelihood, then obtain a distribution over the future home-minus-away margin.</figcaption>
             </figure>
-            <p>The site reports expected margin, median margin, win probabilities, tie probability, and central 50%, 80%, and 95% margin intervals. The canonical browser orientation is home points minus away points. Neutral games retain a neutral site row rather than inventing home-field advantage.</p>
+            <p>The prediction artifact contains expected margin, median margin, win probabilities, tie probability, and central 50%, 80%, and 95% margin intervals. The canonical browser orientation is home points minus away points. Neutral games retain a neutral site row rather than inventing home-field advantage.</p>
             <p>The Student-t mixture is continuous, so production tie probability is zero. The contract still uses the explicit football convention: a point mass at exactly zero, if a future likelihood ever supplies one, receives half credit for each team.</p>
             <div class="methodology-table-wrap">
               <table class="methodology-table">
@@ -347,6 +347,7 @@
             <p class="methodology-number">12</p>
             <h2 id="snapshots-title">Historical snapshots and leakage safety</h2>
             <p>Every published snapshot is intended to mean: <strong>what the model knew at that time.</strong></p>
+            <p>Bundles retain the model and schema identifiers they were generated with. The exporter checks those identifiers against the supported artifact registry and checks internal consistency; it does not require a historical bundle to match today’s current production identifiers.</p>
             <ul class="methodology-list">
               <li>The effective cutoff is the boundary for game evidence. A live request can have a requested cutoff, but the effective cutoff cannot be later than the available source retrieval evidence.</li>
               <li>Only final, eligible games in the snapshot’s included-game evidence update the posterior.</li>
@@ -385,18 +386,18 @@
                 <caption>Validation metrics maintained by the project</caption>
                 <thead><tr><th scope="col">Layer</th><th scope="col">Metrics or checks</th><th scope="col">Reference</th></tr></thead>
                 <tbody>
-                  <tr><th scope="row">Preseason priors</th><td>NLL, CRPS, expected-rank MAE, median-rank MAE, interval coverage and width</td><td><a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/performance_v1.md">Production research reports</a></td></tr>
+                  <tr><th scope="row">Preseason priors</th><td>NLL, CRPS, expected-rank MAE, median-rank MAE, interval coverage and width</td><td><a href="https://github.com/sirgippy/GippyRank4/blob/main/data/processed/preseason/context/context_prior_report.md">Context report</a> / <a href="https://github.com/sirgippy/GippyRank4/blob/main/data/processed/preseason/preseason_prior_report.md">History report</a></td></tr>
                   <tr><th scope="row">Posterior inference</th><td>Exact-vs-loopy marginal total variation, expected-rank error, convergence rate, and predeclared acceptance limits</td><td><a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/posterior_v1.md">Posterior V1</a></td></tr>
                   <tr><th scope="row">Future games</th><td>Win Brier, margin MAE, marginalized margin NLL, 50%/80%/95% interval coverage, and calibration error</td><td><a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/predictive_validation.md">Predictive validation</a></td></tr>
-                  <tr><th scope="row">Performance display</th><td>Prior-removal error, future-game calibration, and comparison with Predictive families</td><td><a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/performance_v1.md">Performance V1</a></td></tr>
+                  <tr><th scope="row">Performance rankings</th><td>Prior-removal error, future-game calibration, and comparison with Predictive families</td><td><a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/performance_v1.md">Performance V1</a></td></tr>
                   <tr><th scope="row">Season simulation</th><td>Expected-win error, CRPS, interval coverage, threshold Brier scores, variance decomposition, and single-game equivalence</td><td><a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/season_forecast_validation.md">Season forecast validation</a></td></tr>
                   <tr><th scope="row">Browser display</th><td>Predictive display CDF and bin-mass error after deterministic chart compression</td><td><a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/predictive_display_validation.md">Display validation</a></td></tr>
                 </tbody>
               </table>
             </div>
             <div class="methodology-callout">
-              <strong>Current checked-in audit examples</strong>
-              <p>The Posterior V1 audit covers 72 deterministic small-graph cases and records p95 marginal total variation of about 0.0061 against a 0.05 limit, with worst marginal total variation about 0.0252 against a 0.15 limit. The forecast validation report covers 1,600 historical team forecasts across preseason, early, and late phases. These are artifact-backed diagnostics, not guarantees about every future schedule.</p>
+              <strong>Where to find current audit values</strong>
+              <p>The linked <a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/posterior_v1.md">Posterior V1 report</a> and <a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/season_forecast_validation.md">season forecast validation report</a> contain the exact current case counts, metrics, thresholds, and scopes. They are checked-in artifact-backed diagnostics, not guarantees about every future schedule.</p>
             </div>
           </section>
 

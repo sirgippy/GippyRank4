@@ -7,6 +7,8 @@ from gippyrank.methodology import (
     PREDICTION_SCHEMA_VERSION,
     PRODUCTION_MODEL_VERSIONS,
     PRODUCTION_SCHEMA_VERSIONS,
+    SUPPORTED_ARTIFACT_MODEL_VERSIONS,
+    SUPPORTED_ARTIFACT_SCHEMA_VERSIONS,
     production_methodology_metadata,
 )
 from gippyrank.performance_snapshot import (
@@ -38,6 +40,14 @@ def test_published_methodology_metadata_matches_the_central_contract() -> None:
     assert published == production_methodology_metadata()
     assert published["model_versions"] == PRODUCTION_MODEL_VERSIONS
     assert published["schema_versions"] == PRODUCTION_SCHEMA_VERSIONS
+    assert all(
+        version in SUPPORTED_ARTIFACT_MODEL_VERSIONS[name]
+        for name, version in PRODUCTION_MODEL_VERSIONS.items()
+    )
+    assert all(
+        version in SUPPORTED_ARTIFACT_SCHEMA_VERSIONS[name]
+        for name, version in PRODUCTION_SCHEMA_VERSIONS.items()
+    )
 
     manifest = json.loads(
         (ROOT / "site/data/manifest.json").read_text(encoding="utf-8")
@@ -84,6 +94,18 @@ def test_methodology_page_documents_every_production_layer() -> None:
         "does not change production model outputs",
     ):
         assert phrase in page
+
+    assert "The prediction artifact contains expected margin" in page
+    assert (
+        'href="https://github.com/sirgippy/GippyRank4/blob/main/data/processed/preseason/context/context_prior_report.md"'
+        in page
+    )
+    assert (
+        'href="https://github.com/sirgippy/GippyRank4/blob/main/data/processed/preseason/preseason_prior_report.md"'
+        in page
+    )
+    assert "72 deterministic small-graph cases" not in page
+    assert "1,600 historical team forecasts" not in page
 
     assert 'src="./assets/methodology.js"' in page
     assert 'fetch("./data/methodology.json")' in (
