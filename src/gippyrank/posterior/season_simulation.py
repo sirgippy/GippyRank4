@@ -22,6 +22,11 @@ from typing import Any
 import numpy as np
 from scipy.stats import t as student_t
 
+from gippyrank.methodology import (
+    HISTORICAL_LIKELIHOOD_VERSION,
+    SEASON_SIMULATION_SCHEMA_VERSION,
+    SEASON_SIMULATION_VERSION,
+)
 from gippyrank.posterior.engine import LikelihoodV1, Team
 from gippyrank.posterior.predictive import (
     ScheduledGame,
@@ -31,8 +36,6 @@ from gippyrank.posterior.predictive import (
     win_probabilities,
 )
 
-SEASON_SIMULATION_SCHEMA_VERSION = "1.0"
-SEASON_SIMULATION_VERSION = "hierarchical_latent_state_v1"
 DEFAULT_OUTER_DRAW_COUNT = 2_000
 DEFAULT_INNER_ROLLOUT_COUNT = 0
 DEFAULT_SEASON_SIMULATION_SEED = 49_049
@@ -66,7 +69,7 @@ class SeasonSimulationConfig:
     inner_rollout_count: int = DEFAULT_INNER_ROLLOUT_COUNT
     seed: int = DEFAULT_SEASON_SIMULATION_SEED
     simulation_version: str = SEASON_SIMULATION_VERSION
-    likelihood_version: str = "V1"
+    likelihood_version: str = HISTORICAL_LIKELIHOOD_VERSION
 
     def __post_init__(self) -> None:
         for field in ("outer_draw_count", "inner_rollout_count", "seed"):
@@ -747,7 +750,7 @@ def simulate_season(
     """
 
     config = config or SeasonSimulationConfig()
-    if config.likelihood_version != "V1":
+    if config.likelihood_version != HISTORICAL_LIKELIHOOD_VERSION:
         raise ValueError("Season Simulation V1 requires Historical Likelihood V1")
     prepared = _prepare_simulation(teams, future_games)
     excluded = tuple(dict(item) for item in (excluded_schedule_games or ()))

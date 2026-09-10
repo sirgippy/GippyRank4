@@ -1,8 +1,9 @@
 # GippyRank 4.0
 
 GippyRank is an experimental probabilistic college-football ranking project.
-The public site currently presents predictive ranking snapshots; it does not use
-AP, Coaches, or CFP poll inputs.
+The public site presents predictive and performance ranking snapshots; its
+[methodology page](site/methodology.html) explains the model, uncertainty, and
+validation boundaries. It does not use AP, Coaches, or CFP poll inputs.
 
 ## Static website
 
@@ -13,6 +14,10 @@ CFBD. The publication boundary is:
 ```text
 existing validated snapshot bundles -> scripts/build_site_data.py -> site/data -> GitHub Pages
 ```
+
+The exporter also writes `site/data/methodology.json`, which keeps the public
+page's production model and artifact identifiers tied to the same source of
+truth as the serializers and publication checks.
 
 `site/publish_config.json` is the explicit list of snapshot directories approved
 for publication. Its ordered `publication_slots` list is the publication

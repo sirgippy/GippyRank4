@@ -13,6 +13,13 @@ from typing import Literal
 
 import numpy as np
 
+from gippyrank.methodology import (
+    CONTEXT_PRIOR_VERSION,
+    HISTORICAL_LIKELIHOOD_VERSION,
+    HISTORY_PRIOR_VERSION,
+    SNAPSHOT_SCHEMA_VERSION,
+    TEAM_SEASON_SCHEMA_VERSION,
+)
 from gippyrank.posterior.engine import Game, LikelihoodV1, Team, infer_posterior
 from gippyrank.posterior.game_evidence import build_team_season_artifact
 from gippyrank.posterior.season_simulation import (
@@ -21,7 +28,7 @@ from gippyrank.posterior.season_simulation import (
 )
 from gippyrank.preseason import pmf_summaries
 
-SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION = SNAPSHOT_SCHEMA_VERSION
 RANKING_FAMILY = "predictive"
 PriorFamily = Literal["context", "history"]
 SnapshotType = Literal["preseason", "weekly", "live"]
@@ -533,9 +540,13 @@ def build_snapshot(
         "snapshot_type": snapshot_type,
         "ranking_family": RANKING_FAMILY,
         "prior_family": prior_family,
-        "prior_model_version": "1.2" if prior_family == "context" else "1.1",
+        "prior_model_version": (
+            CONTEXT_PRIOR_VERSION
+            if prior_family == "context"
+            else HISTORY_PRIOR_VERSION
+        ),
         "prior_artifact_sha256": sha256(prior_path),
-        "historical_likelihood_version": "V1",
+        "historical_likelihood_version": HISTORICAL_LIKELIHOOD_VERSION,
         "season_simulation_schema_version": SEASON_SIMULATION_SCHEMA_VERSION,
         "season_simulation_version": season_simulation_config.simulation_version,
         "season_simulation_configuration": season_simulation_config.as_dict(),
@@ -573,12 +584,14 @@ def build_snapshot(
         "display_statistic": "expected_rank",
         "valid": result.converged,
         "model_versions": {
-            "context_prior": "1.2",
-            "history_prior": "1.1",
-            "historical_likelihood": "V1",
+            "context_prior": CONTEXT_PRIOR_VERSION,
+            "history_prior": HISTORY_PRIOR_VERSION,
+            "historical_likelihood": HISTORICAL_LIKELIHOOD_VERSION,
         },
         "team_season_path": "team_seasons.json" if prior_family == "context" else None,
-        "team_season_schema_version": "1.0" if prior_family == "context" else None,
+        "team_season_schema_version": (
+            TEAM_SEASON_SCHEMA_VERSION if prior_family == "context" else None
+        ),
     }
     if likelihood is not None:
         team_season = build_team_season_artifact(

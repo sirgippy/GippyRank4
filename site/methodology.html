@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="How GippyRank4 models team quality, game performance, predictions, and season uncertainty.">
+    <title>Methodology · GippyRank4</title>
+    <link rel="stylesheet" href="./assets/style.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="shell masthead">
+        <a class="wordmark" href="./" aria-label="GippyRank4 home">GippyRank4</a>
+        <nav class="site-nav" aria-label="Site navigation">
+          <a href="./">Rankings</a>
+          <a href="./week.html">Week games</a>
+          <a href="./methodology.html" aria-current="page">Methodology</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="shell methodology-page">
+      <section class="methodology-hero" aria-labelledby="methodology-title">
+        <p class="methodology-kicker">Model documentation</p>
+        <h1 id="methodology-title">What GippyRank is doing under the hood</h1>
+        <p class="methodology-lede">GippyRank is a probabilistic college-football ranking system. It starts with uncertainty about each team, updates that uncertainty with score-margin evidence, and keeps separate distributions for team quality, individual-game performance, future games, and season outcomes.</p>
+        <div class="methodology-answer">
+          <strong>The short answer</strong>
+          <p>The rankings are not a poll, a résumé table, or an Elo number. They are summaries of posterior probability distributions over rank-like latent states. The table orders teams by expected rank, while the distribution behind each team says how much uncertainty remains.</p>
+        </div>
+        <p class="methodology-meta">Production identifiers below are loaded from the checked-in publication metadata. The page documents shipped behavior only; research candidates are marked as research.</p>
+      </section>
+
+      <div class="methodology-layout">
+        <aside class="methodology-toc" aria-label="On this page">
+          <p>On this page</p>
+          <nav>
+            <ol>
+              <li><a href="#measure">What it measures</a></li>
+              <li><a href="#latent-model">Latent team quality</a></li>
+              <li><a href="#priors">Preseason priors</a></li>
+              <li><a href="#likelihood">Historical Likelihood</a></li>
+              <li><a href="#posterior">Posterior rankings</a></li>
+              <li><a href="#families">Context vs History</a></li>
+              <li><a href="#performance">Performance rankings</a></li>
+              <li><a href="#game-performance">Game performance</a></li>
+              <li><a href="#future">Future predictions</a></li>
+              <li><a href="#simulation">Season simulation</a></li>
+              <li><a href="#uncertainty">Uncertainty</a></li>
+              <li><a href="#snapshots">Snapshots and leakage</a></li>
+              <li><a href="#publications">Publications</a></li>
+              <li><a href="#validation">Validation</a></li>
+              <li><a href="#research">Research decisions</a></li>
+              <li><a href="#limitations">Limitations</a></li>
+              <li><a href="#reproducibility">Reproducibility</a></li>
+            </ol>
+          </nav>
+        </aside>
+
+        <div class="methodology-content">
+          <section id="measure" class="methodology-section" aria-labelledby="measure-title">
+            <p class="methodology-number">01</p>
+            <h2 id="measure-title">What GippyRank is trying to measure</h2>
+            <p>The main question is: <strong>given the evidence available at a snapshot, how strong might this team actually be?</strong> “Strong” is represented by an uncertain final ordinal rank in the team’s modeled subdivision. Lower rank numbers mean stronger teams.</p>
+            <p>That makes GippyRank different from several familiar objects:</p>
+            <ul class="methodology-list">
+              <li>It is not a résumé or standings ranking. Those ask what a team has accomplished or what its record is.</li>
+              <li>It is not a poll or a report of what voters believe.</li>
+              <li>It is not a single point-differential table or a deterministic power number.</li>
+              <li>It is not an Elo clone with one scalar rating per team.</li>
+            </ul>
+            <p>GippyRank keeps three ideas separate: a team’s underlying quality, the randomness of one game’s result, and the performance implied by one completed game. A dominant win can be evidence about quality, but the game-performance distribution is not itself the team’s season-long posterior.</p>
+            <div class="methodology-callout">
+              <strong>Interpretive rule</strong>
+              <p>Use Predictive rankings for “who does the model think is strongest?” Use Performance rankings for “who has played best so far?” Use the weekly and team pages to see the uncertainty behind either answer.</p>
+            </div>
+          </section>
+
+          <section id="latent-model" class="methodology-section" aria-labelledby="latent-model-title">
+            <p class="methodology-number">02</p>
+            <h2 id="latent-model-title">The latent team-quality model</h2>
+            <p>For each team, the latent variable is its final ordinal rank in its subdivision. A team does not receive one certain rank internally; it receives a discrete probability mass function, or PMF, over possible ranks.</p>
+            <p class="equation"><code>rᵢ ∈ {1, …, N}</code> &nbsp; and &nbsp; <code>P(rᵢ | evidence)</code></p>
+            <p>For FBS teams, the published distribution is over the FBS rank support. FCS rank states are used when the model needs a supported cross-subdivision opponent representation. The rank coordinate is rank-percentile based, but the emitted result remains a discrete PMF over ordinal ranks.</p>
+
+            <figure class="method-diagram" aria-labelledby="posterior-flow-caption">
+              <div class="method-flow">
+                <div class="method-flow-step"><strong>Preseason prior</strong><span>What was plausible before this season’s eligible games</span></div>
+                <span class="method-flow-arrow" aria-hidden="true">+</span>
+                <div class="method-flow-step"><strong>Game evidence</strong><span>Score margin, site, and subdivision context</span></div>
+                <span class="method-flow-arrow" aria-hidden="true">→</span>
+                <div class="method-flow-step"><strong>Posterior PMF</strong><span>Updated probability over rank states</span></div>
+              </div>
+              <figcaption id="posterior-flow-caption">Text equivalent: begin with a preseason probability distribution, combine it with the likelihood of the completed games, and obtain a posterior probability distribution for each team.</figcaption>
+            </figure>
+
+            <div class="methodology-two-column">
+              <div>
+                <h3>What the site summarizes</h3>
+                <ul class="methodology-list compact-list">
+                  <li><strong>Expected rank:</strong> the probability-weighted average rank.</li>
+                  <li><strong>Median and mode:</strong> useful points in a potentially asymmetric PMF.</li>
+                  <li><strong>Intervals:</strong> central 50%, 80%, and 95% probability ranges.</li>
+                  <li><strong>Top-N probabilities:</strong> the mass assigned to ranks 1–5, 1–10, or 1–25.</li>
+                </ul>
+              </div>
+              <div>
+                <h3>Illustrative distribution</h3>
+                <table class="methodology-mini-table">
+                  <caption class="sr-only">Illustrative rank probability distribution</caption>
+                  <thead><tr><th scope="col">Rank band</th><th scope="col">Probability</th></tr></thead>
+                  <tbody>
+                    <tr><th scope="row">1–10</th><td>45%</td></tr>
+                    <tr><th scope="row">11–25</th><td>35%</td></tr>
+                    <tr><th scope="row">26–50</th><td>15%</td></tr>
+                    <tr><th scope="row">51+</th><td>5%</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <p>This example is not a live team. It shows why “expected rank 15” does not mean the model believes rank 15 is certain: the team could have meaningful probability of being Top 10 and still have a nontrivial tail closer to #50.</p>
+            <details class="methodology-details">
+              <summary>Technical detail: the rank coordinate</summary>
+              <p>For a population of <code>N</code> teams and ordinal rank <code>r</code>, the likelihood uses <code>(r − 0.5) / N</code> as the rank-percentile coordinate. Lower coordinates correspond to stronger ranks. The coordinate makes smooth score-margin surfaces possible without introducing a separate strength variable.</p>
+            </details>
+          </section>
+
+          <section id="priors" class="methodology-section" aria-labelledby="priors-title">
+            <p class="methodology-number">03</p>
+            <h2 id="priors-title">Preseason priors</h2>
+            <p>A prior is the model’s distribution before the target season’s eligible game evidence is applied. The two production prior families are alternative starting points for the same posterior engine.</p>
+            <div class="methodology-card-grid">
+              <article class="methodology-card">
+                <p class="methodology-card-label">Primary predictive family</p>
+                <h3>Predictive Context <span class="version-badge" data-version-key="context_prior" data-version-prefix="C ">C 1.2</span></h3>
+                <p>Context starts with rank history and adds approved preseason context: coaching tenure, recruiting class rank and points, multi-year recruiting summaries and trend, team-talent composite, and returning production measures for total, passing, receiving, and rushing production.</p>
+                <p>These inputs are preseason-semantic facts or historical rank summaries. They are not target-season game outcomes. Missing context uses training-only median imputation plus missingness indicators; rank-history cold starts retain the History fallback.</p>
+              </article>
+              <article class="methodology-card">
+                <p class="methodology-card-label">Alternative prior family</p>
+                <h3>Predictive History <span class="version-badge" data-version-key="history_prior" data-version-prefix="H ">H 1.1</span></h3>
+                <p>History uses rank history only. Its production specification is a long-run baseline built from prior-season rank distributions, including lagged and long-run summaries. It deliberately does not add recruiting, roster, talent, or coaching inputs.</p>
+                <p>History is a sensitivity view of prior assumptions, not a second likelihood or a blend with Context.</p>
+              </article>
+            </div>
+            <p>Both priors are distributions, not point estimates. They carry uncertainty from the observed rank histories and preseason inputs into the later posterior and prediction calculations.</p>
+            <details class="methodology-details">
+              <summary>Technical detail: prior fitting and cutoff safety</summary>
+              <p>The prior specifications are fit on earlier seasons and evaluated on temporally held-out seasons. Context inputs use a conservative August 15 preseason cutoff convention for the target season. The annual target-season artifacts prohibit target outcomes; a retrospective reconstruction is not treated as a contemporaneous source capture.</p>
+            </details>
+          </section>
+
+          <section id="likelihood" class="methodology-section" aria-labelledby="likelihood-title">
+            <p class="methodology-number">04</p>
+            <h2 id="likelihood-title">Historical Likelihood <span class="version-badge" data-version-key="historical_likelihood">V1</span></h2>
+            <p>The Historical Likelihood describes how plausible an observed score margin is for a pair of rank states, given the site and subdivision pairing:</p>
+            <p class="equation"><code>P(game result | r<sub>home</sub>, r<sub>away</sub>, site, pairing)</code></p>
+            <p>For same-subdivision games, the observed margin is home points minus away points. For an FBS–FCS game, the model’s stable cross-subdivision response is FBS points minus FCS points, regardless of which team is listed first. The browser-facing future prediction converts the result back to a canonical home-minus-away margin.</p>
+            <div class="methodology-table-wrap">
+              <table class="methodology-table">
+                <caption>Historical Likelihood V1 treatment by game context</caption>
+                <thead><tr><th scope="col">Context</th><th scope="col">Evidence orientation</th><th scope="col">Site treatment</th></tr></thead>
+                <tbody>
+                  <tr><th scope="row">FBS vs FBS</th><td>Home minus away margin</td><td>Non-neutral home-field indicator or neutral reference</td></tr>
+                  <tr><th scope="row">FCS vs FCS</th><td>Home minus away margin</td><td>Same-subdivision site treatment</td></tr>
+                  <tr><th scope="row">FBS vs FCS</th><td>FBS minus FCS margin</td><td>FBS-home, FCS-home, or neutral indicators</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>The residual distribution is Student-t with 15 degrees of freedom. Heavy tails are useful for football because score margins include occasional blowouts, unusual game states, and other observations that a thin-tailed residual model would treat as impossibly influential. The frozen production surface uses the weighted-pseudo eight-iteration IRLS fit and a serialized scale.</p>
+            <p>Point differential is therefore evidence inside a likelihood; it is not a rule that directly awards a fixed number of ranking points. The production likelihood does not use YPP, betting lines, polls, injuries, or a direct win/loss bonus.</p>
+            <details class="methodology-details">
+              <summary>Technical detail: the fitted surface</summary>
+              <p>The same-subdivision surface uses a smooth odd basis in the two rank-percentile coordinates: difference terms, difference-by-mean terms, a magnitude term, hinge terms, and non-neutral home field. The cross-subdivision surface uses FBS-first coordinates with linear, quadratic, interaction, hinge, and home-side indicators. The coefficient artifact and its provenance are maintained in the repository; the public contract is the versioned surface and its semantics.</p>
+            </details>
+          </section>
+
+          <section id="posterior" class="methodology-section" aria-labelledby="posterior-title">
+            <p class="methodology-number">05</p>
+            <h2 id="posterior-title">Posterior rankings</h2>
+            <p>Bayesian updating can be stated simply:</p>
+            <p class="equation equation-large"><code>posterior ∝ prior × likelihood</code></p>
+            <p>For a season, the model multiplies the prior for every team by one pairwise game factor for every eligible completed game. Multiple games combine as evidence about the network of teams, so an opponent’s inferred quality affects how the model interprets a result.</p>
+            <p>The production implementation uses deterministic, damped loopy sum-product belief propagation. It passes messages through the schedule graph so evidence can travel beyond direct opponents. In a tree, this calculation is exact. Real schedules contain cycles, so the published marginals are an approximation; the inference layer requires convergence before a snapshot can be marked valid.</p>
+            <ul class="methodology-list">
+              <li>Completed eligible games update team-quality beliefs.</li>
+              <li>Uncertainty can contract, move, or remain broad as evidence accumulates.</li>
+              <li>Games within a selected cutoff are not down-weighted by chronology in the base season-wide model.</li>
+              <li>Rematches are consolidated for message passing, while individual game IDs remain available for game-performance explanations.</li>
+            </ul>
+            <div class="methodology-callout">
+              <strong>Approximation caveat</strong>
+              <p>Posterior PMFs are marginal distributions. They are not a sampled joint permutation of all teams, and expected ranks should not be read as a deterministic ordinal truth.</p>
+            </div>
+            <details class="methodology-details">
+              <summary>Technical detail: why the graph matters</summary>
+              <p>A pairwise factor connects two rank coordinates. A message to one team summarizes the other team’s prior and all neighboring factors except the current pair. The algorithm iterates these messages with damping, then normalizes each team’s marginal. This is why later evidence about an opponent can change the interpretation of an earlier game.</p>
+            </details>
+          </section>
+
+          <section id="families" class="methodology-section" aria-labelledby="families-title">
+            <p class="methodology-number">06</p>
+            <h2 id="families-title">Predictive Context vs Predictive History</h2>
+            <p>Context and History are alternative priors feeding the same posterior machinery. They use the same Historical Likelihood V1 and the same cutoff evidence; early-season differences primarily reflect what each family believed before the games began.</p>
+            <div class="methodology-table-wrap">
+              <table class="methodology-table comparison-table">
+                <caption>Comparison of the two Predictive prior families</caption>
+                <thead><tr><th scope="col">Family</th><th scope="col">Starting information</th><th scope="col">Game updates</th><th scope="col">Intended use</th></tr></thead>
+                <tbody>
+                  <tr><th scope="row">Predictive Context</th><td>Rank history plus approved preseason context</td><td>Historical Likelihood V1</td><td>Primary predictive ranking</td></tr>
+                  <tr><th scope="row">Predictive History</th><td>Rank history only</td><td>Historical Likelihood V1</td><td>Alternative-prior sensitivity view</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>Neither family is “the true prior.” Showing both makes the effect of preseason assumptions visible. The site’s primary predictive presentation is Context, while History remains a first-class selectable family.</p>
+          </section>
+
+          <section id="performance" class="methodology-section" aria-labelledby="performance-title">
+            <p class="methodology-number">07</p>
+            <h2 id="performance-title">Performance rankings</h2>
+            <p>Performance is a distinct ranking family designed to answer a different question: <strong>who has performed best in the eligible games so far?</strong> It is not the same as asking who is strongest or who has the best résumé.</p>
+            <p>Production Performance <span class="version-badge" data-version-key="performance">1.0</span> is Context-anchored and uses the <code>prior_stripping</code> method. It begins with the Context posterior from the complete schedule network and removes the focal team’s Context preseason prior as a direct factor:</p>
+            <p class="equation"><code>Performanceᵢ(r) = normalize(Posterior<sub>Context,i</sub>(r) / ContextPriorᵢ(r))</code></p>
+            <p>Opponent quality still needs to be estimated, so Context remains the anchor for the other teams in the network. Under loopy inference, cycles can leave a small indirect feedback residue; the repository audits the direct factor-removal construction against explicit focal-prior neutralization.</p>
+            <ul class="methodology-list">
+              <li>Performance uses completed eligible games, their margins, sites, and current opponent beliefs.</li>
+              <li>A team with no eligible game receives a neutral uniform PMF and is shown as <strong>NR</strong>.</li>
+              <li>There is no win bonus, loss penalty, quality-win bonus, capped margin, or postseason selection rule.</li>
+              <li>Future predictions on Performance pages use Predictive Context; completed-game ratings also remain Context-anchored.</li>
+            </ul>
+            <div class="methodology-two-column question-columns">
+              <div class="methodology-callout"><strong>Predictive asks</strong><p>What does the model think this team’s underlying quality might be?</p></div>
+              <div class="methodology-callout"><strong>Performance asks</strong><p>What quality does the football this team has played so far imply?</p></div>
+            </div>
+          </section>
+
+          <section id="game-performance" class="methodology-section" aria-labelledby="game-performance-title">
+            <p class="methodology-number">08</p>
+            <h2 id="game-performance-title">Individual game-performance ratings</h2>
+            <p>A completed-game rating is an explanatory distribution for one team in one game. It combines the game’s Historical Likelihood factor with the opponent’s pair-cavity belief:</p>
+            <p class="equation"><code>game performance PMF = normalize(game likelihood × opponent cavity belief)</code></p>
+            <figure class="method-diagram" aria-labelledby="performance-flow-caption">
+              <div class="method-flow method-flow-short">
+                <div class="method-flow-step"><strong>Observed game</strong><span>Score, site, and eligible evidence</span></div>
+                <span class="method-flow-arrow" aria-hidden="true">+</span>
+                <div class="method-flow-step"><strong>Opponent belief</strong><span>Opponent quality without the focal pair factor</span></div>
+                <span class="method-flow-arrow" aria-hidden="true">→</span>
+                <div class="method-flow-step"><strong>Performance PMF</strong><span>How strong that single performance looks</span></div>
+              </div>
+              <figcaption id="performance-flow-caption">Text equivalent: interpret the observed margin using the opponent’s inferred quality and the game site, then retain a probability distribution over performance rank.</figcaption>
+            </figure>
+            <p>That makes the rating opponent-adjusted and site-adjusted. It is not raw margin. A close road loss to a strong opponent can look like a good performance; a close home win over a weak opponent can look ordinary.</p>
+            <div class="methodology-table-wrap">
+              <table class="methodology-table">
+                <caption>Individual game-performance display fields</caption>
+                <thead><tr><th scope="col">Field</th><th scope="col">Meaning</th></tr></thead>
+                <tbody>
+                  <tr><th scope="row">Expected / median / interval</th><td>Summaries of the game-performance PMF; rank 1 is best and rank N is worst.</td></tr>
+                  <tr><th scope="row">Percentile</th><td>Empirical position among eligible FBS team-game performances in the same snapshot reference population; lower expected rank is better.</td></tr>
+                  <tr><th scope="row">Grade</th><td>Presentation shorthand derived from percentile, not an input or model output.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>An 88th-percentile performance rates better than about 88% of eligible reference performances. Exact ties receive half credit. The grade thresholds are <strong>A ≥ 90</strong>, <strong>B ≥ 70</strong>, <strong>C ≥ 30</strong>, <strong>D ≥ 10</strong>, and <strong>F &lt; 10</strong>. The chart is a compact display of the PMF; exact summaries remain authoritative.</p>
+          </section>
+
+          <section id="future" class="methodology-section" aria-labelledby="future-title">
+            <p class="methodology-number">09</p>
+            <h2 id="future-title">Future-game predictions</h2>
+            <p>For a scheduled game, the model integrates over both teams’ posterior PMFs rather than plugging in their expected ranks:</p>
+            <p class="equation equation-large"><code>P(M | snapshot) = ΣᵢΣⱼ P(M | r<sub>home</sub>, r<sub>away</sub>, site, pairing) × P(r<sub>home</sub> | snapshot) × P(r<sub>away</sub> | snapshot)</code></p>
+            <p>Each rank pair contributes a Student-t margin distribution. The mixture therefore includes both uncertainty about team quality and game-level randomness.</p>
+            <figure class="method-diagram" aria-labelledby="future-flow-caption">
+              <div class="method-flow">
+                <div class="method-flow-step"><strong>Team A posterior</strong><span>Probability over rank states</span></div>
+                <span class="method-flow-arrow" aria-hidden="true">↘</span>
+                <div class="method-flow-step"><strong>V1 game likelihood</strong><span>Rank pair, site, and pairing</span></div>
+                <span class="method-flow-arrow" aria-hidden="true">→</span>
+                <div class="method-flow-step"><strong>Margin distribution</strong><span>Win probability and plausible margins</span></div>
+              </div>
+              <div class="method-flow method-flow-secondary" aria-hidden="true">
+                <span class="method-flow-arrow">/</span><div class="method-flow-step"><strong>Team B posterior</strong><span>Probability over rank states</span></div>
+              </div>
+              <figcaption id="future-flow-caption">Text equivalent: combine Team A’s posterior and Team B’s posterior through the Historical Likelihood, then obtain a distribution over the future home-minus-away margin.</figcaption>
+            </figure>
+            <p>The site reports expected margin, median margin, win probabilities, tie probability, and central 50%, 80%, and 95% margin intervals. The canonical browser orientation is home points minus away points. Neutral games retain a neutral site row rather than inventing home-field advantage.</p>
+            <p>The Student-t mixture is continuous, so production tie probability is zero. The contract still uses the explicit football convention: a point mass at exactly zero, if a future likelihood ever supplies one, receives half credit for each team.</p>
+            <div class="methodology-table-wrap">
+              <table class="methodology-table">
+                <caption>Future prediction source by page family</caption>
+                <thead><tr><th scope="col">Page family</th><th scope="col">Posterior used for future games</th></tr></thead>
+                <tbody>
+                  <tr><th scope="row">Predictive Context</th><td>Predictive Context</td></tr>
+                  <tr><th scope="row">Predictive History</th><td>Predictive History</td></tr>
+                  <tr><th scope="row">Performance</th><td>Predictive Context</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>A future prediction is shown only when the kickoff is after the selected effective cutoff, the game is not already included as evidence, and both teams have a supported V1 rank representation. Unsupported matchups remain visible without a fabricated probability.</p>
+            <details class="methodology-details">
+              <summary>Technical detail: display versus exact prediction</summary>
+              <p>Expected margin, median, win probabilities, and intervals come from the exact finite mixture and deterministic mixture quantiles. The chart compresses large mixtures into at most 256 nearby location components for presentation only, then preserves visible-bin and tail mass. Display compression never replaces the exact summary fields.</p>
+            </details>
+          </section>
+
+          <section id="simulation" class="methodology-section" aria-labelledby="simulation-title">
+            <p class="methodology-number">10</p>
+            <h2 id="simulation-title">Season simulation <span class="version-badge" data-version-key="season_simulation">hierarchical_latent_state_v1</span></h2>
+            <p class="methodology-status"><strong>Status:</strong> <span data-feature-key="season_simulation">Shipped</span> in the current team-season pages.</p>
+            <p>Season Simulation V1 forecasts the remaining regular season from a selected snapshot. It keeps two kinds of uncertainty distinct:</p>
+            <ol class="methodology-steps">
+              <li><strong>Team-quality uncertainty:</strong> sample one rank for every modeled team from its posterior PMF.</li>
+              <li><strong>Conditional game probabilities:</strong> hold those sampled ranks fixed for the entire latent universe and evaluate each future game through Historical Likelihood V1.</li>
+              <li><strong>Exact conditional win totals:</strong> compute each team’s remaining-win distribution with a Poisson-binomial calculation.</li>
+              <li><strong>Outer average:</strong> average those conditional distributions across latent universes.</li>
+            </ol>
+            <p class="equation equation-large"><code>total season variance = team-quality variance + game-level variance</code></p>
+            <p>Production uses <span class="version-badge" data-version-key="season_simulation">hierarchical_latent_state_v1</span>, 2,000 outer draws, zero optional inner rollouts, exact conditional Poisson-binomial win distributions, seed 49,049, and Historical Likelihood V1. Simulated games share one canonical result between the two teams, and simulated outcomes never update the posterior.</p>
+            <p>The current inference API exposes marginal PMFs, not joint posterior draws. The V1 simulation therefore samples team marginals independently; sampled ranks can repeat and are not forced into a permutation. This is an explicit approximation, not a hidden claim that all teams’ ranks are independent in reality.</p>
+            <p>Completed regular-season records are fixed at the snapshot. Future and unresolved games enter the forecast scope, while unsupported future games fail closed rather than becoming guessed probabilities.</p>
+            <details class="methodology-details">
+              <summary>Technical detail: why rank is sampled once</summary>
+              <p>If team quality were redrawn independently for every future game, the simulation would erase the season-long correlation caused by not knowing how good the team really is. Sampling once per latent universe preserves that shared uncertainty across the team’s remaining schedule. Conditional on the fixed ranks, future game outcomes are treated as independent for the win-total calculation.</p>
+            </details>
+          </section>
+
+          <section id="uncertainty" class="methodology-section" aria-labelledby="uncertainty-title">
+            <p class="methodology-number">11</p>
+            <h2 id="uncertainty-title">Uncertainty is not one thing</h2>
+            <p>The site uses several probability distributions. They answer different questions and should not be substituted for one another.</p>
+            <div class="methodology-table-wrap">
+              <table class="methodology-table">
+                <caption>GippyRank uncertainty layers</caption>
+                <thead><tr><th scope="col">Distribution</th><th scope="col">Question it answers</th><th scope="col">Where it appears</th></tr></thead>
+                <tbody>
+                  <tr><th scope="row">Team posterior</th><td>How good might this team be at this snapshot?</td><td>Rankings and team detail</td></tr>
+                  <tr><th scope="row">Game performance</th><td>How strong does this team’s single completed performance look?</td><td>Team and weekly completed-game views</td></tr>
+                  <tr><th scope="row">Future margin</th><td>What might happen in this scheduled matchup?</td><td>Team and weekly future-game views</td></tr>
+                  <tr><th scope="row">Season outcome</th><td>What could this final regular-season win total become?</td><td>Season outlook on team pages</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>Central probability intervals describe the middle mass of the named distribution. A wide interval is not a rendering failure; it is the model saying that several outcomes remain plausible. A probability is not certainty, and an expected value is not a guarantee.</p>
+          </section>
+
+          <section id="snapshots" class="methodology-section" aria-labelledby="snapshots-title">
+            <p class="methodology-number">12</p>
+            <h2 id="snapshots-title">Historical snapshots and leakage safety</h2>
+            <p>Every published snapshot is intended to mean: <strong>what the model knew at that time.</strong></p>
+            <ul class="methodology-list">
+              <li>The effective cutoff is the boundary for game evidence. A live request can have a requested cutoff, but the effective cutoff cannot be later than the available source retrieval evidence.</li>
+              <li>Only final, eligible games in the snapshot’s included-game evidence update the posterior.</li>
+              <li>Later games remain future in a historical view. A current schedule score cannot retroactively appear just because its kickoff was before a selected cutoff.</li>
+              <li>Historical future predictions use the posterior available at that historical snapshot.</li>
+              <li>Historical game-performance percentiles use the snapshot-safe reference population, so later performances cannot improve an earlier percentile comparison.</li>
+              <li>The static exporter retains source timestamps, hashes, cutoff values, and included game IDs so the publication can be audited.</li>
+            </ul>
+            <p>The base inference model is season-wide once a cutoff is chosen: the order in which games inside the evidence set are processed does not change the intended model. Chronology matters for deciding which games are known at a snapshot, not as an unannounced time-decay weight.</p>
+          </section>
+
+          <section id="publications" class="methodology-section" aria-labelledby="publications-title">
+            <p class="methodology-number">13</p>
+            <h2 id="publications-title">Official and interim publications</h2>
+            <p>The site distinguishes an information snapshot from the publication slot used to compare and label it.</p>
+            <div class="methodology-table-wrap">
+              <table class="methodology-table">
+                <caption>Publication-slot semantics</caption>
+                <thead><tr><th scope="col">Publication</th><th scope="col">Role</th><th scope="col">Movement baseline</th></tr></thead>
+                <tbody>
+                  <tr><th scope="row">Preseason</th><td>Official starting point before eligible game evidence</td><td>First official baseline for the season</td></tr>
+                  <tr><th scope="row">Official weekly checkpoint</th><td>Reviewed publication intended to reset the comparison chain</td><td>Compared with the latest earlier compatible official publication</td></tr>
+                  <tr><th scope="row">Interim / temporary</th><td>Selectable snapshot while a publication is being reviewed</td><td>Does not reset the official baseline</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>Context and History entries in the same slot represent the same information checkpoint, even though their priors differ. Ranking movement is computed separately for the compatible ranking family and prior family. A temporary publication can be useful for browsing without becoming the next official comparison point.</p>
+          </section>
+
+          <section id="validation" class="methodology-section" aria-labelledby="validation-title">
+            <p class="methodology-number">14</p>
+            <h2 id="validation-title">Validation and research evidence</h2>
+            <p>Validation is treated as an audit of probabilistic behavior, not as a claim that one score proves the model is correct. The repository keeps versioned artifacts and reports; the linked artifacts are the source of exact values and scopes.</p>
+            <div class="methodology-table-wrap">
+              <table class="methodology-table validation-table">
+                <caption>Validation metrics maintained by the project</caption>
+                <thead><tr><th scope="col">Layer</th><th scope="col">Metrics or checks</th><th scope="col">Reference</th></tr></thead>
+                <tbody>
+                  <tr><th scope="row">Preseason priors</th><td>NLL, CRPS, expected-rank MAE, median-rank MAE, interval coverage and width</td><td><a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/performance_v1.md">Production research reports</a></td></tr>
+                  <tr><th scope="row">Posterior inference</th><td>Exact-vs-loopy marginal total variation, expected-rank error, convergence rate, and predeclared acceptance limits</td><td><a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/posterior_v1.md">Posterior V1</a></td></tr>
+                  <tr><th scope="row">Future games</th><td>Win Brier, margin MAE, marginalized margin NLL, 50%/80%/95% interval coverage, and calibration error</td><td><a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/predictive_validation.md">Predictive validation</a></td></tr>
+                  <tr><th scope="row">Performance display</th><td>Prior-removal error, future-game calibration, and comparison with Predictive families</td><td><a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/performance_v1.md">Performance V1</a></td></tr>
+                  <tr><th scope="row">Season simulation</th><td>Expected-win error, CRPS, interval coverage, threshold Brier scores, variance decomposition, and single-game equivalence</td><td><a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/season_forecast_validation.md">Season forecast validation</a></td></tr>
+                  <tr><th scope="row">Browser display</th><td>Predictive display CDF and bin-mass error after deterministic chart compression</td><td><a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/predictive_display_validation.md">Display validation</a></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="methodology-callout">
+              <strong>Current checked-in audit examples</strong>
+              <p>The Posterior V1 audit covers 72 deterministic small-graph cases and records p95 marginal total variation of about 0.0061 against a 0.05 limit, with worst marginal total variation about 0.0252 against a 0.15 limit. The forecast validation report covers 1,600 historical team forecasts across preseason, early, and late phases. These are artifact-backed diagnostics, not guarantees about every future schedule.</p>
+            </div>
+          </section>
+
+          <section id="research" class="methodology-section" aria-labelledby="research-title">
+            <p class="methodology-number">15</p>
+            <h2 id="research-title">Research decisions and rejected complexity</h2>
+            <p>Some of the current model’s simplicity is deliberate. Candidate additions were tested in frozen, leakage-safe research runs and were not promoted when they did not clear their predeclared gates.</p>
+            <div class="methodology-table-wrap">
+              <table class="methodology-table research-table">
+                <caption>Selected research questions and production consequences</caption>
+                <thead><tr><th scope="col">Question</th><th scope="col">Method</th><th scope="col">Result</th><th scope="col">Production consequence</th></tr></thead>
+                <tbody>
+                  <tr><th scope="row">Should recent games receive temporal decay?</th><td>Rolling residual persistence and recency candidates with development gates</td><td>No candidate cleared the required improvement and robustness thresholds</td><td>Retain the static within-season likelihood; do not add an unvalidated decay weight</td></tr>
+                  <tr><th scope="row">Should team quality split into offense and defense?</th><td>Scoreboard-only latent offense/defense candidates against a scalar control</td><td>Stage 0 was informative but no candidate passed the production gate; margin mostly tests the combined sum</td><td>Retain one scalar rank-state coordinate in Posterior V1</td></tr>
+                  <tr><th scope="row">Should the score-margin likelihood become more complex?</th><td>Frozen alternatives for scale, total points, and transformed margins</td><td>No candidate qualified on development evidence</td><td>Keep the frozen Student-t Historical Likelihood V1</td></tr>
+                  <tr><th scope="row">Which rank-history prior is defensible?</th><td>Temporally held-out comparison of candidate History specifications</td><td>The long-run baseline was selected for H 1.1; Context C 1.2 then added approved preseason inputs under its own gate</td><td>Keep Context and History as documented alternative prior families</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>Research artifacts are evidence about proposed changes, not silent production inputs. The <a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/offense_defense_v2.md">offense/defense investigation</a> and versioned research reports describe the designs and decisions in more detail.</p>
+          </section>
+
+          <section id="limitations" class="methodology-section" aria-labelledby="limitations-title">
+            <p class="methodology-number">16</p>
+            <h2 id="limitations-title">Limitations</h2>
+            <p>These are important boundaries on what the output means.</p>
+            <div class="methodology-two-column limitations-columns">
+              <div>
+                <h3>Model limitations</h3>
+                <ul class="methodology-list compact-list">
+                  <li>Within a season, the latent quality state is relatively persistent; there is no production time-varying team-state model.</li>
+                  <li>The current state is not separated into offense and defense.</li>
+                  <li>Schedule quality, team identities, scores, and lower-division support depend on source-data quality.</li>
+                  <li>Posterior inference is approximate on cyclic schedules, and only marginal posteriors are exposed.</li>
+                  <li>Season simulation uses independent marginal draws as an explicit approximation to the unavailable joint posterior.</li>
+                  <li>The likelihood has no explicit injury, roster-availability, weather, or coaching-change adjustment during the season.</li>
+                  <li>There is no explicit matchup-style interaction beyond the production rank/site/subdivision likelihood surface.</li>
+                  <li>There are no betting-market inputs or poll inputs.</li>
+                </ul>
+              </div>
+              <div>
+                <h3>Interpretation limitations</h3>
+                <ul class="methodology-list compact-list">
+                  <li>Probability is not certainty.</li>
+                  <li>Expected rank is not a deterministic ordinal truth or a joint final ordering.</li>
+                  <li>A grade is presentation shorthand derived from a percentile.</li>
+                  <li>Individual-game performance is not the same thing as team quality.</li>
+                  <li>Predictive and Performance rankings answer different questions.</li>
+                  <li>A future margin distribution includes game randomness; it is not a promise about a final score.</li>
+                  <li>A season-outcome distribution depends on the selected snapshot and its supported schedule scope.</li>
+                </ul>
+              </div>
+            </div>
+            <div class="methodology-callout warning-callout">
+              <strong>What is not inferred</strong>
+              <p>GippyRank does not infer who deserves a playoff bid, who should be selected, or what a human poll would say. Those are separate judgments.</p>
+            </div>
+          </section>
+
+          <section id="reproducibility" class="methodology-section" aria-labelledby="reproducibility-title">
+            <p class="methodology-number">17</p>
+            <h2 id="reproducibility-title">Reproducibility and source code</h2>
+            <p>The public site is a deterministic static consumer. The publication boundary is:</p>
+            <p class="equation"><code>validated snapshot bundles → static export → compact site data → GitHub Pages</code></p>
+            <p>The browser does not run inference, call CFBD, or fetch credentials. The repository keeps raw source data unchanged, transforms it into separate processed artifacts, records source coverage and missingness, and validates publication provenance before export.</p>
+            <div class="methodology-table-wrap">
+              <table class="methodology-table version-table">
+                <caption>Current production identifiers</caption>
+                <thead><tr><th scope="col">Contract</th><th scope="col">Identifier</th><th scope="col">Role</th></tr></thead>
+                <tbody>
+                  <tr><th scope="row">Predictive Context prior</th><td><span data-version-key="context_prior" data-version-prefix="C ">C 1.2</span></td><td>Primary preseason prior</td></tr>
+                  <tr><th scope="row">Predictive History prior</th><td><span data-version-key="history_prior" data-version-prefix="H ">H 1.1</span></td><td>Rank-history-only prior</td></tr>
+                  <tr><th scope="row">Historical Likelihood</th><td><span data-version-key="historical_likelihood">V1</span></td><td>Completed-game margin likelihood</td></tr>
+                  <tr><th scope="row">Posterior engine</th><td><span data-version-key="posterior">V1</span></td><td>Rank-state inference</td></tr>
+                  <tr><th scope="row">Performance</th><td><span data-version-key="performance">1.0</span></td><td>Context-anchored prior stripping</td></tr>
+                  <tr><th scope="row">Future prediction schema</th><td><span data-schema-key="prediction">1.0</span></td><td>Posterior-predictive margin payload</td></tr>
+                  <tr><th scope="row">Season simulation</th><td><span data-version-key="season_simulation">hierarchical_latent_state_v1</span></td><td>Hierarchical latent-state forecast</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>Model and artifact schemas are also visible in the generated metadata. The public code, tests, CI configuration, and versioned research artifacts are available in the <a href="https://github.com/sirgippy/GippyRank4">GippyRank4 repository</a>. Run <code>uv run pytest -q</code>, <code>uv run ruff check .</code>, and <code>git diff --check</code> in the repository for the standard validation checks.</p>
+            <p class="methodology-final-note">This page changes documentation and navigation only. It does not change production model outputs.</p>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <div class="shell">
+        <p>GippyRank rankings are model outputs, not AP, Coaches, or CFP poll inputs.</p>
+        <a href="./">Back to rankings</a>
+      </div>
+    </footer>
+    <script type="module" src="./assets/methodology.js"></script>
+  </body>
+</html>

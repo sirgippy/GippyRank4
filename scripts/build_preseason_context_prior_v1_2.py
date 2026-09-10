@@ -30,6 +30,7 @@ from gippyrank.context_prior import (
     coach_at_cutoff,
     only_approved,
 )
+from gippyrank.methodology import CONTEXT_PRIOR_VERSION, HISTORY_PRIOR_VERSION
 from gippyrank.preseason import (
     DirectRankModel,
     GenericRankPrior,
@@ -279,7 +280,7 @@ def build_history_prior(
     return h.fit(
         [row for row in rows if row.season <= trained_through_season], h.CANDIDATES[3]
     ), AnnualFittedInstance(
-        "history_prior", "1.1", trained_through_season, target_season
+        "history_prior", HISTORY_PRIOR_VERSION, trained_through_season, target_season
     )
 
 
@@ -326,7 +327,7 @@ def build_context_prior(
         )
     return model, AnnualFittedInstance(
         "context_prior",
-        "1.2",
+        CONTEXT_PRIOR_VERSION,
         trained_through_season,
         target_season,
         cutoff_for(target_season),
@@ -445,7 +446,7 @@ def context_rows(
         row.update(
             {
                 "model_family": "context_prior",
-                "spec_version": "1.2",
+                "spec_version": CONTEXT_PRIOR_VERSION,
                 "context_effective_cutoff": coverage.get(baseline.key, {}).get(
                     "context_effective_cutoff", cutoff_for(baseline.season)
                 ),
@@ -617,7 +618,7 @@ def future_predictions(
             "team_id": row.team_id,
             "team_name": row.team_name,
             "model_family": "history_prior",
-            "spec_version": "1.1",
+            "spec_version": HISTORY_PRIOR_VERSION,
             "trained_through_season": trained_through_season,
             "pmf": json.dumps(
                 [round(float(x), 12) for x in pmf], separators=(",", ":")
@@ -636,7 +637,7 @@ def future_predictions(
                 {
                     **h_row,
                     "model_family": "context_prior",
-                    "spec_version": "1.2",
+                    "spec_version": CONTEXT_PRIOR_VERSION,
                     "context_effective_cutoff": cutoff_for(row.season),
                     "context_snapshot_mode": "retrospective_reconstruction",
                     "pmf": json.dumps(
@@ -653,7 +654,7 @@ def future_predictions(
                 {
                     **h_row,
                     "model_family": "context_prior",
-                    "spec_version": "1.2",
+                    "spec_version": CONTEXT_PRIOR_VERSION,
                     "context_effective_cutoff": cutoff_for(row.season),
                     "context_snapshot_mode": "retrospective_reconstruction",
                     "context_applied": False,
@@ -790,7 +791,7 @@ def main() -> None:
     all_context = [changed.get(x.key, x) for x in history]
     h_spec = ModelSpecification(
         "history_prior",
-        "1.1",
+        HISTORY_PRIOR_VERSION,
         tuple(H_FEATURES),
         "normal",
         0.25,
@@ -798,7 +799,7 @@ def main() -> None:
     ).metadata()
     c_spec = ModelSpecification(
         "context_prior",
-        "1.2",
+        CONTEXT_PRIOR_VERSION,
         (*H_FEATURES, *selected_features),
         "normal",
         0.25,
@@ -903,7 +904,14 @@ def main() -> None:
     ]
     write_csv(
         HISTORY / "predictions.csv",
-        [{**x, "model_family": "history_prior", "spec_version": "1.1"} for x in raw],
+        [
+            {
+                **x,
+                "model_family": "history_prior",
+                "spec_version": HISTORY_PRIOR_VERSION,
+            }
+            for x in raw
+        ],
     )
     write_json(HISTORY / "model_spec.json", h_spec)
     write_json(
