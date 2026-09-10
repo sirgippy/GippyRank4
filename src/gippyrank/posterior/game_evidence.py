@@ -60,12 +60,28 @@ def _quantile(pmf: np.ndarray, probability: float) -> int:
 
 
 def _display_pmf(pmf: np.ndarray, bins: int = PERFORMANCE_DISPLAY_BINS) -> list[int]:
-    """Compress a rank PMF into deterministic equal-count display bins."""
+    """Compress a rank PMF into deterministic equal-width display bins.
+
+    Rank state ``r`` is represented by the unit interval ``[r, r + 1)``
+    (with zero-based ``r``), and the display axis divides ``[0, N)`` into
+    ``bins`` equal-width intervals.  A state's probability is allocated to
+    each display interval in proportion to their overlap.  This keeps a
+    locally uniform rank density uniform even when ``N`` is not divisible by
+    the number of display bins.
+    """
+    if isinstance(bins, bool) or not isinstance(bins, (int, np.integer)) or bins < 1:
+        raise ValueError("display bin count must be a positive integer")
     values = _normalise(pmf)
-    result = np.zeros(bins, dtype=float)
-    for index, probability in enumerate(values):
-        bin_index = min(bins - 1, index * bins // len(values))
-        result[bin_index] += probability
+    rank_count = len(values)
+    display_edges = np.linspace(0.0, float(rank_count), int(bins) + 1)
+    rank_starts = np.arange(rank_count, dtype=float)[:, np.newaxis]
+    rank_ends = rank_starts + 1.0
+    overlaps = np.maximum(
+        0.0,
+        np.minimum(rank_ends, display_edges[1:])
+        - np.maximum(rank_starts, display_edges[:-1]),
+    )
+    result = np.sum(values[:, np.newaxis] * overlaps, axis=0)
     return quantize_display_probabilities(result, scale=DISPLAY_PROBABILITY_SCALE)
 
 

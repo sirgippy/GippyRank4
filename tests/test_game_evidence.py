@@ -3,6 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from gippyrank.posterior.display import DISPLAY_PROBABILITY_SCALE
 from gippyrank.posterior.engine import (
     Game,
     LikelihoodV1,
@@ -12,6 +13,7 @@ from gippyrank.posterior.engine import (
     infer_posterior,
 )
 from gippyrank.posterior.game_evidence import (
+    _display_pmf,
     game_evidence_summary,
     performance_grade,
     performance_percentile,
@@ -104,6 +106,45 @@ def test_performance_display_and_percentile_are_snapshot_derived() -> None:
     assert sum(summary["display_pmf"]) == 1000
     assert performance_percentile(1.0, [1.0, 2.0, 3.0]) == pytest.approx(83.3333333333)
     assert performance_percentile(2.0, [1.0, 2.0, 3.0]) == pytest.approx(50.0)
+
+
+@pytest.mark.parametrize("rank_count", [1, 3, 40, 80, 138, 160])
+def test_equal_width_display_bins_keep_uniform_rank_pmf_uniform(rank_count: int) -> None:
+    display = _display_pmf(np.full(rank_count, 1 / rank_count))
+
+    assert display == [DISPLAY_PROBABILITY_SCALE // 40] * 40
+
+
+def test_equal_width_display_bins_handle_concentrated_endpoint_mass() -> None:
+    first_rank = np.zeros(138)
+    first_rank[0] = 1.0
+    last_rank = np.zeros(138)
+    last_rank[-1] = 1.0
+
+    first_display = _display_pmf(first_rank)
+    last_display = _display_pmf(last_rank)
+
+    assert sum(first_display) == sum(last_display) == DISPLAY_PROBABILITY_SCALE
+    assert first_display == list(reversed(last_display))
+    assert first_display[-1] == last_display[0] == 0
+
+
+def test_equal_width_display_bins_preserve_smooth_unimodal_shape() -> None:
+    ranks = np.arange(138, dtype=float)
+    source = np.exp(-0.5 * ((ranks - 67.5) / 24.0) ** 2)
+    display = np.asarray(_display_pmf(source), dtype=float)
+    peak = int(np.argmax(display))
+
+    assert 0 < peak < len(display) - 1
+    assert np.all(np.diff(display[: peak + 1]) >= 0)
+    assert np.all(np.diff(display[peak:]) <= 0)
+    assert np.isclose(display.sum() / DISPLAY_PROBABILITY_SCALE, 1.0)
+
+
+def test_equal_width_display_bins_are_deterministic_for_random_pmf() -> None:
+    pmf = np.random.default_rng(55).random(138)
+
+    assert _display_pmf(pmf) == _display_pmf(pmf)
 
 
 @pytest.mark.parametrize(

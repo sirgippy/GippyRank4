@@ -47,11 +47,18 @@ remain.
 
 Each modeled completed game keeps the exact game-evidence summaries above and
 adds `display_pmf`, a deterministic 40-bin compression of that same rank PMF.
-Display bins are fixed-scale integer weights from 0 through 1000; divide by
-the shared axis `probability_encoding.scale` to recover chart probabilities.
-The artifact-level `performance_axis` is shared by every game in the season:
-rank 1 (best) is on the left and `max_rank` (worst) is on the right. The
-display weights sum to 1000 and are not used to recompute any exact summary.
+The rank support is treated as the continuous domain `[0, N)`, where
+zero-based state `r` occupies the unit interval `[r, r + 1)`. The domain is
+divided into 40 equal-width display intervals. Each rank state's probability
+mass is allocated across every display interval in proportion to the overlap
+width, so a state may contribute to more than one display bin. Display bins
+therefore have consistent horizontal rank-axis semantics even when `N` is
+not divisible by 40. Their fixed-scale integer weights run from 0 through
+1000; divide by the shared axis `probability_encoding.scale` to recover chart
+probabilities. The artifact-level `performance_axis` is shared by every game
+in the season: rank 1 (best) is on the left and `max_rank` (worst) is on the
+right. The display weights sum to 1000 and are not used to recompute any exact
+summary.
 
 `performance_percentile` is an empirical percentile of
 `game_rating.expected_rank` among all eligible FBS team-game performance
