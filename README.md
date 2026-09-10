@@ -37,6 +37,12 @@ mathematical definition and provenance checks.
 The artifact's regular-season outlook uses the hierarchical latent-state
 engine described in [Season Simulation V1](docs/season_simulation.md).
 
+The rankings page can also download the selected published Top 25 as an
+importable r/CFB computer ballot.  This is a browser-only JSON export with
+deterministic uncertainty rationales; it does not authenticate to or submit to
+the poll site.  See [the ballot export contract](docs/redditcfb_ballot_export.md)
+for mapping provenance and exact templates.
+
 Each approved item has a deterministic `publication_slot`. Context and History
 entries in the same slot represent the same logical publication, so changing
 views preserves (for example) Sep. 5 rather than jumping to Preseason. The

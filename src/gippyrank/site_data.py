@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 from gippyrank.methodology import (
     HISTORICAL_LIKELIHOOD_VERSION,
@@ -27,7 +28,17 @@ from gippyrank.methodology import (
     WEEKLY_GAME_SCHEMA_VERSION,
     production_methodology_metadata,
 )
-from gippyrank.team_logos import TEAM_LOGO_URL_TEMPLATE, logo_url, team_logo_handle
+from gippyrank.redditcfb import (
+    TeamHandleMappingError,
+    TeamHandleTable,
+    audit_team_handle_coverage,
+    load_team_handle_mapping,
+)
+from gippyrank.team_logos import (
+    TEAM_LOGO_URL_TEMPLATE,
+    logo_url,
+    team_logo_handle,
+)
 
 PREDICTION_SOURCE_CONTEXT = "predictive_context"
 PREDICTION_SOURCE_HISTORY = "predictive_history"
@@ -43,6 +54,8 @@ RANKING_FAMILIES: dict[str, dict[str, str]] = {
     "predictive": {"label": "Predictive"},
     "performance": {"label": "Performance"},
 }
+DEFAULT_SITE_URL = "https://sirgippy.github.io/GippyRank4/"
+DEFAULT_TEAM_HANDLE_MAPPING_PATH = "data/reference/redditcfb_team_handles.csv"
 
 
 class SiteDataValidationError(ValueError):
@@ -265,6 +278,58 @@ def _logo_url_template(path: Path) -> str:
     except ValueError as error:
         raise SiteDataValidationError(f"Invalid team logo URL template: {error}") from error
     return template
+
+
+def _site_url(config: dict[str, Any]) -> str:
+    """Return the one canonical public URL used in generated rationales."""
+    value = config.get("site_url", DEFAULT_SITE_URL)
+    if not isinstance(value, str) or not value:
+        raise SiteDataValidationError("site_url must be a non-empty URL string")
+    parsed = urlsplit(value)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise SiteDataValidationError("site_url must be an absolute HTTP(S) URL")
+    if parsed.query or parsed.fragment:
+        raise SiteDataValidationError("site_url must not contain a query or fragment")
+    return value if value.endswith("/") else f"{value}/"
+
+
+def _team_handle_mapping(
+    config: dict[str, Any], root: Path
+) -> tuple[TeamHandleTable, str, str | None]:
+    """Load the configured stable-ID mapping and its provenance metadata.
+
+    Isolated fixtures may omit the stanza; they receive an explicit empty
+    mapping so ballot export is unavailable rather than inheriting the logo
+    namespace.  The production publish configuration names the CSV reference
+    artifact explicitly.
+    """
+    specification = config.get("redditcfb_team_handles")
+    if specification is None:
+        return TeamHandleTable.empty(), "No ballot mapping configured", None
+    if not isinstance(specification, dict):
+        raise SiteDataValidationError("redditcfb_team_handles must be an object")
+    relative_path = specification.get("path", DEFAULT_TEAM_HANDLE_MAPPING_PATH)
+    source = specification.get("source", "Checked-in RedditCFB Team.handle reference")
+    if not isinstance(relative_path, str) or not relative_path:
+        raise SiteDataValidationError("redditcfb_team_handles.path must be a non-empty string")
+    if not isinstance(source, str) or not source:
+        raise SiteDataValidationError("redditcfb_team_handles.source must be a non-empty string")
+    mapping_path = Path(relative_path)
+    if mapping_path.is_absolute():
+        raise SiteDataValidationError("redditcfb_team_handles.path must be repository-relative")
+    root_resolved = root.resolve()
+    resolved_path = (root / mapping_path).resolve()
+    try:
+        resolved_path.relative_to(root_resolved)
+    except ValueError as error:
+        raise SiteDataValidationError(
+            "redditcfb_team_handles.path must stay inside the repository"
+        ) from error
+    try:
+        table = load_team_handle_mapping(resolved_path)
+    except TeamHandleMappingError as error:
+        raise SiteDataValidationError(str(error)) from error
+    return table, source, resolved_path.relative_to(root_resolved).as_posix()
 
 
 def _finite_number(value: str, field: str, snapshot_id: str) -> float:
@@ -2380,6 +2445,9 @@ def _logo_handles(identities: set[tuple[str, str]]) -> dict[str, str]:
 def build_site_data(*, root: Path, config_path: Path, output_directory: Path) -> dict[str, Any]:
     """Validate configured artifacts and write deterministic consumer JSON."""
     selected, default_slot = load_publish_config(config_path, root)
+    config = _read_json(config_path)
+    site_url = _site_url(config)
+    team_handle_table, team_handle_source, team_handle_path = _team_handle_mapping(config, root)
     logo_url_template = _logo_url_template(config_path)
     manifest_entries: list[dict[str, Any]] = []
     prepared_snapshots: list[PreparedSnapshot] = []
@@ -2719,6 +2787,17 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
     published_families = {entry["ranking_family"] for entry in manifest_entries}
     published_fbs_logo_audit = _logo_audit(published_fbs_identities)
     rendered_logo_audit = _logo_audit(rendered_team_identities)
+    try:
+        team_handle_audit = audit_team_handle_coverage(
+            published_fbs_identities, team_handle_table
+        )
+    except TeamHandleMappingError as error:
+        raise SiteDataValidationError(str(error)) from error
+    published_team_handles = {
+        team_id: team_handle_table.handles[team_id]
+        for team_id, _ in published_fbs_identities
+        if team_id in team_handle_table.handles
+    }
     ranking_snapshot_bytes = sum(
         (output_directory / entry["data_path"].removeprefix("data/")).stat().st_size
         for entry in manifest_entries
@@ -2746,6 +2825,7 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
     )
     manifest = {
         "schema_version": SITE_SCHEMA_VERSION,
+        "site_url": site_url,
         "methodology_path": "data/methodology.json",
         "methodology_schema_version": METHODOLOGY_SCHEMA_VERSION,
         "seasons": sorted({entry["season"] for entry in manifest_entries}, reverse=True),
@@ -2776,6 +2856,12 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
                 if key != "missing"
             },
             "missing": rendered_logo_audit["missing"],
+        },
+        "redditcfb": {
+            "team_handles": published_team_handles,
+            "mapping_path": team_handle_path,
+            "mapping_source": team_handle_source,
+            "mapping_audit": team_handle_audit,
         },
         "payload_stats": {
             "published_snapshot_count": len(manifest_entries),

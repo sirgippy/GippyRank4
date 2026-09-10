@@ -240,6 +240,48 @@ button {
   line-height: 1.45;
 }
 
+.snapshot-actions {
+  display: flex;
+  flex: 0 0 190px;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: end;
+  gap: 5px;
+}
+
+.export-button {
+  padding: 8px 11px;
+  color: #fff;
+  background: var(--green);
+  border: 1px solid var(--green);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.export-button:hover:not(:disabled) {
+  background: #084c3d;
+}
+
+.export-button:disabled {
+  color: var(--muted);
+  background: var(--wash);
+  border-color: var(--line);
+  cursor: not-allowed;
+}
+
+.export-status {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.export-status.is-error {
+  color: var(--danger);
+}
+
 .rankings {
   overflow: hidden;
   background: var(--paper);
@@ -2024,6 +2066,11 @@ summary:focus-visible,
     max-width: none;
     margin-top: 10px;
     text-align: left;
+  }
+
+  .snapshot-actions {
+    max-width: 280px;
+    margin-top: 14px;
   }
 
   .section-heading {
