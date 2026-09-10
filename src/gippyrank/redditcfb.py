@@ -8,8 +8,9 @@ rejects ambiguous mapping tables before they can reach the browser.
 from __future__ import annotations
 
 import csv
+import math
 import re
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -43,9 +44,18 @@ MANUALLY_RESOLVED_ALIASES: tuple[dict[str, str], ...] = (
     {"cfbd_team_id": "113", "team_name": "Massachusetts", "redditcfb_handle": "umass"},
 )
 
+# Historical display-name changes belong here when they are intentionally
+# accepted.  An empty table is deliberate for the current publication: a
+# changed name must not silently inherit a stable-ID mapping.
+ALLOWED_TEAM_NAME_ALIASES: dict[str, frozenset[str]] = {}
+
 
 class TeamHandleMappingError(ValueError):
     """Raised when the checked-in handle table is not unambiguous."""
+
+
+class BallotExportError(ValueError):
+    """Raised when published ranking rows cannot form an importable ballot."""
 
 
 @dataclass(frozen=True)
@@ -56,6 +66,11 @@ class TeamHandleTable:
     team_names: dict[str, str]
     duplicate_cfbd_ids: tuple[str, ...] = ()
     duplicate_redditcfb_handles: tuple[str, ...] = ()
+
+    @classmethod
+    def empty(cls) -> TeamHandleTable:
+        """Return an explicit no-export mapping for unconfigured fixtures."""
+        return cls({}, {})
 
     @classmethod
     def from_rows(cls, rows: Iterable[dict[str, str]]) -> TeamHandleTable:
@@ -94,6 +109,26 @@ class TeamHandleTable:
         return cls(handles, team_names, duplicate_ids, duplicate_handles)
 
 
+def validate_team_handle_identities(
+    identities: Iterable[tuple[str, str]], table: TeamHandleTable
+) -> None:
+    """Require every mapped published ID to retain its checked-in team name."""
+    mismatches = []
+    for team_id, team_name in sorted({(str(team_id), str(team_name)) for team_id, team_name in identities}):
+        mapped_name = table.team_names.get(team_id)
+        if mapped_name is None or team_name == mapped_name:
+            continue
+        if team_name in ALLOWED_TEAM_NAME_ALIASES.get(team_id, frozenset()):
+            continue
+        mismatches.append(
+            f"{team_id}: published {team_name!r}, mapping {mapped_name!r}"
+        )
+    if mismatches:
+        raise TeamHandleMappingError(
+            "r/CFB team-handle mapping identity mismatch: " + "; ".join(mismatches)
+        )
+
+
 def load_team_handle_mapping(path: Path) -> TeamHandleTable:
     """Read and validate a checked-in ``cfbd_team_id -> Team.handle`` CSV."""
     try:
@@ -113,7 +148,11 @@ def audit_team_handle_coverage(
     identities: Iterable[tuple[str, str]], table: TeamHandleTable
 ) -> dict[str, object]:
     """Summarize mapping coverage for the FBS identities selected for publication."""
-    unique_identities = sorted({(str(team_id), str(team_name)) for team_id, team_name in identities})
+    identity_values = list(identities)
+    validate_team_handle_identities(identity_values, table)
+    unique_identities = sorted(
+        {(str(team_id), str(team_name)) for team_id, team_name in identity_values}
+    )
     unmapped = [
         {"cfbd_team_id": team_id, "team_name": team_name}
         for team_id, team_name in unique_identities
@@ -134,3 +173,116 @@ def audit_team_handle_coverage(
         "duplicate_redditcfb_handles": list(table.duplicate_redditcfb_handles),
         "manually_resolved_aliases": aliases,
     }
+
+
+def _ballot_percentage(value: object) -> str:
+    """Match the deterministic percentage formatter used by the browser."""
+    probability = float(value)
+    if not math.isfinite(probability) or not 0 <= probability <= 1:
+        raise BallotExportError("Ballot probability must be finite and between 0 and 1")
+    percent = probability * 100
+    if probability == 1:
+        return "100%"
+    if percent == 0:
+        return "0%"
+    if percent < 0.01:
+        return "<0.01%"
+    if percent < 1:
+        return f"{percent:.2f}%" if percent < 0.1 else f"{percent:.1f}%"
+    if percent < 10:
+        return f"{percent:.1f}%"
+    if percent >= 99.95:
+        return "<100%"
+    if percent >= 95:
+        return f"{percent:.1f}%"
+    return f"{math.floor(percent + 0.5)}%"
+
+
+def build_ballot(
+    *,
+    season: int,
+    snapshot_label: str,
+    ranking_family: str,
+    prior_family: str | None,
+    site_url: str,
+    rankings: Iterable[Mapping[str, object]],
+    handles: Mapping[str, str],
+) -> dict[str, object]:
+    """Build the r/CFB importer payload from already-published ranking rows.
+
+    The static page has a deliberately equivalent client-side implementation;
+    this pure function provides a regression-testable contract for the
+    generated JSON without requiring a browser runtime in CI.
+    """
+    if ranking_family not in {"predictive", "performance"}:
+        raise BallotExportError(f"Unsupported ballot ranking family: {ranking_family}")
+    if ranking_family == "predictive" and prior_family not in {"context", "history"}:
+        raise BallotExportError("Predictive ballot export requires a Context or History prior")
+    rated = [row for row in rankings if row.get("rated", True) is not False]
+    try:
+        ordered = sorted(
+            rated,
+            key=lambda row: (
+                float(row["expected_rank"]),
+                int(float(row["display_rank"])),
+                str(row["team_id"]),
+            ),
+        )
+    except (KeyError, TypeError, ValueError) as error:
+        raise BallotExportError("Published ranking rows are missing ballot ordering fields") from error
+    if len(ordered) < 25:
+        raise BallotExportError(
+            f"A ballot requires 25 rated teams; this snapshot has only {len(ordered)}"
+        )
+    selected = ordered[:25]
+    missing = [
+        str(row.get("team_name", row.get("team_id", "")))
+        for row in selected
+        if str(row.get("team_id")) not in handles
+    ]
+    if missing:
+        raise BallotExportError(
+            "Canonical r/CFB handles are unavailable for: " + ", ".join(missing)
+        )
+
+    family_label = "Predictive" if ranking_family == "predictive" else "Performance"
+    prior_label = ""
+    if ranking_family == "predictive":
+        prior_label = " History" if prior_family == "history" else " Context"
+    semantics = (
+        "Predictive estimates current underlying team quality using preseason information plus games."
+        if ranking_family == "predictive"
+        else "Performance asks what quality is implied by games played, using Context estimates to interpret opponent quality. Performance is not standings, strength of record, or postseason deservingness."
+    )
+    overall = (
+        "Generated from GippyRank 4.0, a probabilistic college-football ranking model "
+        "that estimates underlying team quality from game performance and expresses "
+        "uncertainty rather than treating rank as perfectly known. This ballot uses "
+        f"the {season} {snapshot_label} {family_label}{prior_label} rankings. "
+        f"{semantics}\n\nExplore the rankings and uncertainty at: {site_url}"
+    )
+    entries = []
+    for rank, row in enumerate(selected, 1):
+        try:
+            expected = float(row["expected_rank"])
+            interval = row["interval_80"]
+            low, high = (int(float(interval[0])), int(float(interval[1])))
+            probability = _ballot_percentage(row["top25_probability"])
+        except (KeyError, TypeError, ValueError, IndexError) as error:
+            raise BallotExportError("Published ranking rows are missing ballot rationale fields") from error
+        prefix = (
+            "GippyRank Performance-equivalent expected rank"
+            if ranking_family == "performance"
+            else "GippyRank expected rank"
+        )
+        entries.append(
+            {
+                "rank": rank,
+                "team_handle": handles[str(row["team_id"])],
+                "rationale": (
+                    f"{prefix}: {expected:.1f}. Central 80% interval: {low}–{high}. "
+                    f"Top-25 probability: {probability}."
+                ),
+            }
+        )
+    return {"poll_type": "computer", "overall_rationale": overall, "entries": entries}

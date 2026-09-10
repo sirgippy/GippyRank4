@@ -3,7 +3,83 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
+from gippyrank.redditcfb import BallotExportError, build_ballot
+
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def _published_entry(manifest: dict[str, object], family: str) -> dict[str, object]:
+    return next(
+        entry
+        for entry in manifest["snapshots"]
+        if entry["display_label"] == "Week 2"
+        and entry["ranking_family"] == family
+        and (family == "performance" or entry["prior_family"] == "context")
+    )
+
+
+@pytest.mark.parametrize("family", ["predictive", "performance"])
+def test_functional_ballot_export_matches_published_ranking(family: str) -> None:
+    manifest = json.loads((ROOT / "site/data/manifest.json").read_text(encoding="utf-8"))
+    entry = _published_entry(manifest, family)
+    snapshot = json.loads((ROOT / "site" / entry["data_path"]).read_text(encoding="utf-8"))
+    handles = manifest["redditcfb"]["team_handles"]
+    ballot = build_ballot(
+        season=entry["season"],
+        snapshot_label=entry["display_label"],
+        ranking_family=family,
+        prior_family=entry.get("prior_family"),
+        site_url=manifest["site_url"],
+        rankings=snapshot["rankings"],
+        handles=handles,
+    )
+
+    rated = sorted(
+        (row for row in snapshot["rankings"] if row["rated"] is not False),
+        key=lambda row: (row["expected_rank"], row["display_rank"], row["team_id"]),
+    )[:25]
+    entries = ballot["entries"]
+    assert ballot["poll_type"] == "computer"
+    assert len(entries) == 25
+    assert [entry["rank"] for entry in entries] == list(range(1, 26))
+    assert len({entry["team_handle"] for entry in entries}) == 25
+    assert [entry["team_handle"] for entry in entries] == [
+        handles[row["team_id"]] for row in rated
+    ]
+    assert "GippyRank 4.0" in ballot["overall_rationale"]
+    assert "2026 Week 2" in ballot["overall_rationale"]
+    assert manifest["site_url"] in ballot["overall_rationale"]
+    assert all("Central 80% interval" in entry["rationale"] for entry in entries)
+    if family == "predictive":
+        assert "2026 Week 2 Predictive Context" in ballot["overall_rationale"]
+        assert all("GippyRank expected rank:" in entry["rationale"] for entry in entries)
+    else:
+        assert "2026 Week 2 Performance" in ballot["overall_rationale"]
+        assert all(
+            "GippyRank Performance-equivalent expected rank:" in entry["rationale"]
+            for entry in entries
+        )
+
+
+def test_functional_ballot_export_rejects_missing_handles_and_short_rankings() -> None:
+    manifest = json.loads((ROOT / "site/data/manifest.json").read_text(encoding="utf-8"))
+    entry = _published_entry(manifest, "predictive")
+    snapshot = json.loads((ROOT / "site" / entry["data_path"]).read_text(encoding="utf-8"))
+    kwargs = {
+        "season": entry["season"],
+        "snapshot_label": entry["display_label"],
+        "ranking_family": "predictive",
+        "prior_family": "context",
+        "site_url": manifest["site_url"],
+        "rankings": snapshot["rankings"],
+        "handles": manifest["redditcfb"]["team_handles"],
+    }
+    with pytest.raises(BallotExportError, match="handles are unavailable"):
+        build_ballot(**{**kwargs, "handles": {}})
+    with pytest.raises(BallotExportError, match="requires 25 rated teams"):
+        build_ballot(**{**kwargs, "rankings": snapshot["rankings"][:24]})
 
 
 def test_manifest_publishes_canonical_ballot_mapping_audit() -> None:

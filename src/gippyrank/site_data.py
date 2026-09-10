@@ -35,7 +35,6 @@ from gippyrank.redditcfb import (
     load_team_handle_mapping,
 )
 from gippyrank.team_logos import (
-    TEAM_LOGO_HANDLES,
     TEAM_LOGO_URL_TEMPLATE,
     logo_url,
     team_logo_handle,
@@ -299,22 +298,14 @@ def _team_handle_mapping(
 ) -> tuple[TeamHandleTable, str, str | None]:
     """Load the configured stable-ID mapping and its provenance metadata.
 
-    Older isolated test fixtures do not include the repository reference file;
-    those fixtures retain the existing checked-in logo table as a compatibility
-    fallback.  The production publish configuration always names the CSV
-    reference artifact explicitly.
+    Isolated fixtures may omit the stanza; they receive an explicit empty
+    mapping so ballot export is unavailable rather than inheriting the logo
+    namespace.  The production publish configuration names the CSV reference
+    artifact explicitly.
     """
     specification = config.get("redditcfb_team_handles")
     if specification is None:
-        table = TeamHandleTable.from_rows(
-            {
-                "cfbd_team_id": team_id,
-                "team_name": team_name,
-                "redditcfb_handle": handle,
-            }
-            for team_id, (team_name, handle) in TEAM_LOGO_HANDLES.items()
-        )
-        return table, "Existing checked-in RedditCFB logo handle table", None
+        return TeamHandleTable.empty(), "No ballot mapping configured", None
     if not isinstance(specification, dict):
         raise SiteDataValidationError("redditcfb_team_handles must be an object")
     relative_path = specification.get("path", DEFAULT_TEAM_HANDLE_MAPPING_PATH)
@@ -2796,9 +2787,12 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
     published_families = {entry["ranking_family"] for entry in manifest_entries}
     published_fbs_logo_audit = _logo_audit(published_fbs_identities)
     rendered_logo_audit = _logo_audit(rendered_team_identities)
-    team_handle_audit = audit_team_handle_coverage(
-        published_fbs_identities, team_handle_table
-    )
+    try:
+        team_handle_audit = audit_team_handle_coverage(
+            published_fbs_identities, team_handle_table
+        )
+    except TeamHandleMappingError as error:
+        raise SiteDataValidationError(str(error)) from error
     published_team_handles = {
         team_id: team_handle_table.handles[team_id]
         for team_id, _ in published_fbs_identities

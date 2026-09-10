@@ -25,6 +25,7 @@ from gippyrank.team_logos import logo_url, missing_team_logos, team_logo_handle
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "site/publish_config.json"
+TEAM_HANDLE_MAPPING = ROOT / "data/reference/redditcfb_team_handles.csv"
 SCHEDULE_FIELDS = [
     "season",
     "homeId",
@@ -182,6 +183,44 @@ def test_exported_team_logos_are_canonical_and_audited(tmp_path: Path) -> None:
     assert methodology == production_methodology_metadata()
     assert manifest["methodology_path"] == "data/methodology.json"
     assert manifest["methodology_schema_version"] == methodology["schema_version"]
+
+
+def test_ballot_mapping_identity_mismatch_is_refused(tmp_path: Path) -> None:
+    source = _copied_snapshot(tmp_path)
+    mapping = tmp_path / "handles.csv"
+    shutil.copyfile(TEAM_HANDLE_MAPPING, mapping)
+    with mapping.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+        fields = list(rows[0])
+    rows[0]["team_name"] = "Wrong team for this ID"
+    with mapping.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
+
+    config = _config_for(source, tmp_path)
+    payload = json.loads(config.read_text(encoding="utf-8"))
+    payload["redditcfb_team_handles"] = {
+        "path": "handles.csv",
+        "source": "test fixture",
+    }
+    config.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(SiteDataValidationError, match="identity mismatch"):
+        build_site_data(root=tmp_path, config_path=config, output_directory=tmp_path / "data")
+
+
+def test_absent_ballot_mapping_does_not_reuse_logo_handles(tmp_path: Path) -> None:
+    source = _copied_snapshot(tmp_path)
+    manifest = build_site_data(
+        root=tmp_path,
+        config_path=_config_for(source, tmp_path),
+        output_directory=tmp_path / "data",
+    )
+
+    assert manifest["redditcfb"]["team_handles"] == {}
+    assert manifest["redditcfb"]["mapping_audit"]["mapped_count"] == 0
+    assert manifest["redditcfb"]["mapping_audit"]["current_fbs_team_count"] == 138
 
 
 def test_export_refuses_artifact_version_drift(tmp_path: Path) -> None:
