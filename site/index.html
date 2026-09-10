@@ -14,6 +14,7 @@
         <nav class="site-nav" aria-label="Site navigation">
           <a id="week-view-link" class="week-link" href="./week.html">Week games</a>
           <a class="about-link" href="#about-rankings">About these rankings</a>
+          <a href="./methodology.html">Methodology</a>
         </nav>
       </div>
     </header>
@@ -66,12 +67,12 @@
       <details id="about-rankings" class="about-rankings">
         <summary>About these rankings</summary>
         <div class="explain-grid">
-          <article><h3>Predictive</h3><p>Combines preseason information with eligible game results to estimate current rank distributions. Context includes roster and recruiting information; History starts from prior program performance.</p></article>
-          <article><h3>Performance</h3><p>Uses eligible games to estimate the quality implied by a team's schedule and results, with Predictive Context estimates for opponent quality.</p><p>Performance is not standings, strength of record, or postseason deservingness. Teams without an eligible game are shown as NR.</p><p><a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/performance_v1.md">Performance V1 documentation</a> · <a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/posterior_v1.md">Posterior V1 documentation</a></p></article>
+          <article><h3>Predictive</h3><p>GippyRank models team quality as a probability distribution over rank-like states. Predictive Context and Predictive History are alternative preseason priors that the same game-evidence engine updates.</p></article>
+          <article><h3>Performance</h3><p>Performance asks who has played best so far, using completed games and opponent beliefs. It is separate from Predictive and is not standings, strength of record, or postseason deservingness.</p><p><a href="./methodology.html">Read the full methodology →</a></p></article>
         </div>
       </details>
     </main>
-    <footer><div class="shell"><p>GippyRank rankings are model outputs, not AP, Coaches, or CFP poll inputs.</p><a href="https://github.com/sirgippy/GippyRank4">Source &amp; methodology</a></div></footer>
+    <footer><div class="shell"><p>GippyRank rankings are model outputs, not AP, Coaches, or CFP poll inputs.</p><a href="./methodology.html">Methodology</a></div></footer>
     <script type="module" src="./assets/app.js"></script>
   </body>
 </html>

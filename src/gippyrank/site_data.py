@@ -17,12 +17,18 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from gippyrank.methodology import (
+    HISTORICAL_LIKELIHOOD_VERSION,
+    METHODOLOGY_SCHEMA_VERSION,
+    SITE_SCHEMA_VERSION,
+    SUPPORTED_ARTIFACT_MODEL_VERSIONS,
+    SUPPORTED_ARTIFACT_SCHEMA_VERSIONS,
+    TEAM_SEASON_SCHEMA_VERSION,
+    WEEKLY_GAME_SCHEMA_VERSION,
+    production_methodology_metadata,
+)
 from gippyrank.team_logos import TEAM_LOGO_URL_TEMPLATE, logo_url, team_logo_handle
 
-SITE_SCHEMA_VERSION = "1.0"
-TEAM_SEASON_SCHEMA_VERSION = "1.0"
-WEEKLY_GAME_SCHEMA_VERSION = "1.0"
-PREDICTION_SCHEMA_VERSION = "1.0"
 PREDICTION_SOURCE_CONTEXT = "predictive_context"
 PREDICTION_SOURCE_HISTORY = "predictive_history"
 PERFORMANCE_DISPLAY_BINS = 40
@@ -30,7 +36,7 @@ FUTURE_MARGIN_DISPLAY_MIN = -40.0
 FUTURE_MARGIN_DISPLAY_MAX = 40.0
 FUTURE_MARGIN_DISPLAY_BINS = 40
 DISPLAY_PROBABILITY_SCALE = 1000
-SUPPORTED_SNAPSHOT_SCHEMA_VERSIONS = {"1.0"}
+SUPPORTED_SNAPSHOT_SCHEMA_VERSIONS = SUPPORTED_ARTIFACT_SCHEMA_VERSIONS["snapshot"]
 PMF_SUM_TOLERANCE = 1e-9
 SUMMARY_TOLERANCE = 1e-8
 RANKING_FAMILIES: dict[str, dict[str, str]] = {
@@ -661,8 +667,12 @@ def _validate_metadata(metadata: dict[str, Any], source: Path) -> None:
             raise SiteDataValidationError(
                 f"{metadata['snapshot_id']}: metadata missing {sorted(missing_performance)}"
             )
-        if metadata["model_version"] != "1.0":
-            raise SiteDataValidationError(f"{metadata['snapshot_id']}: unsupported model version")
+        _require_supported_methodology_version(
+            metadata["model_version"],
+            SUPPORTED_ARTIFACT_MODEL_VERSIONS["performance"],
+            snapshot_id=str(metadata["snapshot_id"]),
+            field="Performance model",
+        )
         if metadata["method"] != "prior_stripping":
             raise SiteDataValidationError(f"{metadata['snapshot_id']}: unsupported Performance method")
         if metadata["anchor_family"] != "context":
@@ -735,6 +745,251 @@ def _write_json(path: Path, value: Any, *, compact: bool = False) -> None:
     path.write_text(encoded + "\n", encoding="utf-8")
 
 
+def _require_supported_methodology_version(
+    actual: object,
+    supported: frozenset[str],
+    *,
+    snapshot_id: str,
+    field: str,
+) -> None:
+    """Require an artifact identifier to be in the retained support registry."""
+    if not isinstance(actual, str) or actual not in supported:
+        supported_values = ", ".join(sorted(supported))
+        raise SiteDataValidationError(
+            f"{snapshot_id}: {field} {actual!r} is unsupported; supported versions: "
+            f"{supported_values}"
+        )
+
+
+def _require_consistent_methodology_version(
+    actual: object, expected: object, *, snapshot_id: str, field: str
+) -> None:
+    """Require duplicated identifiers within one artifact to agree."""
+    if actual != expected:
+        raise SiteDataValidationError(
+            f"{snapshot_id}: {field} {actual!r} does not match {expected!r}"
+        )
+
+
+def _validate_artifact_methodology_versions(
+    prepared_snapshots: list[PreparedSnapshot],
+) -> dict[str, object]:
+    """Validate supported artifact IDs without pinning history to today's IDs."""
+    methodology = production_methodology_metadata()
+    supported_models = SUPPORTED_ARTIFACT_MODEL_VERSIONS
+    supported_schemas = SUPPORTED_ARTIFACT_SCHEMA_VERSIONS
+    for prepared in prepared_snapshots:
+        metadata = prepared.metadata
+        snapshot_id = prepared.snapshot_id
+        ranking_family = metadata.get("ranking_family")
+        if ranking_family not in {"predictive", "performance"}:
+            continue
+        _require_supported_methodology_version(
+            metadata.get("schema_version"),
+            supported_schemas["snapshot"],
+            snapshot_id=snapshot_id,
+            field="snapshot schema",
+        )
+        team_season_schema = prepared.team_seasons.get("schema_version")
+        _require_supported_methodology_version(
+            team_season_schema,
+            supported_schemas["team_season"],
+            snapshot_id=snapshot_id,
+            field="team-season schema",
+        )
+        _require_supported_methodology_version(
+            prepared.weekly_games.get("schema_version")
+            if prepared.weekly_games
+            else None,
+            supported_schemas["weekly_game"],
+            snapshot_id=snapshot_id,
+            field="weekly-game schema",
+        )
+        declared_team_season_schema = metadata.get("team_season_schema_version")
+        if declared_team_season_schema is not None:
+            _require_supported_methodology_version(
+                declared_team_season_schema,
+                supported_schemas["team_season"],
+                snapshot_id=snapshot_id,
+                field="declared team-season schema",
+            )
+            _require_consistent_methodology_version(
+                declared_team_season_schema,
+                team_season_schema,
+                snapshot_id=snapshot_id,
+                field="declared team-season schema",
+            )
+        artifact_likelihood = prepared.team_seasons.get("historical_likelihood_version")
+        if artifact_likelihood is not None:
+            _require_supported_methodology_version(
+                artifact_likelihood,
+                supported_models["historical_likelihood"],
+                snapshot_id=snapshot_id,
+                field="team-season Historical Likelihood",
+            )
+
+        if ranking_family == "performance":
+            _require_supported_methodology_version(
+                metadata.get("model_version"),
+                supported_models["performance"],
+                snapshot_id=snapshot_id,
+                field="Performance model",
+            )
+            _require_supported_methodology_version(
+                metadata.get("prior_model_version"),
+                supported_models["context_prior"],
+                snapshot_id=snapshot_id,
+                field="Performance anchor prior",
+            )
+            continue
+
+        model_versions = metadata.get("model_versions")
+        if not isinstance(model_versions, dict):
+            raise SiteDataValidationError(
+                f"{snapshot_id}: model_versions must be an object"
+            )
+        for key in ("context_prior", "history_prior", "historical_likelihood"):
+            _require_supported_methodology_version(
+                model_versions.get(key),
+                supported_models[key],
+                snapshot_id=snapshot_id,
+                field=f"{key} model",
+            )
+        if "posterior" in model_versions:
+            _require_supported_methodology_version(
+                model_versions["posterior"],
+                supported_models["posterior"],
+                snapshot_id=snapshot_id,
+                field="posterior model",
+            )
+        prior_key = (
+            "context_prior"
+            if metadata.get("prior_family") == "context"
+            else "history_prior"
+        )
+        prior_model = metadata.get("prior_model_version")
+        _require_supported_methodology_version(
+            prior_model,
+            supported_models[prior_key],
+            snapshot_id=snapshot_id,
+            field="prior model",
+        )
+        _require_consistent_methodology_version(
+            model_versions.get(prior_key),
+            prior_model,
+            snapshot_id=snapshot_id,
+            field=f"{prior_key} metadata",
+        )
+        historical_likelihood = metadata.get("historical_likelihood_version")
+        _require_supported_methodology_version(
+            historical_likelihood,
+            supported_models["historical_likelihood"],
+            snapshot_id=snapshot_id,
+            field="Historical Likelihood",
+        )
+        _require_consistent_methodology_version(
+            model_versions.get("historical_likelihood"),
+            historical_likelihood,
+            snapshot_id=snapshot_id,
+            field="historical likelihood metadata",
+        )
+        if artifact_likelihood is not None:
+            _require_consistent_methodology_version(
+                artifact_likelihood,
+                historical_likelihood,
+                snapshot_id=snapshot_id,
+                field="team-season Historical Likelihood",
+            )
+        prediction_schema = prepared.team_seasons.get("prediction_schema_version")
+        if prediction_schema is not None:
+            _require_supported_methodology_version(
+                prediction_schema,
+                supported_schemas["prediction"],
+                snapshot_id=snapshot_id,
+                field="prediction schema",
+            )
+        prediction_provenance = prepared.team_seasons.get("prediction_provenance")
+        if isinstance(prediction_provenance, dict):
+            provenance_likelihood = prediction_provenance.get(
+                "historical_likelihood_version"
+            )
+            if provenance_likelihood is not None:
+                _require_supported_methodology_version(
+                    provenance_likelihood,
+                    supported_models["historical_likelihood"],
+                    snapshot_id=snapshot_id,
+                    field="prediction Historical Likelihood",
+                )
+                _require_consistent_methodology_version(
+                    provenance_likelihood,
+                    historical_likelihood,
+                    snapshot_id=snapshot_id,
+                    field="prediction Historical Likelihood",
+                )
+        simulation = prepared.team_seasons.get("season_simulation")
+        if isinstance(simulation, dict):
+            simulation_schema = simulation.get("schema_version")
+            _require_supported_methodology_version(
+                simulation_schema,
+                supported_schemas["season_simulation"],
+                snapshot_id=snapshot_id,
+                field="season-simulation schema",
+            )
+            simulation_version = simulation.get("simulation_version")
+            _require_supported_methodology_version(
+                simulation_version,
+                supported_models["season_simulation"],
+                snapshot_id=snapshot_id,
+                field="season-simulation model",
+            )
+            configuration = simulation.get("configuration")
+            if isinstance(configuration, dict):
+                simulation_likelihood = configuration.get("likelihood_version")
+                _require_supported_methodology_version(
+                    simulation_likelihood,
+                    supported_models["historical_likelihood"],
+                    snapshot_id=snapshot_id,
+                    field="season-simulation likelihood",
+                )
+                _require_consistent_methodology_version(
+                    simulation_likelihood,
+                    historical_likelihood,
+                    snapshot_id=snapshot_id,
+                    field="season-simulation likelihood",
+                )
+        declared_simulation_schema = metadata.get("season_simulation_schema_version")
+        if declared_simulation_schema is not None:
+            _require_supported_methodology_version(
+                declared_simulation_schema,
+                supported_schemas["season_simulation"],
+                snapshot_id=snapshot_id,
+                field="declared season-simulation schema",
+            )
+            if isinstance(simulation, dict):
+                _require_consistent_methodology_version(
+                    declared_simulation_schema,
+                    simulation.get("schema_version"),
+                    snapshot_id=snapshot_id,
+                    field="declared season-simulation schema",
+                )
+        declared_simulation_version = metadata.get("season_simulation_version")
+        if declared_simulation_version is not None:
+            _require_supported_methodology_version(
+                declared_simulation_version,
+                supported_models["season_simulation"],
+                snapshot_id=snapshot_id,
+                field="declared season-simulation model",
+            )
+            if isinstance(simulation, dict):
+                _require_consistent_methodology_version(
+                    declared_simulation_version,
+                    simulation.get("simulation_version"),
+                    snapshot_id=snapshot_id,
+                    field="declared season-simulation model",
+                )
+    return methodology
+
+
 def _empty_team_season_artifact(
     metadata: dict[str, Any], rankings: list[dict[str, Any]]
 ) -> dict[str, Any]:
@@ -754,7 +1009,7 @@ def _empty_team_season_artifact(
         "source_response_hashes": metadata.get("source_response_hashes", {}),
         "game_corpus_sha256": metadata.get("game_corpus_sha256"),
         "included_game_ids": sorted(str(value) for value in metadata.get("included_game_ids", [])),
-        "historical_likelihood_version": "V1",
+        "historical_likelihood_version": HISTORICAL_LIKELIHOOD_VERSION,
         "rank_count": metadata.get("rank_count"),
         "rating_definition": "normalize(single-game Historical Likelihood × opponent pair-cavity belief)",
         "loopy_bp_caveat": "The focal preseason prior is absent as a direct factor; loopy cycles can leave indirect feedback.",
@@ -940,10 +1195,12 @@ def _validate_future_predictions(
                 referenced_ids[str(prediction_id)].append((team_id, game))
     if prediction_map is None and not referenced_ids:
         return
-    if prediction_schema != PREDICTION_SCHEMA_VERSION:
-        raise SiteDataValidationError(
-            f"{metadata['snapshot_id']}: unsupported future-prediction schema"
-        )
+    _require_supported_methodology_version(
+        prediction_schema,
+        SUPPORTED_ARTIFACT_SCHEMA_VERSIONS["prediction"],
+        snapshot_id=str(metadata["snapshot_id"]),
+        field="future-prediction schema",
+    )
     if not isinstance(prediction_map, dict):
         raise SiteDataValidationError(
             f"{metadata['snapshot_id']}: future_predictions must be an object"
@@ -1123,10 +1380,16 @@ def _validate_season_simulation(
     snapshot_id = str(metadata["snapshot_id"])
     if not isinstance(simulation, dict):
         raise SiteDataValidationError(f"{snapshot_id}: season_simulation must be an object")
-    if simulation.get("schema_version") != "1.0" or simulation.get(
-        "artifact_kind"
-    ) != "season_simulation":
-        raise SiteDataValidationError(f"{snapshot_id}: unsupported season simulation schema")
+    _require_supported_methodology_version(
+        simulation.get("schema_version"),
+        SUPPORTED_ARTIFACT_SCHEMA_VERSIONS["season_simulation"],
+        snapshot_id=snapshot_id,
+        field="season-simulation schema",
+    )
+    if simulation.get("artifact_kind") != "season_simulation":
+        raise SiteDataValidationError(
+            f"{snapshot_id}: unsupported season simulation artifact"
+        )
     if simulation.get("simulation_version") != metadata.get(
         "season_simulation_version", simulation.get("simulation_version")
     ):
@@ -1141,8 +1404,14 @@ def _validate_season_simulation(
     declared_configuration = metadata.get("season_simulation_configuration")
     if declared_configuration is not None and configuration != declared_configuration:
         raise SiteDataValidationError(f"{snapshot_id}: season simulation configuration mismatch")
+    _require_supported_methodology_version(
+        configuration.get("likelihood_version"),
+        SUPPORTED_ARTIFACT_MODEL_VERSIONS["historical_likelihood"],
+        snapshot_id=snapshot_id,
+        field="season-simulation likelihood",
+    )
     if configuration.get("likelihood_version") != metadata.get(
-        "historical_likelihood_version", "V1"
+        "historical_likelihood_version", HISTORICAL_LIKELIHOOD_VERSION
     ):
         raise SiteDataValidationError(f"{snapshot_id}: season simulation likelihood version mismatch")
     if configuration.get("latent_sampling_method") != "independent_marginal_pmf":
@@ -1718,8 +1987,12 @@ def _validate_weekly_game_artifact(
 ) -> None:
     """Fail closed if the canonical weekly fold loses source consistency."""
     snapshot_id = str(metadata.get("snapshot_id", artifact.get("snapshot_id", "unknown")))
-    if artifact.get("schema_version") != WEEKLY_GAME_SCHEMA_VERSION:
-        raise SiteDataValidationError(f"{snapshot_id}: unsupported weekly game schema")
+    _require_supported_methodology_version(
+        artifact.get("schema_version"),
+        SUPPORTED_ARTIFACT_SCHEMA_VERSIONS["weekly_game"],
+        snapshot_id=snapshot_id,
+        field="weekly-game schema",
+    )
     if artifact.get("artifact_kind") != "weekly_games":
         raise SiteDataValidationError(f"{snapshot_id}: invalid weekly game artifact kind")
     if artifact.get("snapshot_id") != team_season_artifact.get("snapshot_id"):
@@ -1771,8 +2044,12 @@ def _validate_team_season_artifact(
 ) -> dict[str, Any]:
     """Validate provenance, cutoff redaction, and compact game-rating fields."""
     snapshot_id = str(metadata["snapshot_id"])
-    if artifact.get("schema_version") != TEAM_SEASON_SCHEMA_VERSION:
-        raise SiteDataValidationError(f"{snapshot_id}: unsupported team-season schema")
+    _require_supported_methodology_version(
+        artifact.get("schema_version"),
+        SUPPORTED_ARTIFACT_SCHEMA_VERSIONS["team_season"],
+        snapshot_id=snapshot_id,
+        field="team-season schema",
+    )
     if artifact.get("artifact_kind") != "team_season":
         raise SiteDataValidationError(f"{snapshot_id}: invalid team-season artifact kind")
     source_metadata = anchor_metadata or metadata
@@ -2206,6 +2483,7 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
                 weekly_games,
             )
         )
+    methodology = _validate_artifact_methodology_versions(prepared_snapshots)
     for prepared in prepared_snapshots:
         _apply_rank_changes(
             prepared,
@@ -2468,6 +2746,8 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
     )
     manifest = {
         "schema_version": SITE_SCHEMA_VERSION,
+        "methodology_path": "data/methodology.json",
+        "methodology_schema_version": METHODOLOGY_SCHEMA_VERSION,
         "seasons": sorted({entry["season"] for entry in manifest_entries}, reverse=True),
         "ranking_families": [
             {"id": family, "label": definition["label"]}
@@ -2511,5 +2791,6 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             "initial_rankings_page_bytes": ranking_snapshot_bytes,
         },
     }
+    _write_json(output_directory / "methodology.json", methodology)
     _write_json(output_directory / "manifest.json", manifest)
     return manifest

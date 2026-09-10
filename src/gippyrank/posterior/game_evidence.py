@@ -11,6 +11,11 @@ from typing import Any
 
 import numpy as np
 
+from gippyrank.methodology import (
+    HISTORICAL_LIKELIHOOD_VERSION,
+    PREDICTION_SCHEMA_VERSION,
+    TEAM_SEASON_SCHEMA_VERSION,
+)
 from gippyrank.posterior.display import (
     DISPLAY_PROBABILITY_SCALE,
     quantize_display_probabilities,
@@ -26,7 +31,6 @@ from gippyrank.posterior.predictive import (
     FUTURE_MARGIN_DISPLAY_BINS,
     FUTURE_MARGIN_DISPLAY_MAX,
     FUTURE_MARGIN_DISPLAY_MIN,
-    PREDICTION_SCHEMA_VERSION,
     PREDICTION_SOURCE_CONTEXT,
     PREDICTION_SOURCE_HISTORY,
     ScheduledGame,
@@ -40,7 +44,6 @@ from gippyrank.posterior.season_simulation import (
     simulate_season,
 )
 
-TEAM_SEASON_SCHEMA_VERSION = "1.0"
 PERFORMANCE_DISPLAY_BINS = 40
 
 
@@ -551,7 +554,7 @@ def build_team_season_artifact(
                 "effective_cutoff": metadata.get("effective_cutoff"),
                 "game_corpus_sha256": metadata.get("game_corpus_sha256"),
                 "historical_likelihood_version": metadata.get(
-                    "historical_likelihood_version", "V1"
+                    "historical_likelihood_version", HISTORICAL_LIKELIHOOD_VERSION
                 ),
                 "prediction_source": source,
             },
@@ -578,7 +581,9 @@ def build_team_season_artifact(
             "sha256": schedule_corpus_sha256,
         },
         "included_game_ids": sorted(included_ids),
-        "historical_likelihood_version": metadata.get("historical_likelihood_version", "V1"),
+        "historical_likelihood_version": metadata.get(
+            "historical_likelihood_version", HISTORICAL_LIKELIHOOD_VERSION
+        ),
         "prediction_schema_version": PREDICTION_SCHEMA_VERSION,
         "prediction_source": source,
         "prediction_provenance": {
@@ -590,7 +595,7 @@ def build_team_season_artifact(
             "game_corpus_sha256": metadata.get("game_corpus_sha256"),
             "included_game_ids": sorted(included_ids),
             "historical_likelihood_version": metadata.get(
-                "historical_likelihood_version", "V1"
+                "historical_likelihood_version", HISTORICAL_LIKELIHOOD_VERSION
             ),
         },
         "season_simulation": season_simulation,

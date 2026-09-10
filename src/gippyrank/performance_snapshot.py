@@ -18,10 +18,14 @@ from typing import Any
 
 import numpy as np
 
+from gippyrank.methodology import (
+    PERFORMANCE_SCHEMA_VERSION,
+    PERFORMANCE_VERSION,
+    TEAM_SEASON_SCHEMA_VERSION,
+)
 from gippyrank.posterior.snapshots import Snapshot, load_teams, sha256
 
-PERFORMANCE_SCHEMA_VERSION = "1.0"
-PERFORMANCE_MODEL_VERSION = "1.0"
+PERFORMANCE_MODEL_VERSION = PERFORMANCE_VERSION
 PERFORMANCE_RANKING_FAMILY = "performance"
 PERFORMANCE_METHOD = "prior_stripping"
 PMF_TOLERANCE = 1e-9
@@ -467,7 +471,7 @@ def build_performance_snapshot(
     if team_seasons.is_file():
         shutil.copyfile(team_seasons, directory / "team_seasons.json")
         performance_metadata["team_season_path"] = "team_seasons.json"
-        performance_metadata["team_season_schema_version"] = "1.0"
+        performance_metadata["team_season_schema_version"] = TEAM_SEASON_SCHEMA_VERSION
         (directory / "metadata.json").write_text(
             json.dumps(performance_metadata, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",

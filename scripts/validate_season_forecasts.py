@@ -20,6 +20,7 @@ from typing import Any
 import numpy as np
 from backfill_season_simulation import build_simulation_inputs
 
+from gippyrank.methodology import HISTORICAL_LIKELIHOOD_VERSION
 from gippyrank.posterior.engine import Game, LikelihoodV1, Team, infer_posterior
 from gippyrank.posterior.predictive import ScheduledGame
 from gippyrank.posterior.season_simulation import (
@@ -404,7 +405,7 @@ def _run(
             "snapshot_type": "preseason" if phase == "preseason" else "weekly",
             "requested_cutoff": cutoff.isoformat() if cutoff else None,
             "effective_cutoff": cutoff.isoformat() if cutoff else None,
-            "historical_likelihood_version": "V1",
+            "historical_likelihood_version": HISTORICAL_LIKELIHOOD_VERSION,
             "historical_schedule_source": _historical_source()["path"],
             "historical_schedule_sha256": _historical_source()["sha256"],
         },

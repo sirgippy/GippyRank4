@@ -17,6 +17,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from gippyrank.methodology import SEASON_SIMULATION_SCHEMA_VERSION
 from gippyrank.posterior.game_evidence import _completed_regular_records
 from gippyrank.posterior.predictive import ScheduledGame
 from gippyrank.posterior.season_simulation import (
@@ -278,7 +279,7 @@ def backfill(source: Path, config: SeasonSimulationConfig) -> None:
     metadata = inputs["metadata"]
     metadata.update(
         {
-            "season_simulation_schema_version": "1.0",
+            "season_simulation_schema_version": SEASON_SIMULATION_SCHEMA_VERSION,
             "season_simulation_version": config.simulation_version,
             "season_simulation_configuration": config.as_dict(),
         }

@@ -30,6 +30,7 @@ All tests remaining in these modules run under `uv run pytest -q`:
 | `test_lean_context_validation.py` | Leakage-safe observed/training populations, nested selection, calibration decisions, and synthetic validation workflow. |
 | `test_margin_likelihood.py` | Reusable margin-coordinate, scale, Jacobian, comparison, and leakage-safe selection mathematics. |
 | `test_massey.py` | Source normalization, alias matching, and long-form export semantics. |
+| `test_methodology.py` | Public methodology page coverage, generated metadata, shared version identifiers, and site navigation. |
 | `test_modeling.py` | Shared historical modeling primitives, rank-coordinate orientation, coverage, and marginalized scoring. |
 | `test_offense_defense.py` | Scoreboard-only offense/defense residual orientation, persistence diagnostics, identifiability, cutoff safety, and frozen candidate selection. |
 | `test_performance_snapshot.py` | Production performance snapshot construction and fail-closed evidence validation. |

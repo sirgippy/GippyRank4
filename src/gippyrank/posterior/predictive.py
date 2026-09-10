@@ -18,6 +18,9 @@ import numpy as np
 from scipy.special import gammaln, stdtr
 from scipy.stats import t as student_t
 
+from gippyrank.methodology import (
+    PREDICTION_SCHEMA_VERSION as _PREDICTION_SCHEMA_VERSION,
+)
 from gippyrank.modeling import design_matrix
 from gippyrank.posterior.display import (
     DISPLAY_PROBABILITY_SCALE,
@@ -25,7 +28,7 @@ from gippyrank.posterior.display import (
 )
 from gippyrank.posterior.engine import LikelihoodV1, Team
 
-PREDICTION_SCHEMA_VERSION = "1.0"
+PREDICTION_SCHEMA_VERSION = _PREDICTION_SCHEMA_VERSION
 PREDICTION_SOURCE_CONTEXT = "predictive_context"
 PREDICTION_SOURCE_HISTORY = "predictive_history"
 FUTURE_MARGIN_DISPLAY_MIN = -40.0

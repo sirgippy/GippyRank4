@@ -11,6 +11,11 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from gippyrank import site_data
+from gippyrank.methodology import (
+    PRODUCTION_MODEL_VERSIONS,
+    PRODUCTION_SCHEMA_VERSIONS,
+    production_methodology_metadata,
+)
 from gippyrank.site_data import (
     SiteDataValidationError,
     build_fbs_conference_map,
@@ -171,6 +176,48 @@ def test_exported_team_logos_are_canonical_and_audited(tmp_path: Path) -> None:
         (tmp_path / "data" / entry["data_path"].removeprefix("data/")).read_text()
     )
     assert "logo_handle" not in snapshot["rankings"][0]
+    methodology = json.loads(
+        (tmp_path / "data" / "methodology.json").read_text(encoding="utf-8")
+    )
+    assert methodology == production_methodology_metadata()
+    assert manifest["methodology_path"] == "data/methodology.json"
+    assert manifest["methodology_schema_version"] == methodology["schema_version"]
+
+
+def test_export_refuses_artifact_version_drift(tmp_path: Path) -> None:
+    source = _copied_snapshot(tmp_path)
+    metadata_path = source / "metadata.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata["model_versions"]["context_prior"] = "not-production"
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+    with pytest.raises(SiteDataValidationError, match="context_prior model"):
+        build_site_data(
+            root=tmp_path,
+            config_path=_config_for(source, tmp_path),
+            output_directory=tmp_path / "data",
+        )
+
+
+def test_export_accepts_retained_snapshot_when_current_version_advances(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = _copied_snapshot(tmp_path)
+    monkeypatch.setitem(PRODUCTION_MODEL_VERSIONS, "context_prior", "1.3")
+    monkeypatch.setitem(PRODUCTION_SCHEMA_VERSIONS, "snapshot", "2.0")
+
+    manifest = build_site_data(
+        root=tmp_path,
+        config_path=_config_for(source, tmp_path),
+        output_directory=tmp_path / "data",
+    )
+
+    methodology = json.loads(
+        (tmp_path / "data" / "methodology.json").read_text(encoding="utf-8")
+    )
+    assert methodology["model_versions"]["context_prior"] == "1.3"
+    assert methodology["schema_versions"]["snapshot"] == "2.0"
+    assert manifest["snapshots"][0]["model_versions"]["context_prior"] == "1.2"
 
 
 def test_publish_config_logo_template_override_is_manifest_visible(
