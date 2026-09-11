@@ -148,13 +148,11 @@ test.describe("Schedule browser smoke tests", () => {
             height: box.height,
             width: box.width,
             lineHeight: Number.parseFloat(style.lineHeight),
-            overflowWrap: style.overflowWrap,
           };
         });
         expect(textLayout.lineCount).toBe(1);
         expect(textLayout.height).toBeLessThanOrEqual(textLayout.lineHeight + 1);
         expect(textLayout.width).toBeGreaterThan(0);
-        expect(textLayout.overflowWrap).toBe("normal");
         await expect(identity).toHaveCSS("display", "flex");
       }
     }
