@@ -160,6 +160,12 @@ snapshots from that exact corpus and must agree on cutoffs, source hashes, and
 eligible game IDs before any site data is prepared. An invalid or nonconverged
 snapshot fails closed.
 
+The **Publish this ranking as Official** checkbox is unchecked by default. An
+unchecked run creates an Interim publication; checking it marks the generated
+publication slot Official. This Official/Interim decision is made when the
+Update GippyRank rankings workflow is run, and applies together to the Context,
+History, and Performance snapshots in that slot.
+
 The Action creates or updates `automation/rankings-<publication-slot>` and its
 review PR; it never pushes to `main`, merges, or enables auto-merge. If your
 repository restricts workflow-created PRs, enable **Settings → Actions →
@@ -172,6 +178,9 @@ Git/PR operation), run:
 ```bash
 CFBD_API_KEY=... uv run python scripts/update_rankings.py --season 2026
 ```
+
+Add `--official` to mark the generated publication slot Official; without it,
+the local CLI also defaults to Interim.
 
 Repeated candidates use the same logical slot and replace that slot's Context/
 History configuration entries while preserving older approved slots and
