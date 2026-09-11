@@ -1,4 +1,5 @@
 const { test, expect } = require("@playwright/test");
+const scheduleLayoutFixture = require("./fixtures/schedule-layout.json");
 
 const scheduleCards = ".weekly-game-card";
 const logoResponse = `<svg xmlns="http://www.w3.org/2000/svg" width="60" height="40" viewBox="0 0 60 40"><rect width="60" height="40" fill="#d6dfda"/></svg>`;
@@ -33,6 +34,11 @@ async function selectWeek(page, value) {
   await page.locator("#week-select").selectOption(value);
   await expect(page.locator("#week-select")).toHaveValue(value);
   await expect(page).toHaveURL(new RegExp(`[?&]week=${value}(?:&|$)`));
+}
+
+async function useScheduleLayoutFixture(page) {
+  await page.route("**/data/manifest.json", (route) => route.fulfill({ json: scheduleLayoutFixture.manifest }));
+  await page.route("**/data/week-games/browser-layout-fixture.json", (route) => route.fulfill({ json: scheduleLayoutFixture.artifact }));
 }
 
 async function weekWithMarqueeGame(page) {
@@ -106,10 +112,9 @@ test.describe("Schedule browser smoke tests", () => {
   });
 
   test("keeps team identity readable and the page within the viewport", async ({ page }) => {
+    await useScheduleLayoutFixture(page);
     await loadSchedule(page);
-    const weekOne = page.locator("#week-select option").filter({ hasText: /^Week 1$/ });
-    await expect(weekOne).toHaveCount(1);
-    await selectWeek(page, await weekOne.getAttribute("value"));
+    await expect(page.locator("#week-select")).toHaveValue("fixture-week");
     await expectGamesRendered(page);
 
     const miami = page.locator(".weekly-team-link").filter({ hasText: /^Miami$/ });
