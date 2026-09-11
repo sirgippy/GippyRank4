@@ -1093,6 +1093,34 @@ summary:focus-visible,
   cursor: not-allowed;
 }
 
+.schedule-view-toggle {
+  display: flex;
+  gap: 0;
+  margin-top: 14px;
+}
+
+.schedule-view-toggle button {
+  min-height: 32px;
+  padding: 5px 12px;
+  color: var(--muted);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.schedule-view-toggle button:first-child { border-radius: 4px 0 0 4px; }
+.schedule-view-toggle button:last-child { border-left: 0; border-radius: 0 4px 4px 0; }
+.schedule-view-toggle button.is-active { color: var(--paper); background: var(--green); border-color: var(--green); }
+
+.schedule-filter-note {
+  max-width: 620px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .weekly-schedule {
   display: grid;
   gap: 20px;
@@ -1198,6 +1226,24 @@ summary:focus-visible,
   align-items: center;
   min-width: 0;
   gap: 7px;
+}
+
+.weekly-team-rank {
+  flex: 0 0 30px;
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 850;
+  text-align: center;
+}
+
+.weekly-team-rank.is-unrated {
+  color: var(--muted);
+}
+
+.schedule-empty {
+  margin: 0;
+  padding: 28px 0;
+  color: var(--muted);
 }
 
 .weekly-team-row.is-winner .weekly-team-link {

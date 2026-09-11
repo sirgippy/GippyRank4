@@ -6,6 +6,7 @@ const state = {
   season: Number(params.get("season")) || null,
   slot: params.get("snapshot") || params.get("slot") || null,
   prior: params.get("prior") === "history" ? "history" : "context",
+  view: params.get("view") === "marquee" ? "marquee" : "all",
   weekKey: params.get("week") || null,
 };
 
@@ -108,6 +109,7 @@ function contextParams(entry, week = null) {
   next.set("family", state.family);
   if (state.family === "predictive") next.set("prior", entry.prior_family);
   if (week !== null && week !== undefined) next.set("week", String(week));
+  if (state.view === "marquee") next.set("view", "marquee");
   return next;
 }
 
@@ -254,11 +256,12 @@ function predictionPanel(prediction, axis) {
   return panel;
 }
 
-function teamLink(team, entry, week, winner = false) {
+function teamLink(team, entry, week, rank, winner = false) {
+  const rankLabel = rank?.rated ? `, GippyRank number ${rank.display_rank}` : rank ? ", GippyRank not rated" : "";
   if (team.subdivision === "fbs") {
     const link = node("a", "weekly-team-link", team.team_name);
     link.href = teamPageUrl(team, entry, week);
-    link.setAttribute("aria-label", `Open ${team.team_name} season page${winner ? "; winner" : ""}`);
+    link.setAttribute("aria-label", `Open ${team.team_name} season page${rankLabel}${winner ? "; winner" : ""}`);
     return link;
   } else {
     const label = node("span", "weekly-team-link", team.team_name);
@@ -267,12 +270,14 @@ function teamLink(team, entry, week, winner = false) {
   }
 }
 
-function teamRow(team, score, entry, week, winner = false) {
+function teamRow(team, score, artifact, entry, week, winner = false) {
   const row = node("div", `weekly-team-row${winner ? " is-winner" : ""}`);
   const identity = node("div", "weekly-team-identity");
   const logo = teamLogo(team.team_id);
   if (logo) identity.append(logo);
-  identity.append(teamLink(team, entry, week, winner));
+  const rank = team.subdivision === "fbs" ? artifact.team_rankings?.[team.team_id] : null;
+  if (rank) identity.append(node("span", `weekly-team-rank${rank.rated ? "" : " is-unrated"}`, rank.rated ? `#${rank.display_rank}` : "NR"));
+  identity.append(teamLink(team, entry, week, rank, winner));
   if (team.conference) identity.append(node("span", "team-conference", team.conference));
   if (winner) identity.append(node("span", "weekly-winner-label", "Winner"));
   row.append(identity);
@@ -305,9 +310,9 @@ function gameCard(game, artifact, entry, week) {
   const secondScore = game.neutral_site ? awayScore : homeScore;
   const winnerId = game.state === "completed" ? game.winner_team_id : null;
   matchup.append(
-    teamRow(firstTeam, firstScore, entry, week, firstTeam.team_id === winnerId),
+    teamRow(firstTeam, firstScore, artifact, entry, week, firstTeam.team_id === winnerId),
     node("span", "weekly-at", game.neutral_site ? "vs." : "at"),
-    teamRow(secondTeam, secondScore, entry, week, secondTeam.team_id === winnerId),
+    teamRow(secondTeam, secondScore, artifact, entry, week, secondTeam.team_id === winnerId),
   );
   const context = node("p", "weekly-game-context", `${game.neutral_site ? "Neutral site · " : ""}${game.conference_game ? "Conference" : "Non-conference"}`);
   const body = node("div", "weekly-game-body");
@@ -367,6 +372,11 @@ function populateControls(entry) {
   $("#prior-select").hidden = performance;
   $("#prior-select").disabled = performance;
   document.querySelectorAll("[data-prior]").forEach((button) => { button.disabled = performance; button.classList.toggle("is-active", button.dataset.prior === state.prior); });
+  document.querySelectorAll("[data-view]").forEach((button) => {
+    const selected = button.dataset.view === state.view;
+    button.classList.toggle("is-active", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  });
 }
 
 function renderWeekPicker(artifact, entry) {
@@ -394,7 +404,8 @@ function clearScheduleStatus() {
 
 function renderSchedule(week, artifact, entry) {
   const groups = [];
-  for (const game of week.games || []) {
+  const games = state.view === "marquee" ? (week.games || []).filter((game) => game.marquee) : (week.games || []);
+  for (const game of games) {
     const key = game.date ? localDateKey(game.date) : "unknown";
     let group = groups.find((item) => item.key === key);
     if (!group) {
@@ -411,6 +422,11 @@ function renderSchedule(week, artifact, entry) {
     section.append(cards);
     return section;
   });
+  if (!sections.length) {
+    const empty = node("p", "schedule-empty", "No marquee games this week.");
+    $("#weekly-schedule").replaceChildren(empty);
+    return;
+  }
   $("#weekly-schedule").replaceChildren(...sections);
 }
 
@@ -429,7 +445,7 @@ async function load() {
   if (artifact.snapshot_id !== entry.snapshot_id || artifact.season !== entry.season) throw new Error("The selected Schedule artifact does not match the snapshot.");
   const week = renderWeekPicker(artifact, entry);
   if (!week) throw new Error("No weeks are available for this Schedule.");
-  if (!params.has("week")) {
+  if (!params.has("week") || !params.has("view")) {
     const canonicalUrl = new URL(window.location.href);
     canonicalUrl.search = contextParams(entry, week.key).toString();
     window.history.replaceState({}, "", canonicalUrl);
@@ -446,5 +462,6 @@ document.querySelectorAll("[data-prior]").forEach((button) => button.addEventLis
 $("#week-select").addEventListener("change", (event) => { const next = new URLSearchParams(params); next.set("week", event.target.value); navigateTo(next); });
 $("#previous-week").addEventListener("click", () => { const options = [...$("#week-select").options]; const index = options.findIndex((option) => option.selected); if (index > 0) { const next = new URLSearchParams(params); next.set("week", options[index - 1].value); navigateTo(next); } });
 $("#next-week").addEventListener("click", () => { const options = [...$("#week-select").options]; const index = options.findIndex((option) => option.selected); if (index >= 0 && index < options.length - 1) { const next = new URLSearchParams(params); next.set("week", options[index + 1].value); navigateTo(next); } });
+document.querySelectorAll("[data-view]").forEach((button) => button.addEventListener("click", () => { state.view = button.dataset.view; const next = new URLSearchParams(params); if (state.view === "marquee") next.set("view", "marquee"); else next.delete("view"); navigateTo(next); }));
 
 load().catch((error) => { $("#schedule-status").textContent = error.message; $("#schedule-status").className = "team-page-status team-page-error"; });
