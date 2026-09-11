@@ -1,9 +1,12 @@
-# GippyRank 4.0
+# GippyRank4
 
 GippyRank is an experimental probabilistic college-football ranking project.
 The public site presents predictive and performance ranking snapshots; its
 [methodology page](site/methodology.html) explains the model, uncertainty, and
 validation boundaries. It does not use AP, Coaches, or CFP poll inputs.
+The canonical public game-browsing page is [Schedule](site/schedule.html);
+the legacy `site/week.html` path preserves its query state while redirecting
+to that page.
 
 ## Static website
 

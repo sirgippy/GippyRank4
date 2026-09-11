@@ -28,7 +28,7 @@ closed for an export that would contain one.
 The overall rationale is deterministic presentation text.  Its template is:
 
 ```text
-Generated from GippyRank 4.0, a probabilistic college-football ranking model
+Generated from GippyRank4, a probabilistic college-football ranking model
 that estimates underlying team quality from game performance and expresses
 uncertainty rather than treating rank as perfectly known. This ballot uses the
 {season} {snapshot label} {family} {prior when Predictive} rankings.

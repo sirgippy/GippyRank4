@@ -316,18 +316,25 @@ function updateBackLink(entry) {
   const url = new URL("./", document.baseURI);
   if (!entry) {
     $("#back-to-rankings").href = url.pathname;
-    $("#back-to-week").href = new URL("./week.html", document.baseURI).pathname;
+    $("#rankings-view-link").href = url.pathname;
+    const schedulePath = new URL("./schedule.html", document.baseURI).pathname;
+    $("#back-to-schedule").href = schedulePath;
+    $("#schedule-view-link").href = schedulePath;
     return;
   }
   url.searchParams.set("season", String(entry.season));
   url.searchParams.set("snapshot", entry.snapshot_id);
   url.searchParams.set("family", entry.ranking_family);
   if (entry.ranking_family === "predictive") url.searchParams.set("prior", entry.prior_family);
-  $("#back-to-rankings").href = `${url.pathname}${url.search}`;
-  const weekUrl = new URL("./week.html", document.baseURI);
-  weekUrl.search = url.search;
-  weekUrl.searchParams.set("week", params.get("week") ?? entry.default_week);
-  $("#back-to-week").href = `${weekUrl.pathname}${weekUrl.search}`;
+  const rankingsPath = `${url.pathname}${url.search}`;
+  $("#back-to-rankings").href = rankingsPath;
+  $("#rankings-view-link").href = rankingsPath;
+  const scheduleUrl = new URL("./schedule.html", document.baseURI);
+  scheduleUrl.search = url.search;
+  scheduleUrl.searchParams.set("week", params.get("week") ?? entry.default_week);
+  const schedulePath = `${scheduleUrl.pathname}${scheduleUrl.search}`;
+  $("#back-to-schedule").href = schedulePath;
+  $("#schedule-view-link").href = schedulePath;
 }
 
 function renderSummary(entry, snapshot, row) {

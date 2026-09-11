@@ -255,7 +255,7 @@ def build_ballot(
         else "Performance asks what quality is implied by games played, using Context estimates to interpret opponent quality. Performance is not standings, strength of record, or postseason deservingness."
     )
     overall = (
-        "Generated from GippyRank 4.0, a probabilistic college-football ranking model "
+        "Generated from GippyRank4, a probabilistic college-football ranking model "
         "that estimates underlying team quality from game performance and expresses "
         "uncertainty rather than treating rank as perfectly known. This ballot uses "
         f"the {season} {snapshot_label} {family_label}{prior_label} rankings. "

@@ -48,7 +48,7 @@ def test_functional_ballot_export_matches_published_ranking(family: str) -> None
     assert [entry["team_handle"] for entry in entries] == [
         handles[row["team_id"]] for row in rated
     ]
-    assert "GippyRank 4.0" in ballot["overall_rationale"]
+    assert "GippyRank4" in ballot["overall_rationale"]
     assert "2026 Week 2" in ballot["overall_rationale"]
     assert manifest["site_url"] in ballot["overall_rationale"]
     assert all("Central 80% interval" in entry["rationale"] for entry in entries)

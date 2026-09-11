@@ -71,9 +71,16 @@ FBS team links carry season, snapshot ID, ranking family, prior family where
 applicable, and the selected week.  FCS or unsupported opponents stay visible
 as text with no invented team page or probabilities.
 
-## Browser presentation
+## Schedule route and browser presentation
 
-`week.html` uses the same green completed-performance and gold future-margin
+The canonical public page is `schedule.html`.  The legacy `week.html` URL is a
+small compatibility shell whose redirect script copies the original query string
+and hash to `schedule.html` before replacing the browser location.  It
+does not maintain a second schedule implementation, so links such as
+`week.html?season=2026&snapshot=...&family=predictive&prior=context&week=2`
+continue to open the same state on Schedule.
+
+Schedule uses the same green completed-performance and gold future-margin
 visual language as team pages.  Completed cards show both team assessments;
 future cards show home/away win probability, expected margin, and the central
 predictive ranges.  Details use semantic `<details>` controls, and every SVG
