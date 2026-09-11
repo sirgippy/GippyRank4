@@ -1,0 +1,12 @@
+{
+  "name": "gippyrank4",
+  "private": true,
+  "scripts": {
+    "test:js": "node scripts/check-site-js.mjs",
+    "test:browser": "playwright test",
+    "test:ui": "npm run test:js && npm run test:browser"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  }
+}

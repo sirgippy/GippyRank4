@@ -41,3 +41,11 @@ GippyRank4 is a research project for probabilistic college-football ranking.
   - `uv run ruff check .`
 - Add dependencies with `uv add`, not `pip install`.
 - Do not rely on Debian's system `python3` except for environment diagnostics.
+
+## Browser/UI validation
+
+- The static site has a repo-local Playwright harness using Chromium, with desktop and narrow/mobile projects.
+- For changes affecting user-facing files under `site/` or `site/assets/`, make a best effort to run `npm run test:ui` in addition to the normal Python and Ruff checks.
+- The browser command starts the local `site/` server itself through the configured Python environment; do not claim browser validation is unavailable without first attempting the configured Playwright checks.
+- For substantive layout changes, add or update browser-level regression coverage rather than relying solely on static tests.
+- In a fresh environment, install the Node dependencies and Chromium/Linux browser dependencies before running the UI checks; see `docs/browser_validation.md`.
