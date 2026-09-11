@@ -8,6 +8,7 @@ import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -93,11 +94,18 @@ def test_weekly_update_pairs_h_c_preserves_preseason_and_is_idempotent(tmp_path:
         "id": "2026-09-12",
         "status": "temporary",
     }
+    assert first.report["publication_status"] == "temporary"
+    assert "Publication status: `Interim`" in first.candidate_paths.report_md.read_text()
     entries = config["snapshots"]
     assert len(entries) == 3 and {entry["publication_slot"] for entry in entries} == {"2026-09-12"}
     assert {entry["source"].rsplit("/", 1)[-1] for entry in entries} == {"context", "history", "performance"}
     manifest = json.loads((root / "site/data/manifest.json").read_text())
     assert manifest["default_publication_slot"] == "2026-09-12"
+    assert {
+        entry["publication_status"]
+        for entry in manifest["snapshots"]
+        if entry["publication_slot"] == "2026-09-12"
+    } == {"temporary"}
     assert first.candidate_paths is not None
     assert first.candidate_paths.context_snapshot == first.context.directory
     assert first.candidate_paths.history_snapshot == first.history.directory
@@ -129,6 +137,82 @@ def test_weekly_h_c_effective_cutoff_uses_earliest_required_source(tmp_path: Pat
     assert update.context.metadata["source_retrieval_times"] == {
         "fbs": fbs_time.isoformat(), "fcs": fcs_time.isoformat()
     }
+
+
+def test_official_weekly_update_marks_one_status_across_all_snapshots(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = _root(tmp_path)
+    timestamp = datetime(2026, 9, 12, 15, tzinfo=UTC)
+    monkeypatch.setattr(
+        "gippyrank.weekly_update.fetch_current_season",
+        lambda **_: _acquisition(root, timestamp),
+    )
+
+    update = prepare_weekly_update(season=2026, root=root, official=True)
+
+    config = json.loads((root / "site/publish_config.json").read_text())
+    assert config["publication_slots"] == [{"id": "2026-09-12", "status": "official"}]
+    assert update.report["publication_status"] == "official"
+    assert "Publication status: `Official`" in update.candidate_paths.report_md.read_text()
+    manifest = json.loads((root / "site/data/manifest.json").read_text())
+    slot_statuses = {
+        entry["publication_status"]
+        for entry in manifest["snapshots"]
+        if entry["publication_slot"] == "2026-09-12"
+    }
+    assert len(slot_statuses) == 1
+    assert slot_statuses == {"official"}
+
+
+def test_official_status_change_is_publishable_without_ranking_changes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = _root(tmp_path)
+    timestamp = datetime(2026, 9, 12, 15, tzinfo=UTC)
+    monkeypatch.setattr(
+        "gippyrank.weekly_update.fetch_current_season",
+        lambda **_: _acquisition(root, timestamp),
+    )
+
+    interim = prepare_weekly_update(season=2026, root=root)
+    official = prepare_weekly_update(season=2026, root=root, official=True)
+
+    assert interim.published
+    assert official.published
+    config = json.loads((root / "site/publish_config.json").read_text())
+    assert config["publication_slots"] == [{"id": "2026-09-12", "status": "official"}]
+
+
+def test_new_official_slot_is_publishable_without_ranking_changes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = _root(tmp_path)
+    timestamp = datetime(2026, 9, 12, 15, tzinfo=UTC)
+    next_timestamp = datetime(2026, 9, 13, 15, tzinfo=UTC)
+    timestamps = iter((timestamp, next_timestamp))
+    monkeypatch.setattr(
+        "gippyrank.weekly_update.fetch_current_season",
+        lambda **_: _acquisition(root, next(timestamps)),
+    )
+
+    prior = prepare_weekly_update(season=2026, root=root)
+    update = prepare_weekly_update(season=2026, root=root, official=True)
+
+    assert prior.published
+    assert update.published
+    config = json.loads((root / "site/publish_config.json").read_text())
+    assert config["publication_slots"] == [
+        {"id": "2026-09-12", "status": "temporary"},
+        {"id": "2026-09-13", "status": "official"},
+    ]
+    assert config["default_publication_slot"] == "2026-09-13"
+    manifest = json.loads((root / "site/data/manifest.json").read_text())
+    assert {
+        entry["publication_status"]
+        for entry in manifest["snapshots"]
+        if entry["publication_slot"] == "2026-09-13"
+    } == {"official"}
 
 
 def test_snapshot_failure_never_reaches_publication_configuration(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -193,6 +277,10 @@ def test_update_workflow_is_manual_and_pages_stays_model_and_cfbd_free() -> None
     pages = Path(".github/workflows/deploy-pages.yml").read_text(encoding="utf-8")
     assert "workflow_dispatch:" in workflow and "schedule:" not in workflow
     assert "CFBD_API_KEY" in workflow and "/games/teams" not in workflow
+    assert "official:" in workflow
+    assert "description: Publish this ranking as Official" in workflow
+    assert "default: false" in workflow
+    assert 'INPUT_OFFICIAL: ${{ inputs.official }}' in workflow
     assert "pull-requests: write" in workflow and "base: main" in workflow
     assert "merge" not in workflow.casefold()
     assert "add-paths:" not in workflow
@@ -200,6 +288,7 @@ def test_update_workflow_is_manual_and_pages_stays_model_and_cfbd_free() -> None
     run_block = workflow.split("        run: |", 1)[1].split("      - name: Report", 1)[0]
     assert "${{ inputs." not in run_block
     assert 'args=(--season "$INPUT_SEASON"' in run_block
+    assert 'if [ "$INPUT_OFFICIAL" = "true" ]; then args+=(--official); fi' in run_block
     assert "CFBD_API_KEY" not in pages and "build_snapshot" not in pages and "cfbd" not in pages.casefold()
 
 
@@ -354,3 +443,28 @@ def test_update_rankings_script_reaches_publish_config_with_default_root(
     monkeypatch.setattr(sys, "argv", ["scripts/update_rankings.py", "--season", "2026"])
     with pytest.raises(StopAfterConfigLoad):
         runpy.run_path(str(ROOT / "scripts/update_rankings.py"), run_name="__main__")
+
+
+def test_update_rankings_script_forwards_official_flag(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    def prepare(**kwargs: object) -> SimpleNamespace:
+        captured.update(kwargs)
+        return SimpleNamespace(
+            published=False,
+            publication_slot="2026-09-12",
+            report={},
+        )
+
+    monkeypatch.setattr(weekly_update, "prepare_weekly_update", prepare)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["scripts/update_rankings.py", "--season", "2026", "--official"],
+    )
+    runpy.run_path(str(ROOT / "scripts/update_rankings.py"), run_name="__main__")
+
+    assert captured["season"] == 2026
+    assert captured["official"] is True

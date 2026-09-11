@@ -16,6 +16,11 @@ on:
         description: Optional ISO publication date (normally derived from acquisition time)
         required: false
         type: string
+      official:
+        description: Publish this ranking as Official
+        required: false
+        default: false
+        type: boolean
       dry_run:
         description: Fetch, infer, validate, and summarize without creating a PR
         required: false
@@ -44,6 +49,7 @@ jobs:
           INPUT_SEASON: ${{ inputs.season }}
           INPUT_DISPLAY_LABEL: ${{ inputs.display_label }}
           INPUT_PUBLICATION_SLOT: ${{ inputs.publication_slot }}
+          INPUT_OFFICIAL: ${{ inputs.official }}
         run: |
           if [ -z "$CFBD_API_KEY" ]; then
             echo "CFBD_API_KEY Actions secret is required." >&2
@@ -52,6 +58,7 @@ jobs:
           args=(--season "$INPUT_SEASON" --github-output "$GITHUB_OUTPUT" --github-summary "$RUNNER_TEMP/gippyrank-summary.md")
           if [ -n "$INPUT_DISPLAY_LABEL" ]; then args+=(--display-label "$INPUT_DISPLAY_LABEL"); fi
           if [ -n "$INPUT_PUBLICATION_SLOT" ]; then args+=(--publication-slot "$INPUT_PUBLICATION_SLOT"); fi
+          if [ "$INPUT_OFFICIAL" = "true" ]; then args+=(--official); fi
           uv run python scripts/update_rankings.py "${args[@]}" > "$RUNNER_TEMP/gippyrank-result.json"
           cat "$RUNNER_TEMP/gippyrank-summary.md" >> "$GITHUB_STEP_SUMMARY"
       - name: Report no publishable change

@@ -90,6 +90,10 @@ def _validate_slot(season: int, slot: str) -> str:
     return slot
 
 
+def _publication_status(official: bool) -> str:
+    return "official" if official else "temporary"
+
+
 def _load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -180,7 +184,19 @@ def _is_publishable_change(
     context: Snapshot,
     history: Snapshot,
     performance: Snapshot,
+    *,
+    publication_slot: str,
+    publication_status: str,
 ) -> bool:
+    slot_exists = False
+    for entry in config.get("publication_slots", []):
+        if isinstance(entry, dict) and entry.get("id") == publication_slot:
+            slot_exists = True
+            if entry.get("status") != publication_status:
+                return True
+            break
+    if not slot_exists and publication_status == "official":
+        return True
     for family, snapshot in (
         ("context", context),
         ("history", history),
@@ -199,7 +215,7 @@ def _is_publishable_change(
 
 def _upsert_publication(
     *, root: Path, config_path: Path, context: Snapshot, history: Snapshot,
-    slot: str, label: str, performance: Snapshot | None = None,
+    slot: str, label: str, performance: Snapshot | None = None, official: bool = False,
 ) -> None:
     config = _load_json(config_path)
     slot_entries = config.get("publication_slots")
@@ -207,13 +223,13 @@ def _upsert_publication(
         raise TypeError(
             "Publish configuration needs explicit publication_slots metadata before updates"
         )
-    slot_ids = {
-        entry.get("id")
-        for entry in slot_entries
-        if isinstance(entry, dict) and isinstance(entry.get("id"), str)
-    }
-    if slot not in slot_ids:
-        slot_entries.append({"id": slot, "status": "temporary"})
+    status = _publication_status(official)
+    for entry in slot_entries:
+        if isinstance(entry, dict) and entry.get("id") == slot:
+            entry["status"] = status
+            break
+    else:
+        slot_entries.append({"id": slot, "status": status})
     config["publication_slots"] = slot_entries
     retained = [
         entry for entry in config["snapshots"]
@@ -320,10 +336,12 @@ def _report(
     slot: str,
     label: str,
     corpus: dict[str, int],
+    publication_status: str,
 ) -> dict[str, Any]:
     metadata = context.metadata
     return {
         "season": metadata["season"], "publication_slot": slot, "display_label": label,
+        "publication_status": publication_status,
         "requested_cutoff": metadata["requested_cutoff"], "effective_cutoff": metadata["effective_cutoff"],
         "source_retrieved_at": metadata["source_retrieved_at"],
         "source_retrieval_times": metadata["source_retrieval_times"],
@@ -461,6 +479,7 @@ def render_review_markdown(report: dict[str, Any]) -> str:
     return (
         "# GippyRank weekly publication candidate\n\n"
         f"- Publication slot: `{report['publication_slot']}` ({report['display_label']})\n"
+        f"- Publication status: `{report['publication_status'].title() if report['publication_status'] == 'official' else 'Interim'}`\n"
         f"- Acquisition/effective cutoff: `{report['source_retrieved_at']}` / `{report['effective_cutoff']}`\n"
         f"- Source retrieval times: FBS `{report['source_retrieval_times'].get('fbs')}`; FCS `{report['source_retrieval_times'].get('fcs')}`\n"
         f"- Eligible games: `{report['eligible_game_count']}`; lower-division excluded: `{report['excluded_lower_division_games']}`\n"
@@ -498,6 +517,7 @@ def render_review_markdown(report: dict[str, Any]) -> str:
 def prepare_weekly_update(
     *, season: int, root: Path | None = None, display_label: str | None = None,
     publication_slot: str | None = None, retrieved_at: datetime | None = None,
+    official: bool = False,
 ) -> WeeklyUpdate:
     """Fetch, infer, validate, and prepare static publication data atomically.
 
@@ -512,6 +532,7 @@ def prepare_weekly_update(
     label = display_label.strip() if display_label else _label(requested)
     if not label:
         raise ValueError("display_label must not be blank when supplied")
+    publication_status = _publication_status(official)
     config_path = root / "site/publish_config.json"
     config = _load_json(config_path)
     with tempfile.TemporaryDirectory(prefix="gippyrank-weekly-", dir=root) as temp:
@@ -538,7 +559,15 @@ def prepare_weekly_update(
             generation_timestamp=requested,
         )
         validate_performance_against_context(context, performance)
-        report = _report(context, history, performance, slot=slot, label=label, corpus=corpus)
+        report = _report(
+            context,
+            history,
+            performance,
+            slot=slot,
+            label=label,
+            corpus=corpus,
+            publication_status=publication_status,
+        )
         previous_context = _previous_rows(
             root, config, "context", season=season, publication_slot=slot
         )
@@ -570,7 +599,15 @@ def prepare_weekly_update(
         report["history_movers"] = _movement(history, previous_history)
         report["h_c_disagreements"] = _disagreements(context, history)
         report["newly_rated_teams"] = _newly_rated(performance, previous_performance)
-        if not _is_publishable_change(root, config, context, history, performance):
+        if not _is_publishable_change(
+            root,
+            config,
+            context,
+            history,
+            performance,
+            publication_slot=slot,
+            publication_status=publication_status,
+        ):
             effective = datetime.fromisoformat(str(context.metadata["effective_cutoff"]))
             return WeeklyUpdate(
                 season, slot, label, requested, effective, context, history, performance,
@@ -602,13 +639,22 @@ def prepare_weekly_update(
         performance=performance,
         slot=slot,
         label=label,
+        official=official,
     )
     build_site_data(root=root, config_path=config_path, output_directory=root / "site/data")
     first_export = _tree_hash(root / "site/data")
     build_site_data(root=root, config_path=config_path, output_directory=root / "site/data")
     if _tree_hash(root / "site/data") != first_export:
         raise ValueError("Static site export is not deterministic")
-    report = _report(context, history, performance, slot=slot, label=label, corpus=corpus)
+    report = _report(
+        context,
+        history,
+        performance,
+        slot=slot,
+        label=label,
+        corpus=corpus,
+        publication_status=publication_status,
+    )
     report["new_eligible_game_count"] = len(set(context.metadata["included_game_ids"]) - previous_ids)
     report["context_movers"] = _movement(context, previous_context)
     report["history_movers"] = _movement(history, previous_history)
@@ -657,6 +703,11 @@ def main() -> None:
     parser.add_argument("--season", type=int, required=True)
     parser.add_argument("--display-label")
     parser.add_argument("--publication-slot")
+    parser.add_argument(
+        "--official",
+        action="store_true",
+        help="Mark the generated publication slot as Official (default: Interim)",
+    )
     parser.add_argument("--github-output", type=Path)
     parser.add_argument("--github-summary", type=Path)
     args = parser.parse_args()
@@ -666,6 +717,7 @@ def main() -> None:
         root=root,
         display_label=args.display_label,
         publication_slot=args.publication_slot,
+        official=args.official,
     )
     result = {"published": update.published, "publication_slot": update.publication_slot, "report": update.report}
     if args.github_output:
