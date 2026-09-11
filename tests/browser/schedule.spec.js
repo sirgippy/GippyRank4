@@ -111,32 +111,51 @@ test.describe("Schedule browser smoke tests", () => {
     expect(await page.locator(scheduleCards).count()).toBeGreaterThanOrEqual(marqueeCount);
   });
 
-  test("keeps team identity readable and the page within the viewport", async ({ page }) => {
+  test("keeps short team identities readable on both sides of controlled matchups", async ({ page }) => {
     await useScheduleLayoutFixture(page);
     await loadSchedule(page);
     await expect(page.locator("#week-select")).toHaveValue("fixture-week");
     await expectGamesRendered(page);
 
-    const miami = page.locator(".weekly-team-link").filter({ hasText: /^Miami$/ });
-    await expect(miami).toHaveCount(1);
-    await expect(miami).toBeVisible();
-    const identity = miami.locator("..");
-    await expect(identity.locator(".team-logo-frame")).toHaveCount(1);
-    await expect(identity.locator(".weekly-team-rank")).toHaveCount(1);
-    await expect(identity).toContainText("Miami");
+    const expectedMatchups = [
+      ["Miami", "Alabama"],
+      ["UCF", "Miami"],
+      ["Alabama", "UCF"],
+    ];
+    const matchupNames = await page.locator(".weekly-matchup").evaluateAll((matchups) => matchups.slice(0, 3).map((matchup) => (
+      [...matchup.querySelectorAll(":scope > .weekly-team-row .weekly-team-link")].map((link) => link.textContent.trim())
+    )));
+    expect(matchupNames).toEqual(expectedMatchups);
 
-    const textLayout = await miami.evaluate((element) => {
-      const range = document.createRange();
-      range.selectNodeContents(element);
-      const style = getComputedStyle(element);
-      return {
-        lineCount: range.getClientRects().length,
-        height: element.getBoundingClientRect().height,
-        lineHeight: Number.parseFloat(style.lineHeight),
-      };
-    });
-    expect(textLayout.lineCount).toBe(1);
-    expect(textLayout.height).toBeLessThanOrEqual(textLayout.lineHeight + 1);
+    for (const [teamName, count] of [["Miami", 2], ["Alabama", 2], ["UCF", 3]]) {
+      const links = page.locator(".weekly-team-link").filter({ hasText: new RegExp(`^${teamName}$`) });
+      await expect(links).toHaveCount(count);
+      for (let index = 0; index < count; index += 1) {
+        const link = links.nth(index);
+        await expect(link).toBeVisible();
+        const identity = link.locator("..");
+        await expect(identity.locator(".team-logo-frame")).toHaveCount(1);
+        await expect(identity.locator(".weekly-team-rank")).toHaveCount(1);
+        await expect(identity).toContainText(teamName);
+
+        const textLayout = await link.evaluate((element) => {
+          const range = document.createRange();
+          range.selectNodeContents(element);
+          const style = getComputedStyle(element);
+          const box = element.getBoundingClientRect();
+          return {
+            lineCount: range.getClientRects().length,
+            height: box.height,
+            width: box.width,
+            lineHeight: Number.parseFloat(style.lineHeight),
+          };
+        });
+        expect(textLayout.lineCount).toBe(1);
+        expect(textLayout.height).toBeLessThanOrEqual(textLayout.lineHeight + 1);
+        expect(textLayout.width).toBeGreaterThan(0);
+        await expect(identity).toHaveCSS("display", "flex");
+      }
+    }
 
     const overflow = await page.evaluate(() => ({
       body: document.body.scrollWidth,

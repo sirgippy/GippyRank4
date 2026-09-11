@@ -22,7 +22,9 @@
       "url_template": "https://fixtures.invalid/{handle}.svg",
       "handles": {
         "fixture-miami": "miami",
-        "fixture-opponent": "opponent"
+        "fixture-alabama": "alabama",
+        "fixture-ucf": "ucf",
+        "fixture-north-carolina": "north-carolina"
       }
     }
   },
@@ -30,7 +32,10 @@
     "snapshot_id": "browser-layout-fixture",
     "season": 2026,
     "team_rankings": {
-      "fixture-miami": {"rated": true, "display_rank": 12}
+      "fixture-miami": {"rated": true, "display_rank": 12},
+      "fixture-alabama": {"rated": true, "display_rank": 3},
+      "fixture-ucf": {"rated": true, "display_rank": 20},
+      "fixture-north-carolina": {"rated": true, "display_rank": 35}
     },
     "weeks": [
       {
@@ -39,10 +44,13 @@
         "games": [
           {
             "date": "2026-09-05T18:00:00Z",
-            "state": "future",
+            "state": "completed",
             "neutral_site": false,
             "marquee": true,
-            "future_prediction_id": "fixture-prediction",
+            "game_id": "fixture-miami-alabama",
+            "conference_game": true,
+            "winner_team_id": "fixture-alabama",
+            "score": {"away": 24, "home": 31},
             "away_team": {
               "team_id": "fixture-miami",
               "team_name": "Miami",
@@ -50,32 +58,80 @@
               "conference": "Fixture Conference"
             },
             "home_team": {
-              "team_id": "fixture-opponent",
-              "team_name": "Fixture State",
+              "team_id": "fixture-alabama",
+              "team_name": "Alabama",
+              "subdivision": "fbs",
+              "conference": "Fixture Conference"
+            }
+          },
+          {
+            "date": "2026-09-05T20:30:00Z",
+            "state": "completed",
+            "neutral_site": false,
+            "marquee": true,
+            "game_id": "fixture-ucf-miami",
+            "conference_game": true,
+            "winner_team_id": "fixture-ucf",
+            "score": {"away": 28, "home": 17},
+            "away_team": {
+              "team_id": "fixture-ucf",
+              "team_name": "UCF",
+              "subdivision": "fbs",
+              "conference": "Fixture Conference"
+            },
+            "home_team": {
+              "team_id": "fixture-miami",
+              "team_name": "Miami",
+              "subdivision": "fbs",
+              "conference": "Fixture Conference"
+            }
+          },
+          {
+            "date": "2026-09-05T23:00:00Z",
+            "state": "completed",
+            "neutral_site": false,
+            "marquee": true,
+            "game_id": "fixture-alabama-ucf",
+            "conference_game": true,
+            "winner_team_id": "fixture-ucf",
+            "score": {"away": 10, "home": 42},
+            "away_team": {
+              "team_id": "fixture-alabama",
+              "team_name": "Alabama",
+              "subdivision": "fbs",
+              "conference": "Fixture Conference"
+            },
+            "home_team": {
+              "team_id": "fixture-ucf",
+              "team_name": "UCF",
+              "subdivision": "fbs",
+              "conference": "Fixture Conference"
+            }
+          },
+          {
+            "date": "2026-09-05T23:30:00Z",
+            "state": "completed",
+            "neutral_site": false,
+            "marquee": false,
+            "game_id": "fixture-ucf-north-carolina",
+            "conference_game": false,
+            "winner_team_id": "fixture-north-carolina",
+            "score": {"away": 14, "home": 21},
+            "away_team": {
+              "team_id": "fixture-ucf",
+              "team_name": "UCF",
+              "subdivision": "fbs",
+              "conference": "Fixture Conference"
+            },
+            "home_team": {
+              "team_id": "fixture-north-carolina",
+              "team_name": "North Carolina",
               "subdivision": "fbs",
               "conference": "Fixture Conference"
             }
           }
         ]
       }
-    ],
-    "future_predictions": {
-      "fixture-prediction": {
-        "home_team_name": "Fixture State",
-        "away_team_name": "Miami",
-        "home_win_probability": 0.55,
-        "away_win_probability": 0.45,
-        "expected_home_margin": 1.5,
-        "median_home_margin": 1.0,
-        "margin_interval_50": [-3, 6],
-        "margin_interval_80": [-10, 13],
-        "margin_interval_95": [-17, 20]
-      }
-    },
-    "future_margin_axis": {
-      "min_margin": -30,
-      "max_margin": 30,
-      "probability_encoding": {"scale": 1}
-    }
+    ]
   }
 }
