@@ -1834,10 +1834,59 @@ def _weekly_performance_summary(
     return summary
 
 
+def _weekly_team_rankings(rankings: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Project the selected publication's display ranks for Schedule consumers."""
+    return {
+        str(row["team_id"]): {
+            "rated": bool(row.get("rated")),
+            "display_rank": row.get("display_rank") if row.get("rated") else "NR",
+        }
+        for row in rankings
+    }
+
+
+def _weekly_marquee_reasons(
+    game: dict[str, Any],
+    team_rankings: dict[str, dict[str, Any]],
+    future_predictions: dict[str, Any],
+) -> list[str]:
+    """Return the frozen Marquee V1 reasons for one canonical game."""
+    home_rank = team_rankings.get(str(game["home_team_id"]))
+    away_rank = team_rankings.get(str(game["away_team_id"]))
+    home_top40 = bool(
+        home_rank
+        and home_rank["rated"]
+        and int(home_rank["display_rank"]) <= MARQUEE_RULE["top_rank_threshold"]
+    )
+    away_top40 = bool(
+        away_rank
+        and away_rank["rated"]
+        and int(away_rank["display_rank"]) <= MARQUEE_RULE["top_rank_threshold"]
+    )
+    reasons: list[str] = []
+    if home_top40 and away_top40:
+        reasons.append("top40_matchup")
+    prediction = (
+        future_predictions.get(str(game["future_prediction_id"]))
+        if game.get("future_prediction_id") is not None
+        else None
+    )
+    if (
+        game["state"] == "future"
+        and (home_top40 or away_top40)
+        and isinstance(prediction, dict)
+        and abs(float(prediction["expected_home_margin"]))
+        < MARQUEE_RULE["competitive_margin_threshold"]
+    ):
+        reasons.append("top40_competitive_prediction")
+    return reasons
+
+
 def build_weekly_game_artifact(
     team_season_artifact: dict[str, Any],
     metadata: dict[str, Any] | None = None,
-    rankings: list[dict[str, Any]] | None = None,
+    *,
+    rankings: list[dict[str, Any]],
 ) -> dict[str, Any]:
     """Build one canonical, game-centric view from a team-season artifact.
 
@@ -1849,7 +1898,6 @@ def build_weekly_game_artifact(
     each performance summary.
     """
     metadata = metadata or team_season_artifact
-    rankings = rankings or []
     cutoff = _iso_datetime(team_season_artifact.get("effective_cutoff"))
     if cutoff is None:
         cutoff = _iso_datetime(metadata.get("effective_cutoff"))
@@ -2025,34 +2073,9 @@ def build_weekly_game_artifact(
                 "games": grouped,
             }
         )
-    team_rankings = {
-        str(row["team_id"]): {
-            "rated": bool(row.get("rated")),
-            "display_rank": row.get("display_rank") if row.get("rated") else "NR",
-        }
-        for row in rankings
-    }
+    team_rankings = _weekly_team_rankings(rankings)
     for game in games:
-        home_rank = team_rankings.get(game["home_team_id"])
-        away_rank = team_rankings.get(game["away_team_id"])
-        home_top40 = bool(home_rank and home_rank["rated"] and int(home_rank["display_rank"]) <= MARQUEE_RULE["top_rank_threshold"])
-        away_top40 = bool(away_rank and away_rank["rated"] and int(away_rank["display_rank"]) <= MARQUEE_RULE["top_rank_threshold"])
-        reasons: list[str] = []
-        if home_top40 and away_top40:
-            reasons.append("top40_matchup")
-        prediction = (
-            future_predictions.get(str(game["future_prediction_id"]))
-            if game.get("future_prediction_id") is not None
-            else None
-        )
-        if (
-            game["state"] == "future"
-            and (home_top40 or away_top40)
-            and isinstance(prediction, dict)
-            and abs(float(prediction["expected_home_margin"]))
-            < MARQUEE_RULE["competitive_margin_threshold"]
-        ):
-            reasons.append("top40_competitive_prediction")
+        reasons = _weekly_marquee_reasons(game, team_rankings, future_predictions)
         game["marquee"] = bool(reasons)
         game["marquee_reasons"] = reasons
     weekly_artifact = {
@@ -2088,6 +2111,7 @@ def _validate_weekly_game_artifact(
     artifact: dict[str, Any],
     team_season_artifact: dict[str, Any],
     metadata: dict[str, Any],
+    rankings: list[dict[str, Any]],
 ) -> None:
     """Fail closed if the canonical weekly fold loses source consistency."""
     snapshot_id = str(metadata.get("snapshot_id", artifact.get("snapshot_id", "unknown")))
@@ -2126,6 +2150,9 @@ def _validate_weekly_game_artifact(
     team_rankings = artifact.get("team_rankings")
     if not isinstance(team_rankings, dict):
         raise SiteDataValidationError(f"{snapshot_id}: weekly team rankings must be an object")
+    expected_team_rankings = _weekly_team_rankings(rankings)
+    if team_rankings != expected_team_rankings:
+        raise SiteDataValidationError(f"{snapshot_id}: weekly team rankings do not match publication")
     for ranking in team_rankings.values():
         if not isinstance(ranking, dict) or not isinstance(ranking.get("rated"), bool):
             raise SiteDataValidationError(f"{snapshot_id}: weekly team ranking is invalid")
@@ -2150,8 +2177,13 @@ def _validate_weekly_game_artifact(
                 raise SiteDataValidationError(f"{snapshot_id}: weekly performance display is missing")
         if game.get("state") in {"future", "cancelled", "unresolved"} and game.get("score") is not None:
             raise SiteDataValidationError(f"{snapshot_id}: non-completed weekly game reveals a score")
-        if not isinstance(game.get("marquee"), bool) or not isinstance(game.get("marquee_reasons"), list):
-            raise SiteDataValidationError(f"{snapshot_id}: weekly Marquee classification is invalid")
+        expected_reasons = _weekly_marquee_reasons(
+            game, expected_team_rankings, predictions
+        )
+        if game.get("marquee") != bool(expected_reasons):
+            raise SiteDataValidationError(f"{snapshot_id}: weekly Marquee flag is incorrect")
+        if game.get("marquee_reasons") != expected_reasons:
+            raise SiteDataValidationError(f"{snapshot_id}: weekly Marquee reasons are incorrect")
 
 
 def _validate_team_season_artifact(
@@ -2574,9 +2606,9 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
         weekly_games = build_weekly_game_artifact(
             team_seasons,
             {**metadata, "display_label": selected_snapshot.display_label},
-            rankings,
+            rankings=rankings,
         )
-        _validate_weekly_game_artifact(weekly_games, team_seasons, metadata)
+        _validate_weekly_game_artifact(weekly_games, team_seasons, metadata, rankings)
         rendered_team_identities.update(_rendered_team_identities(team_seasons))
         records = _records(source / "included_games.csv")
         for row in rankings:
@@ -2620,9 +2652,9 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
         distribution = prepared.distribution
         team_seasons = prepared.team_seasons
         weekly_games = prepared.weekly_games or build_weekly_game_artifact(
-            team_seasons, metadata, rankings
+            team_seasons, metadata, rankings=rankings
         )
-        _validate_weekly_game_artifact(weekly_games, team_seasons, metadata)
+        _validate_weekly_game_artifact(weekly_games, team_seasons, metadata, rankings)
         relative_data_path = f"data/snapshots/{snapshot_id}.json"
         relative_distribution_path = f"data/distributions/{snapshot_id}.json"
         relative_team_seasons_path = f"data/team-seasons/{snapshot_id}.json"

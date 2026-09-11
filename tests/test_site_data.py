@@ -330,6 +330,31 @@ def test_weekly_artifact_deduplicates_games_and_reuses_canonical_sources(
     assert future["away_performance"] is None
 
 
+def test_weekly_rank_lookup_matches_every_selected_ranking_view(tmp_path: Path) -> None:
+    manifest = build_site_data(
+        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
+    )
+    saw_performance_nr = False
+    for entry in manifest["snapshots"]:
+        snapshot = json.loads(
+            (tmp_path / "data" / entry["data_path"].removeprefix("data/")).read_text()
+        )
+        weekly = json.loads(
+            (tmp_path / "data" / entry["week_games_path"].removeprefix("data/")).read_text()
+        )
+        expected = {
+            str(row["team_id"]): {
+                "rated": bool(row["rated"]),
+                "display_rank": row["display_rank"] if row["rated"] else "NR",
+            }
+            for row in snapshot["rankings"]
+        }
+        assert weekly["team_rankings"] == expected
+        if entry["ranking_family"] == "performance":
+            saw_performance_nr |= any(not row["rated"] for row in snapshot["rankings"])
+    assert saw_performance_nr
+
+
 def test_weekly_builder_orders_week_zero_and_named_weeks_once() -> None:
     artifact = {
         "schema_version": "1.0",
@@ -384,7 +409,7 @@ def test_weekly_builder_orders_week_zero_and_named_weeks_once() -> None:
             }
         },
     }
-    weekly = site_data.build_weekly_game_artifact(artifact)
+    weekly = site_data.build_weekly_game_artifact(artifact, rankings=[])
     assert [week["week"] for week in weekly["weeks"]] == [0, 1]
     assert [game["game_id"] for week in weekly["weeks"] for game in week["games"]] == [
         "week-0",
@@ -392,6 +417,109 @@ def test_weekly_builder_orders_week_zero_and_named_weeks_once() -> None:
     ]
     assert weekly["weeks"][0]["games"][0]["home_team_id"] == "3"
     assert weekly["weeks"][0]["games"][0]["away_team_id"] == "1"
+
+
+def test_weekly_builder_freezes_rank_and_marquee_v1_semantics() -> None:
+    def game(
+        game_id: str,
+        home_id: str,
+        away_id: str,
+        state: str,
+        *,
+        prediction_id: str | None = None,
+        away_classification: str = "fbs",
+    ) -> tuple[str, dict[str, object]]:
+        return home_id, {
+            "game_id": game_id,
+            "week": 2,
+            "date": "2026-09-12T12:00:00Z",
+            "opponent_id": away_id,
+            "opponent_name": f"Team {away_id}",
+            "opponent_classification": away_classification,
+            "site": "home",
+            "game_state": state,
+            "future_prediction_id": prediction_id,
+        }
+
+    games = [
+        game("top40", "1", "2", "completed"),
+        game("margin-149", "3", "5", "future", prediction_id="margin-149"),
+        game("margin-150", "3", "6", "future", prediction_id="margin-150"),
+        game("low-ranked-close", "7", "8", "future", prediction_id="low-ranked-close"),
+        game("completed-no-prediction", "9", "10", "completed"),
+        game("completed-top40", "11", "12", "completed"),
+        game("fcs", "1", "99", "future", away_classification="fcs"),
+    ]
+    teams: dict[str, dict[str, object]] = {}
+    for team_id, entry in games:
+        teams.setdefault(
+            team_id,
+            {
+                "team_id": team_id,
+                "team_name": f"Team {team_id}",
+                "conference": "Test",
+                "games": [],
+            },
+        )["games"].append(entry)
+    predictions = {
+        game_id: {
+            "game_id": game_id,
+            "home_team_id": home_id,
+            "away_team_id": entry["opponent_id"],
+            "expected_home_margin": margin,
+        }
+        for game_id, home_id, margin in (
+            ("margin-149", "3", 14.9),
+            ("margin-150", "3", 15.0),
+            ("low-ranked-close", "7", 1.0),
+        )
+        for _, entry in games
+        if entry["game_id"] == game_id
+    }
+    source = {
+        "snapshot_id": "2026-weekly-marquee-test-context",
+        "season": 2026,
+        "snapshot_type": "weekly",
+        "effective_cutoff": "2026-09-01T00:00:00+00:00",
+        "future_predictions": predictions,
+        "teams": teams,
+    }
+    rankings = [
+        {"team_id": team_id, "rated": rated, "display_rank": display_rank}
+        for team_id, rated, display_rank in (
+            ("1", True, 40), ("2", True, 30), ("3", True, 12),
+            ("5", True, 70), ("6", True, 70), ("7", True, 41),
+            ("8", True, 42), ("9", True, 15), ("10", True, 60),
+            ("11", True, 15), ("12", True, 30), ("13", False, 999),
+        )
+    ]
+
+    weekly = site_data.build_weekly_game_artifact(source, rankings=rankings)
+    games_by_id = {
+        game["game_id"]: game
+        for week in weekly["weeks"]
+        for game in week["games"]
+    }
+    assert weekly["team_rankings"]["13"] == {"rated": False, "display_rank": "NR"}
+    assert "99" not in weekly["team_rankings"]
+    assert games_by_id["top40"]["marquee"] is True
+    assert games_by_id["top40"]["marquee_reasons"] == ["top40_matchup"]
+    assert games_by_id["margin-149"]["marquee"] is True
+    assert games_by_id["margin-150"]["marquee"] is False
+    assert games_by_id["low-ranked-close"]["marquee"] is False
+    assert games_by_id["completed-no-prediction"]["marquee"] is False
+    assert games_by_id["completed-top40"]["marquee"] is True
+    assert games_by_id["fcs"]["marquee"] is False
+
+    invalid = json.loads(json.dumps(weekly))
+    next(
+        game for week in invalid["weeks"] for game in week["games"]
+        if game["game_id"] == "top40"
+    )["marquee"] = False
+    with pytest.raises(SiteDataValidationError, match="Marquee flag"):
+        site_data._validate_weekly_game_artifact(
+            invalid, source, {"snapshot_id": source["snapshot_id"]}, rankings
+        )
 
 
 def test_default_week_key_follows_snapshot_cutoff() -> None:
