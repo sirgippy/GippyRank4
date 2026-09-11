@@ -129,6 +129,14 @@ uv run pytest -q
 The test inventory, pruning rationale, and timing report are maintained in
 [docs/test_suite.md](docs/test_suite.md).
 
+### Browser/UI validation
+
+The repository also includes lightweight Chromium checks for the static site.
+The Playwright configuration starts `site/` through the project's Python
+environment, so no separate server is required. See
+[docs/browser_validation.md](docs/browser_validation.md) for fresh-environment
+bootstrap and diagnostic artifact details.
+
 ## Weekly ranking update
 
 The reviewed publication path is deliberately separate from Pages deployment:

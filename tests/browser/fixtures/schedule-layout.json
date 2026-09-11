@@ -1,0 +1,81 @@
+{
+  "manifest": {
+    "default_publication_slot": "browser-fixture",
+    "seasons": [2026],
+    "ranking_families": [
+      {"id": "predictive", "label": "Predictive"}
+    ],
+    "snapshots": [
+      {
+        "snapshot_id": "browser-layout-fixture",
+        "season": 2026,
+        "ranking_family": "predictive",
+        "prior_family": "context",
+        "publication_slot": "browser-fixture",
+        "display_label": "Browser fixture",
+        "publication_status": "official",
+        "default_week": "fixture-week",
+        "week_games_path": "data/week-games/browser-layout-fixture.json"
+      }
+    ],
+    "team_logos": {
+      "url_template": "https://fixtures.invalid/{handle}.svg",
+      "handles": {
+        "fixture-miami": "miami",
+        "fixture-opponent": "opponent"
+      }
+    }
+  },
+  "artifact": {
+    "snapshot_id": "browser-layout-fixture",
+    "season": 2026,
+    "team_rankings": {
+      "fixture-miami": {"rated": true, "display_rank": 12}
+    },
+    "weeks": [
+      {
+        "key": "fixture-week",
+        "label": "Fixture week",
+        "games": [
+          {
+            "date": "2026-09-05T18:00:00Z",
+            "state": "future",
+            "neutral_site": false,
+            "marquee": true,
+            "future_prediction_id": "fixture-prediction",
+            "away_team": {
+              "team_id": "fixture-miami",
+              "team_name": "Miami",
+              "subdivision": "fbs",
+              "conference": "Fixture Conference"
+            },
+            "home_team": {
+              "team_id": "fixture-opponent",
+              "team_name": "Fixture State",
+              "subdivision": "fbs",
+              "conference": "Fixture Conference"
+            }
+          }
+        ]
+      }
+    ],
+    "future_predictions": {
+      "fixture-prediction": {
+        "home_team_name": "Fixture State",
+        "away_team_name": "Miami",
+        "home_win_probability": 0.55,
+        "away_win_probability": 0.45,
+        "expected_home_margin": 1.5,
+        "median_home_margin": 1.0,
+        "margin_interval_50": [-3, 6],
+        "margin_interval_80": [-10, 13],
+        "margin_interval_95": [-17, 20]
+      }
+    },
+    "future_margin_axis": {
+      "min_margin": -30,
+      "max_margin": 30,
+      "probability_encoding": {"scale": 1}
+    }
+  }
+}
