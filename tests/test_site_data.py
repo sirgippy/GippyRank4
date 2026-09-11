@@ -909,13 +909,31 @@ def test_publication_status_and_official_comparison_chain(tmp_path: Path) -> Non
         )
         assert current["comparison_snapshot_id"] == expected_snapshot_id
 
-    performance = next(
+    publication_order_by_slot = {
+        slot["id"]: index for index, slot in enumerate(publication_slots)
+    }
+    performance_entries = [
         entry
         for entry in manifest["snapshots"]
         if entry["ranking_family"] == "performance"
-        and entry["publication_slot"] == config["default_publication_slot"]
-    )
-    assert performance["comparison_snapshot_id"] is None
+    ]
+    for current in performance_entries:
+        current_order = publication_order_by_slot[current["publication_slot"]]
+        previous_official = max(
+            (
+                candidate
+                for candidate in performance_entries
+                if expected_status_by_slot[candidate["publication_slot"]] == "official"
+                and publication_order_by_slot[candidate["publication_slot"]]
+                < current_order
+            ),
+            key=lambda candidate: publication_order_by_slot[candidate["publication_slot"]],
+            default=None,
+        )
+        expected_snapshot_id = (
+            previous_official["snapshot_id"] if previous_official is not None else None
+        )
+        assert current["comparison_snapshot_id"] == expected_snapshot_id
 
 
 def test_comparison_resolution_uses_explicit_order_and_compatible_family() -> None:
