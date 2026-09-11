@@ -331,6 +331,7 @@ function updateBackLink(entry) {
   $("#rankings-view-link").href = rankingsPath;
   const scheduleUrl = new URL("./schedule.html", document.baseURI);
   scheduleUrl.search = url.search;
+  if (params.get("view") === "marquee") scheduleUrl.searchParams.set("view", "marquee");
   scheduleUrl.searchParams.set("week", params.get("week") ?? entry.default_week);
   const schedulePath = `${scheduleUrl.pathname}${scheduleUrl.search}`;
   $("#back-to-schedule").href = schedulePath;

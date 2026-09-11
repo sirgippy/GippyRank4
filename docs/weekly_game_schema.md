@@ -10,6 +10,15 @@ The manifest exposes its path, byte size, game count, and week count.  The
 rankings page does not load this artifact; its size is reported under
 `payload_stats.lazy_week_games_bytes`.
 
+Each weekly artifact also contains a snapshot-local `team_rankings` lookup.
+Rated FBS teams carry their selected publication `display_rank`; unrated FBS
+teams carry `NR`, and unsupported/FCS teams are absent.  Games carry the
+build-time `marquee` boolean and `marquee_reasons` list.  Marquee V1 is one
+authoritative rule: two rated Top-40 teams qualify, or an upcoming game with
+at least one rated Top-40 team and an absolute canonical expected home margin
+strictly below 15 points.  Completed games never receive a fabricated
+prediction.  The artifact records this contract in `marquee_rule`.
+
 ## Snapshot and week semantics
 
 `week` is copied from the processed CFBD schedule.  It is never inferred from

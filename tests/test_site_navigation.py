@@ -112,10 +112,24 @@ def test_state_preserving_schedule_links_keep_publication_context() -> None:
 
     assert 'const scheduleUrl = new URL("./schedule.html", document.baseURI);' in team
     assert "scheduleUrl.search = url.search;" in team
+    assert 'scheduleUrl.searchParams.set("view", "marquee")' in team
     assert 'scheduleUrl.searchParams.set("week", params.get("week") ?? entry.default_week);' in team
     assert 'const context = contextParams(entry, week).toString();' in schedule
     assert "scheduleUrl.search = context;" in schedule
     assert "next.set(\"week\", String(week));" in schedule
+
+
+def test_schedule_marquee_filter_is_deep_linkable_and_has_an_empty_state() -> None:
+    schedule = _page("schedule.html")
+    week = (ROOT / "site/assets/week.js").read_text(encoding="utf-8")
+
+    assert 'data-view="all"' in schedule
+    assert 'data-view="marquee"' in schedule
+    assert "view: params.get(\"view\") === \"marquee\" ? \"marquee\" : \"all\"" in week
+    assert 'if (state.view === "marquee") next.set("view", "marquee");' in week
+    assert 'const games = state.view === "marquee" ? (week.games || []).filter((game) => game.marquee)' in week
+    assert '"No marquee games this week."' in week
+    assert 'if (state.view === "marquee") next.set("view", "marquee"); else next.delete("view");' in week
 
 
 def test_schedule_naming_is_updated_in_documentation_and_ballot_copy() -> None:
