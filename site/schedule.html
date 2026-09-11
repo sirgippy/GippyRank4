@@ -33,9 +33,7 @@
       </section>
 
       <section class="schedule-heading" aria-live="polite">
-        <p class="snapshot-kind" id="schedule-kind">Loading Schedule…</p>
         <h1 id="schedule-page-title">Schedule</h1>
-        <p id="schedule-context" class="section-context"></p>
         <div class="week-picker" aria-label="Week selection">
           <button type="button" id="previous-week">← Previous</button>
           <label>Selected week<select id="week-select" aria-label="Selected week"></select></label>
@@ -43,22 +41,15 @@
         </div>
       </section>
 
-      <section class="schedule-summary" aria-labelledby="schedule-summary-title">
-        <h2 id="schedule-summary-title" class="sr-only">Schedule summary</h2>
-        <div id="schedule-summary-cards" class="week-summary-cards"></div>
-      </section>
-
       <section aria-labelledby="weekly-schedule-title">
-        <div class="section-heading">
-          <div><h2 id="weekly-schedule-title">Games</h2><p id="weekly-schedule-context" class="section-context"></p></div>
-        </div>
-        <p id="schedule-status" class="team-page-status" aria-live="polite">Loading Schedule…</p>
+        <div class="section-heading"><h2 id="weekly-schedule-title">Games</h2></div>
+        <p id="schedule-status" class="team-page-status sr-only" aria-live="polite">Loading Schedule…</p>
         <div id="weekly-schedule" class="weekly-schedule"></div>
       </section>
 
       <details class="schedule-method-note">
         <summary>How to read this week</summary>
-        <p>Completed games show both teams' inferred performance distributions: rank 1 is the best performance and rank N is the worst. Future games show one canonical home-minus-away predictive margin distribution with win probabilities and expected margin. The selected snapshot determines what was known; the schedule's week number determines where a game appears.</p>
+        <p>Completed games show how well each team played, adjusted for its opponent. Upcoming games show GippyRank's win probabilities and predicted margin.</p>
       </details>
     </main>
     <footer><div class="shell"><p>GippyRank rankings are model outputs, not AP, Coaches, or CFP poll inputs.</p><a href="./methodology.html">Methodology</a></div></footer>

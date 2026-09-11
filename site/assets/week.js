@@ -67,20 +67,8 @@ function localDateKey(value) {
   return `${date.getFullYear()}-${month}-${day}`;
 }
 
-function formatTimestamp(value) {
-  if (!value) return "an unknown cutoff";
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit",
-    timeZone: "UTC", timeZoneName: "short",
-  }).format(new Date(value));
-}
-
 function publicationStatusLabel(entry) {
   return entry.publication_status === "official" ? "Official" : "Interim";
-}
-
-function familyLabel() {
-  return state.family === "performance" ? "Performance" : "Predictive";
 }
 
 function labelFor(entry) {
@@ -198,17 +186,17 @@ function densitySvg(masses, { className, label, description, zero = false, tail 
 }
 
 function performancePanel(rating, display, axis, teamName) {
-  if (!rating) return node("p", "game-not-modeled", `${teamName}: performance unavailable.`);
+  if (!rating) return node("p", "game-not-modeled", `${teamName}: Performance rating unavailable for this game.`);
   const panel = node("div", "weekly-performance-panel");
   const grade = rating.performance_grade ? `${rating.performance_grade} · ` : "";
   panel.append(node("strong", "game-rating-title", `${teamName}: ${grade}${ordinal(rating.performance_percentile)} percentile`));
   if (Array.isArray(display) && axis) {
-    const label = `${teamName} inferred performance distribution from rank 1 through rank ${axis.max_rank}; rank 1 is best.`;
+    const label = `${teamName} performance distribution from rank 1 through rank ${axis.max_rank}; rank 1 is best.`;
     const description = `The central 80 percent interval is ranks ${rating.interval_80[0]} through ${rating.interval_80[1]}.`;
     const figure = node("figure", "game-distribution game-distribution-performance");
     figure.append(densitySvg(display, { className: "performance-distribution-chart", label, description }));
     const caption = node("figcaption", "distribution-axis");
-    caption.append(node("span", "axis-start", "#1 best"), node("span", "axis-label", "Inferred performance"), node("span", "axis-end", `#${axis.max_rank} worst`));
+    caption.append(node("span", "axis-start", "#1 best"), node("span", "axis-label", "Performance"), node("span", "axis-end", `#${axis.max_rank} worst`));
     figure.append(caption);
     panel.append(figure);
   }
@@ -235,7 +223,7 @@ function predictionRange(prediction, interval) {
 }
 
 function predictionPanel(prediction, axis) {
-  if (!prediction) return node("p", "game-not-modeled", "Prediction unavailable — the matchup lacks sufficient supported model representation.");
+  if (!prediction) return node("p", "game-not-modeled", "No prediction available for this matchup.");
   const panel = node("div", "weekly-prediction-panel");
   const favorite = prediction.home_win_probability >= prediction.away_win_probability
     ? [prediction.home_team_name, prediction.home_win_probability]
@@ -246,12 +234,12 @@ function predictionPanel(prediction, axis) {
   const display = prediction.display_distribution;
   if (display && Array.isArray(display.masses) && axis) {
     const tail = (Number(display.lower_tail_probability) + Number(display.upper_tail_probability)) / displayScale(axis);
-    const label = `Predictive margin distribution from ${prediction.away_team_name} by ${Math.abs(axis.min_margin)} to ${prediction.home_team_name} by ${axis.max_margin}; zero is even.`;
+    const label = `Predictive margin distribution from ${prediction.away_team_name} by ${Math.abs(axis.min_margin)} to ${prediction.home_team_name} by ${axis.max_margin}; even is centered.`;
     const description = `${percentage(prediction.home_win_probability)} home win probability and ${percentage(prediction.away_win_probability)} away win probability. Expected margin: ${expectedTeam} by ${expectedMargin.toFixed(1)}. ${percentage(tail)} of mass is outside the visible range.`;
     const figure = node("figure", "game-distribution game-distribution-future");
     figure.append(densitySvg(display.masses, { className: "future-distribution-chart", label, description, zero: true, tail: tail > 0.001 }));
     const caption = node("figcaption", "distribution-axis");
-    caption.append(node("span", "axis-start", `${prediction.away_team_name} by ${Math.abs(axis.min_margin)}`), node("span", "axis-label", "Home minus away · Even"), node("span", "axis-end", `${prediction.home_team_name} by ${axis.max_margin}`));
+    caption.append(node("span", "axis-start", `${prediction.away_team_name} by ${Math.abs(axis.min_margin)}`), node("span", "axis-label", "Even"), node("span", "axis-end", `${prediction.home_team_name} by ${axis.max_margin}`));
     figure.append(caption);
     if (tail > 0.001) figure.append(node("p", "distribution-tail-note", `${percentage(tail)} of predictive mass is beyond the visible range.`));
     panel.append(figure);
@@ -266,26 +254,27 @@ function predictionPanel(prediction, axis) {
   return panel;
 }
 
-function teamLink(team, entry, week) {
+function teamLink(team, entry, week, winner = false) {
   if (team.subdivision === "fbs") {
     const link = node("a", "weekly-team-link", team.team_name);
     link.href = teamPageUrl(team, entry, week);
-    link.setAttribute("aria-label", `Open ${team.team_name} season page at this snapshot`);
+    link.setAttribute("aria-label", `Open ${team.team_name} season page${winner ? "; winner" : ""}`);
     return link;
   } else {
     const label = node("span", "weekly-team-link", team.team_name);
-    label.setAttribute("aria-label", `${team.team_name}, ${team.subdivision.toUpperCase()} opponent`);
+    label.setAttribute("aria-label", `${team.team_name}, ${team.subdivision.toUpperCase()} opponent${winner ? "; winner" : ""}`);
     return label;
   }
 }
 
-function teamRow(team, score, entry, week) {
-  const row = node("div", "weekly-team-row");
+function teamRow(team, score, entry, week, winner = false) {
+  const row = node("div", `weekly-team-row${winner ? " is-winner" : ""}`);
   const identity = node("div", "weekly-team-identity");
   const logo = teamLogo(team.team_id);
   if (logo) identity.append(logo);
-  identity.append(teamLink(team, entry, week));
+  identity.append(teamLink(team, entry, week, winner));
   if (team.conference) identity.append(node("span", "team-conference", team.conference));
+  if (winner) identity.append(node("span", "weekly-winner-label", "Winner"));
   row.append(identity);
   if (score !== null && score !== undefined) row.append(node("strong", "weekly-score", String(score)));
   return row;
@@ -293,12 +282,12 @@ function teamRow(team, score, entry, week) {
 
 function stateLabel(game) {
   return {
-    completed: "Completed at snapshot",
-    future: "Future at snapshot",
-    cancelled: "Cancelled or postponed",
-    unresolved: "Not resolved by snapshot",
-    out_of_scope: "Outside model scope",
-  }[game.state] || "Schedule status unavailable";
+    completed: "Final",
+    future: "Upcoming",
+    cancelled: "Canceled / postponed",
+    unresolved: "Result unavailable",
+    out_of_scope: "Result unavailable",
+  }[game.state] || "Status unavailable";
 }
 
 function gameCard(game, artifact, entry, week) {
@@ -314,26 +303,33 @@ function gameCard(game, artifact, entry, week) {
   const secondTeam = game.neutral_site ? game.away_team : game.home_team;
   const firstScore = game.neutral_site ? homeScore : awayScore;
   const secondScore = game.neutral_site ? awayScore : homeScore;
-  matchup.append(teamRow(firstTeam, firstScore, entry, week), node("span", "weekly-at", game.neutral_site ? "neutral" : "at"), teamRow(secondTeam, secondScore, entry, week));
-  const context = node("p", "weekly-game-context", `${game.neutral_site ? "Neutral site" : `${game.home_team.team_name} home`} · ${game.conference_game ? "Conference game" : "Non-conference"}`);
+  const winnerId = game.state === "completed" ? game.winner_team_id : null;
+  matchup.append(
+    teamRow(firstTeam, firstScore, entry, week, firstTeam.team_id === winnerId),
+    node("span", "weekly-at", game.neutral_site ? "vs." : "at"),
+    teamRow(secondTeam, secondScore, entry, week, secondTeam.team_id === winnerId),
+  );
+  const context = node("p", "weekly-game-context", `${game.neutral_site ? "Neutral site · " : ""}${game.conference_game ? "Conference" : "Non-conference"}`);
   const body = node("div", "weekly-game-body");
   if (game.state === "completed") {
-    const result = game.winner_team_id ? `${game.home_team.team_id === game.winner_team_id ? game.home_team.team_name : game.away_team.team_name} won` : "Tie game";
-    body.append(node("p", "weekly-result", game.score ? `${result} · ${game.home_team.team_name} ${homeScore}–${awayScore} ${game.away_team.team_name}` : "Completed result unavailable at this snapshot."));
-    const performances = node("div", "weekly-performance-grid");
-    const homeDisplay = artifact.performance_displays?.[game.home_performance_ref];
-    const awayDisplay = artifact.performance_displays?.[game.away_performance_ref];
-    performances.append(performancePanel(game.home_performance, homeDisplay, artifact.performance_axis, game.home_team.team_name), performancePanel(game.away_performance, awayDisplay, artifact.performance_axis, game.away_team.team_name));
-    body.append(performances);
-    if (!game.home_performance && !game.away_performance) body.append(node("p", "game-not-modeled", "Not modeled — this completed game is outside eligible Performance evidence."));
+    if (!game.home_performance && !game.away_performance) {
+      body.append(node("p", "game-not-modeled", "Performance rating unavailable for this game."));
+    } else {
+      const performances = node("div", "weekly-performance-grid");
+      const homeDisplay = artifact.performance_displays?.[game.home_performance_ref];
+      const awayDisplay = artifact.performance_displays?.[game.away_performance_ref];
+      performances.append(performancePanel(game.home_performance, homeDisplay, artifact.performance_axis, game.home_team.team_name), performancePanel(game.away_performance, awayDisplay, artifact.performance_axis, game.away_team.team_name));
+      body.append(performances);
+    }
   } else if (game.state === "future") {
     body.append(predictionPanel(artifact.future_predictions?.[game.future_prediction_id], artifact.future_margin_axis));
   } else if (game.state === "cancelled") {
-    body.append(node("p", "game-not-modeled", "Cancelled or postponed — no prediction is shown."));
-  } else {
-    body.append(node("p", "game-not-modeled", "Not modeled — completed evidence was not available at the selected snapshot."));
+    // The concise state label is sufficient; no prediction is shown for this game.
+  } else if (game.state === "unresolved" || game.state === "out_of_scope") {
+    body.append(node("p", "game-not-modeled", "Result unavailable in this snapshot."));
   }
-  article.append(header, matchup, context, body);
+  article.append(header, matchup, context);
+  if (body.childNodes.length) article.append(body);
   return article;
 }
 
@@ -383,30 +379,17 @@ function renderWeekPicker(artifact, entry) {
   const defaultWeek = weeks.find((week) => week.key === String(entry?.default_week));
   const selected = requested || defaultWeek || weeks[0];
   state.weekKey = selected.key;
-  $("#week-select").replaceChildren(...weeks.map((week) => new Option(`${week.label} · ${week.scheduled_game_count} games`, week.key, week.key === selected.key, week.key === selected.key)));
+  $("#week-select").replaceChildren(...weeks.map((week) => new Option(week.label, week.key, week.key === selected.key, week.key === selected.key)));
   $("#week-select").value = selected.key;
   $("#previous-week").disabled = weeks.indexOf(selected) <= 0;
   $("#next-week").disabled = weeks.indexOf(selected) >= weeks.length - 1;
   return selected;
 }
 
-function renderSummary(week, entry, artifact) {
-  $("#schedule-kind").textContent = `${entry.season} ${entry.display_label} · ${publicationStatusLabel(entry)} publication`;
-  $("#schedule-page-title").textContent = "Schedule";
-  $("#schedule-context").textContent = `${week.label} · ${familyLabel()}${state.family === "predictive" ? ` · ${entry.prior_family === "history" ? "History" : "Context"}` : ""} · selected snapshot through ${formatTimestamp(artifact.effective_cutoff)}`;
-  $("#weekly-schedule-context").textContent = "One card per scheduled game · chronological within date groups · future predictions use one canonical home-minus-away orientation.";
-  const cards = [
-    ["Scheduled", week.scheduled_game_count],
-    ["Completed", week.completed_game_count],
-    ["Future", week.future_game_count],
-    ["Not resolved", week.unresolved_game_count + week.cancelled_game_count],
-  ].map(([label, value]) => {
-    const card = node("div", "week-summary-card");
-    card.append(node("strong", "", String(value)), node("span", "", label));
-    return card;
-  });
-  $("#schedule-summary-cards").replaceChildren(...cards);
-  $("#schedule-status").textContent = `${week.scheduled_game_count} scheduled games · ${week.completed_game_count} completed, ${week.future_game_count} future at ${formatTimestamp(artifact.effective_cutoff)}.`;
+function clearScheduleStatus() {
+  const status = $("#schedule-status");
+  status.textContent = "";
+  status.className = "team-page-status sr-only";
 }
 
 function renderSchedule(week, artifact, entry) {
@@ -452,7 +435,7 @@ async function load() {
     window.history.replaceState({}, "", canonicalUrl);
   }
   updateBackLink(entry, week.key);
-  renderSummary(week, entry, artifact);
+  clearScheduleStatus();
   renderSchedule(week, artifact, entry);
 }
 
