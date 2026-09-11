@@ -35,10 +35,52 @@ def test_schedule_has_canonical_name_and_route() -> None:
     assert "<title>Schedule · GippyRank4</title>" in schedule
     assert '<main class="shell schedule-page" aria-labelledby="schedule-page-title">' in schedule
     assert '<h1 id="schedule-page-title">Schedule</h1>' in schedule
-    assert 'id="schedule-context" class="section-context"' in schedule
     assert 'id="week-select" aria-label="Selected week"' in schedule
     assert 'src="./assets/week.js"' in schedule
     assert "Week games" not in schedule
+
+
+def test_schedule_presentation_keeps_the_primary_flow_scannable() -> None:
+    schedule = _page("schedule.html")
+    week = (ROOT / "site/assets/week.js").read_text(encoding="utf-8")
+
+    assert 'id="schedule-context"' not in schedule
+    assert 'id="schedule-kind"' not in schedule
+    assert 'class="schedule-summary"' not in schedule
+    assert 'id="schedule-summary-cards"' not in schedule
+    assert 'id="weekly-schedule-context"' not in schedule
+    assert 'class="team-page-status sr-only"' in schedule
+    assert "How to read this week" in schedule
+    assert "Completed games show how well each team played" in schedule
+    assert "Upcoming games show GippyRank's win probabilities" in schedule
+
+    for phrase in (
+        "Completed at snapshot",
+        "Future at snapshot",
+        "One card per scheduled game",
+        "canonical home-minus-away",
+        "selected snapshot through",
+        "Home minus away",
+        "Prediction unavailable —",
+        "Not modeled —",
+        "Inferred performance",
+    ):
+        assert phrase not in week
+
+    assert "completed: \"Final\"" in week
+    assert "future: \"Upcoming\"" in week
+    assert "cancelled: \"Canceled / postponed\"" in week
+    assert "unresolved: \"Result unavailable\"" in week
+    assert "No prediction available for this matchup." in week
+    assert "Performance rating unavailable for this game." in week
+    assert "Result unavailable in this snapshot." in week
+    assert "weekly-winner-label\", \"Winner\"" in week
+    assert "weekly-result" not in week
+    assert "scheduled_game_count" not in week
+    assert "Neutral site" in week
+    assert "team_name} home" not in week
+    assert 'node("span", "axis-label", "Even")' in week
+    assert 'node("span", "axis-label", "Performance")' in week
 
 
 def test_week_route_is_a_query_preserving_compatibility_shell() -> None:

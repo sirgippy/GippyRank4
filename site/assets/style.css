@@ -1093,37 +1093,6 @@ summary:focus-visible,
   cursor: not-allowed;
 }
 
-.schedule-summary {
-  margin-bottom: 22px;
-}
-
-.week-summary-cards {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.week-summary-card {
-  display: grid;
-  gap: 2px;
-  padding: 13px 14px;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--gold);
-  border-radius: 5px;
-}
-
-.week-summary-card strong {
-  font-size: 23px;
-  line-height: 1;
-}
-
-.week-summary-card span {
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 700;
-}
-
 .weekly-schedule {
   display: grid;
   gap: 20px;
@@ -1231,6 +1200,18 @@ summary:focus-visible,
   gap: 7px;
 }
 
+.weekly-team-row.is-winner .weekly-team-link {
+  color: var(--green);
+}
+
+.weekly-winner-label {
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
 .weekly-team-identity .team-conference {
   display: none;
 }
@@ -1268,13 +1249,6 @@ summary:focus-visible,
 
 .weekly-game-body {
   min-width: 0;
-}
-
-.weekly-result {
-  margin: 0 0 8px;
-  color: var(--ink);
-  font-size: 12px;
-  font-weight: 800;
 }
 
 .weekly-performance-grid {
@@ -2148,10 +2122,6 @@ summary:focus-visible,
 
   .game-card-body {
     margin-top: 12px;
-  }
-
-  .week-summary-cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .weekly-game-grid,
