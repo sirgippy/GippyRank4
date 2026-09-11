@@ -1,10 +1,5 @@
 {
-  "default_publication_slot": "2026-09-08",
-  "site_url": "https://sirgippy.github.io/GippyRank4/",
-  "redditcfb_team_handles": {
-    "path": "data/reference/redditcfb_team_handles.csv",
-    "source": "RedditCFB Team.handle reference, verified 2026-09-08"
-  },
+  "default_publication_slot": "2026-09-11",
   "publication_slots": [
     {
       "id": "2026-preseason",
@@ -25,13 +20,18 @@
     {
       "id": "2026-09-08",
       "status": "official"
+    },
+    {
+      "id": "2026-09-11",
+      "status": "temporary"
     }
   ],
-  "schema_version": "1.0",
-  "team_logos": {
-    "source": "RedditCFB",
-    "url_template": "https://cdn.redditcfb.com/60x40/cfb/{handle}.png"
+  "redditcfb_team_handles": {
+    "path": "data/reference/redditcfb_team_handles.csv",
+    "source": "RedditCFB Team.handle reference, verified 2026-09-08"
   },
+  "schema_version": "1.0",
+  "site_url": "https://sirgippy.github.io/GippyRank4/",
   "snapshots": [
     {
       "display_label": "Preseason",
@@ -97,6 +97,25 @@
       "display_label": "Week 2",
       "publication_slot": "2026-09-08",
       "source": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z/performance"
+    },
+    {
+      "display_label": "Sep. 11",
+      "publication_slot": "2026-09-11",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-11T17-02-26.077461Z-context/predictive/context"
+    },
+    {
+      "display_label": "Sep. 11",
+      "publication_slot": "2026-09-11",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-11T17-02-26.077461Z-history/predictive/history"
+    },
+    {
+      "display_label": "Sep. 11",
+      "publication_slot": "2026-09-11",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-11T17-02-26.077461Z/performance"
     }
-  ]
+  ],
+  "team_logos": {
+    "source": "RedditCFB",
+    "url_template": "https://cdn.redditcfb.com/60x40/cfb/{handle}.png"
+  }
 }
