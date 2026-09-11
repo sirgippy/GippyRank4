@@ -871,37 +871,50 @@ def test_publication_status_and_official_comparison_chain(tmp_path: Path) -> Non
     manifest = build_site_data(
         root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
     )
+    config = json.loads(CONFIG.read_text(encoding="utf-8"))
+    publication_slots = config["publication_slots"]
+    expected_status_by_slot = {
+        slot["id"]: slot["status"] for slot in publication_slots
+    }
+    context_entries = [
+        entry
+        for entry in manifest["snapshots"]
+        if entry["ranking_family"] == "predictive"
+        and entry["prior_family"] == "context"
+    ]
+    assert len(context_entries) == len(publication_slots)
     status_by_slot = {
         entry["publication_slot"]: entry["publication_status"]
-        for entry in manifest["snapshots"]
-        if entry["ranking_family"] == "predictive" and entry["prior_family"] == "context"
+        for entry in context_entries
     }
-    assert status_by_slot == {
-        "2026-preseason": "official",
-        "2026-sep-05": "temporary",
-        "2026-09-06": "temporary",
-        "2026-09-07": "temporary",
-        "2026-09-08": "official",
-    }
+    assert status_by_slot == expected_status_by_slot
 
-    def entry(slot: str, family: str = "context", ranking_family: str = "predictive"):
-        return next(
-            item
-            for item in manifest["snapshots"]
-            if item["publication_slot"] == slot
-            and item["ranking_family"] == ranking_family
-            and item.get("prior_family") == (family if ranking_family == "predictive" else None)
+    context_by_slot = {
+        entry["publication_slot"]: entry for entry in context_entries
+    }
+    for index, slot in enumerate(publication_slots):
+        previous_official_slot = next(
+            (
+                previous["id"]
+                for previous in reversed(publication_slots[:index])
+                if previous["status"] == "official"
+            ),
+            None,
         )
+        current = context_by_slot[slot["id"]]
+        expected_snapshot_id = (
+            context_by_slot[previous_official_slot]["snapshot_id"]
+            if previous_official_slot is not None
+            else None
+        )
+        assert current["comparison_snapshot_id"] == expected_snapshot_id
 
-    preseason = entry("2026-preseason")
-    sep_5 = entry("2026-sep-05")
-    sep_7 = entry("2026-09-07")
-    week_2 = entry("2026-09-08")
-    performance = entry("2026-09-08", ranking_family="performance")
-    assert preseason["comparison_snapshot_id"] is None
-    assert sep_5["comparison_snapshot_id"] == preseason["snapshot_id"]
-    assert sep_7["comparison_snapshot_id"] == preseason["snapshot_id"]
-    assert week_2["comparison_snapshot_id"] == preseason["snapshot_id"]
+    performance = next(
+        entry
+        for entry in manifest["snapshots"]
+        if entry["ranking_family"] == "performance"
+        and entry["publication_slot"] == config["default_publication_slot"]
+    )
     assert performance["comparison_snapshot_id"] is None
 
 
@@ -955,7 +968,7 @@ def test_comparison_resolution_uses_explicit_order_and_compatible_family() -> No
     ) is week_2_performance
 
 
-def test_future_predictive_temporary_and_week3_compare_to_week2() -> None:
+def test_future_predictive_official_chain_advances_past_interim() -> None:
     def prepared(slot: str, order: int, status: str) -> site_data.PublicationComparison:
         return site_data.PublicationComparison(
             season=2026,
@@ -970,12 +983,16 @@ def test_future_predictive_temporary_and_week3_compare_to_week2() -> None:
 
     preseason = prepared("2026-preseason", 0, "official")
     week_2 = prepared("2026-09-08", 1, "official")
-    later_temporary = prepared("2026-09-09", 2, "temporary")
+    interim = prepared("2026-09-09", 2, "temporary")
     week_3 = prepared("2026-09-15", 3, "official")
-    snapshots = [preseason, week_2, later_temporary, week_3]
+    next_interim = prepared("2026-09-16", 4, "temporary")
+    snapshots = [preseason, week_2, interim, week_3, next_interim]
 
-    assert site_data.resolve_previous_official(later_temporary, snapshots) is week_2
+    assert site_data.resolve_previous_official(preseason, snapshots) is None
+    assert site_data.resolve_previous_official(week_2, snapshots) is preseason
+    assert site_data.resolve_previous_official(interim, snapshots) is week_2
     assert site_data.resolve_previous_official(week_3, snapshots) is week_2
+    assert site_data.resolve_previous_official(next_interim, snapshots) is week_3
 
 
 def test_rank_change_uses_display_rank_and_handles_nr_transitions() -> None:
