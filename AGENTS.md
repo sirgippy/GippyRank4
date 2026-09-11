@@ -49,3 +49,12 @@ GippyRank4 is a research project for probabilistic college-football ranking.
 - The browser command starts the local `site/` server itself through the configured Python environment; do not claim browser validation is unavailable without first attempting the configured Playwright checks.
 - For substantive layout changes, add or update browser-level regression coverage rather than relying solely on static tests.
 - In a fresh environment, install the Node dependencies and Chromium/Linux browser dependencies before running the UI checks; see `docs/browser_validation.md`.
+
+## Validation in Codex workers
+
+- The Codex Linux/WSL sandbox has a known limitation with Python asyncio cross-thread wakeups used by Starlette/FastAPI `TestClient`; `tests/test_api.py` may stall indefinitely there.
+- Do not change application code, API code, pytest fixtures, dependencies, or test behavior to work around this sandbox-specific hang.
+- In a sandboxed Codex worker, run the sandbox-compatible local suite with:
+  `uv run pytest -q --ignore=tests/test_api.py`
+- Validate `tests/test_api.py` and the complete suite through CI or an explicitly approved unsandboxed/escalated command. If an API test run goes silent and hangs, terminate it rather than waiting indefinitely.
+- Validation split: sandboxed Codex worker → run the sandbox-compatible suite locally and rely on CI or approved unsandboxed execution for API tests; normal WSL/CI → run the full suite.
