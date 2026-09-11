@@ -1265,8 +1265,8 @@ def test_rankings_header_is_compact_and_links_to_existing_about_disclosure() -> 
 
     assert "<title>GippyRank4</title>" in index
     assert 'aria-label="GippyRank4 home">GippyRank4</a>' in index
-    assert '<a class="about-link" href="#about-rankings">About these rankings</a>' in index
     assert '<details id="about-rankings" class="about-rankings">' in index
+    assert '<summary>About these rankings</summary>' in index
     assert '<section class="intro"' not in index
     assert "GippyRank 4.0" not in index
     assert "College football rankings, built from the games." not in index

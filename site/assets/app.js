@@ -20,7 +20,6 @@ const detailDialog = $("#team-detail");
 const aboutRankings = $("#about-rankings");
 
 if (window.location.hash === "#about-rankings") aboutRankings.open = true;
-$(".about-link")?.addEventListener("click", () => { aboutRankings.open = true; });
 
 function element(name, className, text) {
   const node = document.createElement(name);

@@ -103,31 +103,6 @@ button {
   outline-offset: 2px;
 }
 
-.about-link {
-  color: #fff;
-  font-size: 13px;
-  font-weight: 750;
-  text-decoration-color: var(--gold);
-  text-underline-offset: 3px;
-}
-
-.about-link:hover {
-  color: #fff;
-  text-decoration-thickness: 2px;
-}
-
-.rankings-about-link {
-  margin: 18px 0 0;
-}
-
-.rankings-about-link .about-link {
-  color: var(--green);
-}
-
-.rankings-about-link .about-link:hover {
-  color: var(--green);
-}
-
 .intro {
   padding: 28px 0 16px;
 }
@@ -603,7 +578,6 @@ footer a {
 button:focus-visible,
 select:focus-visible,
 summary:focus-visible,
-.about-link:focus-visible,
 .team-button:focus-visible,
 .team-link:focus-visible,
 .back-link a:focus-visible {
