@@ -82,6 +82,11 @@ def test_methodology_page_documents_every_production_layer() -> None:
     for phrase in (
         "Predictive Context",
         "Predictive History",
+        "Preseason starting points",
+        "starting distribution + game evidence",
+        "What shapes each preseason starting point",
+        "Context asks what we knew about this particular team before kickoff",
+        "History does not use current roster talent",
         "Historical Likelihood",
         "posterior PMF",
         "Performance rankings",

@@ -10,6 +10,15 @@ entries carry `prior_family` (`context` or `history`); Performance entries do
 not carry a prior family and instead expose `anchor_family: "context"`,
 `model_version: "1.0"`, and `method: "prior_stripping"`.
 
+Each Predictive manifest entry also carries the build-time resolved
+`preseason_snapshot_id`, `preseason_display_label`, and
+`preseason_distribution_path` for the official published preseason artifact
+with the same season and `prior_family`. The preseason entry points to itself.
+If an isolated publication configuration has no matching preseason artifact,
+these fields are null and the browser omits the comparison; the exporter never
+guesses a relationship from snapshot IDs, file order, or dates. Performance
+entries do not receive preseason-reference fields.
+
 Each `site/data/distributions/<snapshot-id>.json` artifact is deterministic,
 compact JSON with this contract:
 

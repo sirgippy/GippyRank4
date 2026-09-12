@@ -66,6 +66,9 @@ class PublicationMetadata(PublicModel):
     default_week: str | None = None
     comparison_snapshot_id: str | None = None
     comparison_display_label: str | None = None
+    preseason_snapshot_id: str | None = None
+    preseason_display_label: str | None = None
+    preseason_distribution_path: str | None = None
 
 
 class TeamIdentity(PublicModel):

@@ -25,10 +25,17 @@
         <label>Ranking family<select id="family-select" aria-label="Ranking family"></select></label>
         <label>Season<select id="season-select" aria-label="Season"></select></label>
         <label>Snapshot<select id="snapshot-select" aria-label="Snapshot"></select></label>
-        <fieldset id="prior-select" class="prior-select">
-          <legend>Predictive prior</legend>
-          <button type="button" data-prior="context">Context</button>
-          <button type="button" data-prior="history">History</button>
+        <fieldset id="prior-select" class="prior-select" aria-describedby="prior-explanation">
+          <legend>Preseason starting point</legend>
+          <div class="prior-buttons">
+            <button type="button" data-prior="context">Context</button>
+            <button type="button" data-prior="history">History</button>
+          </div>
+          <p id="prior-explanation" class="prior-explanation"></p>
+          <details id="prior-help" class="prior-help">
+            <summary>What's this?</summary>
+            <p id="prior-help-text"></p>
+          </details>
         </fieldset>
       </section>
 

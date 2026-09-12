@@ -25,6 +25,21 @@
         <div class="team-page-title"><span id="team-page-logo"></span><h1 id="team-page-title">Team season</h1></div>
         <p id="team-page-meta" class="team-page-meta"></p>
         <div id="team-ranking-summary" class="team-ranking-summary" aria-live="polite"></div>
+        <nav id="team-prior-switch" class="team-prior-switch" aria-label="Preseason starting point" hidden>
+          <span class="team-prior-switch-label">Preseason starting point</span>
+          <div class="team-prior-buttons">
+            <a id="team-context-link" data-prior-link="context" href="./team.html?prior=context">Context</a>
+            <a id="team-history-link" data-prior-link="history" href="./team.html?prior=history">History</a>
+          </div>
+        </nav>
+      </section>
+      <section id="preseason-starting-point-section" class="preseason-starting-point-section" aria-labelledby="preseason-starting-point-title" hidden>
+        <div class="section-heading"><div><h2 id="preseason-starting-point-title">Preseason starting point</h2><p class="section-context">The model's belief before any eligible game evidence.</p></div></div>
+        <div id="preseason-starting-point-content" class="preseason-starting-point-content" aria-live="polite"></div>
+      </section>
+      <section id="season-movement-section" class="season-movement-section" aria-labelledby="season-movement-title" hidden>
+        <div class="section-heading"><div><h2 id="season-movement-title">Season movement</h2><p id="season-movement-context" class="section-context"></p></div></div>
+        <div id="season-movement" class="season-movement" aria-live="polite"></div>
       </section>
       <section class="team-rating-explainer" aria-labelledby="game-ratings-title">
         <h2 id="game-ratings-title">The season story</h2>

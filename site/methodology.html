@@ -38,7 +38,7 @@
             <ol>
               <li><a href="#measure">What it measures</a></li>
               <li><a href="#latent-model">Latent team quality</a></li>
-              <li><a href="#priors">Preseason priors</a></li>
+              <li><a href="#preseason-starting-point">Preseason starting point</a></li>
               <li><a href="#likelihood">Historical Likelihood</a></li>
               <li><a href="#posterior">Posterior rankings</a></li>
               <li><a href="#families">Context vs History</a></li>
@@ -85,7 +85,7 @@
 
             <figure class="method-diagram" aria-labelledby="posterior-flow-caption">
               <div class="method-flow">
-                <div class="method-flow-step"><strong>Preseason prior</strong><span>What was plausible before this season’s eligible games</span></div>
+                <div class="method-flow-step"><strong>Preseason starting point</strong><span>What was plausible before this season’s eligible games</span></div>
                 <span class="method-flow-arrow" aria-hidden="true">+</span>
                 <div class="method-flow-step"><strong>Game evidence</strong><span>Score margin, site, and subdivision context</span></div>
                 <span class="method-flow-arrow" aria-hidden="true">→</span>
@@ -126,27 +126,51 @@
           </section>
 
           <section id="priors" class="methodology-section" aria-labelledby="priors-title">
+            <span id="preseason-starting-point" class="section-anchor" aria-hidden="true"></span>
             <p class="methodology-number">03</p>
-            <h2 id="priors-title">Preseason priors</h2>
-            <p>A prior is the model’s distribution before the target season’s eligible game evidence is applied. The two production prior families are alternative starting points for the same posterior engine.</p>
+            <h2 id="priors-title">Preseason starting points</h2>
+            <p>Before games are played, GippyRank needs a starting estimate for each team. Preseason information becomes an uncertain probability distribution over plausible quality levels. During the season, game evidence updates that distribution into the current estimate.</p>
+            <figure class="method-diagram" aria-labelledby="preseason-flow-caption">
+              <div class="method-flow">
+                <div class="method-flow-step"><strong>Preseason information</strong><span>What we know about the program and this year's team</span></div>
+                <span class="method-flow-arrow" aria-hidden="true">→</span>
+                <div class="method-flow-step"><strong>Starting probability distribution</strong><span>A range of plausible rank states before kickoff</span></div>
+              </div>
+              <p class="equation equation-large"><code>starting distribution + game evidence → current probability distribution</code></p>
+              <figcaption id="preseason-flow-caption">In model terms, the starting distribution is the Bayesian prior. It is a starting point—not a fixed preseason rank—and the later estimate is not calculated by adding points to an ordinal rank.</figcaption>
+            </figure>
             <div class="methodology-card-grid">
               <article class="methodology-card">
                 <p class="methodology-card-label">Primary predictive family</p>
                 <h3>Predictive Context <span class="version-badge" data-version-key="context_prior" data-version-prefix="C ">C 1.2</span></h3>
-                <p>Context starts with rank history and adds approved preseason context: coaching tenure, recruiting class rank and points, multi-year recruiting summaries and trend, team-talent composite, and returning production measures for total, passing, receiving, and rushing production.</p>
+                <p>Context asks what we knew about this particular team before kickoff. It uses program history plus information about this year's team: recruiting, roster talent, returning production, and coach tenure.</p>
                 <p>These inputs are preseason-semantic facts or historical rank summaries. They are not target-season game outcomes. Missing context uses training-only median imputation plus missingness indicators; rank-history cold starts retain the History fallback.</p>
               </article>
               <article class="methodology-card">
-                <p class="methodology-card-label">Alternative prior family</p>
+                <p class="methodology-card-label">Alternative starting-point family</p>
                 <h3>Predictive History <span class="version-badge" data-version-key="history_prior" data-version-prefix="H ">H 1.1</span></h3>
-                <p>History uses rank history only. Its production specification is a long-run baseline built from prior-season rank distributions, including lagged and long-run summaries. It deliberately does not add recruiting, roster, talent, or coaching inputs.</p>
-                <p>History is a sensitivity view of prior assumptions, not a second likelihood or a blend with Context.</p>
+                <p>History asks what we would believe from the program's track record alone. It uses previous program performance across recent and longer historical windows.</p>
+                <p>History does not use current roster talent, recruiting, returning production, or coach tenure.</p>
               </article>
             </div>
-            <p>Both priors are distributions, not point estimates. They carry uncertainty from the observed rank histories and preseason inputs into the later posterior and prediction calculations.</p>
+            <div class="methodology-table-wrap">
+              <table class="methodology-table comparison-table preseason-comparison-table">
+                <caption>What shapes each preseason starting point</caption>
+                <thead><tr><th scope="col">Information before kickoff</th><th scope="col">Context</th><th scope="col">History</th></tr></thead>
+                <tbody>
+                  <tr><th scope="row">Previous program performance</th><td>Yes</td><td>Yes</td></tr>
+                  <tr><th scope="row">Recruiting</th><td>Yes</td><td>No</td></tr>
+                  <tr><th scope="row">Roster talent</th><td>Yes</td><td>No</td></tr>
+                  <tr><th scope="row">Returning production</th><td>Yes</td><td>No</td></tr>
+                  <tr><th scope="row">Coach tenure</th><td>Yes</td><td>No</td></tr>
+                  <tr><th scope="row">Selected-season game evidence</th><td>Added after preseason</td><td>Added after preseason</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>Neither starting point declares that a team is exactly, say, #12. Two teams can have the same expected rank with different uncertainty, and a wider preseason distribution can move more readily when evidence arrives. Both families use the same Historical Likelihood and posterior update framework after kickoff.</p>
             <details class="methodology-details">
               <summary>Technical detail: prior fitting and cutoff safety</summary>
-              <p>The prior specifications are fit on earlier seasons and evaluated on temporally held-out seasons. Context inputs use a conservative August 15 preseason cutoff convention for the target season. The annual target-season artifacts prohibit target outcomes; a retrospective reconstruction is not treated as a contemporaneous source capture.</p>
+              <p>The prior specifications are fit on earlier seasons and evaluated on temporally held-out seasons. Context inputs use a conservative August 15 preseason cutoff convention for the target season. The annual target-season artifacts prohibit target outcomes; a retrospective reconstruction is not treated as a contemporaneous source capture. Exact feature names and regularization details remain in the technical model artifacts; the public page groups them by meaning.</p>
             </details>
           </section>
 
@@ -201,10 +225,10 @@
           <section id="families" class="methodology-section" aria-labelledby="families-title">
             <p class="methodology-number">06</p>
             <h2 id="families-title">Predictive Context vs Predictive History</h2>
-            <p>Context and History are alternative priors feeding the same posterior machinery. They use the same Historical Likelihood V1 and the same cutoff evidence; early-season differences primarily reflect what each family believed before the games began.</p>
+            <p>Context and History are alternative starting points feeding the same posterior machinery. They use the same Historical Likelihood V1 and the same cutoff evidence; early-season differences primarily reflect what each family believed before the games began.</p>
             <div class="methodology-table-wrap">
               <table class="methodology-table comparison-table">
-                <caption>Comparison of the two Predictive prior families</caption>
+                <caption>Comparison of the two Predictive starting-point families</caption>
                 <thead><tr><th scope="col">Family</th><th scope="col">Starting information</th><th scope="col">Game updates</th><th scope="col">Intended use</th></tr></thead>
                 <tbody>
                   <tr><th scope="row">Predictive Context</th><td>Rank history plus approved preseason context</td><td>Historical Likelihood V1</td><td>Primary predictive ranking</td></tr>
@@ -212,7 +236,7 @@
                 </tbody>
               </table>
             </div>
-            <p>Neither family is “the true prior.” Showing both makes the effect of preseason assumptions visible. The site’s primary predictive presentation is Context, while History remains a first-class selectable family.</p>
+            <p>Neither family is “the true starting point.” Showing both makes the effect of preseason assumptions visible. The site’s primary predictive presentation is Context, while History remains a first-class selectable family.</p>
           </section>
 
           <section id="performance" class="methodology-section" aria-labelledby="performance-title">
@@ -386,7 +410,7 @@
                 <caption>Validation metrics maintained by the project</caption>
                 <thead><tr><th scope="col">Layer</th><th scope="col">Metrics or checks</th><th scope="col">Reference</th></tr></thead>
                 <tbody>
-                  <tr><th scope="row">Preseason priors</th><td>NLL, CRPS, expected-rank MAE, median-rank MAE, interval coverage and width</td><td><a href="https://github.com/sirgippy/GippyRank4/blob/main/data/processed/preseason/context/context_prior_report.md">Context report</a> / <a href="https://github.com/sirgippy/GippyRank4/blob/main/data/processed/preseason/preseason_prior_report.md">History report</a></td></tr>
+                  <tr><th scope="row">Preseason starting points</th><td>NLL, CRPS, expected-rank MAE, median-rank MAE, interval coverage and width</td><td><a href="https://github.com/sirgippy/GippyRank4/blob/main/data/processed/preseason/context/context_prior_report.md">Context report</a> / <a href="https://github.com/sirgippy/GippyRank4/blob/main/data/processed/preseason/preseason_prior_report.md">History report</a></td></tr>
                   <tr><th scope="row">Posterior inference</th><td>Exact-vs-loopy marginal total variation, expected-rank error, convergence rate, and predeclared acceptance limits</td><td><a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/posterior_v1.md">Posterior V1</a></td></tr>
                   <tr><th scope="row">Future games</th><td>Win Brier, margin MAE, marginalized margin NLL, 50%/80%/95% interval coverage, and calibration error</td><td><a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/predictive_validation.md">Predictive validation</a></td></tr>
                   <tr><th scope="row">Performance rankings</th><td>Prior-removal error, future-game calibration, and comparison with Predictive families</td><td><a href="https://github.com/sirgippy/GippyRank4/blob/main/docs/performance_v1.md">Performance V1</a></td></tr>
@@ -468,8 +492,8 @@
                 <caption>Current production identifiers</caption>
                 <thead><tr><th scope="col">Contract</th><th scope="col">Identifier</th><th scope="col">Role</th></tr></thead>
                 <tbody>
-                  <tr><th scope="row">Predictive Context prior</th><td><span data-version-key="context_prior" data-version-prefix="C ">C 1.2</span></td><td>Primary preseason prior</td></tr>
-                  <tr><th scope="row">Predictive History prior</th><td><span data-version-key="history_prior" data-version-prefix="H ">H 1.1</span></td><td>Rank-history-only prior</td></tr>
+                  <tr><th scope="row">Predictive Context starting point</th><td><span data-version-key="context_prior" data-version-prefix="C ">C 1.2</span></td><td>Primary preseason starting point</td></tr>
+                  <tr><th scope="row">Predictive History starting point</th><td><span data-version-key="history_prior" data-version-prefix="H ">H 1.1</span></td><td>Rank-history-only starting point</td></tr>
                   <tr><th scope="row">Historical Likelihood</th><td><span data-version-key="historical_likelihood">V1</span></td><td>Completed-game margin likelihood</td></tr>
                   <tr><th scope="row">Posterior engine</th><td><span data-version-key="posterior">V1</span></td><td>Rank-state inference</td></tr>
                   <tr><th scope="row">Performance</th><td><span data-version-key="performance">1.0</span></td><td>Context-anchored prior stripping</td></tr>

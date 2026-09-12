@@ -293,16 +293,214 @@ function rank(value) {
   return `#${Number(value).toFixed(1)}`;
 }
 
+function distributionTeam(distribution, expectedSnapshotId, expectedRankCount, teamId, label) {
+  if (!distribution || distribution.snapshot_id !== expectedSnapshotId) {
+    throw new Error(`${label} distribution does not match the published snapshot.`);
+  }
+  if (distribution.rank_count !== expectedRankCount) {
+    throw new Error(`${label} distribution does not use the selected rank support.`);
+  }
+  const team = distribution.teams?.[teamId];
+  if (!team || !Array.isArray(team.pmf) || team.pmf.length !== expectedRankCount || !team.summary) {
+    throw new Error(`${label} distribution for this team is unavailable.`);
+  }
+  return team;
+}
+
+function rankSummaryLine(summary) {
+  return `expected ${rank(summary.expected_rank)} · 80% range #${summary.interval_80[0]}–#${summary.interval_80[1]}`;
+}
+
+function movementChart(teamName, preseasonTeam, currentTeam, rankCount, currentLabel) {
+  const width = 760;
+  const height = 252;
+  const left = 74;
+  const right = 18;
+  const top = 28;
+  const bottom = 47;
+  const plotWidth = width - left - right;
+  const plotHeight = 56;
+  const baselines = [105, 183];
+  const distributions = [
+    { label: "Preseason", team: preseasonTeam, className: "movement-preseason-bar", baseline: baselines[0] },
+    { label: currentLabel, team: currentTeam, className: "movement-current-bar", baseline: baselines[1] },
+  ];
+  const maximum = Math.max(
+    ...distributions.flatMap(({ team }) => team.pmf.map((value) => Math.max(0, Number(value) || 0))),
+    1e-12,
+  );
+  const xFor = (value) => left + ((value - 0.5) / rankCount) * plotWidth;
+  const svg = svgElement("svg", {
+    viewBox: `0 0 ${width} ${height}`,
+    class: "distribution-chart season-movement-chart",
+    role: "img",
+    "aria-labelledby": "season-movement-chart-title season-movement-chart-description",
+  });
+  const title = svgElement("title", { id: "season-movement-chart-title" });
+  title.textContent = `${teamName} preseason to ${currentLabel} rank distributions`;
+  const description = svgElement("desc", { id: "season-movement-chart-description" });
+  description.textContent = `Preseason ${rankSummaryLine(preseasonTeam.summary)}. At ${currentLabel}, ${rankSummaryLine(currentTeam.summary)}. Both distributions use the same horizontal rank axis from rank 1 best to rank ${rankCount} worst.`;
+  svg.append(title, description);
+
+  distributions.forEach(({ label, team, className, baseline }) => {
+    svg.append(svgElement("line", { x1: left, y1: baseline, x2: width - right, y2: baseline, class: "movement-baseline" }));
+    const rowLabel = svgElement("text", { x: left - 10, y: baseline - plotHeight / 2 + 4, "text-anchor": "end", class: "movement-row-label" });
+    rowLabel.textContent = label;
+    svg.append(rowLabel);
+    const barWidth = Math.max(1, (plotWidth / rankCount) * 0.82);
+    team.pmf.forEach((probability, index) => {
+      const value = Math.max(0, Number(probability) || 0);
+      const barHeight = (value / maximum) * plotHeight;
+      svg.append(svgElement("rect", {
+        x: xFor(index + 1) - barWidth / 2,
+        y: baseline - barHeight,
+        width: barWidth,
+        height: barHeight,
+        class: className,
+      }));
+    });
+    const expected = svgElement("line", {
+      x1: xFor(team.summary.expected_rank),
+      y1: baseline - plotHeight - 2,
+      x2: xFor(team.summary.expected_rank),
+      y2: baseline + 2,
+      class: "movement-expected-marker",
+    });
+    expected.setAttribute("aria-hidden", "true");
+    svg.append(expected);
+  });
+
+  const axisY = height - bottom;
+  svg.append(svgElement("line", { x1: left, y1: axisY, x2: width - right, y2: axisY, class: "chart-axis" }));
+  const ticks = [...new Set([1, Math.round(rankCount * 0.25), Math.round(rankCount * 0.5), Math.round(rankCount * 0.75), rankCount])].sort((a, b) => a - b);
+  ticks.forEach((value) => {
+    const x = xFor(value);
+    const label = svgElement("text", { x, y: axisY + 17, "text-anchor": "middle", class: "chart-label" });
+    label.textContent = value;
+    svg.append(svgElement("line", { x1: x, y1: axisY, x2: x, y2: axisY + 4, class: "chart-axis" }), label);
+  });
+  const axisTitle = svgElement("text", { x: left + plotWidth / 2, y: height - 6, "text-anchor": "middle", class: "chart-axis-title" });
+  axisTitle.textContent = "Shared rank axis (1 is best)";
+  svg.append(axisTitle);
+
+  const figure = node("figure", "season-movement-chart-figure");
+  figure.append(svg);
+  const caption = node("figcaption", "distribution-axis");
+  caption.append(node("span", "axis-start", "#1 best"), node("span", "axis-label", "Rank position · shared scale"), node("span", "axis-end", `#${rankCount} worst`));
+  figure.append(caption);
+  return figure;
+}
+
+function preseasonDistributionChart(teamName, team, rankCount) {
+  const label = `${teamName} preseason rank distribution from rank 1 through rank ${rankCount}; rank 1 is best.`;
+  const description = `The published preseason distribution has ${rankCount} rank bins. ${rankSummaryLine(team.summary)}. It is not a fixed rank.`;
+  const figure = node("figure", "preseason-distribution-figure");
+  figure.append(densitySvg(team.pmf, { className: "preseason-distribution-chart", label, description }));
+  const caption = node("figcaption", "distribution-axis");
+  caption.append(node("span", "axis-start", "#1 best"), node("span", "axis-label", "Preseason rank distribution"), node("span", "axis-end", `#${rankCount} worst`));
+  figure.append(caption);
+  return figure;
+}
+
+function renderPreseasonStartingPoint(entry, distribution, row) {
+  const section = $("#preseason-starting-point-section");
+  const content = $("#preseason-starting-point-content");
+  const visible = entry.ranking_family === "predictive" && entry.snapshot_type === "preseason";
+  section.hidden = !visible;
+  if (!visible) {
+    content.replaceChildren();
+    return;
+  }
+  const copy = preseasonCopy[entry.prior_family] ?? preseasonCopy.context;
+  const team = distributionTeam(distribution, entry.snapshot_id, distribution.rank_count, row.team_id, "Preseason");
+  const familyList = node("ul", "preseason-input-list");
+  copy.families.forEach(([label, description]) => {
+    const item = node("li");
+    item.append(node("strong", "", label), node("span", "", description));
+    familyList.append(item);
+  });
+  const explanation = node("p", "preseason-starting-point-explanation", copy.detail);
+  const uncertainty = node("p", "preseason-starting-point-note", `This is an uncertain distribution, not a declaration that ${row.team_name} is exactly ${rank(team.summary.expected_rank)}. ${row.team_name}'s published preseason summary is ${rankSummaryLine(team.summary)}.`);
+  content.replaceChildren(
+    node("p", "preseason-starting-point-summary", copy.summary),
+    node("h3", "preseason-input-heading", "What goes into this?"),
+    explanation,
+    familyList,
+    ...(entry.prior_family === "history"
+      ? [node("p", "preseason-starting-point-note", "History does not use current roster talent, recruiting, returning production, or coach tenure.")]
+      : []),
+    preseasonDistributionChart(row.team_name, team, distribution.rank_count),
+    uncertainty,
+  );
+}
+
+function renderSeasonMovement(entry, currentDistribution, preseasonDistribution, row) {
+  const section = $("#season-movement-section");
+  const content = $("#season-movement");
+  const context = $("#season-movement-context");
+  if (entry.ranking_family === "performance") {
+    section.hidden = false;
+    context.textContent = "Performance is a separate view of completed-game evidence.";
+    content.replaceChildren(node("p", "season-movement-not-applicable", "Performance has no preseason starting point in the same semantic sense, so this page does not show a preseason-to-current comparison."));
+    return;
+  }
+  if (entry.snapshot_type === "preseason") {
+    section.hidden = true;
+    content.replaceChildren();
+    return;
+  }
+  section.hidden = false;
+  context.textContent = `Published ${priorLabel(entry.prior_family)} distributions · exact selected snapshot, not today's latest view.`;
+  if (!entry.preseason_snapshot_id || !entry.preseason_distribution_path || !preseasonDistribution) {
+    content.replaceChildren(node("p", "season-movement-unavailable", "A matching published preseason distribution is unavailable, so no comparison is shown."));
+    return;
+  }
+  const currentTeam = distributionTeam(currentDistribution, entry.snapshot_id, currentDistribution.rank_count, row.team_id, "Selected snapshot");
+  const preseasonTeam = distributionTeam(preseasonDistribution, entry.preseason_snapshot_id, currentDistribution.rank_count, row.team_id, "Preseason");
+  const intro = node("p", "season-movement-intro", `GippyRank started ${row.team_name} from an uncertain preseason belief and updates that distribution with game evidence. The change below is probabilistic movement, not arithmetic rank points.`);
+  const summary = node("div", "season-movement-summary");
+  const preseason = node("article", "season-movement-point season-movement-preseason");
+  preseason.append(node("h3", "", "Preseason"), node("p", "season-movement-rank", rankSummaryLine(preseasonTeam.summary)), node("p", "season-movement-source", `Published ${entry.preseason_display_label || "Preseason"} ${priorLabel(entry.prior_family)} distribution`));
+  const current = node("article", "season-movement-point season-movement-current");
+  current.append(node("h3", "", entry.display_label), node("p", "season-movement-rank", rankSummaryLine(currentTeam.summary)), node("p", "season-movement-source", "Exact distribution at the selected snapshot"));
+  summary.append(preseason, node("span", "season-movement-arrow", "→"), current);
+  const accessible = node("p", "sr-only", `Preseason expected rank ${Number(preseasonTeam.summary.expected_rank).toFixed(1)} with a central 80 percent range from rank ${preseasonTeam.summary.interval_80[0]} to rank ${preseasonTeam.summary.interval_80[1]}. At the selected ${entry.display_label} snapshot, expected rank is ${Number(currentTeam.summary.expected_rank).toFixed(1)} with a central 80 percent range from rank ${currentTeam.summary.interval_80[0]} to rank ${currentTeam.summary.interval_80[1]}.`);
+  content.replaceChildren(intro, movementChart(row.team_name, preseasonTeam, currentTeam, currentDistribution.rank_count, entry.display_label), summary, accessible);
+}
+
 function publicationStatusLabel(entry) {
   return entry.publication_status === "official" ? "Official" : "Interim";
+}
+
+const preseasonCopy = {
+  context: {
+    summary: "Context asks what we knew about this particular team before kickoff.",
+    detail: "Context starts with program history and adds information about this year's team. Those inputs produce the preseason distribution; they are not feature-by-feature rank adjustments.",
+    families: [
+      ["Program history", "Previous program performance."],
+      ["Recruiting", "Recent recruiting quality and trends."],
+      ["Roster talent", "Current roster talent."],
+      ["Returning production", "How much production returns from the previous team."],
+      ["Coaching", "Coach tenure."],
+    ],
+  },
+  history: {
+    summary: "History asks what we would believe from the program's track record alone.",
+    detail: "History uses previous program performance across recent and longer historical windows. It intentionally ignores current roster talent, recruiting, returning production, and coach tenure.",
+    families: [["Program history", "Previous program performance across recent and longer historical windows."]],
+  },
+};
+
+function priorLabel(prior) {
+  return prior === "history" ? "History" : "Context";
 }
 
 function entryFor(manifest) {
   const family = params.get("family") === "performance" ? "performance" : "predictive";
   const season = Number(params.get("season")) || manifest.seasons[0];
   let entries = manifest.snapshots.filter((item) => item.season === season && item.ranking_family === family);
-  const prior = params.get("prior");
-  if (family === "predictive" && (prior === "context" || prior === "history")) {
+  const prior = params.get("prior") === "history" ? "history" : "context";
+  if (family === "predictive") {
     entries = entries.filter((item) => item.prior_family === prior);
   }
   const snapshot = params.get("snapshot");
@@ -310,6 +508,38 @@ function entryFor(manifest) {
     ?? entries.find((item) => item.publication_slot === snapshot)
     ?? entries.find((item) => item.publication_slot === manifest.default_publication_slot)
     ?? entries[0];
+}
+
+function teamPageUrl(entry, prior) {
+  const url = new URL("./team.html", document.baseURI);
+  url.searchParams.set("team", params.get("team"));
+  url.searchParams.set("season", String(entry.season));
+  url.searchParams.set("snapshot", entry.snapshot_id);
+  url.searchParams.set("family", "predictive");
+  url.searchParams.set("prior", prior);
+  return `${url.pathname}${url.search}`;
+}
+
+function updatePriorSwitch(manifest, entry) {
+  const nav = $("#team-prior-switch");
+  if (!nav) return;
+  const predictive = entry?.ranking_family === "predictive";
+  nav.hidden = !predictive;
+  if (!predictive) return;
+  ["context", "history"].forEach((prior) => {
+    const link = nav.querySelector(`[data-prior-link="${prior}"]`);
+    if (!link) return;
+    const counterpart = manifest.snapshots.find((candidate) => (
+      candidate.season === entry.season
+      && candidate.publication_slot === entry.publication_slot
+      && candidate.ranking_family === "predictive"
+      && candidate.prior_family === prior
+    ));
+    link.hidden = !counterpart;
+    if (counterpart) link.href = teamPageUrl(counterpart, prior);
+    if (prior === entry.prior_family) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  });
 }
 
 function updateBackLink(entry) {
@@ -438,16 +668,31 @@ async function load() {
   if (!entry) throw new Error("No published snapshot matches this team page.");
   const teamId = params.get("team");
   if (!teamId) throw new Error("A stable team ID is required.");
-  const [snapshotResponse, teamResponse] = await Promise.all([
+  const preseasonPath = entry.ranking_family === "predictive"
+    && entry.snapshot_type !== "preseason"
+    ? entry.preseason_distribution_path
+    : null;
+  const responses = await Promise.all([
     fetch(`./${entry.data_path}`),
     fetch(`./${entry.team_seasons_path || entry.team_season_path}`),
+    fetch(`./${entry.distribution_path}`),
+    ...(preseasonPath ? [fetch(`./${preseasonPath}`)] : []),
   ]);
-  if (!snapshotResponse.ok || !teamResponse.ok) throw new Error("The selected team-season artifact is unavailable.");
-  const [snapshot, artifact] = await Promise.all([snapshotResponse.json(), teamResponse.json()]);
+  if (responses.some((response) => !response.ok)) throw new Error("The selected team-season artifact is unavailable.");
+  const [snapshot, artifact, distribution, preseasonDistribution] = await Promise.all([
+    responses[0].json(),
+    responses[1].json(),
+    responses[2].json(),
+    responses[3]?.json() ?? Promise.resolve(null),
+  ]);
   if (artifact.snapshot_id !== entry.snapshot_id || artifact.season !== entry.season) throw new Error("The team-season artifact does not match the selected snapshot.");
   const row = snapshot.rankings.find((item) => item.team_id === teamId);
   if (!row) throw new Error("This team is not available in the selected ranking snapshot.");
+  distributionTeam(distribution, entry.snapshot_id, snapshot.rank_count, teamId, "Selected snapshot");
+  updatePriorSwitch(manifest, entry);
   renderSummary(entry, snapshot, row);
+  renderPreseasonStartingPoint(entry, distribution, row);
+  renderSeasonMovement(entry, distribution, preseasonDistribution, row);
   renderSeasonOutlook(artifact.season_simulation, artifact.teams[teamId]);
   renderSchedule(artifact, entry);
 }

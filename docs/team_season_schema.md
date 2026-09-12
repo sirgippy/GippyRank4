@@ -10,6 +10,15 @@ supported predictive snapshots. Its method and provenance are documented in
 [`season_simulation.md`](season_simulation.md); team pages read the team
 summary from this object and never run Monte Carlo in the browser.
 
+Predictive team pages use the manifest's explicit preseason reference to load
+the matching published preseason distribution alongside the selected
+snapshot's distribution. They show a shared-axis preseason → selected-snapshot
+comparison for the same season and `prior_family`. Historical URLs therefore
+compare against the selected historical snapshot, not the latest publication.
+Preseason pages show the starting distribution and its input-family
+explanation instead of Preseason → Preseason. Performance pages have no
+Predictive preseason prior and do not show a fabricated comparison.
+
 The simulation object is required whenever snapshot metadata declares
 `season_simulation_version` and `season_simulation_configuration`. Legacy
 retained artifacts may omit it only when those metadata declarations are also

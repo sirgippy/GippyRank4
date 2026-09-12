@@ -525,6 +525,64 @@ def _previous_official_snapshot(
     return next(snapshot for snapshot in snapshots if snapshot.snapshot_id == previous.snapshot_id)
 
 
+def _matching_preseason_snapshot(
+    current: PreparedSnapshot, snapshots: list[PreparedSnapshot]
+) -> PreparedSnapshot | None:
+    """Resolve the published preseason artifact for a Predictive snapshot.
+
+    This is intentionally separate from the official movement chain.  A
+    weekly publication may compare its rank-change column with the latest
+    earlier official checkpoint while its team page still needs the season's
+    original, same-family preseason distribution.
+
+    The publication configuration is the source of chronology and status; no
+    snapshot ID parsing or "earliest file" heuristic belongs here.  A
+    duplicate official preseason for one season/family is ambiguous and must
+    fail closed rather than silently choosing one.
+    """
+    metadata = current.metadata
+    if metadata.get("ranking_family") != "predictive":
+        return None
+
+    key = _comparison_key(_comparison_descriptor(current))
+    candidates = [
+        snapshot
+        for snapshot in snapshots
+        if snapshot.metadata.get("snapshot_type") == "preseason"
+        and snapshot.selected.publication_status == "official"
+        and _comparison_key(_comparison_descriptor(snapshot)) == key
+    ]
+    if len(candidates) > 1:
+        ids = sorted(snapshot.snapshot_id for snapshot in candidates)
+        raise SiteDataValidationError(
+            f"{current.snapshot_id}: multiple official preseason snapshots match "
+            f"{key}: {ids}"
+        )
+    return candidates[0] if candidates else None
+
+
+def _preseason_reference_fields(
+    current: PreparedSnapshot, snapshots: list[PreparedSnapshot]
+) -> dict[str, str | None]:
+    """Return explicit browser-facing metadata for a matching preseason view."""
+    if current.metadata.get("ranking_family") != "predictive":
+        return {}
+    preseason = _matching_preseason_snapshot(current, snapshots)
+    if preseason is None:
+        return {
+            "preseason_snapshot_id": None,
+            "preseason_display_label": None,
+            "preseason_distribution_path": None,
+        }
+    return {
+        "preseason_snapshot_id": preseason.snapshot_id,
+        "preseason_display_label": preseason.selected.display_label,
+        "preseason_distribution_path": (
+            f"data/distributions/{preseason.snapshot_id}.json"
+        ),
+    }
+
+
 def _rank_change_text(
     *,
     current: dict[str, Any],
@@ -2660,6 +2718,9 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
         relative_team_seasons_path = f"data/team-seasons/{snapshot_id}.json"
         relative_weekly_games_path = f"data/week-games/{snapshot_id}.json"
         previous = _previous_official_snapshot(prepared, prepared_snapshots)
+        preseason_reference = _preseason_reference_fields(
+            prepared, prepared_snapshots
+        )
         consumer_snapshot = {
             "schema_version": SITE_SCHEMA_VERSION,
             "snapshot_id": snapshot_id,
@@ -2690,7 +2751,12 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             "rankings": rankings,
         }
         if metadata["ranking_family"] != "performance":
-            consumer_snapshot["prior_family"] = metadata["prior_family"]
+            consumer_snapshot.update(
+                {
+                    "prior_family": metadata["prior_family"],
+                    **preseason_reference,
+                }
+            )
         else:
             consumer_snapshot.update(
                 {
@@ -2861,7 +2927,12 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
             "valid": True,
         }
         if metadata["ranking_family"] != "performance":
-            manifest_entry["prior_family"] = metadata["prior_family"]
+            manifest_entry.update(
+                {
+                    "prior_family": metadata["prior_family"],
+                    **preseason_reference,
+                }
+            )
         else:
             manifest_entry.update(
                 {

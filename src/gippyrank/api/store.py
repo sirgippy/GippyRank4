@@ -363,6 +363,9 @@ def _publication_metadata(
         "generation_timestamp",
         "included_game_count",
         "rank_count",
+        "preseason_snapshot_id",
+        "preseason_display_label",
+        "preseason_distribution_path",
     ):
         if field in entry and field in snapshot and entry[field] != snapshot[field]:
             raise PublicationDataError(
@@ -415,6 +418,15 @@ def _publication_metadata(
         ),
         "comparison_display_label": entry.get(
             "comparison_display_label", snapshot.get("comparison_display_label")
+        ),
+        "preseason_snapshot_id": entry.get(
+            "preseason_snapshot_id", snapshot.get("preseason_snapshot_id")
+        ),
+        "preseason_display_label": entry.get(
+            "preseason_display_label", snapshot.get("preseason_display_label")
+        ),
+        "preseason_distribution_path": entry.get(
+            "preseason_distribution_path", snapshot.get("preseason_distribution_path")
         ),
     }
     try:

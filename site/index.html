@@ -23,10 +23,17 @@
         <label>Ranking family<select id="family-select" aria-label="Ranking family"></select></label>
         <label>Season<select id="season-select" aria-label="Season"></select></label>
         <label>Snapshot<select id="snapshot-select" aria-label="Snapshot"></select></label>
-        <fieldset id="prior-select" class="prior-select">
-          <legend>Predictive prior</legend>
-          <button type="button" data-prior="context">Context</button>
-          <button type="button" data-prior="history">History</button>
+        <fieldset id="prior-select" class="prior-select" aria-describedby="prior-explanation">
+          <legend>Preseason starting point</legend>
+          <div class="prior-buttons">
+            <button type="button" data-prior="context">Context</button>
+            <button type="button" data-prior="history">History</button>
+          </div>
+          <p id="prior-explanation" class="prior-explanation"></p>
+          <details id="prior-help" class="prior-help">
+            <summary>What's this?</summary>
+            <p id="prior-help-text"></p>
+          </details>
         </fieldset>
       </section>
 
@@ -71,7 +78,7 @@
       <details id="about-rankings" class="about-rankings">
         <summary>About these rankings</summary>
         <div class="explain-grid">
-          <article><h3>Predictive</h3><p>GippyRank models team quality as a probability distribution over rank-like states. Predictive Context and Predictive History are alternative preseason priors that the same game-evidence engine updates.</p></article>
+          <article><h3>Predictive</h3><p>GippyRank starts each Predictive ranking with an uncertain preseason starting point, then updates it with game evidence. Context and History are two ways to set that starting point.</p></article>
           <article><h3>Performance</h3><p>Performance asks who has played best so far, using completed games and opponent beliefs. It is separate from Predictive and is not standings, strength of record, or postseason deservingness.</p><p><a href="./methodology.html">Read the full methodology →</a></p></article>
         </div>
       </details>
