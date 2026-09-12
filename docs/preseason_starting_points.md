@@ -57,6 +57,11 @@ snapshot ID, reconstruct a PMF, or substitute today’s latest ranking. Both
 distributions use one shared rank axis so changes in location, shape, and
 uncertainty remain visible.
 
+An exact `snapshot_id` in a team-page URL is authoritative. The optional prior
+selector chooses the Context or History family only when the URL needs normal
+publication-slot or default fallback resolution; if both are supplied and
+contradict, the exact snapshot wins.
+
 Preseason pages show the selected starting distribution and its input-family
 explanation instead of a redundant Preseason → Preseason comparison.
 Performance pages do not have a Predictive preseason prior and therefore do

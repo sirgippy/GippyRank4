@@ -498,12 +498,17 @@ function priorLabel(prior) {
 function entryFor(manifest) {
   const family = params.get("family") === "performance" ? "performance" : "predictive";
   const season = Number(params.get("season")) || manifest.seasons[0];
-  let entries = manifest.snapshots.filter((item) => item.season === season && item.ranking_family === family);
+  const seasonEntries = manifest.snapshots.filter((item) => item.season === season && item.ranking_family === family);
+  const snapshot = params.get("snapshot");
+  // A published snapshot ID is durable identity; never let the default prior shadow it.
+  const exact = seasonEntries.find((item) => item.snapshot_id === snapshot);
+  if (exact) return exact;
+
+  let entries = seasonEntries;
   const prior = params.get("prior") === "history" ? "history" : "context";
   if (family === "predictive") {
     entries = entries.filter((item) => item.prior_family === prior);
   }
-  const snapshot = params.get("snapshot");
   return entries.find((item) => item.snapshot_id === snapshot)
     ?? entries.find((item) => item.publication_slot === snapshot)
     ?? entries.find((item) => item.publication_slot === manifest.default_publication_slot)

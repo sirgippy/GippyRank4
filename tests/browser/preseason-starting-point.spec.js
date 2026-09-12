@@ -1,6 +1,7 @@
 const { test, expect } = require("@playwright/test");
 
 const contextSnapshot = "2026-weekly-2026-09-11T17-02-26.077461Z-context";
+const historySnapshot = "2026-weekly-2026-09-11T17-02-26.077461Z-history";
 const performanceSnapshot = "2026-weekly-2026-09-11T17-02-26.077461Z-performance";
 
 const logoResponse = `<svg xmlns="http://www.w3.org/2000/svg" width="60" height="40" viewBox="0 0 60 40"><rect width="60" height="40" fill="#d6dfda"/></svg>`;
@@ -63,6 +64,16 @@ test.describe("Preseason starting point browser checks", () => {
     await expect(page.locator("#team-page-title")).toHaveText("Ohio State");
     await expect(page.locator("#season-movement-context")).toContainText("History");
     await expect(page.locator("#season-movement svg")).toBeVisible();
+  });
+
+  test("treats an explicit History snapshot as authoritative without prior", async ({ page }) => {
+    await page.goto(`/team.html?team=194&season=2026&family=predictive&snapshot=${historySnapshot}`);
+    await expect(page.locator("#team-page-title")).toHaveText("Ohio State");
+    await expect(page.locator("#team-page-status")).toHaveText(/scheduled games/);
+    await expect(page.locator("#team-page-meta")).toContainText("Predictive History");
+    await expect(page.locator("#season-movement-context")).toContainText("History");
+    await expect(page.locator("#season-movement")).toContainText("Published Preseason History distribution");
+    await expect(page.locator("#team-history-link")).toHaveAttribute("aria-current", "page");
   });
 
   test("shows the published preseason distribution without duplicating movement", async ({ page }) => {
