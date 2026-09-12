@@ -24,7 +24,9 @@
         "fixture-miami": "miami",
         "fixture-alabama": "alabama",
         "fixture-ucf": "ucf",
-        "fixture-north-carolina": "north-carolina"
+        "fixture-north-carolina": "north-carolina",
+        "fixture-rutgers": "rutgers",
+        "fixture-boston-college": "boston-college"
       }
     }
   },
@@ -35,7 +37,9 @@
       "fixture-miami": {"rated": true, "display_rank": 12},
       "fixture-alabama": {"rated": true, "display_rank": 3},
       "fixture-ucf": {"rated": true, "display_rank": 20},
-      "fixture-north-carolina": {"rated": true, "display_rank": 35}
+      "fixture-north-carolina": {"rated": true, "display_rank": 35},
+      "fixture-rutgers": {"rated": true, "display_rank": 118},
+      "fixture-boston-college": {"rated": true, "display_rank": 110}
     },
     "weeks": [
       {
@@ -126,6 +130,28 @@
             "home_team": {
               "team_id": "fixture-north-carolina",
               "team_name": "North Carolina",
+              "subdivision": "fbs",
+              "conference": "Fixture Conference"
+            }
+          },
+          {
+            "date": "2026-09-05T23:45:00Z",
+            "state": "completed",
+            "neutral_site": false,
+            "marquee": true,
+            "game_id": "fixture-rutgers-boston-college",
+            "conference_game": false,
+            "winner_team_id": "fixture-boston-college",
+            "score": {"away": 13, "home": 28},
+            "away_team": {
+              "team_id": "fixture-rutgers",
+              "team_name": "Rutgers",
+              "subdivision": "fbs",
+              "conference": "Fixture Conference"
+            },
+            "home_team": {
+              "team_id": "fixture-boston-college",
+              "team_name": "Boston College",
               "subdivision": "fbs",
               "conference": "Fixture Conference"
             }
