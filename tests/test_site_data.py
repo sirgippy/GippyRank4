@@ -936,6 +936,42 @@ def test_publication_status_and_official_comparison_chain(tmp_path: Path) -> Non
         assert current["comparison_snapshot_id"] == expected_snapshot_id
 
 
+def test_predictive_entries_reference_the_matching_published_preseason_artifact(
+    tmp_path: Path,
+) -> None:
+    manifest = build_site_data(
+        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
+    )
+    by_id = {entry["snapshot_id"]: entry for entry in manifest["snapshots"]}
+    predictive = [
+        entry for entry in manifest["snapshots"] if entry["ranking_family"] == "predictive"
+    ]
+
+    for entry in predictive:
+        preseason_id = entry["preseason_snapshot_id"]
+        preseason = by_id[preseason_id]
+        assert preseason["snapshot_type"] == "preseason"
+        assert preseason["publication_status"] == "official"
+        assert preseason["season"] == entry["season"]
+        assert preseason["prior_family"] == entry["prior_family"]
+        assert entry["preseason_distribution_path"] == preseason["distribution_path"]
+        assert entry["preseason_display_label"] == preseason["display_label"]
+
+        exported = json.loads(
+            (tmp_path / "data" / entry["data_path"].removeprefix("data/")).read_text(
+                encoding="utf-8"
+            )
+        )
+        assert exported["preseason_snapshot_id"] == preseason_id
+        assert exported["preseason_distribution_path"] == preseason["distribution_path"]
+
+    assert all(
+        "preseason_snapshot_id" not in entry
+        for entry in manifest["snapshots"]
+        if entry["ranking_family"] == "performance"
+    )
+
+
 def test_comparison_resolution_uses_explicit_order_and_compatible_family() -> None:
     def prepared(
         slot: str,

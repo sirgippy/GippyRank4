@@ -145,3 +145,48 @@ def test_schedule_naming_is_updated_in_documentation_and_ballot_copy() -> None:
     assert "Generated from GippyRank4" in ballot_source
     assert "Generated from GippyRank4" in app
     assert "GippyRank 4.0" not in ballot_docs + ballot_source + app
+
+
+def test_predictive_selector_uses_human_facing_starting_point_copy() -> None:
+    index = _page("index.html")
+    schedule = _page("schedule.html")
+    app = (ROOT / "site/assets/app.js").read_text(encoding="utf-8")
+    week = (ROOT / "site/assets/week.js").read_text(encoding="utf-8")
+
+    for page in (index, schedule):
+        assert "<legend>Preseason starting point</legend>" in page
+        assert "<summary>What's this?</summary>" in page
+        assert 'aria-describedby="prior-explanation"' in page
+        assert "Predictive prior" not in page
+
+    for source in (app, week):
+        assert "Every Predictive ranking needs a starting estimate before games are played." in source
+        assert "Context uses program history" in source
+        assert "recruiting" in source
+        assert "roster talent" in source
+        assert "returning production" in source
+        assert "coach tenure" in source
+        assert "History uses previous program performance" in source
+
+
+def test_team_pages_have_snapshot_safe_preseason_movement_surfaces() -> None:
+    team = _page("team.html")
+    team_source = (ROOT / "site/assets/team.js").read_text(encoding="utf-8")
+    distribution_docs = (ROOT / "docs/site_distribution_schema.md").read_text(encoding="utf-8")
+
+    for phrase in (
+        'id="preseason-starting-point-section"',
+        'id="season-movement-section"',
+        "Preseason starting point",
+        "Season movement",
+    ):
+        assert phrase in team
+    for phrase in (
+        "preseason_snapshot_id",
+        "preseason_distribution_path",
+        "same horizontal rank axis",
+        "Performance has no preseason starting point",
+        "exact selected snapshot, not today's latest view",
+    ):
+        assert phrase in team_source
+    assert "build-time resolved" in distribution_docs

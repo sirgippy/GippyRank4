@@ -84,7 +84,9 @@ Every publication response contains a `publication` object with:
   History prior;
 - requested and effective cutoff, generation and source retrieval timestamps;
 - public model-version metadata, anchor family and source-context snapshot,
-  ranking support, publication counts, and the comparison baseline.
+  ranking support, publication counts, and the comparison baseline;
+- for Predictive publications, an explicit same-season, same-prior reference to
+  the published preseason snapshot and its rank-distribution artifact.
 
 OpenAPI is available at `/openapi.json`; interactive Swagger UI is at `/docs`
 and ReDoc is at `/redoc`. The generated models intentionally reject arbitrary

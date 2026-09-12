@@ -14,6 +14,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   background: var(--canvas);
@@ -168,6 +172,10 @@ button {
   margin-bottom: 5px;
 }
 
+.prior-buttons {
+  display: flex;
+}
+
 .prior-select button,
 .table-toggle button {
   padding: 7px 11px;
@@ -198,6 +206,37 @@ button {
 .prior-select button:hover:not(:disabled):not(.is-active),
 .table-toggle button:hover:not(.is-active) {
   background: var(--wash);
+}
+
+.prior-explanation,
+.prior-help {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.prior-explanation {
+  max-width: 290px;
+}
+
+.prior-help {
+  border-top: 1px solid var(--line);
+}
+
+.prior-help summary {
+  width: fit-content;
+  padding-top: 6px;
+  color: var(--green);
+  cursor: pointer;
+  font-weight: 750;
+}
+
+.prior-help p {
+  margin: 5px 0 0;
+  color: #40534c;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .snapshot-summary {
@@ -580,6 +619,7 @@ select:focus-visible,
 summary:focus-visible,
 .team-button:focus-visible,
 .team-link:focus-visible,
+.team-prior-buttons a:focus-visible,
 .back-link a:focus-visible {
   outline: 3px solid var(--gold);
   outline-offset: 2px;
@@ -906,6 +946,55 @@ summary:focus-visible,
   margin-top: 18px;
 }
 
+.team-prior-switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.team-prior-switch-label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.team-prior-buttons {
+  display: flex;
+}
+
+.team-prior-buttons a {
+  padding: 6px 10px;
+  color: var(--green);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.team-prior-buttons a + a {
+  margin-left: -1px;
+}
+
+.team-prior-buttons a:first-child {
+  border-radius: 4px 0 0 4px;
+}
+
+.team-prior-buttons a:last-child {
+  border-radius: 0 4px 4px 0;
+}
+
+.team-prior-buttons a[aria-current="page"] {
+  color: #fff;
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.team-prior-buttons a:hover:not([aria-current="page"]) {
+  background: var(--wash);
+}
+
 .team-summary-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -921,6 +1010,170 @@ summary:focus-visible,
   border-radius: 5px;
   font-size: 13px;
   font-weight: 700;
+}
+
+.preseason-starting-point-section,
+.season-movement-section {
+  overflow: hidden;
+  margin: 4px 0 22px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 3px 12px rgb(19 42 36 / 4%);
+}
+
+.preseason-starting-point-content,
+.season-movement {
+  padding: 17px 20px 21px;
+}
+
+.preseason-input-heading {
+  margin: 0;
+  font-size: 17px;
+}
+
+.preseason-starting-point-explanation,
+.season-movement-intro,
+.preseason-starting-point-note,
+.season-movement-not-applicable,
+.season-movement-unavailable {
+  max-width: 800px;
+  margin: 8px 0 0;
+  color: #40534c;
+  font-size: 13px;
+}
+
+.preseason-input-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px 18px;
+  max-width: 800px;
+  margin: 15px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.preseason-input-list li {
+  padding: 10px 12px;
+  background: var(--wash);
+  border-left: 3px solid var(--gold);
+}
+
+.preseason-input-list strong,
+.preseason-input-list span {
+  display: block;
+}
+
+.preseason-input-list strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.preseason-input-list span {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.preseason-starting-point-note {
+  color: var(--muted);
+}
+
+.preseason-distribution-figure,
+.season-movement-chart-figure {
+  max-width: 800px;
+  margin: 17px 0 0;
+}
+
+.preseason-distribution-chart {
+  height: 128px;
+}
+
+.season-movement-chart {
+  height: auto;
+}
+
+.movement-baseline {
+  stroke: #aebdb4;
+  stroke-width: 1;
+}
+
+.movement-preseason-bar {
+  fill: var(--gold);
+  opacity: 0.65;
+}
+
+.movement-current-bar {
+  fill: var(--green);
+  opacity: 0.78;
+}
+
+.movement-expected-marker {
+  stroke: var(--ink);
+  stroke-dasharray: 3 3;
+  stroke-width: 1.5;
+}
+
+.movement-row-label {
+  fill: var(--ink);
+  font: 700 12px ui-sans-serif, system-ui, sans-serif;
+}
+
+.season-movement-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+  max-width: 800px;
+  margin-top: 14px;
+}
+
+.season-movement-point {
+  min-width: 0;
+  padding: 12px 14px;
+  background: var(--wash);
+  border-top: 3px solid var(--gold);
+}
+
+.season-movement-current {
+  border-top-color: var(--green);
+}
+
+.season-movement-point h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.season-movement-rank {
+  margin: 4px 0 0;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.season-movement-source {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.season-movement-arrow {
+  align-self: center;
+  color: var(--gold);
+  font-size: 25px;
+  font-weight: 800;
+}
+
+.season-movement-not-applicable {
+  padding: 12px 14px;
+  background: #fbf7eb;
+  border-left: 3px solid var(--gold);
+}
+
+.season-movement-unavailable {
+  color: var(--danger);
 }
 
 .team-rating-explainer {
@@ -2153,6 +2406,25 @@ summary:focus-visible,
 
   .team-summary-grid {
     grid-template-columns: 1fr;
+  }
+
+  .team-prior-switch {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .preseason-input-list {
+    grid-template-columns: 1fr;
+  }
+
+  .season-movement-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .season-movement-arrow {
+    justify-self: center;
+    transform: rotate(90deg);
   }
 
   .game-card {

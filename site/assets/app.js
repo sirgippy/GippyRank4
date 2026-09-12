@@ -18,6 +18,16 @@ const state = {
 const $ = (selector) => document.querySelector(selector);
 const detailDialog = $("#team-detail");
 const aboutRankings = $("#about-rankings");
+const priorExplanations = {
+  context: {
+    short: "Program history plus information about this year's team.",
+    detail: "Every Predictive ranking needs a starting estimate before games are played. As results arrive, GippyRank updates that starting distribution with game evidence. Context uses program history plus information about this year's team, including recruiting, roster talent, returning production, and coach tenure.",
+  },
+  history: {
+    short: "Previous program performance across recent and longer historical windows.",
+    detail: "Every Predictive ranking needs a starting estimate before games are played. As results arrive, GippyRank updates that starting distribution with game evidence. History uses previous program performance across recent and longer historical windows only. It intentionally ignores current roster talent, recruiting, returning production, and coach tenure.",
+  },
+};
 
 if (window.location.hash === "#about-rankings") aboutRankings.open = true;
 
@@ -199,6 +209,25 @@ function chooseDefault() {
   return entry;
 }
 
+function syncUrl(entry) {
+  if (!entry) return;
+  const url = new URL(window.location.href);
+  url.searchParams.set("family", state.family);
+  url.searchParams.set("season", String(entry.season));
+  url.searchParams.set("snapshot", entry.snapshot_id);
+  if (state.family === "predictive") url.searchParams.set("prior", entry.prior_family);
+  else url.searchParams.delete("prior");
+  window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+}
+
+function updatePriorExplanation() {
+  const copy = priorExplanations[state.prior] ?? priorExplanations.context;
+  const short = $("#prior-explanation");
+  const detail = $("#prior-help-text");
+  if (short) short.textContent = copy.short;
+  if (detail) detail.textContent = copy.detail;
+}
+
 function changePrior(prior) {
   const current = selectedEntry() ?? chooseDefault();
   const counterpart = current && choices().find((entry) => entry.publication_slot === current.publication_slot && entry.prior_family === prior);
@@ -227,9 +256,11 @@ function populate() {
   priorSelector.hidden = performance;
   priorSelector.disabled = performance;
   document.querySelectorAll("[data-prior]").forEach((button) => { button.classList.toggle("is-active", button.dataset.prior === state.prior); button.disabled = performance; });
+  updatePriorExplanation();
   const scheduleLink = $("#schedule-view-link");
   if (scheduleLink) scheduleLink.href = schedulePageUrl(entry, entry?.default_week);
   updateBallotExport(entry, state.snapshot);
+  syncUrl(entry);
 }
 
 function updateSnapshotSummary(entry, snapshot) {

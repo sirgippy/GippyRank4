@@ -141,6 +141,33 @@ def test_publication_selectors_are_explicit(client: TestClient) -> None:
     assert no_substitution.json()["error"]["code"] == "publication_not_found"
 
 
+def test_predictive_metadata_exposes_the_explicit_preseason_reference(
+    client: TestClient,
+) -> None:
+    entry = _weekly_entry()
+    response = client.get(f"/api/v1/rankings/{entry['snapshot_id']}")
+    assert response.status_code == 200
+    metadata = response.json()["publication"]
+    assert metadata["preseason_snapshot_id"] == entry["preseason_snapshot_id"]
+    assert metadata["preseason_display_label"] == entry["preseason_display_label"]
+    assert metadata["preseason_distribution_path"] == entry[
+        "preseason_distribution_path"
+    ]
+
+    performance = next(
+        item
+        for item in MANIFEST["snapshots"]
+        if item["ranking_family"] == "performance"
+    )
+    performance_response = client.get(
+        f"/api/v1/rankings/{performance['snapshot_id']}"
+    )
+    assert performance_response.status_code == 200
+    performance_metadata = performance_response.json()["publication"]
+    assert performance_metadata["preseason_snapshot_id"] is None
+    assert performance_metadata["preseason_distribution_path"] is None
+
+
 def test_rankings_and_rank_distribution_match_static_publication(
     client: TestClient,
 ) -> None:

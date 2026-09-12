@@ -10,6 +10,17 @@ const state = {
   weekKey: params.get("week") || null,
 };
 
+const priorExplanations = {
+  context: {
+    short: "Program history plus information about this year's team.",
+    detail: "Every Predictive ranking needs a starting estimate before games are played. As results arrive, GippyRank updates that starting distribution with game evidence. Context uses program history plus information about this year's team, including recruiting, roster talent, returning production, and coach tenure.",
+  },
+  history: {
+    short: "Previous program performance across recent and longer historical windows.",
+    detail: "Every Predictive ranking needs a starting estimate before games are played. As results arrive, GippyRank updates that starting distribution with game evidence. History uses previous program performance across recent and longer historical windows only. It intentionally ignores current roster talent, recruiting, returning production, and coach tenure.",
+  },
+};
+
 function node(name, className, text) {
   const value = document.createElement(name);
   if (className) value.className = className;
@@ -372,6 +383,9 @@ function populateControls(entry) {
   $("#prior-select").hidden = performance;
   $("#prior-select").disabled = performance;
   document.querySelectorAll("[data-prior]").forEach((button) => { button.disabled = performance; button.classList.toggle("is-active", button.dataset.prior === state.prior); });
+  const priorCopy = priorExplanations[state.prior] ?? priorExplanations.context;
+  $("#prior-explanation").textContent = priorCopy.short;
+  $("#prior-help-text").textContent = priorCopy.detail;
   document.querySelectorAll("[data-view]").forEach((button) => {
     const selected = button.dataset.view === state.view;
     button.classList.toggle("is-active", selected);
