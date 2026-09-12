@@ -2608,6 +2608,39 @@ summary:focus-visible,
   .method-flow-secondary {
     flex-direction: column-reverse;
   }
+
+  .weekly-matchup {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .weekly-team-row,
+  .weekly-team-row:last-child {
+    text-align: left;
+  }
+
+  .weekly-team-row:last-child .weekly-team-identity {
+    flex-direction: row;
+  }
+
+  .weekly-team-link {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: normal;
+  }
+
+  .weekly-winner-label {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .weekly-at {
+    justify-self: center;
+    padding: 0 6px;
+    background: var(--wash);
+    border-radius: 3px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

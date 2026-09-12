@@ -166,6 +166,94 @@ test.describe("Schedule browser smoke tests", () => {
     expect(overflow.document).toBeLessThanOrEqual(overflow.viewport);
   });
 
+  test("stacks ranked completed matchups into readable mobile scoreboard rows", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "mobile", "This invariant is specific to the narrow mobile viewport.");
+    await useScheduleLayoutFixture(page);
+    await page.setViewportSize({ width: 360, height: 844 });
+    await loadSchedule(page);
+
+    const matchup = page.locator(".weekly-matchup").filter({ hasText: "Boston College" }).first();
+    await expect(matchup).toBeVisible();
+    await expect(matchup.locator(":scope > .weekly-team-row")).toHaveCount(2);
+    await expect(matchup.locator(":scope > .weekly-team-row .team-logo-frame")).toHaveCount(2);
+    await expect(matchup.locator(":scope > .weekly-team-row .weekly-team-rank")).toHaveCount(2);
+    await expect(matchup.locator(":scope > .weekly-team-row .weekly-score")).toHaveCount(2);
+    for (const value of ["#118", "#110", "13", "28"]) await expect(matchup).toContainText(value);
+    await expect(matchup.locator(".weekly-at")).toHaveText("at");
+    await expect(matchup.locator(".weekly-winner-label")).toHaveText("Winner");
+
+    const layout = await matchup.evaluate((element) => {
+      const rect = (value) => {
+        const box = value.getBoundingClientRect();
+        return { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height };
+      };
+      const wordLineCounts = (link) => {
+        const textNode = link.firstChild;
+        return [...textNode.textContent.matchAll(/\S+/g)].map((match) => {
+          const range = document.createRange();
+          range.setStart(textNode, match.index);
+          range.setEnd(textNode, match.index + match[0].length);
+          return range.getClientRects().length;
+        });
+      };
+      const lineCount = (link) => {
+        const range = document.createRange();
+        range.selectNodeContents(link);
+        return range.getClientRects().length;
+      };
+      const rows = [...element.querySelectorAll(":scope > .weekly-team-row")].map((row) => {
+        const link = row.querySelector(".weekly-team-link");
+        const score = row.querySelector(".weekly-score");
+        return {
+          row: rect(row),
+          identity: rect(row.querySelector(".weekly-team-identity")),
+          logo: rect(row.querySelector(".team-logo-frame")),
+          rank: rect(row.querySelector(".weekly-team-rank")),
+          link: rect(link),
+          linkText: link.textContent.trim(),
+          linkLineCount: lineCount(link),
+          wordLineCounts: wordLineCounts(link),
+          score: rect(score),
+          winner: row.querySelector(".weekly-winner-label") ? rect(row.querySelector(".weekly-winner-label")) : null,
+        };
+      });
+      return {
+        display: getComputedStyle(element).display,
+        rows,
+        separator: rect(element.querySelector(":scope > .weekly-at")),
+      };
+    });
+
+    expect(layout.display).toBe("grid");
+    expect(layout.rows.map((row) => row.linkText)).toEqual(["Rutgers", "Boston College"]);
+    expect(layout.rows[0].row.left).toBeCloseTo(layout.rows[1].row.left, 0);
+    expect(layout.rows[0].row.right).toBeCloseTo(layout.rows[1].row.right, 0);
+    expect(layout.rows[0].row.bottom).toBeLessThanOrEqual(layout.separator.top);
+    expect(layout.separator.bottom).toBeLessThanOrEqual(layout.rows[1].row.top);
+    expect(layout.rows[0].winner).toBeNull();
+    expect(layout.rows[1].winner).not.toBeNull();
+
+    for (const row of layout.rows) {
+      expect(row.logo.width).toBeGreaterThan(0);
+      expect(row.logo.height).toBeGreaterThan(0);
+      expect(row.rank.width).toBeGreaterThan(0);
+      expect(row.score.width).toBeGreaterThan(0);
+      expect(row.identity.right).toBeLessThanOrEqual(row.score.left + 1);
+      expect(row.winner === null || row.winner.right <= row.identity.right + 1).toBe(true);
+      expect(row.wordLineCounts.every((count) => count === 1)).toBe(true);
+    }
+    expect(layout.rows[0].linkLineCount).toBe(1);
+    expect(layout.rows[1].linkLineCount).toBeLessThanOrEqual(2);
+
+    const overflow = await page.evaluate(() => ({
+      body: document.body.scrollWidth,
+      document: document.documentElement.scrollWidth,
+      viewport: window.innerWidth,
+    }));
+    expect(overflow.body).toBeLessThanOrEqual(overflow.viewport);
+    expect(overflow.document).toBeLessThanOrEqual(overflow.viewport);
+  });
+
   test("keeps the matchup horizontal at desktop width", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "This invariant is specific to the desktop viewport.");
     await loadSchedule(page);
