@@ -247,10 +247,38 @@ def test_upserting_a_slot_preserves_preseason_and_older_slots(tmp_path: Path) ->
 
 
 def test_weekly_report_movers_use_latest_earlier_official_slot() -> None:
-    config = json.loads((ROOT / "site/publish_config.json").read_text(encoding="utf-8"))
-    config["publication_slots"].append(
-        {"id": "2026-09-09", "status": "temporary"}
-    )
+    config = {
+        "schema_version": "1.0",
+        "publication_slots": [
+            {"id": "2026-preseason", "status": "official"},
+            {"id": "2026-09-07", "status": "temporary"},
+            {"id": "2026-09-08", "status": "official"},
+            {"id": "2026-09-09", "status": "temporary"},
+            {"id": "2026-09-13", "status": "official"},
+        ],
+        "snapshots": [
+            {
+                "display_label": "Preseason",
+                "publication_slot": "2026-preseason",
+                "source": "data/processed/snapshots/2026/2026-preseason-context/predictive/context",
+            },
+            {
+                "display_label": "Sep. 7",
+                "publication_slot": "2026-09-07",
+                "source": "data/processed/snapshots/2026/2026-weekly-2026-09-07T13-42-50.853587Z-context/predictive/context",
+            },
+            {
+                "display_label": "Week 2",
+                "publication_slot": "2026-09-08",
+                "source": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context/predictive/context",
+            },
+            {
+                "display_label": "Week 3",
+                "publication_slot": "2026-09-13",
+                "source": "data/processed/snapshots/2026/2026-weekly-2026-09-13T12-02-55.255941Z-context/predictive/context",
+            },
+        ],
+    }
     rows = _previous_rows(
         ROOT,
         config,
