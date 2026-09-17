@@ -1,0 +1,96 @@
+{
+  "aggregate_metric_deltas": {
+    "crps": -4.071075033125482e-05,
+    "expected_rank_mae": -0.010024540262516979,
+    "interval_80_average_width": 0.7359550561797761,
+    "interval_80_coverage": 0.006004350723748608,
+    "median_rank_mae": 0.011235955056179137,
+    "nll": -0.0009313233926988573,
+    "top10_brier": 0.00021109459257929314,
+    "top25_brier": 0.0007564094818528905,
+    "top5_brier": 2.0298502504366434e-05
+  },
+  "candidate": "C2_rp_scale_only",
+  "paired_team_season": {
+    "fraction_c2_better_crps": 0.46441947565543074,
+    "fraction_c2_better_nll": 0.43258426966292135,
+    "mean_delta_crps": -4.071075033126321e-05,
+    "mean_delta_nll": -0.0009313233926978806,
+    "median_delta_crps": 0.00012028846040918612,
+    "median_delta_nll": 0.005483559180662123,
+    "n_team_seasons": 534
+  },
+  "per_season": [
+    {
+      "delta_crps_c2_minus_c1": 0.0002551555048636439,
+      "delta_expected_rank_mae_c2_minus_c1": -0.012556153747169674,
+      "delta_interval_80_average_width_c2_minus_c1": -0.06870229007634521,
+      "delta_interval_80_coverage_c2_minus_c1": 0.0013795640577577428,
+      "delta_median_rank_mae_c2_minus_c1": -0.02290076335878055,
+      "delta_nll_c2_minus_c1": 0.006265119364118554,
+      "delta_top10_brier_c2_minus_c1": 0.00047989854060614956,
+      "delta_top25_brier_c2_minus_c1": 0.0012822415401873288,
+      "delta_top5_brier_c2_minus_c1": 6.803160444946582e-05,
+      "n_team_seasons": 131,
+      "target_season": 2022
+    },
+    {
+      "delta_crps_c2_minus_c1": -0.00015607038332279832,
+      "delta_expected_rank_mae_c2_minus_c1": -0.03792518701363434,
+      "delta_interval_80_average_width_c2_minus_c1": 0.3082706766917198,
+      "delta_interval_80_coverage_c2_minus_c1": -0.001219264377159135,
+      "delta_median_rank_mae_c2_minus_c1": -0.015037593984960296,
+      "delta_nll_c2_minus_c1": -0.004124703789534223,
+      "delta_top10_brier_c2_minus_c1": 0.0002957708008584671,
+      "delta_top25_brier_c2_minus_c1": 0.0003833823494454672,
+      "delta_top5_brier_c2_minus_c1": 0.00019634085447438332,
+      "n_team_seasons": 133,
+      "target_season": 2023
+    },
+    {
+      "delta_crps_c2_minus_c1": -0.00020172255671035977,
+      "delta_expected_rank_mae_c2_minus_c1": 0.019985535271825228,
+      "delta_interval_80_average_width_c2_minus_c1": 0.5671641791044806,
+      "delta_interval_80_coverage_c2_minus_c1": 0.00855721393034814,
+      "delta_median_rank_mae_c2_minus_c1": 0.014925373134328623,
+      "delta_nll_c2_minus_c1": -0.0026773005122731064,
+      "delta_top10_brier_c2_minus_c1": 0.00024399307670571954,
+      "delta_top25_brier_c2_minus_c1": 0.0003624691413076364,
+      "delta_top5_brier_c2_minus_c1": 1.0963643495089798e-05,
+      "n_team_seasons": 134,
+      "target_season": 2024
+    },
+    {
+      "delta_crps_c2_minus_c1": -5.4240648771380906e-05,
+      "delta_expected_rank_mae_c2_minus_c1": -0.009869560389091703,
+      "delta_interval_80_average_width_c2_minus_c1": 2.095588235294116,
+      "delta_interval_80_coverage_c2_minus_c1": 0.015008058017727754,
+      "delta_median_rank_mae_c2_minus_c1": 0.0661764705882355,
+      "delta_nll_c2_minus_c1": -0.003019951880497196,
+      "delta_top10_brier_c2_minus_c1": -0.0001630498909912445,
+      "delta_top25_brier_c2_minus_c1": 0.0010028551774517586,
+      "delta_top5_brier_c2_minus_c1": -0.00018864118911017524,
+      "n_team_seasons": 136,
+      "target_season": 2025
+    }
+  ],
+  "reference": "C1_no_rp",
+  "season_bootstrap": {
+    "crps_central_95_bootstrap_range": [
+      -0.00017898196097798516,
+      0.00015117633541724776
+    ],
+    "fraction_candidate_better_crps": 0.72265625,
+    "fraction_candidate_better_nll": 0.73828125,
+    "mean_delta_crps": -4.034238842370843e-05,
+    "mean_delta_nll": -0.0009208752030360743,
+    "n_resamples": 256,
+    "n_season_clusters": 4,
+    "n_team_seasons": 534,
+    "nll_central_95_bootstrap_range": [
+      -0.0037608162864322826,
+      0.0038780311046332
+    ],
+    "resampling": "exhaustive ordered season bootstrap over all 4^4 = 256 resamples; descriptive only"
+  }
+}
