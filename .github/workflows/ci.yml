@@ -47,8 +47,12 @@ jobs:
       - name: Run retained test suite
         run: uv run pytest -q
 
-      - name: Validate static API exporter contract
-        run: uv run python -c "from gippyrank.api.static import STATIC_API_SCHEMA_VERSION, build_static_api; assert STATIC_API_SCHEMA_VERSION == '1.0'; assert callable(build_static_api)"
+      - name: Build and validate production static API
+        run: |
+          uv run python scripts/build_site_data.py
+          test -s site/api/v1/index.json
+          test -s site/api/v1/publications.json
+          uv run python -c 'import json; from pathlib import Path; root = Path("site/api/v1"); manifest = json.loads(Path("site/data/manifest.json").read_text()); index = json.loads((root / "index.json").read_text()); inventory = json.loads((root / "publications.json").read_text()); assert index["data"]["publication_count"] == len(manifest["snapshots"]) == inventory["count"]; assert len(inventory["publications"]) == inventory["count"]; assert all((root / item["links"][key]).is_file() for item in inventory["publications"] for key in ("rankings", "weeks", "season_outlook")); print("validated", inventory["count"], "publications")'
 
       - name: Run Ruff
         run: uv run ruff check .
