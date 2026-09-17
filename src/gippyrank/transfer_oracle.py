@@ -225,8 +225,16 @@ def cutoff_date(season: int, month: int = 8, day: int = 15) -> date:
 
 
 def available_by_cutoff(record: TransferRecord, cutoff: date) -> bool:
-    """Whether the record has a dated portal event on or before the cutoff."""
-    return record.transfer_date is not None and record.transfer_date <= cutoff
+    """Whether the event is on or before the month/day cutoff in its season.
+
+    ``cutoff`` supplies only the month and day.  Its year is intentionally
+    ignored so callers can pass one configured date while evaluating multiple
+    transfer seasons.
+    """
+    if record.transfer_date is None:
+        return False
+    season_cutoff = cutoff_date(record.season, cutoff.month, cutoff.day)
+    return record.transfer_date <= season_cutoff
 
 
 def portal_provenance() -> dict[str, object]:
@@ -359,7 +367,7 @@ PRODUCTION_FEATURES = (
     "transfer_net_prior_usage",
     "transfer_in_prior_usage_qb",
     "transfer_out_prior_usage_qb",
-    "effective_returning_production",
+    "ad_hoc_rp_usage_hybrid",
 )
 ALL_FEATURES = (
     "transfer_data_available",
@@ -548,7 +556,7 @@ def aggregate_team_features(
             None,
         )
         incoming_usage = target["transfer_in_prior_usage_sum"]
-        target["effective_returning_production"] = (
+        target["ad_hoc_rp_usage_hybrid"] = (
             base_returning + incoming_usage
             if base_returning is not None and incoming_usage is not None
             else None
@@ -613,7 +621,7 @@ def coverage_rows(
                     _matched_team(index, season, item.origin) is not None
                     for item in before
                 ),
-                "cutoff": cutoff.isoformat(),
+                "cutoff": cutoff_date(season, cutoff.month, cutoff.day).isoformat(),
                 "classification": "retrospective-research-oracle",
             }
         )

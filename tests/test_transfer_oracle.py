@@ -56,6 +56,36 @@ def test_portal_parser_keeps_fields_and_cutoff_semantics() -> None:
     assert position_group("EDGE") == "dl"
 
 
+def test_cutoff_is_relative_to_each_transfer_season() -> None:
+    records = [
+        *parse_transfer_payload(
+            [
+                {
+                    "season": 2022,
+                    "firstName": "Late",
+                    "lastName": "Transfer",
+                    "transferDate": "2022-08-16",
+                }
+            ],
+            season=2022,
+        ),
+        *parse_transfer_payload(
+            [
+                {
+                    "season": 2023,
+                    "firstName": "Cutoff",
+                    "lastName": "Transfer",
+                    "transferDate": "2023-08-15",
+                }
+            ],
+            season=2023,
+        ),
+    ]
+    configured_cutoff = date(2025, 8, 15)
+    assert not available_by_cutoff(records[0], configured_cutoff)
+    assert available_by_cutoff(records[1], configured_cutoff)
+
+
 def test_aggregate_distinguishes_uncovered_from_zero_activity() -> None:
     records = parse_transfer_payload(
         [

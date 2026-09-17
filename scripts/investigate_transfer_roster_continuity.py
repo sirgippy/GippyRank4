@@ -2,8 +2,10 @@
 
 The study keeps the production Context equation and evaluation population
 fixed, then adds a small predeclared set of transfer-volume, transfer-talent,
-and prior-usage oracle features.  Choices are made on 2018--2021 only.  The
-2022--2025 panel is scored after the candidate set is frozen.
+and prior-usage oracle features.  The transfer candidates are predeclared and
+compared descriptively.  No candidate is selected from the 2018--2021 panel
+because the transfer features have no observed values in candidate training
+rows through 2017.
 
 Raw portal and usage payloads are read from a separate transfer-data root and
 are never modified.  Outputs are written only to the requested research
@@ -140,8 +142,8 @@ def candidate_definitions() -> tuple[Candidate, ...]:
             transfer_aware=True,
         ),
         Candidate(
-            "C9_effective_returning_production",
-            (*C_MINUS_RP_FEATURES, "effective_returning_production"),
+            "C9_ad_hoc_rp_usage_hybrid",
+            (*C_MINUS_RP_FEATURES, "ad_hoc_rp_usage_hybrid"),
             transfer_aware=True,
         ),
         Candidate(
@@ -153,6 +155,66 @@ def candidate_definitions() -> tuple[Candidate, ...]:
             ),
             transfer_aware=True,
         ),
+    )
+
+
+def added_transfer_feature_names(candidate: Candidate) -> tuple[str, ...]:
+    """Return transfer-derived inputs added by a candidate."""
+    names = set(candidate.features) & set(ALL_FEATURES)
+    if candidate.interaction is not None:
+        names.add(candidate.interaction[1])
+    return tuple(sorted(names))
+
+
+def development_transfer_observation_counts(
+    rows: Iterable[TeamSeason],
+    candidates: Iterable[Candidate],
+    *,
+    trained_through: int,
+) -> dict[str, dict[str, int]]:
+    """Count non-missing transfer values available to each training fit."""
+    training = [row for row in rows if row.season <= trained_through]
+    return {
+        candidate.name: {
+            feature: sum(row.features.get(feature) is not None for row in training)
+            for feature in added_transfer_feature_names(candidate)
+        }
+        for candidate in candidates
+        if candidate.transfer_aware
+    }
+
+
+def select_development_candidate(
+    development_summary: list[dict[str, object]],
+    observation_counts: dict[str, dict[str, int]],
+) -> str:
+    """Select only when the development fit has observed transfer values.
+
+    The current issue-91 study intentionally does not call this function:
+    its historical transfer training panel has no observations. Keeping the
+    guard here prevents a future caller from treating imputed all-missing
+    transfer columns as evidence for candidate selection.
+    """
+    if not any(
+        count > 0 for counts in observation_counts.values() for count in counts.values()
+    ):
+        raise ValueError(
+            "cannot select a transfer candidate: development training rows "
+            "contain zero observed transfer-feature values"
+        )
+    eligible = [
+        row
+        for row in development_summary
+        if row["candidate"] not in {"C0_full", "C1_minus_rp"}
+        and float(row["delta_vs_c0_nll"]) < 0
+    ]
+    if not eligible:
+        raise ValueError("no transfer candidate improves C0 on development rows")
+    return str(
+        min(
+            eligible,
+            key=lambda row: (float(row["delta_vs_c0_nll"]), str(row["candidate"])),
+        )["candidate"]
     )
 
 
@@ -541,13 +603,13 @@ def transfer_bucket(value: float | None) -> str:
 def diagnostics(
     c0: list[v1.PriorPrediction],
     minus_rp: list[v1.PriorPrediction],
-    selected: list[v1.PriorPrediction],
+    diagnostic: list[v1.PriorPrediction],
     transfer_features: dict[tuple[int, str, str], dict[str, float | None]],
 ) -> tuple[list[dict[str, object]], list[dict[str, object]], list[dict[str, object]]]:
-    c0_losses, minus_losses, selected_losses = (
+    c0_losses, minus_losses, diagnostic_losses = (
         h11.prediction_losses(c0),
         h11.prediction_losses(minus_rp),
-        h11.prediction_losses(selected),
+        h11.prediction_losses(diagnostic),
     )
     team_rows = []
     for prediction in c0:
@@ -570,9 +632,10 @@ def diagnostics(
                 "transfer_data_available": feature.get("transfer_data_available"),
                 "c0_nll": c0_losses[key][0],
                 "minus_rp_nll": minus_losses[key][0],
-                "selected_transfer_nll": selected_losses[key][0],
+                "diagnostic_transfer_nll": diagnostic_losses[key][0],
                 "rp_contribution_nll": minus_losses[key][0] - c0_losses[key][0],
-                "selected_minus_c0_nll": selected_losses[key][0] - c0_losses[key][0],
+                "diagnostic_minus_c0_nll": diagnostic_losses[key][0]
+                - c0_losses[key][0],
             }
         )
     bucket_rows = []
@@ -596,8 +659,8 @@ def diagnostics(
                 "mean_rp_contribution_nll": float(
                     np.mean([row["rp_contribution_nll"] for row in part])
                 ),
-                "mean_selected_minus_c0_nll": float(
-                    np.mean([row["selected_minus_c0_nll"] for row in part])
+                "mean_diagnostic_minus_c0_nll": float(
+                    np.mean([row["diagnostic_minus_c0_nll"] for row in part])
                 ),
                 "mean_c0_nll": float(np.mean([row["c0_nll"] for row in part])),
                 "mean_minus_rp_nll": float(
@@ -684,19 +747,28 @@ def render_report(
     coverage: list[dict[str, object]],
 ) -> None:
     sanity = summary["c0_sanity_check"]
-    selected = summary["selection"]["development_selected_candidate"]
-    descriptive_best = summary["selection"][
-        "heldout_descriptive_best_transfer_candidate"
-    ]
+    comparison = summary["comparison"]
+    diagnostic = comparison["diagnostic_candidate"]
+    descriptive_best = comparison["heldout_descriptive_best_transfer_candidate"]
+    clean_primary = comparison["clean_primary_candidate"]
     heldout = [
         row for row in candidate_summary if row["protocol"] == "frozen_through_2021"
     ]
+    clean_primary_delta = next(
+        row["delta_vs_c0_nll"] for row in heldout if row["candidate"] == clean_primary
+    )
+    descriptive_best_delta = next(
+        row["delta_vs_c0_nll"]
+        for row in heldout
+        if row["candidate"] == descriptive_best
+    )
     lines = [
         "# Transfer-aware roster continuity oracle (issue 91)",
         "",
         "## Conclusion",
         "",
-        f"The development-selected candidate is **{selected}**, chosen using only 2018--2021 rows; its 2022--2025 held-out NLL delta versus production C0 is **{fmt(next((row['delta_vs_c0_nll'] for row in heldout if row['candidate'] == selected), None))}**. The strongest descriptive result among the predeclared transfer candidates is **{descriptive_best}**, with held-out ΔNLL **{fmt(next((row['delta_vs_c0_nll'] for row in heldout if row['candidate'] == descriptive_best), None))}**; this comparison was not used to tune the selected candidate. This is a retrospective oracle study, not a production-safe Context change.",
+        f"No development candidate was selected: the rows available to train through 2017 contain zero observed values for every added transfer feature. The predeclared candidates are exploratory retrospective-oracle comparisons. The clean C10 candidate **{clean_primary}** has held-out ΔNLL **{fmt(clean_primary_delta)}** versus production C0; the strongest descriptive result is **{descriptive_best}**, with ΔNLL **{fmt(descriptive_best_delta)}**. {diagnostic} is used only for mechanism diagnostics. This is not a production-safe Context change.",
+        "C9 is retained as an explicitly ad hoc hybrid index: returning-production percentage plus incoming prior-usage sum. Those quantities have incompatible denominators, so C9 is not interpreted as reconstructed effective returning production; C10 keeps returning production and incoming prior usage as separate features.",
         f"The C0 control reproduction check {'passed' if sanity['passed'] else 'failed'}: maximum absolute metric difference from the stored production evaluation was {fmt(sanity['max_abs_metric_delta'], 6)}.",
         "",
         "## Provenance and leakage audit",
@@ -708,7 +780,7 @@ def render_report(
         "## Evaluation protocol",
         "",
         "- C0 is the existing C 1.2 location equation; C1 removes returning production. Transfer candidates were predeclared in the script.",
-        "- Fits use rows through 2021 and score unchanged on 2022--2025. Development comparisons use rows through 2017 and target 2018--2021. The production FBS population and stored H cold-start fallback are retained.",
+        "- Fits use rows through 2021 and score unchanged on 2022--2025. The 2018--2021 development comparison is reported for transparency only; it cannot select a transfer candidate because its training rows end before portal coverage begins. The production FBS population and stored H cold-start fallback are retained.",
         "- Training-only imputation and missingness indicators remain in `DirectRankModel`; transfer missingness is never silently converted to zero.",
         "- The negative-control permutation shuffles transfer values within season with seed 7 and never changes the target keys.",
         "",
@@ -748,7 +820,7 @@ def render_report(
         "",
         "## Diagnostics and limitations",
         "",
-        "The bucket, replacement-quality, negative-control, cutoff, QB, Team Talent overlap, and returning-production component tables are the auditable diagnostics for the mechanism question. A positive RP contribution means C-minus-RP has higher NLL than C0, so RP helped; a negative value means RP hurt.",
+        f"The bucket, replacement-quality, negative-control, cutoff, QB, Team Talent overlap, and returning-production component tables are the auditable diagnostics for the mechanism question. They use the predeclared {diagnostic} candidate as a descriptive reference, not a selected model. A positive RP contribution means C-minus-RP has higher NLL than C0, so RP helped; a negative value means RP hurt.",
         "",
         "Because historical portal coverage begins late and the endpoint is retrospective, these results cannot establish that a feature was knowable on August 15 in the historical years. A positive result identifies a promising oracle representation; productionization requires an archived cutoff-safe source and a stable player/team identity join.",
         "",
@@ -758,7 +830,7 @@ def render_report(
         "- `candidate_annual_metrics.csv`, `candidate_summary.csv`, `candidate_per_team_losses.csv` — paired primary scores and losses.",
         "- `transfer_bucket_diagnostics.csv`, `replacement_quality_diagnostics.csv` — RP mechanism diagnostics.",
         "- `negative_control_metrics.csv`, `cutoff_sensitivity.csv`, `qb_sensitivity.csv`, `talent_overlap_sensitivity.csv`, `rp_component_sensitivity.csv` — predeclared robustness checks.",
-        "- `summary.json`, `plots/` — configuration, hashes, selection record, and visual summaries.",
+        "- `summary.json`, `plots/` — configuration, hashes, comparison record, and visual summaries.",
     ]
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -834,6 +906,11 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     # known FBS cold start in the common Context population; ordinary rows are
     # still paired exactly and any future cold start is reported as missing.
     dev_augmented = contextual_augmented
+    development_observation_counts = development_transfer_observation_counts(
+        dev_augmented,
+        candidates,
+        trained_through=DEVELOPMENT_TRAIN_THROUGH,
+    )
     dev_c0, _ = panel_fit(
         dev_augmented,
         dev_fallback,
@@ -966,23 +1043,9 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     development_summary = aggregate_annual(
         [row for row in annual_rows if row["protocol"] == "development_through_2017"]
     )
-    eligible = [
-        row
-        for row in development_summary
-        if row["candidate"] not in {"C0_full", "C1_minus_rp"}
-        and float(row["delta_vs_c0_nll"]) < 0
-    ]
-    selected = (
-        min(
-            eligible,
-            key=lambda row: (float(row["delta_vs_c0_nll"]), str(row["candidate"])),
-        )
-        if eligible
-        else None
-    )
-    selected_name = str(selected["candidate"]) if selected else "C2_transfer_volume"
-    sensitivity_candidate = next(
-        candidate for candidate in candidates if candidate.name == selected_name
+    diagnostic_name = "C10_transfer_production"
+    diagnostic_candidate = next(
+        candidate for candidate in candidates if candidate.name == diagnostic_name
     )
     heldout_transfer_summary = [
         row
@@ -995,18 +1058,10 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         key=lambda row: (float(row["delta_vs_c0_nll"]), str(row["candidate"])),
     )
 
-    selected_predictions = candidate_predictions.get(selected_name)
-    if selected_predictions is None:
-        selected_predictions, _ = panel_fit(
-            contextual_augmented,
-            panel_fallback,
-            sensitivity_candidate,
-            target_seasons=TARGET_SEASONS,
-            trained_through=FROZEN_TRAIN_THROUGH,
-        )
+    diagnostic_predictions = candidate_predictions[diagnostic_name]
 
     bucket_rows, replacement_rows, _ = diagnostics(
-        c0_predictions, c1_predictions, selected_predictions, transfer_features
+        c0_predictions, c1_predictions, diagnostic_predictions, transfer_features
     )
     negative_rows = []
     permuted = permute_transfer_features(contextual_augmented, VOLUME_FEATURES)
@@ -1057,7 +1112,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         candidate_panel, _ = panel_fit(
             augmented,
             panel_fallback,
-            sensitivity_candidate,
+            diagnostic_candidate,
             target_seasons=TARGET_SEASONS,
             trained_through=FROZEN_TRAIN_THROUGH,
         )
@@ -1065,7 +1120,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         c0_score = score(c0_predictions)
         sensitivity_rows.append(
             {
-                "candidate": sensitivity_candidate.name,
+                "candidate": diagnostic_candidate.name,
                 "cutoff": f"month={month},day={day}",
                 "nll": candidate_score["nll"],
                 "delta_nll_vs_c0": candidate_score["nll"] - c0_score["nll"],
@@ -1078,14 +1133,14 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     qb_rows = []
     qb_features = tuple(
         feature
-        for feature in sensitivity_candidate.features
+        for feature in diagnostic_candidate.features
         if feature not in QB_FEATURES
     )
     qb_candidate = Candidate(
-        "selected_without_qb_features",
+        "diagnostic_without_qb_features",
         qb_features,
-        sensitivity_candidate.interaction,
-        sensitivity_candidate.interaction_name,
+        diagnostic_candidate.interaction,
+        diagnostic_candidate.interaction_name,
         True,
     )
     qb_panel, _ = panel_fit(
@@ -1097,16 +1152,16 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     )
     qb_rows.append(
         {
-            "candidate": sensitivity_candidate.name,
+            "candidate": diagnostic_candidate.name,
             "variant": "with_qb_features",
-            "nll": score(selected_predictions)["nll"],
-            "delta_nll_vs_c0": score(selected_predictions)["nll"]
+            "nll": score(diagnostic_predictions)["nll"],
+            "delta_nll_vs_c0": score(diagnostic_predictions)["nll"]
             - score(c0_predictions)["nll"],
         }
     )
     qb_rows.append(
         {
-            "candidate": sensitivity_candidate.name,
+            "candidate": diagnostic_candidate.name,
             "variant": "without_qb_features",
             "nll": score(qb_panel)["nll"],
             "delta_nll_vs_c0": score(qb_panel)["nll"] - score(c0_predictions)["nll"],
@@ -1118,17 +1173,17 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         feature for feature in BASE_CONTEXT_FEATURES if feature != "talent_composite"
     )
     overlap_candidate = Candidate(
-        "selected_without_team_talent",
+        "diagnostic_without_team_talent",
         (
             *without_talent,
             *[
                 feature
-                for feature in sensitivity_candidate.features
+                for feature in diagnostic_candidate.features
                 if feature not in BASE_CONTEXT_FEATURES
             ],
         ),
-        sensitivity_candidate.interaction,
-        sensitivity_candidate.interaction_name,
+        diagnostic_candidate.interaction,
+        diagnostic_candidate.interaction_name,
         True,
     )
     overlap_panel, _ = panel_fit(
@@ -1142,8 +1197,8 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         [
             {
                 "variant": "with_team_talent",
-                "nll": score(selected_predictions)["nll"],
-                "delta_nll_vs_c0": score(selected_predictions)["nll"]
+                "nll": score(diagnostic_predictions)["nll"],
+                "delta_nll_vs_c0": score(diagnostic_predictions)["nll"]
                 - score(c0_predictions)["nll"],
             },
             {
@@ -1214,7 +1269,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         "development_seasons": list(DEVELOPMENT_SEASONS),
         "frozen_train_through": FROZEN_TRAIN_THROUGH,
         "development_train_through": DEVELOPMENT_TRAIN_THROUGH,
-        "cutoff": date(2025, *DEFAULT_CUTOFF).isoformat(),
+        "cutoff": f"season-relative {DEFAULT_CUTOFF[0]:02d}-{DEFAULT_CUTOFF[1]:02d}",
         "portal_seasons_available": sorted(portal_seasons),
         "usage_seasons_available": sorted(usage_seasons),
         "candidate_definitions": [
@@ -1227,12 +1282,14 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             for candidate in candidates
         ],
         "c0_sanity_check": sanity,
-        "selection": {
-            "development_rule": "lowest development NLL among transfer-aware candidates strictly below C0; otherwise fixed C2_transfer_volume sensitivity candidate",
+        "comparison": {
+            "development_selection_performed": False,
+            "development_selection_reason": "transfer portal coverage begins after the development training period; selection is refused when all added transfer features are unobserved",
             "development_summary": development_summary,
-            "development_selected_candidate": selected_name,
+            "development_transfer_observation_counts": development_observation_counts,
+            "diagnostic_candidate": diagnostic_name,
+            "clean_primary_candidate": "C10_transfer_production",
             "heldout_descriptive_best_transfer_candidate": heldout_best["candidate"],
-            "heldout_candidate": selected_name,
             "heldout_best_delta_nll_vs_c0": heldout_best["delta_vs_c0_nll"],
         },
         "heldout_summary": [
@@ -1282,7 +1339,7 @@ def main() -> None:
     print(
         json.dumps(
             {
-                "selected": summary["selection"]["heldout_candidate"],
+                "diagnostic_candidate": summary["comparison"]["diagnostic_candidate"],
                 "output": str(args.output),
             },
             indent=2,
