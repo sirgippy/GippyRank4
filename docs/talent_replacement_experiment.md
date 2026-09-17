@@ -19,8 +19,9 @@ z(current Team Talent within the target season)
 - z(previous Team Talent within the previous season)
 ```
 
-The model is fit using outcomes through 2021 and scored without refitting on
-the unchanged 2022–2025 FBS population. It preserves C 1.2's preprocessing,
+The primary model is fit using outcomes through 2021 and scored without
+refitting on the unchanged 2022–2025 FBS population. It preserves C 1.2's
+preprocessing,
 penalty (`0.25`), H-only scale equation, scoring, and exact H fallback for
 rank-history cold starts.
 
@@ -50,9 +51,30 @@ Year-by-year NLL deltas versus C0 were:
 | 2024 | +0.0007 | +0.0159 | −0.0043 | +0.0034 | +0.0034 |
 | 2025 | +0.0239 | +0.0116 | +0.0227 | +0.0078 | +0.0258 |
 
-The complete generated report includes year-by-year CRPS, expected-rank MAE,
-median-rank MAE, interval coverage, interval width, model metadata, and the
-interaction diagnostic under `data/processed/talent_replacement/`.
+## Secondary pre-2022 development-era diagnostic
+
+To distinguish historical usefulness from recent degradation, this separate
+diagnostic fits through 2017 and evaluates 2018–2021. It uses the same C0/C1/
+C2 definitions and common regular-lag FBS population, and is not used for
+tuning or candidate selection.
+
+| Variant | NLL | ΔNLL | CRPS | ΔCRPS | Expected MAE | Median MAE | 80% coverage | 80% width |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| C0 | 4.4835 | — | 0.1121 | — | 19.10 | 19.89 | 0.835 | 71.2 |
+| C1: talent delta | 4.4815 | −0.0020 | 0.1121 | −0.0000 | 19.15 | 19.97 | 0.842 | 71.1 |
+| C2: total RP interaction | 4.4882 | +0.0047 | 0.1130 | +0.0009 | 19.27 | 20.04 | 0.836 | 70.8 |
+
+Year-by-year NLL deltas versus the same-era C0 were:
+
+| Season | C1 | C2 total |
+|---:|---:|---:|
+| 2018 | −0.0147 | −0.0182 |
+| 2019 | −0.0030 | −0.0158 |
+| 2020 | −0.0041 | +0.0207 |
+| 2021 | +0.0141 | +0.0328 |
+
+The full generated report includes every requested metric for each development
+season under `data/processed/talent_replacement/`.
 
 ## Interpretation
 
@@ -63,6 +85,13 @@ location effect was `−0.215` at declining talent, `−0.307` at flat talent, a
 `−0.428` at improving talent. Since lower rank-z is better, this is opposite
 the hypothesized pattern that returning production should matter more when
 talent declines.
+
+The development-era panel is mixed for C1 and negative for C2: C1 improves
+aggregate NLL by only `0.0020` before regressing in 2021, while C2 worsens
+aggregate NLL by `0.0047` and regresses in both 2020 and 2021. Thus the
+interaction was not a historically useful repair that merely degraded in
+recent seasons; the evidence is more consistent with an unstable or
+mis-specified representation.
 
 This result does not show that returning production is useless or that
 transfers are irrelevant. It says that this season-normalized Team Talent

@@ -27,7 +27,9 @@ from gippyrank.talent_replacement import add_seasonal_talent_delta
 
 ROOT = Path(__file__).resolve().parents[1]
 TEST_SEASONS = (2022, 2023, 2024, 2025)
+DEVELOPMENT_SEASONS = (2018, 2019, 2020, 2021)
 TRAIN_THROUGH = 2021
+DEVELOPMENT_TRAIN_THROUGH = 2017
 CONTROL_METRIC_TOLERANCE = 1e-3
 CONTROL_PMF_TOLERANCE = 2e-4
 METRICS = (
@@ -111,6 +113,7 @@ def metric_row(metrics: dict[str, Any]) -> dict[str, float | int]:
 
 def score_by_season(
     predictions: list[v1.PriorPrediction],
+    seasons: tuple[int, ...] = TEST_SEASONS,
 ) -> dict[int, dict[str, float | int]]:
     return {
         season: metric_row(
@@ -122,7 +125,7 @@ def score_by_season(
                 ]
             )
         )
-        for season in TEST_SEASONS
+        for season in seasons
     }
 
 
@@ -353,7 +356,7 @@ def render_report(report: dict[str, Any], path: Path) -> None:
         "",
         "This focused study tests whether returning production is better interpreted after conditioning on year-over-year roster-talent movement. C0 is the frozen production Context C 1.2 artifact. C1 adds season-relative `talent_delta` to the Context location equation. Primary C2 adds a training-standardized `returning_pct_ppa × talent_delta` product. Passing, receiving, and rushing interactions are secondary diagnostics.",
         "",
-        "All fitted variants use source and outcome rows through 2021 only, production penalty 0.25, H-only scale equation, production preprocessing, optimizer/retry behavior, and the same 534-team-season FBS population in 2022–2025. The exact H fallback PMFs for rank-history cold starts are retained unchanged.",
+        "The primary variants use source and outcome rows through 2021 only, production penalty 0.25, H-only scale equation, production preprocessing, optimizer/retry behavior, and the same 534-team-season FBS population in 2022–2025. The secondary development-era panel fits through 2017 and scores 2018–2021 without tuning or selection. The exact H fallback PMFs for rank-history cold starts are retained unchanged in the primary panel.",
         "",
         "`talent_delta` is `z(current Team Talent within the target season) − z(previous Team Talent within the previous season)`, using population mean/standard deviation for each FBS season. Missing current or previous talent remains missing and is handled by the existing training-only median plus indicator preprocessing.",
         "",
@@ -380,6 +383,28 @@ def render_report(report: dict[str, Any], path: Path) -> None:
         "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for row in report["annual_results"]:
+        lines.append(
+            f"| {row['variant']} | {row['season']} | {row['n_team_seasons']} | {row['nll']:.4f} | {row['delta_nll']:+.4f} | {row['crps']:.4f} | {row['delta_crps']:+.4f} | {row['expected_rank_mae']:.2f} | {row['median_rank_mae']:.2f} | {row['interval_80_coverage']:.3f} | {row['interval_80_average_width']:.1f} |"
+        )
+    lines += [
+        "",
+        "## Secondary pre-2022 development-era diagnostic",
+        "",
+        "This diagnostic fits through 2017 and evaluates 2018–2021. It is reported for historical context only; it is not used for tuning, candidate selection, or the primary held-out conclusion.",
+        "",
+        "| Variant | N | NLL | ΔNLL | CRPS | ΔCRPS | Expected MAE | Median MAE | 80% coverage | 80% width |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+    ]
+    for row in report["development_aggregate_results"]:
+        lines.append(
+            f"| {row['variant']} | {row['n_team_seasons']} | {row['nll']:.4f} | {row['delta_nll']:+.4f} | {row['crps']:.4f} | {row['delta_crps']:+.4f} | {row['expected_rank_mae']:.2f} | {row['median_rank_mae']:.2f} | {row['interval_80_coverage']:.3f} | {row['interval_80_average_width']:.1f} |"
+        )
+    lines += [
+        "",
+        "| Variant | Season | N | NLL | ΔNLL | CRPS | ΔCRPS | Expected MAE | Median MAE | 80% coverage | 80% width |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+    ]
+    for row in report["development_annual_results"]:
         lines.append(
             f"| {row['variant']} | {row['season']} | {row['n_team_seasons']} | {row['nll']:.4f} | {row['delta_nll']:+.4f} | {row['crps']:.4f} | {row['delta_crps']:+.4f} | {row['expected_rank_mae']:.2f} | {row['median_rank_mae']:.2f} | {row['interval_80_coverage']:.3f} | {row['interval_80_average_width']:.1f} |"
         )
@@ -490,6 +515,81 @@ def main(argv: list[str] | None = None) -> None:
             model, interaction_target, label
         )
 
+    # This is a secondary historical diagnostic, not a selection stage.  Its
+    # fit is deliberately kept separate from the primary 2022--2025 panel so
+    # the report can distinguish old usefulness from recent degradation.
+    development_train = [
+        row for row in contextual if row.season <= DEVELOPMENT_TRAIN_THROUGH
+    ]
+    development_target = [
+        row for row in contextual if row.season in DEVELOPMENT_SEASONS
+    ]
+    if not development_train or not development_target:
+        raise ValueError("development-era diagnostic lacks training or target rows")
+    print("fitting development C0", flush=True)
+    development_c0_model = fit_context_variant(development_train, BASE_CONTEXT_FEATURES)
+    development_predictions: dict[str, list[v1.PriorPrediction]] = {
+        "C0": h11.make_predictions(
+            development_c0_model, development_target, "development_C0"
+        )
+    }
+    print("fitting development C1", flush=True)
+    development_c1_model = fit_context_variant(
+        development_train, [*BASE_CONTEXT_FEATURES, TALENT_DELTA]
+    )
+    development_predictions["C1"] = h11.make_predictions(
+        development_c1_model, development_target, "development_C1"
+    )
+    print("fitting development C2_total", flush=True)
+    (
+        development_interaction_train,
+        development_interaction_target,
+        _development_interaction_prep,
+    ) = interaction_feature(
+        development_train,
+        development_target,
+        "returning_pct_ppa",
+        PRIMARY_INTERACTION,
+    )
+    development_c2_model = fit_context_variant(
+        development_interaction_train,
+        [*BASE_CONTEXT_FEATURES, TALENT_DELTA, PRIMARY_INTERACTION],
+    )
+    development_predictions["C2_total"] = h11.make_predictions(
+        development_c2_model,
+        development_interaction_target,
+        "development_C2_total",
+    )
+    development_control_metrics = metric_row(
+        v1.score_predictions(development_predictions["C0"])
+    )
+    development_by_variant_season = {
+        label: score_by_season(predictions, DEVELOPMENT_SEASONS)
+        for label, predictions in development_predictions.items()
+    }
+    development_aggregate_results = []
+    development_annual_results = []
+    development_control_by_season = development_by_variant_season["C0"]
+    for label in ("C0", "C1", "C2_total"):
+        aggregate = metric_row(v1.score_predictions(development_predictions[label]))
+        development_aggregate_results.append(
+            {
+                "variant": label,
+                **aggregate,
+                **metric_deltas(aggregate, development_control_metrics),
+            }
+        )
+        for season in DEVELOPMENT_SEASONS:
+            scored = development_by_variant_season[label][season]
+            development_annual_results.append(
+                {
+                    "variant": label,
+                    "season": season,
+                    **scored,
+                    **metric_deltas(scored, development_control_by_season[season]),
+                }
+            )
+
     variant_predictions = {"C0": control}
     for label, predictions in regular_predictions.items():
         variant_predictions[label] = candidate_predictions(predictions, control)
@@ -534,9 +634,16 @@ def main(argv: list[str] | None = None) -> None:
     effects = [
         row["location_effect_high_minus_low_returning"] for row in marginal_effects
     ]
+    development_c1 = next(
+        row for row in development_aggregate_results if row["variant"] == "C1"
+    )
+    development_c2 = next(
+        row for row in development_aggregate_results if row["variant"] == "C2_total"
+    )
     interpretation = [
         f"C1 talent_delta changes held-out aggregate NLL by {float(aggregate_results[1]['delta_nll']):+.4f} versus frozen C0; its 2024–2025 mean NLL delta is {recent(by_variant_season['C1']) - recent(control_by_season):+.4f}.",
         f"Primary C2_total changes aggregate NLL by {float(next(row['delta_nll'] for row in aggregate_results if row['variant'] == 'C2_total')):+.4f} versus C0 and by {recent(c2_by_season) - recent(control_by_season):+.4f} in 2024–2025; relative to C1, its aggregate NLL change is {float(next(row['delta_nll'] for row in aggregate_results if row['variant'] == 'C2_total')) - float(aggregate_results[1]['delta_nll']):+.4f}.",
+        f"In the secondary fit-through-2017/evaluate-2018–2021 diagnostic, C1 changes NLL by {float(development_c1['delta_nll']):+.4f} and C2_total by {float(development_c2['delta_nll']):+.4f} versus the same-era C0; this panel is descriptive and was not used for selection.",
         f"The primary interaction's modeled RP q25→q75 location effect is {effects[0]:+.3f} at declining talent, {effects[1]:+.3f} when flat, and {effects[2]:+.3f} when improving; the hypothesized monotone pattern (declining more negative than flat more negative than improving) is {effects[0] < effects[1] < effects[2]}.",
         f"The interaction variants preserve the full {len(control)}-row population and exact H fallback handling; no result is treated as evidence that transfers are the only explanation for recent RP degradation.",
     ]
@@ -552,6 +659,12 @@ def main(argv: list[str] | None = None) -> None:
             "talent_delta_definition": "season-relative z(current Team Talent) minus season-relative z(previous Team Talent)",
             "interaction_definition": "product of training-standardized returning production and training-standardized talent_delta",
             "cold_start_handling": "exact frozen production H fallback PMFs",
+        },
+        "development_protocol": {
+            "train_through": DEVELOPMENT_TRAIN_THROUGH,
+            "test_seasons": list(DEVELOPMENT_SEASONS),
+            "selection_or_tuning_used": False,
+            "population": "regular-lag FBS team-seasons available in the established development split",
         },
         "feature_coverage": {
             "all_contextual_rows": len(contextual),
@@ -570,6 +683,8 @@ def main(argv: list[str] | None = None) -> None:
         },
         "aggregate_results": aggregate_results,
         "annual_results": annual_results,
+        "development_aggregate_results": development_aggregate_results,
+        "development_annual_results": development_annual_results,
         "marginal_effects": marginal_effects,
         "interpretation": interpretation,
         "input_hashes": hashes(
@@ -584,10 +699,22 @@ def main(argv: list[str] | None = None) -> None:
     write_json(output_dir / "summary.json", report)
     write_csv(output_dir / "aggregate_metrics.csv", aggregate_results)
     write_csv(output_dir / "annual_metrics.csv", annual_results)
+    write_csv(
+        output_dir / "development_aggregate_metrics.csv",
+        development_aggregate_results,
+    )
+    write_csv(output_dir / "development_annual_metrics.csv", development_annual_results)
     write_csv(output_dir / "marginal_effects.csv", marginal_effects)
     write_json(
         output_dir / "model_metadata.json",
-        {label: model.metadata() for label, model in models.items()},
+        {
+            "primary": {label: model.metadata() for label, model in models.items()},
+            "development": {
+                "C0": development_c0_model.metadata(),
+                "C1": development_c1_model.metadata(),
+                "C2_total": development_c2_model.metadata(),
+            },
+        },
     )
     render_report(report, output_dir / "report.md")
     print(
