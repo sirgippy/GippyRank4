@@ -1,5 +1,5 @@
-"""Public GippyRank HTTP API."""
+"""Build-time contracts for the static GippyRank JSON API."""
 
-from .app import app, create_app
+from .static import build_static_api
 
-__all__ = ["app", "create_app"]
+__all__ = ["build_static_api"]

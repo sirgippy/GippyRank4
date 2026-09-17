@@ -42,24 +42,28 @@ engine described in [Season Simulation V1](docs/season_simulation.md).
 
 ## Public API
 
-GippyRank also provides a versioned, read-only FastAPI over the same validated
-`site/data` publication artifacts. It exposes publication inventory, exact
-snapshot rankings, stable-ID team seasons, weekly/game views, and published
-regular-season outlooks. Requests never fetch CFBD data, run inference, or
-mutate artifacts. The [API contract](docs/api.md) documents route semantics,
-schemas, cutoff safety, caching, CORS, and deployment.
+GippyRank publishes a versioned, read-only static JSON API under the same
+GitHub Pages site as the human-facing pages. The build reshapes the validated
+`site/data` publication artifacts into focused inventory, ranking, team,
+weekly-game, individual-game, and season-outlook resources. It never fetches
+CFBD data, runs inference, or handles requests at runtime. See the [static API
+contract](docs/api.md).
 
-Run it locally with:
+The API base path is
+`https://sirgippy.github.io/GippyRank4/api/v1/`. After regenerating the site
+data, the same files are available locally under `site/api/v1/`:
 
 ```bash
-uv run uvicorn gippyrank.api.app:app --host 127.0.0.1 --port 8000
+uv run python scripts/build_site_data.py
+python -m http.server --directory site 8000
+curl 'http://localhost:8000/api/v1/publications.json'
 ```
 
-The local base URL is `http://127.0.0.1:8000`; OpenAPI is at
-`/openapi.json` and interactive documentation is at `/docs`. The production
-deployment target is the Render web service described by `render.yaml`; its
-HTTPS URL is assigned when that service is provisioned and is intentionally
-not represented by a fabricated URL in source documentation.
+An agent can discover an exact snapshot from `publications.json`, then fetch
+one focused week such as
+`rankings/<snapshot-id>/weeks/3.json`. Future expected margins explicitly use
+home minus away orientation; unsupported predictions remain `null` rather
+than receiving an invented value.
 
 The rankings page can also download the selected published Top 25 as an
 importable r/CFB computer ballot.  This is a browser-only JSON export with
