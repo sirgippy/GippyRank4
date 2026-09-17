@@ -1,8 +1,8 @@
-"""Public V1 API response models.
+"""Public V1 static API response models.
 
 The publication artifacts are deliberately more detailed than this public
 contract.  These models make the compatibility surface explicit and keep
-implementation-only artifact fields out of HTTP responses.
+implementation-only artifact fields out of generated JSON responses.
 """
 
 from __future__ import annotations
@@ -28,6 +28,22 @@ class PublicModel(BaseModel):
     """Base class for models returned by the API."""
 
     model_config = ConfigDict(extra="forbid")
+
+
+class PublicationLinks(PublicModel):
+    """Static API resources associated with one publication.
+
+    Values are relative to the ``/api/v1/`` directory.  Templates use the
+    stable identifiers needed to address a subordinate resource without
+    exposing the repository's ``site/data`` layout.
+    """
+
+    rankings: str
+    weeks: str
+    season_outlook: str
+    teams: str
+    team_season: str
+    games: str
 
 
 class ModelVersions(PublicModel):
@@ -69,6 +85,7 @@ class PublicationMetadata(PublicModel):
     preseason_snapshot_id: str | None = None
     preseason_display_label: str | None = None
     preseason_distribution_path: str | None = None
+    links: PublicationLinks | None = None
 
 
 class TeamIdentity(PublicModel):
@@ -362,22 +379,16 @@ class SeasonSimulationInfo(PublicModel):
     season_scope: SeasonScope
 
 
-class PublicationLinks(PublicModel):
-    rankings: str
-    weeks: str
-    season_outlook: str
-
-
 class TeamLinks(PublicModel):
     rankings: str
     season: str
 
 
-class RootResources(PublicModel):
+class StaticRootResources(PublicModel):
+    """Resources available from the static API index document."""
+
     publications: str
     rankings: str
-    health: str
-    openapi: str
 
 
 class APIDataInfo(PublicModel):
@@ -386,13 +397,16 @@ class APIDataInfo(PublicModel):
     season_count: int = Field(ge=0)
 
 
-class APIRootResponse(PublicModel):
+class StaticAPIIndex(PublicModel):
+    """Small, self-describing entry point for the GitHub Pages API tree."""
+
     api_version: Literal["v1"] = API_VERSION
+    schema_version: str
     name: str
     description: str
     read_only: Literal[True]
     data: APIDataInfo
-    resources: RootResources
+    resources: StaticRootResources
 
 
 class PublicationsResponse(PublicModel):
@@ -456,21 +470,3 @@ class SeasonOutlookResponse(PublicModel):
     publication: PublicationMetadata
     season_simulation: SeasonSimulationInfo | None = None
     outlooks: list[SeasonOutlook]
-
-
-class HealthResponse(PublicModel):
-    status: Literal["ok"]
-    service: str
-    api_version: Literal["v1"] = API_VERSION
-    publication_data_schema_version: str
-    publication_count: int = Field(ge=0)
-    season_count: int = Field(ge=0)
-
-
-class ErrorDetail(PublicModel):
-    code: str
-    message: str
-
-
-class ErrorResponse(PublicModel):
-    error: ErrorDetail
