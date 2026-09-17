@@ -2,9 +2,9 @@
 
 ## Conclusion
 
-The frozen C2 scale-only variant has ΔNLL -0.0141 versus C0 and ΔCRPS -0.0009. The fitted representative-scale diagnostic says **lower RP increases predicted uncertainty**: C2 scale is 1.2832 at low RP, 1.2051 at median RP, and 1.1448 at high RP.
-Removing RP entirely (C1) has ΔNLL -0.0132 versus C0. C2 is better than C1 by NLL, with the sign interpreted as lower being better.
-These are descriptive held-out results, not causal evidence that transfers explain the relationship.
+Removing RP from location (C1) has ΔNLL -0.0132 versus C0 and ΔCRPS -0.0008. This is the strong result in the experiment.
+Moving RP into scale (C2) adds only ΔNLL -0.0009 versus C1, with C2 winning in 2023, 2024, 2025 and losing in 2022. Its paired team-season improvement fraction is 0.433, and the season-bootstrap 95% ΔNLL range is -0.0038 to +0.0039.
+The representative C2 scale diagnostic says **lower RP increases predicted uncertainty**: scale is 1.2832 at low RP, 1.2051 at median RP, and 1.1448 at high RP, but individual RP scale coefficients have mixed signs. Overall, evidence that RP adds meaningful uncertainty-signal value beyond removing it from location is weak and mixed.
 
 ## Frozen protocol
 
@@ -77,6 +77,28 @@ Lower is better for NLL, CRPS, rank MAE, and interval width. Coverage is closer 
 | C2_rp_scale_only | 4.5661 | -0.0764 | 0.1115 | -0.0063 | 20.72 | 20.95 | 0.842 | 78.7 |
 | C3_rp_both | 4.6348 | -0.0077 | 0.1172 | -0.0005 | 21.51 | 22.12 | 0.801 | 72.1 |
 
+## Incremental C1→C2 comparison
+
+These deltas isolate the value of adding RP to scale after RP has already been removed from location. Negative values favor C2. The paired team-season and season-bootstrap summaries are descriptive, not inferential confidence intervals.
+
+| Metric | Δ C2 − C1 |
+|---|---:|
+| NLL | -0.0009 |
+| CRPS | -0.00004 |
+| Expected-rank MAE | -0.01 |
+| Median-rank MAE | +0.01 |
+| 80% coverage | +0.006 |
+| 80% interval width | +0.7 |
+
+| Season | ΔNLL | ΔCRPS | Δ80% coverage | Δ80% width |
+|---:|---:|---:|---:|---:|
+| 2022 | +0.0063 | +0.0003 | +0.001 | -0.1 |
+| 2023 | -0.0041 | -0.0002 | -0.001 | +0.3 |
+| 2024 | -0.0027 | -0.0002 | +0.009 | +0.6 |
+| 2025 | -0.0030 | -0.0001 | +0.015 | +2.1 |
+
+Across 534 paired team-seasons, mean ΔNLL was -0.0009, and C2 was better on 43.3% of team-seasons. The exhaustive ordered season bootstrap over 256 resamples had mean ΔNLL -0.0009, central 95% range -0.0038 to +0.0039, and C2 favored in 73.8% of resamples.
+
 ## Scale diagnostics
 
 The scale coefficients are standardized feature coefficients. Positive values mean higher RP raises the modeled scale, conditional on the other features; negative values mean higher RP lowers it.
@@ -105,17 +127,17 @@ Representative low/median/high RP predictions are in `scale_diagnostics.csv`; th
 ## Interpretation
 
 - C0 versus C1: C1 changes RP semantics by removing the four RP features from the location equation; its held-out delta is -0.0132 NLL and -0.0008 CRPS.
-- C2 versus C1: scale-only RP is preferred by aggregate NLL, while the year-by-year table shows whether that comparison is stable across 2022–2025.
-- C2 loses to C0 on NLL in 2022–2023 but improves on C0 in 2024–2025, so it avoids the recent degradation in this panel without being uniformly better across every season.
+- C2 versus C1: scale-only RP adds a small aggregate NLL improvement of -0.0009; it loses in 2022 and wins modestly in 2023–2025. The paired and bootstrap summaries above show why this should be treated as weak evidence.
+- C2 versus C0: scale-only RP loses in 2022–2023 but improves on C0 in 2024–2025, so it avoids the recent degradation in this panel without being uniformly better across every season.
 - C2 calibration: 80% coverage is 0.840 with width 75.3; compare the C0, C1, and C2 rows rather than interpreting coverage alone.
-- Directional check: lower RP increases predicted uncertainty. Together with C2's held-out scores, this supports treating roster continuity as a useful uncertainty signal in the portal-era panel, but not as proof that RP itself causes uncertainty.
+- Directional check: lower RP increases predicted uncertainty, but the individual RP scale coefficients have mixed signs and C2's intervals are wider with coverage farther above nominal. The evidence supports continued investigation of roster continuity as an uncertainty signal, not a production conclusion.
 
 ## Limitations
 
 - Returning production is correlated with rank history, recruiting, talent, and coaching; the experiment is a conditional semantic ablation, not a causal transfer analysis.
 - The data do not model incoming transfers or reconstruct a transfer-adjusted roster, so low RP may proxy for several roster and measurement processes.
 - The 2022–2025 panel contains four season clusters and has appeared in earlier research; uncertainty summaries are descriptive and do not establish independent confirmation.
-- The scale diagnostic uses representative feature values and should not be mistaken for a population-average effect.
+- The scale diagnostic uses representative feature values and should not be mistaken for a population-average effect; the fitted individual RP coefficients also have mixed signs.
 
 ## Reproduction
 
@@ -123,4 +145,4 @@ Representative low/median/high RP predictions are in `scale_diagnostics.csv`; th
 uv run python scripts/investigate_returning_production_uncertainty.py --source-root /path/to/cached-input-checkout
 ```
 
-Artifacts: `annual_metrics.csv`, `aggregate_metrics.csv`, `per_team_losses.csv`, `scale_coefficients.csv`, `scale_diagnostics.csv`, `summary.json`, and deterministic plots under `plots/`.
+Artifacts: `annual_metrics.csv`, `aggregate_metrics.csv`, `per_team_losses.csv`, `c2_vs_c1_annual.csv`, `c2_vs_c1_per_team.csv`, `c2_vs_c1_summary.json`, `scale_coefficients.csv`, `scale_diagnostics.csv`, `summary.json`, and deterministic plots under `plots/`.

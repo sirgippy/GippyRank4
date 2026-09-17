@@ -328,6 +328,90 @@ def aggregate_rows(
     return result
 
 
+def c2_vs_c1_comparison(
+    predictions_by_variant: dict[str, list[v1.PriorPrediction]],
+) -> tuple[list[dict[str, object]], dict[str, object]]:
+    """Measure the incremental scale-only effect against the no-RP parent."""
+
+    reference = predictions_by_variant[VARIANTS[1].name]
+    candidate = predictions_by_variant[VARIANTS[2].name]
+    reference_by_key = {prediction.key: prediction for prediction in reference}
+    candidate_by_key = {prediction.key: prediction for prediction in candidate}
+    if set(reference_by_key) != set(candidate_by_key):
+        raise ValueError("C1/C2 comparison requires identical team-season keys")
+    reference_losses = prediction_losses(reference)
+    candidate_losses = prediction_losses(candidate)
+    paired_rows = []
+    for key in sorted(reference_losses):
+        reference_nll, reference_crps = reference_losses[key]
+        candidate_nll, candidate_crps = candidate_losses[key]
+        paired_rows.append(
+            {
+                "season": key[0],
+                "subdivision": key[1],
+                "team_id": key[2],
+                "team_name": reference_by_key[key].team_name,
+                "c1_nll": reference_nll,
+                "c2_nll": candidate_nll,
+                "delta_nll_c2_minus_c1": candidate_nll - reference_nll,
+                "c1_crps": reference_crps,
+                "c2_crps": candidate_crps,
+                "delta_crps_c2_minus_c1": candidate_crps - reference_crps,
+            }
+        )
+    reference_score = score(reference)
+    candidate_score = score(candidate)
+    all_metrics = (*METRICS, "top5_brier", "top10_brier", "top25_brier")
+    aggregate_deltas = {
+        metric: candidate_score[metric] - reference_score[metric]
+        for metric in all_metrics
+    }
+    per_season = []
+    seasons = sorted({prediction.season for prediction in reference})
+    for season in seasons:
+        reference_year = [
+            prediction for prediction in reference if prediction.season == season
+        ]
+        candidate_year = [
+            prediction for prediction in candidate if prediction.season == season
+        ]
+        reference_year_score = score(reference_year)
+        candidate_year_score = score(candidate_year)
+        per_season.append(
+            {
+                "target_season": season,
+                "n_team_seasons": len(reference_year),
+                **{
+                    f"delta_{metric}_c2_minus_c1": candidate_year_score[metric]
+                    - reference_year_score[metric]
+                    for metric in all_metrics
+                },
+            }
+        )
+    nll_deltas = np.asarray(
+        [float(row["delta_nll_c2_minus_c1"]) for row in paired_rows], dtype=float
+    )
+    crps_deltas = np.asarray(
+        [float(row["delta_crps_c2_minus_c1"]) for row in paired_rows], dtype=float
+    )
+    return paired_rows, {
+        "reference": VARIANTS[1].name,
+        "candidate": VARIANTS[2].name,
+        "aggregate_metric_deltas": aggregate_deltas,
+        "per_season": per_season,
+        "paired_team_season": {
+            "n_team_seasons": len(paired_rows),
+            "mean_delta_nll": float(np.mean(nll_deltas)),
+            "median_delta_nll": float(np.median(nll_deltas)),
+            "fraction_c2_better_nll": float(np.mean(nll_deltas < 0)),
+            "mean_delta_crps": float(np.mean(crps_deltas)),
+            "median_delta_crps": float(np.median(crps_deltas)),
+            "fraction_c2_better_crps": float(np.mean(crps_deltas < 0)),
+        },
+        "season_bootstrap": h11.paired_bootstrap(reference, candidate),
+    }
+
+
 def scale_diagnostics(
     models: dict[str, DirectRankModel], training: list[TeamSeason]
 ) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
@@ -438,6 +522,7 @@ def render_report(
     aggregate: list[dict[str, object]],
     coefficients: list[dict[str, object]],
     levels: list[dict[str, object]],
+    c2_vs_c1: dict[str, object],
 ) -> None:
     by_variant = {str(row["variant"]): row for row in aggregate}
     c1 = by_variant[VARIANTS[1].name]
@@ -452,14 +537,28 @@ def render_report(
         if c2_levels["low"] > c2_levels["high"]
         else "lower RP does not increase predicted uncertainty"
     )
+    incremental = c2_vs_c1["aggregate_metric_deltas"]
+    incremental_per_season = c2_vs_c1["per_season"]
+    incremental_paired = c2_vs_c1["paired_team_season"]
+    incremental_bootstrap = c2_vs_c1["season_bootstrap"]
+    incremental_wins = [
+        int(row["target_season"])
+        for row in incremental_per_season
+        if float(row["delta_nll_c2_minus_c1"]) < 0
+    ]
+    incremental_losses = [
+        int(row["target_season"])
+        for row in incremental_per_season
+        if float(row["delta_nll_c2_minus_c1"]) > 0
+    ]
     lines = [
         "# Returning production as an uncertainty signal (issue 90)",
         "",
         "## Conclusion",
         "",
-        f"The frozen C2 scale-only variant has ΔNLL {float(c2['delta_nll_vs_c0']):+.4f} versus C0 and ΔCRPS {float(c2['delta_crps_vs_c0']):+.4f}. The fitted representative-scale diagnostic says **{direction}**: C2 scale is {c2_levels['low']:.4f} at low RP, {c2_levels['median']:.4f} at median RP, and {c2_levels['high']:.4f} at high RP.",
-        f"Removing RP entirely (C1) has ΔNLL {float(c1['delta_nll_vs_c0']):+.4f} versus C0. C2 is {'better' if float(c2['nll']) < float(c1['nll']) else 'not better'} than C1 by NLL, with the sign interpreted as lower being better.",
-        "These are descriptive held-out results, not causal evidence that transfers explain the relationship.",
+        f"Removing RP from location (C1) has ΔNLL {float(c1['delta_nll_vs_c0']):+.4f} versus C0 and ΔCRPS {float(c1['delta_crps_vs_c0']):+.4f}. This is the strong result in the experiment.",
+        f"Moving RP into scale (C2) adds only ΔNLL {float(incremental['nll']):+.4f} versus C1, with C2 winning in {', '.join(map(str, incremental_wins))} and losing in {', '.join(map(str, incremental_losses))}. Its paired team-season improvement fraction is {float(incremental_paired['fraction_c2_better_nll']):.3f}, and the season-bootstrap 95% ΔNLL range is {float(incremental_bootstrap['nll_central_95_bootstrap_range'][0]):+.4f} to {float(incremental_bootstrap['nll_central_95_bootstrap_range'][1]):+.4f}.",
+        f"The representative C2 scale diagnostic says **{direction}**: scale is {c2_levels['low']:.4f} at low RP, {c2_levels['median']:.4f} at median RP, and {c2_levels['high']:.4f} at high RP, but individual RP scale coefficients have mixed signs. Overall, evidence that RP adds meaningful uncertainty-signal value beyond removing it from location is weak and mixed.",
         "",
         "## Frozen protocol",
         "",
@@ -510,6 +609,30 @@ def render_report(
             )
         lines.append("")
     lines += [
+        "## Incremental C1→C2 comparison",
+        "",
+        "These deltas isolate the value of adding RP to scale after RP has already been removed from location. Negative values favor C2. The paired team-season and season-bootstrap summaries are descriptive, not inferential confidence intervals.",
+        "",
+        "| Metric | Δ C2 − C1 |",
+        "|---|---:|",
+        f"| NLL | {float(incremental['nll']):+.4f} |",
+        f"| CRPS | {float(incremental['crps']):+.5f} |",
+        f"| Expected-rank MAE | {float(incremental['expected_rank_mae']):+.2f} |",
+        f"| Median-rank MAE | {float(incremental['median_rank_mae']):+.2f} |",
+        f"| 80% coverage | {float(incremental['interval_80_coverage']):+.3f} |",
+        f"| 80% interval width | {float(incremental['interval_80_average_width']):+.1f} |",
+        "",
+        "| Season | ΔNLL | ΔCRPS | Δ80% coverage | Δ80% width |",
+        "|---:|---:|---:|---:|---:|",
+    ]
+    for row in incremental_per_season:
+        lines.append(
+            f"| {row['target_season']} | {float(row['delta_nll_c2_minus_c1']):+.4f} | {float(row['delta_crps_c2_minus_c1']):+.4f} | {float(row['delta_interval_80_coverage_c2_minus_c1']):+.3f} | {float(row['delta_interval_80_average_width_c2_minus_c1']):+.1f} |"
+        )
+    lines += [
+        "",
+        f"Across {incremental_paired['n_team_seasons']} paired team-seasons, mean ΔNLL was {float(incremental_paired['mean_delta_nll']):+.4f}, and C2 was better on {float(incremental_paired['fraction_c2_better_nll']):.1%} of team-seasons. The exhaustive ordered season bootstrap over {incremental_bootstrap['n_resamples']} resamples had mean ΔNLL {float(incremental_bootstrap['mean_delta_nll']):+.4f}, central 95% range {float(incremental_bootstrap['nll_central_95_bootstrap_range'][0]):+.4f} to {float(incremental_bootstrap['nll_central_95_bootstrap_range'][1]):+.4f}, and C2 favored in {float(incremental_bootstrap['fraction_candidate_better_nll']):.1%} of resamples.",
+        "",
         "## Scale diagnostics",
         "",
         "The scale coefficients are standardized feature coefficients. Positive values mean higher RP raises the modeled scale, conditional on the other features; negative values mean higher RP lowers it.",
@@ -538,17 +661,17 @@ def render_report(
         "## Interpretation",
         "",
         f"- C0 versus C1: C1 changes RP semantics by removing the four RP features from the location equation; its held-out delta is {float(c1['delta_nll_vs_c0']):+.4f} NLL and {float(c1['delta_crps_vs_c0']):+.4f} CRPS.",
-        f"- C2 versus C1: scale-only RP is {'preferred' if float(c2['nll']) < float(c1['nll']) else 'not preferred'} by aggregate NLL, while the year-by-year table shows whether that comparison is stable across 2022–2025.",
-        "- C2 loses to C0 on NLL in 2022–2023 but improves on C0 in 2024–2025, so it avoids the recent degradation in this panel without being uniformly better across every season.",
+        f"- C2 versus C1: scale-only RP adds a small aggregate NLL improvement of {float(incremental['nll']):+.4f}; it loses in 2022 and wins modestly in 2023–2025. The paired and bootstrap summaries above show why this should be treated as weak evidence.",
+        "- C2 versus C0: scale-only RP loses in 2022–2023 but improves on C0 in 2024–2025, so it avoids the recent degradation in this panel without being uniformly better across every season.",
         f"- C2 calibration: 80% coverage is {float(c2['interval_80_coverage']):.3f} with width {float(c2['interval_80_average_width']):.1f}; compare the C0, C1, and C2 rows rather than interpreting coverage alone.",
-        f"- Directional check: {direction}. Together with C2's held-out scores, this supports treating roster continuity as a useful uncertainty signal in the portal-era panel, but not as proof that RP itself causes uncertainty.",
+        f"- Directional check: {direction}, but the individual RP scale coefficients have mixed signs and C2's intervals are wider with coverage farther above nominal. The evidence supports continued investigation of roster continuity as an uncertainty signal, not a production conclusion.",
         "",
         "## Limitations",
         "",
         "- Returning production is correlated with rank history, recruiting, talent, and coaching; the experiment is a conditional semantic ablation, not a causal transfer analysis.",
         "- The data do not model incoming transfers or reconstruct a transfer-adjusted roster, so low RP may proxy for several roster and measurement processes.",
         "- The 2022–2025 panel contains four season clusters and has appeared in earlier research; uncertainty summaries are descriptive and do not establish independent confirmation.",
-        "- The scale diagnostic uses representative feature values and should not be mistaken for a population-average effect.",
+        "- The scale diagnostic uses representative feature values and should not be mistaken for a population-average effect; the fitted individual RP coefficients also have mixed signs.",
         "",
         "## Reproduction",
         "",
@@ -556,7 +679,7 @@ def render_report(
         "uv run python scripts/investigate_returning_production_uncertainty.py --source-root /path/to/cached-input-checkout",
         "```",
         "",
-        "Artifacts: `annual_metrics.csv`, `aggregate_metrics.csv`, `per_team_losses.csv`, `scale_coefficients.csv`, `scale_diagnostics.csv`, `summary.json`, and deterministic plots under `plots/`.",
+        "Artifacts: `annual_metrics.csv`, `aggregate_metrics.csv`, `per_team_losses.csv`, `c2_vs_c1_annual.csv`, `c2_vs_c1_per_team.csv`, `c2_vs_c1_summary.json`, `scale_coefficients.csv`, `scale_diagnostics.csv`, `summary.json`, and deterministic plots under `plots/`.",
     ]
     (OUT / "report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -646,6 +769,7 @@ def main() -> None:
 
     annual, per_team = annual_rows(predictions_by_variant)
     aggregate = aggregate_rows(predictions_by_variant)
+    c2_vs_c1_rows, c2_vs_c1 = c2_vs_c1_comparison(predictions_by_variant)
     coefficients, levels = scale_diagnostics(models, training)
     production_reference = load_production_reference(source_root)
     reproduction = c0_reproduction(
@@ -684,6 +808,7 @@ def main() -> None:
             for variant in VARIANTS
         },
         "aggregate_metrics": aggregate,
+        "c2_vs_c1": c2_vs_c1,
         "c0_reproduction": reproduction,
         "source_hashes": {
             name: sha256_file(path) for name, path in input_paths.items()
@@ -695,10 +820,13 @@ def main() -> None:
     write_csv("annual_metrics.csv", annual)
     write_csv("aggregate_metrics.csv", aggregate)
     write_csv("per_team_losses.csv", per_team)
+    write_csv("c2_vs_c1_per_team.csv", c2_vs_c1_rows)
+    write_csv("c2_vs_c1_annual.csv", c2_vs_c1["per_season"])
+    write_json("c2_vs_c1_summary.json", c2_vs_c1)
     write_csv("scale_coefficients.csv", coefficients)
     write_csv("scale_diagnostics.csv", levels)
     write_json("summary.json", summary)
-    render_report(summary, annual, aggregate, coefficients, levels)
+    render_report(summary, annual, aggregate, coefficients, levels, c2_vs_c1)
     plot_results(annual, levels)
 
 

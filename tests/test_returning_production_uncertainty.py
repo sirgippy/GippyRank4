@@ -13,11 +13,14 @@ from investigate_returning_production_uncertainty import (
     NON_RP_FEATURES,
     RP_FEATURES,
     VARIANTS,
+    c2_vs_c1_comparison,
     merge_h_fallback,
 )
 
 
-def prediction(team_id: str, model: str) -> v1.PriorPrediction:
+def prediction(
+    team_id: str, model: str, pmf: np.ndarray | None = None
+) -> v1.PriorPrediction:
     return v1.PriorPrediction(
         season=2022,
         subdivision="fbs",
@@ -27,7 +30,7 @@ def prediction(team_id: str, model: str) -> v1.PriorPrediction:
         target_ranks=np.asarray([1]),
         model=model,
         prior_method="same_subdivision_lag1",
-        pmf=np.asarray([0.5, 0.5]),
+        pmf=np.asarray([0.5, 0.5]) if pmf is None else pmf,
     )
 
 
@@ -51,3 +54,16 @@ def test_merge_h_fallback_keeps_the_exact_target_keys() -> None:
     assert [item.team_id for item in merged] == ["candidate", "cold"]
     assert merged[0].model == "C2"
     assert merged[1].model == "H"
+
+
+def test_c2_vs_c1_comparison_reports_paired_and_bootstrap_deltas() -> None:
+    rows, summary = c2_vs_c1_comparison(
+        {
+            "C1_no_rp": [prediction("a", "C1", np.asarray([0.4, 0.6]))],
+            "C2_rp_scale_only": [prediction("a", "C2", np.asarray([0.5, 0.5]))],
+        }
+    )
+    assert len(rows) == 1
+    assert rows[0]["delta_nll_c2_minus_c1"] < 0
+    assert summary["paired_team_season"]["n_team_seasons"] == 1
+    assert summary["season_bootstrap"]["n_resamples"] == 1
