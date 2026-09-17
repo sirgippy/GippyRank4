@@ -1,0 +1,313 @@
+{
+  "aggregate_metrics": [
+    {
+      "crps": 0.11194306775822212,
+      "delta_crps_vs_c0": 0.0,
+      "delta_expected_rank_mae_vs_c0": 0.0,
+      "delta_interval_80_average_width_vs_c0": 0.0,
+      "delta_interval_80_coverage_vs_c0": 0.0,
+      "delta_median_rank_mae_vs_c0": 0.0,
+      "delta_nll_vs_c0": 0.0,
+      "delta_top10_brier_vs_c0": 0.0,
+      "delta_top25_brier_vs_c0": 0.0,
+      "delta_top5_brier_vs_c0": 0.0,
+      "expected_rank_mae": 20.16301079638477,
+      "interval_80_average_width": 71.91947565543072,
+      "interval_80_coverage": 0.8249770482173019,
+      "median_rank_mae": 20.594569288389515,
+      "n_team_seasons": 534,
+      "nll": 4.542326751937675,
+      "top10_brier": 0.03113643706059292,
+      "top25_brier": 0.07147816327411728,
+      "top5_brier": 0.01678044549695795,
+      "variant": "C0_current_location"
+    },
+    {
+      "crps": 0.11111614140217868,
+      "delta_crps_vs_c0": -0.0008269263560434365,
+      "delta_expected_rank_mae_vs_c0": 0.06312820532530594,
+      "delta_interval_80_average_width_vs_c0": 2.6779026217228363,
+      "delta_interval_80_coverage_vs_c0": 0.008853352723146135,
+      "delta_median_rank_mae_vs_c0": -0.11423220973782833,
+      "delta_nll_vs_c0": -0.01317101732469439,
+      "delta_top10_brier_vs_c0": 0.0003115084903453115,
+      "delta_top25_brier_vs_c0": 0.0007190108066206652,
+      "delta_top5_brier_vs_c0": -0.0003804134888222774,
+      "expected_rank_mae": 20.226139001710077,
+      "interval_80_average_width": 74.59737827715355,
+      "interval_80_coverage": 0.833830400940448,
+      "median_rank_mae": 20.480337078651687,
+      "n_team_seasons": 534,
+      "nll": 4.5291557346129805,
+      "top10_brier": 0.03144794555093823,
+      "top25_brier": 0.07219717408073795,
+      "top5_brier": 0.01640003200813567,
+      "variant": "C1_no_rp"
+    },
+    {
+      "crps": 0.11107543065184743,
+      "delta_crps_vs_c0": -0.0008676371063746913,
+      "delta_expected_rank_mae_vs_c0": 0.05310366506278896,
+      "delta_interval_80_average_width_vs_c0": 3.4138576779026124,
+      "delta_interval_80_coverage_vs_c0": 0.014857703446894743,
+      "delta_median_rank_mae_vs_c0": -0.10299625468164919,
+      "delta_nll_vs_c0": -0.014102340717393247,
+      "delta_top10_brier_vs_c0": 0.0005226030829246046,
+      "delta_top25_brier_vs_c0": 0.0014754202884735557,
+      "delta_top5_brier_vs_c0": -0.00036011498631791095,
+      "expected_rank_mae": 20.21611446144756,
+      "interval_80_average_width": 75.33333333333333,
+      "interval_80_coverage": 0.8398347516641966,
+      "median_rank_mae": 20.491573033707866,
+      "n_team_seasons": 534,
+      "nll": 4.528224411220282,
+      "top10_brier": 0.031659040143517524,
+      "top25_brier": 0.07295358356259084,
+      "top5_brier": 0.016420330510640038,
+      "variant": "C2_rp_scale_only"
+    },
+    {
+      "crps": 0.1117278904474444,
+      "delta_crps_vs_c0": -0.00021517731077771995,
+      "delta_expected_rank_mae_vs_c0": -0.04432877621547959,
+      "delta_interval_80_average_width_vs_c0": -1.093632958801507,
+      "delta_interval_80_coverage_vs_c0": -0.007118294648517098,
+      "delta_median_rank_mae_vs_c0": -0.03370786516854096,
+      "delta_nll_vs_c0": -0.0025977228955635923,
+      "delta_top10_brier_vs_c0": -0.00017924645584105683,
+      "delta_top25_brier_vs_c0": -4.054072759025751e-05,
+      "delta_top5_brier_vs_c0": -8.355202042795509e-05,
+      "expected_rank_mae": 20.11868202016929,
+      "interval_80_average_width": 70.82584269662921,
+      "interval_80_coverage": 0.8178587535687848,
+      "median_rank_mae": 20.560861423220974,
+      "n_team_seasons": 534,
+      "nll": 4.539729029042111,
+      "top10_brier": 0.030957190604751862,
+      "top25_brier": 0.07143762254652702,
+      "top5_brier": 0.016696893476529993,
+      "variant": "C3_rp_both"
+    }
+  ],
+  "c0_reproduction": {
+    "differences_recomputed_minus_stored": {
+      "crps": 3.6745783081604255e-07,
+      "expected_rank_mae": -5.664247808567779e-07,
+      "interval_80_average_width": 0.0,
+      "interval_80_coverage": 0.0,
+      "median_rank_mae": 0.0,
+      "nll": 5.348005158722913e-06
+    },
+    "max_absolute_difference": 5.348005158722913e-06,
+    "passed": true,
+    "production_metrics": {
+      "crps": 0.1119427003003913,
+      "expected_rank_mae": 20.163011362809552,
+      "interval_80_average_width": 71.91947565543072,
+      "interval_80_coverage": 0.8249770482173019,
+      "median_rank_mae": 20.594569288389515,
+      "nll": 4.542321403932516
+    },
+    "recomputed_c0_metrics": {
+      "crps": 0.11194306775822212,
+      "expected_rank_mae": 20.16301079638477,
+      "interval_80_average_width": 71.91947565543072,
+      "interval_80_coverage": 0.8249770482173019,
+      "median_rank_mae": 20.594569288389515,
+      "nll": 4.542326751937675
+    },
+    "tolerance": 1e-05
+  },
+  "frozen_train_through": 2021,
+  "metrics": [
+    "nll",
+    "crps",
+    "expected_rank_mae",
+    "median_rank_mae",
+    "interval_80_coverage",
+    "interval_80_average_width"
+  ],
+  "n_team_seasons": 534,
+  "no_2026_outcomes_accessed": true,
+  "optimizer": "production L-BFGS-B settings with deterministic 2000-iteration retry",
+  "outcomes_through": 2025,
+  "penalty": 0.25,
+  "population": "exact stored production FBS evaluation panel with H fallback for rank-history cold starts",
+  "preprocessing": "production training-only median imputation plus missingness indicators",
+  "primary_protocol": "fit once through 2021; score unchanged across 2022-2025",
+  "production_models_modified": false,
+  "source_hashes": {
+    "stored_context_evaluation": "23b5e22a151ac68ab419a20950325bf4bd1c8407fc1c73ed3c796fa2b1eab2ac",
+    "team_season_features": "fd6f171131e38b852b94619338c5580e5f4e8c19f45c74e8135b11b20b1a2019",
+    "team_season_rank_distributions": "03e4e372017aedb45392ff7d790cea25f461db9b6dc846514c762ff46e2cab00"
+  },
+  "study": "issue_90_returning_production_uncertainty",
+  "target_seasons": [
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "variants": {
+    "C0_current_location": {
+      "location_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean",
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite",
+        "returning_pct_ppa",
+        "returning_pct_passing_ppa",
+        "returning_pct_receiving_ppa",
+        "returning_pct_rushing_ppa"
+      ],
+      "model_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean",
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite",
+        "returning_pct_ppa",
+        "returning_pct_passing_ppa",
+        "returning_pct_receiving_ppa",
+        "returning_pct_rushing_ppa"
+      ],
+      "scale_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean"
+      ]
+    },
+    "C1_no_rp": {
+      "location_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean",
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite"
+      ],
+      "model_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean",
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite"
+      ],
+      "scale_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean"
+      ]
+    },
+    "C2_rp_scale_only": {
+      "location_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean",
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite"
+      ],
+      "model_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean",
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite",
+        "returning_pct_ppa",
+        "returning_pct_passing_ppa",
+        "returning_pct_receiving_ppa",
+        "returning_pct_rushing_ppa"
+      ],
+      "scale_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean",
+        "returning_pct_ppa",
+        "returning_pct_passing_ppa",
+        "returning_pct_receiving_ppa",
+        "returning_pct_rushing_ppa"
+      ]
+    },
+    "C3_rp_both": {
+      "location_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean",
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite",
+        "returning_pct_ppa",
+        "returning_pct_passing_ppa",
+        "returning_pct_receiving_ppa",
+        "returning_pct_rushing_ppa"
+      ],
+      "model_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean",
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite",
+        "returning_pct_ppa",
+        "returning_pct_passing_ppa",
+        "returning_pct_receiving_ppa",
+        "returning_pct_rushing_ppa"
+      ],
+      "scale_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean",
+        "returning_pct_ppa",
+        "returning_pct_passing_ppa",
+        "returning_pct_receiving_ppa",
+        "returning_pct_rushing_ppa"
+      ]
+    }
+  }
+}
