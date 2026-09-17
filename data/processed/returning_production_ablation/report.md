@@ -2,15 +2,16 @@
 
 ## Primary result: frozen C evaluation
 
-Both variants were fit through 2021 and scored unchanged on 2022–2025. C-full NLL was **4.5437**; C-minus-RP NLL was **4.5304**; RP contribution was **-0.0133** NLL, so returning production hurt on the established held-out panel.
-C-full CRPS was **0.1120** versus **0.1112** without RP. Positive RP contribution means RP helped; negative means it hurt.
+Both variants were fit through 2021 and scored unchanged on 2022–2025. C-full NLL was **4.5423**; C-minus-RP NLL was **4.5292**; RP contribution was **-0.0132** NLL, so returning production hurt on the established held-out panel.
+C-full CRPS was **0.1119** versus **0.1111** without RP. Positive RP contribution means RP helped; negative means it hurt.
+The primary panel contains **534** team-seasons, including **6** rank-history cold starts scored with identical stored H fallback predictions in both variants. The C-full aggregate and yearly metrics match the stored production C 1.2 evaluation within the recorded numerical tolerance.
 This frozen comparison is the primary answer to issue 84. It is separate from the rolling-origin diagnostic below.
 
 ## Exact experiment
 
 - C-full uses the current Context C 1.2 location equation: rank-history features plus coach tenure, recruiting, Talent, and all returning-production features.
 - C-minus-RP uses the same equation, penalty (0.25), production fitting path, optimizer defaults, and iteration-limit retry, with only the four returning-production features removed.
-- Both variants use the full eligible historical FBS population and identical target-season keys. The existing training-only median imputation and missingness indicators are retained for the remaining features.
+- The primary comparison uses the exact all-FBS C 1.2 held-out panel, including stored H fallback predictions for rank-history cold starts; those rows are identical in both variants and therefore contribute zero RP difference. The secondary rolling diagnostic remains on contextual rows only.
 - Primary protocol: fit each variant once on rows through 2021, then score the unchanged fits across 2022–2025. 2026 is excluded.
 - Secondary protocol: refit each target season using only earlier seasons, preserving the prior report’s rolling-origin diagnostic for temporal shape analysis.
 
@@ -26,10 +27,10 @@ RP contribution is `NLL(C-minus-RP) - NLL(C-full)`: positive means RP helped; ne
 
 | Season | N | C-full NLL | C-minus-RP NLL | RP contribution | C-full CRPS | C-minus-RP CRPS | C-full rank MAE | C-minus-RP rank MAE | C-full 80% cov. | C-minus-RP 80% cov. |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 2022 | 130 | 4.4616 | 4.4821 | +0.0205 | 0.1065 | 0.1085 | 18.56 | 19.17 | 0.825 | 0.832 |
-| 2023 | 131 | 4.4718 | 4.5048 | +0.0330 | 0.1043 | 0.1077 | 19.21 | 20.04 | 0.865 | 0.860 |
-| 2024 | 133 | 4.5962 | 4.5658 | -0.0304 | 0.1187 | 0.1164 | 21.02 | 20.76 | 0.803 | 0.814 |
-| 2025 | 134 | 4.6417 | 4.5672 | -0.0745 | 0.1184 | 0.1121 | 21.90 | 21.01 | 0.800 | 0.824 |
+| 2022 | 131 | 4.4669 | 4.4872 | +0.0203 | 0.1071 | 0.1090 | 18.68 | 19.28 | 0.826 | 0.833 |
+| 2023 | 133 | 4.4722 | 4.5047 | +0.0325 | 0.1044 | 0.1078 | 19.28 | 20.10 | 0.867 | 0.861 |
+| 2024 | 134 | 4.5840 | 4.5539 | -0.0301 | 0.1183 | 0.1160 | 21.02 | 20.76 | 0.805 | 0.815 |
+| 2025 | 136 | 4.6425 | 4.5691 | -0.0734 | 0.1177 | 0.1115 | 21.61 | 20.73 | 0.803 | 0.827 |
 
 ## Secondary rolling-origin diagnostic
 
@@ -44,7 +45,7 @@ The rolling-origin diagnostic is secondary and does not replace the frozen held-
 ## Interpretation
 
 - Returning production is useful when its contribution is positive, but a worse absolute C-minus-RP score is expected and is not by itself evidence against feature drift.
-- The primary frozen result is the relevant held-out answer: RP hurt by -0.0133 NLL on 2022–2025.
+- The primary frozen result is the relevant held-out answer: RP hurt by -0.0132 NLL on 2022–2025.
 - The secondary rolling result compares 0.0070 before 2022, 0.0145 in 2015–2021, and -0.0034 in 2022–2025. This is consistent with the hypothesis that RP became less informative, but it is not causal evidence that omitted transfers caused the drift.
 
 ## Limitations
@@ -57,7 +58,7 @@ The rolling-origin diagnostic is secondary and does not replace the frozen held-
 ## Artifacts
 
 - `annual_metrics.csv` — primary frozen 2022–2025 model metrics and RP contribution for every metric.
-- `per_team_losses.csv` — primary paired team-season NLL and CRPS losses.
+- `per_team_losses.csv` — primary paired team-season NLL and CRPS losses, with the prediction source recorded for H fallback rows.
 - `heldout_summary.csv` — primary aggregate held-out metrics.
 - `rolling_annual_metrics.csv` and `rolling_per_team_losses.csv` — secondary rolling-origin diagnostics.
 - `period_summary.csv` — secondary pre-2022, RP-observable-era, and recent descriptive aggregates.

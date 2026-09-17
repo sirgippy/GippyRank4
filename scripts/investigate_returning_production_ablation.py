@@ -39,6 +39,8 @@ MIN_TRAIN_SEASONS = 3
 RECENT_START = 2022
 FROZEN_TRAIN_THROUGH = 2021
 RP_OBSERVABLE_START = 2015
+PRODUCTION_PARITY_RTOL = 1e-8
+PRODUCTION_PARITY_ATOL = 1e-3
 
 H_FEATURES = tuple(c12.H_FEATURES)
 CONTEXT_FEATURES = (
@@ -92,6 +94,8 @@ def configure_source_root(source_root: Path) -> None:
     """Point the existing cached-input loaders at an explicit checkout."""
     v1.ROOT = source_root
     v1.OUT = source_root / "data/processed/preseason"
+    h11.ROOT = source_root
+    h11.OUT = source_root / "data/processed/preseason"
     c12.ROOT = source_root
     c12.PRESEASON = source_root / "data/processed/preseason"
     c12.MODELING = source_root / "data/processed/modeling"
@@ -122,6 +126,41 @@ def predictions(
     model: DirectRankModel, rows: list[TeamSeason], name: str
 ) -> list[v1.PriorPrediction]:
     return h11.make_predictions(model, rows, name)
+
+
+def complete_production_panel(
+    history: list[v1.PriorPrediction],
+    contextual_predictions: list[v1.PriorPrediction],
+    contextual_keys: set[tuple[int, str, str]],
+    *,
+    target_min: int,
+    target_max: int,
+) -> tuple[list[v1.PriorPrediction], set[tuple[int, str, str]]]:
+    """Restore production H fallbacks around predictions from an ablation model."""
+    production_rows = [
+        prediction
+        for prediction in history
+        if target_min <= prediction.season <= target_max
+    ]
+    if not production_rows:
+        raise ValueError("production held-out panel is empty")
+    production_keys = {prediction.key for prediction in production_rows}
+    updates = {prediction.key: prediction for prediction in contextual_predictions}
+    if set(updates) != contextual_keys:
+        raise ValueError("context predictions do not cover the expected target keys")
+    if not contextual_keys <= production_keys:
+        raise ValueError("context predictions extend beyond the production panel")
+    fallback_keys = production_keys - contextual_keys
+    panel = [updates.get(prediction.key, prediction) for prediction in production_rows]
+    if {prediction.key for prediction in panel} != production_keys:
+        raise ValueError("completed production panel changed target keys")
+    if any(
+        prediction.model != c12.H_MODEL_NAME
+        for prediction in production_rows
+        if prediction.key in fallback_keys
+    ):
+        raise ValueError("production fallback rows are not the stored H predictions")
+    return panel, fallback_keys
 
 
 def top_brier(predictions_: list[v1.PriorPrediction], cutoff: int) -> float:
@@ -173,9 +212,21 @@ def compare_predictions(
     protocol: str,
     n_training_rows: int,
     n_training_seasons: int,
+    fallback_keys: set[tuple[int, str, str]] | None = None,
 ) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
     """Compare paired predictions, retaining annual and team-level metrics."""
     assert_same_population(full_predictions, minus_rp_predictions)
+    fallback_keys = fallback_keys or set()
+    population_keys = {prediction.key for prediction in full_predictions}
+    if not fallback_keys <= population_keys:
+        raise ValueError("fallback keys are outside the ablation population")
+    full_by_key = {prediction.key: prediction for prediction in full_predictions}
+    minus_by_key = {
+        prediction.key: prediction for prediction in minus_rp_predictions
+    }
+    for key in fallback_keys:
+        if not np.array_equal(full_by_key[key].pmf, minus_by_key[key].pmf):
+            raise ValueError("H fallback predictions differ between ablation variants")
     annual: list[dict[str, object]] = []
     per_team: list[dict[str, object]] = []
     for target in sorted({prediction.season for prediction in full_predictions}):
@@ -192,6 +243,9 @@ def compare_predictions(
             "n_training_rows": n_training_rows,
             "n_training_seasons": n_training_seasons,
             "same_population_keys": True,
+            "n_h_fallback_team_seasons": sum(
+                prediction.key in fallback_keys for prediction in full_year
+            ),
         }
         for metric in METRICS:
             annual_row[f"c_full_{metric}"] = full_scores[metric]
@@ -220,15 +274,22 @@ def compare_predictions(
                     "c_full_crps": full_crps,
                     "c_minus_rp_crps": minus_crps,
                     "rp_contribution_crps": minus_crps - full_crps,
+                    "prediction_source": (
+                        "h_fallback" if key in fallback_keys else "context_model"
+                    ),
                 }
             )
     return annual, per_team
 
 
 def run_frozen_ablation(
-    rows: list[TeamSeason], *, target_min: int, target_max: int
+    rows: list[TeamSeason],
+    history: list[v1.PriorPrediction],
+    *,
+    target_min: int,
+    target_max: int,
 ) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
-    """Fit once through 2021 and score unchanged across the held-out period."""
+    """Fit once through 2021 and score the exact production held-out panel."""
     target_rows = [row for row in rows if target_min <= row.season <= target_max]
     if not target_rows:
         raise ValueError("no held-out target rows for returning-production ablation")
@@ -247,14 +308,32 @@ def run_frozen_ablation(
         target_season=target_min,
         trained_through_season=FROZEN_TRAIN_THROUGH,
     )
-    full_predictions = predictions(full_model, target_rows, "C-full")
-    minus_rp_predictions = predictions(minus_rp_model, target_rows, "C-minus-RP")
+    contextual_keys = {
+        (row.season, row.subdivision, row.team_id) for row in target_rows
+    }
+    full_predictions, fallback_keys = complete_production_panel(
+        history,
+        predictions(full_model, target_rows, "C-full"),
+        contextual_keys,
+        target_min=target_min,
+        target_max=target_max,
+    )
+    minus_rp_predictions, minus_fallback_keys = complete_production_panel(
+        history,
+        predictions(minus_rp_model, target_rows, "C-minus-RP"),
+        contextual_keys,
+        target_min=target_min,
+        target_max=target_max,
+    )
+    if fallback_keys != minus_fallback_keys:
+        raise ValueError("ablation variants have different H fallback populations")
     return compare_predictions(
         full_predictions,
         minus_rp_predictions,
         protocol="frozen_through_2021",
         n_training_rows=len(training),
         n_training_seasons=len({row.season for row in training}),
+        fallback_keys=fallback_keys,
     )
 
 
@@ -323,6 +402,10 @@ def summarize_rows(
         "n_target_seasons": len(rows),
         "n_team_seasons": sum(int(row["n_team_seasons"]) for row in rows),
     }
+    if "n_h_fallback_team_seasons" in rows[0]:
+        item["n_h_fallback_team_seasons"] = sum(
+            int(row["n_h_fallback_team_seasons"]) for row in rows
+        )
     for metric in METRICS:
         item[f"c_full_{metric}"] = weighted_mean(rows, f"c_full_{metric}")
         item[f"c_minus_rp_{metric}"] = weighted_mean(
@@ -332,6 +415,76 @@ def summarize_rows(
             rows, f"rp_contribution_{metric}"
         )
     return item
+
+
+def validate_production_control(
+    primary_annual: list[dict[str, object]],
+    primary_summary: dict[str, object],
+    source_root: Path,
+) -> dict[str, object]:
+    """Guard that the ablation's C-full reproduces stored production C 1.2."""
+    evaluation_path = source_root / "data/processed/preseason/context/evaluation.json"
+    report = json.loads(evaluation_path.read_text(encoding="utf-8"))
+    all_fbs = report["all_fbs"]
+    candidate = all_fbs["candidate"]
+
+    def expected_metrics(item: dict[str, object]) -> dict[str, float]:
+        metrics = {metric: float(item[metric]) for metric in METRICS[:6]}
+        for cutoff in (5, 10, 25):
+            metrics[f"top{cutoff}_brier"] = float(
+                item[f"top{cutoff}"]["reliability"]["brier_score"]
+            )
+        return metrics
+
+    def compare(label: str, actual: dict[str, object], expected: dict[str, object]) -> float:
+        differences = {
+            metric: abs(float(actual[f"c_full_{metric}"]) - value)
+            for metric, value in expected_metrics(expected).items()
+        }
+        maximum = max(differences.values())
+        if not all(
+            np.isclose(
+                value,
+                0.0,
+                rtol=PRODUCTION_PARITY_RTOL,
+                atol=PRODUCTION_PARITY_ATOL,
+            )
+            for value in differences.values()
+        ):
+            raise ValueError(
+                f"C-full does not reproduce stored production C metrics for {label}: "
+                f"{differences}"
+            )
+        return maximum
+
+    if int(primary_summary["n_team_seasons"]) != int(candidate["n_team_seasons"]):
+        raise ValueError(
+            "C-full population does not match stored production C population: "
+            f"{primary_summary['n_team_seasons']} != {candidate['n_team_seasons']}"
+        )
+    aggregate_difference = compare("all_fbs", primary_summary, candidate)
+    production_per_season = all_fbs["per_season"]
+    annual_by_year = {str(row["target_season"]): row for row in primary_annual}
+    annual_differences = [
+        compare(year, annual_by_year[year], production_per_season[year]["c"])
+        for year in sorted(production_per_season)
+    ]
+    return {
+        "evaluation_artifact": str(evaluation_path.relative_to(source_root)),
+        "aggregate_match": True,
+        "annual_match": True,
+        "expected_n_team_seasons": int(candidate["n_team_seasons"]),
+        "n_h_fallback_team_seasons": int(
+            primary_summary["n_h_fallback_team_seasons"]
+        ),
+        "max_abs_metric_difference": max(
+            aggregate_difference, *annual_differences
+        ),
+        "tolerance": (
+            f"numpy.isclose(rtol={PRODUCTION_PARITY_RTOL:g}, "
+            f"atol={PRODUCTION_PARITY_ATOL:g})"
+        ),
+    }
 
 
 def period_rows(
@@ -402,6 +555,7 @@ def make_summary(
     target_min: int,
     target_max: int,
     source_root: Path,
+    production_control_parity: dict[str, object],
 ) -> dict[str, object]:
     full_degradation = period_difference(rolling_periods, "c_full_nll")
     minus_degradation = period_difference(rolling_periods, "c_minus_rp_nll")
@@ -426,7 +580,9 @@ def make_summary(
         "recent_period_definition": "2022-2025, the established temporally held-out Context evaluation period",
         "rp_observable_period_definition": "2015-2021, a reporting era after returning-production coverage begins in 2014",
         "same_population_keys_required": True,
-        "population": "all historical FBS rows eligible for the existing Context loader; no raw-coverage restriction",
+        "population": "Primary held-out panel is the exact all-FBS C 1.2 evaluation population, including H fallbacks for rank-history cold starts; secondary rolling diagnostics use contextual rows.",
+        "primary_population": "All production C 1.2 FBS team-seasons for 2022-2025, with exact stored H predictions retained for rank-history cold starts",
+        "secondary_population": "All contextual FBS team-seasons available to the rolling fit; H fallback rows are not used in the secondary rolling diagnostic",
         "preprocessing": "existing DirectRankModel training-only median imputation and missingness indicators",
         "penalty": 0.25,
         "location_features": {
@@ -439,6 +595,7 @@ def make_summary(
         "production_models_modified": False,
         "no_2026_outcomes_accessed": target_max < 2026,
         "primary_heldout_summary": primary_summary,
+        "production_control_parity": production_control_parity,
         "secondary_rolling_periods": rolling_periods,
         "secondary_rolling_linear_slopes_per_year": slopes(rolling_annual),
         "secondary_rolling_nll_period_changes_recent_minus_pre_2022": {
@@ -454,6 +611,9 @@ def make_summary(
             ),
             "data/processed/preseason/team_season_features.csv": sha256_file(
                 source_root / "data/processed/preseason/team_season_features.csv"
+            ),
+            "data/processed/preseason/context/evaluation.json": sha256_file(
+                source_root / "data/processed/preseason/context/evaluation.json"
             ),
         },
     }
@@ -472,6 +632,7 @@ def render_report(
     primary_contribution = float(primary_summary["rp_contribution_nll"])
     primary_full_nll = float(primary_summary["c_full_nll"])
     primary_minus_nll = float(primary_summary["c_minus_rp_nll"])
+    primary_fallback_count = int(primary_summary["n_h_fallback_team_seasons"])
     rolling_changes = summary[
         "secondary_rolling_nll_period_changes_recent_minus_pre_2022"
     ]
@@ -506,13 +667,14 @@ def render_report(
         "",
         f"Both variants were fit through 2021 and scored unchanged on 2022–2025. C-full NLL was **{fmt(primary_full_nll)}**; C-minus-RP NLL was **{fmt(primary_minus_nll)}**; RP contribution was **{fmt(primary_contribution)}** NLL, so returning production {primary_direction} on the established held-out panel.",
         f"C-full CRPS was **{fmt(primary_summary['c_full_crps'])}** versus **{fmt(primary_summary['c_minus_rp_crps'])}** without RP. Positive RP contribution means RP helped; negative means it hurt.",
+        f"The primary panel contains **{primary_summary['n_team_seasons']}** team-seasons, including **{primary_fallback_count}** rank-history cold starts scored with identical stored H fallback predictions in both variants. The C-full aggregate and yearly metrics match the stored production C 1.2 evaluation within the recorded numerical tolerance.",
         "This frozen comparison is the primary answer to issue 84. It is separate from the rolling-origin diagnostic below.",
         "",
         "## Exact experiment",
         "",
         "- C-full uses the current Context C 1.2 location equation: rank-history features plus coach tenure, recruiting, Talent, and all returning-production features.",
         "- C-minus-RP uses the same equation, penalty (0.25), production fitting path, optimizer defaults, and iteration-limit retry, with only the four returning-production features removed.",
-        "- Both variants use the full eligible historical FBS population and identical target-season keys. The existing training-only median imputation and missingness indicators are retained for the remaining features.",
+        "- The primary comparison uses the exact all-FBS C 1.2 held-out panel, including stored H fallback predictions for rank-history cold starts; those rows are identical in both variants and therefore contribute zero RP difference. The secondary rolling diagnostic remains on contextual rows only.",
         "- Primary protocol: fit each variant once on rows through 2021, then score the unchanged fits across 2022–2025. 2026 is excluded.",
         "- Secondary protocol: refit each target season using only earlier seasons, preserving the prior report’s rolling-origin diagnostic for temporal shape analysis.",
         "",
@@ -568,7 +730,7 @@ def render_report(
         "## Artifacts",
         "",
         "- `annual_metrics.csv` — primary frozen 2022–2025 model metrics and RP contribution for every metric.",
-        "- `per_team_losses.csv` — primary paired team-season NLL and CRPS losses.",
+        "- `per_team_losses.csv` — primary paired team-season NLL and CRPS losses, with the prediction source recorded for H fallback rows.",
         "- `heldout_summary.csv` — primary aggregate held-out metrics.",
         "- `rolling_annual_metrics.csv` and `rolling_per_team_losses.csv` — secondary rolling-origin diagnostics.",
         "- `period_summary.csv` — secondary pre-2022, RP-observable-era, and recent descriptive aggregates.",
@@ -636,11 +798,14 @@ def main() -> None:
         raise ValueError("--target-min must not exceed --target-max")
     source_root = args.source_root.resolve()
     configure_source_root(source_root)
-    rows, _cold, _coverage = v1.load_rows(max_season=args.target_max)
+    rows, cold, _coverage = v1.load_rows(max_season=args.target_max)
     fbs = [row for row in rows if row.subdivision == "fbs"]
+    fbs_cold = [row for row in cold if row.subdivision == "fbs"]
     contextual, _ = c12.attach_context(fbs, c12.feature_index(), c12.cached_tenures())
+    history = c12.raw_history_predictions(fbs, fbs_cold)
     primary_annual, primary_per_team = run_frozen_ablation(
         contextual,
+        history,
         target_min=max(args.target_min, RECENT_START),
         target_max=args.target_max,
     )
@@ -656,6 +821,9 @@ def main() -> None:
         start=RECENT_START,
         end=args.target_max,
     )
+    production_control_parity = validate_production_control(
+        primary_annual, primary_summary, source_root
+    )
     summary = make_summary(
         primary_annual,
         primary_summary,
@@ -664,6 +832,7 @@ def main() -> None:
         target_min=args.target_min,
         target_max=args.target_max,
         source_root=source_root,
+        production_control_parity=production_control_parity,
     )
     write_csv("annual_metrics.csv", primary_annual)
     write_csv("per_team_losses.csv", primary_per_team)
