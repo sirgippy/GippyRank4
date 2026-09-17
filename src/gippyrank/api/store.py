@@ -1,9 +1,9 @@
 """Validated, read-only access to the generated publication artifacts.
 
 This module intentionally knows nothing about CFBD acquisition or the model
-implementation.  A :class:`PublicationStore` can only serve files selected by
+implementation. A :class:`PublicationStore` can only load files selected by
 the checked-in publication manifest, and it validates the cross-artifact
-relationships before making a publication available to the API.
+relationships before the static exporter writes a publication resource.
 """
 
 from __future__ import annotations
