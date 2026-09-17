@@ -450,6 +450,27 @@
     }
   ],
   "comparison": {
+    "c10_vs_c1": {
+      "aggregate_delta_nll": -0.01311614927261669,
+      "by_season": [
+        {
+          "delta_nll": -0.030673703737267743,
+          "season": 2022
+        },
+        {
+          "delta_nll": -0.029488707780858547,
+          "season": 2023
+        },
+        {
+          "delta_nll": 0.000615340862522018,
+          "season": 2024
+        },
+        {
+          "delta_nll": 0.006277749538830868,
+          "season": 2025
+        }
+      ]
+    },
     "clean_primary_candidate": "C10_transfer_production",
     "development_selection_performed": false,
     "development_selection_reason": "transfer portal coverage begins after the development training period; selection is refused when all added transfer features are unobserved",
@@ -1332,7 +1353,64 @@
   ],
   "missing_data_policy": "uncovered portal seasons are None; covered seasons with no matching transfer are zero; DirectRankModel applies training-only median imputation and missingness indicators",
   "negative_control": {
-    "method": "permute transfer volume features within season",
+    "candidate": "C10_transfer_production",
+    "mean_permuted_delta_crps_vs_c0": 0.0015955839726764474,
+    "mean_permuted_delta_crps_vs_real": 0.00456826705113569,
+    "mean_permuted_delta_nll_vs_c0": 0.015471581322461514,
+    "mean_permuted_delta_nll_vs_real": 0.04146262361951236,
+    "mean_real_delta_crps_vs_c0": -0.002972683078459243,
+    "mean_real_delta_nll_vs_c0": -0.025991042297050848,
+    "method": "jointly permute C10 transfer-production features within season",
+    "rows": [
+      {
+        "candidate": "C10_transfer_production",
+        "control": "within_season_c10_production_permutation",
+        "permuted_delta_crps_vs_c0": 0.0010518028461341117,
+        "permuted_delta_crps_vs_real": 0.0023985023895479185,
+        "permuted_delta_nll_vs_c0": 0.008057170831865967,
+        "permuted_delta_nll_vs_real": 0.018404429928104094,
+        "real_delta_crps_vs_c0": -0.0013466995434138068,
+        "real_delta_nll_vs_c0": -0.010347259096238126,
+        "season": 2022,
+        "seed": 7
+      },
+      {
+        "candidate": "C10_transfer_production",
+        "control": "within_season_c10_production_permutation",
+        "permuted_delta_crps_vs_c0": 0.0011036418895035843,
+        "permuted_delta_crps_vs_real": 0.0005161473415990769,
+        "permuted_delta_nll_vs_c0": 0.009917869662467993,
+        "permuted_delta_nll_vs_real": 0.006923570364934406,
+        "real_delta_crps_vs_c0": 0.0005874945479045074,
+        "real_delta_nll_vs_c0": 0.002994299297533587,
+        "season": 2023,
+        "seed": 7
+      },
+      {
+        "candidate": "C10_transfer_production",
+        "control": "within_season_c10_production_permutation",
+        "permuted_delta_crps_vs_c0": 0.0016492114405556313,
+        "permuted_delta_crps_vs_real": 0.005022373353244028,
+        "permuted_delta_nll_vs_c0": 0.01715398038048921,
+        "permuted_delta_nll_vs_real": 0.046667304902209494,
+        "real_delta_crps_vs_c0": -0.0033731619126883966,
+        "real_delta_nll_vs_c0": -0.029513324521720286,
+        "season": 2024,
+        "seed": 7
+      },
+      {
+        "candidate": "C10_transfer_production",
+        "control": "within_season_c10_production_permutation",
+        "permuted_delta_crps_vs_c0": 0.0025776797145124625,
+        "permuted_delta_crps_vs_real": 0.010336045120151738,
+        "permuted_delta_nll_vs_c0": 0.026757304415022887,
+        "permuted_delta_nll_vs_real": 0.09385518928280145,
+        "real_delta_crps_vs_c0": -0.007758365405639275,
+        "real_delta_nll_vs_c0": -0.06709788486777857,
+        "season": 2025,
+        "seed": 7
+      }
+    ],
     "seed": 7
   },
   "portal_seasons_available": [

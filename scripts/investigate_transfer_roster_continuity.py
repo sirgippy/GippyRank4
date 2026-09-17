@@ -74,7 +74,14 @@ BASE_CONTEXT_FEATURES = (
 C_MINUS_RP_FEATURES = tuple(
     feature for feature in BASE_CONTEXT_FEATURES if feature not in RP_FEATURES
 )
-QB_FEATURES = tuple(feature for feature in ALL_FEATURES if feature.endswith("_qb"))
+C10_TRANSFER_FEATURES = (
+    "transfer_in_prior_usage_sum",
+    "transfer_net_prior_usage",
+)
+C10_QB_FEATURES = (
+    "transfer_in_prior_usage_qb",
+    "transfer_out_prior_usage_qb",
+)
 
 METRICS = (
     "nll",
@@ -150,8 +157,7 @@ def candidate_definitions() -> tuple[Candidate, ...]:
             "C10_transfer_production",
             (
                 *BASE_CONTEXT_FEATURES,
-                "transfer_in_prior_usage_sum",
-                "transfer_net_prior_usage",
+                *C10_TRANSFER_FEATURES,
             ),
             transfer_aware=True,
         ),
@@ -574,7 +580,11 @@ def aggregate_annual(rows: list[dict[str, object]]) -> list[dict[str, object]]:
 def permute_transfer_features(
     rows: list[TeamSeason], feature_names: Iterable[str], seed: int = RANDOM_SEED
 ) -> list[TeamSeason]:
-    """Permute transfer values within season, preserving each season's distribution."""
+    """Permute transfer feature vectors within season.
+
+    A shared permutation preserves the joint missingness and value pattern
+    across the supplied features while removing team identity.
+    """
     names = tuple(feature_names)
     rng = np.random.default_rng(seed)
     by_season: defaultdict[int, list[int]] = defaultdict(list)
@@ -582,22 +592,32 @@ def permute_transfer_features(
         by_season[row.season].append(index)
     output = [replace(row, features=dict(row.features)) for row in rows]
     for indices in by_season.values():
+        permutation = rng.permutation(len(indices))
         for name in names:
             values = [rows[index].features.get(name) for index in indices]
-            shuffled = list(rng.permutation(values))
+            shuffled = [values[int(source)] for source in permutation]
             for index, value in zip(indices, shuffled, strict=True):
                 output[index].features[name] = value
     return output
 
 
-def transfer_bucket(value: float | None) -> str:
-    if value is None:
-        return "unknown"
-    if value <= 0:
-        return "low_0"
-    if value <= 3:
-        return "medium_1_3"
-    return "high_4_plus"
+def within_season_intake_buckets(
+    rows: list[dict[str, object]],
+) -> dict[tuple[int, str], str]:
+    """Assign balanced low/middle/high intake tertiles within each season."""
+    by_season: defaultdict[int, list[tuple[str, float]]] = defaultdict(list)
+    for row in rows:
+        value = row["transfer_in_count"]
+        if value is not None:
+            by_season[int(row["season"])].append((str(row["team_id"]), float(value)))
+    labels = ("low_tertile", "middle_tertile", "high_tertile")
+    result: dict[tuple[int, str], str] = {}
+    for season, values in by_season.items():
+        ranked = sorted(values, key=lambda item: (item[1], item[0]))
+        for rank, (team_id, _) in enumerate(ranked):
+            bucket_index = min(2, (3 * rank) // len(ranked))
+            result[(season, team_id)] = labels[bucket_index]
+    return result
 
 
 def diagnostics(
@@ -620,7 +640,6 @@ def diagnostics(
                 "season": key[0],
                 "team_id": key[2],
                 "team_name": prediction.team_name,
-                "transfer_bucket": transfer_bucket(feature.get("transfer_in_count")),
                 "transfer_in_count": feature.get("transfer_in_count"),
                 "transfer_in_weighted_rating_sum": feature.get(
                     "transfer_in_weighted_rating_sum"
@@ -637,6 +656,11 @@ def diagnostics(
                 "diagnostic_minus_c0_nll": diagnostic_losses[key][0]
                 - c0_losses[key][0],
             }
+        )
+    buckets = within_season_intake_buckets(team_rows)
+    for row in team_rows:
+        row["transfer_bucket"] = buckets.get(
+            (int(row["season"]), str(row["team_id"])), "unknown"
         )
     bucket_rows = []
     for (season, bucket), part in sorted(
@@ -726,7 +750,7 @@ def plot_outputs(
         ]
         axis.bar(bucket_labels, values)
         axis.axhline(0, color="black", linewidth=0.8)
-        axis.set_title("RP contribution by incoming-transfer bucket")
+        axis.set_title("RP contribution by within-season transfer-intake tertile")
         axis.set_ylabel("mean NLL(C-minus-RP) − NLL(C0)")
         figure.tight_layout()
         figure.savefig(plots / "rp_contribution_by_transfer_bucket.png", dpi=160)
@@ -751,6 +775,11 @@ def render_report(
     diagnostic = comparison["diagnostic_candidate"]
     descriptive_best = comparison["heldout_descriptive_best_transfer_candidate"]
     clean_primary = comparison["clean_primary_candidate"]
+    c10_vs_c1 = comparison["c10_vs_c1"]
+    c10_by_season = {
+        int(row["season"]): row["delta_nll"] for row in c10_vs_c1["by_season"]
+    }
+    negative = summary["negative_control"]
     heldout = [
         row for row in candidate_summary if row["protocol"] == "frozen_through_2021"
     ]
@@ -769,6 +798,8 @@ def render_report(
         "",
         f"No development candidate was selected: the rows available to train through 2017 contain zero observed values for every added transfer feature. The predeclared candidates are exploratory retrospective-oracle comparisons. The clean C10 candidate **{clean_primary}** has held-out ΔNLL **{fmt(clean_primary_delta)}** versus production C0; the strongest descriptive result is **{descriptive_best}**, with ΔNLL **{fmt(descriptive_best_delta)}**. {diagnostic} is used only for mechanism diagnostics. This is not a production-safe Context change.",
         "C9 is retained as an explicitly ad hoc hybrid index: returning-production percentage plus incoming prior-usage sum. Those quantities have incompatible denominators, so C9 is not interpreted as reconstructed effective returning production; C10 keeps returning production and incoming prior usage as separate features.",
+        f"Against C1 (remove RP), C10's aggregate ΔNLL is **{fmt(c10_vs_c1['aggregate_delta_nll'])}**; it is **{fmt(c10_by_season.get(2024))}** in 2024 and **{fmt(c10_by_season.get(2025))}** in 2025. The improvement is therefore concentrated in preserving earlier RP value while avoiding most of the later damage, rather than clearly repairing the 2024--2025 failure.",
+        f"The C10 within-season permutation negative control has mean real ΔNLL **{fmt(negative['mean_real_delta_nll_vs_c0'])}** versus C0 and mean permuted ΔNLL **{fmt(negative['mean_permuted_delta_nll_vs_c0'])}**; permutation therefore changes team identity while preserving season coverage and missingness.",
         f"The C0 control reproduction check {'passed' if sanity['passed'] else 'failed'}: maximum absolute metric difference from the stored production evaluation was {fmt(sanity['max_abs_metric_delta'], 6)}.",
         "",
         "## Provenance and leakage audit",
@@ -782,7 +813,8 @@ def render_report(
         "- C0 is the existing C 1.2 location equation; C1 removes returning production. Transfer candidates were predeclared in the script.",
         "- Fits use rows through 2021 and score unchanged on 2022--2025. The 2018--2021 development comparison is reported for transparency only; it cannot select a transfer candidate because its training rows end before portal coverage begins. The production FBS population and stored H cold-start fallback are retained.",
         "- Training-only imputation and missingness indicators remain in `DirectRankModel`; transfer missingness is never silently converted to zero.",
-        "- The negative-control permutation shuffles transfer values within season with seed 7 and never changes the target keys.",
+        "- The negative-control permutation jointly shuffles C10 transfer-production inputs within season with seed 7, preserving coverage and missingness while removing team identity.",
+        "- C10 QB sensitivity compares the model with and without incoming/outgoing QB prior-usage features; intake mechanism diagnostics use balanced within-season low/middle/high tertiles rather than fixed count cutoffs.",
         "",
         "## Held-out candidate comparison",
         "",
@@ -1057,6 +1089,23 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         heldout_transfer_summary,
         key=lambda row: (float(row["delta_vs_c0_nll"]), str(row["candidate"])),
     )
+    c10_summary = next(
+        row
+        for row in heldout_transfer_summary
+        if row["candidate"] == "C10_transfer_production"
+    )
+    c10_vs_c1 = {
+        "aggregate_delta_nll": c10_summary["delta_vs_minus_rp_nll"],
+        "by_season": [
+            {
+                "season": row["target_season"],
+                "delta_nll": row["delta_vs_minus_rp_nll"],
+            }
+            for row in annual_rows
+            if row["protocol"] == "frozen_through_2021"
+            and row["candidate"] == "C10_transfer_production"
+        ],
+    }
 
     diagnostic_predictions = candidate_predictions[diagnostic_name]
 
@@ -1064,11 +1113,13 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         c0_predictions, c1_predictions, diagnostic_predictions, transfer_features
     )
     negative_rows = []
-    permuted = permute_transfer_features(contextual_augmented, VOLUME_FEATURES)
+    permuted = permute_transfer_features(contextual_augmented, C10_TRANSFER_FEATURES)
     permuted_target = [row for row in permuted if row.season in TARGET_SEASONS]
     permuted_train = [row for row in permuted if row.season <= FROZEN_TRAIN_THROUGH]
     perm_candidate = next(
-        candidate for candidate in candidates if candidate.name == "C2_transfer_volume"
+        candidate
+        for candidate in candidates
+        if candidate.name == "C10_transfer_production"
     )
     enriched_train, enriched_target, perm_features = enrich_for_candidate(
         permuted_train, permuted_target, perm_candidate
@@ -1088,7 +1139,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         original_score = score(
             [
                 item
-                for item in candidate_predictions["C2_transfer_volume"]
+                for item in candidate_predictions["C10_transfer_production"]
                 if item.season == season
             ]
         )
@@ -1097,14 +1148,39 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         negative_rows.append(
             {
                 "season": season,
-                "control": "within_season_transfer_permutation",
+                "candidate": perm_candidate.name,
+                "control": "within_season_c10_production_permutation",
                 "seed": RANDOM_SEED,
-                "original_delta_nll_vs_c0": original_score["nll"] - c0_score["nll"],
+                "real_delta_nll_vs_c0": original_score["nll"] - c0_score["nll"],
                 "permuted_delta_nll_vs_c0": perm_score["nll"] - c0_score["nll"],
-                "original_delta_crps_vs_c0": original_score["crps"] - c0_score["crps"],
+                "permuted_delta_nll_vs_real": perm_score["nll"] - original_score["nll"],
+                "real_delta_crps_vs_c0": original_score["crps"] - c0_score["crps"],
                 "permuted_delta_crps_vs_c0": perm_score["crps"] - c0_score["crps"],
+                "permuted_delta_crps_vs_real": perm_score["crps"]
+                - original_score["crps"],
             }
         )
+    negative_summary = {
+        "candidate": perm_candidate.name,
+        "mean_real_delta_nll_vs_c0": float(
+            np.mean([row["real_delta_nll_vs_c0"] for row in negative_rows])
+        ),
+        "mean_permuted_delta_nll_vs_c0": float(
+            np.mean([row["permuted_delta_nll_vs_c0"] for row in negative_rows])
+        ),
+        "mean_permuted_delta_nll_vs_real": float(
+            np.mean([row["permuted_delta_nll_vs_real"] for row in negative_rows])
+        ),
+        "mean_real_delta_crps_vs_c0": float(
+            np.mean([row["real_delta_crps_vs_c0"] for row in negative_rows])
+        ),
+        "mean_permuted_delta_crps_vs_c0": float(
+            np.mean([row["permuted_delta_crps_vs_c0"] for row in negative_rows])
+        ),
+        "mean_permuted_delta_crps_vs_real": float(
+            np.mean([row["permuted_delta_crps_vs_real"] for row in negative_rows])
+        ),
+    }
 
     sensitivity_rows = []
     for month, day in ((7, 1), (8, 1), (8, 15)):
@@ -1131,14 +1207,9 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         )
 
     qb_rows = []
-    qb_features = tuple(
-        feature
-        for feature in diagnostic_candidate.features
-        if feature not in QB_FEATURES
-    )
     qb_candidate = Candidate(
-        "diagnostic_without_qb_features",
-        qb_features,
+        "diagnostic_with_qb_features",
+        (*diagnostic_candidate.features, *C10_QB_FEATURES),
         diagnostic_candidate.interaction,
         diagnostic_candidate.interaction_name,
         True,
@@ -1154,17 +1225,17 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         {
             "candidate": diagnostic_candidate.name,
             "variant": "with_qb_features",
-            "nll": score(diagnostic_predictions)["nll"],
-            "delta_nll_vs_c0": score(diagnostic_predictions)["nll"]
-            - score(c0_predictions)["nll"],
+            "nll": score(qb_panel)["nll"],
+            "delta_nll_vs_c0": score(qb_panel)["nll"] - score(c0_predictions)["nll"],
         }
     )
     qb_rows.append(
         {
             "candidate": diagnostic_candidate.name,
             "variant": "without_qb_features",
-            "nll": score(qb_panel)["nll"],
-            "delta_nll_vs_c0": score(qb_panel)["nll"] - score(c0_predictions)["nll"],
+            "nll": score(diagnostic_predictions)["nll"],
+            "delta_nll_vs_c0": score(diagnostic_predictions)["nll"]
+            - score(c0_predictions)["nll"],
         }
     )
 
@@ -1291,13 +1362,16 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             "clean_primary_candidate": "C10_transfer_production",
             "heldout_descriptive_best_transfer_candidate": heldout_best["candidate"],
             "heldout_best_delta_nll_vs_c0": heldout_best["delta_vs_c0_nll"],
+            "c10_vs_c1": c10_vs_c1,
         },
         "heldout_summary": [
             row for row in candidate_summary if row["protocol"] == "frozen_through_2021"
         ],
         "negative_control": {
-            "method": "permute transfer volume features within season",
+            "method": "jointly permute C10 transfer-production features within season",
             "seed": RANDOM_SEED,
+            **negative_summary,
+            "rows": negative_rows,
         },
         "missing_data_policy": "uncovered portal seasons are None; covered seasons with no matching transfer are zero; DirectRankModel applies training-only median imputation and missingness indicators",
         "provenance": portal_provenance(),

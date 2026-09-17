@@ -4,6 +4,8 @@
 
 No development candidate was selected: the rows available to train through 2017 contain zero observed values for every added transfer feature. The predeclared candidates are exploratory retrospective-oracle comparisons. The clean C10 candidate **C10_transfer_production** has held-out ΔNLL **-0.0263** versus production C0; the strongest descriptive result is **C9_ad_hoc_rp_usage_hybrid**, with ΔNLL **-0.0309**. C10_transfer_production is used only for mechanism diagnostics. This is not a production-safe Context change.
 C9 is retained as an explicitly ad hoc hybrid index: returning-production percentage plus incoming prior-usage sum. Those quantities have incompatible denominators, so C9 is not interpreted as reconstructed effective returning production; C10 keeps returning production and incoming prior usage as separate features.
+Against C1 (remove RP), C10's aggregate ΔNLL is **-0.0131**; it is **0.0006** in 2024 and **0.0063** in 2025. The improvement is therefore concentrated in preserving earlier RP value while avoiding most of the later damage, rather than clearly repairing the 2024--2025 failure.
+The C10 within-season permutation negative control has mean real ΔNLL **-0.0260** versus C0 and mean permuted ΔNLL **0.0155**; permutation therefore changes team identity while preserving season coverage and missingness.
 The C0 control reproduction check passed: maximum absolute metric difference from the stored production evaluation was 0.000005.
 
 ## Provenance and leakage audit
@@ -17,7 +19,8 @@ All cutoff features include only records with a transfer date on or before the c
 - C0 is the existing C 1.2 location equation; C1 removes returning production. Transfer candidates were predeclared in the script.
 - Fits use rows through 2021 and score unchanged on 2022--2025. The 2018--2021 development comparison is reported for transparency only; it cannot select a transfer candidate because its training rows end before portal coverage begins. The production FBS population and stored H cold-start fallback are retained.
 - Training-only imputation and missingness indicators remain in `DirectRankModel`; transfer missingness is never silently converted to zero.
-- The negative-control permutation shuffles transfer values within season with seed 7 and never changes the target keys.
+- The negative-control permutation jointly shuffles C10 transfer-production inputs within season with seed 7, preserving coverage and missingness while removing team identity.
+- C10 QB sensitivity compares the model with and without incoming/outgoing QB prior-usage features; intake mechanism diagnostics use balanced within-season low/middle/high tertiles rather than fixed count cutoffs.
 
 ## Held-out candidate comparison
 
