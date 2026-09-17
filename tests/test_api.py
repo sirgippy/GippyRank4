@@ -1,301 +1,174 @@
 from __future__ import annotations
 
+import hashlib
 import json
-from email.utils import format_datetime
-from hashlib import sha256
+import shutil
 from pathlib import Path
+from typing import Any
 
 import pytest
-from fastapi.testclient import TestClient
 
-from gippyrank.api.app import app, create_app
+from gippyrank.api.static import build_static_api
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST = json.loads((ROOT / "site/data/manifest.json").read_text(encoding="utf-8"))
+FULL_MANIFEST = json.loads(
+    (ROOT / "site/data/manifest.json").read_text(encoding="utf-8")
+)
 
 
-@pytest.fixture(scope="module")
-def client() -> TestClient:
-    return TestClient(app)
+def _tree_hash(directory: Path) -> str:
+    digest = hashlib.sha256()
+    for path in sorted(directory.rglob("*")):
+        if path.is_file():
+            digest.update(path.relative_to(directory).as_posix().encode())
+            digest.update(path.read_bytes())
+    return digest.hexdigest()
 
 
-def _entry(*, family: str = "predictive", prior: str | None = "context") -> dict:
-    return next(
+def _copy_selected_publication(tmp_path: Path) -> tuple[Path, dict[str, Any]]:
+    entry = next(
         item
-        for item in MANIFEST["snapshots"]
-        if item["ranking_family"] == family and item.get("prior_family") == prior
-    )
-
-
-def _weekly_entry() -> dict:
-    return next(
-        item
-        for item in MANIFEST["snapshots"]
+        for item in FULL_MANIFEST["snapshots"]
         if item["ranking_family"] == "predictive"
         and item.get("prior_family") == "context"
         and item["snapshot_type"] == "weekly"
     )
-
-
-def _artifact(entry: dict, field: str) -> dict:
-    path = ROOT / "site/data" / entry[field].removeprefix("data/")
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def test_root_health_inventory_and_openapi(client: TestClient) -> None:
-    root = client.get("/api/v1/")
-    assert root.status_code == 200
-    assert root.json()["api_version"] == "v1"
-    assert root.json()["read_only"] is True
-    assert root.json()["data"]["publication_count"] == len(MANIFEST["snapshots"])
-
-    health = client.get("/health")
-    assert health.status_code == 200
-    assert health.json()["status"] == "ok"
-    assert health.json()["publication_count"] == len(MANIFEST["snapshots"])
-    assert health.headers["cache-control"] == "no-store"
-
-    all_inventory = client.get("/api/v1/publications")
-    assert all_inventory.status_code == 200
-    assert all_inventory.json()["count"] == len(MANIFEST["snapshots"])
-
-    inventory = client.get(
-        "/api/v1/publications?season=2026&family=predictive&prior=context"
-    )
-    assert inventory.status_code == 200
-    assert inventory.json()["count"] > 0
-    assert all(
-        item["ranking_family"] == "predictive" and item["prior_family"] == "context"
-        for item in inventory.json()["publications"]
-    )
-
-    store = app.state.publication_store
-    assert store is not None
-    original_publications = store.publications
-    maximum_generation = max(
-        item.metadata.generation_timestamp for item in original_publications
-    )
-    removed = next(
-        item
-        for item in original_publications
-        if item.metadata.generation_timestamp < maximum_generation
-    )
-    store.publications = tuple(
-        item for item in original_publications if item is not removed
-    )
-    try:
-        assert (
-            max(item.metadata.generation_timestamp for item in store.publications)
-            == maximum_generation
-        )
-        changed_inventory = client.get(
-            "/api/v1/publications",
-            headers={
-                "If-Modified-Since": format_datetime(maximum_generation, usegmt=True)
-            },
-        )
-        assert changed_inventory.status_code == 200
-        assert changed_inventory.json()["count"] == all_inventory.json()["count"] - 1
-        assert "last-modified" not in changed_inventory.headers
-    finally:
-        store.publications = original_publications
-
-    openapi = client.get("/openapi.json")
-    assert openapi.status_code == 200
-    assert openapi.json()["info"]["version"] == "v1"
-    paths = openapi.json()["paths"]
-    assert "/api/v1/rankings/{snapshot_id}/games/{game_id}" in paths
-    assert "/api/v1/seasons/{season}/publications/{publication_slot}/rankings" in paths
-
-
-def test_publication_selectors_are_explicit(client: TestClient) -> None:
-    ambiguous = client.get("/api/v1/seasons/2026/publications/2026-09-08/rankings")
-    assert ambiguous.status_code == 422
-    assert ambiguous.json() == {
-        "error": {
-            "code": "ambiguous_selector",
-            "message": (
-                "The publication selector matches more than one family or prior; "
-                "specify family and prior explicitly."
-            ),
-        }
-    }
-
-    resolved = client.get(
-        "/api/v1/seasons/2026/publications/2026-09-08/rankings"
-        "?family=predictive&prior=context"
-    )
-    assert resolved.status_code == 200
-    assert resolved.json()["publication"]["snapshot_id"].endswith("-context")
-    assert resolved.json()["publication"]["anchor_family"] == "context"
-
-    invalid = client.get("/api/v1/publications?family=performance&prior=context")
-    assert invalid.status_code == 422
-    assert invalid.json()["error"]["code"] == "invalid_selector"
-
-    no_substitution = client.get(
-        "/api/v1/seasons/2026/publications/2026-09-07/rankings"
-        "?family=predictive&prior=context&status=official"
-    )
-    assert no_substitution.status_code == 404
-    assert no_substitution.json()["error"]["code"] == "publication_not_found"
-
-
-def test_predictive_metadata_exposes_the_explicit_preseason_reference(
-    client: TestClient,
-) -> None:
-    entry = _weekly_entry()
-    response = client.get(f"/api/v1/rankings/{entry['snapshot_id']}")
-    assert response.status_code == 200
-    metadata = response.json()["publication"]
-    assert metadata["preseason_snapshot_id"] == entry["preseason_snapshot_id"]
-    assert metadata["preseason_display_label"] == entry["preseason_display_label"]
-    assert metadata["preseason_distribution_path"] == entry[
-        "preseason_distribution_path"
-    ]
-
-    performance = next(
-        item
-        for item in MANIFEST["snapshots"]
-        if item["ranking_family"] == "performance"
-    )
-    performance_response = client.get(
-        f"/api/v1/rankings/{performance['snapshot_id']}"
-    )
-    assert performance_response.status_code == 200
-    performance_metadata = performance_response.json()["publication"]
-    assert performance_metadata["preseason_snapshot_id"] is None
-    assert performance_metadata["preseason_distribution_path"] is None
-
-
-def test_rankings_and_rank_distribution_match_static_publication(
-    client: TestClient,
-) -> None:
-    entry = _entry()
-    source = _artifact(entry, "data_path")
-    distribution = _artifact(entry, "distribution_path")
-    response = client.get(f"/api/v1/rankings/{entry['snapshot_id']}")
-    assert response.status_code == 200
-    payload = response.json()
-    assert [row["team_id"] for row in payload["rankings"]] == [
-        row["team_id"] for row in source["rankings"]
-    ]
-    assert payload["rankings"][0]["expected_rank"] == pytest.approx(
-        source["rankings"][0]["expected_rank"]
-    )
-    assert (
-        payload["rankings"][0]["display_rank"] == source["rankings"][0]["display_rank"]
-    )
-
-    team_id = source["rankings"][0]["team_id"]
-    team_response = client.get(
-        f"/api/v1/rankings/{entry['snapshot_id']}/teams/{team_id}"
-    )
-    assert team_response.status_code == 200
-    team_payload = team_response.json()
-    assert team_payload["team"]["team_id"] == team_id
-    assert team_payload["rank_distribution"]["pmf"] == pytest.approx(
-        distribution["teams"][team_id]["pmf"]
-    )
-
-
-def test_team_season_week_and_game_views_share_canonical_published_values(
-    client: TestClient,
-) -> None:
-    entry = _weekly_entry()
-    team_artifact = _artifact(entry, "team_seasons_path")
-    weekly_artifact = _artifact(entry, "week_games_path")
-    team_id = next(iter(team_artifact["teams"]))
-
-    team_response = client.get(
-        f"/api/v1/rankings/{entry['snapshot_id']}/teams/{team_id}/season"
-    )
-    assert team_response.status_code == 200
-    team_payload = team_response.json()
-    assert team_payload["team"]["team_id"] == team_id
-    assert len(team_payload["games"]) == len(team_artifact["teams"][team_id]["games"])
-
-    weeks_response = client.get(f"/api/v1/rankings/{entry['snapshot_id']}/weeks")
-    assert weeks_response.status_code == 200
-    assert weeks_response.json()["week_count"] == weekly_artifact["week_count"]
-    raw_week = next(week for week in weekly_artifact["weeks"] if week["games"])
-    week_response = client.get(
-        f"/api/v1/rankings/{entry['snapshot_id']}/weeks/{raw_week['key']}"
-    )
-    assert week_response.status_code == 200
-    week_payload = week_response.json()
-    assert [game["game_id"] for game in week_payload["games"]] == [
-        game["game_id"] for game in raw_week["games"]
-    ]
-
-    representative = next(
-        game
-        for game in week_payload["games"]
-        if game["state"] in {"completed", "future"}
-    )
-    game_response = client.get(
-        f"/api/v1/rankings/{entry['snapshot_id']}/games/{representative['game_id']}"
-    )
-    assert game_response.status_code == 200
-    assert game_response.json()["game"] == representative
-    if representative["state"] == "future":
-        assert representative["score"] is None
-        assert representative["home_performance"] is None
-        assert representative["away_performance"] is None
-
-    outlook = client.get(f"/api/v1/rankings/{entry['snapshot_id']}/season-outlook")
-    assert outlook.status_code == 200
-    source_summary = team_artifact["season_simulation"]["teams"][team_id]
-    api_summary = next(
-        item for item in outlook.json()["outlooks"] if item["team_id"] == team_id
-    )
-    assert api_summary["expected_final_wins"] == pytest.approx(
-        source_summary["expected_final_wins"]
-    )
-
-
-def test_exact_publication_responses_are_cacheable_and_cors_is_read_only(
-    client: TestClient,
-) -> None:
-    entry = _entry()
-    path = f"/api/v1/rankings/{entry['snapshot_id']}"
-    response = client.get(path, headers={"Origin": "https://example.com"})
-    assert response.status_code == 200
-    assert response.headers["cache-control"] == "public, max-age=31536000, immutable"
-    assert "last-modified" in response.headers
-    assert response.headers["etag"] == f'"{sha256(response.content).hexdigest()}"'
-    assert response.headers["access-control-allow-origin"] == "*"
-    conditional = client.get(path, headers={"If-None-Match": response.headers["etag"]})
-    assert conditional.status_code == 304
-    assert conditional.headers["etag"] == response.headers["etag"]
-
-    write_attempt = client.post(path)
-    assert write_attempt.status_code == 405
-    assert write_attempt.json()["error"]["code"] == "method_not_allowed"
-
-
-def test_errors_are_structured_and_exact_resources_do_not_fallback(
-    client: TestClient,
-) -> None:
-    for path, code in (
-        ("/api/v1/rankings/unknown", "snapshot_not_found"),
-        ("/api/v1/rankings/2026-preseason-context/teams/unknown", "team_not_found"),
-        ("/api/v1/rankings/2026-preseason-context/weeks/unknown", "week_not_found"),
-        ("/api/v1/rankings/2026-preseason-context/games/unknown", "game_not_found"),
+    data_dir = tmp_path / "data"
+    methodology_source = ROOT / "site/data" / FULL_MANIFEST[
+        "methodology_path"
+    ].removeprefix("data/")
+    methodology_destination = data_dir / "methodology.json"
+    methodology_destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(methodology_source, methodology_destination)
+    for field in (
+        "data_path",
+        "distribution_path",
+        "team_seasons_path",
+        "week_games_path",
     ):
-        response = client.get(path)
-        assert response.status_code == 404
-        assert response.json()["error"]["code"] == code
-    malformed = client.get("/api/v1/publications?season=not-a-season")
-    assert malformed.status_code == 400
-    assert malformed.json()["error"]["code"] == "malformed_request"
+        source = ROOT / "site/data" / entry[field].removeprefix("data/")
+        destination = data_dir / entry[field].removeprefix("data/")
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, destination)
+
+    manifest = {
+        "schema_version": FULL_MANIFEST["schema_version"],
+        "site_url": FULL_MANIFEST["site_url"],
+        "methodology_path": "data/methodology.json",
+        "methodology_schema_version": FULL_MANIFEST["methodology_schema_version"],
+        "seasons": [entry["season"]],
+        "ranking_families": FULL_MANIFEST["ranking_families"],
+        "snapshots": [entry],
+    }
+    (data_dir / "manifest.json").write_text(
+        json.dumps(manifest), encoding="utf-8"
+    )
+    return data_dir, entry
 
 
-def test_invalid_publication_data_fails_closed(tmp_path: Path) -> None:
-    unavailable = TestClient(create_app(tmp_path))
-    health = unavailable.get("/health")
-    assert health.status_code == 503
-    assert health.json()["error"]["code"] == "publication_data_unavailable"
-    root = unavailable.get("/api/v1/")
-    assert root.status_code == 500
-    assert root.json()["error"]["code"] == "publication_data_unavailable"
+@pytest.fixture(scope="module")
+def static_api(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, dict[str, Any]]:
+    data_dir, entry = _copy_selected_publication(tmp_path_factory.mktemp("static-api"))
+    api_root = data_dir.parent / "api" / "v1"
+    build_static_api(data_dir=data_dir, output_directory=api_root)
+    return api_root, entry
+
+
+def _read(api_root: Path, relative: str) -> dict[str, Any]:
+    return json.loads((api_root / relative).read_text(encoding="utf-8"))
+
+
+def test_static_inventory_and_links_are_complete(
+    static_api: tuple[Path, dict[str, Any]],
+) -> None:
+    api_root, entry = static_api
+    index = _read(api_root, "index.json")
+    inventory = _read(api_root, "publications.json")
+    assert index["api_version"] == "v1"
+    assert index["read_only"] is True
+    assert inventory["count"] == 1
+    publication = inventory["publications"][0]
+    assert publication["snapshot_id"] == entry["snapshot_id"]
+    assert publication["publication_status"] == entry["publication_status"]
+    links = publication["links"]
+    assert links["rankings"] == f"rankings/{entry['snapshot_id']}.json"
+    assert links["weeks"] == f"rankings/{entry['snapshot_id']}/weeks.json"
+    assert links["season_outlook"].endswith("/season-outlook.json")
+    assert (api_root / links["rankings"]).is_file()
+    assert (api_root / links["weeks"]).is_file()
+    assert (api_root / links["season_outlook"]).is_file()
+
+
+def test_week_games_are_canonical_once_and_match_individual_resources(
+    static_api: tuple[Path, dict[str, Any]],
+) -> None:
+    api_root, entry = static_api
+    base = f"rankings/{entry['snapshot_id']}"
+    weeks = _read(api_root, f"{base}/weeks.json")
+    all_games: list[dict[str, Any]] = []
+    for summary in weeks["weeks"]:
+        week = _read(api_root, f"{base}/weeks/{summary['key']}.json")
+        games = week["games"]
+        assert len(games) == summary["scheduled_game_count"]
+        all_games.extend(games)
+        for game in games:
+            individual = _read(api_root, f"{base}/games/{game['game_id']}.json")
+            assert individual["game"] == game
+            assert game["home_team_id"] == game["home_team"]["team_id"]
+            assert game["away_team_id"] == game["away_team"]["team_id"]
+            if game["prediction"] is not None:
+                assert game["prediction"]["home_team_id"] == game["home_team_id"]
+                assert game["prediction"]["away_team_id"] == game["away_team_id"]
+
+    assert len(all_games) == len({game["game_id"] for game in all_games})
+    assert all_games
+    assert any(
+        game["state"] == "future" and game["prediction"] is None
+        for game in all_games
+    )
+
+
+def test_team_resources_are_scoped_and_prediction_orientation_is_stable(
+    static_api: tuple[Path, dict[str, Any]],
+) -> None:
+    api_root, entry = static_api
+    base = f"rankings/{entry['snapshot_id']}"
+    rankings = _read(api_root, f"{base}.json")
+    row = rankings["rankings"][0]
+    team = _read(api_root, f"{base}/teams/{row['team_id']}.json")
+    season = _read(api_root, f"{base}/teams/{row['team_id']}/season.json")
+    assert team["team"] == row
+    assert season["ranking"] == row
+    assert season["team"]["team_id"] == row["team_id"]
+    assert all(game["opponent"]["team_id"] != row["team_id"] for game in season["games"])
+
+    weeks = _read(api_root, f"{base}/weeks.json")
+    future = next(
+        game
+        for summary in weeks["weeks"]
+        for game in _read(api_root, f"{base}/weeks/{summary['key']}.json")["games"]
+        if game["prediction"] is not None
+    )
+    raw_weekly = json.loads(
+        (
+            api_root.parent.parent
+            / "data"
+            / entry["week_games_path"].removeprefix("data/")
+        ).read_text(encoding="utf-8")
+    )
+    raw_prediction = raw_weekly["future_predictions"][future["game_id"]]
+    assert future["prediction"]["expected_home_margin"] == pytest.approx(
+        raw_prediction["expected_home_margin"]
+    )
+    assert future["prediction"]["home_team_id"] == future["home_team_id"]
+    assert future["prediction"]["away_team_id"] == future["away_team_id"]
+    assert weeks["axes"]["future_margin"]["direction"] == "home_minus_away"
+
+
+def test_static_api_generation_is_deterministic(
+    static_api: tuple[Path, dict[str, Any]],
+) -> None:
+    api_root, _ = static_api
+    before = _tree_hash(api_root)
+    build_static_api(data_dir=api_root.parent.parent / "data", output_directory=api_root)
+    assert _tree_hash(api_root) == before
