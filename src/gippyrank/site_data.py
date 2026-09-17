@@ -2586,8 +2586,24 @@ def _logo_handles(identities: set[tuple[str, str]]) -> dict[str, str]:
     return handles
 
 
-def build_site_data(*, root: Path, config_path: Path, output_directory: Path) -> dict[str, Any]:
-    """Validate configured artifacts and write deterministic consumer JSON."""
+def build_site_data(
+    *,
+    root: Path,
+    config_path: Path,
+    output_directory: Path,
+    static_api_directory: Path | None = None,
+) -> dict[str, Any]:
+    """Validate configured artifacts and write deterministic consumer JSON.
+
+    Production callers can request the machine-facing export with
+    ``static_api_directory``. When writing the repository's conventional
+    ``site/data`` directory, the sibling ``site/api/v1`` tree is selected by
+    default so the Pages build cannot accidentally omit the static API.
+    """
+    if static_api_directory is None and output_directory.resolve() == (
+        root / "site/data"
+    ).resolve():
+        static_api_directory = root / "site/api/v1"
     selected, default_slot = load_publish_config(config_path, root)
     config = _read_json(config_path)
     site_url = _site_url(config)
@@ -3037,4 +3053,15 @@ def build_site_data(*, root: Path, config_path: Path, output_directory: Path) ->
     }
     _write_json(output_directory / "methodology.json", methodology)
     _write_json(output_directory / "manifest.json", manifest)
+    if static_api_directory is not None:
+        # Import lazily so the browser-oriented site serializer remains
+        # independent from the publication API's typed validation layer when
+        # callers only need site/data.
+        from gippyrank.api.static import build_static_api
+
+        manifest["static_api"] = build_static_api(
+            data_dir=output_directory,
+            output_directory=static_api_directory,
+        )
+        _write_json(output_directory / "manifest.json", manifest)
     return manifest

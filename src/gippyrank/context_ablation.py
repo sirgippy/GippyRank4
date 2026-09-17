@@ -7,6 +7,7 @@ and a comparison can only be paired after its target keys have been checked.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import replace
 
 import numpy as np
@@ -14,6 +15,25 @@ import numpy as np
 from gippyrank.preseason import Preprocessor, TeamSeason
 
 Key = tuple[int, str, str]
+
+
+def remove_features(features: Iterable[str], removed: Iterable[str]) -> list[str]:
+    """Return an ablated feature list while rejecting ambiguous specifications.
+
+    This small helper keeps future single-feature or feature-family studies
+    explicit: a requested feature must exist exactly once in the parent model,
+    and the resulting order remains the parent's order.
+    """
+    parent = list(features)
+    excluded = list(removed)
+    if len(parent) != len(set(parent)):
+        raise ValueError("parent feature list contains duplicates")
+    if len(excluded) != len(set(excluded)):
+        raise ValueError("removed feature list contains duplicates")
+    unknown = set(excluded) - set(parent)
+    if unknown:
+        raise ValueError(f"removed features are not in parent model: {sorted(unknown)}")
+    return [feature for feature in parent if feature not in set(excluded)]
 
 
 def observed(row: TeamSeason, features: list[str]) -> bool:

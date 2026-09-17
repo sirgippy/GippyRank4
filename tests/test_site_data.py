@@ -185,6 +185,23 @@ def test_exported_team_logos_are_canonical_and_audited(tmp_path: Path) -> None:
     assert manifest["methodology_schema_version"] == methodology["schema_version"]
 
 
+def test_site_export_includes_static_api_when_requested(tmp_path: Path) -> None:
+    source = _copied_snapshot(tmp_path)
+    output = tmp_path / "site-data"
+    api_output = tmp_path / "site" / "api" / "v1"
+    manifest = build_site_data(
+        root=tmp_path,
+        config_path=_config_for(source, tmp_path),
+        output_directory=output,
+        static_api_directory=api_output,
+    )
+
+    assert manifest["static_api"]["base_path"] == "api/v1/"
+    assert (api_output / "index.json").is_file()
+    assert (api_output / "publications.json").is_file()
+    assert manifest["static_api"]["publication_count"] == 1
+
+
 def test_ballot_mapping_identity_mismatch_is_refused(tmp_path: Path) -> None:
     source = _copied_snapshot(tmp_path)
     mapping = tmp_path / "handles.csv"

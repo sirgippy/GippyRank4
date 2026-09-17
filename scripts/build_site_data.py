@@ -14,4 +14,5 @@ if __name__ == "__main__":
         root=ROOT,
         config_path=ROOT / "site/publish_config.json",
         output_directory=ROOT / "site/data",
+        static_api_directory=ROOT / "site/api/v1",
     )

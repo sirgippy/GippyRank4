@@ -6,6 +6,7 @@ from gippyrank.context_ablation import (
     assert_same_population,
     interaction_is_useful,
     paired_loss_differences,
+    remove_features,
     restrict_observed,
     standardized_interaction_rows,
     training_only_impute_rows,
@@ -32,6 +33,15 @@ def test_raw_observed_coverage_precedes_imputation() -> None:
     rows = [row(2020, "a", 1.0, 2.0), row(2020, "b", None, 3.0)]
     observed = restrict_observed(rows, ["left", "right"])
     assert [item.team_id for item in observed] == ["a"]
+
+
+def test_remove_features_preserves_parent_order_and_rejects_unknowns() -> None:
+    assert remove_features(["history", "returning", "talent"], ["returning"]) == [
+        "history",
+        "talent",
+    ]
+    with pytest.raises(ValueError, match="not in parent"):
+        remove_features(["history"], ["transfers"])
 
 
 def test_rolling_training_excludes_target_and_future_outcomes() -> None:
