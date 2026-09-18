@@ -1,0 +1,189 @@
+[
+  {
+    "continuity_features": [],
+    "description": "Production Context C 1.2; the parity control.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "returning_pct_passing_ppa",
+      "returning_pct_receiving_ppa",
+      "returning_pct_rushing_ppa"
+    ],
+    "name": "D0_C0_full",
+    "transfer_aware": false
+  },
+  {
+    "continuity_features": [],
+    "description": "C-minus-RP; remove all returning-production features.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite"
+    ],
+    "name": "D1_no_returning_production",
+    "transfer_aware": false
+  },
+  {
+    "continuity_features": [
+      "returning_pct_ppa"
+    ],
+    "description": "C-minus-RP plus total returning production only.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa"
+    ],
+    "name": "D2_total_rp_only",
+    "transfer_aware": false
+  },
+  {
+    "continuity_features": [
+      "transfer_in_prior_usage_sum"
+    ],
+    "description": "C-minus-RP plus incoming prior transfer production only.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "transfer_in_prior_usage_sum"
+    ],
+    "name": "D3_incoming_transfer_production_only",
+    "transfer_aware": true
+  },
+  {
+    "continuity_features": [
+      "transfer_out_prior_usage_sum"
+    ],
+    "description": "C-minus-RP plus outgoing prior transfer production only.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "transfer_out_prior_usage_sum"
+    ],
+    "name": "D4_outgoing_transfer_production_only",
+    "transfer_aware": true
+  },
+  {
+    "continuity_features": [
+      "returning_pct_ppa",
+      "transfer_in_prior_usage_sum"
+    ],
+    "description": "C-minus-RP plus total RP and incoming prior transfer production.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "transfer_in_prior_usage_sum"
+    ],
+    "name": "D5_total_rp_plus_incoming",
+    "transfer_aware": true
+  },
+  {
+    "continuity_features": [
+      "returning_pct_ppa",
+      "transfer_out_prior_usage_sum"
+    ],
+    "description": "C-minus-RP plus total RP and outgoing prior transfer production.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "transfer_out_prior_usage_sum"
+    ],
+    "name": "D6_total_rp_plus_outgoing",
+    "transfer_aware": true
+  },
+  {
+    "continuity_features": [
+      "returning_pct_ppa",
+      "transfer_in_prior_usage_sum",
+      "transfer_out_prior_usage_sum"
+    ],
+    "description": "C-minus-RP plus total RP, incoming, and outgoing prior production.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "transfer_in_prior_usage_sum",
+      "transfer_out_prior_usage_sum"
+    ],
+    "name": "D7_total_rp_plus_incoming_plus_outgoing",
+    "transfer_aware": true
+  },
+  {
+    "continuity_features": [
+      "returning_pct_ppa",
+      "returning_pct_passing_ppa",
+      "returning_pct_receiving_ppa",
+      "returning_pct_rushing_ppa",
+      "transfer_in_prior_usage_sum",
+      "transfer_net_prior_usage"
+    ],
+    "description": "Existing C10: full RP family plus incoming and net prior production.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "returning_pct_passing_ppa",
+      "returning_pct_receiving_ppa",
+      "returning_pct_rushing_ppa",
+      "transfer_in_prior_usage_sum",
+      "transfer_net_prior_usage"
+    ],
+    "name": "D8_existing_c10",
+    "transfer_aware": true
+  }
+]
