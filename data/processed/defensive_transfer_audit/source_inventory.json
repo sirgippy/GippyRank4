@@ -1,0 +1,42 @@
+[
+  {
+    "defensive_participation": "none",
+    "defensive_production": "none",
+    "fields": "season, firstName, lastName, origin, destination, position, transferDate",
+    "historical_coverage": "2021 onward in the repository acquisition workflow",
+    "player_identifier": "no player ID in the portal response; name + origin fallback",
+    "preseason_semantics": "retrospective response; final destination is not proven as-of cutoff",
+    "reproducibility": "raw response bytes and SHA-256 sidecar",
+    "source": "CFBD /player/portal"
+  },
+  {
+    "defensive_participation": "position identity only",
+    "defensive_production": "none",
+    "fields": "id, firstName, lastName, team, position",
+    "historical_coverage": "season-wide FBS and FCS roster snapshots for requested years",
+    "player_identifier": "CFBD athlete ID",
+    "preseason_semantics": "retrospective roster response; used for prior-season identity and position",
+    "reproducibility": "raw response bytes and SHA-256 sidecar",
+    "source": "CFBD /roster?year=&classification=fbs|fcs"
+  },
+  {
+    "defensive_participation": "games with a defensive box-score row; no snaps or snap share",
+    "defensive_production": "box-score event counts, not play-level opportunity-adjusted impact",
+    "fields": "game/team defensive rows: TOT, SOLO, SACKS, TFL, PD, QB HUR; interception INT; fumble REC",
+    "historical_coverage": "week-level FBS and FCS game box scores for requested seasons",
+    "player_identifier": "CFBD athlete ID",
+    "preseason_semantics": "completed prior-season outcomes; safe for a prior-season feature after frozen retrieval",
+    "reproducibility": "raw weekly response bytes and SHA-256 sidecar",
+    "source": "CFBD /games/players?year=&week=&classification=fbs|fcs&seasonType=both"
+  },
+  {
+    "defensive_participation": "not a defensive snap measure",
+    "defensive_production": "not used",
+    "fields": "usage.overall and offensive usage components",
+    "historical_coverage": "existing transfer-oracle acquisition seasons",
+    "player_identifier": "CFBD athlete ID, not shared with portal",
+    "preseason_semantics": "offensive participation only; excluded from this feature",
+    "reproducibility": "existing raw response bytes and sidecar",
+    "source": "CFBD /player/usage"
+  }
+]

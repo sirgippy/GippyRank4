@@ -1,0 +1,22 @@
+[
+  {
+    "classification": "prior-season outcome; cutoff-safe once frozen",
+    "field": "prior defensive game appearances",
+    "limitation": "box-score appearance is not snap share and may miss unrecorded participation"
+  },
+  {
+    "classification": "prior-season outcome; cutoff-safe once frozen",
+    "field": "prior defensive production",
+    "limitation": "opportunity, scheme, and position labeling are not fully observed"
+  },
+  {
+    "classification": "retrospective research oracle",
+    "field": "portal destination",
+    "limitation": "current endpoint may contain a later final destination or revision"
+  },
+  {
+    "classification": "deterministic fallback",
+    "field": "player identity",
+    "limitation": "portal lacks a shared athlete ID; ambiguous name + source-team joins fail closed"
+  }
+]
