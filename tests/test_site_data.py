@@ -37,6 +37,15 @@ SCHEDULE_FIELDS = [
 ]
 
 
+@pytest.fixture(scope="session")
+def production_site_data(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> tuple[Path, dict[str, object]]:
+    output = tmp_path_factory.mktemp("production-site-data")
+    manifest = build_site_data(root=ROOT, config_path=CONFIG, output_directory=output)
+    return output, manifest
+
+
 def _hash_tree(directory: Path) -> str:
     digest = hashlib.sha256()
     for path in sorted(directory.rglob("*")):
@@ -153,10 +162,10 @@ def test_logo_mapping_fails_closed_on_unknown_or_renamed_identity() -> None:
     ]
 
 
-def test_exported_team_logos_are_canonical_and_audited(tmp_path: Path) -> None:
-    manifest = build_site_data(
-        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
-    )
+def test_exported_team_logos_are_canonical_and_audited(
+    production_site_data: tuple[Path, dict[str, object]],
+) -> None:
+    output, manifest = production_site_data
     assert manifest["team_logos"]["source"] == "RedditCFB"
     assert manifest["team_logos"]["url_template"] == (
         "https://cdn.redditcfb.com/60x40/cfb/{handle}.png"
@@ -174,11 +183,11 @@ def test_exported_team_logos_are_canonical_and_audited(tmp_path: Path) -> None:
     ]
     entry = manifest["snapshots"][0]
     snapshot = json.loads(
-        (tmp_path / "data" / entry["data_path"].removeprefix("data/")).read_text()
+        (output / entry["data_path"].removeprefix("data/")).read_text()
     )
     assert "logo_handle" not in snapshot["rankings"][0]
     methodology = json.loads(
-        (tmp_path / "data" / "methodology.json").read_text(encoding="utf-8")
+        (output / "methodology.json").read_text(encoding="utf-8")
     )
     assert methodology == production_methodology_metadata()
     assert manifest["methodology_path"] == "data/methodology.json"
@@ -294,13 +303,13 @@ def test_publish_config_logo_template_override_is_manifest_visible(
     )
 
 
-def test_team_season_export_uses_manifest_logo_handles(tmp_path: Path) -> None:
-    manifest = build_site_data(
-        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
-    )
+def test_team_season_export_uses_manifest_logo_handles(
+    production_site_data: tuple[Path, dict[str, object]],
+) -> None:
+    output, manifest = production_site_data
     entry = manifest["snapshots"][0]
     artifact = json.loads(
-        (tmp_path / "data" / entry["team_seasons_path"].removeprefix("data/")).read_text()
+        (output / entry["team_seasons_path"].removeprefix("data/")).read_text()
     )
     ohio_state = artifact["teams"]["194"]
     assert "logo_handle" not in ohio_state
@@ -310,11 +319,9 @@ def test_team_season_export_uses_manifest_logo_handles(tmp_path: Path) -> None:
 
 
 def test_weekly_artifact_deduplicates_games_and_reuses_canonical_sources(
-    tmp_path: Path,
+    production_site_data: tuple[Path, dict[str, object]],
 ) -> None:
-    manifest = build_site_data(
-        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
-    )
+    output, manifest = production_site_data
     entry = next(
         item
         for item in manifest["snapshots"]
@@ -323,10 +330,10 @@ def test_weekly_artifact_deduplicates_games_and_reuses_canonical_sources(
         and item["snapshot_type"] == "weekly"
     )
     weekly = json.loads(
-        (tmp_path / "data" / entry["week_games_path"].removeprefix("data/")).read_text()
+        (output / entry["week_games_path"].removeprefix("data/")).read_text()
     )
     team_seasons = json.loads(
-        (tmp_path / "data" / entry["team_seasons_path"].removeprefix("data/")).read_text()
+        (output / entry["team_seasons_path"].removeprefix("data/")).read_text()
     )
     games = [game for week in weekly["weeks"] for game in week["games"]]
     assert weekly["artifact_kind"] == "weekly_games"
@@ -347,17 +354,17 @@ def test_weekly_artifact_deduplicates_games_and_reuses_canonical_sources(
     assert future["away_performance"] is None
 
 
-def test_weekly_rank_lookup_matches_every_selected_ranking_view(tmp_path: Path) -> None:
-    manifest = build_site_data(
-        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
-    )
+def test_weekly_rank_lookup_matches_every_selected_ranking_view(
+    production_site_data: tuple[Path, dict[str, object]],
+) -> None:
+    output, manifest = production_site_data
     saw_performance_nr = False
     for entry in manifest["snapshots"]:
         snapshot = json.loads(
-            (tmp_path / "data" / entry["data_path"].removeprefix("data/")).read_text()
+            (output / entry["data_path"].removeprefix("data/")).read_text()
         )
         weekly = json.loads(
-            (tmp_path / "data" / entry["week_games_path"].removeprefix("data/")).read_text()
+            (output / entry["week_games_path"].removeprefix("data/")).read_text()
         )
         expected = {
             str(row["team_id"]): {
@@ -759,14 +766,14 @@ def test_blank_ranking_conferences_are_enriched_from_schedule(tmp_path: Path) ->
     )
 
 
-def test_all_ranking_families_receive_consistent_season_conferences(tmp_path: Path) -> None:
-    manifest = build_site_data(
-        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
-    )
+def test_all_ranking_families_receive_consistent_season_conferences(
+    production_site_data: tuple[Path, dict[str, object]],
+) -> None:
+    output, manifest = production_site_data
     conferences_by_team: dict[tuple[int, str], set[str]] = {}
     for entry in manifest["snapshots"]:
         snapshot = json.loads(
-            (tmp_path / "data" / entry["data_path"].removeprefix("data/")).read_text(
+            (output / entry["data_path"].removeprefix("data/")).read_text(
                 encoding="utf-8"
             )
         )
@@ -829,11 +836,9 @@ def test_conference_enrichment_preserves_ranking_pmf_and_record_values(
 
 
 def test_site_data_publishes_all_initial_h_c_preseason_and_current_snapshots(
-    tmp_path: Path,
+    production_site_data: tuple[Path, dict[str, object]],
 ) -> None:
-    manifest = build_site_data(
-        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
-    )
+    _, manifest = production_site_data
     assert manifest["seasons"] == [2026]
     configured_default_slot = json.loads(CONFIG.read_text(encoding="utf-8"))[
         "default_publication_slot"
@@ -884,10 +889,10 @@ def test_site_data_publishes_all_initial_h_c_preseason_and_current_snapshots(
     )["default_week"] == "2"
 
 
-def test_publication_status_and_official_comparison_chain(tmp_path: Path) -> None:
-    manifest = build_site_data(
-        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
-    )
+def test_publication_status_and_official_comparison_chain(
+    production_site_data: tuple[Path, dict[str, object]],
+) -> None:
+    _, manifest = production_site_data
     config = json.loads(CONFIG.read_text(encoding="utf-8"))
     publication_slots = config["publication_slots"]
     expected_status_by_slot = {
@@ -954,11 +959,9 @@ def test_publication_status_and_official_comparison_chain(tmp_path: Path) -> Non
 
 
 def test_predictive_entries_reference_the_matching_published_preseason_artifact(
-    tmp_path: Path,
+    production_site_data: tuple[Path, dict[str, object]],
 ) -> None:
-    manifest = build_site_data(
-        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
-    )
+    output, manifest = production_site_data
     by_id = {entry["snapshot_id"]: entry for entry in manifest["snapshots"]}
     predictive = [
         entry for entry in manifest["snapshots"] if entry["ranking_family"] == "predictive"
@@ -975,7 +978,7 @@ def test_predictive_entries_reference_the_matching_published_preseason_artifact(
         assert entry["preseason_display_label"] == preseason["display_label"]
 
         exported = json.loads(
-            (tmp_path / "data" / entry["data_path"].removeprefix("data/")).read_text(
+            (output / entry["data_path"].removeprefix("data/")).read_text(
                 encoding="utf-8"
             )
         )
@@ -1120,11 +1123,12 @@ def test_rank_change_uses_display_rank_and_handles_nr_transitions() -> None:
     ],
 )
 def test_logical_publication_slots_pair_context_and_history(
-    tmp_path: Path, slot: str, from_prior: str, to_prior: str
+    production_site_data: tuple[Path, dict[str, object]],
+    slot: str,
+    from_prior: str,
+    to_prior: str,
 ) -> None:
-    manifest = build_site_data(
-        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
-    )
+    _, manifest = production_site_data
     current = next(
         entry
         for entry in manifest["snapshots"]
@@ -1137,10 +1141,10 @@ def test_logical_publication_slots_pair_context_and_history(
     assert counterpart["distribution_path"] != current["distribution_path"]
 
 
-def test_missing_logical_counterpart_keeps_current_selection(tmp_path: Path) -> None:
-    manifest = build_site_data(
-        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
-    )
+def test_missing_logical_counterpart_keeps_current_selection(
+    production_site_data: tuple[Path, dict[str, object]],
+) -> None:
+    _, manifest = production_site_data
     current = next(
         entry
         for entry in manifest["snapshots"]
@@ -1159,23 +1163,25 @@ def test_missing_logical_counterpart_keeps_current_selection(tmp_path: Path) -> 
 
 
 def test_site_data_is_byte_deterministic(tmp_path: Path) -> None:
+    source = _copied_snapshot(tmp_path)
+    config = _config_for(source, tmp_path)
     output = tmp_path / "data"
-    build_site_data(root=ROOT, config_path=CONFIG, output_directory=output)
+    build_site_data(root=tmp_path, config_path=config, output_directory=output)
     first = _hash_tree(output)
-    build_site_data(root=ROOT, config_path=CONFIG, output_directory=output)
+    build_site_data(root=tmp_path, config_path=config, output_directory=output)
     assert _hash_tree(output) == first
 
 
-def test_distribution_artifact_contains_complete_fbs_pmfs_and_summaries(tmp_path: Path) -> None:
-    manifest = build_site_data(
-        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
-    )
+def test_distribution_artifact_contains_complete_fbs_pmfs_and_summaries(
+    production_site_data: tuple[Path, dict[str, object]],
+) -> None:
+    output, manifest = production_site_data
     entry = next(item for item in manifest["snapshots"] if item["prior_family"] == "context")
     distribution = json.loads(
-        (tmp_path / "data" / entry["distribution_path"].removeprefix("data/")).read_text()
+        (output / entry["distribution_path"].removeprefix("data/")).read_text()
     )
     snapshot = json.loads(
-        (tmp_path / "data" / entry["data_path"].removeprefix("data/")).read_text()
+        (output / entry["data_path"].removeprefix("data/")).read_text()
     )
     assert distribution["schema_version"] == "1.0"
     assert distribution["snapshot_id"] == entry["snapshot_id"]
@@ -1191,13 +1197,13 @@ def test_distribution_artifact_contains_complete_fbs_pmfs_and_summaries(tmp_path
     }
 
 
-def test_performance_export_keeps_nr_after_rated_teams_and_out_of_top25(tmp_path: Path) -> None:
-    manifest = build_site_data(
-        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
-    )
+def test_performance_export_keeps_nr_after_rated_teams_and_out_of_top25(
+    production_site_data: tuple[Path, dict[str, object]],
+) -> None:
+    output, manifest = production_site_data
     entry = next(item for item in manifest["snapshots"] if item["ranking_family"] == "performance")
     snapshot = json.loads(
-        (tmp_path / "data" / entry["data_path"].removeprefix("data/")).read_text()
+        (output / entry["data_path"].removeprefix("data/")).read_text()
     )
     assert all(row["rated"] for row in snapshot["rankings"][:25])
     assert all(row["display_rank"] == "NR" for row in snapshot["rankings"][131:])
@@ -1214,16 +1220,16 @@ def test_pmf_summary_uses_established_discrete_quantiles() -> None:
     assert summary["interval_widths"] == {"50": 3, "80": 5, "95": 5}
 
 
-def test_exported_80_percent_interval_remains_the_ranking_interval(tmp_path: Path) -> None:
-    manifest = build_site_data(
-        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
-    )
+def test_exported_80_percent_interval_remains_the_ranking_interval(
+    production_site_data: tuple[Path, dict[str, object]],
+) -> None:
+    output, manifest = production_site_data
     for entry in manifest["snapshots"]:
         snapshot = json.loads(
-            (tmp_path / "data" / entry["data_path"].removeprefix("data/")).read_text()
+            (output / entry["data_path"].removeprefix("data/")).read_text()
         )
         distribution = json.loads(
-            (tmp_path / "data" / entry["distribution_path"].removeprefix("data/")).read_text()
+            (output / entry["distribution_path"].removeprefix("data/")).read_text()
         )
         for row in snapshot["rankings"]:
             assert distribution["teams"][row["team_id"]]["summary"]["interval_80"] == row["interval_80"]
@@ -1251,10 +1257,10 @@ def test_preseason_and_in_season_distribution_exports_work(
     assert len(distribution["teams"]) == 138
 
 
-def test_context_and_history_export_distinct_distribution_artifacts(tmp_path: Path) -> None:
-    manifest = build_site_data(
-        root=ROOT, config_path=CONFIG, output_directory=tmp_path / "data"
-    )
+def test_context_and_history_export_distinct_distribution_artifacts(
+    production_site_data: tuple[Path, dict[str, object]],
+) -> None:
+    output, manifest = production_site_data
     for slot in {entry["publication_slot"] for entry in manifest["snapshots"]}:
         context, history = (
             next(
@@ -1264,8 +1270,8 @@ def test_context_and_history_export_distinct_distribution_artifacts(tmp_path: Pa
             )
             for prior in ("context", "history")
         )
-        context_path = tmp_path / "data" / context["distribution_path"].removeprefix("data/")
-        history_path = tmp_path / "data" / history["distribution_path"].removeprefix("data/")
+        context_path = output / context["distribution_path"].removeprefix("data/")
+        history_path = output / history["distribution_path"].removeprefix("data/")
         assert context_path != history_path
         assert context_path.read_bytes() != history_path.read_bytes()
 
