@@ -1,0 +1,10 @@
+{
+  "integration": "Add the snapshot acquisition as a prerequisite to the existing preseason pipeline; do not let live portal endpoints enter model fitting directly.",
+  "steps": [
+    "On or before the configured preseason cutoff, fetch each required portal and prior-usage season response.",
+    "Store response bytes unchanged under data/raw/cfbd/preseason/transfers/{portal,usage}/.",
+    "Write endpoint, query parameters, retrieval timestamp, record count, and SHA-256 in a sidecar.",
+    "Never overwrite a prior season snapshot; refresh only into a new explicitly named snapshot when source semantics require it.",
+    "Run this audit and derive transfer features only from the frozen snapshot, with explicit aliases and fail-closed ambiguous joins."
+  ]
+}

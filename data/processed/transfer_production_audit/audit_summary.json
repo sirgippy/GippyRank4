@@ -1,0 +1,431 @@
+{
+  "aliases_file": null,
+  "audit": "issue_98_transfer_production_data_quality",
+  "collision_summary": {
+    "portal": {
+      "collision_key_count": 6,
+      "max_records_per_key": 2,
+      "records_in_collision_keys": 12
+    },
+    "usage": {
+      "collision_key_count": 195,
+      "max_records_per_key": 2,
+      "records_in_collision_keys": 390
+    }
+  },
+  "cutoff": "season-relative 08-15",
+  "explicit_alias_count": 0,
+  "field_requirements": [
+    {
+      "classification": "likely cutoff-safe but not provable",
+      "evidence": "The request selects an explicit season, but the source response is not an archived preseason snapshot.",
+      "field": "transfer season",
+      "required_for_model": true
+    },
+    {
+      "classification": "retrospective oracle only",
+      "evidence": "Portal identity is a name assembled from the current endpoint; no shared stable portal/usage ID is available.",
+      "field": "player identity",
+      "required_for_model": true
+    },
+    {
+      "classification": "retrospective oracle only",
+      "evidence": "Origin is read from the current portal record and is not an archived roster state.",
+      "field": "source school",
+      "required_for_model": true
+    },
+    {
+      "classification": "retrospective oracle only",
+      "evidence": "A final destination may have been resolved or revised after the preseason cutoff.",
+      "field": "destination school",
+      "required_for_model": true
+    },
+    {
+      "classification": "retrospective oracle only",
+      "evidence": "The date supports deterministic filtering, but publication and revision timing are not archived.",
+      "field": "transfer date",
+      "required_for_model": true
+    },
+    {
+      "classification": "retrospective oracle only",
+      "evidence": "Usage is a prior-season outcome, but the cross-endpoint name join is not an archived transfer roster join.",
+      "field": "prior-season usage",
+      "required_for_model": true
+    },
+    {
+      "classification": "retrospective oracle only",
+      "evidence": "Position is supplied by the current portal response and is not timestamped as-of the cutoff.",
+      "field": "position",
+      "required_for_model": false
+    },
+    {
+      "classification": "retrospective oracle only",
+      "evidence": "The response does not provide an archived rating revision history.",
+      "field": "rating / stars",
+      "required_for_model": false
+    },
+    {
+      "classification": "unavailable",
+      "evidence": "Eligibility is not a scholarship indicator in the selected source fields.",
+      "field": "scholarship status",
+      "required_for_model": false
+    }
+  ],
+  "missingness": {
+    "by_season": [
+      {
+        "complete_teams": 3,
+        "conference_analysis": "not available in the canonical team-season feature table",
+        "mean_incoming_transfers": 6.276923076923077,
+        "mean_joined_prior_usage": 0.1898923076923077,
+        "median_incoming_transfers": 6.0,
+        "median_joined_prior_usage": 0.0855,
+        "missingness_rate": 0.9384615384615385,
+        "missingness_vs_roster_strength_pearson": 0.015338487643843211,
+        "missingness_vs_transfer_volume_pearson": 0.3767439312317464,
+        "no_incoming_transfer_teams": 5,
+        "no_usable_teams": 34,
+        "partial_teams": 88,
+        "season": 2021,
+        "teams_audited": 130
+      },
+      {
+        "complete_teams": 1,
+        "conference_analysis": "not available in the canonical team-season feature table",
+        "mean_incoming_transfers": 8.312977099236642,
+        "mean_joined_prior_usage": 0.2688702290076336,
+        "median_incoming_transfers": 8.0,
+        "median_joined_prior_usage": 0.135,
+        "missingness_rate": 0.9694656488549618,
+        "missingness_vs_roster_strength_pearson": 0.2923631695900951,
+        "missingness_vs_transfer_volume_pearson": 0.3039123480784035,
+        "no_incoming_transfer_teams": 3,
+        "no_usable_teams": 20,
+        "partial_teams": 107,
+        "season": 2022,
+        "teams_audited": 131
+      },
+      {
+        "complete_teams": 2,
+        "conference_analysis": "not available in the canonical team-season feature table",
+        "mean_incoming_transfers": 10.661654135338345,
+        "mean_joined_prior_usage": 0.3612857142857143,
+        "median_incoming_transfers": 9.0,
+        "median_joined_prior_usage": 0.248,
+        "missingness_rate": 0.9624060150375939,
+        "missingness_vs_roster_strength_pearson": 0.39365521644054163,
+        "missingness_vs_transfer_volume_pearson": 0.26249937672718243,
+        "no_incoming_transfer_teams": 3,
+        "no_usable_teams": 15,
+        "partial_teams": 113,
+        "season": 2023,
+        "teams_audited": 133
+      },
+      {
+        "complete_teams": 0,
+        "conference_analysis": "not available in the canonical team-season feature table",
+        "mean_incoming_transfers": 15.417910447761194,
+        "mean_joined_prior_usage": 0.4788059701492537,
+        "median_incoming_transfers": 15.0,
+        "median_joined_prior_usage": 0.394,
+        "missingness_rate": 0.9701492537313433,
+        "missingness_vs_roster_strength_pearson": 0.40571397537059795,
+        "missingness_vs_transfer_volume_pearson": 0.35279471334836626,
+        "no_incoming_transfer_teams": 4,
+        "no_usable_teams": 5,
+        "partial_teams": 125,
+        "season": 2024,
+        "teams_audited": 134
+      },
+      {
+        "complete_teams": 0,
+        "conference_analysis": "not available in the canonical team-season feature table",
+        "mean_incoming_transfers": 21.360294117647058,
+        "mean_joined_prior_usage": 0.4655220588235294,
+        "median_incoming_transfers": 20.0,
+        "median_joined_prior_usage": 0.3625,
+        "missingness_rate": 0.9779411764705882,
+        "missingness_vs_roster_strength_pearson": 0.35330081092802973,
+        "missingness_vs_transfer_volume_pearson": 0.3050276951412999,
+        "no_incoming_transfer_teams": 3,
+        "no_usable_teams": 4,
+        "partial_teams": 129,
+        "season": 2025,
+        "teams_audited": 136
+      }
+    ],
+    "competition_level_analysis": "FBS destination population only; source level is retained as a join failure dimension",
+    "conference_analysis": "not available in the canonical team-season feature table; add an explicit season-specific conference mapping before using conference-stratified rates",
+    "roster_strength_analysis": "talent_composite is used only as a roster-strength proxy when present",
+    "transfer_volume_analysis": "Pearson correlation is descriptive and computed by season"
+  },
+  "portal_record_count": 14422,
+  "portal_seasons": [
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "production_models_modified": false,
+  "raw_inputs_unchanged": true,
+  "raw_root": "data/raw/cfbd/preseason/transfers",
+  "recommendation": "feasible only with a new snapshot pipeline and additional identity controls",
+  "season_rows": [
+    {
+      "ambiguous_joins": 2,
+      "any_name_usage_mass": 26.137,
+      "destination_alias_matches": 0,
+      "failed_prior_usage_joins": 643,
+      "incoming_fbs_transfers": 816,
+      "incoming_fbs_with_alias_successful_join": 0,
+      "incoming_fbs_with_exact_successful_join": 173,
+      "incoming_from_fbs_source": 737,
+      "incoming_from_non_fbs_or_unrecognized_source": 79,
+      "missing_usage_records": 634,
+      "normalization_changed_matches": 4,
+      "origin_alias_matches": 0,
+      "portal_normalized_name_collision_keys": 0,
+      "portal_records_in_normalized_name_collisions": 0,
+      "records_on_or_before_cutoff": 1770,
+      "records_with_destination": 1053,
+      "records_with_transfer_date": 1770,
+      "recoverable_source_usage_mass": 24.97,
+      "recoverable_unique_usage_mass": 24.686,
+      "season": 2021,
+      "source_team_mismatches": 7,
+      "total_portal_records": 1770,
+      "usage_normalized_name_collision_keys": 31,
+      "usage_records_without_value": 0,
+      "usage_weighted_denominator_definition": "unique numeric usage records whose normalized player name appears in at least one in-scope transfer; the numerator additionally requires a unique source-team/player join. This is a recoverable identity-resolution proxy, not a full-population denominator.",
+      "usage_weighted_join_coverage_proxy": 0.9444848299345755
+    },
+    {
+      "ambiguous_joins": 2,
+      "any_name_usage_mass": 37.657000000000004,
+      "destination_alias_matches": 0,
+      "failed_prior_usage_joins": 832,
+      "incoming_fbs_transfers": 1089,
+      "incoming_fbs_with_alias_successful_join": 0,
+      "incoming_fbs_with_exact_successful_join": 257,
+      "incoming_from_fbs_source": 964,
+      "incoming_from_non_fbs_or_unrecognized_source": 125,
+      "missing_usage_records": 813,
+      "normalization_changed_matches": 2,
+      "origin_alias_matches": 0,
+      "portal_normalized_name_collision_keys": 1,
+      "portal_records_in_normalized_name_collisions": 2,
+      "records_on_or_before_cutoff": 2268,
+      "records_with_destination": 1367,
+      "records_with_transfer_date": 2273,
+      "recoverable_source_usage_mass": 36.312,
+      "recoverable_unique_usage_mass": 35.222,
+      "season": 2022,
+      "source_team_mismatches": 17,
+      "total_portal_records": 2273,
+      "usage_normalized_name_collision_keys": 32,
+      "usage_records_without_value": 0,
+      "usage_weighted_denominator_definition": "unique numeric usage records whose normalized player name appears in at least one in-scope transfer; the numerator additionally requires a unique source-team/player join. This is a recoverable identity-resolution proxy, not a full-population denominator.",
+      "usage_weighted_join_coverage_proxy": 0.9353373874711208
+    },
+    {
+      "ambiguous_joins": 5,
+      "any_name_usage_mass": 52.333,
+      "destination_alias_matches": 0,
+      "failed_prior_usage_joins": 1056,
+      "incoming_fbs_transfers": 1418,
+      "incoming_fbs_with_alias_successful_join": 0,
+      "incoming_fbs_with_exact_successful_join": 362,
+      "incoming_from_fbs_source": 1218,
+      "incoming_from_non_fbs_or_unrecognized_source": 200,
+      "missing_usage_records": 1032,
+      "normalization_changed_matches": 8,
+      "origin_alias_matches": 0,
+      "portal_normalized_name_collision_keys": 0,
+      "portal_records_in_normalized_name_collisions": 0,
+      "records_on_or_before_cutoff": 2502,
+      "records_with_destination": 1607,
+      "records_with_transfer_date": 2502,
+      "recoverable_source_usage_mass": 50.281,
+      "recoverable_unique_usage_mass": 48.051,
+      "season": 2023,
+      "source_team_mismatches": 19,
+      "total_portal_records": 2502,
+      "usage_normalized_name_collision_keys": 43,
+      "usage_records_without_value": 0,
+      "usage_weighted_denominator_definition": "unique numeric usage records whose normalized player name appears in at least one in-scope transfer; the numerator additionally requires a unique source-team/player join. This is a recoverable identity-resolution proxy, not a full-population denominator.",
+      "usage_weighted_join_coverage_proxy": 0.9181778227886802
+    },
+    {
+      "ambiguous_joins": 3,
+      "any_name_usage_mass": 67.438,
+      "destination_alias_matches": 0,
+      "failed_prior_usage_joins": 1593,
+      "incoming_fbs_transfers": 2066,
+      "incoming_fbs_with_alias_successful_join": 0,
+      "incoming_fbs_with_exact_successful_join": 473,
+      "incoming_from_fbs_source": 1712,
+      "incoming_from_non_fbs_or_unrecognized_source": 354,
+      "missing_usage_records": 1563,
+      "normalization_changed_matches": 10,
+      "origin_alias_matches": 0,
+      "portal_normalized_name_collision_keys": 1,
+      "portal_records_in_normalized_name_collisions": 2,
+      "records_on_or_before_cutoff": 3378,
+      "records_with_destination": 2654,
+      "records_with_transfer_date": 3378,
+      "recoverable_source_usage_mass": 64.792,
+      "recoverable_unique_usage_mass": 64.16,
+      "season": 2024,
+      "source_team_mismatches": 27,
+      "total_portal_records": 3378,
+      "usage_normalized_name_collision_keys": 44,
+      "usage_records_without_value": 0,
+      "usage_weighted_denominator_definition": "unique numeric usage records whose normalized player name appears in at least one in-scope transfer; the numerator additionally requires a unique source-team/player join. This is a recoverable identity-resolution proxy, not a full-population denominator.",
+      "usage_weighted_join_coverage_proxy": 0.9513923900471544
+    },
+    {
+      "ambiguous_joins": 13,
+      "any_name_usage_mass": 73.976,
+      "destination_alias_matches": 0,
+      "failed_prior_usage_joins": 2348,
+      "incoming_fbs_transfers": 2905,
+      "incoming_fbs_with_alias_successful_join": 0,
+      "incoming_fbs_with_exact_successful_join": 557,
+      "incoming_from_fbs_source": 2271,
+      "incoming_from_non_fbs_or_unrecognized_source": 634,
+      "missing_usage_records": 2281,
+      "normalization_changed_matches": 6,
+      "origin_alias_matches": 0,
+      "portal_normalized_name_collision_keys": 0,
+      "portal_records_in_normalized_name_collisions": 0,
+      "records_on_or_before_cutoff": 4497,
+      "records_with_destination": 3770,
+      "records_with_transfer_date": 4499,
+      "recoverable_source_usage_mass": 67.807,
+      "recoverable_unique_usage_mass": 63.311,
+      "season": 2025,
+      "source_team_mismatches": 54,
+      "total_portal_records": 4499,
+      "usage_normalized_name_collision_keys": 45,
+      "usage_records_without_value": 0,
+      "usage_weighted_denominator_definition": "unique numeric usage records whose normalized player name appears in at least one in-scope transfer; the numerator additionally requires a unique source-team/player join. This is a recoverable identity-resolution proxy, not a full-population denominator.",
+      "usage_weighted_join_coverage_proxy": 0.8558316210662917
+    }
+  ],
+  "snapshot_strategy": {
+    "integration": "Add the snapshot acquisition as a prerequisite to the existing preseason pipeline; do not let live portal endpoints enter model fitting directly.",
+    "steps": [
+      "On or before the configured preseason cutoff, fetch each required portal and prior-usage season response.",
+      "Store response bytes unchanged under data/raw/cfbd/preseason/transfers/{portal,usage}/.",
+      "Write endpoint, query parameters, retrieval timestamp, record count, and SHA-256 in a sidecar.",
+      "Never overwrite a prior season snapshot; refresh only into a new explicitly named snapshot when source semantics require it.",
+      "Run this audit and derive transfer features only from the frozen snapshot, with explicit aliases and fail-closed ambiguous joins."
+    ]
+  },
+  "source_inventory": [
+    {
+      "fields": "season, firstName, lastName, origin, destination, position, transferDate, rating, stars, eligibility",
+      "historical_depth": "2021\u20132025 fetched for this audit",
+      "player_identifier": "none in audited portal payload",
+      "production_assessment": "usable for future snapshots only if fetched and frozen before the cutoff",
+      "reproducibility": "raw response bytes plus retrieval sidecar hash",
+      "source": "CFBD /player/portal",
+      "timestamp_semantics": "current retrospective response; event date is not an as-of publication timestamp"
+    },
+    {
+      "fields": "season, id, name, team, position, conference, usage.overall and component usage",
+      "historical_depth": "2020\u20132024 fetched for this audit",
+      "player_identifier": "stable within usage endpoint, not shared by portal endpoint",
+      "production_assessment": "supporting prior-production source after deterministic identity resolution",
+      "reproducibility": "raw response bytes plus retrieval sidecar hash",
+      "source": "CFBD /player/usage",
+      "timestamp_semantics": "season-wide prior usage; not a transfer-time roster snapshot"
+    },
+    {
+      "fields": "raw portal and usage payloads, endpoint, parameters, retrieval timestamp, SHA-256",
+      "historical_depth": "future seasons from process start; historical reconstruction remains retrospective",
+      "player_identifier": "portal ID remains unavailable; exact name + source-team fallback is required",
+      "production_assessment": "recommended minimal path for future production feasibility",
+      "reproducibility": "immutable ignored raw payloads and committed derived audit artifacts",
+      "source": "repository-managed preseason snapshot process",
+      "timestamp_semantics": "retrieval timestamp proves when GippyRank captured the response, not when CFBD first knew a destination"
+    }
+  ],
+  "stable_player_id": {
+    "cross_endpoint_stable_id_available": false,
+    "limitation": "CFBD /player/portal payloads contain no player ID in the audited seasons; /player/usage IDs cannot be linked cross-endpoint",
+    "portal_records": 14422,
+    "portal_records_with_stable_id": 0,
+    "recommendation": "retain an explicit normalized player-name + source-team join, use a stable ID only if a future portal snapshot exposes the same identifier, and fail closed on ambiguity",
+    "unique_usage_stable_ids": 9109,
+    "usage_records": 19423,
+    "usage_records_with_stable_id": 19423
+  },
+  "team_file": "data/processed/preseason/team_season_features.csv",
+  "team_summary": [
+    {
+      "complete": 3,
+      "mean_observed_usage": 0.1898923076923077,
+      "mean_transfers": 6.276923076923077,
+      "missingness_rate": 0.9384615384615385,
+      "no_incoming": 5,
+      "no_usable": 34,
+      "partial": 88,
+      "season": 2021,
+      "teams": 130
+    },
+    {
+      "complete": 1,
+      "mean_observed_usage": 0.2688702290076336,
+      "mean_transfers": 8.312977099236642,
+      "missingness_rate": 0.9694656488549618,
+      "no_incoming": 3,
+      "no_usable": 20,
+      "partial": 107,
+      "season": 2022,
+      "teams": 131
+    },
+    {
+      "complete": 2,
+      "mean_observed_usage": 0.3612857142857143,
+      "mean_transfers": 10.661654135338345,
+      "missingness_rate": 0.9624060150375939,
+      "no_incoming": 3,
+      "no_usable": 15,
+      "partial": 113,
+      "season": 2023,
+      "teams": 133
+    },
+    {
+      "complete": 0,
+      "mean_observed_usage": 0.4788059701492537,
+      "mean_transfers": 15.417910447761194,
+      "missingness_rate": 0.9701492537313433,
+      "no_incoming": 4,
+      "no_usable": 5,
+      "partial": 125,
+      "season": 2024,
+      "teams": 134
+    },
+    {
+      "complete": 0,
+      "mean_observed_usage": 0.4655220588235294,
+      "mean_transfers": 21.360294117647058,
+      "missingness_rate": 0.9779411764705882,
+      "no_incoming": 3,
+      "no_usable": 4,
+      "partial": 129,
+      "season": 2025,
+      "teams": 136
+    }
+  ],
+  "usage_record_count": 19423,
+  "usage_seasons": [
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+  ]
+}

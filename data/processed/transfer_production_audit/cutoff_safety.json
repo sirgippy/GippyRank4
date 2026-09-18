@@ -1,0 +1,56 @@
+[
+  {
+    "classification": "likely cutoff-safe but not provable",
+    "evidence": "The request selects an explicit season, but the source response is not an archived preseason snapshot.",
+    "field": "transfer season",
+    "required_for_model": true
+  },
+  {
+    "classification": "retrospective oracle only",
+    "evidence": "Portal identity is a name assembled from the current endpoint; no shared stable portal/usage ID is available.",
+    "field": "player identity",
+    "required_for_model": true
+  },
+  {
+    "classification": "retrospective oracle only",
+    "evidence": "Origin is read from the current portal record and is not an archived roster state.",
+    "field": "source school",
+    "required_for_model": true
+  },
+  {
+    "classification": "retrospective oracle only",
+    "evidence": "A final destination may have been resolved or revised after the preseason cutoff.",
+    "field": "destination school",
+    "required_for_model": true
+  },
+  {
+    "classification": "retrospective oracle only",
+    "evidence": "The date supports deterministic filtering, but publication and revision timing are not archived.",
+    "field": "transfer date",
+    "required_for_model": true
+  },
+  {
+    "classification": "retrospective oracle only",
+    "evidence": "Usage is a prior-season outcome, but the cross-endpoint name join is not an archived transfer roster join.",
+    "field": "prior-season usage",
+    "required_for_model": true
+  },
+  {
+    "classification": "retrospective oracle only",
+    "evidence": "Position is supplied by the current portal response and is not timestamped as-of the cutoff.",
+    "field": "position",
+    "required_for_model": false
+  },
+  {
+    "classification": "retrospective oracle only",
+    "evidence": "The response does not provide an archived rating revision history.",
+    "field": "rating / stars",
+    "required_for_model": false
+  },
+  {
+    "classification": "unavailable",
+    "evidence": "Eligibility is not a scholarship indicator in the selected source fields.",
+    "field": "scholarship status",
+    "required_for_model": false
+  }
+]
