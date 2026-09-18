@@ -37,6 +37,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TARGET_SEASONS = tuple(range(2022, 2026))
 FROZEN_TRAIN_THROUGH = 2021
 SANITY_TOLERANCE = 1e-3
+DECOMPOSITION_PARITY_TOLERANCE = 1e-6
 RANDOM_SEED = 7
 
 EXPERIENCE = "transfer_in_prior_defensive_experience_sum"
@@ -173,7 +174,9 @@ def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
 
 def write_json(path: Path, value: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
 
 def sha256_file(path: Path) -> str:
@@ -182,6 +185,17 @@ def sha256_file(path: Path) -> str:
         for block in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def transfer_source_hashes(transfer_root: Path) -> dict[str, str]:
+    """Hash the immutable portal and usage payloads used by the study."""
+    result: dict[str, str] = {}
+    for kind in ("portal", "usage"):
+        for path in sorted((transfer_root / kind).glob("*.json")):
+            if path.name == "manifest.json" or path.name.endswith(".provenance.json"):
+                continue
+            result[f"{kind}/{path.name}"] = sha256_file(path)
+    return result
 
 
 def _float_or_none(value: object) -> float | None:
@@ -231,8 +245,12 @@ def load_defensive_coverage(path: Path) -> dict[str, object]:
     with path.open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
     statuses = Counter(row["feature_coverage_status"] for row in rows)
-    observed = sum(statuses[name] for name in ("complete", "no_incoming_defensive_transfer"))
-    unresolved = sum(statuses[name] for name in ("partial", "no_usable_defensive_transfer"))
+    observed = sum(
+        statuses[name] for name in ("complete", "no_incoming_defensive_transfer")
+    )
+    unresolved = sum(
+        statuses[name] for name in ("partial", "no_usable_defensive_transfer")
+    )
     return {
         "n_team_seasons": len(rows),
         "seasons": sorted({int(row["season"]) for row in rows}),
@@ -303,8 +321,7 @@ def permute_defensive_features(
             indices_for_feature = [
                 index
                 for index in indices
-                if result[index].features.get(availability) == 1.0
-                and index not in both
+                if result[index].features.get(availability) == 1.0 and index not in both
             ]
             if len(indices_for_feature) > 1:
                 source = rng.permutation(indices_for_feature)
@@ -337,7 +354,11 @@ def metric_row(
     reference: dict[str, float] | None,
     kind: str,
 ) -> dict[str, object]:
-    selected = predictions if season is None else [p for p in predictions if p.season == season]
+    selected = (
+        predictions
+        if season is None
+        else [p for p in predictions if p.season == season]
+    )
     values = prior.score(selected)
     row: dict[str, object] = {
         "variant": variant,
@@ -421,7 +442,7 @@ def coefficient_rows(
     models: dict[str, DirectRankModel],
     training: list[TeamSeason],
 ) -> list[dict[str, object]]:
-    """Extract standardized location coefficients and explicit availability effects."""
+    """Extract coefficients and report source availability separately."""
     requested = (
         "returning_pct_ppa",
         "transfer_in_prior_usage_sum",
@@ -439,23 +460,35 @@ def coefficient_rows(
             if included:
                 index = model.feature_names.index(feature)
                 numeric = float(model.beta[model.lag_count + 1 + index])
-                missing = float(
-                    model.beta[model.lag_count + 1 + feature_count + index]
-                )
+                missing = float(model.beta[model.lag_count + 1 + feature_count + index])
                 scale = float(model.gamma[1 + index])
                 scale_missing = float(model.gamma[1 + feature_count + index])
-                observed = sum(row.features.get(feature) is not None for row in training)
-                missing_count = len(training) - observed
+                availability_feature = {
+                    EXPERIENCE: EXPERIENCE_AVAILABLE,
+                    IMPACT: IMPACT_AVAILABLE,
+                    EXPERIENCE_AVAILABLE: EXPERIENCE_AVAILABLE,
+                    IMPACT_AVAILABLE: IMPACT_AVAILABLE,
+                }.get(feature)
+                if availability_feature is None:
+                    source_available = sum(
+                        row.features.get(feature) is not None for row in training
+                    )
+                else:
+                    source_available = sum(
+                        row.features.get(availability_feature) == 1.0
+                        for row in training
+                    )
+                source_unavailable = len(training) - source_available
             else:
                 numeric = missing = scale = scale_missing = None
-                observed = missing_count = None
+                source_available = source_unavailable = None
             rows.append(
                 {
                     "variant": candidate.name,
                     "feature": feature,
                     "included": included,
-                    "training_observed_n": observed,
-                    "training_missing_n": missing_count,
+                    "training_source_available_n": source_available,
+                    "training_source_unavailable_n": source_unavailable,
                     "location_coefficient_standardized": numeric,
                     "location_missingness_coefficient": missing,
                     "log_scale_coefficient_standardized": scale,
@@ -463,6 +496,44 @@ def coefficient_rows(
                 }
             )
     return rows
+
+
+def read_decomposition_metrics(path: Path, candidate: str) -> dict[str, float]:
+    """Read one aggregate control row from the frozen decomposition study."""
+    with path.open(newline="", encoding="utf-8") as handle:
+        for row in csv.DictReader(handle):
+            if (
+                row.get("candidate") == candidate
+                and row.get("target_season") == "aggregate"
+            ):
+                return {metric: float(row[metric]) for metric in METRICS}
+    raise ValueError(f"aggregate control row is missing for {candidate}: {path}")
+
+
+def decomposition_parity(
+    computed: dict[str, float],
+    *,
+    candidate: str,
+    reference_path: Path,
+    tolerance: float = DECOMPOSITION_PARITY_TOLERANCE,
+) -> dict[str, object]:
+    """Require a control to reproduce its stored decomposition metrics."""
+    expected = read_decomposition_metrics(reference_path, candidate)
+    deltas = {metric: abs(computed[metric] - expected[metric]) for metric in METRICS}
+    maximum = max(deltas.values(), default=None)
+    result: dict[str, object] = {
+        "candidate": candidate,
+        "reference_path": str(reference_path),
+        "reference_metrics": expected,
+        "computed_metrics": computed,
+        "metric_abs_deltas": deltas,
+        "max_abs_metric_delta": maximum,
+        "tolerance": tolerance,
+        "passed": maximum is not None and maximum <= tolerance,
+    }
+    if not result["passed"]:
+        raise ValueError(f"control does not reproduce stored metrics: {result}")
+    return result
 
 
 def collinearity_diagnostics(
@@ -517,7 +588,11 @@ def plot_outputs(
     figure, axis = plt.subplots(figsize=(12, 5))
     values = [float(row["delta_vs_E0_nll"]) for row in primary]
     labels = [str(row["variant"]) for row in primary]
-    axis.bar(labels, values, color=["#2f855a" if value < 0 else "#c53030" for value in values])
+    axis.bar(
+        labels,
+        values,
+        color=["#2f855a" if value < 0 else "#c53030" for value in values],
+    )
     axis.axhline(0, color="black", linewidth=0.8)
     axis.set_ylabel("held-out ΔNLL versus E0")
     axis.set_title("Defensive-transfer candidates, frozen through 2021")
@@ -530,7 +605,11 @@ def plot_outputs(
     figure, axis = plt.subplots(figsize=(11, 5))
     values = [float(row["mean_delta_nll"]) for row in aggregate_pairs]
     labels = [str(row["comparison"]) for row in aggregate_pairs]
-    axis.bar(labels, values, color=["#2f855a" if value < 0 else "#c53030" for value in values])
+    axis.bar(
+        labels,
+        values,
+        color=["#2f855a" if value < 0 else "#c53030" for value in values],
+    )
     axis.axhline(0, color="black", linewidth=0.8)
     axis.set_ylabel("mean paired ΔNLL")
     axis.set_title("Paired defensive-transfer diagnostics")
@@ -565,6 +644,20 @@ def render_report(
         for row in paired_rows
         if row["scope"] == "aggregate"
     }
+    e4_by_season = {
+        str(row["target_season"]): float(row["nll"])
+        for row in annual_rows
+        if row["variant"] == e4["variant"] and row["target_season"] != "aggregate"
+    }
+    e2_by_season = {
+        str(row["target_season"]): float(row["nll"])
+        for row in annual_rows
+        if row["variant"] == e2["variant"] and row["target_season"] != "aggregate"
+    }
+    e4_season_deltas = "; ".join(
+        f"{season}: {fmt(value - e2_by_season[season])}"
+        for season, value in sorted(e4_by_season.items())
+    )
     recommendation = str(summary["recommendation"])
     lines = [
         "# Defensive-transfer predictive-value experiment (issue 106)",
@@ -580,8 +673,8 @@ def render_report(
             f"{fmt(e6['nll'] - e2['nll'])} versus E2."
         ),
         (
-            f"E4 is worse than E2 in 2022 and 2023 but better in 2024 and 2025, "
-            f"so the small aggregate gain is not yet directionally stable. "
+            f"E4's season-level ΔNLL versus E2 is {e4_season_deltas}. "
+            f"The experience availability-only and permutation controls are also reported. "
             f"It does beat the experience availability-only control by mean paired "
             f"ΔNLL {fmt(pair_by_name['E4_vs_E4M']['mean_delta_nll'])} and the "
             f"within-season permutation by {fmt(pair_by_name['E4_vs_E4P']['mean_delta_nll'])}; "
@@ -594,7 +687,8 @@ def render_report(
         "",
         f"- Fit through {FROZEN_TRAIN_THROUGH}; score unchanged on 2022–2025.",
         "- The production FBS target population, Context preprocessing, H fallback, optimizer retry, penalty, and rank-distribution scoring are unchanged.",
-        "- E0 parity is required before interpreting defensive variants.",
+        "- E0, E1, and E2 parity are required before interpreting defensive variants; the study fails if any stored control comparison exceeds tolerance.",
+        "- The offensive transfer attachment reads the frozen portal/usage payloads supplied by `--transfer-root`; missing payloads are an error rather than an all-missing feature matrix.",
         "- Defensive values are zero for observed no-incoming rows and for unresolved rows after neutral imputation; an explicit availability indicator separates those cases.",
         "- Partial and no-usable defensive audit rows are never dropped and never treated as observed zeros.",
         f"- The defensive audit covers {summary['defensive_coverage']['n_team_seasons']} team-seasons: {summary['defensive_coverage']['observed_team_seasons']} observed and {summary['defensive_coverage']['unresolved_team_seasons']} unresolved under this policy.",
@@ -613,7 +707,14 @@ def render_report(
         "",
         "## C0 / no-RP / D5 parity and aggregate metrics",
         "",
-        f"E0 parity {'passed' if summary['c0_sanity_check']['passed'] else 'failed'}; maximum absolute stored-metric delta {fmt(summary['c0_sanity_check']['max_abs_metric_delta'], 6)}.",
+        "| Control | Frozen reference | Maximum absolute metric delta | Tolerance | Status |",
+        "|---|---|---:|---:|:---:|",
+    ]
+    for label, parity in summary["control_parity"].items():
+        lines.append(
+            f"| {label} | {parity['candidate']} | {fmt(parity['max_abs_metric_delta'], 8)} | {fmt(parity['tolerance'], 8)} | {'passed' if parity['passed'] else 'failed'} |"
+        )
+    lines += [
         "",
         "| Variant | NLL | Δ vs E0 | CRPS | Expected-rank MAE | Median-rank MAE | 80% coverage | 80% width |",
         "|---|---:|---:|---:|---:|---:|---:|---:|",
@@ -653,12 +754,12 @@ def render_report(
         "",
         "Numeric coefficients are standardized training-fit location coefficients. Availability indicators are explicit observed/unresolved controls. The defensive inputs enter location only, matching the frozen Context experiment; coefficients are not causal effects.",
         "",
-        "| Variant | Feature | Included | Training observed / missing | Location β | Location missingness |",
+        "| Variant | Feature | Included | Training source available / unavailable | Location β | Location missingness |",
         "|---|---|:---:|---:|---:|---:|",
     ]
     for row in coefficient_rows_:
         lines.append(
-            f"| {row['variant']} | {row['feature']} | {row['included']} | {row['training_observed_n']} / {row['training_missing_n']} | {fmt(row['location_coefficient_standardized'])} | {fmt(row['location_missingness_coefficient'])} |"
+            f"| {row['variant']} | {row['feature']} | {row['included']} | {row['training_source_available_n']} / {row['training_source_unavailable_n']} | {fmt(row['location_coefficient_standardized'])} | {fmt(row['location_missingness_coefficient'])} |"
         )
     lines += [
         "",
@@ -697,11 +798,26 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     prior.configure_source_root(source_root)
     rows, cold, _ = v1_1.v1.load_rows(max_season=max(TARGET_SEASONS))
     fbs = [row for row in rows if row.subdivision == "fbs"]
-    contextual, _ = c12.attach_context(
-        fbs, c12.feature_index(), c12.cached_tenures()
+    contextual, _ = c12.attach_context(fbs, c12.feature_index(), c12.cached_tenures())
+    transfer_root = args.transfer_root.resolve()
+    decomposition_summary = args.decomposition_summary.resolve()
+    records, usage, portal_seasons, usage_seasons = prior.load_raw_transfer_data(
+        transfer_root
     )
-    transfer_root = source_root / "data/raw/cfbd/preseason/transfers"
-    records, usage, portal_seasons, _ = prior.load_raw_transfer_data(transfer_root)
+    required_portal_seasons = {FROZEN_TRAIN_THROUGH, *TARGET_SEASONS}
+    required_usage_seasons = set(range(FROZEN_TRAIN_THROUGH - 1, max(TARGET_SEASONS)))
+    if not required_portal_seasons <= portal_seasons:
+        raise FileNotFoundError(
+            "D5 requires portal payloads for seasons "
+            f"{sorted(required_portal_seasons)}; found {sorted(portal_seasons)} "
+            f"under {transfer_root}"
+        )
+    if not required_usage_seasons <= usage_seasons:
+        raise FileNotFoundError(
+            "D5 requires usage payloads for seasons "
+            f"{sorted(required_usage_seasons)}; found {sorted(usage_seasons)} "
+            f"under {transfer_root}"
+        )
     transfer_features = prior.aggregate_team_features(
         records,
         usage,
@@ -836,6 +952,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         if metric in stored_c0
     }
     sanity = {
+        "candidate": "E0_production_C0",
         "stored_evaluation_path": str(stored_path),
         "stored_metrics": stored_c0,
         "computed_metrics": e0_metrics,
@@ -848,18 +965,38 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     if not sanity["passed"]:
         raise ValueError(f"E0 does not reproduce stored production metrics: {sanity}")
 
-    e2_metrics = next(row for row in aggregate_rows if row["variant"] == primary[2].name)
-    e4_metrics = next(row for row in aggregate_rows if row["variant"] == primary[4].name)
-    e5_metrics = next(row for row in aggregate_rows if row["variant"] == primary[5].name)
-    e6_metrics = next(row for row in aggregate_rows if row["variant"] == primary[6].name)
+    control_parity = {
+        "E0": sanity,
+        "E1": decomposition_parity(
+            prior.score(predictions_by_name[primary[1].name]),
+            candidate="D1_no_returning_production",
+            reference_path=decomposition_summary,
+        ),
+        "E2": decomposition_parity(
+            prior.score(predictions_by_name[primary[2].name]),
+            candidate="D5_total_rp_plus_incoming",
+            reference_path=decomposition_summary,
+        ),
+    }
+
+    e2_metrics = next(
+        row for row in aggregate_rows if row["variant"] == primary[2].name
+    )
+    e4_metrics = next(
+        row for row in aggregate_rows if row["variant"] == primary[4].name
+    )
+    e5_metrics = next(
+        row for row in aggregate_rows if row["variant"] == primary[5].name
+    )
+    e6_metrics = next(
+        row for row in aggregate_rows if row["variant"] == primary[6].name
+    )
     improved = {
         "experience": float(e4_metrics["nll"]) < float(e2_metrics["nll"]),
         "impact": float(e5_metrics["nll"]) < float(e2_metrics["nll"]),
         "both": float(e6_metrics["nll"]) < float(e2_metrics["nll"]),
     }
-    recommendation = (
-        "Advance both defensive representations only if E6 materially beats E4 and E5; otherwise prefer the simpler candidate that improves D5."
-    )
+    recommendation = "Advance both defensive representations only if E6 materially beats E4 and E5; otherwise prefer the simpler candidate that improves D5."
     if not any(improved.values()):
         recommendation = "No defensive candidate improves D5 on aggregate NLL; retain D5 and stop the defensive-transfer branch for this model cycle."
     elif improved["experience"] and not improved["impact"]:
@@ -911,7 +1048,9 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             for candidate in auxiliary
         ],
         "missingness_controls": [candidate.name for candidate in controls],
-        "permutation_controls": [candidate.name for candidate in permutation_candidates],
+        "permutation_controls": [
+            candidate.name for candidate in permutation_candidates
+        ],
         "missing_data_policy": {
             "observed_statuses": ["complete", "no_incoming_defensive_transfer"],
             "unresolved_statuses": ["partial", "no_usable_defensive_transfer"],
@@ -921,6 +1060,12 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         },
         "defensive_coverage": defensive_coverage,
         "c0_sanity_check": sanity,
+        "control_parity": control_parity,
+        "transfer_root": str(transfer_root),
+        "portal_seasons_available": sorted(portal_seasons),
+        "usage_seasons_available": sorted(usage_seasons),
+        "raw_transfer_input_sha256": transfer_source_hashes(transfer_root),
+        "decomposition_reference": str(decomposition_summary),
         "aggregate_metrics": aggregate_rows,
         "improved_over_d5_by_nll": improved,
         "recommendation": recommendation,
@@ -952,9 +1097,23 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-root", type=Path, default=ROOT)
     parser.add_argument(
+        "--transfer-root",
+        type=Path,
+        default=ROOT / "data/raw/cfbd/preseason/transfers",
+        help="Directory containing immutable portal/usage JSON payloads.",
+    )
+    parser.add_argument(
+        "--decomposition-summary",
+        type=Path,
+        default=ROOT
+        / "data/processed/transfer_signal_decomposition/candidate_summary.csv",
+        help="Frozen issue-96 aggregate metrics used for E1/E2 parity.",
+    )
+    parser.add_argument(
         "--defensive-features",
         type=Path,
-        default=ROOT / "data/processed/defensive_transfer_audit/team_season_features.csv",
+        default=ROOT
+        / "data/processed/defensive_transfer_audit/team_season_features.csv",
     )
     parser.add_argument(
         "--output",

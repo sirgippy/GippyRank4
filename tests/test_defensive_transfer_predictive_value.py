@@ -73,7 +73,9 @@ def test_defensive_loader_separates_zero_from_unresolved(tmp_path: Path) -> None
     assert values[(2022, "fbs", "2")][study.EXPERIENCE] == 0.0
 
 
-def _row(season: int, team_id: str, experience: float, impact: float, available: float) -> TeamSeason:
+def _row(
+    season: int, team_id: str, experience: float, impact: float, available: float
+) -> TeamSeason:
     return TeamSeason(
         season,
         "fbs",
@@ -134,3 +136,23 @@ def test_controls_are_availability_only() -> None:
     assert study.IMPACT_AVAILABLE in controls[1].features
     assert study.EXPERIENCE not in controls[2].features
     assert study.IMPACT not in controls[2].features
+
+
+def test_coefficient_coverage_uses_defensive_availability_indicators() -> None:
+    candidate = study.candidate_definitions()[4]
+    model = study.DirectRankModel(
+        feature_names=[study.EXPERIENCE, study.EXPERIENCE_AVAILABLE],
+        preprocessor=None,  # type: ignore[arg-type]
+        beta=np.zeros(5),
+        gamma=np.zeros(5),
+        lag_count=0,
+    )
+    rows = [
+        _row(2021, "a", 1.0, 1.0, 1.0),
+        _row(2021, "b", 0.0, 0.0, 0.0),
+    ]
+    coefficients = study.coefficient_rows([candidate], {candidate.name: model}, rows)
+    by_feature = {row["feature"]: row for row in coefficients}
+    assert by_feature[study.EXPERIENCE]["training_source_available_n"] == 1
+    assert by_feature[study.EXPERIENCE]["training_source_unavailable_n"] == 1
+    assert by_feature[study.EXPERIENCE_AVAILABLE]["training_source_available_n"] == 1

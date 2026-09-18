@@ -5,18 +5,24 @@ add predictive value beyond D5 (`total returning production + incoming prior
 offensive usage`). The research-only runner is:
 
 ```text
-uv run python scripts/investigate_defensive_transfer_predictive_value.py
+uv run python scripts/investigate_defensive_transfer_predictive_value.py \
+  --source-root /path/to/model-input-root \
+  --transfer-root /path/to/frozen-transfer-cache
 ```
 
 It fits through 2021 and evaluates the unchanged 2022–2025 production FBS
-population. If the large generated rank-distribution input is stored outside a
-checkout, pass `--source-root` for that input root and pass `--output` for the
-repository artifact directory.
+population. `--source-root` points to the large generated model-input root;
+`--transfer-root` must contain the immutable `portal/*.json` and `usage/*.json`
+payloads for the frozen seasons. Missing transfer payloads are an error, so an
+empty cache cannot silently turn E2 into a total-RP-only control. Pass
+`--output` for a different repository artifact directory when needed.
 
 The runner reuses the existing Context fit, H fallback, optimizer retry,
 regularization, and scoring implementation. It attaches the existing
-offensive transfer oracle before evaluating the E0–E6 variants, and it reads
-the frozen defensive audit from
+offensive transfer oracle before evaluating the E0–E6 variants. Before any
+defensive conclusion, it requires parity for E0 against production C0, E1
+against stored C-minus-RP, and E2 against the stored issue-96 D5 aggregate
+metrics. It reads the frozen defensive audit from
 `data/processed/defensive_transfer_audit/team_season_features.csv`.
 
 Defensive audit rows marked `complete` or
