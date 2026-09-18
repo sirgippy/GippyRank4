@@ -87,6 +87,8 @@ class UsageRecord:
     team: str
     position: str | None
     overall_usage: float | None
+    player_id: str | None = None
+    conference: str | None = None
 
 
 def normalize_player_name(value: str | None) -> str:
@@ -215,6 +217,10 @@ def parse_usage_payload(
                     str(item["position"]).strip() if item.get("position") else None
                 ),
                 overall_usage=_optional_float(overall),
+                player_id=(str(item["id"]).strip() if item.get("id") else None),
+                conference=(
+                    str(item["conference"]).strip() if item.get("conference") else None
+                ),
             )
         )
     return result

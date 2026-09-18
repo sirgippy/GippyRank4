@@ -1,0 +1,38 @@
+[
+  {
+    "fields": "season, firstName, lastName, origin, destination, position, transferDate, rating, stars, eligibility",
+    "historical_depth": "2021\u20132025 fetched for this audit",
+    "player_identifier": "none in audited portal payload",
+    "production_assessment": "usable for future snapshots only if fetched and frozen before the cutoff",
+    "reproducibility": "raw response bytes plus retrieval sidecar hash",
+    "source": "CFBD /player/portal",
+    "timestamp_semantics": "current retrospective response; event date is not an as-of publication timestamp"
+  },
+  {
+    "fields": "season, id, name, team, position, conference, usage.overall and component usage",
+    "historical_depth": "2020\u20132024 fetched for this audit",
+    "player_identifier": "stable within usage endpoint, not shared by portal endpoint",
+    "production_assessment": "supporting incoming prior offensive usage source after deterministic identity resolution",
+    "reproducibility": "raw response bytes plus retrieval sidecar hash",
+    "source": "CFBD /player/usage",
+    "timestamp_semantics": "season-wide prior offensive usage; not a transfer-time roster snapshot"
+  },
+  {
+    "fields": "season, playerId, player, team, position, category, statType, stat",
+    "historical_depth": "2020\u20132024 fetched for this audit",
+    "player_identifier": "stable within stats endpoint, not shared by portal endpoint",
+    "production_assessment": "conservative prior-participation evidence; source-team coverage and position-consistent skill-player stats are required before calling a missing offensive usage row a D5 failure",
+    "reproducibility": "raw response bytes plus retrieval sidecar hash",
+    "source": "CFBD /stats/player/season",
+    "timestamp_semantics": "season-wide prior player statistics; not a transfer-time roster snapshot"
+  },
+  {
+    "fields": "raw portal, usage, and player-stats payloads, endpoint, parameters, retrieval timestamp, SHA-256",
+    "historical_depth": "future seasons from process start; historical reconstruction remains retrospective",
+    "player_identifier": "portal ID remains unavailable; exact name + source-team fallback is required",
+    "production_assessment": "recommended minimal path for future production feasibility",
+    "reproducibility": "immutable ignored raw payloads and committed derived audit artifacts",
+    "source": "repository-managed preseason snapshot process",
+    "timestamp_semantics": "retrieval timestamp proves when GippyRank captured the response, not when CFBD first knew a destination"
+  }
+]
