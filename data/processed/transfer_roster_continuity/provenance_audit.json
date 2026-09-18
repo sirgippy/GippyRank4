@@ -1,0 +1,42 @@
+{
+  "destination": {
+    "classification": "retrospective-research-oracle",
+    "reason": "Final destination can reflect later portal resolution and is not proven knowable by August 15.",
+    "source": "CFBD /player/portal destination"
+  },
+  "origin": {
+    "classification": "retrospective-research-oracle",
+    "reason": "The source team is present in the retrospective record; source-team naming is not a historical roster snapshot.",
+    "source": "CFBD /player/portal origin"
+  },
+  "portal_season": {
+    "classification": "retrospective-research-oracle",
+    "reason": "The requested season is explicit, but the endpoint is not an archived as-of snapshot.",
+    "source": "CFBD /player/portal season query"
+  },
+  "position": {
+    "classification": "retrospective-research-oracle",
+    "reason": "The endpoint supplies a position but no archived as-of roster context.",
+    "source": "CFBD /player/portal position"
+  },
+  "prior_usage": {
+    "classification": "retrospective-research-oracle",
+    "reason": "Prior-season usage is outcome data from the source school and is not itself target-season data, but the name-based portal join is not an archived roster join.",
+    "source": "CFBD /player/usage for season-1"
+  },
+  "rating_stars": {
+    "classification": "retrospective-research-oracle",
+    "reason": "Rating coverage and later corrections are not timestamped as-of the cutoff.",
+    "source": "CFBD /player/portal rating and stars"
+  },
+  "scholarship_player_count": {
+    "classification": "unavailable",
+    "reason": "Eligibility does not establish scholarship status.",
+    "source": "not available in the selected CFBD fields"
+  },
+  "transfer_date": {
+    "classification": "retrospective-research-oracle",
+    "reason": "A date allows deterministic cutoff filtering, but historical publication and revision timing are not archived.",
+    "source": "CFBD /player/portal transferDate"
+  }
+}
