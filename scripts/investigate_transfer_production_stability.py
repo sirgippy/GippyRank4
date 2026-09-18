@@ -1,10 +1,10 @@
 """Rolling-origin stability study for the selected transfer-production signal.
 
 This is the issue #97 follow-up to the fixed candidate comparison in issue
-#91.  The candidate is deliberately not searched again here: R2 is the C10
-representation selected for descriptive follow-up in that study.  Each target
-season is fit using only earlier seasons, with the existing Context C 1.2
-optimizer, penalty, preprocessing, and H fallback path.
+#96.  The candidate is deliberately not searched again here: R2 is the D5
+representation selected in that decomposition study.  Each target season is
+fit using only earlier seasons, with the existing Context C 1.2 optimizer,
+penalty, preprocessing, and H fallback path.
 
 The script writes research artifacts only under
 ``data/processed/transfer_production_stability`` by default.  Transfer data is
@@ -42,6 +42,10 @@ ROOT = Path(__file__).resolve().parents[1]
 TARGET_SEASONS = (2022, 2023, 2024, 2025)
 FROZEN_TRAIN_THROUGH = 2021
 DEFAULT_CUTOFF = (8, 15)
+D5_PARITY_TOLERANCE = 1e-6
+DECOMPOSITION_SUMMARY = (
+    ROOT / "data/processed/transfer_signal_decomposition/candidate_summary.csv"
+)
 H_FEATURES = tuple(c12.H_FEATURES)
 COACH_FEATURES = tuple(c12.COACH_FEATURES)
 RECRUITING_FEATURES = tuple(c12.RECRUITING_FEATURES)
@@ -53,14 +57,11 @@ BASE_CONTEXT_FEATURES = (
     *TALENT_FEATURES,
     *RP_FEATURES,
 )
-SELECTED_TRANSFER_FEATURES = (
-    "transfer_in_prior_usage_sum",
-    "transfer_net_prior_usage",
-)
+SELECTED_TRANSFER_FEATURES = ("transfer_in_prior_usage_sum",)
 C_MINUS_RP_FEATURES = tuple(
     feature for feature in BASE_CONTEXT_FEATURES if feature not in RP_FEATURES
 )
-ROSTER_CONTINUITY_FEATURES = (*RP_FEATURES, *SELECTED_TRANSFER_FEATURES)
+ROSTER_CONTINUITY_FEATURES = ("returning_pct_ppa", *SELECTED_TRANSFER_FEATURES)
 
 METRICS = (
     "nll",
@@ -88,8 +89,8 @@ def candidate_definitions() -> tuple[Candidate, ...]:
         Candidate("R1", "C_minus_RP", C_MINUS_RP_FEATURES),
         Candidate(
             "R2",
-            "C10_transfer_production",
-            (*BASE_CONTEXT_FEATURES, *SELECTED_TRANSFER_FEATURES),
+            "D5_total_rp_plus_incoming",
+            (*C_MINUS_RP_FEATURES, *ROSTER_CONTINUITY_FEATURES),
         ),
     )
 
@@ -212,6 +213,44 @@ def score(predictions: list[v1.PriorPrediction]) -> dict[str, float]:
     return {metric: float(raw[metric]) for metric in METRICS}
 
 
+def read_d5_reference(path: Path = DECOMPOSITION_SUMMARY) -> dict[str, float]:
+    """Read the frozen D5 aggregate produced by issue 96."""
+    with path.open(newline="", encoding="utf-8") as handle:
+        for row in csv.DictReader(handle):
+            if (
+                row.get("candidate") == "D5_total_rp_plus_incoming"
+                and row.get("target_season") == "aggregate"
+            ):
+                return {metric: float(row[metric]) for metric in METRICS}
+    raise ValueError(f"D5 aggregate reference is missing from {path}")
+
+
+def d5_frozen_parity(
+    computed: dict[str, float],
+    *,
+    reference_path: Path = DECOMPOSITION_SUMMARY,
+    tolerance: float = D5_PARITY_TOLERANCE,
+) -> dict[str, object]:
+    """Require frozen R2 to reproduce issue 96's selected D5 aggregate."""
+    expected = read_d5_reference(reference_path)
+    deltas = {
+        metric: abs(computed[metric] - expected[metric]) for metric in METRICS
+    }
+    maximum = max(deltas.values(), default=None)
+    result: dict[str, object] = {
+        "reference_path": str(reference_path),
+        "reference_metrics": expected,
+        "computed_metrics": computed,
+        "metric_abs_deltas": deltas,
+        "max_abs_metric_delta": maximum,
+        "tolerance": tolerance,
+        "passed": maximum is not None and maximum <= tolerance,
+    }
+    if not result["passed"]:
+        raise ValueError(f"frozen R2 does not reproduce D5: {result}")
+    return result
+
+
 def sign(value: float, tolerance: float = 1e-10) -> str:
     if value > tolerance:
         return "positive"
@@ -303,7 +342,9 @@ def coefficient_rows(
     target_season: int,
     previous: dict[tuple[str, str], float],
 ) -> list[dict[str, object]]:
-    """Extract standardized location coefficients and their fit-to-fit deltas."""
+    """Extract selected D5 coefficients and their fit-to-fit deltas."""
+    if candidate.label != "R2":
+        return []
     result = []
     for feature in ROSTER_CONTINUITY_FEATURES:
         if feature not in model.feature_names:
@@ -561,13 +602,24 @@ def render_report(
         "",
         "## Selected representation",
         "",
-        "R2 is the exact C10 representation carried forward from the issue-91 decomposition follow-up:",
+        "R2 is the exact D5 representation selected by the issue-96 decomposition study:",
         "",
-        "- existing Context C 1.2 C0 features: coaching, recruiting, Team Talent, and all four returning-production features;",
-        "- `transfer_in_prior_usage_sum`;",
-        "- `transfer_net_prior_usage` (incoming prior usage minus outgoing prior usage).",
+        "- C-minus-RP baseline features: coaching, recruiting, and Team Talent;",
+        "- total returning production: `returning_pct_ppa`;",
+        "- incoming prior transfer production: `transfer_in_prior_usage_sum`.",
         "",
-        "R0 is C0 with the existing Context feature family. R1 removes all returning-production features. R2 adds only the two fixed C10 transfer-production inputs to R0.",
+        "R0 is C0 with the existing Context feature family. R1 removes all returning-production features. R2 is D5 and adds only total RP plus incoming prior transfer production to the C-minus-RP baseline.",
+        "",
+        "## Frozen D5 parity check",
+        "",
+        f"The frozen-through-2021 R2 aggregate reproduces the checked-in issue-96 D5 aggregate within the configured tolerance of {summary['d5_frozen_parity']['tolerance']:.1e}; maximum absolute metric difference is {fmt(summary['d5_frozen_parity']['max_abs_metric_delta'], 8)}.",
+        "",
+        "| Metric | Issue-96 D5 | Frozen R2 | Absolute difference |",
+        "|---|---:|---:|---:|",
+        *[
+            f"| {metric} | {fmt(summary['d5_frozen_parity']['reference_metrics'][metric], 8)} | {fmt(summary['d5_frozen_parity']['computed_metrics'][metric], 8)} | {fmt(summary['d5_frozen_parity']['metric_abs_deltas'][metric], 8)} |"
+            for metric in METRICS
+        ],
         "",
         "## Rolling-origin protocol",
         "",
@@ -584,14 +636,14 @@ def render_report(
         "",
         "## Training-data coverage",
         "",
-        "Counts below are computed from raw transfer values before preprocessing. A complete observed row has both selected R2 transfer-production inputs present.",
+        "Counts below are computed from raw transfer values before preprocessing. The selected transfer-production input is observed when `transfer_in_prior_usage_sum` is present.",
         "",
-        "| Target | Training team-seasons | Transfer-covered seasons | Rows with incoming usage | Rows with net usage | Rows with both | Fraction with both |",
-        "|---:|---:|---:|---:|---:|---:|---:|",
+        "| Target | Training team-seasons | Transfer-covered seasons | Rows with incoming usage | Fraction observed |",
+        "|---:|---:|---:|---:|---:|",
     ]
     for row in coverage:
         lines.append(
-            f"| {row['target_season']} | {row['n_training_team_seasons']} | {row['n_transfer_covered_training_seasons']} | {row['n_team_seasons_with_transfer_in_prior_usage_sum']} | {row['n_team_seasons_with_transfer_net_prior_usage']} | {row['n_team_seasons_with_all_observed_transfer_production']} | {fmt(row['fraction_with_all_observed_transfer_production'], 3)} |"
+            f"| {row['target_season']} | {row['n_training_team_seasons']} | {row['n_transfer_covered_training_seasons']} | {row['n_team_seasons_with_transfer_in_prior_usage_sum']} | {fmt(row['fraction_with_all_observed_transfer_production'], 3)} |"
         )
     lines += [
         "",
@@ -610,7 +662,7 @@ def render_report(
         "",
         "## R2 standardized roster-continuity coefficients",
         "",
-        "The reported location coefficients are for numeric inputs after training-only standardization. Missingness-indicator coefficients are shown separately. R2 has no separate outgoing-production feature; its net coefficient implies an outgoing direction through the negative of the net term, conditional on the incoming term.",
+        "The reported location coefficients are for the two selected D5 continuity inputs after training-only standardization. Missingness-indicator coefficients are shown separately. No outgoing or net transfer-production feature is included.",
         "",
         "| Target | Feature | Coefficient | Sign | Change from prior fit | Missingness indicator |",
         "|---:|---|---:|---|---:|---:|",
@@ -767,6 +819,19 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     rolling_rows = [row for row in metric_rows_ if row["protocol"] == "rolling_origin"]
     comparisons = comparison_rows(rolling_rows)
     stability = coefficient_stability(coefficient_rows_)
+    rolling_summary = {
+        candidate: aggregate_metrics(
+            rolling_rows, candidate=candidate, protocol="rolling_origin"
+        )
+        for candidate in ("R0", "R1", "R2")
+    }
+    frozen_summary = {
+        candidate: aggregate_metrics(
+            metric_rows_, candidate=candidate, protocol="frozen_through_2021"
+        )
+        for candidate in ("R0", "R1", "R2")
+    }
+    d5_parity = d5_frozen_parity(frozen_summary["R2"])
     coverage = source_coverage(
         records,
         transfer_root=transfer_root,
@@ -775,8 +840,9 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     summary: dict[str, object] = {
         "study": "issue_97_transfer_production_stability",
         "selected_representation": {
-            "source": "issue_91_C10_transfer_production",
-            "context_features": list(BASE_CONTEXT_FEATURES),
+            "source": "issue_96_D5_total_rp_plus_incoming",
+            "context_features": list(C_MINUS_RP_FEATURES),
+            "continuity_features": list(ROSTER_CONTINUITY_FEATURES),
             "transfer_production_features": list(SELECTED_TRANSFER_FEATURES),
             "full_features": list(by_name["R2"].features),
         },
@@ -798,23 +864,14 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         },
         "training_coverage": coverage_rows_,
         "coefficient_stability": stability,
+        "d5_frozen_parity": d5_parity,
         "portal_seasons": sorted(portal_seasons),
         "usage_seasons": sorted(usage_seasons),
         "raw_transfer_input_sha256": source_hashes(transfer_root),
         "source_coverage": coverage,
         "optional_coefficient_resampling": "omitted; coefficient paths and coverage diagnostics are reported",
-        "rolling_summary": {
-            candidate: aggregate_metrics(
-                rolling_rows, candidate=candidate, protocol="rolling_origin"
-            )
-            for candidate in ("R0", "R1", "R2")
-        },
-        "frozen_summary": {
-            candidate: aggregate_metrics(
-                metric_rows_, candidate=candidate, protocol="frozen_through_2021"
-            )
-            for candidate in ("R0", "R1", "R2")
-        },
+        "rolling_summary": rolling_summary,
+        "frozen_summary": frozen_summary,
     }
     write_csv(output / "rolling_metrics.csv", rolling_rows)
     write_csv(output / "frozen_metrics.csv", [row for row in metric_rows_ if row["protocol"] == "frozen_through_2021"])

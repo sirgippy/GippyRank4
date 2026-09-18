@@ -43,78 +43,30 @@
         "recruiting_points_trend",
         "talent_composite",
         "returning_pct_ppa",
-        "returning_pct_passing_ppa",
-        "returning_pct_receiving_ppa",
-        "returning_pct_rushing_ppa",
-        "transfer_in_prior_usage_sum",
-        "transfer_net_prior_usage"
+        "transfer_in_prior_usage_sum"
       ],
       "label": "R2",
-      "name": "C10_transfer_production"
+      "name": "D5_total_rp_plus_incoming"
     }
   ],
   "coefficient_stability": {
-    "returning_pct_passing_ppa": {
-      "max_absolute_change": 0.004259624718584713,
-      "max_absolute_coefficient": 0.02893042620387923,
-      "sign_flip_count": 0,
-      "signs": [
-        "negative",
-        "negative",
-        "negative",
-        "negative"
-      ]
-    },
     "returning_pct_ppa": {
-      "max_absolute_change": 0.01781007935118417,
-      "max_absolute_coefficient": 0.177248794781685,
+      "max_absolute_change": 0.014589953800532296,
+      "max_absolute_coefficient": 0.22571284497785532,
       "sign_flip_count": 0,
       "signs": [
         "negative",
         "negative",
-        "negative",
-        "negative"
-      ]
-    },
-    "returning_pct_receiving_ppa": {
-      "max_absolute_change": 0.00785606447778786,
-      "max_absolute_coefficient": 0.07647105501233588,
-      "sign_flip_count": 0,
-      "signs": [
-        "negative",
-        "negative",
-        "negative",
-        "negative"
-      ]
-    },
-    "returning_pct_rushing_ppa": {
-      "max_absolute_change": 0.0014869476435936993,
-      "max_absolute_coefficient": 0.0013174239903600935,
-      "sign_flip_count": 2,
-      "signs": [
-        "negative",
-        "positive",
         "negative",
         "negative"
       ]
     },
     "transfer_in_prior_usage_sum": {
-      "max_absolute_change": 0.031813088466705566,
-      "max_absolute_coefficient": 0.07916320752844064,
+      "max_absolute_change": 0.024051039067816082,
+      "max_absolute_coefficient": 0.08242325419585043,
       "sign_flip_count": 0,
       "signs": [
         "negative",
-        "negative",
-        "negative",
-        "negative"
-      ]
-    },
-    "transfer_net_prior_usage": {
-      "max_absolute_change": 0.01906022128695544,
-      "max_absolute_coefficient": 0.020144388344486994,
-      "sign_flip_count": 1,
-      "signs": [
-        "positive",
         "negative",
         "negative",
         "negative"
@@ -122,6 +74,41 @@
     }
   },
   "cutoff": "August 15 season-relative",
+  "d5_frozen_parity": {
+    "computed_metrics": {
+      "candidate": "R2",
+      "crps": 0.10798618291065665,
+      "expected_rank_mae": 19.489574646043323,
+      "interval_80_average_width": 71.95880149812734,
+      "interval_80_coverage": 0.8377027739003331,
+      "median_rank_mae": 19.675093632958802,
+      "n_target_seasons": 4,
+      "n_team_seasons": 534,
+      "nll": 4.508080629954508,
+      "protocol": "frozen_through_2021",
+      "target_seasons": "2022;2023;2024;2025"
+    },
+    "max_abs_metric_delta": 1.7763568394002505e-15,
+    "metric_abs_deltas": {
+      "crps": 1.3877787807814457e-17,
+      "expected_rank_mae": 0.0,
+      "interval_80_average_width": 0.0,
+      "interval_80_coverage": 0.0,
+      "median_rank_mae": 0.0,
+      "nll": 1.7763568394002505e-15
+    },
+    "passed": true,
+    "reference_metrics": {
+      "crps": 0.10798618291065663,
+      "expected_rank_mae": 19.489574646043323,
+      "interval_80_average_width": 71.95880149812734,
+      "interval_80_coverage": 0.8377027739003331,
+      "median_rank_mae": 19.675093632958802,
+      "nll": 4.5080806299545095
+    },
+    "reference_path": "/home/gippy/.codex/worktrees/ecff/GippyRank4/data/processed/transfer_signal_decomposition/candidate_summary.csv",
+    "tolerance": 1e-06
+  },
   "frozen_summary": {
     "R0": {
       "candidate": "R0",
@@ -151,14 +138,14 @@
     },
     "R2": {
       "candidate": "R2",
-      "crps": 0.10893665903765455,
-      "expected_rank_mae": 19.65669264524181,
-      "interval_80_average_width": 71.74157303370787,
-      "interval_80_coverage": 0.8332048266502539,
-      "median_rank_mae": 19.8061797752809,
+      "crps": 0.10798618291065665,
+      "expected_rank_mae": 19.489574646043323,
+      "interval_80_average_width": 71.95880149812734,
+      "interval_80_coverage": 0.8377027739003331,
+      "median_rank_mae": 19.675093632958802,
       "n_target_seasons": 4,
       "n_team_seasons": 534,
-      "nll": 4.516039585340363,
+      "nll": 4.508080629954508,
       "protocol": "frozen_through_2021",
       "target_seasons": "2022;2023;2024;2025"
     }
@@ -222,14 +209,14 @@
     },
     "R2": {
       "candidate": "R2",
-      "crps": 0.10881496397897711,
-      "expected_rank_mae": 19.632676629914595,
-      "interval_80_average_width": 71.45131086142322,
-      "interval_80_coverage": 0.8358396393912694,
-      "median_rank_mae": 19.888576779026216,
+      "crps": 0.10815622251997055,
+      "expected_rank_mae": 19.55459800808548,
+      "interval_80_average_width": 71.90074906367042,
+      "interval_80_coverage": 0.8360241150968474,
+      "median_rank_mae": 19.75749063670412,
       "n_target_seasons": 4,
       "n_team_seasons": 534,
-      "nll": 4.511883585081437,
+      "nll": 4.50804403235961,
       "protocol": "rolling_origin",
       "target_seasons": "2022;2023;2024;2025"
     }
@@ -243,11 +230,11 @@
       "recruiting_points_3y_mean",
       "recruiting_points_4y_mean",
       "recruiting_points_trend",
-      "talent_composite",
+      "talent_composite"
+    ],
+    "continuity_features": [
       "returning_pct_ppa",
-      "returning_pct_passing_ppa",
-      "returning_pct_receiving_ppa",
-      "returning_pct_rushing_ppa"
+      "transfer_in_prior_usage_sum"
     ],
     "full_features": [
       "coach_tenure_seasons",
@@ -259,16 +246,11 @@
       "recruiting_points_trend",
       "talent_composite",
       "returning_pct_ppa",
-      "returning_pct_passing_ppa",
-      "returning_pct_receiving_ppa",
-      "returning_pct_rushing_ppa",
-      "transfer_in_prior_usage_sum",
-      "transfer_net_prior_usage"
+      "transfer_in_prior_usage_sum"
     ],
-    "source": "issue_91_C10_transfer_production",
+    "source": "issue_96_D5_total_rp_plus_incoming",
     "transfer_production_features": [
-      "transfer_in_prior_usage_sum",
-      "transfer_net_prior_usage"
+      "transfer_in_prior_usage_sum"
     ]
   },
   "source_coverage": [
@@ -382,11 +364,10 @@
   ],
   "training_coverage": [
     {
-      "fraction_with_all_observed_transfer_production": 0.034747292418772564,
-      "n_team_seasons_with_all_observed_transfer_production": 77,
+      "fraction_with_all_observed_transfer_production": 0.042418772563176894,
+      "n_team_seasons_with_all_observed_transfer_production": 94,
       "n_team_seasons_with_any_observed_transfer_production": 94,
       "n_team_seasons_with_transfer_in_prior_usage_sum": 94,
-      "n_team_seasons_with_transfer_net_prior_usage": 77,
       "n_training_seasons": 18,
       "n_training_team_seasons": 2216,
       "n_transfer_covered_training_seasons": 1,
@@ -397,11 +378,10 @@
       ]
     },
     {
-      "fraction_with_all_observed_transfer_production": 0.07672634271099744,
-      "n_team_seasons_with_all_observed_transfer_production": 180,
+      "fraction_with_all_observed_transfer_production": 0.08738277919863598,
+      "n_team_seasons_with_all_observed_transfer_production": 205,
       "n_team_seasons_with_any_observed_transfer_production": 205,
       "n_team_seasons_with_transfer_in_prior_usage_sum": 205,
-      "n_team_seasons_with_transfer_net_prior_usage": 180,
       "n_training_seasons": 19,
       "n_training_team_seasons": 2346,
       "n_transfer_covered_training_seasons": 2,
@@ -413,11 +393,10 @@
       ]
     },
     {
-      "fraction_with_all_observed_transfer_production": 0.11788453774727493,
-      "n_team_seasons_with_all_observed_transfer_production": 292,
+      "fraction_with_all_observed_transfer_production": 0.12999596285829632,
+      "n_team_seasons_with_all_observed_transfer_production": 322,
       "n_team_seasons_with_any_observed_transfer_production": 322,
       "n_team_seasons_with_transfer_in_prior_usage_sum": 322,
-      "n_team_seasons_with_transfer_net_prior_usage": 292,
       "n_training_seasons": 20,
       "n_training_team_seasons": 2477,
       "n_transfer_covered_training_seasons": 3,
@@ -430,11 +409,10 @@
       ]
     },
     {
-      "fraction_with_all_observed_transfer_production": 0.15900383141762453,
-      "n_team_seasons_with_all_observed_transfer_production": 415,
+      "fraction_with_all_observed_transfer_production": 0.1727969348659004,
+      "n_team_seasons_with_all_observed_transfer_production": 451,
       "n_team_seasons_with_any_observed_transfer_production": 451,
       "n_team_seasons_with_transfer_in_prior_usage_sum": 451,
-      "n_team_seasons_with_transfer_net_prior_usage": 415,
       "n_training_seasons": 21,
       "n_training_team_seasons": 2610,
       "n_transfer_covered_training_seasons": 4,
