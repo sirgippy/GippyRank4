@@ -58,3 +58,9 @@ GippyRank4 is a research project for probabilistic college-football ranking.
   `uv run pytest -q --ignore=tests/test_api.py`
 - Validate `tests/test_api.py` and the complete suite through CI or an explicitly approved unsandboxed/escalated command. If an API test run goes silent and hangs, terminate it rather than waiting indefinitely.
 - Validation split: sandboxed Codex worker → run the sandbox-compatible suite locally and rely on CI or approved unsandboxed execution for API tests; normal WSL/CI → run the full suite.
+
+## Git and GitHub workflow
+
+- When working on a ticket, always pull the latest refs from `origin` before editing and create the ticket branch from the most recent `origin/main`; do not base the work on an existing feature branch or stale local `main`.
+- If synchronizing with `origin` or creating the branch requires privilege escalation, request and use it rather than proceeding from stale refs.
+- When the ticket is complete, commit and push the branch and open a pull request against `main` before reporting the work as done.
