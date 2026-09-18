@@ -21,7 +21,7 @@
     "fields": "season, playerId, player, team, position, category, statType, stat",
     "historical_depth": "2020\u20132024 fetched for this audit",
     "player_identifier": "stable within stats endpoint, not shared by portal endpoint",
-    "production_assessment": "independent prior-participation evidence used before calling a missing offensive usage row a D5 failure",
+    "production_assessment": "conservative prior-participation evidence; source-team coverage and position-consistent skill-player stats are required before calling a missing offensive usage row a D5 failure",
     "reproducibility": "raw response bytes plus retrieval sidecar hash",
     "source": "CFBD /stats/player/season",
     "timestamp_semantics": "season-wide prior player statistics; not a transfer-time roster snapshot"

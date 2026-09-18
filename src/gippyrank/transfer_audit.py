@@ -48,6 +48,13 @@ PARTICIPATION_POSITIVE = "positive_prior_offensive_participation"
 PARTICIPATION_ZERO = "no_prior_offensive_participation"
 PARTICIPATION_UNKNOWN = "prior_participation_unknown"
 OFFENSIVE_STAT_CATEGORIES = {"passing", "rushing", "receiving"}
+OFFENSIVE_SKILL_GROUPS = {"qb", "rb", "wr", "te"}
+OFFENSIVE_STAT_CATEGORIES_BY_POSITION = {
+    "qb": {"passing", "rushing"},
+    "rb": {"rushing", "receiving"},
+    "wr": {"rushing", "receiving"},
+    "te": {"rushing", "receiving"},
+}
 
 
 @dataclass(frozen=True)
@@ -259,6 +266,7 @@ def _participation_indexes(
 ) -> dict[str, Any]:
     by_key: defaultdict[tuple[int, str, str], list[int]] = defaultdict(list)
     by_name: defaultdict[tuple[int, str], list[int]] = defaultdict(list)
+    teams_by_season: defaultdict[int, set[str]] = defaultdict(set)
     for index, item in enumerate(participation):
         key = (
             item.season,
@@ -267,7 +275,12 @@ def _participation_indexes(
         )
         by_key[key].append(index)
         by_name[(item.season, normalize_player_name(item.player_name))].append(index)
-    return {"by_key": by_key, "by_name": by_name}
+        teams_by_season[item.season].add(normalize_team_name(item.team))
+    return {
+        "by_key": by_key,
+        "by_name": by_name,
+        "teams_by_season": teams_by_season,
+    }
 
 
 def _stat_has_positive_value(value: str | None) -> bool:
@@ -277,6 +290,37 @@ def _stat_has_positive_value(value: str | None) -> bool:
     return any(float(number) > 0 for number in numbers)
 
 
+def _appropriate_offensive_stat(
+    record: TransferRecord, participation: ParticipationRecord
+) -> bool:
+    """Require a position-consistent ordinary offensive stat signal."""
+    portal_group = position_group(record.position)
+    stats_group = position_group(participation.position)
+    return (
+        portal_group in OFFENSIVE_SKILL_GROUPS
+        and stats_group == portal_group
+        and participation.category
+        in OFFENSIVE_STAT_CATEGORIES_BY_POSITION[portal_group]
+        and _stat_has_positive_value(participation.stat_value)
+    )
+
+
+def _participation_zero_is_supported(
+    record: TransferRecord, candidates: Sequence[ParticipationRecord]
+) -> bool:
+    """Return whether this source can support a zero classification."""
+    portal_group = position_group(record.position)
+    if portal_group in OFFENSIVE_SKILL_GROUPS:
+        return True
+    if portal_group in {"dl", "lb", "db", "st"}:
+        return not any(
+            item.category in OFFENSIVE_STAT_CATEGORIES
+            and _stat_has_positive_value(item.stat_value)
+            for item in candidates
+        )
+    return False
+
+
 def _participation_evidence(
     record: TransferRecord,
     source_resolution: TeamResolution,
@@ -284,7 +328,15 @@ def _participation_evidence(
     indexes: Mapping[str, Any],
     participation_seasons: set[int],
 ) -> tuple[str, str, str, int]:
-    """Find independent prior offensive-participation evidence for one transfer."""
+    """Find conservative prior offensive-participation evidence for one transfer.
+
+    The season-wide stats endpoint is treated as verified only for source teams
+    that are both in the audited FBS population and represented somewhere in
+    that season's payload.  A positive box-score category is evidence only when
+    the portal and stats positions agree on an offensive skill position.  The
+    absence of ordinary box-score stats is not treated as zero for offensive
+    line or unknown positions.
+    """
     prior_season = record.season - 1
     if prior_season not in participation_seasons:
         return (
@@ -295,6 +347,18 @@ def _participation_evidence(
         )
     if not record.origin or not record.player_name:
         return PARTICIPATION_UNKNOWN, "missing_source_or_player_identity", "none", 0
+    source_names = {
+        team_name
+        for team_name, _method in _team_name_candidates(record, source_resolution)
+    }
+    covered_source_names = indexes["teams_by_season"].get(prior_season, set())
+    if not source_resolution.matched or not source_names & covered_source_names:
+        return (
+            PARTICIPATION_UNKNOWN,
+            "source_team_outside_verified_stats_coverage",
+            "none",
+            0,
+        )
     normalized_player = normalize_player_name(record.player_name)
     candidates: list[int] = []
     method = "none"
@@ -323,30 +387,40 @@ def _participation_evidence(
                 len(same_name),
             )
     if not candidates:
+        if _participation_zero_is_supported(record, ()):
+            return (
+                PARTICIPATION_ZERO,
+                "no_prior_participation_record_in_verified_source",
+                "none",
+                0,
+            )
         return (
-            PARTICIPATION_ZERO,
-            "no_prior_participation_record",
+            PARTICIPATION_UNKNOWN,
+            "absence_of_box_score_stats_not_informative_for_position",
             "none",
             0,
         )
-    has_positive_offense = any(
-        participation[index].category in OFFENSIVE_STAT_CATEGORIES
-        and _stat_has_positive_value(participation[index].stat_value)
-        for index in candidates
-    )
-    if has_positive_offense:
+    candidate_records = [participation[index] for index in candidates]
+    if any(_appropriate_offensive_stat(record, item) for item in candidate_records):
         return (
             PARTICIPATION_POSITIVE,
-            "positive_prior_offensive_stat",
+            "positive_prior_offensive_stat_for_matching_offensive_position",
             method,
             len(candidates),
         )
-    return (
-        PARTICIPATION_ZERO,
-        "identity_found_without_positive_offensive_stat",
-        method,
-        len(candidates),
+    if _participation_zero_is_supported(record, candidate_records):
+        return (
+            PARTICIPATION_ZERO,
+            "identity_found_without_positive_appropriate_offensive_stat",
+            method,
+            len(candidates),
+        )
+    reason = (
+        "offensive_line_box_score_absence_not_informative"
+        if position_group(record.position) == "ol"
+        else "positive_stat_not_sufficient_for_position"
     )
+    return PARTICIPATION_UNKNOWN, reason, method, len(candidates)
 
 
 def _unique_ints(values: Iterable[int]) -> list[int]:
@@ -499,6 +573,13 @@ def _classify_d5(
             D5_APPLICABLE,
             f"{portal_reason}; {participation_reason}; {usage_join_status}",
             D5_CATEGORY_FAILURE,
+            None,
+        )
+    if participation_status == PARTICIPATION_UNKNOWN:
+        return (
+            D5_UNKNOWN,
+            f"{portal_reason}; {participation_reason}",
+            D5_CATEGORY_UNDETERMINED,
             None,
         )
     if participation_status == PARTICIPATION_ZERO:
@@ -1264,7 +1345,7 @@ def cutoff_safety_assessment() -> list[Row]:
             "field": "prior-season offensive participation",
             "required_for_model": True,
             "classification": "retrospective oracle only",
-            "evidence": "Independent player-season stats are used to distinguish positive prior participation, legitimate zero, and undetermined applicability before classifying a missing usage row.",
+            "evidence": "Independent player-season stats are used conservatively: source-team coverage and a position-consistent offensive stat are required for a failure; offensive-line absence, incidental defensive offense, and unverified source coverage remain undetermined.",
         },
         {
             "field": "position",
@@ -1315,7 +1396,7 @@ def source_inventory() -> list[Row]:
             "historical_depth": "2020–2024 fetched for this audit",
             "timestamp_semantics": "season-wide prior player statistics; not a transfer-time roster snapshot",
             "reproducibility": "raw response bytes plus retrieval sidecar hash",
-            "production_assessment": "independent prior-participation evidence used before calling a missing offensive usage row a D5 failure",
+            "production_assessment": "conservative prior-participation evidence; source-team coverage and position-consistent skill-player stats are required before calling a missing offensive usage row a D5 failure",
         },
         {
             "source": "repository-managed preseason snapshot process",
