@@ -1,0 +1,436 @@
+{
+  "candidates": [
+    {
+      "features": [
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite",
+        "returning_pct_ppa",
+        "returning_pct_passing_ppa",
+        "returning_pct_receiving_ppa",
+        "returning_pct_rushing_ppa"
+      ],
+      "label": "R0",
+      "name": "C0_full"
+    },
+    {
+      "features": [
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite"
+      ],
+      "label": "R1",
+      "name": "C_minus_RP"
+    },
+    {
+      "features": [
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite",
+        "returning_pct_ppa",
+        "transfer_in_prior_usage_sum"
+      ],
+      "label": "R2",
+      "name": "D5_total_rp_plus_incoming"
+    }
+  ],
+  "coefficient_stability": {
+    "returning_pct_ppa": {
+      "max_absolute_change": 0.014589953800532296,
+      "max_absolute_coefficient": 0.22571284497785532,
+      "sign_flip_count": 0,
+      "signs": [
+        "negative",
+        "negative",
+        "negative",
+        "negative"
+      ]
+    },
+    "transfer_in_prior_usage_sum": {
+      "max_absolute_change": 0.024051039067816082,
+      "max_absolute_coefficient": 0.08242325419585043,
+      "sign_flip_count": 0,
+      "signs": [
+        "negative",
+        "negative",
+        "negative",
+        "negative"
+      ]
+    }
+  },
+  "cutoff": "August 15 season-relative",
+  "d5_frozen_parity": {
+    "computed_metrics": {
+      "candidate": "R2",
+      "crps": 0.10798618291065665,
+      "expected_rank_mae": 19.489574646043323,
+      "interval_80_average_width": 71.95880149812734,
+      "interval_80_coverage": 0.8377027739003331,
+      "median_rank_mae": 19.675093632958802,
+      "n_target_seasons": 4,
+      "n_team_seasons": 534,
+      "nll": 4.508080629954508,
+      "protocol": "frozen_through_2021",
+      "target_seasons": "2022;2023;2024;2025"
+    },
+    "max_abs_metric_delta": 1.7763568394002505e-15,
+    "metric_abs_deltas": {
+      "crps": 1.3877787807814457e-17,
+      "expected_rank_mae": 0.0,
+      "interval_80_average_width": 0.0,
+      "interval_80_coverage": 0.0,
+      "median_rank_mae": 0.0,
+      "nll": 1.7763568394002505e-15
+    },
+    "passed": true,
+    "reference_metrics": {
+      "crps": 0.10798618291065663,
+      "expected_rank_mae": 19.489574646043323,
+      "interval_80_average_width": 71.95880149812734,
+      "interval_80_coverage": 0.8377027739003331,
+      "median_rank_mae": 19.675093632958802,
+      "nll": 4.5080806299545095
+    },
+    "reference_path": "/home/gippy/.codex/worktrees/ecff/GippyRank4/data/processed/transfer_signal_decomposition/candidate_summary.csv",
+    "tolerance": 1e-06
+  },
+  "frozen_summary": {
+    "R0": {
+      "candidate": "R0",
+      "crps": 0.11194306775822213,
+      "expected_rank_mae": 20.16301079638477,
+      "interval_80_average_width": 71.91947565543072,
+      "interval_80_coverage": 0.8249770482173018,
+      "median_rank_mae": 20.594569288389515,
+      "n_target_seasons": 4,
+      "n_team_seasons": 534,
+      "nll": 4.542326751937674,
+      "protocol": "frozen_through_2021",
+      "target_seasons": "2022;2023;2024;2025"
+    },
+    "R1": {
+      "candidate": "R1",
+      "crps": 0.11111614140217868,
+      "expected_rank_mae": 20.226139001710077,
+      "interval_80_average_width": 74.59737827715355,
+      "interval_80_coverage": 0.833830400940448,
+      "median_rank_mae": 20.480337078651687,
+      "n_target_seasons": 4,
+      "n_team_seasons": 534,
+      "nll": 4.5291557346129805,
+      "protocol": "frozen_through_2021",
+      "target_seasons": "2022;2023;2024;2025"
+    },
+    "R2": {
+      "candidate": "R2",
+      "crps": 0.10798618291065665,
+      "expected_rank_mae": 19.489574646043323,
+      "interval_80_average_width": 71.95880149812734,
+      "interval_80_coverage": 0.8377027739003331,
+      "median_rank_mae": 19.675093632958802,
+      "n_target_seasons": 4,
+      "n_team_seasons": 534,
+      "nll": 4.508080629954508,
+      "protocol": "frozen_through_2021",
+      "target_seasons": "2022;2023;2024;2025"
+    }
+  },
+  "frozen_train_through": 2021,
+  "model_protocol": {
+    "fallback": "stored H PMFs for rows without modeled Context predictions",
+    "family": "Context C 1.2 location fit",
+    "location_features": "H plus candidate features",
+    "optimizer_retry_maxiter": 2000,
+    "penalty": 0.25,
+    "preprocessing": "DirectRankModel training-only imputation, standardization, and missingness indicators",
+    "scale_features": "H only"
+  },
+  "optional_coefficient_resampling": "omitted; coefficient paths and coverage diagnostics are reported",
+  "portal_seasons": [
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "raw_transfer_input_sha256": {
+    "portal/2021.json": "18d0d528f2b9c2dcc83814185a619a13dd829f642a023c80129805db33114087",
+    "portal/2022.json": "6a3efbb4a12baaa13d9376bfb5a5e83a98dd258178fc8735dcf0e9336000297e",
+    "portal/2023.json": "73229d36aee995b0b80629d46870dba85c9ba032b0162a4705dd4a82801655df",
+    "portal/2024.json": "ce7e540c2e153cb9fdab6e9834eddbbbf9be27fab71ac726026d244236865029",
+    "portal/2025.json": "a566904246c2ee1c4c0c7c631714b44b0fc47b2bd0191763eead37aee130ce51",
+    "usage/2020.json": "7d0a49eaa06ff9a730f6e96c5f2272e7030e9c86f616f26d9930dd6c08e7f567",
+    "usage/2021.json": "9c738768bcb914bc6fe781e5716a877dd93227f6186b9650f1fcc4917e3fb984",
+    "usage/2022.json": "3f4429e25852b011ea749e1ad548b630f990a72da4976c3f6d71d4ab4704aec6",
+    "usage/2023.json": "75595ed1c97c4da9579a6c6e5bd88248283a6389a915348612478e698e07651b",
+    "usage/2024.json": "ff286be911442c317fc00ae485598a8a314978276df27c9d972407edd4d8a08b"
+  },
+  "rolling_summary": {
+    "R0": {
+      "candidate": "R0",
+      "crps": 0.11094712867541907,
+      "expected_rank_mae": 20.018248744400832,
+      "interval_80_average_width": 71.99812734082397,
+      "interval_80_coverage": 0.825756673463604,
+      "median_rank_mae": 20.448501872659175,
+      "n_target_seasons": 4,
+      "n_team_seasons": 534,
+      "nll": 4.53164684448745,
+      "protocol": "rolling_origin",
+      "target_seasons": "2022;2023;2024;2025"
+    },
+    "R1": {
+      "candidate": "R1",
+      "crps": 0.1111064134483531,
+      "expected_rank_mae": 20.23406509779717,
+      "interval_80_average_width": 74.43632958801498,
+      "interval_80_coverage": 0.8334585961666117,
+      "median_rank_mae": 20.500936329588015,
+      "n_target_seasons": 4,
+      "n_team_seasons": 534,
+      "nll": 4.528304084845875,
+      "protocol": "rolling_origin",
+      "target_seasons": "2022;2023;2024;2025"
+    },
+    "R2": {
+      "candidate": "R2",
+      "crps": 0.10815622251997055,
+      "expected_rank_mae": 19.55459800808548,
+      "interval_80_average_width": 71.90074906367042,
+      "interval_80_coverage": 0.8360241150968474,
+      "median_rank_mae": 19.75749063670412,
+      "n_target_seasons": 4,
+      "n_team_seasons": 534,
+      "nll": 4.50804403235961,
+      "protocol": "rolling_origin",
+      "target_seasons": "2022;2023;2024;2025"
+    }
+  },
+  "selected_representation": {
+    "context_features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite"
+    ],
+    "continuity_features": [
+      "returning_pct_ppa",
+      "transfer_in_prior_usage_sum"
+    ],
+    "full_features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "transfer_in_prior_usage_sum"
+    ],
+    "source": "issue_96_D5_total_rp_plus_incoming",
+    "transfer_production_features": [
+      "transfer_in_prior_usage_sum"
+    ]
+  },
+  "source_coverage": [
+    {
+      "classification": "retrospective-research-oracle",
+      "cutoff": "2021-08-15",
+      "cutoff_rate": 1.0,
+      "date_rate": 1.0,
+      "destination_rate": 0.5949152542372881,
+      "n_destination_team_matches": 806,
+      "n_on_or_before_cutoff": 1770,
+      "n_origin_team_matches": 1642,
+      "n_portal_records": 1770,
+      "n_with_destination": 1053,
+      "n_with_position": 1770,
+      "n_with_rating": 323,
+      "n_with_stars": 1554,
+      "n_with_transfer_date": 1770,
+      "portal_payload_available": true,
+      "rating_rate": 0.1824858757062147,
+      "season": 2021,
+      "stars_rate": 0.8779661016949153
+    },
+    {
+      "classification": "retrospective-research-oracle",
+      "cutoff": "2022-08-15",
+      "cutoff_rate": 0.9978002639683238,
+      "date_rate": 1.0,
+      "destination_rate": 0.6014078310602727,
+      "n_destination_team_matches": 1084,
+      "n_on_or_before_cutoff": 2268,
+      "n_origin_team_matches": 2118,
+      "n_portal_records": 2273,
+      "n_with_destination": 1367,
+      "n_with_position": 2273,
+      "n_with_rating": 1043,
+      "n_with_stars": 2030,
+      "n_with_transfer_date": 2273,
+      "portal_payload_available": true,
+      "rating_rate": 0.45886493620765506,
+      "season": 2022,
+      "stars_rate": 0.8930928288605368
+    },
+    {
+      "classification": "retrospective-research-oracle",
+      "cutoff": "2023-08-15",
+      "cutoff_rate": 1.0,
+      "date_rate": 1.0,
+      "destination_rate": 0.6422861710631494,
+      "n_destination_team_matches": 1411,
+      "n_on_or_before_cutoff": 2502,
+      "n_origin_team_matches": 2251,
+      "n_portal_records": 2502,
+      "n_with_destination": 1607,
+      "n_with_position": 2502,
+      "n_with_rating": 891,
+      "n_with_stars": 2433,
+      "n_with_transfer_date": 2502,
+      "portal_payload_available": true,
+      "rating_rate": 0.35611510791366907,
+      "season": 2023,
+      "stars_rate": 0.9724220623501199
+    },
+    {
+      "classification": "retrospective-research-oracle",
+      "cutoff": "2024-08-15",
+      "cutoff_rate": 1.0,
+      "date_rate": 1.0,
+      "destination_rate": 0.7856719952634695,
+      "n_destination_team_matches": 2056,
+      "n_on_or_before_cutoff": 3378,
+      "n_origin_team_matches": 2951,
+      "n_portal_records": 3378,
+      "n_with_destination": 2654,
+      "n_with_position": 3378,
+      "n_with_rating": 1852,
+      "n_with_stars": 2996,
+      "n_with_transfer_date": 3378,
+      "portal_payload_available": true,
+      "rating_rate": 0.5482534043812907,
+      "season": 2024,
+      "stars_rate": 0.886915334517466
+    },
+    {
+      "classification": "retrospective-research-oracle",
+      "cutoff": "2025-08-15",
+      "cutoff_rate": 0.9995554567681707,
+      "date_rate": 1.0,
+      "destination_rate": 0.8379639919982218,
+      "n_destination_team_matches": 2882,
+      "n_on_or_before_cutoff": 4497,
+      "n_origin_team_matches": 3684,
+      "n_portal_records": 4499,
+      "n_with_destination": 3770,
+      "n_with_position": 4499,
+      "n_with_rating": 2511,
+      "n_with_stars": 3813,
+      "n_with_transfer_date": 4499,
+      "portal_payload_available": true,
+      "rating_rate": 0.5581240275616803,
+      "season": 2025,
+      "stars_rate": 0.8475216714825516
+    }
+  ],
+  "study": "issue_97_transfer_production_stability",
+  "target_seasons": [
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "training_coverage": [
+    {
+      "fraction_with_all_observed_transfer_production": 0.042418772563176894,
+      "n_team_seasons_with_all_observed_transfer_production": 94,
+      "n_team_seasons_with_any_observed_transfer_production": 94,
+      "n_team_seasons_with_transfer_in_prior_usage_sum": 94,
+      "n_training_seasons": 18,
+      "n_training_team_seasons": 2216,
+      "n_transfer_covered_training_seasons": 1,
+      "target_season": 2022,
+      "train_through": 2021,
+      "transfer_covered_training_seasons": [
+        2021
+      ]
+    },
+    {
+      "fraction_with_all_observed_transfer_production": 0.08738277919863598,
+      "n_team_seasons_with_all_observed_transfer_production": 205,
+      "n_team_seasons_with_any_observed_transfer_production": 205,
+      "n_team_seasons_with_transfer_in_prior_usage_sum": 205,
+      "n_training_seasons": 19,
+      "n_training_team_seasons": 2346,
+      "n_transfer_covered_training_seasons": 2,
+      "target_season": 2023,
+      "train_through": 2022,
+      "transfer_covered_training_seasons": [
+        2021,
+        2022
+      ]
+    },
+    {
+      "fraction_with_all_observed_transfer_production": 0.12999596285829632,
+      "n_team_seasons_with_all_observed_transfer_production": 322,
+      "n_team_seasons_with_any_observed_transfer_production": 322,
+      "n_team_seasons_with_transfer_in_prior_usage_sum": 322,
+      "n_training_seasons": 20,
+      "n_training_team_seasons": 2477,
+      "n_transfer_covered_training_seasons": 3,
+      "target_season": 2024,
+      "train_through": 2023,
+      "transfer_covered_training_seasons": [
+        2021,
+        2022,
+        2023
+      ]
+    },
+    {
+      "fraction_with_all_observed_transfer_production": 0.1727969348659004,
+      "n_team_seasons_with_all_observed_transfer_production": 451,
+      "n_team_seasons_with_any_observed_transfer_production": 451,
+      "n_team_seasons_with_transfer_in_prior_usage_sum": 451,
+      "n_training_seasons": 21,
+      "n_training_team_seasons": 2610,
+      "n_transfer_covered_training_seasons": 4,
+      "target_season": 2025,
+      "train_through": 2024,
+      "transfer_covered_training_seasons": [
+        2021,
+        2022,
+        2023,
+        2024
+      ]
+    }
+  ],
+  "usage_seasons": [
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+  ]
+}
