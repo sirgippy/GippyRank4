@@ -1289,8 +1289,8 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         ("rushing", "returning_pct_rushing_ppa"),
     ):
         component_candidate = Candidate(
-            f"rp_{label}_plus_transfer_volume",
-            (*C_MINUS_RP_FEATURES, component, *VOLUME_FEATURES),
+            f"rp_{label}_plus_transfer_production",
+            (*C_MINUS_RP_FEATURES, component, *C10_TRANSFER_FEATURES),
             transfer_aware=True,
         )
         component_panel, _ = panel_fit(
