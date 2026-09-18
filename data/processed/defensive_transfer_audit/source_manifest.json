@@ -1,0 +1,3469 @@
+{
+  "files": [
+    {
+      "kind": "portal",
+      "path": "data/raw/cfbd/preseason/transfers/portal/2021.json",
+      "provenance": {
+        "content_sha256": "18d0d528f2b9c2dcc83814185a619a13dd829f642a023c80129805db33114087",
+        "endpoint": "/player/portal",
+        "parameters": {
+          "year": 2021
+        },
+        "record_count": 1770,
+        "retrieved_at": "2026-09-18T19:37:19.243427+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 1770,
+      "season": 2021,
+      "sha256": "18d0d528f2b9c2dcc83814185a619a13dd829f642a023c80129805db33114087"
+    },
+    {
+      "kind": "portal",
+      "path": "data/raw/cfbd/preseason/transfers/portal/2022.json",
+      "provenance": {
+        "content_sha256": "6a3efbb4a12baaa13d9376bfb5a5e83a98dd258178fc8735dcf0e9336000297e",
+        "endpoint": "/player/portal",
+        "parameters": {
+          "year": 2022
+        },
+        "record_count": 2273,
+        "retrieved_at": "2026-09-18T19:37:19.513459+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 2273,
+      "season": 2022,
+      "sha256": "6a3efbb4a12baaa13d9376bfb5a5e83a98dd258178fc8735dcf0e9336000297e"
+    },
+    {
+      "kind": "portal",
+      "path": "data/raw/cfbd/preseason/transfers/portal/2023.json",
+      "provenance": {
+        "content_sha256": "73229d36aee995b0b80629d46870dba85c9ba032b0162a4705dd4a82801655df",
+        "endpoint": "/player/portal",
+        "parameters": {
+          "year": 2023
+        },
+        "record_count": 2502,
+        "retrieved_at": "2026-09-18T19:37:19.777219+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 2502,
+      "season": 2023,
+      "sha256": "73229d36aee995b0b80629d46870dba85c9ba032b0162a4705dd4a82801655df"
+    },
+    {
+      "kind": "portal",
+      "path": "data/raw/cfbd/preseason/transfers/portal/2024.json",
+      "provenance": {
+        "content_sha256": "ce7e540c2e153cb9fdab6e9834eddbbbf9be27fab71ac726026d244236865029",
+        "endpoint": "/player/portal",
+        "parameters": {
+          "year": 2024
+        },
+        "record_count": 3378,
+        "retrieved_at": "2026-09-18T19:37:20.070508+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 3378,
+      "season": 2024,
+      "sha256": "ce7e540c2e153cb9fdab6e9834eddbbbf9be27fab71ac726026d244236865029"
+    },
+    {
+      "kind": "portal",
+      "path": "data/raw/cfbd/preseason/transfers/portal/2025.json",
+      "provenance": {
+        "content_sha256": "a566904246c2ee1c4c0c7c631714b44b0fc47b2bd0191763eead37aee130ce51",
+        "endpoint": "/player/portal",
+        "parameters": {
+          "year": 2025
+        },
+        "record_count": 4499,
+        "retrieved_at": "2026-09-18T19:37:20.400622+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 4499,
+      "season": 2025,
+      "sha256": "a566904246c2ee1c4c0c7c631714b44b0fc47b2bd0191763eead37aee130ce51"
+    },
+    {
+      "kind": "roster",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/roster/fbs/2020.json",
+      "provenance": {
+        "content_sha256": "87e8ac4bca006f7dfac20056c8febda0eb3f918aee98e270d898ef10f760a543",
+        "endpoint": "/roster",
+        "parameters": {
+          "classification": "fbs",
+          "year": 2020
+        },
+        "record_count": 15989,
+        "retrieved_at": "2026-09-18T19:44:19.436057+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 15989,
+      "season": 2020,
+      "sha256": "87e8ac4bca006f7dfac20056c8febda0eb3f918aee98e270d898ef10f760a543"
+    },
+    {
+      "kind": "roster",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/roster/fbs/2021.json",
+      "provenance": {
+        "content_sha256": "7078768c95649a22a513423d5c290cfcc3d5e1bed5d3bf8107a97d67c39a68e7",
+        "endpoint": "/roster",
+        "parameters": {
+          "classification": "fbs",
+          "year": 2021
+        },
+        "record_count": 15129,
+        "retrieved_at": "2026-09-18T19:44:38.869128+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 15129,
+      "season": 2021,
+      "sha256": "7078768c95649a22a513423d5c290cfcc3d5e1bed5d3bf8107a97d67c39a68e7"
+    },
+    {
+      "kind": "roster",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/roster/fbs/2022.json",
+      "provenance": {
+        "content_sha256": "33e2b3fe4fb9cc715597bc7a1f7644796eb3351c8ac330e52d93724d125ad8dd",
+        "endpoint": "/roster",
+        "parameters": {
+          "classification": "fbs",
+          "year": 2022
+        },
+        "record_count": 15548,
+        "retrieved_at": "2026-09-18T19:45:20.656319+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 15548,
+      "season": 2022,
+      "sha256": "33e2b3fe4fb9cc715597bc7a1f7644796eb3351c8ac330e52d93724d125ad8dd"
+    },
+    {
+      "kind": "roster",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/roster/fbs/2023.json",
+      "provenance": {
+        "content_sha256": "6312c0d2d69ac5d1bc4790ffce36b72c638827f8533bcc3446dd33e84917b753",
+        "endpoint": "/roster",
+        "parameters": {
+          "classification": "fbs",
+          "year": 2023
+        },
+        "record_count": 15918,
+        "retrieved_at": "2026-09-18T19:45:59.721682+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 15918,
+      "season": 2023,
+      "sha256": "6312c0d2d69ac5d1bc4790ffce36b72c638827f8533bcc3446dd33e84917b753"
+    },
+    {
+      "kind": "roster",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/roster/fbs/2024.json",
+      "provenance": {
+        "content_sha256": "b1f19b773d6ffe9bad8a65e079d4d3370ca950c7f3ae322ddab56c4c42256e5c",
+        "endpoint": "/roster",
+        "parameters": {
+          "classification": "fbs",
+          "year": 2024
+        },
+        "record_count": 16221,
+        "retrieved_at": "2026-09-18T19:46:34.028603+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 16221,
+      "season": 2024,
+      "sha256": "b1f19b773d6ffe9bad8a65e079d4d3370ca950c7f3ae322ddab56c4c42256e5c"
+    },
+    {
+      "kind": "roster",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/roster/fcs/2020.json",
+      "provenance": {
+        "content_sha256": "33853d92ae2f18c84d12f12444442e198a6730ccd433c611d2fcfce946b000d8",
+        "endpoint": "/roster",
+        "parameters": {
+          "classification": "fcs",
+          "year": 2020
+        },
+        "record_count": 271,
+        "retrieved_at": "2026-09-18T19:44:31.147783+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 271,
+      "season": 2020,
+      "sha256": "33853d92ae2f18c84d12f12444442e198a6730ccd433c611d2fcfce946b000d8"
+    },
+    {
+      "kind": "roster",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/roster/fcs/2021.json",
+      "provenance": {
+        "content_sha256": "cfb48aa07a5ec7e83dc36ae42fdd2379432abf1a5d8338227a52e466a8435031",
+        "endpoint": "/roster",
+        "parameters": {
+          "classification": "fcs",
+          "year": 2021
+        },
+        "record_count": 3569,
+        "retrieved_at": "2026-09-18T19:44:56.443480+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 3569,
+      "season": 2021,
+      "sha256": "cfb48aa07a5ec7e83dc36ae42fdd2379432abf1a5d8338227a52e466a8435031"
+    },
+    {
+      "kind": "roster",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/roster/fcs/2022.json",
+      "provenance": {
+        "content_sha256": "56026525b7dfc8dfc9e9ab3a0d013036cc9d34a001d8cb387a4708fde95e2e44",
+        "endpoint": "/roster",
+        "parameters": {
+          "classification": "fcs",
+          "year": 2022
+        },
+        "record_count": 14170,
+        "retrieved_at": "2026-09-18T19:45:42.929355+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 14170,
+      "season": 2022,
+      "sha256": "56026525b7dfc8dfc9e9ab3a0d013036cc9d34a001d8cb387a4708fde95e2e44"
+    },
+    {
+      "kind": "roster",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/roster/fcs/2023.json",
+      "provenance": {
+        "content_sha256": "f93a83432143cf5c07137ee4ea12bd4c2d85385c8be547b43b8fc5a33a58dfe6",
+        "endpoint": "/roster",
+        "parameters": {
+          "classification": "fcs",
+          "year": 2023
+        },
+        "record_count": 5899,
+        "retrieved_at": "2026-09-18T19:46:21.026500+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 5899,
+      "season": 2023,
+      "sha256": "f93a83432143cf5c07137ee4ea12bd4c2d85385c8be547b43b8fc5a33a58dfe6"
+    },
+    {
+      "kind": "roster",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/roster/fcs/2024.json",
+      "provenance": {
+        "content_sha256": "50cec2d5c4a324d1f8f413f939ce405e9283d159ff72bbf38160cb1ccd59c585",
+        "endpoint": "/roster",
+        "parameters": {
+          "classification": "fcs",
+          "year": 2024
+        },
+        "record_count": 5975,
+        "retrieved_at": "2026-09-18T19:46:51.333525+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 5975,
+      "season": 2024,
+      "sha256": "50cec2d5c4a324d1f8f413f939ce405e9283d159ff72bbf38160cb1ccd59c585"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2020-week-01.json",
+      "provenance": {
+        "content_sha256": "3e1f46600b792bd188dcb900c950aa5c0b44787e28d5fd926355d1e0124afc3b",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 1,
+          "year": 2020
+        },
+        "record_count": 35,
+        "retrieved_at": "2026-09-18T19:44:20.084424+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 35,
+      "season": 2020,
+      "sha256": "3e1f46600b792bd188dcb900c950aa5c0b44787e28d5fd926355d1e0124afc3b"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2020-week-02.json",
+      "provenance": {
+        "content_sha256": "390e21622c2f9a4cabef0f66b6d7a49167ef9f792cb07fbe7b081bca3fddb941",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 2,
+          "year": 2020
+        },
+        "record_count": 20,
+        "retrieved_at": "2026-09-18T19:44:20.524080+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 20,
+      "season": 2020,
+      "sha256": "390e21622c2f9a4cabef0f66b6d7a49167ef9f792cb07fbe7b081bca3fddb941"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2020-week-03.json",
+      "provenance": {
+        "content_sha256": "286cb76b6f8d3da630282ac2afafa4db960d7a49bcd462d8246b85096e3b33b8",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 3,
+          "year": 2020
+        },
+        "record_count": 20,
+        "retrieved_at": "2026-09-18T19:44:20.980258+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 20,
+      "season": 2020,
+      "sha256": "286cb76b6f8d3da630282ac2afafa4db960d7a49bcd462d8246b85096e3b33b8"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2020-week-04.json",
+      "provenance": {
+        "content_sha256": "1f6aaebe5f2d6c7be79b3bb02a2b631c1c9a486227f06e95aee6ef1db8deb3ef",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 4,
+          "year": 2020
+        },
+        "record_count": 30,
+        "retrieved_at": "2026-09-18T19:44:21.679361+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 30,
+      "season": 2020,
+      "sha256": "1f6aaebe5f2d6c7be79b3bb02a2b631c1c9a486227f06e95aee6ef1db8deb3ef"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2020-week-05.json",
+      "provenance": {
+        "content_sha256": "0378b69d1b2854b26ea878b56ac20abf298b11950fc35b64708724bee4d09d53",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 5,
+          "year": 2020
+        },
+        "record_count": 32,
+        "retrieved_at": "2026-09-18T19:44:22.257718+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 32,
+      "season": 2020,
+      "sha256": "0378b69d1b2854b26ea878b56ac20abf298b11950fc35b64708724bee4d09d53"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2020-week-06.json",
+      "provenance": {
+        "content_sha256": "030058d076371f2ebaacd05a45155af81744e8bdac569a3ee625403d6e62b50e",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 6,
+          "year": 2020
+        },
+        "record_count": 29,
+        "retrieved_at": "2026-09-18T19:44:22.822468+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 29,
+      "season": 2020,
+      "sha256": "030058d076371f2ebaacd05a45155af81744e8bdac569a3ee625403d6e62b50e"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2020-week-07.json",
+      "provenance": {
+        "content_sha256": "a70af6ec31560f37cdfb814007c557f89dd5c7e6a5f146021c7d75310a429414",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 7,
+          "year": 2020
+        },
+        "record_count": 28,
+        "retrieved_at": "2026-09-18T19:44:23.387461+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 28,
+      "season": 2020,
+      "sha256": "a70af6ec31560f37cdfb814007c557f89dd5c7e6a5f146021c7d75310a429414"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2020-week-08.json",
+      "provenance": {
+        "content_sha256": "284f375dd389660a22d761553d9da28bcc30f6a02acf2d705a2650b89b6a9d50",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 8,
+          "year": 2020
+        },
+        "record_count": 47,
+        "retrieved_at": "2026-09-18T19:44:24.309724+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 47,
+      "season": 2020,
+      "sha256": "284f375dd389660a22d761553d9da28bcc30f6a02acf2d705a2650b89b6a9d50"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2020-week-09.json",
+      "provenance": {
+        "content_sha256": "30e93b3583bfacdd4073515ab4d906f4ecc690c2bfb1186d33bff10d94bc6274",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 9,
+          "year": 2020
+        },
+        "record_count": 43,
+        "retrieved_at": "2026-09-18T19:44:25.121028+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 43,
+      "season": 2020,
+      "sha256": "30e93b3583bfacdd4073515ab4d906f4ecc690c2bfb1186d33bff10d94bc6274"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2020-week-10.json",
+      "provenance": {
+        "content_sha256": "f04acd342e5d36c80be693b1c5a349215bfd45a50748d62073f852e907c8fd0f",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 10,
+          "year": 2020
+        },
+        "record_count": 49,
+        "retrieved_at": "2026-09-18T19:44:26.198903+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 49,
+      "season": 2020,
+      "sha256": "f04acd342e5d36c80be693b1c5a349215bfd45a50748d62073f852e907c8fd0f"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2020-week-11.json",
+      "provenance": {
+        "content_sha256": "5febe64f45cfc00bb17a107c9084a8033a9571461bbd8c58054a318cc47cac89",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 11,
+          "year": 2020
+        },
+        "record_count": 45,
+        "retrieved_at": "2026-09-18T19:44:27.039141+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 45,
+      "season": 2020,
+      "sha256": "5febe64f45cfc00bb17a107c9084a8033a9571461bbd8c58054a318cc47cac89"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2020-week-12.json",
+      "provenance": {
+        "content_sha256": "ca05c994d2a845e294de7cbfc7e6fde32d668748e855d8713488f7253e0848a0",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 12,
+          "year": 2020
+        },
+        "record_count": 44,
+        "retrieved_at": "2026-09-18T19:44:27.850636+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 44,
+      "season": 2020,
+      "sha256": "ca05c994d2a845e294de7cbfc7e6fde32d668748e855d8713488f7253e0848a0"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2020-week-13.json",
+      "provenance": {
+        "content_sha256": "b493862ab76e787a315ec582b769d2c52414b4c0d0baf5a52a1ce27a9a00f590",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 13,
+          "year": 2020
+        },
+        "record_count": 44,
+        "retrieved_at": "2026-09-18T19:44:28.735868+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 44,
+      "season": 2020,
+      "sha256": "b493862ab76e787a315ec582b769d2c52414b4c0d0baf5a52a1ce27a9a00f590"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2020-week-14.json",
+      "provenance": {
+        "content_sha256": "faae496f0bc5f534746cf2929bde54fefea2aa0caecdcce6c80db0e24cc2a614",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 14,
+          "year": 2020
+        },
+        "record_count": 46,
+        "retrieved_at": "2026-09-18T19:44:29.708853+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 46,
+      "season": 2020,
+      "sha256": "faae496f0bc5f534746cf2929bde54fefea2aa0caecdcce6c80db0e24cc2a614"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2020-week-15.json",
+      "provenance": {
+        "content_sha256": "9bb8d6e369a2cd5466ec3b1d83e4ac1faa1a80a9677f3b2344e554747e3a3903",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 15,
+          "year": 2020
+        },
+        "record_count": 37,
+        "retrieved_at": "2026-09-18T19:44:30.390154+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 37,
+      "season": 2020,
+      "sha256": "9bb8d6e369a2cd5466ec3b1d83e4ac1faa1a80a9677f3b2344e554747e3a3903"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2020-week-16.json",
+      "provenance": {
+        "content_sha256": "95e69a16884da646286a9991fd89c7de757440ed331a2350218ee6d08ad57103",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 16,
+          "year": 2020
+        },
+        "record_count": 19,
+        "retrieved_at": "2026-09-18T19:44:30.973040+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 19,
+      "season": 2020,
+      "sha256": "95e69a16884da646286a9991fd89c7de757440ed331a2350218ee6d08ad57103"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2020-week-01.json",
+      "provenance": {
+        "content_sha256": "43aa3d7f339432f64969039e3cbf0882ed5630f3bb0026ea7ec651a37ca07bac",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 1,
+          "year": 2020
+        },
+        "record_count": 4,
+        "retrieved_at": "2026-09-18T19:44:31.541034+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 4,
+      "season": 2020,
+      "sha256": "43aa3d7f339432f64969039e3cbf0882ed5630f3bb0026ea7ec651a37ca07bac"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2020-week-02.json",
+      "provenance": {
+        "content_sha256": "efdd193a2e00d2e8cc6a0cf40d5bef55b5a5f09850c599777616f7101b147739",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 2,
+          "year": 2020
+        },
+        "record_count": 6,
+        "retrieved_at": "2026-09-18T19:44:31.894096+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 6,
+      "season": 2020,
+      "sha256": "efdd193a2e00d2e8cc6a0cf40d5bef55b5a5f09850c599777616f7101b147739"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2020-week-03.json",
+      "provenance": {
+        "content_sha256": "392a6dc8e08389f384b297da8fcfcd2a8e41df75c85db2028b936d9b9b7fd556",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 3,
+          "year": 2020
+        },
+        "record_count": 5,
+        "retrieved_at": "2026-09-18T19:44:32.203029+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 5,
+      "season": 2020,
+      "sha256": "392a6dc8e08389f384b297da8fcfcd2a8e41df75c85db2028b936d9b9b7fd556"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2020-week-04.json",
+      "provenance": {
+        "content_sha256": "b73e86e0609215dff4b155c5cabc9c034a6ee64a14b21c90186220bbd8e7e9d7",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 4,
+          "year": 2020
+        },
+        "record_count": 3,
+        "retrieved_at": "2026-09-18T19:44:32.538281+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 3,
+      "season": 2020,
+      "sha256": "b73e86e0609215dff4b155c5cabc9c034a6ee64a14b21c90186220bbd8e7e9d7"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2020-week-05.json",
+      "provenance": {
+        "content_sha256": "66551bbc6dbe9fe738a20e817a8f79e2d7c9838ae053e7f72f00afc1ffbf7ebf",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 5,
+          "year": 2020
+        },
+        "record_count": 4,
+        "retrieved_at": "2026-09-18T19:44:33.073637+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 4,
+      "season": 2020,
+      "sha256": "66551bbc6dbe9fe738a20e817a8f79e2d7c9838ae053e7f72f00afc1ffbf7ebf"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2020-week-06.json",
+      "provenance": {
+        "content_sha256": "890ffedca3b443b845b5cfea368e6b9d4b4f9e1d83158579468df93e9ba30321",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 6,
+          "year": 2020
+        },
+        "record_count": 2,
+        "retrieved_at": "2026-09-18T19:44:33.444812+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 2,
+      "season": 2020,
+      "sha256": "890ffedca3b443b845b5cfea368e6b9d4b4f9e1d83158579468df93e9ba30321"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2020-week-07.json",
+      "provenance": {
+        "content_sha256": "b42c721ed158005ca4099a29dec7d8472342f76f2a9e3065c90dad189d27e2ec",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 7,
+          "year": 2020
+        },
+        "record_count": 1,
+        "retrieved_at": "2026-09-18T19:44:33.785961+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 1,
+      "season": 2020,
+      "sha256": "b42c721ed158005ca4099a29dec7d8472342f76f2a9e3065c90dad189d27e2ec"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2020-week-08.json",
+      "provenance": {
+        "content_sha256": "69b64c4907d39919aeb7f1e3f8a4df40cf3b55a56fe236afab14d1cf312838c8",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 8,
+          "year": 2020
+        },
+        "record_count": 3,
+        "retrieved_at": "2026-09-18T19:44:34.267462+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 3,
+      "season": 2020,
+      "sha256": "69b64c4907d39919aeb7f1e3f8a4df40cf3b55a56fe236afab14d1cf312838c8"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2020-week-09.json",
+      "provenance": {
+        "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 9,
+          "year": 2020
+        },
+        "record_count": 0,
+        "retrieved_at": "2026-09-18T19:44:34.725928+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 0,
+      "season": 2020,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2020-week-10.json",
+      "provenance": {
+        "content_sha256": "dabe6b1265f937992ea95c204a32e6ba1e336d44b7995c1bfaca9a0df70b8d4e",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 10,
+          "year": 2020
+        },
+        "record_count": 1,
+        "retrieved_at": "2026-09-18T19:44:35.222507+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 1,
+      "season": 2020,
+      "sha256": "dabe6b1265f937992ea95c204a32e6ba1e336d44b7995c1bfaca9a0df70b8d4e"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2020-week-11.json",
+      "provenance": {
+        "content_sha256": "22eb2920aec61da528464e8c3fffedb6239133ef14a45317f95da3e25fc68cd7",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 11,
+          "year": 2020
+        },
+        "record_count": 1,
+        "retrieved_at": "2026-09-18T19:44:35.684034+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 1,
+      "season": 2020,
+      "sha256": "22eb2920aec61da528464e8c3fffedb6239133ef14a45317f95da3e25fc68cd7"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2020-week-12.json",
+      "provenance": {
+        "content_sha256": "ab74f767673809f285674309cd2d09b90dab6571694ab1b370ca58db94041a0f",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 12,
+          "year": 2020
+        },
+        "record_count": 3,
+        "retrieved_at": "2026-09-18T19:44:36.135556+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 3,
+      "season": 2020,
+      "sha256": "ab74f767673809f285674309cd2d09b90dab6571694ab1b370ca58db94041a0f"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2020-week-13.json",
+      "provenance": {
+        "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 13,
+          "year": 2020
+        },
+        "record_count": 0,
+        "retrieved_at": "2026-09-18T19:44:36.559348+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 0,
+      "season": 2020,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2020-week-14.json",
+      "provenance": {
+        "content_sha256": "ad0f5c417e0f960e66c4608b050053622fda8c76c058d4176d86bcfaa6bcd108",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 14,
+          "year": 2020
+        },
+        "record_count": 1,
+        "retrieved_at": "2026-09-18T19:44:37.007059+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 1,
+      "season": 2020,
+      "sha256": "ad0f5c417e0f960e66c4608b050053622fda8c76c058d4176d86bcfaa6bcd108"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2020-week-15.json",
+      "provenance": {
+        "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 15,
+          "year": 2020
+        },
+        "record_count": 0,
+        "retrieved_at": "2026-09-18T19:44:37.371253+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 0,
+      "season": 2020,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2020-week-16.json",
+      "provenance": {
+        "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 16,
+          "year": 2020
+        },
+        "record_count": 0,
+        "retrieved_at": "2026-09-18T19:44:37.761733+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 0,
+      "season": 2020,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2021-week-01.json",
+      "provenance": {
+        "content_sha256": "880e11c7dac4d8eb63a26b4f150b91a7372fbe51e750e9b6f85d06f8c4b4b6b0",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 1,
+          "year": 2021
+        },
+        "record_count": 127,
+        "retrieved_at": "2026-09-18T19:44:41.272462+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 127,
+      "season": 2021,
+      "sha256": "880e11c7dac4d8eb63a26b4f150b91a7372fbe51e750e9b6f85d06f8c4b4b6b0"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2021-week-02.json",
+      "provenance": {
+        "content_sha256": "ca0e3db034ce5db0e4e67916e81e21170626db8ebd80fc0f469a4ef34b204727",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 2,
+          "year": 2021
+        },
+        "record_count": 82,
+        "retrieved_at": "2026-09-18T19:44:42.614803+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 82,
+      "season": 2021,
+      "sha256": "ca0e3db034ce5db0e4e67916e81e21170626db8ebd80fc0f469a4ef34b204727"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2021-week-03.json",
+      "provenance": {
+        "content_sha256": "5583b4c2aadc32e69f4b22b02b6eeece3a3320246cc8a48fe638867378b0023e",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 3,
+          "year": 2021
+        },
+        "record_count": 73,
+        "retrieved_at": "2026-09-18T19:44:43.718392+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 73,
+      "season": 2021,
+      "sha256": "5583b4c2aadc32e69f4b22b02b6eeece3a3320246cc8a48fe638867378b0023e"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2021-week-04.json",
+      "provenance": {
+        "content_sha256": "ec7676f56c61a4ca3a8a58bee11dc96a7b87547a884dcc956e8b99acbed7c036",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 4,
+          "year": 2021
+        },
+        "record_count": 67,
+        "retrieved_at": "2026-09-18T19:44:44.788084+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 67,
+      "season": 2021,
+      "sha256": "ec7676f56c61a4ca3a8a58bee11dc96a7b87547a884dcc956e8b99acbed7c036"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2021-week-05.json",
+      "provenance": {
+        "content_sha256": "59c5536d290504a80791b3e33b637783dc371042916a9cc399119a798e256e22",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 5,
+          "year": 2021
+        },
+        "record_count": 61,
+        "retrieved_at": "2026-09-18T19:44:45.726211+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 61,
+      "season": 2021,
+      "sha256": "59c5536d290504a80791b3e33b637783dc371042916a9cc399119a798e256e22"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2021-week-06.json",
+      "provenance": {
+        "content_sha256": "b82979c98a16a693ca4e4c9a41a1cdaf2a03a304a71c8925674ea5baa6072095",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 6,
+          "year": 2021
+        },
+        "record_count": 51,
+        "retrieved_at": "2026-09-18T19:44:46.644151+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 51,
+      "season": 2021,
+      "sha256": "b82979c98a16a693ca4e4c9a41a1cdaf2a03a304a71c8925674ea5baa6072095"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2021-week-07.json",
+      "provenance": {
+        "content_sha256": "dd0632d0c96d27cfcc5786642e5fc12a19a4c01892a9754bbf46dfb42ad96c02",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 7,
+          "year": 2021
+        },
+        "record_count": 52,
+        "retrieved_at": "2026-09-18T19:44:47.568135+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 52,
+      "season": 2021,
+      "sha256": "dd0632d0c96d27cfcc5786642e5fc12a19a4c01892a9754bbf46dfb42ad96c02"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2021-week-08.json",
+      "provenance": {
+        "content_sha256": "42b36d49cba38ee53e4a587ea70039cda6717611deb92df38c0a1801349414a3",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 8,
+          "year": 2021
+        },
+        "record_count": 54,
+        "retrieved_at": "2026-09-18T19:44:48.863144+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 54,
+      "season": 2021,
+      "sha256": "42b36d49cba38ee53e4a587ea70039cda6717611deb92df38c0a1801349414a3"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2021-week-09.json",
+      "provenance": {
+        "content_sha256": "685de430a58eec8dc63a1758c1635be588605b20404462111666c28b0a3c0dba",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 9,
+          "year": 2021
+        },
+        "record_count": 53,
+        "retrieved_at": "2026-09-18T19:44:50.790879+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 53,
+      "season": 2021,
+      "sha256": "685de430a58eec8dc63a1758c1635be588605b20404462111666c28b0a3c0dba"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2021-week-10.json",
+      "provenance": {
+        "content_sha256": "5b15a0ad30d95dd90a7c1eb8e5f89a37f76594af86480e52fb597b3edb9cf8e1",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 10,
+          "year": 2021
+        },
+        "record_count": 61,
+        "retrieved_at": "2026-09-18T19:44:51.836177+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 61,
+      "season": 2021,
+      "sha256": "5b15a0ad30d95dd90a7c1eb8e5f89a37f76594af86480e52fb597b3edb9cf8e1"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2021-week-11.json",
+      "provenance": {
+        "content_sha256": "25f10abffa0a71c1892973d3cae7b75e9d42580daac2b4e63c7cc0de802b9ace",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 11,
+          "year": 2021
+        },
+        "record_count": 63,
+        "retrieved_at": "2026-09-18T19:44:53.047997+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 63,
+      "season": 2021,
+      "sha256": "25f10abffa0a71c1892973d3cae7b75e9d42580daac2b4e63c7cc0de802b9ace"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2021-week-12.json",
+      "provenance": {
+        "content_sha256": "d57f279aa11737446f30f498aeb416c6544624fe7735e5ea362a9af0aecf1088",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 12,
+          "year": 2021
+        },
+        "record_count": 66,
+        "retrieved_at": "2026-09-18T19:44:54.264504+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 66,
+      "season": 2021,
+      "sha256": "d57f279aa11737446f30f498aeb416c6544624fe7735e5ea362a9af0aecf1088"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2021-week-13.json",
+      "provenance": {
+        "content_sha256": "e6b293b17b989281924ed8d2904fa38ffcfe0f705aa4a2761548a4192dc80abd",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 13,
+          "year": 2021
+        },
+        "record_count": 65,
+        "retrieved_at": "2026-09-18T19:44:55.338137+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 65,
+      "season": 2021,
+      "sha256": "e6b293b17b989281924ed8d2904fa38ffcfe0f705aa4a2761548a4192dc80abd"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2021-week-14.json",
+      "provenance": {
+        "content_sha256": "96075f17ef1d95007e938bdc6bd6d621875015e2b7adc7421338a205f6138cbf",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 14,
+          "year": 2021
+        },
+        "record_count": 11,
+        "retrieved_at": "2026-09-18T19:44:55.678031+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 11,
+      "season": 2021,
+      "sha256": "96075f17ef1d95007e938bdc6bd6d621875015e2b7adc7421338a205f6138cbf"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2021-week-15.json",
+      "provenance": {
+        "content_sha256": "3efbddc3e99421a5f755cffdd5dd53082559e99f4663aa8c1d4e6ce2224c0e8e",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 15,
+          "year": 2021
+        },
+        "record_count": 1,
+        "retrieved_at": "2026-09-18T19:44:55.864899+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 1,
+      "season": 2021,
+      "sha256": "3efbddc3e99421a5f755cffdd5dd53082559e99f4663aa8c1d4e6ce2224c0e8e"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2021-week-16.json",
+      "provenance": {
+        "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 16,
+          "year": 2021
+        },
+        "record_count": 0,
+        "retrieved_at": "2026-09-18T19:44:56.029069+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 0,
+      "season": 2021,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2021-week-01.json",
+      "provenance": {
+        "content_sha256": "df9b38e4d7a1043dfd9cdfff35d59e534ad8648be230df5aaf61c1b3c8553f8f",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 1,
+          "year": 2021
+        },
+        "record_count": 78,
+        "retrieved_at": "2026-09-18T19:44:57.840286+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 78,
+      "season": 2021,
+      "sha256": "df9b38e4d7a1043dfd9cdfff35d59e534ad8648be230df5aaf61c1b3c8553f8f"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2021-week-02.json",
+      "provenance": {
+        "content_sha256": "4d56f2c9b13af66201b0f3a66ee2a332411f456080a2ee1e10fd7f6aa8d095dc",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 2,
+          "year": 2021
+        },
+        "record_count": 75,
+        "retrieved_at": "2026-09-18T19:44:58.972674+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 75,
+      "season": 2021,
+      "sha256": "4d56f2c9b13af66201b0f3a66ee2a332411f456080a2ee1e10fd7f6aa8d095dc"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2021-week-03.json",
+      "provenance": {
+        "content_sha256": "ee9e9b32ed83b012e40a8247335c3488a79d866cdf16a18d63c049aeffd6d725",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 3,
+          "year": 2021
+        },
+        "record_count": 67,
+        "retrieved_at": "2026-09-18T19:44:59.992588+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 67,
+      "season": 2021,
+      "sha256": "ee9e9b32ed83b012e40a8247335c3488a79d866cdf16a18d63c049aeffd6d725"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2021-week-04.json",
+      "provenance": {
+        "content_sha256": "ce44e0587ca83fde7fce2f5b50ce96621cbbe37039d6c727101585333673a703",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 4,
+          "year": 2021
+        },
+        "record_count": 54,
+        "retrieved_at": "2026-09-18T19:45:07.213750+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 54,
+      "season": 2021,
+      "sha256": "ce44e0587ca83fde7fce2f5b50ce96621cbbe37039d6c727101585333673a703"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2021-week-05.json",
+      "provenance": {
+        "content_sha256": "30586be052dfb97b814609e425972d558dd678dc82ae234842b1c4204702581f",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 5,
+          "year": 2021
+        },
+        "record_count": 47,
+        "retrieved_at": "2026-09-18T19:45:13.244773+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 47,
+      "season": 2021,
+      "sha256": "30586be052dfb97b814609e425972d558dd678dc82ae234842b1c4204702581f"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2021-week-06.json",
+      "provenance": {
+        "content_sha256": "ae3808cb0625ddd6e75dd906f9840e5e59c19aaa52906f75218e4b0a5da7c1e3",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 6,
+          "year": 2021
+        },
+        "record_count": 46,
+        "retrieved_at": "2026-09-18T19:45:13.833734+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 46,
+      "season": 2021,
+      "sha256": "ae3808cb0625ddd6e75dd906f9840e5e59c19aaa52906f75218e4b0a5da7c1e3"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2021-week-07.json",
+      "provenance": {
+        "content_sha256": "49327a9b5ceb329aa991ba42a1180d08c79eb68745479c0a56d32b8faaeb9c4f",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 7,
+          "year": 2021
+        },
+        "record_count": 50,
+        "retrieved_at": "2026-09-18T19:45:14.354559+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 50,
+      "season": 2021,
+      "sha256": "49327a9b5ceb329aa991ba42a1180d08c79eb68745479c0a56d32b8faaeb9c4f"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2021-week-08.json",
+      "provenance": {
+        "content_sha256": "d0e238f9410f72adfeeb7916b51741edbc8b77b7d780d7b5e6b57547d3222d92",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 8,
+          "year": 2021
+        },
+        "record_count": 51,
+        "retrieved_at": "2026-09-18T19:45:14.813685+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 51,
+      "season": 2021,
+      "sha256": "d0e238f9410f72adfeeb7916b51741edbc8b77b7d780d7b5e6b57547d3222d92"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2021-week-09.json",
+      "provenance": {
+        "content_sha256": "c6f6eed22a5122c3c019ca07e0e5391012139aa0325e3538fd2cd056a09db6d8",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 9,
+          "year": 2021
+        },
+        "record_count": 49,
+        "retrieved_at": "2026-09-18T19:45:15.488356+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 49,
+      "season": 2021,
+      "sha256": "c6f6eed22a5122c3c019ca07e0e5391012139aa0325e3538fd2cd056a09db6d8"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2021-week-10.json",
+      "provenance": {
+        "content_sha256": "f207b98f0e39651a1e06a455d2404263d79db61e391d63ceec8bc06df6ef9c4f",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 10,
+          "year": 2021
+        },
+        "record_count": 53,
+        "retrieved_at": "2026-09-18T19:45:16.312780+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 53,
+      "season": 2021,
+      "sha256": "f207b98f0e39651a1e06a455d2404263d79db61e391d63ceec8bc06df6ef9c4f"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2021-week-11.json",
+      "provenance": {
+        "content_sha256": "74d2295bebfcdbc50872c6197e1a291ba1086d0a6195a20c2d7efa7beab540b6",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 11,
+          "year": 2021
+        },
+        "record_count": 61,
+        "retrieved_at": "2026-09-18T19:45:17.098926+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 61,
+      "season": 2021,
+      "sha256": "74d2295bebfcdbc50872c6197e1a291ba1086d0a6195a20c2d7efa7beab540b6"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2021-week-12.json",
+      "provenance": {
+        "content_sha256": "9abb80f22756fd89356e70cf223454813dcdc8a5cf3fc8a55708592af705f78a",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 12,
+          "year": 2021
+        },
+        "record_count": 59,
+        "retrieved_at": "2026-09-18T19:45:17.952480+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 59,
+      "season": 2021,
+      "sha256": "9abb80f22756fd89356e70cf223454813dcdc8a5cf3fc8a55708592af705f78a"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2021-week-13.json",
+      "provenance": {
+        "content_sha256": "ce500b579e3cf2ab05b4c28c67d46b4c1b6a3df253c68c0f8a8f0adc0f12100a",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 13,
+          "year": 2021
+        },
+        "record_count": 10,
+        "retrieved_at": "2026-09-18T19:45:18.725643+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 10,
+      "season": 2021,
+      "sha256": "ce500b579e3cf2ab05b4c28c67d46b4c1b6a3df253c68c0f8a8f0adc0f12100a"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2021-week-14.json",
+      "provenance": {
+        "content_sha256": "586d05b3bf9400f4e878f73a3fd5240b8bc8c80945545fb310235aa6f8bfca0e",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 14,
+          "year": 2021
+        },
+        "record_count": 8,
+        "retrieved_at": "2026-09-18T19:45:18.963838+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 8,
+      "season": 2021,
+      "sha256": "586d05b3bf9400f4e878f73a3fd5240b8bc8c80945545fb310235aa6f8bfca0e"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2021-week-15.json",
+      "provenance": {
+        "content_sha256": "13ede57892b54592be29b0d991d0919e020b0c09353296f1937ceddc514a1b0a",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 15,
+          "year": 2021
+        },
+        "record_count": 2,
+        "retrieved_at": "2026-09-18T19:45:19.150169+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 2,
+      "season": 2021,
+      "sha256": "13ede57892b54592be29b0d991d0919e020b0c09353296f1937ceddc514a1b0a"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2021-week-16.json",
+      "provenance": {
+        "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 16,
+          "year": 2021
+        },
+        "record_count": 0,
+        "retrieved_at": "2026-09-18T19:45:19.342533+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 0,
+      "season": 2021,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2022-week-01.json",
+      "provenance": {
+        "content_sha256": "028e76b93e2b00f145c98bf91999a574349b4d870e8917496cf2950c2ba0b6c7",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 1,
+          "year": 2022
+        },
+        "record_count": 136,
+        "retrieved_at": "2026-09-18T19:45:22.925216+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 136,
+      "season": 2022,
+      "sha256": "028e76b93e2b00f145c98bf91999a574349b4d870e8917496cf2950c2ba0b6c7"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2022-week-02.json",
+      "provenance": {
+        "content_sha256": "ef827f57edfc7449422b1daa886d75f7df1fa632d9ee9612ecf60c31b5506d61",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 2,
+          "year": 2022
+        },
+        "record_count": 82,
+        "retrieved_at": "2026-09-18T19:45:24.663671+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 82,
+      "season": 2022,
+      "sha256": "ef827f57edfc7449422b1daa886d75f7df1fa632d9ee9612ecf60c31b5506d61"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2022-week-03.json",
+      "provenance": {
+        "content_sha256": "012bb318d3319477d99bc94d8360620450c57481e62ae71b228c743cf77ab2d1",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 3,
+          "year": 2022
+        },
+        "record_count": 72,
+        "retrieved_at": "2026-09-18T19:45:26.236478+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 72,
+      "season": 2022,
+      "sha256": "012bb318d3319477d99bc94d8360620450c57481e62ae71b228c743cf77ab2d1"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2022-week-04.json",
+      "provenance": {
+        "content_sha256": "f1f8a490d482582725ce73217bdaf2bd29e4d1800b31c86c6fed22ca446a49e1",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 4,
+          "year": 2022
+        },
+        "record_count": 66,
+        "retrieved_at": "2026-09-18T19:45:28.772673+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 66,
+      "season": 2022,
+      "sha256": "f1f8a490d482582725ce73217bdaf2bd29e4d1800b31c86c6fed22ca446a49e1"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2022-week-05.json",
+      "provenance": {
+        "content_sha256": "d90c448b01784631a91ac0a43a34432a36cbee24b0f4f68002dcb9606d63280e",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 5,
+          "year": 2022
+        },
+        "record_count": 63,
+        "retrieved_at": "2026-09-18T19:45:30.093052+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 63,
+      "season": 2022,
+      "sha256": "d90c448b01784631a91ac0a43a34432a36cbee24b0f4f68002dcb9606d63280e"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2022-week-06.json",
+      "provenance": {
+        "content_sha256": "ca0755e9742f2785f0043aa90b524f00661948de0869e65b2b30f7854c44d990",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 6,
+          "year": 2022
+        },
+        "record_count": 57,
+        "retrieved_at": "2026-09-18T19:45:31.219725+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 57,
+      "season": 2022,
+      "sha256": "ca0755e9742f2785f0043aa90b524f00661948de0869e65b2b30f7854c44d990"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2022-week-07.json",
+      "provenance": {
+        "content_sha256": "8321e5e6b2cd6aeadad5dff8df3d281072382e1df1746ce121d547e7733a6b69",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 7,
+          "year": 2022
+        },
+        "record_count": 53,
+        "retrieved_at": "2026-09-18T19:45:32.401484+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 53,
+      "season": 2022,
+      "sha256": "8321e5e6b2cd6aeadad5dff8df3d281072382e1df1746ce121d547e7733a6b69"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2022-week-08.json",
+      "provenance": {
+        "content_sha256": "56cb426fb88c032812f7c2df49b1a186653c1e0d1b43d0f7a000f6bd7fea6f95",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 8,
+          "year": 2022
+        },
+        "record_count": 53,
+        "retrieved_at": "2026-09-18T19:45:33.707186+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 53,
+      "season": 2022,
+      "sha256": "56cb426fb88c032812f7c2df49b1a186653c1e0d1b43d0f7a000f6bd7fea6f95"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2022-week-09.json",
+      "provenance": {
+        "content_sha256": "e9216fcc70fbb516b62bb82567cb679271553f00fc706f2e9f914e1b68451b62",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 9,
+          "year": 2022
+        },
+        "record_count": 48,
+        "retrieved_at": "2026-09-18T19:45:34.954688+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 48,
+      "season": 2022,
+      "sha256": "e9216fcc70fbb516b62bb82567cb679271553f00fc706f2e9f914e1b68451b62"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2022-week-10.json",
+      "provenance": {
+        "content_sha256": "9d828a82db57aa401b972695134574a2daef4eb5003659b5ba909ae767c1ee7c",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 10,
+          "year": 2022
+        },
+        "record_count": 60,
+        "retrieved_at": "2026-09-18T19:45:36.597385+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 60,
+      "season": 2022,
+      "sha256": "9d828a82db57aa401b972695134574a2daef4eb5003659b5ba909ae767c1ee7c"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2022-week-11.json",
+      "provenance": {
+        "content_sha256": "1dfb12d5a0fae882f235e582e58502a8a135edba700d45535d7cf37732ca55e0",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 11,
+          "year": 2022
+        },
+        "record_count": 65,
+        "retrieved_at": "2026-09-18T19:45:38.050386+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 65,
+      "season": 2022,
+      "sha256": "1dfb12d5a0fae882f235e582e58502a8a135edba700d45535d7cf37732ca55e0"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2022-week-12.json",
+      "provenance": {
+        "content_sha256": "6a820f5392f39407714decfad87b5fd4bc910bc2635ba83f4d126e9319247f74",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 12,
+          "year": 2022
+        },
+        "record_count": 65,
+        "retrieved_at": "2026-09-18T19:45:39.366635+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 65,
+      "season": 2022,
+      "sha256": "6a820f5392f39407714decfad87b5fd4bc910bc2635ba83f4d126e9319247f74"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2022-week-13.json",
+      "provenance": {
+        "content_sha256": "232aed04ee655e614e633771472c4a232acaeeb6b9b75cffd1800fa7cd38d94d",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 13,
+          "year": 2022
+        },
+        "record_count": 63,
+        "retrieved_at": "2026-09-18T19:45:40.909108+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 63,
+      "season": 2022,
+      "sha256": "232aed04ee655e614e633771472c4a232acaeeb6b9b75cffd1800fa7cd38d94d"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2022-week-14.json",
+      "provenance": {
+        "content_sha256": "bd9578cf3f4567d4b59deafadf378287c7b7c8cc5572e744bec2e8ba645487e8",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 14,
+          "year": 2022
+        },
+        "record_count": 12,
+        "retrieved_at": "2026-09-18T19:45:41.263417+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 12,
+      "season": 2022,
+      "sha256": "bd9578cf3f4567d4b59deafadf378287c7b7c8cc5572e744bec2e8ba645487e8"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2022-week-15.json",
+      "provenance": {
+        "content_sha256": "9fbd92cea3393edd824fae8da67aa182e66b9e8291e53d0db64f2786f3b37aa0",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 15,
+          "year": 2022
+        },
+        "record_count": 1,
+        "retrieved_at": "2026-09-18T19:45:41.443687+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 1,
+      "season": 2022,
+      "sha256": "9fbd92cea3393edd824fae8da67aa182e66b9e8291e53d0db64f2786f3b37aa0"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2022-week-16.json",
+      "provenance": {
+        "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 16,
+          "year": 2022
+        },
+        "record_count": 0,
+        "retrieved_at": "2026-09-18T19:45:41.610969+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 0,
+      "season": 2022,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2022-week-01.json",
+      "provenance": {
+        "content_sha256": "f454c156caddcf25c67e3cc36cd1c5c11464abcc46ca0cc4ea8308e53b34bd97",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 1,
+          "year": 2022
+        },
+        "record_count": 96,
+        "retrieved_at": "2026-09-18T19:45:44.520645+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 96,
+      "season": 2022,
+      "sha256": "f454c156caddcf25c67e3cc36cd1c5c11464abcc46ca0cc4ea8308e53b34bd97"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2022-week-02.json",
+      "provenance": {
+        "content_sha256": "4aac349f6b34093f58b99935ebb58372ef7524f4f09e1ceb3a7e648bcc208848",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 2,
+          "year": 2022
+        },
+        "record_count": 83,
+        "retrieved_at": "2026-09-18T19:45:45.938098+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 83,
+      "season": 2022,
+      "sha256": "4aac349f6b34093f58b99935ebb58372ef7524f4f09e1ceb3a7e648bcc208848"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2022-week-03.json",
+      "provenance": {
+        "content_sha256": "1f626b871c78e965a60008167a9cf5b23ef73abfc607e5cde102fce6b902ff6c",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 3,
+          "year": 2022
+        },
+        "record_count": 72,
+        "retrieved_at": "2026-09-18T19:45:47.090214+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 72,
+      "season": 2022,
+      "sha256": "1f626b871c78e965a60008167a9cf5b23ef73abfc607e5cde102fce6b902ff6c"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2022-week-04.json",
+      "provenance": {
+        "content_sha256": "61882676b2e7a5069be317d3f403dc8e189e06b4aa5b9c297972240909e7fa4c",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 4,
+          "year": 2022
+        },
+        "record_count": 61,
+        "retrieved_at": "2026-09-18T19:45:48.500207+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 61,
+      "season": 2022,
+      "sha256": "61882676b2e7a5069be317d3f403dc8e189e06b4aa5b9c297972240909e7fa4c"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2022-week-05.json",
+      "provenance": {
+        "content_sha256": "d1a40f7f4020ae62ac03b93f617c86ba2c63f9bde3e1e2780910b576e79ef9db",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 5,
+          "year": 2022
+        },
+        "record_count": 62,
+        "retrieved_at": "2026-09-18T19:45:49.561466+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 62,
+      "season": 2022,
+      "sha256": "d1a40f7f4020ae62ac03b93f617c86ba2c63f9bde3e1e2780910b576e79ef9db"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2022-week-06.json",
+      "provenance": {
+        "content_sha256": "8682250f5ba4395b2ed4d3f2d32ea00801fcc2bad39f1681de86ad6cdeeb2960",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 6,
+          "year": 2022
+        },
+        "record_count": 53,
+        "retrieved_at": "2026-09-18T19:45:51.471545+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 53,
+      "season": 2022,
+      "sha256": "8682250f5ba4395b2ed4d3f2d32ea00801fcc2bad39f1681de86ad6cdeeb2960"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2022-week-07.json",
+      "provenance": {
+        "content_sha256": "480f297b742d6d2ae23ed1ec308c4bb8359506c204cac93dc886438a0c5c3166",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 7,
+          "year": 2022
+        },
+        "record_count": 57,
+        "retrieved_at": "2026-09-18T19:45:52.170464+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 57,
+      "season": 2022,
+      "sha256": "480f297b742d6d2ae23ed1ec308c4bb8359506c204cac93dc886438a0c5c3166"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2022-week-08.json",
+      "provenance": {
+        "content_sha256": "49f7a674b856593b85f255ba75ec279034666b7efd45e5d3d38b042ffbf8a5d2",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 8,
+          "year": 2022
+        },
+        "record_count": 60,
+        "retrieved_at": "2026-09-18T19:45:53.007107+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 60,
+      "season": 2022,
+      "sha256": "49f7a674b856593b85f255ba75ec279034666b7efd45e5d3d38b042ffbf8a5d2"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2022-week-09.json",
+      "provenance": {
+        "content_sha256": "d68f5ca58e65eae3ce75c78727b4bd7b1436ff8d3e7876a3bc1b91c5acb1d018",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 9,
+          "year": 2022
+        },
+        "record_count": 60,
+        "retrieved_at": "2026-09-18T19:45:54.574742+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 60,
+      "season": 2022,
+      "sha256": "d68f5ca58e65eae3ce75c78727b4bd7b1436ff8d3e7876a3bc1b91c5acb1d018"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2022-week-10.json",
+      "provenance": {
+        "content_sha256": "a03ce664e09114e257cd9e8b3556827d6c541761bfcfb84bde264d8d2168b1cf",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 10,
+          "year": 2022
+        },
+        "record_count": 59,
+        "retrieved_at": "2026-09-18T19:45:55.338226+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 59,
+      "season": 2022,
+      "sha256": "a03ce664e09114e257cd9e8b3556827d6c541761bfcfb84bde264d8d2168b1cf"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2022-week-11.json",
+      "provenance": {
+        "content_sha256": "4752ef3cc7e73f971e6ac9971ab2357da4a74aecc9cfc91265e0e61caf1848f4",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 11,
+          "year": 2022
+        },
+        "record_count": 65,
+        "retrieved_at": "2026-09-18T19:45:56.156456+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 65,
+      "season": 2022,
+      "sha256": "4752ef3cc7e73f971e6ac9971ab2357da4a74aecc9cfc91265e0e61caf1848f4"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2022-week-12.json",
+      "provenance": {
+        "content_sha256": "1f66122db9e6c8b79cb9d6542b144e30680ae0087535f7848f6bd6a35eebc834",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 12,
+          "year": 2022
+        },
+        "record_count": 63,
+        "retrieved_at": "2026-09-18T19:45:56.935127+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 63,
+      "season": 2022,
+      "sha256": "1f66122db9e6c8b79cb9d6542b144e30680ae0087535f7848f6bd6a35eebc834"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2022-week-13.json",
+      "provenance": {
+        "content_sha256": "c183ebf50a263e8b33f0e7dfe41d5f910f68234175ca4361ee3887ee7d9be72d",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 13,
+          "year": 2022
+        },
+        "record_count": 10,
+        "retrieved_at": "2026-09-18T19:45:57.583603+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 10,
+      "season": 2022,
+      "sha256": "c183ebf50a263e8b33f0e7dfe41d5f910f68234175ca4361ee3887ee7d9be72d"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2022-week-14.json",
+      "provenance": {
+        "content_sha256": "0f8a08bbfa3b226d8586696baca20c47f2fd6850e20296f83f21a46837e78deb",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 14,
+          "year": 2022
+        },
+        "record_count": 10,
+        "retrieved_at": "2026-09-18T19:45:57.867083+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 10,
+      "season": 2022,
+      "sha256": "0f8a08bbfa3b226d8586696baca20c47f2fd6850e20296f83f21a46837e78deb"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2022-week-15.json",
+      "provenance": {
+        "content_sha256": "e53cddb646a86175bab367f799d89bdbbd45d52a296446ae01674a2ed0a62e24",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 15,
+          "year": 2022
+        },
+        "record_count": 4,
+        "retrieved_at": "2026-09-18T19:45:58.063369+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 4,
+      "season": 2022,
+      "sha256": "e53cddb646a86175bab367f799d89bdbbd45d52a296446ae01674a2ed0a62e24"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2022-week-16.json",
+      "provenance": {
+        "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 16,
+          "year": 2022
+        },
+        "record_count": 0,
+        "retrieved_at": "2026-09-18T19:45:58.243112+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 0,
+      "season": 2022,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2023-week-01.json",
+      "provenance": {
+        "content_sha256": "7ea01e67b23ad205d1cceceeac52d7a96c640d117721d2a51830f0f958ccdfde",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 1,
+          "year": 2023
+        },
+        "record_count": 136,
+        "retrieved_at": "2026-09-18T19:46:02.169013+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 136,
+      "season": 2023,
+      "sha256": "7ea01e67b23ad205d1cceceeac52d7a96c640d117721d2a51830f0f958ccdfde"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2023-week-02.json",
+      "provenance": {
+        "content_sha256": "0a8fcc84c2ed2a0d0f7b507a08bf2f944bf41c4165c2ef2b0c2c8e9b7012853a",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 2,
+          "year": 2023
+        },
+        "record_count": 85,
+        "retrieved_at": "2026-09-18T19:46:04.119465+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 85,
+      "season": 2023,
+      "sha256": "0a8fcc84c2ed2a0d0f7b507a08bf2f944bf41c4165c2ef2b0c2c8e9b7012853a"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2023-week-03.json",
+      "provenance": {
+        "content_sha256": "83f0739e9e43d245250d8920fb7f62735dda1dbc810f131e06e6f8a827f947f4",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 3,
+          "year": 2023
+        },
+        "record_count": 75,
+        "retrieved_at": "2026-09-18T19:46:07.089646+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 75,
+      "season": 2023,
+      "sha256": "83f0739e9e43d245250d8920fb7f62735dda1dbc810f131e06e6f8a827f947f4"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2023-week-04.json",
+      "provenance": {
+        "content_sha256": "a9a2d9c489047d093ccb6244104357eebf999cd087b42e27aa22bb6f5a9fec27",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 4,
+          "year": 2023
+        },
+        "record_count": 67,
+        "retrieved_at": "2026-09-18T19:46:08.271813+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 67,
+      "season": 2023,
+      "sha256": "a9a2d9c489047d093ccb6244104357eebf999cd087b42e27aa22bb6f5a9fec27"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2023-week-05.json",
+      "provenance": {
+        "content_sha256": "f7487b22e66c81bf0525e3ff98933c66fd25df7380aa7c3c66a7b02a624c2a7c",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 5,
+          "year": 2023
+        },
+        "record_count": 59,
+        "retrieved_at": "2026-09-18T19:46:09.252662+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 59,
+      "season": 2023,
+      "sha256": "f7487b22e66c81bf0525e3ff98933c66fd25df7380aa7c3c66a7b02a624c2a7c"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2023-week-06.json",
+      "provenance": {
+        "content_sha256": "cbd819cdccab60e554fa783272fcd662b9d303742eb85e84cbaec15282d9a6ee",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 6,
+          "year": 2023
+        },
+        "record_count": 51,
+        "retrieved_at": "2026-09-18T19:46:10.218397+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 51,
+      "season": 2023,
+      "sha256": "cbd819cdccab60e554fa783272fcd662b9d303742eb85e84cbaec15282d9a6ee"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2023-week-07.json",
+      "provenance": {
+        "content_sha256": "92e00fd31339034d9408565c61ac0f9ff142a7cfbce5cd6192ecfcff5f82dea5",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 7,
+          "year": 2023
+        },
+        "record_count": 55,
+        "retrieved_at": "2026-09-18T19:46:11.350111+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 55,
+      "season": 2023,
+      "sha256": "92e00fd31339034d9408565c61ac0f9ff142a7cfbce5cd6192ecfcff5f82dea5"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2023-week-08.json",
+      "provenance": {
+        "content_sha256": "db6e815cbcb0c3cea480559493450ab1774a285fbb016b40d7169aea2ae85f95",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 8,
+          "year": 2023
+        },
+        "record_count": 54,
+        "retrieved_at": "2026-09-18T19:46:12.468987+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 54,
+      "season": 2023,
+      "sha256": "db6e815cbcb0c3cea480559493450ab1774a285fbb016b40d7169aea2ae85f95"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2023-week-09.json",
+      "provenance": {
+        "content_sha256": "aa2441eddbf2e73b5169860c8be8817f1e66f78452c9439fe7b98bf426403935",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 9,
+          "year": 2023
+        },
+        "record_count": 54,
+        "retrieved_at": "2026-09-18T19:46:13.475910+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 54,
+      "season": 2023,
+      "sha256": "aa2441eddbf2e73b5169860c8be8817f1e66f78452c9439fe7b98bf426403935"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2023-week-10.json",
+      "provenance": {
+        "content_sha256": "5cbc61954e3475bb77ab987be7832efba7214e94ce346e24734b31f760709759",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 10,
+          "year": 2023
+        },
+        "record_count": 65,
+        "retrieved_at": "2026-09-18T19:46:14.743832+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 65,
+      "season": 2023,
+      "sha256": "5cbc61954e3475bb77ab987be7832efba7214e94ce346e24734b31f760709759"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2023-week-11.json",
+      "provenance": {
+        "content_sha256": "ece08b80082d0aa3ef0323343751c493fcc88588f9202d82eafc6e9fadcd52e3",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 11,
+          "year": 2023
+        },
+        "record_count": 65,
+        "retrieved_at": "2026-09-18T19:46:17.096438+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 65,
+      "season": 2023,
+      "sha256": "ece08b80082d0aa3ef0323343751c493fcc88588f9202d82eafc6e9fadcd52e3"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2023-week-12.json",
+      "provenance": {
+        "content_sha256": "f8d5f66f82f1084942c003f066cf82b2de5cb3e03dde13c877cb4622bee9759c",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 12,
+          "year": 2023
+        },
+        "record_count": 68,
+        "retrieved_at": "2026-09-18T19:46:18.410777+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 68,
+      "season": 2023,
+      "sha256": "f8d5f66f82f1084942c003f066cf82b2de5cb3e03dde13c877cb4622bee9759c"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2023-week-13.json",
+      "provenance": {
+        "content_sha256": "ef34de11bfe5c2121df8131084878d1d7eec99e69a53f71c2bfba7a5c4070fcc",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 13,
+          "year": 2023
+        },
+        "record_count": 65,
+        "retrieved_at": "2026-09-18T19:46:19.732044+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 65,
+      "season": 2023,
+      "sha256": "ef34de11bfe5c2121df8131084878d1d7eec99e69a53f71c2bfba7a5c4070fcc"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2023-week-14.json",
+      "provenance": {
+        "content_sha256": "2620a3aa9cba9c8acd60859299b839fe1dda342fd19d300582842150ea427427",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 14,
+          "year": 2023
+        },
+        "record_count": 10,
+        "retrieved_at": "2026-09-18T19:46:20.067280+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 10,
+      "season": 2023,
+      "sha256": "2620a3aa9cba9c8acd60859299b839fe1dda342fd19d300582842150ea427427"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2023-week-15.json",
+      "provenance": {
+        "content_sha256": "e8205a2ec24e87e527ec399ca8e9e45bc192e47059f5b01dc707bda47a47413d",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 15,
+          "year": 2023
+        },
+        "record_count": 1,
+        "retrieved_at": "2026-09-18T19:46:20.240879+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 1,
+      "season": 2023,
+      "sha256": "e8205a2ec24e87e527ec399ca8e9e45bc192e47059f5b01dc707bda47a47413d"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2023-week-16.json",
+      "provenance": {
+        "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 16,
+          "year": 2023
+        },
+        "record_count": 0,
+        "retrieved_at": "2026-09-18T19:46:20.402955+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 0,
+      "season": 2023,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2023-week-01.json",
+      "provenance": {
+        "content_sha256": "e9b665f1a859303317f5782ce8401265f462fd01124348687ec7de3456cc3667",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 1,
+          "year": 2023
+        },
+        "record_count": 82,
+        "retrieved_at": "2026-09-18T19:46:22.442260+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 82,
+      "season": 2023,
+      "sha256": "e9b665f1a859303317f5782ce8401265f462fd01124348687ec7de3456cc3667"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2023-week-02.json",
+      "provenance": {
+        "content_sha256": "47b4bc9593e9bc2442e4f50e74d76fc029e361814b0c60142bd6b361dc918c8a",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 2,
+          "year": 2023
+        },
+        "record_count": 75,
+        "retrieved_at": "2026-09-18T19:46:23.559602+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 75,
+      "season": 2023,
+      "sha256": "47b4bc9593e9bc2442e4f50e74d76fc029e361814b0c60142bd6b361dc918c8a"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2023-week-03.json",
+      "provenance": {
+        "content_sha256": "72cf22c9fd1e2e3b38f13562f76dec7937d3d699c0c1b7810e3f5c70248bb346",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 3,
+          "year": 2023
+        },
+        "record_count": 66,
+        "retrieved_at": "2026-09-18T19:46:24.630150+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 66,
+      "season": 2023,
+      "sha256": "72cf22c9fd1e2e3b38f13562f76dec7937d3d699c0c1b7810e3f5c70248bb346"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2023-week-04.json",
+      "provenance": {
+        "content_sha256": "64ba0c9259b353dc2872970267a075d2b6348e7ff096021a9092bf608e18f6b4",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 4,
+          "year": 2023
+        },
+        "record_count": 57,
+        "retrieved_at": "2026-09-18T19:46:25.475086+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 57,
+      "season": 2023,
+      "sha256": "64ba0c9259b353dc2872970267a075d2b6348e7ff096021a9092bf608e18f6b4"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2023-week-05.json",
+      "provenance": {
+        "content_sha256": "1efe9f32fd1ae322610b2b3d07331101de8ff27081ae8e9664b9272d5ff25a26",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 5,
+          "year": 2023
+        },
+        "record_count": 59,
+        "retrieved_at": "2026-09-18T19:46:26.280500+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 59,
+      "season": 2023,
+      "sha256": "1efe9f32fd1ae322610b2b3d07331101de8ff27081ae8e9664b9272d5ff25a26"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2023-week-06.json",
+      "provenance": {
+        "content_sha256": "fc8094951bd0a1284f24014368a904ba5e169e5e79912bb67dddc9180a759bc2",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 6,
+          "year": 2023
+        },
+        "record_count": 53,
+        "retrieved_at": "2026-09-18T19:46:26.920326+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 53,
+      "season": 2023,
+      "sha256": "fc8094951bd0a1284f24014368a904ba5e169e5e79912bb67dddc9180a759bc2"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2023-week-07.json",
+      "provenance": {
+        "content_sha256": "fd081f32b6eaa0a31322d57c4292663e7cb30e8114fc75278be26e246b28f20b",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 7,
+          "year": 2023
+        },
+        "record_count": 54,
+        "retrieved_at": "2026-09-18T19:46:27.611351+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 54,
+      "season": 2023,
+      "sha256": "fd081f32b6eaa0a31322d57c4292663e7cb30e8114fc75278be26e246b28f20b"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2023-week-08.json",
+      "provenance": {
+        "content_sha256": "c263c5e2979457353a844ba53a396150cd745d2b5ab5b68a208fa70edcb025d4",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 8,
+          "year": 2023
+        },
+        "record_count": 54,
+        "retrieved_at": "2026-09-18T19:46:28.245495+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 54,
+      "season": 2023,
+      "sha256": "c263c5e2979457353a844ba53a396150cd745d2b5ab5b68a208fa70edcb025d4"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2023-week-09.json",
+      "provenance": {
+        "content_sha256": "456495512c25600601eec866c50225a4d45385fb2423f514274148afff578824",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 9,
+          "year": 2023
+        },
+        "record_count": 59,
+        "retrieved_at": "2026-09-18T19:46:29.066712+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 59,
+      "season": 2023,
+      "sha256": "456495512c25600601eec866c50225a4d45385fb2423f514274148afff578824"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2023-week-10.json",
+      "provenance": {
+        "content_sha256": "0b313c290fdc23373fea3ed3f10ce10b3679552a8870fcda8a83e25710762182",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 10,
+          "year": 2023
+        },
+        "record_count": 62,
+        "retrieved_at": "2026-09-18T19:46:29.918037+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 62,
+      "season": 2023,
+      "sha256": "0b313c290fdc23373fea3ed3f10ce10b3679552a8870fcda8a83e25710762182"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2023-week-11.json",
+      "provenance": {
+        "content_sha256": "47cb6074a87559db9b4ae026be0d42d8f389a1ec468c59a3189aa197ae2ced15",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 11,
+          "year": 2023
+        },
+        "record_count": 60,
+        "retrieved_at": "2026-09-18T19:46:30.653692+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 60,
+      "season": 2023,
+      "sha256": "47cb6074a87559db9b4ae026be0d42d8f389a1ec468c59a3189aa197ae2ced15"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2023-week-12.json",
+      "provenance": {
+        "content_sha256": "3a2468862d56e8094bb40b4b36c120c96a36a6da4669354bdc7b60b78b48c31e",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 12,
+          "year": 2023
+        },
+        "record_count": 61,
+        "retrieved_at": "2026-09-18T19:46:31.429549+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 61,
+      "season": 2023,
+      "sha256": "3a2468862d56e8094bb40b4b36c120c96a36a6da4669354bdc7b60b78b48c31e"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2023-week-13.json",
+      "provenance": {
+        "content_sha256": "3f9bc6330c5c4a7d7f3ae378c562e8f8d752360e20033b6caaf4efb861086e2f",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 13,
+          "year": 2023
+        },
+        "record_count": 10,
+        "retrieved_at": "2026-09-18T19:46:32.079454+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 10,
+      "season": 2023,
+      "sha256": "3f9bc6330c5c4a7d7f3ae378c562e8f8d752360e20033b6caaf4efb861086e2f"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2023-week-14.json",
+      "provenance": {
+        "content_sha256": "65e39e4b1667a036123c1ecfc0323e4cf7e862e05dcc74a8344bd7c973c81139",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 14,
+          "year": 2023
+        },
+        "record_count": 9,
+        "retrieved_at": "2026-09-18T19:46:32.376962+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 9,
+      "season": 2023,
+      "sha256": "65e39e4b1667a036123c1ecfc0323e4cf7e862e05dcc74a8344bd7c973c81139"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2023-week-15.json",
+      "provenance": {
+        "content_sha256": "ae22fe41947953c17d5b27f03097fa6bc27d7870c406c324d3887105e036c625",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 15,
+          "year": 2023
+        },
+        "record_count": 3,
+        "retrieved_at": "2026-09-18T19:46:32.558984+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 3,
+      "season": 2023,
+      "sha256": "ae22fe41947953c17d5b27f03097fa6bc27d7870c406c324d3887105e036c625"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2023-week-16.json",
+      "provenance": {
+        "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 16,
+          "year": 2023
+        },
+        "record_count": 0,
+        "retrieved_at": "2026-09-18T19:46:32.726800+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 0,
+      "season": 2023,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2024-week-01.json",
+      "provenance": {
+        "content_sha256": "e4c4534521d42734953b4e8c9c0994849fb83e0bb1fedbb1846fa4a58b6c4a85",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 1,
+          "year": 2024
+        },
+        "record_count": 146,
+        "retrieved_at": "2026-09-18T19:46:36.187848+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 146,
+      "season": 2024,
+      "sha256": "e4c4534521d42734953b4e8c9c0994849fb83e0bb1fedbb1846fa4a58b6c4a85"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2024-week-02.json",
+      "provenance": {
+        "content_sha256": "78a5ec0cd81a241a5f8758bf6e8806904e371d993d954d44dc9959e240ea855a",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 2,
+          "year": 2024
+        },
+        "record_count": 78,
+        "retrieved_at": "2026-09-18T19:46:37.656771+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 78,
+      "season": 2024,
+      "sha256": "78a5ec0cd81a241a5f8758bf6e8806904e371d993d954d44dc9959e240ea855a"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2024-week-03.json",
+      "provenance": {
+        "content_sha256": "796d267fcf619ae9789abd68ac583558ba03c38b0262f4bda65aa0aa6ec2eddd",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 3,
+          "year": 2024
+        },
+        "record_count": 63,
+        "retrieved_at": "2026-09-18T19:46:38.900652+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 63,
+      "season": 2024,
+      "sha256": "796d267fcf619ae9789abd68ac583558ba03c38b0262f4bda65aa0aa6ec2eddd"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2024-week-04.json",
+      "provenance": {
+        "content_sha256": "4a2f57868653e198faaf9883d4e7d63d18810f9a2874987e3a192ef06050c82e",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 4,
+          "year": 2024
+        },
+        "record_count": 64,
+        "retrieved_at": "2026-09-18T19:46:40.024672+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 64,
+      "season": 2024,
+      "sha256": "4a2f57868653e198faaf9883d4e7d63d18810f9a2874987e3a192ef06050c82e"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2024-week-05.json",
+      "provenance": {
+        "content_sha256": "b03ec6f743c3c56b28396b1e98cee4d126bd99f6279ee016f1827d0d39ff56f4",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 5,
+          "year": 2024
+        },
+        "record_count": 55,
+        "retrieved_at": "2026-09-18T19:46:41.030500+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 55,
+      "season": 2024,
+      "sha256": "b03ec6f743c3c56b28396b1e98cee4d126bd99f6279ee016f1827d0d39ff56f4"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2024-week-06.json",
+      "provenance": {
+        "content_sha256": "28ab5ff64c27b2b4d3ebf78d65b907d4998d03ad2428e6733091e87d7e65c0a1",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 6,
+          "year": 2024
+        },
+        "record_count": 49,
+        "retrieved_at": "2026-09-18T19:46:41.962190+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 49,
+      "season": 2024,
+      "sha256": "28ab5ff64c27b2b4d3ebf78d65b907d4998d03ad2428e6733091e87d7e65c0a1"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2024-week-07.json",
+      "provenance": {
+        "content_sha256": "599fc57ed3a529bb4e6e76fe39572f80971970cd6726be467af6c53bb4a0e432",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 7,
+          "year": 2024
+        },
+        "record_count": 52,
+        "retrieved_at": "2026-09-18T19:46:42.903014+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 52,
+      "season": 2024,
+      "sha256": "599fc57ed3a529bb4e6e76fe39572f80971970cd6726be467af6c53bb4a0e432"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2024-week-08.json",
+      "provenance": {
+        "content_sha256": "a778ded5c831473aeed93dd08b5704d25715ff31fdf1a055a862ca6c950b6224",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 8,
+          "year": 2024
+        },
+        "record_count": 59,
+        "retrieved_at": "2026-09-18T19:46:43.896857+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 59,
+      "season": 2024,
+      "sha256": "a778ded5c831473aeed93dd08b5704d25715ff31fdf1a055a862ca6c950b6224"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2024-week-09.json",
+      "provenance": {
+        "content_sha256": "bac06329f11cb41ab6d3a03473d737d17676b576a17c2c1c8cefa8f44475a536",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 9,
+          "year": 2024
+        },
+        "record_count": 57,
+        "retrieved_at": "2026-09-18T19:46:44.916782+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 57,
+      "season": 2024,
+      "sha256": "bac06329f11cb41ab6d3a03473d737d17676b576a17c2c1c8cefa8f44475a536"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2024-week-10.json",
+      "provenance": {
+        "content_sha256": "e1ba822dbc6d55d7415115d66e1d91b8ea325caf8eb31fc533c9da432544b69e",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 10,
+          "year": 2024
+        },
+        "record_count": 49,
+        "retrieved_at": "2026-09-18T19:46:46.098094+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 49,
+      "season": 2024,
+      "sha256": "e1ba822dbc6d55d7415115d66e1d91b8ea325caf8eb31fc533c9da432544b69e"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2024-week-11.json",
+      "provenance": {
+        "content_sha256": "1d9c95a8db75e519658c28a3529c7e19d5d8ac97a9add32e6eeb51e71a2bf792",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 11,
+          "year": 2024
+        },
+        "record_count": 50,
+        "retrieved_at": "2026-09-18T19:46:46.939839+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 50,
+      "season": 2024,
+      "sha256": "1d9c95a8db75e519658c28a3529c7e19d5d8ac97a9add32e6eeb51e71a2bf792"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2024-week-12.json",
+      "provenance": {
+        "content_sha256": "3800ebe5b0638cffbe996a7f26f342c74d2481458cd471a05d66f62682007444",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 12,
+          "year": 2024
+        },
+        "record_count": 55,
+        "retrieved_at": "2026-09-18T19:46:47.883474+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 55,
+      "season": 2024,
+      "sha256": "3800ebe5b0638cffbe996a7f26f342c74d2481458cd471a05d66f62682007444"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2024-week-13.json",
+      "provenance": {
+        "content_sha256": "d3424bacdfaa6b4452d9f7072881f94533bf53ac9ab5283100f65fdfb16d1129",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 13,
+          "year": 2024
+        },
+        "record_count": 65,
+        "retrieved_at": "2026-09-18T19:46:49.094978+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 65,
+      "season": 2024,
+      "sha256": "d3424bacdfaa6b4452d9f7072881f94533bf53ac9ab5283100f65fdfb16d1129"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2024-week-14.json",
+      "provenance": {
+        "content_sha256": "772cd403b75e65a3497c371c61d124883514e46e437cec4327a4794c506632ce",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 14,
+          "year": 2024
+        },
+        "record_count": 67,
+        "retrieved_at": "2026-09-18T19:46:50.251394+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 67,
+      "season": 2024,
+      "sha256": "772cd403b75e65a3497c371c61d124883514e46e437cec4327a4794c506632ce"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2024-week-15.json",
+      "provenance": {
+        "content_sha256": "dbefcdb2dfc7d896240ead4db376e4358b3fb1cb5dc827c462d6973eb62d29d1",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 15,
+          "year": 2024
+        },
+        "record_count": 9,
+        "retrieved_at": "2026-09-18T19:46:50.537143+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 9,
+      "season": 2024,
+      "sha256": "dbefcdb2dfc7d896240ead4db376e4358b3fb1cb5dc827c462d6973eb62d29d1"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fbs/2024-week-16.json",
+      "provenance": {
+        "content_sha256": "5887e26acacf1fd99e026819c9ee37db08db83faaaead13534b40033ce79ce4b",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fbs",
+          "seasonType": "both",
+          "week": 16,
+          "year": 2024
+        },
+        "record_count": 1,
+        "retrieved_at": "2026-09-18T19:46:50.721668+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 1,
+      "season": 2024,
+      "sha256": "5887e26acacf1fd99e026819c9ee37db08db83faaaead13534b40033ce79ce4b"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2024-week-01.json",
+      "provenance": {
+        "content_sha256": "aa33b76ae6a672537af309aa1682ca7490f47e053e894938491cdc2483197df5",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 1,
+          "year": 2024
+        },
+        "record_count": 102,
+        "retrieved_at": "2026-09-18T19:46:53.271846+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 102,
+      "season": 2024,
+      "sha256": "aa33b76ae6a672537af309aa1682ca7490f47e053e894938491cdc2483197df5"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2024-week-02.json",
+      "provenance": {
+        "content_sha256": "09abb2e27eb85f21f769dbddcaf86cd0a15b13931c5e71c01c9345013fe9f5c9",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 2,
+          "year": 2024
+        },
+        "record_count": 83,
+        "retrieved_at": "2026-09-18T19:46:54.319386+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 83,
+      "season": 2024,
+      "sha256": "09abb2e27eb85f21f769dbddcaf86cd0a15b13931c5e71c01c9345013fe9f5c9"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2024-week-03.json",
+      "provenance": {
+        "content_sha256": "ea90db9b912e35a5a1da685c4b6e9a02290567cb9f2481465ec6496a0c0cd4c9",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 3,
+          "year": 2024
+        },
+        "record_count": 66,
+        "retrieved_at": "2026-09-18T19:46:55.238647+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 66,
+      "season": 2024,
+      "sha256": "ea90db9b912e35a5a1da685c4b6e9a02290567cb9f2481465ec6496a0c0cd4c9"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2024-week-04.json",
+      "provenance": {
+        "content_sha256": "756cfbc76c60036bd63a534771772e31587b8e2749c9c80e4549ef074e2170b6",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 4,
+          "year": 2024
+        },
+        "record_count": 65,
+        "retrieved_at": "2026-09-18T19:46:56.268276+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 65,
+      "season": 2024,
+      "sha256": "756cfbc76c60036bd63a534771772e31587b8e2749c9c80e4549ef074e2170b6"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2024-week-05.json",
+      "provenance": {
+        "content_sha256": "8535df80a22037dcb8daffaa898fe964e9955bf2ba5e8db16ea343d60e17af16",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 5,
+          "year": 2024
+        },
+        "record_count": 54,
+        "retrieved_at": "2026-09-18T19:46:57.124691+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 54,
+      "season": 2024,
+      "sha256": "8535df80a22037dcb8daffaa898fe964e9955bf2ba5e8db16ea343d60e17af16"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2024-week-06.json",
+      "provenance": {
+        "content_sha256": "e4bdbf64409cd1cdc2bbb67f24b8b6196088126480bcb984adeb249e42e152ab",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 6,
+          "year": 2024
+        },
+        "record_count": 56,
+        "retrieved_at": "2026-09-18T19:46:57.889574+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 56,
+      "season": 2024,
+      "sha256": "e4bdbf64409cd1cdc2bbb67f24b8b6196088126480bcb984adeb249e42e152ab"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2024-week-07.json",
+      "provenance": {
+        "content_sha256": "92f920b3f5b3c43339638beffbb7b81c755017aba874f811248fb84076308f9e",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 7,
+          "year": 2024
+        },
+        "record_count": 55,
+        "retrieved_at": "2026-09-18T19:46:58.571222+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 55,
+      "season": 2024,
+      "sha256": "92f920b3f5b3c43339638beffbb7b81c755017aba874f811248fb84076308f9e"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2024-week-08.json",
+      "provenance": {
+        "content_sha256": "382ba5bdb1f47703aeb363079696f1e016bd2d7a9583416aaeef9474853d2102",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 8,
+          "year": 2024
+        },
+        "record_count": 53,
+        "retrieved_at": "2026-09-18T19:46:59.360153+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 53,
+      "season": 2024,
+      "sha256": "382ba5bdb1f47703aeb363079696f1e016bd2d7a9583416aaeef9474853d2102"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2024-week-09.json",
+      "provenance": {
+        "content_sha256": "cb76da97faf5521a6b72bdb1ca7a6ee7b678ccb01ef71152dbf4de3b3c122890",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 9,
+          "year": 2024
+        },
+        "record_count": 59,
+        "retrieved_at": "2026-09-18T19:47:00.286383+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 59,
+      "season": 2024,
+      "sha256": "cb76da97faf5521a6b72bdb1ca7a6ee7b678ccb01ef71152dbf4de3b3c122890"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2024-week-10.json",
+      "provenance": {
+        "content_sha256": "7f89a6c25ef63786b98ad19c8f199bd2c8ad909b80cee138545cc087ed7920ed",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 10,
+          "year": 2024
+        },
+        "record_count": 60,
+        "retrieved_at": "2026-09-18T19:47:03.422625+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 60,
+      "season": 2024,
+      "sha256": "7f89a6c25ef63786b98ad19c8f199bd2c8ad909b80cee138545cc087ed7920ed"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2024-week-11.json",
+      "provenance": {
+        "content_sha256": "838f32181341551378c83f34313e20df242cef142fd95d5f420ab017e4ee2d80",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 11,
+          "year": 2024
+        },
+        "record_count": 60,
+        "retrieved_at": "2026-09-18T19:47:04.477919+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 60,
+      "season": 2024,
+      "sha256": "838f32181341551378c83f34313e20df242cef142fd95d5f420ab017e4ee2d80"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2024-week-12.json",
+      "provenance": {
+        "content_sha256": "657f6485ffa71af88c30c33f46fd2266f30ba1b80b49b1b7bc19a95bf73f6f0c",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 12,
+          "year": 2024
+        },
+        "record_count": 62,
+        "retrieved_at": "2026-09-18T19:47:05.596362+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 62,
+      "season": 2024,
+      "sha256": "657f6485ffa71af88c30c33f46fd2266f30ba1b80b49b1b7bc19a95bf73f6f0c"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2024-week-13.json",
+      "provenance": {
+        "content_sha256": "8c8d208ddb66623d7f979fc466602e0b3dc6a70dbba4ee2bdb7a56bc9f7f8bfc",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 13,
+          "year": 2024
+        },
+        "record_count": 63,
+        "retrieved_at": "2026-09-18T19:47:06.629321+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 63,
+      "season": 2024,
+      "sha256": "8c8d208ddb66623d7f979fc466602e0b3dc6a70dbba4ee2bdb7a56bc9f7f8bfc"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2024-week-14.json",
+      "provenance": {
+        "content_sha256": "9751fd3f011fdf858957ca8facbd3de7b26498ec9032a4a0b349c93eda41b091",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 14,
+          "year": 2024
+        },
+        "record_count": 11,
+        "retrieved_at": "2026-09-18T19:47:07.302352+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 11,
+      "season": 2024,
+      "sha256": "9751fd3f011fdf858957ca8facbd3de7b26498ec9032a4a0b349c93eda41b091"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2024-week-15.json",
+      "provenance": {
+        "content_sha256": "48c29d930f1eb0f4a114128b83843e619bb19555fb842ecd0c6119d99bcf9a7c",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 15,
+          "year": 2024
+        },
+        "record_count": 9,
+        "retrieved_at": "2026-09-18T19:47:08.259752+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 9,
+      "season": 2024,
+      "sha256": "48c29d930f1eb0f4a114128b83843e619bb19555fb842ecd0c6119d99bcf9a7c"
+    },
+    {
+      "kind": "games_players",
+      "path": "data/raw/cfbd/preseason/defensive_transfers_complete/games_players/fcs/2024-week-16.json",
+      "provenance": {
+        "content_sha256": "0be1e2fd0a76623f45fe839ecf86440c63186df9a3bfba08416e77b4a6795499",
+        "endpoint": "/games/players",
+        "parameters": {
+          "classification": "fcs",
+          "seasonType": "both",
+          "week": 16,
+          "year": 2024
+        },
+        "record_count": 4,
+        "retrieved_at": "2026-09-18T19:47:08.447537+00:00",
+        "source_kind": "cfbd_api_raw_response"
+      },
+      "record_count": 4,
+      "season": 2024,
+      "sha256": "0be1e2fd0a76623f45fe839ecf86440c63186df9a3bfba08416e77b4a6795499"
+    }
+  ]
+}

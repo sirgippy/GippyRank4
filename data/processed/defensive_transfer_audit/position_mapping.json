@@ -1,0 +1,51 @@
+{
+  "groups": {
+    "db": {
+      "label": "DB",
+      "source_positions": [
+        "CB",
+        "DB",
+        "FS",
+        "NB",
+        "S",
+        "SS"
+      ]
+    },
+    "dl_edge": {
+      "label": "DL / EDGE",
+      "source_positions": [
+        "DE",
+        "DL",
+        "DT",
+        "EDGE",
+        "NT"
+      ]
+    },
+    "lb": {
+      "label": "LB",
+      "source_positions": [
+        "ILB",
+        "LB",
+        "MLB",
+        "OLB"
+      ]
+    }
+  },
+  "known_non_defensive_positions": [
+    "FB",
+    "IOL",
+    "K",
+    "LS",
+    "OC",
+    "OG",
+    "OL",
+    "OT",
+    "P",
+    "QB",
+    "RB",
+    "TE",
+    "WR"
+  ],
+  "unknown_policy": "retain unknown labels and fail closed; never infer a defensive group from an unrecognized or hybrid label",
+  "version": "issue-103-v1"
+}

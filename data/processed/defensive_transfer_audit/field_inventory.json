@@ -1,0 +1,74 @@
+[
+  {
+    "availability": "unavailable",
+    "decision": "do not label the fallback as snap share",
+    "field": "defensive snaps",
+    "measurement": "no snap-count field in selected CFBD endpoints"
+  },
+  {
+    "availability": "unavailable",
+    "decision": "use recorded defensive box-score game rate only",
+    "field": "defensive snap share",
+    "measurement": "no defensive denominator or participation percentage"
+  },
+  {
+    "availability": "proxy available",
+    "decision": "frozen experience proxy numerator",
+    "field": "games played",
+    "measurement": "distinct team games containing the player's recorded defensive box-score row"
+  },
+  {
+    "availability": "unavailable",
+    "decision": "not used",
+    "field": "starts",
+    "measurement": "not present in roster or games/players responses"
+  },
+  {
+    "availability": "unavailable",
+    "decision": "not used",
+    "field": "defensive play participation",
+    "measurement": "no player defensive-play count in selected endpoint"
+  },
+  {
+    "availability": "available",
+    "decision": "position-specific impact components where declared",
+    "field": "tackles / solo tackles / tackles for loss / sacks",
+    "measurement": "games/players defensive category TOT, SOLO, TFL, SACKS"
+  },
+  {
+    "availability": "available",
+    "decision": "DL/EDGE impact component",
+    "field": "quarterback hurries",
+    "measurement": "games/players defensive category QB HUR"
+  },
+  {
+    "availability": "available",
+    "decision": "LB/DB impact component",
+    "field": "passes defended",
+    "measurement": "games/players defensive category PD"
+  },
+  {
+    "availability": "available",
+    "decision": "DB impact component",
+    "field": "interceptions",
+    "measurement": "games/players interceptions category INT"
+  },
+  {
+    "availability": "unavailable",
+    "decision": "not used",
+    "field": "forced fumbles",
+    "measurement": "no player forced-fumble field in selected endpoint"
+  },
+  {
+    "availability": "available",
+    "decision": "not in the frozen impact composite",
+    "field": "fumble recoveries",
+    "measurement": "games/players fumbles category REC; retained as audit data"
+  },
+  {
+    "availability": "available",
+    "decision": "join and position taxonomy inputs",
+    "field": "position / player ID / source team / season",
+    "measurement": "roster identity plus game-player and portal season fields"
+  }
+]
