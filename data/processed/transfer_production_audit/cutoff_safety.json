@@ -37,6 +37,12 @@
   },
   {
     "classification": "retrospective oracle only",
+    "evidence": "Independent player-season stats are used to distinguish positive prior participation, legitimate zero, and undetermined applicability before classifying a missing usage row.",
+    "field": "prior-season offensive participation",
+    "required_for_model": true
+  },
+  {
+    "classification": "retrospective oracle only",
     "evidence": "Position is supplied by the current portal response and is not timestamped as-of the cutoff.",
     "field": "position",
     "required_for_model": false

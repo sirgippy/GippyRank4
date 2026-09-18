@@ -8,6 +8,7 @@ from gippyrank.transfer_audit import (
     D5_CATEGORY_UNDETERMINED,
     D5_CATEGORY_ZERO,
     audit_transfer_records,
+    parse_participation_payload,
 )
 from gippyrank.transfer_oracle import parse_transfer_payload, parse_usage_payload
 
@@ -83,6 +84,15 @@ def test_audit_is_explicit_about_aliases_ambiguity_and_normalization() -> None:
             },
             {
                 "season": 2022,
+                "firstName": "G",
+                "lastName": "NoStats",
+                "origin": "Alpha",
+                "destination": "Beta",
+                "position": "WR",
+                "transferDate": "2022-08-01",
+            },
+            {
+                "season": 2022,
                 "firstName": "D",
                 "lastName": "Player",
                 "origin": "Alpha",
@@ -125,12 +135,68 @@ def test_audit_is_explicit_about_aliases_ambiguity_and_normalization() -> None:
         ],
         season=2021,
     )
+    participation = parse_participation_payload(
+        [
+            {
+                "season": 2021,
+                "playerId": "1",
+                "player": "A Player",
+                "team": "Alpha",
+                "position": "QB",
+                "category": "passing",
+                "statType": "YDS",
+                "stat": "100",
+            },
+            {
+                "season": 2021,
+                "playerId": "2",
+                "player": "B Player",
+                "team": "Alpha",
+                "position": "WR",
+                "category": "receiving",
+                "statType": "REC",
+                "stat": "5",
+            },
+            {
+                "season": 2021,
+                "playerId": "4",
+                "player": "C Player",
+                "team": "Other State",
+                "position": "WR",
+                "category": "receiving",
+                "statType": "REC",
+                "stat": "5",
+            },
+            {
+                "season": 2021,
+                "playerId": "5",
+                "player": "F Unknown",
+                "team": "Beta",
+                "position": "ATH",
+                "category": "defensive",
+                "statType": "TOT",
+                "stat": "0",
+            },
+            {
+                "season": 2021,
+                "playerId": "6",
+                "player": "F Unknown",
+                "team": "Gamma",
+                "position": "ATH",
+                "category": "defensive",
+                "statType": "TOT",
+                "stat": "0",
+            },
+        ],
+        season=2021,
+    )
     audit = audit_transfer_records(
         records,
         usage,
         _team_rows(),
         cutoff=date(2025, 8, 15),
         aliases={"Old State": "Alpha"},
+        participation=participation,
     )
 
     by_player = {row["player_name"]: row for row in audit["join_rows"]}
@@ -144,25 +210,26 @@ def test_audit_is_explicit_about_aliases_ambiguity_and_normalization() -> None:
     assert by_player["C Player"]["d5_resolution_category"] == D5_CATEGORY_FAILURE
     assert by_player["E Defender"]["d5_resolution_category"] == D5_CATEGORY_ZERO
     assert by_player["F Unknown"]["d5_resolution_category"] == D5_CATEGORY_UNDETERMINED
+    assert by_player["G NoStats"]["d5_resolution_category"] == D5_CATEGORY_ZERO
     assert by_player["D Player"]["in_model_relevant_population"] is False
 
     season = audit["season_rows"][0]
-    assert season["incoming_fbs_transfers"] == 5
+    assert season["incoming_fbs_transfers"] == 6
     assert season["incoming_fbs_with_alias_successful_join"] == 1
     assert season["ambiguous_joins"] == 1
     assert season["d5_applicable_transfers"] == 3
     assert season["d5_successfully_resolved"] == 1
-    assert season["d5_legitimate_zero_or_non_applicable"] == 1
+    assert season["d5_legitimate_zero_or_non_applicable"] == 2
     assert season["d5_resolution_failures"] == 2
     assert season["d5_applicability_unknown"] == 1
-    assert season["d5_resolved_rate_among_determined"] == pytest.approx(0.5)
+    assert season["d5_resolved_rate_among_determined"] == pytest.approx(0.6)
     assert season["d5_resolution_rate_among_applicable"] == pytest.approx(1 / 3)
     assert season["usage_weighted_join_coverage_proxy"] == pytest.approx(0.5 / 1.8)
     assert len(audit["unmatched_rows"]) == 3
 
     beta = next(row for row in audit["team_feature_rows"] if row["team_id"] == "2")
     assert beta["feature_coverage_status"] == "partial"
-    assert beta["d5_legitimate_zero_or_non_applicable_count"] == 1
+    assert beta["d5_legitimate_zero_or_non_applicable_count"] == 2
     assert beta["unmatched_incoming_count"] == 2
     assert beta["undetermined_incoming_count"] == 1
     assert beta["observed_incoming_prior_offensive_usage"] == pytest.approx(0.5)

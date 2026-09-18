@@ -1,4 +1,4 @@
-"""Acquire raw CFBD transfer and player-usage payloads for issue #91.
+"""Acquire raw CFBD transfer, usage, and prior-participation payloads for issue #91.
 
 The response bytes are stored unchanged under ``data/raw``.  Normalization and
 feature construction happen in ``investigate_transfer_roster_continuity.py``;
@@ -23,6 +23,7 @@ API = "https://api.collegefootballdata.com"
 ENDPOINTS = {
     "portal": "/player/portal",
     "usage": "/player/usage",
+    "stats": "/stats/player/season",
 }
 
 
@@ -106,6 +107,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--portal-end", type=int, default=2025)
     parser.add_argument("--usage-start", type=int, default=2020)
     parser.add_argument("--usage-end", type=int, default=2024)
+    parser.add_argument("--stats-start", type=int, default=2020)
+    parser.add_argument("--stats-end", type=int, default=2024)
     parser.add_argument("--refresh", action="store_true")
     return parser.parse_args()
 
@@ -115,7 +118,11 @@ def main() -> None:
     api_key = os.environ.get("CFBD_API_KEY")
     if not api_key:
         raise RuntimeError("CFBD_API_KEY is not configured")
-    if args.portal_start > args.portal_end or args.usage_start > args.usage_end:
+    if (
+        args.portal_start > args.portal_end
+        or args.usage_start > args.usage_end
+        or args.stats_start > args.stats_end
+    ):
         raise ValueError("start seasons must not exceed end seasons")
     results: list[dict[str, object]] = []
     failures: list[dict[str, object]] = []
@@ -123,6 +130,7 @@ def main() -> None:
         for kind, start, end in (
             ("portal", args.portal_start, args.portal_end),
             ("usage", args.usage_start, args.usage_end),
+            ("stats", args.stats_start, args.stats_end),
         ):
             for season in range(start, end + 1):
                 try:
@@ -144,8 +152,10 @@ def main() -> None:
         "source": API,
         "portal_endpoint": ENDPOINTS["portal"],
         "usage_endpoint": ENDPOINTS["usage"],
+        "stats_endpoint": ENDPOINTS["stats"],
         "portal_seasons": [args.portal_start, args.portal_end],
         "usage_seasons": [args.usage_start, args.usage_end],
+        "stats_seasons": [args.stats_start, args.stats_end],
         "raw_payloads_unchanged": True,
         "results": results,
         "failures": failures,

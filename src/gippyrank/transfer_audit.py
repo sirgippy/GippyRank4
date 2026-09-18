@@ -17,6 +17,7 @@ rather than treating it as full feature coverage.
 from __future__ import annotations
 
 import csv
+import re
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
@@ -43,6 +44,10 @@ D5_CATEGORY_RESOLVED = "applicable_prior_offensive_usage_successfully_resolved"
 D5_CATEGORY_ZERO = "legitimate_zero_or_non_applicable_prior_offensive_usage"
 D5_CATEGORY_FAILURE = "should_have_recoverable_offensive_usage_but_resolution_failed"
 D5_CATEGORY_UNDETERMINED = "cannot_determine_applicability"
+PARTICIPATION_POSITIVE = "positive_prior_offensive_participation"
+PARTICIPATION_ZERO = "no_prior_offensive_participation"
+PARTICIPATION_UNKNOWN = "prior_participation_unknown"
+OFFENSIVE_STAT_CATEGORIES = {"passing", "rushing", "receiving"}
 
 
 @dataclass(frozen=True)
@@ -59,6 +64,20 @@ class TeamResolution:
     @property
     def matched(self) -> bool:
         return self.team_id is not None
+
+
+@dataclass(frozen=True)
+class ParticipationRecord:
+    """One raw player-season-stat row used as independent participation evidence."""
+
+    season: int
+    player_name: str
+    team: str
+    position: str | None
+    category: str
+    stat_type: str
+    stat_value: str | None
+    player_id: str | None = None
 
 
 class TeamResolver:
@@ -169,6 +188,41 @@ def read_team_aliases(path: Path | None) -> dict[str | tuple[int, str], str]:
     return aliases
 
 
+def parse_participation_payload(
+    payload: Iterable[Mapping[str, Any]], *, season: int | None = None
+) -> list[ParticipationRecord]:
+    """Parse CFBD player-season stats without collapsing raw stat categories."""
+    result: list[ParticipationRecord] = []
+    for item in payload:
+        raw_season = item.get("season")
+        record_season = int(raw_season) if raw_season not in (None, "") else season
+        if record_season is None:
+            raise ValueError("player-stat record has no season")
+        if season is not None and record_season != season:
+            raise ValueError("player-stat season disagrees with requested season")
+        result.append(
+            ParticipationRecord(
+                season=record_season,
+                player_name=str(item.get("player") or item.get("name") or "").strip(),
+                team=str(item.get("team") or "").strip(),
+                position=(
+                    str(item["position"]).strip() if item.get("position") else None
+                ),
+                category=str(item.get("category") or "").strip().casefold(),
+                stat_type=str(item.get("statType") or "").strip().casefold(),
+                stat_value=(
+                    str(item["stat"]).strip() if item.get("stat") is not None else None
+                ),
+                player_id=(
+                    str(item.get("playerId") or item.get("id")).strip()
+                    if item.get("playerId") or item.get("id")
+                    else None
+                ),
+            )
+        )
+    return result
+
+
 def _raw_player_name(value: str | None) -> str:
     if not value:
         return ""
@@ -198,6 +252,101 @@ def _usage_indexes(usage: Sequence[UsageRecord]) -> dict[str, Any]:
         ].append(index)
         by_name[(item.season, normalized_player)].append(index)
     return {"by_key": by_key, "by_raw_key": by_raw_key, "by_name": by_name}
+
+
+def _participation_indexes(
+    participation: Sequence[ParticipationRecord],
+) -> dict[str, Any]:
+    by_key: defaultdict[tuple[int, str, str], list[int]] = defaultdict(list)
+    by_name: defaultdict[tuple[int, str], list[int]] = defaultdict(list)
+    for index, item in enumerate(participation):
+        key = (
+            item.season,
+            normalize_team_name(item.team),
+            normalize_player_name(item.player_name),
+        )
+        by_key[key].append(index)
+        by_name[(item.season, normalize_player_name(item.player_name))].append(index)
+    return {"by_key": by_key, "by_name": by_name}
+
+
+def _stat_has_positive_value(value: str | None) -> bool:
+    if value in (None, ""):
+        return False
+    numbers = re.findall(r"[-+]?\d+(?:\.\d+)?", value.replace(",", ""))
+    return any(float(number) > 0 for number in numbers)
+
+
+def _participation_evidence(
+    record: TransferRecord,
+    source_resolution: TeamResolution,
+    participation: Sequence[ParticipationRecord],
+    indexes: Mapping[str, Any],
+    participation_seasons: set[int],
+) -> tuple[str, str, str, int]:
+    """Find independent prior offensive-participation evidence for one transfer."""
+    prior_season = record.season - 1
+    if prior_season not in participation_seasons:
+        return (
+            PARTICIPATION_UNKNOWN,
+            "prior_participation_source_not_available",
+            "none",
+            0,
+        )
+    if not record.origin or not record.player_name:
+        return PARTICIPATION_UNKNOWN, "missing_source_or_player_identity", "none", 0
+    normalized_player = normalize_player_name(record.player_name)
+    candidates: list[int] = []
+    method = "none"
+    for team_name, candidate_method in _team_name_candidates(record, source_resolution):
+        found = indexes["by_key"].get((prior_season, team_name, normalized_player), [])
+        if found:
+            candidates = list(found)
+            method = f"{candidate_method}_participation_stats"
+            break
+    if not candidates:
+        same_name = indexes["by_name"].get((prior_season, normalized_player), [])
+        teams = {normalize_team_name(participation[index].team) for index in same_name}
+        player_ids = {
+            participation[index].player_id
+            for index in same_name
+            if participation[index].player_id
+        }
+        if len(teams) == 1 or len(player_ids) == 1:
+            candidates = list(same_name)
+            method = "unique_player_name_participation_stats"
+        elif same_name:
+            return (
+                PARTICIPATION_UNKNOWN,
+                "ambiguous_player_name_participation_stats",
+                "none",
+                len(same_name),
+            )
+    if not candidates:
+        return (
+            PARTICIPATION_ZERO,
+            "no_prior_participation_record",
+            "none",
+            0,
+        )
+    has_positive_offense = any(
+        participation[index].category in OFFENSIVE_STAT_CATEGORIES
+        and _stat_has_positive_value(participation[index].stat_value)
+        for index in candidates
+    )
+    if has_positive_offense:
+        return (
+            PARTICIPATION_POSITIVE,
+            "positive_prior_offensive_stat",
+            method,
+            len(candidates),
+        )
+    return (
+        PARTICIPATION_ZERO,
+        "identity_found_without_positive_offensive_stat",
+        method,
+        len(candidates),
+    )
 
 
 def _unique_ints(values: Iterable[int]) -> list[int]:
@@ -315,11 +464,11 @@ def _usage_position_applicability(
 
 def _classify_d5(
     record: TransferRecord,
-    source_resolution: TeamResolution,
     usage: Sequence[UsageRecord],
     usage_indexes: Sequence[int],
     usage_join_status: str,
-    usage_seasons: set[int],
+    participation_status: str,
+    participation_reason: str,
 ) -> tuple[str, str, str, float | None]:
     """Classify a transfer against D5's offensive-usage semantic requirement."""
     portal_kind, portal_reason = _position_applicability(record.position)
@@ -345,26 +494,30 @@ def _classify_d5(
             0.0,
         )
 
+    if participation_status == PARTICIPATION_POSITIVE:
+        return (
+            D5_APPLICABLE,
+            f"{portal_reason}; {participation_reason}; {usage_join_status}",
+            D5_CATEGORY_FAILURE,
+            None,
+        )
+    if participation_status == PARTICIPATION_ZERO:
+        return (
+            D5_NON_APPLICABLE,
+            participation_reason,
+            D5_CATEGORY_ZERO,
+            0.0,
+        )
     if portal_kind == D5_NON_APPLICABLE:
         return D5_NON_APPLICABLE, portal_reason, D5_CATEGORY_ZERO, 0.0
     if portal_kind == D5_UNKNOWN and usage_kind != D5_UNKNOWN:
         portal_kind, portal_reason = usage_kind, usage_reason
     if portal_kind == D5_UNKNOWN:
         return D5_UNKNOWN, portal_reason, D5_CATEGORY_UNDETERMINED, None
-    if (
-        record.season - 1 not in usage_seasons
-        or source_resolution.match_method == "missing_name"
-    ):
-        return (
-            portal_kind,
-            "required_usage_source_not_available",
-            D5_CATEGORY_UNDETERMINED,
-            None,
-        )
     return (
-        portal_kind,
-        f"{portal_reason}; {usage_join_status}",
-        D5_CATEGORY_FAILURE,
+        D5_UNKNOWN,
+        f"{portal_reason}; {participation_reason}",
+        D5_CATEGORY_UNDETERMINED,
         None,
     )
 
@@ -402,6 +555,7 @@ def audit_transfer_records(
     *,
     cutoff: date,
     aliases: Mapping[str | tuple[int, str], str] | None = None,
+    participation: Iterable[ParticipationRecord] | None = None,
 ) -> dict[str, Any]:
     """Audit player joins, team mappings, and usage-weighted coverage.
 
@@ -413,10 +567,12 @@ def audit_transfer_records(
     """
     record_list = list(records)
     usage_list = list(usage)
+    participation_list = list(participation or ())
     team_list = [dict(row) for row in team_rows]
     resolver = TeamResolver(team_list, aliases)
     indexes = _usage_indexes(usage_list)
-    usage_seasons = {item.season for item in usage_list}
+    participation_indexes = _participation_indexes(participation_list)
+    participation_seasons = {item.season for item in participation_list}
     by_portal_key: Counter[tuple[int, str, str]] = Counter(
         (
             item.season,
@@ -451,6 +607,18 @@ def audit_transfer_records(
                 [],
                 False,
             )
+        (
+            participation_status,
+            participation_reason,
+            participation_method,
+            participation_record_count,
+        ) = _participation_evidence(
+            record,
+            source,
+            participation_list,
+            participation_indexes,
+            participation_seasons,
+        )
         prior_usage = (
             usage_list[usage_indexes[0]].overall_usage
             if status == "joined" and len(usage_indexes) == 1
@@ -463,11 +631,11 @@ def audit_transfer_records(
             d5_feature_value,
         ) = _classify_d5(
             record,
-            source,
             usage_list,
             usage_indexes,
             status,
-            usage_seasons,
+            participation_status,
+            participation_reason,
         )
         row: Row = {
             "portal_index": portal_index,
@@ -495,6 +663,10 @@ def audit_transfer_records(
             "usage_join_status": status,
             "usage_join_method": join_method,
             "normalization_changed_match": normalization_rescue,
+            "prior_participation_status": participation_status,
+            "prior_participation_reason": participation_reason,
+            "prior_participation_method": participation_method,
+            "prior_participation_record_count": participation_record_count,
             "prior_usage": prior_usage,
             "incoming_prior_offensive_usage": prior_usage,
             "d5_applicability": d5_applicability,
@@ -592,6 +764,14 @@ def audit_transfer_records(
         ),
         "usage_normalized_name_collisions": _collision_summary(
             usage_list,
+            key=lambda item: (
+                item.season,
+                normalize_team_name(item.team),
+                normalize_player_name(item.player_name),
+            ),
+        ),
+        "participation_normalized_name_collisions": _collision_summary(
+            participation_list,
             key=lambda item: (
                 item.season,
                 normalize_team_name(item.team),
@@ -700,6 +880,18 @@ def _season_join_rows(
                 ],
                 "d5_resolution_failures": category_counts[D5_CATEGORY_FAILURE],
                 "d5_applicability_unknown": category_counts[D5_CATEGORY_UNDETERMINED],
+                "prior_participation_positive": sum(
+                    row["prior_participation_status"] == PARTICIPATION_POSITIVE
+                    for row in relevant
+                ),
+                "prior_participation_zero": sum(
+                    row["prior_participation_status"] == PARTICIPATION_ZERO
+                    for row in relevant
+                ),
+                "prior_participation_unknown": sum(
+                    row["prior_participation_status"] == PARTICIPATION_UNKNOWN
+                    for row in relevant
+                ),
                 "d5_resolved_rate_among_determined": (
                     (
                         category_counts[D5_CATEGORY_RESOLVED]
@@ -1069,6 +1261,12 @@ def cutoff_safety_assessment() -> list[Row]:
             "evidence": "Usage is a prior-season outcome, but the cross-endpoint name join is not an archived transfer roster join.",
         },
         {
+            "field": "prior-season offensive participation",
+            "required_for_model": True,
+            "classification": "retrospective oracle only",
+            "evidence": "Independent player-season stats are used to distinguish positive prior participation, legitimate zero, and undetermined applicability before classifying a missing usage row.",
+        },
+        {
             "field": "position",
             "required_for_model": False,
             "classification": "retrospective oracle only",
@@ -1111,8 +1309,17 @@ def source_inventory() -> list[Row]:
             "production_assessment": "supporting incoming prior offensive usage source after deterministic identity resolution",
         },
         {
+            "source": "CFBD /stats/player/season",
+            "fields": "season, playerId, player, team, position, category, statType, stat",
+            "player_identifier": "stable within stats endpoint, not shared by portal endpoint",
+            "historical_depth": "2020–2024 fetched for this audit",
+            "timestamp_semantics": "season-wide prior player statistics; not a transfer-time roster snapshot",
+            "reproducibility": "raw response bytes plus retrieval sidecar hash",
+            "production_assessment": "independent prior-participation evidence used before calling a missing offensive usage row a D5 failure",
+        },
+        {
             "source": "repository-managed preseason snapshot process",
-            "fields": "raw portal and usage payloads, endpoint, parameters, retrieval timestamp, SHA-256",
+            "fields": "raw portal, usage, and player-stats payloads, endpoint, parameters, retrieval timestamp, SHA-256",
             "player_identifier": "portal ID remains unavailable; exact name + source-team fallback is required",
             "historical_depth": "future seasons from process start; historical reconstruction remains retrospective",
             "timestamp_semantics": "retrieval timestamp proves when GippyRank captured the response, not when CFBD first knew a destination",
@@ -1125,8 +1332,8 @@ def source_inventory() -> list[Row]:
 def snapshot_strategy() -> Row:
     return {
         "steps": [
-            "On or before the configured preseason cutoff, fetch each required portal and prior-usage season response.",
-            "Store response bytes unchanged under data/raw/cfbd/preseason/transfers/{portal,usage}/.",
+            "On or before the configured preseason cutoff, fetch each required portal, prior-usage, and prior-player-stats season response.",
+            "Store response bytes unchanged under data/raw/cfbd/preseason/transfers/{portal,usage,stats}/.",
             "Write endpoint, query parameters, retrieval timestamp, record count, and SHA-256 in a sidecar.",
             "Never overwrite a prior season snapshot; refresh only into a new explicitly named snapshot when source semantics require it.",
             "Run this audit and derive transfer features only from the frozen snapshot, with explicit aliases and fail-closed ambiguous joins.",

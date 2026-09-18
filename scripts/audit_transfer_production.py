@@ -17,8 +17,10 @@ from pathlib import Path
 from typing import Any
 
 from gippyrank.transfer_audit import (
+    ParticipationRecord,
     audit_transfer_records,
     cutoff_safety_assessment,
+    parse_participation_payload,
     read_team_aliases,
     snapshot_strategy,
     source_inventory,
@@ -84,16 +86,25 @@ def _load_team_rows(path: Path) -> list[dict[str, str]]:
 def _load_raw(
     raw_root: Path,
 ) -> tuple[
-    list[TransferRecord], list[UsageRecord], set[int], set[int], list[dict[str, Any]]
+    list[TransferRecord],
+    list[UsageRecord],
+    list[ParticipationRecord],
+    set[int],
+    set[int],
+    set[int],
+    list[dict[str, Any]],
 ]:
     records: list[TransferRecord] = []
     usage: list[UsageRecord] = []
+    participation: list[ParticipationRecord] = []
     portal_seasons: set[int] = set()
     usage_seasons: set[int] = set()
+    participation_seasons: set[int] = set()
     source_files: list[dict[str, Any]] = []
     for kind, parser, seasons in (
         ("portal", parse_transfer_payload, portal_season_paths(raw_root)),
         ("usage", parse_usage_payload, usage_season_paths(raw_root)),
+        ("stats", parse_participation_payload, stats_season_paths(raw_root)),
     ):
         for path in seasons:
             season = int(path.stem)
@@ -105,8 +116,12 @@ def _load_raw(
                 records.extend(parsed)
                 portal_seasons.add(season)
             else:
-                usage.extend(parsed)
-                usage_seasons.add(season)
+                if kind == "usage":
+                    usage.extend(parsed)
+                    usage_seasons.add(season)
+                else:
+                    participation.extend(parsed)
+                    participation_seasons.add(season)
             sidecar = path.with_name(f"{path.name}.provenance.json")
             source_files.append(
                 {
@@ -128,7 +143,19 @@ def _load_raw(
         )
     if not usage:
         raise FileNotFoundError(f"no usage JSON files found under {raw_root / 'usage'}")
-    return records, usage, portal_seasons, usage_seasons, source_files
+    if not participation:
+        raise FileNotFoundError(
+            f"no player-stat JSON files found under {raw_root / 'stats'}"
+        )
+    return (
+        records,
+        usage,
+        participation,
+        portal_seasons,
+        usage_seasons,
+        participation_seasons,
+        source_files,
+    )
 
 
 def portal_season_paths(raw_root: Path) -> list[Path]:
@@ -143,6 +170,14 @@ def usage_season_paths(raw_root: Path) -> list[Path]:
     return sorted(
         path
         for path in (raw_root / "usage").glob("*.json")
+        if path.stem.isdigit() and not path.name.endswith(".provenance.json")
+    )
+
+
+def stats_season_paths(raw_root: Path) -> list[Path]:
+    return sorted(
+        path
+        for path in (raw_root / "stats").glob("*.json")
         if path.stem.isdigit() and not path.name.endswith(".provenance.json")
     )
 
@@ -282,6 +317,11 @@ def render_report(
             "audit": "D5 applicability categories, identity resolution, and usage-weighted proxy",
         },
         {
+            "field": "prior-season offensive participation",
+            "model": "yes for applicability audit",
+            "audit": "independent player-season stats check before failure classification",
+        },
+        {
             "field": "position",
             "model": "only if representation needs it",
             "audit": "position-group coverage",
@@ -309,10 +349,10 @@ def render_report(
         "",
         (
             "**Feasible only with a new snapshot pipeline and explicit identity controls.** "
-            "The audited CFBD responses contain useful incoming prior offensive usage signal, but they are retrospective endpoint responses. Final destinations, publication timing, and rating revisions are not proven as-of the historical preseason cutoff. The current portal payload also has no player identifier shared with `/player/usage`, so the production fallback must be deterministic name + source-team matching that fails closed on ambiguity. D5 feasibility is driven by applicable-usage resolution failures and transfers whose applicability cannot be determined; defensive or special-team transfers without offensive usage are not counted as identity failures."
+            "The audited CFBD responses contain useful incoming prior offensive usage signal, but they are retrospective endpoint responses. Final destinations, publication timing, and rating revisions are not proven as-of the historical preseason cutoff. The current portal payload also has no player identifier shared with `/player/usage`, so the production fallback must be deterministic name + source-team matching that fails closed on ambiguity. D5 feasibility is driven by applicable-usage resolution failures and transfers whose applicability cannot be determined; defensive or special-team transfers without offensive usage are not counted as identity failures, and an offensive portal position alone is not enough to establish a failure."
         ),
         "",
-        "The selected issue-91 representation is `total RP + incoming prior transfer usage`; this audit operationalizes D5 as `usage.overall` for incoming transfers where offensive applicability is established. Each transfer is classified as successfully resolved applicable usage, legitimate zero/non-applicable usage, failed resolution of recoverable offensive usage, or undetermined applicability. It does not redesign or promote the Context model.",
+        "The selected issue-91 representation is `total RP + incoming prior transfer usage`; this audit operationalizes D5 as `usage.overall` for incoming transfers where offensive applicability is established. Each transfer is classified as successfully resolved applicable usage, legitimate zero/non-applicable usage, failed resolution of recoverable offensive usage, or undetermined applicability. A missing offensive usage row is a failure only when independent prior-season player stats show positive offensive participation; a complete stats snapshot with no matching player-season record, or an identity with no positive offensive stat, is legitimate zero, while missing or ambiguous participation identity evidence is undetermined. It does not redesign or promote the Context model.",
         "",
         "## Exact data requirements",
         "",
@@ -325,7 +365,7 @@ def render_report(
             ],
         ),
         "",
-        "Fields such as rating and stars are useful for diagnosing important unresolved D5 cases but are not required by D5. Position is used only to distinguish offensive applicability from defensive/special-team non-applicability. Scholarship status is not available from the selected endpoints.",
+        "Fields such as rating and stars are useful for diagnosing important unresolved D5 cases but are not required by D5. Portal position is not sufficient to classify a missing offensive usage row: the audit checks independent prior-season player stats, then classifies positive participation as a genuine resolution failure, no matching player-season record or an identity with no positive offensive stat as legitimate zero, and missing/ambiguous participation identity evidence as undetermined. Scholarship status is not available from the selected endpoints.",
         "",
         "## Player identity and join coverage",
         "",
@@ -350,6 +390,9 @@ def render_report(
                 ),
                 ("d5_resolution_failures", "D5 failures"),
                 ("d5_applicability_unknown", "D5 unknown"),
+                ("prior_participation_positive", "Prior offense"),
+                ("prior_participation_zero", "Prior zero"),
+                ("prior_participation_unknown", "Prior unknown"),
                 ("d5_resolved_rate_among_determined", "D5 valid rate"),
                 (
                     "d5_resolution_rate_among_applicable",
@@ -498,7 +541,15 @@ def run(
     cutoff_month: int = 8,
     cutoff_day: int = 15,
 ) -> dict[str, Any]:
-    records, usage, portal_seasons, usage_seasons, source_files = _load_raw(raw_root)
+    (
+        records,
+        usage,
+        participation,
+        portal_seasons,
+        usage_seasons,
+        participation_seasons,
+        source_files,
+    ) = _load_raw(raw_root)
     team_rows = _load_team_rows(team_file)
     scoped_team_rows = [
         row for row in team_rows if int(row["season"]) in portal_seasons
@@ -511,6 +562,7 @@ def run(
         scoped_team_rows,
         cutoff=cutoff,
         aliases=aliases,
+        participation=participation,
     )
     cutoff_rows = cutoff_safety_assessment()
     inventory_rows = source_inventory()
@@ -526,8 +578,10 @@ def run(
         "cutoff": f"season-relative {cutoff_month:02d}-{cutoff_day:02d}",
         "portal_seasons": sorted(portal_seasons),
         "usage_seasons": sorted(usage_seasons),
+        "participation_seasons": sorted(participation_seasons),
         "portal_record_count": len(records),
         "usage_record_count": len(usage),
+        "participation_record_count": len(participation),
         "explicit_alias_count": len(aliases),
         "field_requirements": cutoff_rows,
         "source_inventory": inventory_rows,
@@ -540,6 +594,7 @@ def run(
         "collision_summary": {
             "portal": audit["portal_normalized_name_collisions"],
             "usage": audit["usage_normalized_name_collisions"],
+            "participation": audit["participation_normalized_name_collisions"],
         },
     }
     output.mkdir(parents=True, exist_ok=True)

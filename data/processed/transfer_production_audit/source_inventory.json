@@ -18,7 +18,16 @@
     "timestamp_semantics": "season-wide prior offensive usage; not a transfer-time roster snapshot"
   },
   {
-    "fields": "raw portal and usage payloads, endpoint, parameters, retrieval timestamp, SHA-256",
+    "fields": "season, playerId, player, team, position, category, statType, stat",
+    "historical_depth": "2020\u20132024 fetched for this audit",
+    "player_identifier": "stable within stats endpoint, not shared by portal endpoint",
+    "production_assessment": "independent prior-participation evidence used before calling a missing offensive usage row a D5 failure",
+    "reproducibility": "raw response bytes plus retrieval sidecar hash",
+    "source": "CFBD /stats/player/season",
+    "timestamp_semantics": "season-wide prior player statistics; not a transfer-time roster snapshot"
+  },
+  {
+    "fields": "raw portal, usage, and player-stats payloads, endpoint, parameters, retrieval timestamp, SHA-256",
     "historical_depth": "future seasons from process start; historical reconstruction remains retrospective",
     "player_identifier": "portal ID remains unavailable; exact name + source-team fallback is required",
     "production_assessment": "recommended minimal path for future production feasibility",
