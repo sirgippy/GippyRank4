@@ -12,10 +12,10 @@
     "fields": "season, id, name, team, position, conference, usage.overall and component usage",
     "historical_depth": "2020\u20132024 fetched for this audit",
     "player_identifier": "stable within usage endpoint, not shared by portal endpoint",
-    "production_assessment": "supporting prior-production source after deterministic identity resolution",
+    "production_assessment": "supporting incoming prior offensive usage source after deterministic identity resolution",
     "reproducibility": "raw response bytes plus retrieval sidecar hash",
     "source": "CFBD /player/usage",
-    "timestamp_semantics": "season-wide prior usage; not a transfer-time roster snapshot"
+    "timestamp_semantics": "season-wide prior offensive usage; not a transfer-time roster snapshot"
   },
   {
     "fields": "raw portal and usage payloads, endpoint, parameters, retrieval timestamp, SHA-256",

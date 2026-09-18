@@ -187,8 +187,26 @@ def _aggregate_team_rows(rows: list[Mapping[str, Any]]) -> list[dict[str, Any]]:
                 "partial": sum(
                     row["feature_coverage_status"] == "partial" for row in scoped
                 ),
+                "unresolved_applicable": sum(
+                    row["feature_coverage_status"]
+                    == "unresolved_applicable_offensive_usage"
+                    for row in scoped
+                ),
+                "undetermined": sum(
+                    row["feature_coverage_status"] == "undetermined_applicability"
+                    for row in scoped
+                ),
+                "unresolved_and_undetermined": sum(
+                    row["feature_coverage_status"] == "unresolved_and_undetermined"
+                    for row in scoped
+                ),
                 "no_usable": sum(
-                    row["feature_coverage_status"] == "no_usable_transfer_production"
+                    row["feature_coverage_status"]
+                    in {
+                        "unresolved_applicable_offensive_usage",
+                        "undetermined_applicability",
+                        "unresolved_and_undetermined",
+                    }
                     for row in scoped
                 ),
                 "no_incoming": sum(
@@ -196,13 +214,16 @@ def _aggregate_team_rows(rows: list[Mapping[str, Any]]) -> list[dict[str, Any]]:
                     for row in scoped
                 ),
                 "mean_transfers": (
-                    sum(float(row["incoming_transfer_count"]) for row in scoped)
+                    sum(float(row["d5_applicable_transfer_count"]) for row in scoped)
                     / len(scoped)
                     if scoped
                     else None
                 ),
                 "mean_observed_usage": (
-                    sum(float(row["observed_incoming_prior_usage"]) for row in scoped)
+                    sum(
+                        float(row["observed_incoming_prior_offensive_usage"])
+                        for row in scoped
+                    )
                     / len(scoped)
                     if scoped
                     else None
@@ -256,9 +277,9 @@ def render_report(
             "audit": "season-relative inclusion rule",
         },
         {
-            "field": "prior-season usage",
+            "field": "incoming prior offensive usage",
             "model": "yes",
-            "audit": "exact, alias, missing, ambiguous, and usage-weighted coverage",
+            "audit": "D5 applicability categories, identity resolution, and usage-weighted proxy",
         },
         {
             "field": "position",
@@ -267,7 +288,7 @@ def render_report(
         },
         {
             "field": "rating / stars",
-            "model": "no for C10; audit proxy only",
+            "model": "no for D5; audit proxy only",
             "audit": "unmatched prioritization",
         },
         {
@@ -288,10 +309,10 @@ def render_report(
         "",
         (
             "**Feasible only with a new snapshot pipeline and explicit identity controls.** "
-            "The audited CFBD responses contain useful prior-production signal, but they are retrospective endpoint responses. Final destinations, publication timing, and rating revisions are not proven as-of the historical preseason cutoff. The current portal payload also has no player identifier shared with `/player/usage`, so the production fallback must be deterministic name + source-team matching that fails closed on ambiguity."
+            "The audited CFBD responses contain useful incoming prior offensive usage signal, but they are retrospective endpoint responses. Final destinations, publication timing, and rating revisions are not proven as-of the historical preseason cutoff. The current portal payload also has no player identifier shared with `/player/usage`, so the production fallback must be deterministic name + source-team matching that fails closed on ambiguity. D5 feasibility is driven by applicable-usage resolution failures and transfers whose applicability cannot be determined; defensive or special-team transfers without offensive usage are not counted as identity failures."
         ),
         "",
-        "The selected issue-91 representation is `total RP + incoming prior transfer production`; this audit therefore focuses on incoming destination-resolved transfers and prior-season `usage.overall`. It does not redesign or promote the Context model.",
+        "The selected issue-91 representation is `total RP + incoming prior transfer usage`; this audit operationalizes D5 as `usage.overall` for incoming transfers where offensive applicability is established. Each transfer is classified as successfully resolved applicable usage, legitimate zero/non-applicable usage, failed resolution of recoverable offensive usage, or undetermined applicability. It does not redesign or promote the Context model.",
         "",
         "## Exact data requirements",
         "",
@@ -304,7 +325,7 @@ def render_report(
             ],
         ),
         "",
-        "Fields such as rating, stars, and position are useful for diagnosing important unmatched cases but are not required by C10. Scholarship status is not available from the selected endpoints.",
+        "Fields such as rating and stars are useful for diagnosing important unresolved D5 cases but are not required by D5. Position is used only to distinguish offensive applicability from defensive/special-team non-applicability. Scholarship status is not available from the selected endpoints.",
         "",
         "## Player identity and join coverage",
         "",
@@ -321,6 +342,19 @@ def render_report(
                     "incoming_from_non_fbs_or_unrecognized_source",
                     "Non-FBS/unrecognized source",
                 ),
+                ("d5_applicable_transfers", "D5 applicable"),
+                ("d5_successfully_resolved", "D5 resolved"),
+                (
+                    "d5_legitimate_zero_or_non_applicable",
+                    "D5 zero/non-applicable",
+                ),
+                ("d5_resolution_failures", "D5 failures"),
+                ("d5_applicability_unknown", "D5 unknown"),
+                ("d5_resolved_rate_among_determined", "D5 valid rate"),
+                (
+                    "d5_resolution_rate_among_applicable",
+                    "Applicable resolution rate",
+                ),
                 ("incoming_fbs_with_exact_successful_join", "Exact joins"),
                 ("incoming_fbs_with_alias_successful_join", "Alias joins"),
                 ("failed_prior_usage_joins", "Failed joins"),
@@ -331,11 +365,11 @@ def render_report(
             ],
         ),
         "",
-        "A raw record-count join rate is not enough. The usage-weighted proxy is `recoverable_unique_usage_mass / any_name_usage_mass`: the denominator is the unique prior-usage mass whose normalized player name appears in at least one in-scope transfer, while the numerator additionally requires a unique source-team/player join. It is the strongest reproducible identity-resolution proxy available from these endpoints, not a full-population denominator, because usage for a completely unmatched player is unobserved.",
+        "A raw record-count join rate is not enough. The usage-weighted proxy is `recoverable_unique_usage_mass / any_name_usage_mass` over D5-applicable transfers: the denominator is the unique prior offensive-usage mass whose normalized player name appears in at least one D5-applicable transfer, while the numerator additionally requires a unique source-team/player join. It is an applicable-D5 identity-resolution proxy, not overall D5 feature coverage or a full-population denominator, because usage for a completely unmatched player is unobserved.",
         "",
         "## High-value unmatched transfers",
         "",
-        "The full machine-readable list is `unmatched_high_value_transfers.csv`. Ranking uses rating, then stars, then QB status; it is a diagnostic ordering, not a model feature.",
+        "The full machine-readable list is `unmatched_high_value_transfers.csv`. It contains only D5 resolution failures or undetermined-applicability cases; legitimate zero/non-applicable defensive and special-team transfers are excluded. Ranking uses rating, then stars, then QB status; it is a diagnostic ordering, not a model feature.",
         "",
         *_markdown_table(
             unmatched[:25],
@@ -348,11 +382,13 @@ def render_report(
                 ("position", "Pos"),
                 ("rating", "Rating"),
                 ("stars", "Stars"),
+                ("d5_resolution_category", "D5 category"),
+                ("d5_applicability_reason", "Applicability"),
                 ("usage_join_status", "Failure"),
             ],
         ),
         "",
-        "Failure classes distinguish missing usage rows, source-team mismatches, usage rows without a numeric value, and ambiguous normalized joins. No fuzzy player match is applied.",
+        "Failure classes distinguish missing usage rows, source-team mismatches, usage rows without a numeric value, and ambiguous normalized joins. The D5 applicability category is retained alongside each identity result, and no fuzzy player match is applied.",
         "",
         "## Team identity audit",
         "",
@@ -416,15 +452,18 @@ def render_report(
                 ("partial", "Partial"),
                 ("no_usable", "No usable"),
                 ("no_incoming", "No incoming"),
-                ("mean_transfers", "Mean transfers"),
-                ("mean_observed_usage", "Mean joined usage"),
+                ("unresolved_applicable", "Applicable failures"),
+                ("undetermined", "Undetermined"),
+                ("unresolved_and_undetermined", "Both"),
+                ("mean_transfers", "Mean applicable transfers"),
+                ("mean_observed_usage", "Mean observed offensive usage"),
                 ("missingness_rate", "Missingness"),
             ],
         ),
         "",
-        "For each team-season, `unmatched_prior_usage_upper_bound` is the observed usage plus the unmatched incoming count multiplied by the maximum numeric overall usage in the prior usage payload. This is intentionally conservative and not imputed into the model. The complete team-season table is `team_feature_coverage.csv`.",
+        "For each team-season, `unresolved_prior_offensive_usage_upper_bound` equals observed incoming prior offensive usage plus the D5 resolution-failure count multiplied by the maximum numeric overall usage in the prior usage payload. `unmatched_prior_usage_upper_bound` is retained as the missing portion only; `undetermined_incoming_count` is reported separately because its applicability cannot be established. These bounds are intentionally conservative and are not imputed into the model. The complete team-season table is `team_feature_coverage.csv`.",
         "",
-        "Conference-stratified missingness is not reported as a numeric result because the canonical team-season feature table has no season-specific conference column. Competition level is FBS destination only; source level remains visible through mapping and join failure classes. Transfer-volume and roster-strength correlations are descriptive in `missingness_summary.json`.",
+        "Conference-stratified missingness is not reported as a numeric result because the canonical team-season feature table has no season-specific conference column. Competition level is FBS destination only; source level remains visible through mapping and join failure classes. Transfer-volume and roster-strength correlations are descriptive in `missingness_summary.json`, and missingness is based on applicable D5 failures or undetermined applicability rather than defensive/non-applicable transfers.",
         "",
         "## Stable-player-ID assessment",
         "",
@@ -438,7 +477,7 @@ def render_report(
         "- `player_join_coverage_by_season.csv` — record-count and usage-weighted join coverage.",
         "- `unmatched_high_value_transfers.csv` — all unmatched in-scope transfers in diagnostic priority order.",
         "- `team_mapping_by_season.csv` — every encountered origin/destination name and deterministic resolution.",
-        "- `team_feature_coverage.csv` — team-season completeness and unresolved-production bounds.",
+        "- `team_feature_coverage.csv` — team-season completeness and unresolved incoming offensive-usage bounds.",
         "- `player_join_records.csv` — row-level explanation for every portal record.",
         "- `cutoff_safety.json`, `source_inventory.json`, `snapshot_strategy.json`, `missingness_summary.json` — supporting audit decisions.",
         "",

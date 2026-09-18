@@ -7,10 +7,11 @@ ambiguous usage row.  Every row returned by the audit retains the reason a
 transfer was or was not usable.
 
 The usage-weighted metric is intentionally named a *recoverable-denominator
-proxy*.  A missing player is missing precisely the usage value needed for a
-full population-weighted denominator.  The proxy therefore uses unique usage
-rows that can be linked to at least one in-scope transfer, and reports that
-limitation alongside the number rather than treating it as full coverage.
+proxy*.  A missing player is missing precisely the incoming prior offensive
+usage value needed for a full population-weighted denominator.  The proxy
+therefore uses unique usage rows that can be linked to at least one in-scope,
+D5-applicable transfer, and reports that limitation alongside the number
+rather than treating it as full feature coverage.
 """
 
 from __future__ import annotations
@@ -34,6 +35,14 @@ from gippyrank.transfer_oracle import (
 )
 
 Row = dict[str, Any]
+
+D5_APPLICABLE = "applicable_prior_offensive_usage"
+D5_NON_APPLICABLE = "legitimate_zero_or_non_applicable"
+D5_UNKNOWN = "applicability_unknown"
+D5_CATEGORY_RESOLVED = "applicable_prior_offensive_usage_successfully_resolved"
+D5_CATEGORY_ZERO = "legitimate_zero_or_non_applicable_prior_offensive_usage"
+D5_CATEGORY_FAILURE = "should_have_recoverable_offensive_usage_but_resolution_failed"
+D5_CATEGORY_UNDETERMINED = "cannot_determine_applicability"
 
 
 @dataclass(frozen=True)
@@ -269,6 +278,97 @@ def _usage_match(
     return "no_usage_record", "none", [], normalization_rescue
 
 
+def _position_applicability(position: str | None) -> tuple[str, str]:
+    """Classify whether a portal position can contribute to D5."""
+    raw = str(position or "").strip().upper()
+    group = position_group(position)
+    if group in {"qb", "rb", "wr", "te", "ol"} or raw in {"FB", "H-BACK"}:
+        return D5_APPLICABLE, "offensive_portal_position"
+    if group in {"dl", "lb", "db", "st"} or raw in {
+        "DE",
+        "DT",
+        "NT",
+        "OLB",
+        "ILB",
+        "MLB",
+        "SS",
+        "FS",
+        "KR",
+        "PR",
+    }:
+        return D5_NON_APPLICABLE, "defensive_or_special_portal_position"
+    return D5_UNKNOWN, "missing_or_ambiguous_portal_position"
+
+
+def _usage_position_applicability(
+    usage: Sequence[UsageRecord], usage_indexes: Sequence[int]
+) -> tuple[str, str]:
+    kinds = [
+        _position_applicability(usage[index].position)[0] for index in usage_indexes
+    ]
+    if kinds and all(kind == D5_APPLICABLE for kind in kinds):
+        return D5_APPLICABLE, "offensive_usage_position"
+    if kinds and all(kind == D5_NON_APPLICABLE for kind in kinds):
+        return D5_NON_APPLICABLE, "defensive_or_special_usage_position"
+    return D5_UNKNOWN, "missing_or_mixed_usage_position"
+
+
+def _classify_d5(
+    record: TransferRecord,
+    source_resolution: TeamResolution,
+    usage: Sequence[UsageRecord],
+    usage_indexes: Sequence[int],
+    usage_join_status: str,
+    usage_seasons: set[int],
+) -> tuple[str, str, str, float | None]:
+    """Classify a transfer against D5's offensive-usage semantic requirement."""
+    portal_kind, portal_reason = _position_applicability(record.position)
+    usage_kind, usage_reason = _usage_position_applicability(usage, usage_indexes)
+    prior_usage = (
+        usage[usage_indexes[0]].overall_usage
+        if usage_join_status == "joined" and len(usage_indexes) == 1
+        else None
+    )
+
+    if usage_join_status == "joined" and prior_usage is not None:
+        if prior_usage > 0:
+            return (
+                D5_APPLICABLE,
+                "positive_numeric_usage_resolved",
+                D5_CATEGORY_RESOLVED,
+                prior_usage,
+            )
+        return (
+            portal_kind if portal_kind != D5_UNKNOWN else usage_kind,
+            "numeric_zero_usage",
+            D5_CATEGORY_ZERO,
+            0.0,
+        )
+
+    if portal_kind == D5_NON_APPLICABLE:
+        return D5_NON_APPLICABLE, portal_reason, D5_CATEGORY_ZERO, 0.0
+    if portal_kind == D5_UNKNOWN and usage_kind != D5_UNKNOWN:
+        portal_kind, portal_reason = usage_kind, usage_reason
+    if portal_kind == D5_UNKNOWN:
+        return D5_UNKNOWN, portal_reason, D5_CATEGORY_UNDETERMINED, None
+    if (
+        record.season - 1 not in usage_seasons
+        or source_resolution.match_method == "missing_name"
+    ):
+        return (
+            portal_kind,
+            "required_usage_source_not_available",
+            D5_CATEGORY_UNDETERMINED,
+            None,
+        )
+    return (
+        portal_kind,
+        f"{portal_reason}; {usage_join_status}",
+        D5_CATEGORY_FAILURE,
+        None,
+    )
+
+
 def _priority_key(row: Row) -> tuple[Any, ...]:
     rating = _optional_number(row.get("rating"))
     stars = _optional_number(row.get("stars"))
@@ -316,6 +416,7 @@ def audit_transfer_records(
     team_list = [dict(row) for row in team_rows]
     resolver = TeamResolver(team_list, aliases)
     indexes = _usage_indexes(usage_list)
+    usage_seasons = {item.season for item in usage_list}
     by_portal_key: Counter[tuple[int, str, str]] = Counter(
         (
             item.season,
@@ -355,6 +456,19 @@ def audit_transfer_records(
             if status == "joined" and len(usage_indexes) == 1
             else None
         )
+        (
+            d5_applicability,
+            d5_applicability_reason,
+            d5_category,
+            d5_feature_value,
+        ) = _classify_d5(
+            record,
+            source,
+            usage_list,
+            usage_indexes,
+            status,
+            usage_seasons,
+        )
         row: Row = {
             "portal_index": portal_index,
             "season": record.season,
@@ -382,6 +496,13 @@ def audit_transfer_records(
             "usage_join_method": join_method,
             "normalization_changed_match": normalization_rescue,
             "prior_usage": prior_usage,
+            "incoming_prior_offensive_usage": prior_usage,
+            "d5_applicability": d5_applicability,
+            "d5_applicability_reason": d5_applicability_reason,
+            "d5_resolution_category": d5_category,
+            "d5_feature_value": d5_feature_value,
+            "d5_unresolved": d5_category
+            in {D5_CATEGORY_FAILURE, D5_CATEGORY_UNDETERMINED},
             "prior_usage_record_count": len(usage_indexes),
             "portal_normalized_key_count": by_portal_key[
                 (
@@ -439,7 +560,7 @@ def audit_transfer_records(
     unmatched = [
         row
         for row in join_rows
-        if row["in_model_relevant_population"] and row["usage_join_status"] != "joined"
+        if row["in_model_relevant_population"] and row["d5_unresolved"]
     ]
     unmatched.sort(key=_priority_key)
     for rank, row in enumerate(unmatched, start=1):
@@ -504,6 +625,19 @@ def _season_join_rows(
     for season in seasons:
         rows = [row for row in join_rows if int(row["season"]) == season]
         relevant = [row for row in rows if row["in_model_relevant_population"]]
+        row_by_portal_index = {int(row["portal_index"]): row for row in relevant}
+
+        def d5_portal_indexes(
+            portal_indexes: Sequence[int],
+            row_by_portal_index: Mapping[int, Row] = row_by_portal_index,
+        ) -> list[int]:
+            return [
+                portal_index
+                for portal_index in portal_indexes
+                if row_by_portal_index.get(portal_index, {}).get("d5_applicability")
+                == D5_APPLICABLE
+            ]
+
         portal_collision_counts = Counter(
             (
                 normalize_team_name(str(row["origin"] or "")),
@@ -522,20 +656,21 @@ def _season_join_rows(
         source_usage_mass = sum(
             usage[index].overall_usage or 0.0
             for index, portal_indexes in usage_to_portal.items()
-            if portal_indexes and usage[index].season == season - 1
+            if d5_portal_indexes(portal_indexes) and usage[index].season == season - 1
         )
         unique_usage_mass = sum(
             usage[index].overall_usage or 0.0
             for index, portal_indexes in successful_usage_to_portal.items()
-            if portal_indexes
+            if d5_portal_indexes(portal_indexes)
             and usage[index].season == season - 1
-            and len(set(portal_indexes)) == 1
+            and len(set(d5_portal_indexes(portal_indexes))) == 1
         )
         any_name_usage_mass = sum(
             usage[index].overall_usage or 0.0
             for index, portal_indexes in any_name_usage_to_portal.items()
-            if portal_indexes and usage[index].season == season - 1
+            if d5_portal_indexes(portal_indexes) and usage[index].season == season - 1
         )
+        category_counts = Counter(row["d5_resolution_category"] for row in relevant)
         result.append(
             {
                 "season": season,
@@ -555,6 +690,40 @@ def _season_join_rows(
                 ),
                 "incoming_from_non_fbs_or_unrecognized_source": sum(
                     not bool(row["origin_team_id"]) for row in relevant
+                ),
+                "d5_applicable_transfers": sum(
+                    row["d5_applicability"] == D5_APPLICABLE for row in relevant
+                ),
+                "d5_successfully_resolved": category_counts[D5_CATEGORY_RESOLVED],
+                "d5_legitimate_zero_or_non_applicable": category_counts[
+                    D5_CATEGORY_ZERO
+                ],
+                "d5_resolution_failures": category_counts[D5_CATEGORY_FAILURE],
+                "d5_applicability_unknown": category_counts[D5_CATEGORY_UNDETERMINED],
+                "d5_resolved_rate_among_determined": (
+                    (
+                        category_counts[D5_CATEGORY_RESOLVED]
+                        + category_counts[D5_CATEGORY_ZERO]
+                    )
+                    / (
+                        category_counts[D5_CATEGORY_RESOLVED]
+                        + category_counts[D5_CATEGORY_ZERO]
+                        + category_counts[D5_CATEGORY_FAILURE]
+                    )
+                    if category_counts[D5_CATEGORY_RESOLVED]
+                    + category_counts[D5_CATEGORY_ZERO]
+                    + category_counts[D5_CATEGORY_FAILURE]
+                    else None
+                ),
+                "d5_resolution_rate_among_applicable": (
+                    category_counts[D5_CATEGORY_RESOLVED]
+                    / (
+                        category_counts[D5_CATEGORY_RESOLVED]
+                        + category_counts[D5_CATEGORY_FAILURE]
+                    )
+                    if category_counts[D5_CATEGORY_RESOLVED]
+                    + category_counts[D5_CATEGORY_FAILURE]
+                    else None
                 ),
                 "incoming_fbs_with_exact_successful_join": sum(
                     row["usage_join_status"] == "joined"
@@ -612,9 +781,10 @@ def _season_join_rows(
                 ),
                 "usage_weighted_denominator_definition": (
                     "unique numeric usage records whose normalized player name appears "
-                    "in at least one in-scope transfer; the numerator additionally "
+                    "in at least one D5-applicable transfer; the numerator additionally "
                     "requires a unique source-team/player join. This is a recoverable "
-                    "identity-resolution proxy, not a full-population denominator."
+                    "D5 identity-resolution proxy, not overall D5 feature coverage or "
+                    "a full-population denominator."
                 ),
             }
         )
@@ -628,7 +798,7 @@ def build_team_feature_coverage(
     *,
     covered_seasons: set[int],
 ) -> list[Row]:
-    """Build team-season completeness and unresolved-production bounds."""
+    """Build team-season completeness and unresolved offensive-usage bounds."""
     rows = [
         dict(row)
         for row in team_rows
@@ -649,24 +819,34 @@ def build_team_feature_coverage(
             and int(row["season"]) == season
             and row["destination_team_id"] == team_id
         ]
-        matched = [row for row in incoming if row["usage_join_status"] == "joined"]
+        category_counts = Counter(row["d5_resolution_category"] for row in incoming)
+        resolved = [
+            row
+            for row in incoming
+            if row["d5_resolution_category"] in {D5_CATEGORY_RESOLVED, D5_CATEGORY_ZERO}
+        ]
+        resolution_failures = category_counts[D5_CATEGORY_FAILURE]
+        applicability_unknown = category_counts[D5_CATEGORY_UNDETERMINED]
         if season not in covered_seasons:
             status = "portal_payload_missing"
         elif not incoming:
             status = "no_incoming_transfer"
-        elif len(matched) == len(incoming):
+        elif not resolution_failures and not applicability_unknown:
             status = "complete"
-        elif matched:
+        elif resolved:
             status = "partial"
+        elif resolution_failures and not applicability_unknown:
+            status = "unresolved_applicable_offensive_usage"
+        elif applicability_unknown and not resolution_failures:
+            status = "undetermined_applicability"
         else:
-            status = "no_usable_transfer_production"
+            status = "unresolved_and_undetermined"
         observed = sum(
-            float(row["prior_usage"])
-            for row in matched
-            if row["prior_usage"] is not None
+            float(row["d5_feature_value"])
+            for row in resolved
+            if row["d5_feature_value"] is not None
         )
-        unmatched_count = len(incoming) - len(matched)
-        upper_bound = unmatched_count * max_usage.get(season - 1, 1.0)
+        missing_upper_bound = resolution_failures * max_usage.get(season - 1, 1.0)
         result.append(
             {
                 "season": season,
@@ -675,18 +855,38 @@ def build_team_feature_coverage(
                 "team_name": team.get("team_name"),
                 "portal_payload_available": season in covered_seasons,
                 "incoming_transfer_count": len(incoming),
-                "joined_prior_usage_count": len(matched),
-                "unmatched_incoming_count": unmatched_count,
-                "observed_incoming_prior_usage": observed if matched else 0.0,
-                "unmatched_prior_usage_upper_bound": upper_bound
+                "d5_applicable_transfer_count": sum(
+                    row["d5_applicability"] == D5_APPLICABLE for row in incoming
+                ),
+                "d5_successfully_resolved_count": category_counts[D5_CATEGORY_RESOLVED],
+                "d5_legitimate_zero_or_non_applicable_count": category_counts[
+                    D5_CATEGORY_ZERO
+                ],
+                "d5_resolution_failure_count": resolution_failures,
+                "d5_applicability_unknown_count": applicability_unknown,
+                "joined_prior_usage_count": category_counts[D5_CATEGORY_RESOLVED],
+                "unmatched_incoming_count": resolution_failures,
+                "undetermined_incoming_count": applicability_unknown,
+                "observed_incoming_prior_offensive_usage": observed,
+                "observed_incoming_prior_usage": observed,
+                "unresolved_prior_offensive_usage_upper_bound": (
+                    observed + missing_upper_bound
+                )
                 if season in covered_seasons
                 else None,
-                "plausible_prior_usage_upper_bound_basis": (
-                    f"unmatched count × max overall usage in {season - 1} usage payload"
+                "unresolved_offensive_usage_missing_upper_bound": missing_upper_bound
+                if season in covered_seasons
+                else None,
+                "unmatched_prior_usage_upper_bound": missing_upper_bound
+                if season in covered_seasons
+                else None,
+                "plausible_prior_offensive_usage_upper_bound_basis": (
+                    "observed incoming prior offensive usage + resolution-failure "
+                    f"count × max overall usage in {season - 1} usage payload"
                 ),
                 "feature_coverage_status": status,
                 "missingness_flag": int(
-                    status in {"partial", "no_usable_transfer_production"}
+                    resolution_failures > 0 or applicability_unknown > 0
                 ),
                 "roster_strength_proxy": _optional_number(team.get("talent_composite")),
                 "conference": team.get("conference"),
@@ -705,7 +905,7 @@ def _missingness_summary(team_rows: Sequence[Row]) -> dict[str, Any]:
             and row["feature_coverage_status"] != "portal_payload_missing"
         ]
         flags = [float(row["missingness_flag"]) for row in rows]
-        volumes = [float(row["incoming_transfer_count"]) for row in rows]
+        volumes = [float(row["d5_applicable_transfer_count"]) for row in rows]
         strengths = [
             float(row["roster_strength_proxy"])
             for row in rows
@@ -726,8 +926,26 @@ def _missingness_summary(team_rows: Sequence[Row]) -> dict[str, Any]:
                 "partial_teams": sum(
                     row["feature_coverage_status"] == "partial" for row in rows
                 ),
+                "unresolved_applicable_teams": sum(
+                    row["feature_coverage_status"]
+                    == "unresolved_applicable_offensive_usage"
+                    for row in rows
+                ),
+                "undetermined_applicability_teams": sum(
+                    row["feature_coverage_status"] == "undetermined_applicability"
+                    for row in rows
+                ),
+                "unresolved_and_undetermined_teams": sum(
+                    row["feature_coverage_status"] == "unresolved_and_undetermined"
+                    for row in rows
+                ),
                 "no_usable_teams": sum(
-                    row["feature_coverage_status"] == "no_usable_transfer_production"
+                    row["feature_coverage_status"]
+                    in {
+                        "unresolved_applicable_offensive_usage",
+                        "undetermined_applicability",
+                        "unresolved_and_undetermined",
+                    }
                     for row in rows
                 ),
                 "no_incoming_transfer_teams": sum(
@@ -737,9 +955,18 @@ def _missingness_summary(team_rows: Sequence[Row]) -> dict[str, Any]:
                 "mean_incoming_transfers": (
                     sum(volumes) / len(volumes) if volumes else None
                 ),
+                "mean_applicable_incoming_transfers": (
+                    sum(volumes) / len(volumes) if volumes else None
+                ),
                 "median_incoming_transfers": _median(volumes),
                 "mean_joined_prior_usage": _mean(
                     [float(row["observed_incoming_prior_usage"]) for row in rows]
+                ),
+                "mean_joined_prior_offensive_usage": _mean(
+                    [
+                        float(row["observed_incoming_prior_offensive_usage"])
+                        for row in rows
+                    ]
                 ),
                 "median_joined_prior_usage": _median(
                     [float(row["observed_incoming_prior_usage"]) for row in rows]
@@ -836,7 +1063,7 @@ def cutoff_safety_assessment() -> list[Row]:
             "evidence": "The date supports deterministic filtering, but publication and revision timing are not archived.",
         },
         {
-            "field": "prior-season usage",
+            "field": "incoming prior offensive usage",
             "required_for_model": True,
             "classification": "retrospective oracle only",
             "evidence": "Usage is a prior-season outcome, but the cross-endpoint name join is not an archived transfer roster join.",
@@ -879,9 +1106,9 @@ def source_inventory() -> list[Row]:
             "fields": "season, id, name, team, position, conference, usage.overall and component usage",
             "player_identifier": "stable within usage endpoint, not shared by portal endpoint",
             "historical_depth": "2020–2024 fetched for this audit",
-            "timestamp_semantics": "season-wide prior usage; not a transfer-time roster snapshot",
+            "timestamp_semantics": "season-wide prior offensive usage; not a transfer-time roster snapshot",
             "reproducibility": "raw response bytes plus retrieval sidecar hash",
-            "production_assessment": "supporting prior-production source after deterministic identity resolution",
+            "production_assessment": "supporting incoming prior offensive usage source after deterministic identity resolution",
         },
         {
             "source": "repository-managed preseason snapshot process",
