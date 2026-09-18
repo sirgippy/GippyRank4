@@ -47,6 +47,13 @@ def _roster() -> list:
                 "team": "Alpha",
                 "position": "WR",
             },
+            {
+                "id": "5",
+                "firstName": "E",
+                "lastName": "Linebacker",
+                "team": "Alpha",
+                "position": "LB",
+            },
         ],
         season=2021,
     )
@@ -68,6 +75,11 @@ def _game_payload() -> list[dict]:
                                     "athletes": [
                                         {"id": "1", "name": "A Defender", "stat": "8"},
                                         {"id": "3", "name": "C Back", "stat": "0"},
+                                        {
+                                            "id": "5",
+                                            "name": "E Linebacker",
+                                            "stat": "10",
+                                        },
                                     ],
                                 },
                                 {
@@ -75,6 +87,11 @@ def _game_payload() -> list[dict]:
                                     "athletes": [
                                         {"id": "1", "name": "A Defender", "stat": "2"},
                                         {"id": "3", "name": "C Back", "stat": "0"},
+                                        {
+                                            "id": "5",
+                                            "name": "E Linebacker",
+                                            "stat": "3",
+                                        },
                                     ],
                                 },
                                 {
@@ -157,8 +174,8 @@ def test_position_taxonomy_is_explicit_and_unknowns_fail_closed() -> None:
 
 def test_parser_and_aggregation_preserve_zero_events_and_game_rate() -> None:
     game_players = parse_games_players_payload(_game_payload(), season=2021)
-    assert len(game_players) == 3
-    assert {item.player_id for item in game_players} == {"1", "3"}
+    assert len(game_players) == 4
+    assert {item.player_id for item in game_players} == {"1", "3", "5"}
     assert (
         next(item for item in game_players if item.player_id == "3").stats[
             "interceptions"
@@ -172,13 +189,17 @@ def test_parser_and_aggregation_preserve_zero_events_and_game_rate() -> None:
     )
     defender = next(item for item in players if item.player_id == "1")
     corner = next(item for item in players if item.player_id == "3")
-    assert defender.defensive_games == 2
+    assert defender.recorded_defensive_box_score_games == 2
     assert defender.team_games == 2
-    assert defender.defensive_experience == 1.0
-    assert corner.defensive_games == 1
-    assert corner.defensive_experience == 0.5
+    assert defender.defensive_box_score_game_rate == 1.0
+    assert corner.recorded_defensive_box_score_games == 1
+    assert corner.defensive_box_score_game_rate == 0.5
     assert defender.defensive_impact == pytest.approx(0.0)
     assert corner.defensive_impact == pytest.approx(0.0)
+    zero_linebacker = next(item for item in players if item.player_id == "2")
+    assert zero_linebacker.recorded_defensive_box_score_games == 0
+    assert zero_linebacker.defensive_box_score_game_rate == 0.0
+    assert zero_linebacker.defensive_impact < 0.0
 
 
 def test_aggregation_deduplicates_same_game_from_overlapping_division_queries() -> None:
@@ -189,7 +210,7 @@ def test_aggregation_deduplicates_same_game_from_overlapping_division_queries() 
         team_game_keys(_game_payload(), season=2021),
     )
     defender = next(item for item in players if item.player_id == "1")
-    assert defender.defensive_games == 2
+    assert defender.recorded_defensive_box_score_games == 2
     assert defender.stats["tackles"] == 12
 
 
@@ -255,8 +276,9 @@ def test_audit_distinguishes_zero_identity_failure_and_non_defensive() -> None:
     assert by_player["A Defender"]["experience_status"] == "resolved"
     assert (
         by_player["B Linebacker"]["experience_status"]
-        == "legitimate_zero_defensive_participation"
+        == "zero_recorded_defensive_box_score_games"
     )
+    assert by_player["B Linebacker"]["prior_defensive_impact"] < 0.0
     assert (
         by_player["Missing Player"]["experience_status"]
         == "identity_resolution_failure"

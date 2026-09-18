@@ -8,9 +8,10 @@ score a ranking model.
 
 CFBD does not expose defensive snaps or defensive snap share in the selected
 endpoints.  The frozen experience candidate is therefore the rate of games
-with a defensive player box-score row, not snap share.  The production
-candidate is an equal-weight mean of log1p-transformed, season-by-position
-group z-scores over the components declared in ``IMPACT_COMPONENTS``.
+with a recorded defensive box-score row, not snap share or observed
+participation.  The production candidate is an equal-weight mean of
+log1p-transformed, season-by-position-group z-scores over the components
+declared in ``IMPACT_COMPONENTS``.
 """
 
 from __future__ import annotations
@@ -178,9 +179,9 @@ class DefensivePlayerSeason:
     position: str | None
     position_group: str | None
     team_games: int | None
-    defensive_games: int
+    recorded_defensive_box_score_games: int
     stats: Mapping[str, float | None]
-    defensive_experience: float | None
+    defensive_box_score_game_rate: float | None
     defensive_impact: float | None = None
 
     @property
@@ -229,8 +230,8 @@ def parse_games_players_payload(
     CFBD returns a nested game → team → category → stat-type → athlete shape.
     The parser keeps only numeric defensive events and is tolerant of absent
     categories or nonnumeric source values.  A row in an event category is
-    itself the participation observation; zero-valued event statistics are
-    retained as legitimate zeros.
+    itself the recorded box-score observation; zero-valued event statistics are
+    retained as explicit zero-stat observations.
     """
     grouped: dict[tuple[str, str, str], dict[str, Any]] = {}
     for game in payload:
@@ -335,9 +336,11 @@ def aggregate_player_seasons(
 ) -> list[DefensivePlayerSeason]:
     """Aggregate player-game rows and attach roster positions.
 
-    A roster row with no defensive box-score row is not fabricated into this
-    table; the transfer audit uses the roster separately to classify that case
-    as a legitimate zero when the source game coverage is complete.
+    Rostered defensive players with no recorded defensive box-score row are
+    included as verified zero-stat rows when the source team-game coverage is
+    complete.  This keeps the zero-production population in the frozen impact
+    normalization rather than treating a standardized impact of zero as the
+    raw zero-production value.
     """
     unique_game_rows: dict[tuple[int, str, str, str], DefensiveGamePlayer] = {}
     for item in game_players:
@@ -374,6 +377,33 @@ def aggregate_player_seasons(
         row["games"].add(item.game_id)
         for field, value in item.stats.items():
             row["stats"][field] += value
+    # Add verified zero-stat defensive roster rows so raw zero production is in
+    # each season × position-group normalization population. Do not fabricate
+    # a zero when the source has no team-game coverage to verify it.
+    for roster_match in roster_rows:
+        if roster_match.position_group is None:
+            continue
+        key = (
+            roster_match.season,
+            roster_match.normalized_team,
+            roster_match.player_id,
+        )
+        if key in grouped:
+            continue
+        team_game_count = len(
+            team_games.get((roster_match.season, roster_match.normalized_team), set())
+        )
+        if not team_game_count:
+            continue
+        grouped[key] = {
+            "season": roster_match.season,
+            "team": roster_match.team,
+            "player_id": roster_match.player_id,
+            "player_name": roster_match.player_name,
+            "games": set(),
+            "stats": defaultdict(float, {field: 0.0 for field in ALL_STAT_FIELDS}),
+        }
+
     result: list[DefensivePlayerSeason] = []
     for row in grouped.values():
         id_matches = by_id.get(
@@ -395,6 +425,7 @@ def aggregate_player_seasons(
                 team_games.get((row["season"], normalize_team_name(row["team"])), set())
             )
         team_games_value = team_game_count or None
+        recorded_games = len(row["games"])
         result.append(
             DefensivePlayerSeason(
                 season=row["season"],
@@ -404,10 +435,10 @@ def aggregate_player_seasons(
                 position=position,
                 position_group=defensive_position_group(position),
                 team_games=team_games_value,
-                defensive_games=len(row["games"]),
+                recorded_defensive_box_score_games=recorded_games,
                 stats={field: float(value) for field, value in row["stats"].items()},
-                defensive_experience=(
-                    len(row["games"]) / team_game_count if team_game_count else None
+                defensive_box_score_game_rate=(
+                    recorded_games / team_game_count if team_game_count else None
                 ),
             )
         )
@@ -420,11 +451,6 @@ def aggregate_player_seasons(
             item.player_id,
         ),
     )
-
-
-def _z_score(value: float, values: Sequence[float]) -> float:
-    spread = pstdev(values) if len(values) > 1 else 0.0
-    return (value - mean(values)) / spread if spread > 0 else 0.0
 
 
 def add_defensive_impact(
@@ -440,9 +466,10 @@ def add_defensive_impact(
         for field in IMPACT_COMPONENTS[group]:
             value = row.stats.get(field)
             if value is not None and value >= 0:
-                transformed[(row.season, group, field)].append(float(value))
-    means: dict[tuple[int, str, str], tuple[float, ...]] = {
-        key: tuple(values) for key, values in transformed.items()
+                transformed[(row.season, group, field)].append(log1p(float(value)))
+    parameters: dict[tuple[int, str, str], tuple[float, float]] = {
+        key: (mean(values), pstdev(values) if len(values) > 1 else 0.0)
+        for key, values in transformed.items()
     }
     result: list[DefensivePlayerSeason] = []
     for row in rows:
@@ -453,12 +480,8 @@ def add_defensive_impact(
             value = row.stats.get(field)
             if value is None or value < 0:
                 continue
-            scores.append(
-                _z_score(
-                    log1p(value),
-                    [log1p(item) for item in means[(row.season, group, field)]],
-                )
-            )
+            center, spread = parameters[(row.season, group, field)]
+            scores.append((log1p(value) - center) / spread if spread > 0 else 0.0)
         result.append(replace(row, defensive_impact=mean(scores) if scores else None))
     return result
 
@@ -571,6 +594,13 @@ def audit_transfer_records(
     resolver = TeamResolver(team_input, aliases)
     roster_idx = _player_index(roster_list)
     player_idx = _defensive_player_index(player_list)
+    zero_impact_by_group = {
+        (player.season, player.position_group): player.defensive_impact
+        for player in player_list
+        if player.recorded_defensive_box_score_games == 0
+        and player.position_group in IMPACT_COMPONENTS
+        and player.defensive_impact is not None
+    }
     team_list = [
         row for row in team_input if str(row.get("subdivision", "")).casefold() == "fbs"
     ]
@@ -613,8 +643,8 @@ def audit_transfer_records(
             "prior_position_group": None,
             "prior_player_id": None,
             "prior_team_games": None,
-            "prior_defensive_games": None,
-            "prior_defensive_experience": None,
+            "prior_recorded_defensive_box_score_games": None,
+            "prior_defensive_box_score_game_rate": None,
             "prior_defensive_impact": None,
             "prior_stats": {},
         }
@@ -705,8 +735,8 @@ def audit_transfer_records(
                 row.update(
                     {
                         "prior_team_games": player.team_games,
-                        "prior_defensive_games": player.defensive_games,
-                        "prior_defensive_experience": player.defensive_experience,
+                        "prior_recorded_defensive_box_score_games": player.recorded_defensive_box_score_games,
+                        "prior_defensive_box_score_game_rate": player.defensive_box_score_game_rate,
                         "prior_defensive_impact": player.defensive_impact,
                         "prior_stats": dict(player.stats),
                     }
@@ -740,20 +770,24 @@ def audit_transfer_records(
                 )
             )
             if has_team_games:
+                zero_impact = zero_impact_by_group.get((prior_season, prior_group))
+                zero_status = "zero_recorded_defensive_box_score_games"
                 row.update(
                     {
-                        "identity_status": "legitimate_zero_defensive_participation",
-                        "experience_status": "legitimate_zero_defensive_participation",
-                        "impact_status": "legitimate_zero_defensive_participation",
+                        "identity_status": zero_status,
+                        "experience_status": zero_status,
+                        "impact_status": zero_status
+                        if zero_impact is not None
+                        else "source_data_unavailable",
                         "prior_team_games": sum(
                             1
                             for item in team_coverage or set()
                             if item[0] == prior_season and item[1] == source_team
                         )
                         or None,
-                        "prior_defensive_games": 0,
-                        "prior_defensive_experience": 0.0,
-                        "prior_defensive_impact": 0.0,
+                        "prior_recorded_defensive_box_score_games": 0,
+                        "prior_defensive_box_score_game_rate": 0.0,
+                        "prior_defensive_impact": zero_impact,
                     }
                 )
             else:
@@ -767,18 +801,29 @@ def audit_transfer_records(
             audit_rows.append(row)
             continue
         player = stats_matches[0]
+        zero_status = "zero_recorded_defensive_box_score_games"
+        is_zero_recorded = player.recorded_defensive_box_score_games == 0
         row.update(
             {
-                "identity_status": "resolved",
-                "experience_status": "resolved"
-                if player.defensive_experience is not None
-                else "source_data_unavailable",
-                "impact_status": "resolved"
-                if player.defensive_impact is not None
-                else "source_data_unavailable",
+                "identity_status": zero_status if is_zero_recorded else "resolved",
+                "experience_status": (
+                    zero_status
+                    if is_zero_recorded
+                    and player.defensive_box_score_game_rate is not None
+                    else "resolved"
+                    if player.defensive_box_score_game_rate is not None
+                    else "source_data_unavailable"
+                ),
+                "impact_status": (
+                    zero_status
+                    if is_zero_recorded and player.defensive_impact is not None
+                    else "resolved"
+                    if player.defensive_impact is not None
+                    else "source_data_unavailable"
+                ),
                 "prior_team_games": player.team_games,
-                "prior_defensive_games": player.defensive_games,
-                "prior_defensive_experience": player.defensive_experience,
+                "prior_recorded_defensive_box_score_games": player.recorded_defensive_box_score_games,
+                "prior_defensive_box_score_game_rate": player.defensive_box_score_game_rate,
                 "prior_defensive_impact": player.defensive_impact,
                 "prior_stats": dict(player.stats),
             }
@@ -801,17 +846,17 @@ def audit_transfer_records(
             row
             for row in incoming
             if row["experience_status"]
-            in {"resolved", "legitimate_zero_defensive_participation"}
+            in {"resolved", "zero_recorded_defensive_box_score_games"}
         ]
         impact_usable = [
             row
             for row in incoming
             if row["impact_status"]
-            in {"resolved", "legitimate_zero_defensive_participation"}
+            in {"resolved", "zero_recorded_defensive_box_score_games"}
         ]
         experience_value = (
             sum(
-                float(row["prior_defensive_experience"] or 0.0)
+                float(row["prior_defensive_box_score_game_rate"] or 0.0)
                 for row in experience_usable
             )
             if len(experience_usable) == len(incoming)
@@ -926,7 +971,7 @@ def correlation_rows(
         pairs = [
             (
                 float(
-                    row["prior_defensive_experience"]
+                    row["prior_defensive_box_score_game_rate"]
                     if level == "player"
                     else row["transfer_in_prior_defensive_experience_sum"]
                 ),
@@ -939,13 +984,13 @@ def correlation_rows(
             for row in rows
             if (
                 row.get("experience_status")
-                in {"resolved", "legitimate_zero_defensive_participation"}
+                in {"resolved", "zero_recorded_defensive_box_score_games"}
                 if level == "player"
                 else row.get("transfer_in_prior_defensive_experience_sum") is not None
                 and row.get("transfer_in_prior_defensive_impact_sum") is not None
             )
             and (
-                row.get("prior_defensive_experience")
+                row.get("prior_defensive_box_score_game_rate")
                 if level == "player"
                 else row.get("transfer_in_prior_defensive_experience_sum")
             )
@@ -1034,7 +1079,7 @@ def source_inventory() -> list[Row]:
             "fields": "game/team defensive rows: TOT, SOLO, SACKS, TFL, PD, QB HUR; interception INT; fumble REC",
             "historical_coverage": "week-level FBS and FCS game box scores for requested seasons",
             "player_identifier": "CFBD athlete ID",
-            "defensive_participation": "games with a defensive box-score row; no snaps or snap share",
+            "defensive_participation": "recorded defensive box-score games; no snaps or observed participation",
             "defensive_production": "box-score event counts, not play-level opportunity-adjusted impact",
             "preseason_semantics": "completed prior-season outcomes; safe for a prior-season feature after frozen retrieval",
             "reproducibility": "raw weekly response bytes and SHA-256 sidecar",
@@ -1065,12 +1110,12 @@ def field_inventory() -> list[Row]:
             "field": "defensive snap share",
             "availability": "unavailable",
             "measurement": "no defensive denominator or participation percentage",
-            "decision": "use defensive box-score game appearance rate only",
+            "decision": "use recorded defensive box-score game rate only",
         },
         {
             "field": "games played",
             "availability": "proxy available",
-            "measurement": "distinct team games containing the player's defensive box-score row",
+            "measurement": "distinct team games containing the player's recorded defensive box-score row",
             "decision": "frozen experience proxy numerator",
         },
         {
@@ -1134,9 +1179,9 @@ def cutoff_safety() -> list[Row]:
     """Return field-level leakage and timing classifications."""
     return [
         {
-            "field": "prior defensive game appearances",
+            "field": "prior recorded defensive box-score games",
             "classification": "prior-season outcome; cutoff-safe once frozen",
-            "limitation": "box-score appearance is not snap share and may miss unrecorded participation",
+            "limitation": "recorded box-score activity is not snap share or observed participation and may miss unrecorded activity",
         },
         {
             "field": "prior defensive production",

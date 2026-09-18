@@ -2,7 +2,7 @@
 
 Issue 103 freezes and audits two research-only candidate measurements:
 
-- `transfer_in_prior_defensive_experience_sum`: the sum of incoming players' prior-season defensive box-score game appearance rates. CFBD does not provide defensive snaps or snap share in the selected endpoints, so this is explicitly not a snap-share feature.
+- `transfer_in_prior_defensive_experience_sum`: the sum of incoming players' prior-season recorded defensive box-score game rates. CFBD does not provide defensive snaps or snap share in the selected endpoints, so this is explicitly not a snap-share or observed-participation feature.
 - `transfer_in_prior_defensive_impact_sum`: the sum of incoming players' prior defensive impact values, kept separate from experience.
 
 The reproducible implementation is [defensive_transfer.py](../src/gippyrank/defensive_transfer.py) and the audit command is:
@@ -17,7 +17,7 @@ The fetchers preserve raw CFBD response bytes under `data/raw/` with provenance 
 
 ## Frozen construction
 
-CFBD `/roster` supplies prior-season athlete IDs and positions. CFBD `/games/players` supplies weekly defensive box-score rows. A player's experience proxy is the number of distinct prior-season team games with a defensive box-score row divided by the number of frozen FBS/FCS team games observed.
+CFBD `/roster` supplies prior-season athlete IDs and positions. CFBD `/games/players` supplies weekly defensive box-score rows. A player's conservative experience proxy is the number of distinct prior-season team games with a recorded defensive box-score row divided by the number of frozen FBS/FCS team games observed. It is not a games-played, snap-share, or observed-participation measure.
 
 Impact uses `log1p` of each nonnegative component, standardizes each component within prior season × defensive position group, and takes a simple equal-weight mean:
 
@@ -29,6 +29,6 @@ Impact uses `log1p` of each nonnegative component, standardizes each component w
 
 The position taxonomy is the machine-readable [defensive_position_groups.json](../data/reference/defensive_position_groups.json). Unknown and hybrid labels remain unknown; they are never silently assigned.
 
-Portal-to-prior-season joins use normalized player name + normalized source-team name because the portal response has no shared athlete ID. Explicit aliases are accepted, fuzzy matching is not, and ambiguous joins fail closed. A roster player with complete team-game coverage but no defensive row is classified as a legitimate zero.
+Rostered defensive players with complete team-game coverage but no recorded defensive box-score row are included as verified zero-stat rows in the season × position-group impact normalization. Their impact is therefore the standardized composite for a raw zero-stat vector, not an arbitrary standardized value of `0.0`. Portal-to-prior-season joins use normalized player name + normalized source-team name because the portal response has no shared athlete ID. Explicit aliases are accepted, fuzzy matching is not, and ambiguous joins fail closed. The audit status for this case is `zero_recorded_defensive_box_score_games`.
 
 This study does not fit Context variants, compare predictive metrics, tune weights against outcomes, or combine the defensive candidates with D5.

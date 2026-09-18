@@ -245,8 +245,8 @@ def _player_feature_rows(
             "position": item.position,
             "position_group": item.position_group,
             "team_games": item.team_games,
-            "defensive_games": item.defensive_games,
-            "defensive_game_appearance_rate": item.defensive_experience,
+            "recorded_defensive_box_score_games": item.recorded_defensive_box_score_games,
+            "defensive_box_score_game_rate": item.defensive_box_score_game_rate,
             "defensive_impact": item.defensive_impact,
         }
         for field in ALL_STAT_FIELDS:
@@ -308,16 +308,16 @@ def _coverage_row(
 
     statuses = Counter(str(row.get("identity_status")) for row in scoped)
     recoverable_experience = [
-        float(row["prior_defensive_experience"])
+        float(row["prior_defensive_box_score_game_rate"])
         for row in scoped
-        if row.get("prior_defensive_experience") is not None
+        if row.get("prior_defensive_box_score_game_rate") is not None
     ]
     resolved_experience = [
-        float(row["prior_defensive_experience"])
+        float(row["prior_defensive_box_score_game_rate"])
         for row in scoped
         if row.get("experience_status")
-        in {"resolved", "legitimate_zero_defensive_participation"}
-        and row.get("prior_defensive_experience") is not None
+        in {"resolved", "zero_recorded_defensive_box_score_games"}
+        and row.get("prior_defensive_box_score_game_rate") is not None
     ]
     return {
         "season": season,
@@ -337,9 +337,11 @@ def _coverage_row(
             else None
         ),
         "resolved_impact": count("resolved", "impact_status"),
-        "legitimate_zero_experience": count("legitimate_zero_defensive_participation"),
-        "legitimate_zero_impact": count(
-            "legitimate_zero_defensive_participation", "impact_status"
+        "zero_recorded_box_score_games": count(
+            "zero_recorded_defensive_box_score_games"
+        ),
+        "zero_recorded_box_score_impact": count(
+            "zero_recorded_defensive_box_score_games", "impact_status"
         ),
         "identity_resolution_failure": statuses["identity_resolution_failure"],
         "ambiguous": statuses["ambiguous"],
@@ -375,7 +377,7 @@ def _distribution_rows(
                 row for row in season_players if row.get("position_group") == group
             ]
             for field in (
-                "defensive_game_appearance_rate",
+                "defensive_box_score_game_rate",
                 "defensive_impact",
                 *ALL_STAT_FIELDS,
             ):
@@ -411,12 +413,12 @@ def _spot_checks(rows: list[Mapping[str, Any]]) -> list[dict[str, Any]]:
         row
         for row in candidates
         if row.get("experience_status") == "resolved"
-        and row.get("prior_defensive_experience") is not None
+        and row.get("prior_defensive_box_score_game_rate") is not None
     ]
     if not resolved:
         return []
     experience_values = sorted(
-        float(row["prior_defensive_experience"]) for row in resolved
+        float(row["prior_defensive_box_score_game_rate"]) for row in resolved
     )
     experience_median = experience_values[len(experience_values) // 2]
     impact_values = [
@@ -432,21 +434,22 @@ def _spot_checks(rows: list[Mapping[str, Any]]) -> list[dict[str, Any]]:
         ("high_experience", row)
         for row in sorted(
             resolved,
-            key=lambda item: float(item["prior_defensive_experience"]),
+            key=lambda item: float(item["prior_defensive_box_score_game_rate"]),
             reverse=True,
         )[:3]
     )
     selections.extend(
         ("light_experience", row)
         for row in sorted(
-            resolved, key=lambda item: float(item["prior_defensive_experience"])
+            resolved,
+            key=lambda item: float(item["prior_defensive_box_score_game_rate"]),
         )[:3]
     )
     strong_modest = [
         row
         for row in resolved
         if row.get("prior_defensive_impact") is not None
-        and float(row["prior_defensive_experience"]) <= experience_median
+        and float(row["prior_defensive_box_score_game_rate"]) <= experience_median
     ]
     selections.extend(
         ("strong_impact_modest_experience", row)
@@ -460,7 +463,7 @@ def _spot_checks(rows: list[Mapping[str, Any]]) -> list[dict[str, Any]]:
         row
         for row in resolved
         if row.get("prior_defensive_impact") is not None
-        and float(row["prior_defensive_experience"]) >= experience_median
+        and float(row["prior_defensive_box_score_game_rate"]) >= experience_median
         and abs(float(row["prior_defensive_impact"])) <= impact_median
     ]
     selections.extend(("high_experience_modest_impact", row) for row in high_modest[:3])
@@ -468,7 +471,7 @@ def _spot_checks(rows: list[Mapping[str, Any]]) -> list[dict[str, Any]]:
         row
         for row in candidates
         if row.get("experience_status")
-        not in {"resolved", "legitimate_zero_defensive_participation"}
+        not in {"resolved", "zero_recorded_defensive_box_score_games"}
     ]
     selections.extend(("unresolved", row) for row in unresolved[:3])
 
@@ -491,14 +494,18 @@ def _spot_checks(rows: list[Mapping[str, Any]]) -> list[dict[str, Any]]:
                 "portal_position_group": row["portal_position_group"],
                 "experience_status": row["experience_status"],
                 "impact_status": row["impact_status"],
-                "prior_defensive_games": row["prior_defensive_games"],
+                "prior_recorded_defensive_box_score_games": row[
+                    "prior_recorded_defensive_box_score_games"
+                ],
                 "prior_team_games": row["prior_team_games"],
-                "prior_defensive_experience": row["prior_defensive_experience"],
+                "prior_defensive_box_score_game_rate": row[
+                    "prior_defensive_box_score_game_rate"
+                ],
                 "prior_defensive_impact": row["prior_defensive_impact"],
                 "prior_stats": json.dumps(row.get("prior_stats", {}), sort_keys=True),
                 "implausible_value_flag": (
-                    row.get("prior_defensive_experience") is not None
-                    and not 0 <= float(row["prior_defensive_experience"]) <= 1
+                    row.get("prior_defensive_box_score_game_rate") is not None
+                    and not 0 <= float(row["prior_defensive_box_score_game_rate"]) <= 1
                 ),
             }
         )
@@ -511,7 +518,7 @@ def _implausible_rows(
 ) -> list[dict[str, Any]]:
     issues: list[dict[str, Any]] = []
     for row in player_features:
-        experience = row.get("defensive_game_appearance_rate")
+        experience = row.get("defensive_box_score_game_rate")
         if experience is not None and not 0 <= float(experience) <= 1:
             issues.append({"kind": "experience_outside_0_1", **dict(row)})
         for field in ALL_STAT_FIELDS:
@@ -585,12 +592,12 @@ def _render_report(
             ],
         ),
         "",
-        "CFBD provides no defensive snaps or defensive snap share in these endpoints. `/player/usage.overall` is an offensive participation measure and is not substituted for defense. The fallback therefore measures recorded defensive box-score game appearances.",
+        "CFBD provides no defensive snaps or defensive snap share in these endpoints. `/player/usage.overall` is an offensive participation measure and is not substituted for defense. The fallback therefore measures recorded defensive box-score games, not observed defensive participation.",
         "",
         "## Frozen definitions",
         "",
-        "- `prior_defensive_experience`: defensive box-score game appearances divided by all source-team FBS/FCS games present in the frozen `/games/players` inputs. This is a participation proxy, never snap share.",
-        "- `transfer_in_prior_defensive_experience_sum`: sum of that rate over incoming defensive transfers. A team feature is numeric only when every known defensive incoming transfer is resolved or a legitimate zero; otherwise it is missing.",
+        "- `prior_defensive_box_score_game_rate`: recorded defensive box-score games divided by all source-team FBS/FCS games present in the frozen `/games/players` inputs. This is a conservative experience proxy, never snap share or observed participation.",
+        "- `transfer_in_prior_defensive_experience_sum`: sum of that recorded-box-score-game rate over incoming defensive transfers. A team feature is numeric only when every known defensive incoming transfer is resolved or has zero recorded defensive box-score games; otherwise it is missing.",
         "- `prior_defensive_impact`: equal-weight mean of `z(log1p(component))`, standardized within prior season × defensive position group. Components are frozen as DL/EDGE = tackles, TFL, sacks, QB hurries; LB = tackles, TFL, sacks, passes defended; DB = tackles, passes defended, interceptions.",
         "- `transfer_in_prior_defensive_impact_sum`: sum of prior-player impact values under the same strict missingness rule. Experience and impact are never collapsed.",
         "- `experience_mass_coverage_proxy`: resolved prior defensive experience mass divided by the recoverable prior defensive experience mass among source-team/player records that could be joined. This is explicitly a recoverable-denominator proxy, not full-population coverage.",
@@ -613,7 +620,7 @@ def _render_report(
         "",
         "## Identity join and missing-data behavior",
         "",
-        "Portal records have no shared athlete ID with the roster/game-player sources. The deterministic fallback is normalized player name + normalized source team. Explicit aliases are supported; no fuzzy matching is used. Ambiguous joins, position mismatches, missing source seasons, and unknown positions remain unresolved. A roster player with complete team-game coverage but no defensive row is a legitimate zero, not a failed identity join.",
+        "Portal records have no shared athlete ID with the roster/game-player sources. The deterministic fallback is normalized player name + normalized source team. Explicit aliases are supported; no fuzzy matching is used. Ambiguous joins, position mismatches, missing source seasons, and unknown positions remain unresolved. A roster player with complete team-game coverage but zero recorded defensive box-score games is a verified zero-record state, not a failed identity join.",
         "",
         "## Coverage by season",
         "",
@@ -626,7 +633,8 @@ def _render_report(
                 ("resolved_experience", "Experience resolved"),
                 ("experience_mass_coverage_proxy", "Experience-mass proxy"),
                 ("resolved_impact", "Impact resolved"),
-                ("legitimate_zero_experience", "Legitimate zero"),
+                ("zero_recorded_box_score_games", "Zero recorded box-score games"),
+                ("zero_recorded_box_score_impact", "Zero-game impact resolved"),
                 ("identity_resolution_failure", "Identity fail"),
                 ("ambiguous", "Ambiguous"),
                 ("source_data_unavailable", "Source unavailable"),
@@ -648,7 +656,8 @@ def _render_report(
                 ("resolved_experience", "Experience resolved"),
                 ("experience_mass_coverage_proxy", "Experience-mass proxy"),
                 ("resolved_impact", "Impact resolved"),
-                ("legitimate_zero_experience", "Legitimate zero"),
+                ("zero_recorded_box_score_games", "Zero recorded box-score games"),
+                ("zero_recorded_box_score_impact", "Zero-game impact resolved"),
                 ("identity_resolution_failure", "Identity fail"),
                 ("ambiguous", "Ambiguous"),
                 ("source_data_unavailable", "Source unavailable"),
@@ -665,7 +674,7 @@ def _render_report(
                 row
                 for row in distributions
                 if row["feature"]
-                in {"defensive_game_appearance_rate", "defensive_impact"}
+                in {"defensive_box_score_game_rate", "defensive_impact"}
                 and row["level"] == "player"
             ][:30],
             [
@@ -709,9 +718,12 @@ def _render_report(
                 ("position", "Position"),
                 ("experience_status", "Experience status"),
                 ("impact_status", "Impact status"),
-                ("prior_defensive_games", "Def games"),
+                (
+                    "prior_recorded_defensive_box_score_games",
+                    "Recorded box-score games",
+                ),
                 ("prior_team_games", "Team games"),
-                ("prior_defensive_experience", "Experience"),
+                ("prior_defensive_box_score_game_rate", "Box-score game rate"),
                 ("prior_defensive_impact", "Impact"),
                 ("implausible_value_flag", "Implausible"),
             ],
@@ -782,7 +794,7 @@ def run(
     player_correlation_rows = [
         {
             "experience_status": "resolved",
-            "prior_defensive_experience": row["defensive_game_appearance_rate"],
+            "prior_defensive_box_score_game_rate": row["defensive_box_score_game_rate"],
             "prior_defensive_impact": row["defensive_impact"],
         }
         for row in player_features
@@ -802,7 +814,7 @@ def run(
     else:
         recommendation = (
             "Outcome B: carry `transfer_in_prior_defensive_experience_sum` as a conservative "
-            "defensive-game-appearance-rate candidate and carry `transfer_in_prior_defensive_impact_sum` "
+            "recorded-defensive-box-score-game-rate candidate and carry `transfer_in_prior_defensive_impact_sum` "
             "as a separate optional position-normalized production candidate. Direct defensive snaps are "
             "unavailable; both features require the strict fail-closed missing-data rule documented here."
         )
@@ -820,7 +832,7 @@ def run(
         "recommendation": recommendation,
         "feature_definitions": {
             "transfer_in_prior_defensive_experience_sum": {
-                "player_measure": "defensive box-score game appearances / frozen source-team FBS/FCS games",
+                "player_measure": "recorded defensive box-score games / frozen source-team FBS/FCS games",
                 "aggregation": "sum over incoming defensive transfers",
                 "missingness": "missing if any known defensive incoming transfer is unresolved",
             },
