@@ -1,0 +1,146 @@
+[
+  {
+    "defensive_features": [],
+    "description": "Existing production Context C0.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "returning_pct_passing_ppa",
+      "returning_pct_receiving_ppa",
+      "returning_pct_rushing_ppa"
+    ],
+    "kind": "primary",
+    "name": "E0_production_C0"
+  },
+  {
+    "defensive_features": [],
+    "description": "C-minus-RP control.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite"
+    ],
+    "kind": "primary",
+    "name": "E1_no_returning_production"
+  },
+  {
+    "defensive_features": [],
+    "description": "C-minus-RP plus total returning production and incoming prior offensive usage.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "transfer_in_prior_usage_sum"
+    ],
+    "kind": "primary",
+    "name": "E2_D5"
+  },
+  {
+    "defensive_features": [
+      "transfer_in_prior_defensive_experience_sum"
+    ],
+    "description": "C-minus-RP plus total returning production and defensive experience; no incoming offensive usage.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "transfer_in_prior_defensive_experience_sum",
+      "transfer_in_prior_defensive_experience_available"
+    ],
+    "kind": "primary",
+    "name": "E3_total_RP_plus_defensive_experience"
+  },
+  {
+    "defensive_features": [
+      "transfer_in_prior_defensive_experience_sum"
+    ],
+    "description": "D5 plus defensive experience and its availability indicator.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "transfer_in_prior_usage_sum",
+      "transfer_in_prior_defensive_experience_sum",
+      "transfer_in_prior_defensive_experience_available"
+    ],
+    "kind": "primary",
+    "name": "E4_D5_plus_defensive_experience"
+  },
+  {
+    "defensive_features": [
+      "transfer_in_prior_defensive_impact_sum"
+    ],
+    "description": "D5 plus defensive impact and its availability indicator.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "transfer_in_prior_usage_sum",
+      "transfer_in_prior_defensive_impact_sum",
+      "transfer_in_prior_defensive_impact_available"
+    ],
+    "kind": "primary",
+    "name": "E5_D5_plus_defensive_impact"
+  },
+  {
+    "defensive_features": [
+      "transfer_in_prior_defensive_experience_sum",
+      "transfer_in_prior_defensive_impact_sum"
+    ],
+    "description": "D5 plus defensive experience, defensive impact, and both availability indicators.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "transfer_in_prior_usage_sum",
+      "transfer_in_prior_defensive_experience_sum",
+      "transfer_in_prior_defensive_experience_available",
+      "transfer_in_prior_defensive_impact_sum",
+      "transfer_in_prior_defensive_impact_available"
+    ],
+    "kind": "primary",
+    "name": "E6_D5_plus_experience_plus_impact"
+  }
+]

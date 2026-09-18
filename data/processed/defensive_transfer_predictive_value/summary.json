@@ -1,0 +1,675 @@
+{
+  "aggregate_metrics": [
+    {
+      "crps": 0.11194306775822215,
+      "delta_vs_E0_crps": 0.0,
+      "delta_vs_E0_expected_rank_mae": 0.0,
+      "delta_vs_E0_interval_80_average_width": 0.0,
+      "delta_vs_E0_interval_80_coverage": 0.0,
+      "delta_vs_E0_median_rank_mae": 0.0,
+      "delta_vs_E0_nll": 0.0,
+      "expected_rank_mae": 20.16301079638477,
+      "interval_80_average_width": 71.91947565543072,
+      "interval_80_coverage": 0.8249770482173018,
+      "kind": "primary",
+      "median_rank_mae": 20.594569288389515,
+      "n_team_seasons": 534,
+      "nll": 4.542326751937674,
+      "target_season": "aggregate",
+      "variant": "E0_production_C0"
+    },
+    {
+      "crps": 0.11111614140217868,
+      "delta_vs_E0_crps": -0.0008269263560434642,
+      "delta_vs_E0_expected_rank_mae": 0.06312820532530594,
+      "delta_vs_E0_interval_80_average_width": 2.6779026217228363,
+      "delta_vs_E0_interval_80_coverage": 0.008853352723146246,
+      "delta_vs_E0_median_rank_mae": -0.11423220973782833,
+      "delta_vs_E0_nll": -0.013171017324692613,
+      "expected_rank_mae": 20.226139001710077,
+      "interval_80_average_width": 74.59737827715355,
+      "interval_80_coverage": 0.833830400940448,
+      "kind": "primary",
+      "median_rank_mae": 20.480337078651687,
+      "n_team_seasons": 534,
+      "nll": 4.529155734612981,
+      "target_season": "aggregate",
+      "variant": "E1_no_returning_production"
+    },
+    {
+      "crps": 0.11107627474385705,
+      "delta_vs_E0_crps": -0.000866793014365097,
+      "delta_vs_E0_expected_rank_mae": -0.12920085528999792,
+      "delta_vs_E0_interval_80_average_width": 0.42134831460673183,
+      "delta_vs_E0_interval_80_coverage": 0.0019302388743707155,
+      "delta_vs_E0_median_rank_mae": -0.16292134831460814,
+      "delta_vs_E0_nll": -0.006963849998194327,
+      "expected_rank_mae": 20.033809941094773,
+      "interval_80_average_width": 72.34082397003745,
+      "interval_80_coverage": 0.8269072870916725,
+      "kind": "primary",
+      "median_rank_mae": 20.431647940074907,
+      "n_team_seasons": 534,
+      "nll": 4.53536290193948,
+      "target_season": "aggregate",
+      "variant": "E2_D5"
+    },
+    {
+      "crps": 0.11081924501447558,
+      "delta_vs_E0_crps": -0.0011238227437465609,
+      "delta_vs_E0_expected_rank_mae": -0.20694497306042337,
+      "delta_vs_E0_interval_80_average_width": -0.4363295880149849,
+      "delta_vs_E0_interval_80_coverage": 0.002041850919423771,
+      "delta_vs_E0_median_rank_mae": -0.151685393258429,
+      "delta_vs_E0_nll": -0.00845541000230643,
+      "expected_rank_mae": 19.956065823324348,
+      "interval_80_average_width": 71.48314606741573,
+      "interval_80_coverage": 0.8270188991367255,
+      "kind": "primary",
+      "median_rank_mae": 20.442883895131086,
+      "n_team_seasons": 534,
+      "nll": 4.533871341935368,
+      "target_season": "aggregate",
+      "variant": "E3_total_RP_plus_defensive_experience"
+    },
+    {
+      "crps": 0.11081896956331808,
+      "delta_vs_E0_crps": -0.001124098194904069,
+      "delta_vs_E0_expected_rank_mae": -0.2070583422739034,
+      "delta_vs_E0_interval_80_average_width": -0.43820224719101475,
+      "delta_vs_E0_interval_80_coverage": 0.001763482663527327,
+      "delta_vs_E0_median_rank_mae": -0.15543071161048871,
+      "delta_vs_E0_nll": -0.008455771170458704,
+      "expected_rank_mae": 19.955952454110868,
+      "interval_80_average_width": 71.4812734082397,
+      "interval_80_coverage": 0.8267405308808291,
+      "kind": "primary",
+      "median_rank_mae": 20.439138576779026,
+      "n_team_seasons": 534,
+      "nll": 4.533870980767215,
+      "target_season": "aggregate",
+      "variant": "E4_D5_plus_defensive_experience"
+    },
+    {
+      "crps": 0.11188518694759414,
+      "delta_vs_E0_crps": -5.788081062800543e-05,
+      "delta_vs_E0_expected_rank_mae": 0.008697180629919643,
+      "delta_vs_E0_interval_80_average_width": 0.6498127340823885,
+      "delta_vs_E0_interval_80_coverage": 0.0015953847518554998,
+      "delta_vs_E0_median_rank_mae": -0.013108614232212545,
+      "delta_vs_E0_nll": 0.00023028835864469244,
+      "expected_rank_mae": 20.17170797701469,
+      "interval_80_average_width": 72.5692883895131,
+      "interval_80_coverage": 0.8265724329691573,
+      "kind": "primary",
+      "median_rank_mae": 20.581460674157302,
+      "n_team_seasons": 534,
+      "nll": 4.542557040296319,
+      "target_season": "aggregate",
+      "variant": "E5_D5_plus_defensive_impact"
+    },
+    {
+      "crps": 0.11098020111123608,
+      "delta_vs_E0_crps": -0.0009628666469860686,
+      "delta_vs_E0_expected_rank_mae": -0.13736430641375108,
+      "delta_vs_E0_interval_80_average_width": 0.20599250936329838,
+      "delta_vs_E0_interval_80_coverage": 0.006225298327399265,
+      "delta_vs_E0_median_rank_mae": -0.16666666666666785,
+      "delta_vs_E0_nll": -0.007064985560666592,
+      "expected_rank_mae": 20.02564648997102,
+      "interval_80_average_width": 72.12546816479401,
+      "interval_80_coverage": 0.831202346544701,
+      "kind": "primary",
+      "median_rank_mae": 20.427902621722847,
+      "n_team_seasons": 534,
+      "nll": 4.535261766377007,
+      "target_season": "aggregate",
+      "variant": "E6_D5_plus_experience_plus_impact"
+    },
+    {
+      "crps": 0.11107627633737303,
+      "delta_vs_E0_crps": -0.0008667914208491112,
+      "delta_vs_E0_expected_rank_mae": -0.12921996607797936,
+      "delta_vs_E0_interval_80_average_width": 0.4232209737827617,
+      "delta_vs_E0_interval_80_coverage": 0.0019808512845336246,
+      "delta_vs_E0_median_rank_mae": -0.16104868913857828,
+      "delta_vs_E0_nll": -0.006965751277810739,
+      "expected_rank_mae": 20.033790830306792,
+      "interval_80_average_width": 72.34269662921348,
+      "interval_80_coverage": 0.8269578995018354,
+      "kind": "auxiliary",
+      "median_rank_mae": 20.433520599250937,
+      "n_team_seasons": 534,
+      "nll": 4.535361000659863,
+      "target_season": "aggregate",
+      "variant": "RP_only_mechanism_control"
+    },
+    {
+      "crps": 0.11141533225242678,
+      "delta_vs_E0_crps": -0.0005277355057953653,
+      "delta_vs_E0_expected_rank_mae": -0.07938207557787891,
+      "delta_vs_E0_interval_80_average_width": 0.45131086142320953,
+      "delta_vs_E0_interval_80_coverage": 0.003002495347470324,
+      "delta_vs_E0_median_rank_mae": -0.11048689138576862,
+      "delta_vs_E0_nll": -0.0035498679833132485,
+      "expected_rank_mae": 20.083628720806892,
+      "interval_80_average_width": 72.37078651685393,
+      "interval_80_coverage": 0.8279795435647721,
+      "kind": "missingness_control",
+      "median_rank_mae": 20.484082397003746,
+      "n_team_seasons": 534,
+      "nll": 4.538776883954361,
+      "target_season": "aggregate",
+      "variant": "E4-M_experience_availability_only"
+    },
+    {
+      "crps": 0.11141533225242678,
+      "delta_vs_E0_crps": -0.0005277355057953653,
+      "delta_vs_E0_expected_rank_mae": -0.07938207557787891,
+      "delta_vs_E0_interval_80_average_width": 0.45131086142320953,
+      "delta_vs_E0_interval_80_coverage": 0.003002495347470324,
+      "delta_vs_E0_median_rank_mae": -0.11048689138576862,
+      "delta_vs_E0_nll": -0.0035498679833132485,
+      "expected_rank_mae": 20.083628720806892,
+      "interval_80_average_width": 72.37078651685393,
+      "interval_80_coverage": 0.8279795435647721,
+      "kind": "missingness_control",
+      "median_rank_mae": 20.484082397003746,
+      "n_team_seasons": 534,
+      "nll": 4.538776883954361,
+      "target_season": "aggregate",
+      "variant": "E5-M_impact_availability_only"
+    },
+    {
+      "crps": 0.11141543592859648,
+      "delta_vs_E0_crps": -0.0005276318296256605,
+      "delta_vs_E0_expected_rank_mae": -0.07939986442064395,
+      "delta_vs_E0_interval_80_average_width": 0.4531835205992394,
+      "delta_vs_E0_interval_80_coverage": 0.003002495347470324,
+      "delta_vs_E0_median_rank_mae": -0.11048689138576862,
+      "delta_vs_E0_nll": -0.0035486567451714635,
+      "expected_rank_mae": 20.083610931964127,
+      "interval_80_average_width": 72.37265917602996,
+      "interval_80_coverage": 0.8279795435647721,
+      "kind": "missingness_control",
+      "median_rank_mae": 20.484082397003746,
+      "n_team_seasons": 534,
+      "nll": 4.5387780951925025,
+      "target_season": "aggregate",
+      "variant": "E6-M_availability_only"
+    },
+    {
+      "crps": 0.11141154633376539,
+      "delta_vs_E0_crps": -0.0005315214244567545,
+      "delta_vs_E0_expected_rank_mae": -0.07508045682439501,
+      "delta_vs_E0_interval_80_average_width": 0.45131086142320953,
+      "delta_vs_E0_interval_80_coverage": 0.003202903506750898,
+      "delta_vs_E0_median_rank_mae": -0.09737827715355962,
+      "delta_vs_E0_nll": -0.003617228915516968,
+      "expected_rank_mae": 20.087930339560376,
+      "interval_80_average_width": 72.37078651685393,
+      "interval_80_coverage": 0.8281799517240527,
+      "kind": "permutation_control",
+      "median_rank_mae": 20.497191011235955,
+      "n_team_seasons": 534,
+      "nll": 4.538709523022157,
+      "target_season": "aggregate",
+      "variant": "E4P_experience_within_season_permutation"
+    },
+    {
+      "crps": 0.11141222589059886,
+      "delta_vs_E0_crps": -0.0005308418676232829,
+      "delta_vs_E0_expected_rank_mae": -0.08148414923844882,
+      "delta_vs_E0_interval_80_average_width": 0.46441947565543273,
+      "delta_vs_E0_interval_80_coverage": 0.0031051068091705325,
+      "delta_vs_E0_median_rank_mae": -0.10861423220973876,
+      "delta_vs_E0_nll": -0.003572406640725667,
+      "expected_rank_mae": 20.081526647146323,
+      "interval_80_average_width": 72.38389513108615,
+      "interval_80_coverage": 0.8280821550264723,
+      "kind": "permutation_control",
+      "median_rank_mae": 20.485955056179776,
+      "n_team_seasons": 534,
+      "nll": 4.538754345296948,
+      "target_season": "aggregate",
+      "variant": "E5P_impact_within_season_permutation"
+    },
+    {
+      "crps": 0.11138797066846623,
+      "delta_vs_E0_crps": -0.0005550970897559154,
+      "delta_vs_E0_expected_rank_mae": -0.08234607021184814,
+      "delta_vs_E0_interval_80_average_width": 0.44569288389511996,
+      "delta_vs_E0_interval_80_coverage": 0.003279532427647225,
+      "delta_vs_E0_median_rank_mae": -0.1067415730337089,
+      "delta_vs_E0_nll": -0.003842923155393585,
+      "expected_rank_mae": 20.080664726172923,
+      "interval_80_average_width": 72.36516853932584,
+      "interval_80_coverage": 0.828256580644949,
+      "kind": "permutation_control",
+      "median_rank_mae": 20.487827715355806,
+      "n_team_seasons": 534,
+      "nll": 4.53848382878228,
+      "target_season": "aggregate",
+      "variant": "E6P_defense_within_season_permutation"
+    }
+  ],
+  "auxiliary_definitions": [
+    {
+      "description": "C-minus-RP plus total returning production only; auxiliary comparison for E3.",
+      "features": [
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite",
+        "returning_pct_ppa"
+      ],
+      "kind": "auxiliary",
+      "name": "RP_only_mechanism_control"
+    }
+  ],
+  "c0_sanity_check": {
+    "computed_metrics": {
+      "crps": 0.11194306775822215,
+      "expected_rank_mae": 20.16301079638477,
+      "interval_80_average_width": 71.91947565543072,
+      "interval_80_coverage": 0.8249770482173018,
+      "median_rank_mae": 20.594569288389515,
+      "nll": 4.542326751937674
+    },
+    "max_abs_metric_delta": 5.348005157834734e-06,
+    "metric_abs_deltas": {
+      "crps": 3.6745783084379813e-07,
+      "expected_rank_mae": 5.664247808567779e-07,
+      "interval_80_average_width": 0.0,
+      "interval_80_coverage": 1.1102230246251565e-16,
+      "median_rank_mae": 0.0,
+      "nll": 5.348005157834734e-06
+    },
+    "passed": true,
+    "stored_evaluation_path": "/home/gippy/src/GippyRank4/data/processed/preseason/context/evaluation.json",
+    "stored_metrics": {
+      "crps": 0.1119427003003913,
+      "expected_rank_mae": 20.163011362809552,
+      "interval_80_average_width": 71.91947565543072,
+      "interval_80_coverage": 0.8249770482173019,
+      "median_rank_mae": 20.594569288389515,
+      "n_team_seasons": 534,
+      "nll": 4.542321403932516,
+      "top10": {
+        "calibration_gap": -0.0016852445535894267,
+        "empirical_frequency": 0.0749514913586932,
+        "mean_predicted_probability": 0.07326624680510377,
+        "reliability": {
+          "bins": [
+            {
+              "empirical_frequency": 0.009757212710488244,
+              "mean_predicted_probability": 0.009508996916558507,
+              "n_team_seasons": 367,
+              "range": "[0.00, 0.05)"
+            },
+            {
+              "empirical_frequency": 0.08519585323112049,
+              "mean_predicted_probability": 0.09040021329072272,
+              "n_team_seasons": 95,
+              "range": "[0.05, 0.15)"
+            },
+            {
+              "empirical_frequency": 0.1842909081717466,
+              "mean_predicted_probability": 0.1997660764762794,
+              "n_team_seasons": 30,
+              "range": "[0.15, 0.30)"
+            },
+            {
+              "empirical_frequency": 0.4094991156247139,
+              "mean_predicted_probability": 0.4045579478178539,
+              "n_team_seasons": 28,
+              "range": "[0.30, 0.50)"
+            },
+            {
+              "empirical_frequency": 0.6259625182912855,
+              "mean_predicted_probability": 0.5920176156109369,
+              "n_team_seasons": 7,
+              "range": "[0.50, 0.70)"
+            },
+            {
+              "empirical_frequency": 0.996164736164736,
+              "mean_predicted_probability": 0.7973750743521332,
+              "n_team_seasons": 7,
+              "range": "[0.70, 1.00]"
+            }
+          ],
+          "brier_score": 0.03113633741110296
+        }
+      },
+      "top25": {
+        "calibration_gap": -0.004799416839958659,
+        "empirical_frequency": 0.18753022821115417,
+        "mean_predicted_probability": 0.1827308113711955,
+        "reliability": {
+          "bins": [
+            {
+              "empirical_frequency": 0.0204333959310028,
+              "mean_predicted_probability": 0.01686522245731591,
+              "n_team_seasons": 219,
+              "range": "[0.00, 0.05)"
+            },
+            {
+              "empirical_frequency": 0.1092765298432757,
+              "mean_predicted_probability": 0.09037004384205899,
+              "n_team_seasons": 115,
+              "range": "[0.05, 0.15)"
+            },
+            {
+              "empirical_frequency": 0.22946446625758593,
+              "mean_predicted_probability": 0.23056376296805578,
+              "n_team_seasons": 82,
+              "range": "[0.15, 0.30)"
+            },
+            {
+              "empirical_frequency": 0.3834987596466388,
+              "mean_predicted_probability": 0.385318445474766,
+              "n_team_seasons": 63,
+              "range": "[0.30, 0.50)"
+            },
+            {
+              "empirical_frequency": 0.5105553025605839,
+              "mean_predicted_probability": 0.6031719958724587,
+              "n_team_seasons": 22,
+              "range": "[0.50, 0.70)"
+            },
+            {
+              "empirical_frequency": 0.8754758326271778,
+              "mean_predicted_probability": 0.8194284840831669,
+              "n_team_seasons": 33,
+              "range": "[0.70, 1.00]"
+            }
+          ],
+          "brier_score": 0.07147793268834314
+        }
+      },
+      "top5": {
+        "calibration_gap": -0.0038944871097067735,
+        "empirical_frequency": 0.03752635808950957,
+        "mean_predicted_probability": 0.033631870979802796,
+        "reliability": {
+          "bins": [
+            {
+              "empirical_frequency": 0.006906434244472099,
+              "mean_predicted_probability": 0.0070554358120896036,
+              "n_team_seasons": 461,
+              "range": "[0.00, 0.05)"
+            },
+            {
+              "empirical_frequency": 0.08240684746708844,
+              "mean_predicted_probability": 0.08211816373446501,
+              "n_team_seasons": 35,
+              "range": "[0.05, 0.15)"
+            },
+            {
+              "empirical_frequency": 0.2804403359457824,
+              "mean_predicted_probability": 0.21241430095192493,
+              "n_team_seasons": 24,
+              "range": "[0.15, 0.30)"
+            },
+            {
+              "empirical_frequency": 0.3256207311926077,
+              "mean_predicted_probability": 0.3615801801273855,
+              "n_team_seasons": 7,
+              "range": "[0.30, 0.50)"
+            },
+            {
+              "empirical_frequency": 0.6601760317835578,
+              "mean_predicted_probability": 0.5787630924204851,
+              "n_team_seasons": 6,
+              "range": "[0.50, 0.70)"
+            },
+            {
+              "empirical_frequency": 1.0,
+              "mean_predicted_probability": 0.7311444248743033,
+              "n_team_seasons": 1,
+              "range": "[0.70, 1.00]"
+            }
+          ],
+          "brier_score": 0.016780330423490274
+        }
+      }
+    },
+    "tolerance": 0.001
+  },
+  "collinearity": {
+    "coefficient_comparison": {
+      "E4_D5_plus_defensive_experience": {
+        "transfer_in_prior_defensive_experience_sum": -0.024230284473138963,
+        "transfer_in_prior_defensive_impact_sum": null
+      },
+      "E5_D5_plus_defensive_impact": {
+        "transfer_in_prior_defensive_experience_sum": null,
+        "transfer_in_prior_defensive_impact_sum": 0.004757337721412854
+      },
+      "E6_D5_plus_experience_plus_impact": {
+        "transfer_in_prior_defensive_experience_sum": -0.042143798134279285,
+        "transfer_in_prior_defensive_impact_sum": 0.024942063645766264
+      }
+    },
+    "interpretation": "Experience and impact are frozen measurements; coefficients are structural diagnostics, not causal effects.",
+    "training_observed_n": 52,
+    "training_pairwise_correlation": 0.5980482235054371
+  },
+  "defensive_coverage": {
+    "n_team_seasons": 664,
+    "observed_team_seasons": 226,
+    "seasons": [
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "status_counts": {
+      "complete": 182,
+      "no_incoming_defensive_transfer": 44,
+      "no_usable_defensive_transfer": 19,
+      "partial": 419
+    },
+    "unresolved_team_seasons": 438
+  },
+  "frozen_train_through": 2021,
+  "improved_over_d5_by_nll": {
+    "both": true,
+    "experience": true,
+    "impact": false
+  },
+  "missing_data_policy": {
+    "availability_features": [
+      "transfer_in_prior_defensive_experience_available",
+      "transfer_in_prior_defensive_impact_available"
+    ],
+    "neutral_value": 0.0,
+    "observed_statuses": [
+      "complete",
+      "no_incoming_defensive_transfer"
+    ],
+    "population_preserved": true,
+    "unresolved_statuses": [
+      "partial",
+      "no_usable_defensive_transfer"
+    ]
+  },
+  "missingness_controls": [
+    "E4-M_experience_availability_only",
+    "E5-M_impact_availability_only",
+    "E6-M_availability_only"
+  ],
+  "optimizer_penalty": 0.25,
+  "permutation_controls": [
+    "E4P_experience_within_season_permutation",
+    "E5P_impact_within_season_permutation",
+    "E6P_defense_within_season_permutation"
+  ],
+  "production_models_modified": false,
+  "random_seed": 7,
+  "recommendation": "Defensive experience improves D5 while impact does not; advance the recorded defensive box-score game-rate proxy to the next stability study, subject to its controls.",
+  "source_hashes": {
+    "data/processed/defensive_transfer_audit/summary.json": "8288c6a3c2c906a3f13a5b87afada422f75796cbbbb86bb2c4098131f7f0a125",
+    "data/processed/defensive_transfer_audit/team_season_features.csv": "b17ca3893d6274654d7d6c19024ed47dce56b0d0b958c0aa081ed3a2b106a56d",
+    "data/processed/modeling/team_season_rank_distributions.csv": "03e4e372017aedb45392ff7d790cea25f461db9b6dc846514c762ff46e2cab00",
+    "data/processed/preseason/team_season_features.csv": "fd6f171131e38b852b94619338c5580e5f4e8c19f45c74e8135b11b20b1a2019"
+  },
+  "study": "issue_106_defensive_transfer_predictive_value",
+  "target_seasons": [
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "variant_definitions": [
+    {
+      "defensive_features": [],
+      "description": "Existing production Context C0.",
+      "features": [
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite",
+        "returning_pct_ppa",
+        "returning_pct_passing_ppa",
+        "returning_pct_receiving_ppa",
+        "returning_pct_rushing_ppa"
+      ],
+      "kind": "primary",
+      "name": "E0_production_C0"
+    },
+    {
+      "defensive_features": [],
+      "description": "C-minus-RP control.",
+      "features": [
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite"
+      ],
+      "kind": "primary",
+      "name": "E1_no_returning_production"
+    },
+    {
+      "defensive_features": [],
+      "description": "C-minus-RP plus total returning production and incoming prior offensive usage.",
+      "features": [
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite",
+        "returning_pct_ppa",
+        "transfer_in_prior_usage_sum"
+      ],
+      "kind": "primary",
+      "name": "E2_D5"
+    },
+    {
+      "defensive_features": [
+        "transfer_in_prior_defensive_experience_sum"
+      ],
+      "description": "C-minus-RP plus total returning production and defensive experience; no incoming offensive usage.",
+      "features": [
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite",
+        "returning_pct_ppa",
+        "transfer_in_prior_defensive_experience_sum",
+        "transfer_in_prior_defensive_experience_available"
+      ],
+      "kind": "primary",
+      "name": "E3_total_RP_plus_defensive_experience"
+    },
+    {
+      "defensive_features": [
+        "transfer_in_prior_defensive_experience_sum"
+      ],
+      "description": "D5 plus defensive experience and its availability indicator.",
+      "features": [
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite",
+        "returning_pct_ppa",
+        "transfer_in_prior_usage_sum",
+        "transfer_in_prior_defensive_experience_sum",
+        "transfer_in_prior_defensive_experience_available"
+      ],
+      "kind": "primary",
+      "name": "E4_D5_plus_defensive_experience"
+    },
+    {
+      "defensive_features": [
+        "transfer_in_prior_defensive_impact_sum"
+      ],
+      "description": "D5 plus defensive impact and its availability indicator.",
+      "features": [
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite",
+        "returning_pct_ppa",
+        "transfer_in_prior_usage_sum",
+        "transfer_in_prior_defensive_impact_sum",
+        "transfer_in_prior_defensive_impact_available"
+      ],
+      "kind": "primary",
+      "name": "E5_D5_plus_defensive_impact"
+    },
+    {
+      "defensive_features": [
+        "transfer_in_prior_defensive_experience_sum",
+        "transfer_in_prior_defensive_impact_sum"
+      ],
+      "description": "D5 plus defensive experience, defensive impact, and both availability indicators.",
+      "features": [
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite",
+        "returning_pct_ppa",
+        "transfer_in_prior_usage_sum",
+        "transfer_in_prior_defensive_experience_sum",
+        "transfer_in_prior_defensive_experience_available",
+        "transfer_in_prior_defensive_impact_sum",
+        "transfer_in_prior_defensive_impact_available"
+      ],
+      "kind": "primary",
+      "name": "E6_D5_plus_experience_plus_impact"
+    }
+  ]
+}
