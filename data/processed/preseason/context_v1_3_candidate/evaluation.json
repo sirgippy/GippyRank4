@@ -1,0 +1,148 @@
+{
+  "aggregate": {
+    "D5": {
+      "crps": 0.10798618291065663,
+      "expected_rank_mae": 19.489574646043323,
+      "interval_80_average_width": 71.95880149812734,
+      "interval_80_coverage": 0.8377027739003331,
+      "median_rank_mae": 19.675093632958802,
+      "nll": 4.5080806299545095
+    },
+    "D5_incremental_over_context_1_2": {
+      "crps": -0.003956517389686567,
+      "expected_rank_mae": -0.673436716774912,
+      "interval_80_average_width": 0.03932584269662698,
+      "interval_80_coverage": 0.01272572568303132,
+      "median_rank_mae": -0.9194756554307126,
+      "nll": -0.03424077397858394
+    },
+    "P3": {
+      "crps": 0.10776929310065958,
+      "expected_rank_mae": 19.4087125306865,
+      "interval_80_average_width": 71.62172284644194,
+      "interval_80_coverage": 0.8368601279754156,
+      "median_rank_mae": 19.64513108614232,
+      "nll": 4.506145604144135
+    },
+    "P3_incremental_over_D5": {
+      "crps": -0.00021688980999705343,
+      "expected_rank_mae": -0.08086211535682253,
+      "interval_80_average_width": -0.3370786516854025,
+      "interval_80_coverage": -0.0008426459249174512,
+      "median_rank_mae": -0.02996254681648125,
+      "nll": -0.0019350258103747464
+    },
+    "context_1_2": {
+      "crps": 0.1119427003003432,
+      "expected_rank_mae": 20.163011362818235,
+      "interval_80_average_width": 71.91947565543072,
+      "interval_80_coverage": 0.8249770482173018,
+      "median_rank_mae": 20.594569288389515,
+      "nll": 4.5423214039330935
+    }
+  },
+  "annual": {
+    "D5": {
+      "2022": {
+        "crps": 0.10561449458364564,
+        "expected_rank_mae": 18.51603490979311,
+        "interval_80_average_width": 71.69465648854961,
+        "interval_80_coverage": 0.8331647199484964,
+        "median_rank_mae": 18.52671755725191,
+        "nll": 4.4563787950709415
+      },
+      "2023": {
+        "crps": 0.10400838900406108,
+        "expected_rank_mae": 19.155870103218493,
+        "interval_80_average_width": 72.35338345864662,
+        "interval_80_coverage": 0.8710627921154237,
+        "median_rank_mae": 19.402255639097746,
+        "nll": 4.468424225691642
+      },
+      "2024": {
+        "crps": 0.11447798382293448,
+        "expected_rank_mae": 20.414504191358315,
+        "interval_80_average_width": 70.4776119402985,
+        "interval_80_coverage": 0.8148258706467661,
+        "median_rank_mae": 20.70149253731343,
+        "nll": 4.549217101618224
+      },
+      "2025": {
+        "crps": 0.10776439201485094,
+        "expected_rank_mae": 19.84233825319237,
+        "interval_80_average_width": 73.28676470588235,
+        "interval_80_coverage": 0.8319903303787268,
+        "median_rank_mae": 20.03676470588235,
+        "nll": 4.556131769173409
+      }
+    },
+    "P3": {
+      "2022": {
+        "crps": 0.10552472005503363,
+        "expected_rank_mae": 18.46604317348192,
+        "interval_80_average_width": 71.58015267175573,
+        "interval_80_coverage": 0.8316012140163709,
+        "median_rank_mae": 18.519083969465647,
+        "nll": 4.456178484707776
+      },
+      "2023": {
+        "crps": 0.1041671650365459,
+        "expected_rank_mae": 19.21898980570302,
+        "interval_80_average_width": 71.99248120300751,
+        "interval_80_coverage": 0.8726884779516358,
+        "median_rank_mae": 19.55263157894737,
+        "nll": 4.46756533962607
+      },
+      "2024": {
+        "crps": 0.1141610345810839,
+        "expected_rank_mae": 20.264521584658706,
+        "interval_80_average_width": 70.01492537313433,
+        "interval_80_coverage": 0.8136318407960199,
+        "median_rank_mae": 20.671641791044777,
+        "nll": 4.5467767624532875
+      },
+      "2025": {
+        "crps": 0.10715626915306589,
+        "expected_rank_mae": 19.65903896439479,
+        "interval_80_average_width": 72.88235294117646,
+        "interval_80_coverage": 0.8297743755036261,
+        "median_rank_mae": 19.808823529411764,
+        "nll": 4.5519712851267755
+      }
+    },
+    "context_1_2": {
+      "2022": {
+        "crps": 0.1070805294713052,
+        "expected_rank_mae": 18.680197841307987,
+        "interval_80_average_width": 72.09923664122137,
+        "interval_80_coverage": 0.8258070449737882,
+        "median_rank_mae": 18.85496183206107,
+        "nll": 4.466875725773451
+      },
+      "2023": {
+        "crps": 0.10443238133692037,
+        "expected_rank_mae": 19.279227497207376,
+        "interval_80_average_width": 72.1203007518797,
+        "interval_80_coverage": 0.8669985775248933,
+        "median_rank_mae": 19.545112781954888,
+        "nll": 4.472205802111477
+      },
+      "2024": {
+        "crps": 0.11828271940065954,
+        "expected_rank_mae": 21.018063369569877,
+        "interval_80_average_width": 70.8731343283582,
+        "interval_80_coverage": 0.8045771144278607,
+        "median_rank_mae": 21.708955223880597,
+        "nll": 4.584015123056475
+      },
+      "2025": {
+        "crps": 0.11772398148634924,
+        "expected_rank_mae": 21.613120602078272,
+        "interval_80_average_width": 72.58088235294117,
+        "interval_80_coverage": 0.8031829170024174,
+        "median_rank_mae": 22.198529411764707,
+        "nll": 4.642481701864382
+      }
+    }
+  }
+}

@@ -264,6 +264,22 @@ def test_export_refuses_artifact_version_drift(tmp_path: Path) -> None:
         )
 
 
+def test_export_rejects_unactivated_context_candidate_version(tmp_path: Path) -> None:
+    source = _copied_snapshot(tmp_path)
+    metadata_path = source / "metadata.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata["model_versions"]["context_prior"] = "1.3"
+    metadata["prior_model_version"] = "1.3"
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+    with pytest.raises(SiteDataValidationError, match="context_prior model"):
+        build_site_data(
+            root=tmp_path,
+            config_path=_config_for(source, tmp_path),
+            output_directory=tmp_path / "data",
+        )
+
+
 def test_export_accepts_retained_snapshot_when_current_version_advances(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

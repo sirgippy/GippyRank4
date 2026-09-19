@@ -1,0 +1,27 @@
+{
+  "candidate_spec_version": "1.3",
+  "context_features": [
+    "coach_tenure_seasons",
+    "recruiting_class_rank",
+    "recruiting_class_points",
+    "recruiting_points_2y_mean",
+    "recruiting_points_3y_mean",
+    "recruiting_points_4y_mean",
+    "recruiting_points_trend",
+    "talent_composite",
+    "returning_pct_ppa",
+    "transfer_in_prior_usage_sum",
+    "transfer_in_prior_defensive_impact_db_sum",
+    "transfer_in_prior_defensive_impact_db_available"
+  ],
+  "historical_cutoff_caveat": "Values for 2021-2025 reproduce the frozen retrospective research representation; they are not archived August 15 snapshots.",
+  "provenance_class": "retrospective_research_reconstruction",
+  "row_count": 2744,
+  "source_root": "repository working tree",
+  "transfer_features": [
+    "transfer_in_prior_usage_sum",
+    "transfer_in_prior_defensive_impact_db_sum",
+    "transfer_in_prior_defensive_impact_db_available"
+  ],
+  "transfer_root": "external retrospective research oracle (not committed)"
+}

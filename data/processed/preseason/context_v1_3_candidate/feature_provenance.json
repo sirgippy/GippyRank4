@@ -1,0 +1,63 @@
+{
+  "coaching": {
+    "cutoff": "target-season August 15",
+    "feature": "coach_tenure_seasons",
+    "production_status": "production-safe-by-construction",
+    "source": "CFBD /coaches/tenures"
+  },
+  "db_availability": {
+    "feature": "transfer_in_prior_defensive_impact_db_available",
+    "production_status": "production-safe-after-immutable-snapshot-validation",
+    "semantics": {
+      "all_incoming_db_transfers_resolved": "summed impact, availability=1",
+      "no_incoming_db_transfers": "impact=0, availability=1",
+      "one_or_more_unresolved": "neutral impact=0, availability=0"
+    }
+  },
+  "incoming_db_defensive_impact": {
+    "definition": "sum of prior DB defensive impact for incoming DB transfers; each player impact is the frozen equal-weight mean of within-season x DB-group standardized log1p tackles, passes defended, and interceptions",
+    "feature": "transfer_in_prior_defensive_impact_db_sum",
+    "historical_evaluation_caveat": "retrospective research reconstruction for seasons before the production snapshot process existed",
+    "production_status": "production-safe-after-immutable-snapshot-validation",
+    "source": "production preseason transfer-feature artifact derived from frozen portal, prior roster, and defensive game-player snapshots"
+  },
+  "incoming_prior_offensive_usage": {
+    "feature": "transfer_in_prior_usage_sum",
+    "historical_evaluation_caveat": "retrospective research reconstruction for seasons before the production snapshot process existed",
+    "production_status": "production-safe-after-immutable-snapshot-validation",
+    "source": "production preseason transfer-feature artifact derived from frozen portal + prior usage snapshots"
+  },
+  "rank_history": {
+    "historical_coverage": "2003-2025",
+    "production_status": "production-safe-by-construction",
+    "source": "processed Massey final constituent-rank distributions"
+  },
+  "recruiting": {
+    "caveat": "historical values are retrospective endpoint reconstructions, not archived snapshots",
+    "features": [
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend"
+    ],
+    "production_status": "production-safe-by-semantics",
+    "source": "CFBD /recruiting/teams"
+  },
+  "returning_production": {
+    "excluded_features": [
+      "returning_pct_passing_ppa",
+      "returning_pct_receiving_ppa",
+      "returning_pct_rushing_ppa"
+    ],
+    "feature": "returning_pct_ppa",
+    "production_status": "production-safe-with-retrospective-stability-caveat",
+    "source": "CFBD /player/returning"
+  },
+  "team_talent": {
+    "feature": "talent_composite",
+    "production_status": "production-safe-with-retrospective-stability-caveat",
+    "source": "CFBD /talent (247Sports Team Talent Composite)"
+  }
+}
