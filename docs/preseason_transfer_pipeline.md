@@ -68,7 +68,10 @@ rows may be scoped by season and source team.
 The derivation refuses a canonical snapshot whose retrieval timestamp is after
 the target season's August 15 cutoff. A retrospective research response can
 still be kept for research parity, but it cannot be promoted into the
-production artifact.
+production artifact. A post-cutoff refresh is retained as a noncanonical raw
+snapshot, while an existing on-time canonical snapshot remains selected. If
+no on-time snapshot exists, the request remains unsatisfied and derivation
+fails closed.
 
 ## Feature semantics
 

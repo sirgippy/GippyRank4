@@ -235,10 +235,8 @@ def main() -> None:
     )
     late = [
         record.path
-        for record in manifest.snapshots
-        if record.target_season in seasons
-        and record.canonical
-        and not record.captured_on_or_before_cutoff
+        for record in records
+        if record.target_season in seasons and not record.captured_on_or_before_cutoff
     ]
     result = {
         "manifest": str(manifest_path),

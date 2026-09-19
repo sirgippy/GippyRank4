@@ -854,7 +854,12 @@ def write_snapshot_manifest(
     preserve_existing: bool = True,
     required_specs: Iterable[SnapshotSpec] | None = None,
 ) -> Path:
-    """Persist a manifest while retaining superseded raw snapshots."""
+    """Persist a manifest while retaining superseded raw snapshots.
+
+    Late snapshots are deliberately retained for diagnosis and provenance but
+    can never become canonical.  In particular, a post-cutoff refresh must
+    not demote an existing on-time production snapshot.
+    """
     existing: list[SnapshotRecord] = []
     existing_required_requests: list[dict[str, Any]] = []
     if preserve_existing and path.exists():
@@ -880,7 +885,7 @@ def write_snapshot_manifest(
             item.path,
         ),
     ):
-        if record.canonical:
+        if record.canonical and record.captured_on_or_before_cutoff:
             newest_by_request[_canonical_key(record)] = record.snapshot_id
     normalized: list[SnapshotRecord] = []
     for record in values:

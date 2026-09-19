@@ -1,3 +1,4 @@
+import csv
 import hashlib
 import json
 from pathlib import Path
@@ -335,6 +336,125 @@ def test_research_parity_and_attach_hook() -> None:
         rows,
     )
     assert merged[0]["transfer_in_prior_usage_sum"] == 0.5
+
+
+def test_production_derivation_matches_checked_in_research_fixture(
+    tmp_path: Path,
+) -> None:
+    fixture_root = (
+        Path(__file__).parent / "fixtures" / "preseason_transfer_research_parity"
+    )
+    case = json.loads((fixture_root / "case.json").read_text(encoding="utf-8"))
+    expected = list(
+        csv.DictReader(
+            (fixture_root / "expected_features.csv").open(newline="", encoding="utf-8")
+        )
+    )
+    raw_root = tmp_path / "raw"
+    manifest = raw_root / "manifest.json"
+    specs = []
+    records = []
+    for snapshot in case["snapshots"]:
+        spec = SnapshotSpec(
+            target_season=case["target_season"],
+            source=snapshot["source"],
+            source_season=snapshot["source_season"],
+            endpoint=snapshot["endpoint"],
+            query_parameters=snapshot["query_parameters"],
+        )
+        specs.append(spec)
+        records.append(
+            write_immutable_snapshot(
+                raw_root=raw_root,
+                spec=spec,
+                content=_payload_bytes(snapshot["payload"]),
+                retrieval_timestamp=case["retrieval_timestamp"],
+                filename=snapshot["filename"],
+            )
+        )
+    write_snapshot_manifest(
+        manifest,
+        records,
+        raw_root=raw_root,
+        required_specs=specs,
+    )
+
+    result = derive_preseason_transfer_features(
+        manifest,
+        case["team_rows"],
+        required_seasons=[case["target_season"]],
+    )
+    comparisons = validate_research_parity(result["features"], expected)
+
+    assert len(comparisons) == len(expected) * len(MODEL_FEATURE_COLUMNS)
+    by_team = {row["team_id"]: row for row in result["features"]}
+    assert by_team["ucf"]["transfer_in_prior_usage_sum"] == pytest.approx(0.053)
+    assert by_team["ksu"]["transfer_in_prior_defensive_impact_db_available"] == 1
+    assert by_team["syr"]["transfer_in_prior_defensive_impact_db_available"] == 0
+    assert by_team["gamma"]["transfer_in_prior_defensive_impact_db_available"] == 1
+    assert any(
+        row["origin"] == "Prairie View A&M" and row["identity_status"] == "resolved"
+        for row in result["player_audit"]
+    )
+
+
+def test_late_refresh_preserves_on_time_canonical(tmp_path: Path) -> None:
+    manifest = _fixture_manifest(tmp_path)
+    raw_root = manifest.parent
+    spec = SnapshotSpec(2022, "portal", 2022, "/player/portal", {"year": 2022})
+    late = write_immutable_snapshot(
+        raw_root=raw_root,
+        spec=spec,
+        content=_payload_bytes([{"season": 2022, "late": True}]),
+        retrieval_timestamp="2022-08-16T00:00:00+00:00",
+        version="v2",
+    )
+    write_snapshot_manifest(manifest, [late], raw_root=raw_root)
+
+    loaded = load_snapshot_manifest(manifest, verify_hashes=True)
+    portal_records = [
+        record
+        for record in loaded.snapshots
+        if record.target_season == 2022 and record.source == "portal"
+    ]
+    assert len(portal_records) == 2
+    assert sum(record.canonical for record in portal_records) == 1
+    assert next(
+        record for record in portal_records if record.canonical
+    ).captured_on_or_before_cutoff
+    assert (
+        next(record for record in portal_records if not record.canonical).path
+        == late.path
+    )
+    assert (
+        len([record for record in loaded.for_target(2022) if record.source == "portal"])
+        == 1
+    )
+
+
+def test_late_only_snapshot_does_not_satisfy_production_request(
+    tmp_path: Path,
+) -> None:
+    raw_root = tmp_path / "raw"
+    manifest = raw_root / "manifest.json"
+    spec = SnapshotSpec(2022, "portal", 2022, "/player/portal", {"year": 2022})
+    late = write_immutable_snapshot(
+        raw_root=raw_root,
+        spec=spec,
+        content=_payload_bytes([{"season": 2022, "late": True}]),
+        retrieval_timestamp="2022-08-16T00:00:00+00:00",
+    )
+    write_snapshot_manifest(
+        manifest,
+        [late],
+        raw_root=raw_root,
+    )
+
+    manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+    assert manifest_payload["snapshots"][0]["canonical"] is False
+    assert (raw_root / late.path).exists()
+    with pytest.raises(ManifestValidationError, match="missing required snapshots"):
+        load_snapshot_manifest(manifest, verify_hashes=True)
 
 
 def test_late_manifest_snapshot_is_rejected(tmp_path: Path) -> None:
