@@ -1,0 +1,57 @@
+[
+  {
+    "description": "Production Context C 1.2 (C0).",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "returning_pct_passing_ppa",
+      "returning_pct_receiving_ppa",
+      "returning_pct_rushing_ppa"
+    ],
+    "label": "R0",
+    "name": "production_C0"
+  },
+  {
+    "description": "C-minus-RP baseline plus total RP and incoming prior offensive usage.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "transfer_in_prior_usage_sum"
+    ],
+    "label": "R1",
+    "name": "D5"
+  },
+  {
+    "description": "D5 plus imported prior defensive experience and its availability indicator.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "transfer_in_prior_usage_sum",
+      "transfer_in_prior_defensive_experience_sum",
+      "transfer_in_prior_defensive_experience_available"
+    ],
+    "label": "R2",
+    "name": "D5_plus_defensive_experience"
+  }
+]
