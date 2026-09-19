@@ -1,0 +1,119 @@
+[
+  {
+    "description": "D5: C-minus-RP plus returning production and incoming prior usage.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "transfer_in_prior_usage_sum"
+    ],
+    "kind": "primary",
+    "label": "P0",
+    "name": "P0_D5",
+    "position_groups": []
+  },
+  {
+    "description": "D5 plus imported prior defensive impact from DL / EDGE and its availability indicator.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "transfer_in_prior_usage_sum",
+      "transfer_in_prior_defensive_impact_dl_edge_sum",
+      "transfer_in_prior_defensive_impact_dl_edge_available"
+    ],
+    "kind": "primary",
+    "label": "P1",
+    "name": "P1_D5_plus_dl_edge",
+    "position_groups": [
+      "dl_edge"
+    ]
+  },
+  {
+    "description": "D5 plus imported prior defensive impact from LB and its availability indicator.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "transfer_in_prior_usage_sum",
+      "transfer_in_prior_defensive_impact_lb_sum",
+      "transfer_in_prior_defensive_impact_lb_available"
+    ],
+    "kind": "primary",
+    "label": "P2",
+    "name": "P2_D5_plus_lb",
+    "position_groups": [
+      "lb"
+    ]
+  },
+  {
+    "description": "D5 plus imported prior defensive impact from DB and its availability indicator.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "transfer_in_prior_usage_sum",
+      "transfer_in_prior_defensive_impact_db_sum",
+      "transfer_in_prior_defensive_impact_db_available"
+    ],
+    "kind": "primary",
+    "label": "P3",
+    "name": "P3_D5_plus_db",
+    "position_groups": [
+      "db"
+    ]
+  },
+  {
+    "description": "D5 plus all three position-specific defensive impact values and availability indicators.",
+    "features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "transfer_in_prior_usage_sum",
+      "transfer_in_prior_defensive_impact_dl_edge_sum",
+      "transfer_in_prior_defensive_impact_lb_sum",
+      "transfer_in_prior_defensive_impact_db_sum",
+      "transfer_in_prior_defensive_impact_dl_edge_available",
+      "transfer_in_prior_defensive_impact_lb_available",
+      "transfer_in_prior_defensive_impact_db_available"
+    ],
+    "kind": "primary",
+    "label": "P4",
+    "name": "P4_D5_plus_all_position_groups",
+    "position_groups": [
+      "dl_edge",
+      "lb",
+      "db"
+    ]
+  }
+]
