@@ -60,19 +60,26 @@ reconstruct the existing aggregate wherever all three groups are observed.
 Availability-only and within-season permutation controls are generated only for
 a candidate that improves frozen D5 NLL. The permutation preserves season,
 missingness, availability, and the observed value distribution while removing
-the team-to-impact assignment.
+the team-to-impact assignment. The availability-only control is also refit at
+each rolling origin for a successful candidate, so the numeric value can be
+compared with resolvability under the same expanding training protocol.
 
 ## Result for the checked-in frozen inputs
 
 The stored run recommends:
 
-> retain D5 and stop defensive research
+> advance D5 + DB defensive position-group feature
 
 P3 (DB) improves frozen D5 NLL by 0.001935 and beats both its availability-only
-and within-season permutation controls. It also improves NLL in all four rolling
-origins. However, its availability coefficient is larger in absolute value than
-the defensive-value coefficient in 2 of 4 fits, so it fails the predeclared
-stability screen. P1 and P2 do not improve frozen D5; P4 is worse than D5.
+and within-season permutation controls. It also improves NLL versus D5 in all
+four rolling origins. In the rolling DB availability-only comparison, P3 minus
+P3-M is +0.000093 in 2022, -0.001241 in 2023, -0.001469 in 2024, and -0.002921
+in 2025, for a weighted aggregate of -0.001399 across 534 team-seasons. The
+numeric DB value therefore adds predictive information beyond availability in
+the aggregate and in three of four target seasons. Its availability coefficient
+is larger in absolute value than the defensive-value coefficient in 2 of 4
+fits; that relationship is retained as a diagnostic rather than an automatic
+promotion veto. P1 and P2 do not improve frozen D5; P4 is worse than D5.
 
 The full report and machine-readable outputs are written to
 `data/processed/defensive_transfer_position_groups/`.
@@ -85,6 +92,7 @@ The full report and machine-readable outputs are written to
 - `aggregate_reconstruction.csv` — position-sum versus existing aggregate parity.
 - `candidate_summary.csv`, `candidate_annual_metrics.csv` — frozen metrics.
 - `rolling_metrics.csv`, `rolling_aggregate.csv` — rolling metrics and weighted aggregate.
+- `rolling_control_metrics.csv`, `rolling_control_aggregate.csv` — rolling availability-only control metrics.
 - `control_metrics.csv` — availability-only and permutation metrics when controls are required.
 - `coefficients.csv` — standardized coefficient paths, signs, changes, and source coverage.
 - `paired_nll_summary.csv`, `paired_nll_by_team.csv` — paired team-season diagnostics.

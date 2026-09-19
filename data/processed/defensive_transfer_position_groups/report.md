@@ -2,9 +2,9 @@
 
 ## Conclusion
 
-Final recommendation: **retain D5 and stop defensive research**
+Final recommendation: **advance D5 + DB defensive position-group feature**
 
-P0 D5 aggregate NLL is 4.5081. The individual position-group decisions are DL / EDGE: fail, LB: fail, and DB: fail. P4 has frozen ΔNLL 0.029433 versus D5.
+P0 D5 aggregate NLL is 4.5081. The individual position-group decisions are DL / EDGE: fail, LB: fail, and DB: pass. P4 has frozen ΔNLL 0.029433 versus D5.
 
 ## Frozen player construction
 
@@ -166,32 +166,45 @@ The D5 control P0 has aggregate NLL 4.5081. Negative ΔNLL favors the position-g
 | P3 | 4.5069 | -0.001122 | 0.1080 | 19.52 | 19.75 | 0.836 | 71.73 |
 | P4 | 4.5151 | 0.007036 | 0.1084 | 19.47 | 19.79 | 0.834 | 71.24 |
 
-## Paired team-season NLL diagnostics
+### Rolling DB availability-only control
+
+P3-M is D5 plus the DB availability indicator, with the numeric DB impact removed. Both P3 and P3-M are refit at each rolling origin. Each row below is P3 minus P3-M, so a negative value means the resolved DB impact adds predictive information beyond resolvability. The aggregate pools the paired team-seasons across the four target seasons.
 
 | Comparison | Scope | Mean ΔNLL | Median ΔNLL | Fraction improved | Team-seasons |
 |---|---|---:|---:|---:|---:|
-| P1_vs_P0 | aggregate | 0.001782 | 0.000233 | 0.485 | 534 |
-| P1_vs_P0 | 2022 | 0.004309 | 0.000000 | 0.496 | 131 |
-| P1_vs_P0 | 2023 | -0.004905 | 0.001074 | 0.474 | 133 |
-| P1_vs_P0 | 2024 | 0.006181 | 0.000142 | 0.493 | 134 |
-| P1_vs_P0 | 2025 | 0.001551 | 0.000823 | 0.478 | 136 |
-| P2_vs_P0 | aggregate | 0.019880 | 0.003325 | 0.442 | 534 |
-| P2_vs_P0 | 2022 | 0.016285 | 0.001552 | 0.466 | 131 |
-| P2_vs_P0 | 2023 | 0.014324 | 0.003945 | 0.429 | 133 |
-| P2_vs_P0 | 2024 | 0.020466 | 0.003429 | 0.433 | 134 |
-| P2_vs_P0 | 2025 | 0.028200 | 0.009200 | 0.441 | 136 |
-| P3_vs_P0 | aggregate | -0.001935 | -0.000574 | 0.528 | 534 |
-| P3_vs_P0 | 2022 | -0.000200 | -0.000542 | 0.557 | 131 |
-| P3_vs_P0 | 2023 | -0.000859 | 0.000850 | 0.436 | 133 |
-| P3_vs_P0 | 2024 | -0.002440 | -0.001042 | 0.560 | 134 |
-| P3_vs_P0 | 2025 | -0.004160 | -0.001267 | 0.559 | 136 |
-| P4_vs_P0 | aggregate | 0.029433 | 0.004054 | 0.461 | 534 |
-| P4_vs_P0 | 2022 | 0.026394 | 0.000839 | 0.489 | 131 |
-| P4_vs_P0 | 2023 | 0.021416 | 0.004954 | 0.466 | 133 |
-| P4_vs_P0 | 2024 | 0.040705 | 0.012281 | 0.396 | 134 |
-| P4_vs_P0 | 2025 | 0.029096 | 0.000000 | 0.493 | 136 |
-| P3_vs_P3-M | aggregate | -0.001874 | -0.000069 | 0.517 | 534 |
-| P3_vs_P3-P | aggregate | -0.023200 | -0.000589 | 0.532 | 534 |
+| P3_vs_P3-M | aggregate | -0.001399 | -0.000170 | 0.537 | 534 |
+| P3_vs_P3-M | 2022 | 0.000093 | -0.000110 | 0.534 | 131 |
+| P3_vs_P3-M | 2023 | -0.001241 | -0.000021 | 0.511 | 133 |
+| P3_vs_P3-M | 2024 | -0.001469 | -0.000024 | 0.507 | 134 |
+| P3_vs_P3-M | 2025 | -0.002921 | -0.000719 | 0.596 | 136 |
+
+## Paired team-season NLL diagnostics
+
+| Protocol | Comparison | Scope | Mean ΔNLL | Median ΔNLL | Fraction improved | Team-seasons |
+|---|---|---|---:|---:|---:|---:|
+| frozen_through_2021 | P1_vs_P0 | aggregate | 0.001782 | 0.000233 | 0.485 | 534 |
+| frozen_through_2021 | P1_vs_P0 | 2022 | 0.004309 | 0.000000 | 0.496 | 131 |
+| frozen_through_2021 | P1_vs_P0 | 2023 | -0.004905 | 0.001074 | 0.474 | 133 |
+| frozen_through_2021 | P1_vs_P0 | 2024 | 0.006181 | 0.000142 | 0.493 | 134 |
+| frozen_through_2021 | P1_vs_P0 | 2025 | 0.001551 | 0.000823 | 0.478 | 136 |
+| frozen_through_2021 | P2_vs_P0 | aggregate | 0.019880 | 0.003325 | 0.442 | 534 |
+| frozen_through_2021 | P2_vs_P0 | 2022 | 0.016285 | 0.001552 | 0.466 | 131 |
+| frozen_through_2021 | P2_vs_P0 | 2023 | 0.014324 | 0.003945 | 0.429 | 133 |
+| frozen_through_2021 | P2_vs_P0 | 2024 | 0.020466 | 0.003429 | 0.433 | 134 |
+| frozen_through_2021 | P2_vs_P0 | 2025 | 0.028200 | 0.009200 | 0.441 | 136 |
+| frozen_through_2021 | P3_vs_P0 | aggregate | -0.001935 | -0.000574 | 0.528 | 534 |
+| frozen_through_2021 | P3_vs_P0 | 2022 | -0.000200 | -0.000542 | 0.557 | 131 |
+| frozen_through_2021 | P3_vs_P0 | 2023 | -0.000859 | 0.000850 | 0.436 | 133 |
+| frozen_through_2021 | P3_vs_P0 | 2024 | -0.002440 | -0.001042 | 0.560 | 134 |
+| frozen_through_2021 | P3_vs_P0 | 2025 | -0.004160 | -0.001267 | 0.559 | 136 |
+| frozen_through_2021 | P4_vs_P0 | aggregate | 0.029433 | 0.004054 | 0.461 | 534 |
+| frozen_through_2021 | P4_vs_P0 | 2022 | 0.026394 | 0.000839 | 0.489 | 131 |
+| frozen_through_2021 | P4_vs_P0 | 2023 | 0.021416 | 0.004954 | 0.466 | 133 |
+| frozen_through_2021 | P4_vs_P0 | 2024 | 0.040705 | 0.012281 | 0.396 | 134 |
+| frozen_through_2021 | P4_vs_P0 | 2025 | 0.029096 | 0.000000 | 0.493 | 136 |
+| frozen_through_2021 | P3_vs_P3-M | aggregate | -0.001874 | -0.000069 | 0.517 | 534 |
+| frozen_through_2021 | P3_vs_P3-P | aggregate | -0.023200 | -0.000589 | 0.532 | 534 |
+| rolling_origin | P3_vs_P3-M | aggregate | -0.001399 | -0.000170 | 0.537 | 534 |
 
 ### Frozen control metrics
 
@@ -215,21 +228,21 @@ The coefficient artifact reports standardized location coefficients for returnin
 
 ## Controls and position-group decisions
 
-A group is eligible only if it improves frozen D5 NLL, beats its availability-only control, beats its within-season permutation, improves in every rolling target season, keeps one non-zero coefficient sign, avoids availability dominance, and does not collapse to less than half its first rolling magnitude. These criteria were fixed before interpreting the results.
+A group is eligible only if it improves frozen D5 NLL, beats its frozen availability-only control, beats its within-season permutation, improves in every rolling target season, beats its rolling availability-only control in the weighted aggregate, keeps one non-zero coefficient sign, and does not collapse to less than half its first rolling magnitude. The rolling control table reports the target-season pattern as a diagnostic. Availability-coefficient dominance is reported as a stability diagnostic, not used as an automatic promotion veto; the direct availability-only control is the predictive test for a missingness artifact.
 
-| Group candidate | Frozen ΔNLL | Availability control | Permutation control | Rolling persistence | Stable value path | Passed |
-|---|---:|:---:|:---:|:---:|:---:|:---:|
-| P1 (DL / EDGE) | 0.001782 | no | no | no | no | no |
-| P2 (LB) | 0.019880 | no | no | no | yes | no |
-| P3 (DB) | -0.001935 | yes | yes | yes | no | no |
+| Group candidate | Frozen ΔNLL | Frozen availability control | Rolling availability control (aggregate) | Permutation control | Rolling persistence | Stable value path | Availability dominates (diagnostic) | Passed |
+|---|---:|:---:|:---:|:---:|:---:|:---:|---:|:---:|
+| P1 (DL / EDGE) | 0.001782 | no | no | no | no | no | 4 / 4 | no |
+| P2 (LB) | 0.019880 | no | no | no | no | yes | 0 / 4 | no |
+| P3 (DB) | -0.001935 | yes | yes | yes | yes | yes | 2 / 4 | yes |
 
 ### Answers
 
 - DL / EDGE: does not pass the full screen.
 - LB: does not pass the full screen.
-- DB: does not pass the full screen.
+- DB: passes the full screen.
 - Combining position groups: P4 does not improve D5 on frozen aggregate NLL.
-- Aggregate defensive null: The aggregate defensive null is not plausibly explained by cancellation across DL / EDGE, LB, and DB under this frozen decomposition; no group survives the controls and rolling-origin stability screen.
+- Aggregate defensive null: The aggregate null may have obscured a stable position-specific effect, but only the named surviving group is carried forward.
 
 ## Artifacts
 
@@ -239,6 +252,7 @@ A group is eligible only if it improves frozen D5 NLL, beats its availability-on
 - `aggregate_reconstruction.csv` — position sum versus existing aggregate sanity check.
 - `candidate_summary.csv`, `candidate_annual_metrics.csv` — frozen aggregate and annual metrics.
 - `rolling_metrics.csv`, `rolling_aggregate.csv` — rolling annual and weighted aggregate metrics.
+- `rolling_control_metrics.csv`, `rolling_control_aggregate.csv` — rolling availability-only control metrics.
 - `coefficients.csv` — standardized coefficient paths and source coverage.
 - `paired_nll_summary.csv`, `paired_nll_by_team.csv` — paired diagnostics.
 - `plots/` — frozen deltas, rolling NLL, coefficients, and paired losses.

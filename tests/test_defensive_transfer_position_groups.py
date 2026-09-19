@@ -186,3 +186,31 @@ def test_missingness_control_removes_only_numeric_group_value() -> None:
     assert study.DL_EDGE_IMPACT not in control.features
     assert study.DL_EDGE_AVAILABLE in control.features
     assert control.features[: len(study.d5_features())] == study.d5_features()
+
+
+def test_paired_diagnostics_labels_rolling_protocol_and_scopes() -> None:
+    def prediction(season: int, model: str, probability: float):
+        return study.v1_1.v1.PriorPrediction(
+            season=season,
+            subdivision="fbs",
+            team_id=f"team-{season}",
+            team_name=f"Team {season}",
+            population=2,
+            target_ranks=np.asarray([1]),
+            model=model,
+            prior_method="same_subdivision_lag1",
+            pmf=np.asarray([probability, 1.0 - probability]),
+        )
+
+    details, summaries = study.paired_diagnostics(
+        "P3_vs_P3-M",
+        "P3",
+        [prediction(2022, "P3", 0.8), prediction(2023, "P3", 0.8)],
+        "P3-M",
+        [prediction(2022, "P3-M", 0.6), prediction(2023, "P3-M", 0.6)],
+        protocol="rolling_origin",
+    )
+
+    assert {row["protocol"] for row in details} == {"rolling_origin"}
+    assert {row["scope"] for row in summaries} == {"aggregate", "2022", "2023"}
+    assert all(row["mean_delta_nll"] < 0 for row in summaries)

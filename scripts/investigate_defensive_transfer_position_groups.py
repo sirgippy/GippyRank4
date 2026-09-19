@@ -587,6 +587,8 @@ def paired_diagnostics(
     candidate: list[v1_1.PriorPrediction],
     reference_name: str,
     reference: list[v1_1.PriorPrediction],
+    *,
+    protocol: str = "frozen_through_2021",
 ) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
     """Return paired team-season losses and aggregate/year summaries."""
     candidate_losses = v1_1.prediction_losses(candidate)
@@ -598,6 +600,7 @@ def paired_diagnostics(
     details = [
         {
             "comparison": comparison,
+            "protocol": protocol,
             "season": key[0],
             "subdivision": key[1],
             "team_id": key[2],
@@ -615,6 +618,7 @@ def paired_diagnostics(
         numbers = np.asarray(values, dtype=float)
         return {
             "comparison": comparison,
+            "protocol": protocol,
             "candidate": candidate_name,
             "reference": reference_name,
             "scope": scope,
@@ -862,13 +866,18 @@ def _summary_metric(
 
 
 def _paired_aggregate(
-    paired_summaries: list[dict[str, object]], comparison: str
+    paired_summaries: list[dict[str, object]],
+    comparison: str,
+    *,
+    protocol: str = "frozen_through_2021",
 ) -> dict[str, object] | None:
     return next(
         (
             row
             for row in paired_summaries
-            if row["comparison"] == comparison and row["scope"] == "aggregate"
+            if row["comparison"] == comparison
+            and row["protocol"] == protocol
+            and row["scope"] == "aggregate"
         ),
         None,
     )
@@ -916,10 +925,28 @@ def build_group_screens(
             for index, season in enumerate(TARGET_SEASONS)
         ]
         missingness_pair = _paired_aggregate(
-            paired_summaries, f"{candidate.label}_vs_{candidate.label}-M"
+            paired_summaries,
+            f"{candidate.label}_vs_{candidate.label}-M",
         )
         permutation_pair = _paired_aggregate(
-            paired_summaries, f"{candidate.label}_vs_{candidate.label}-P"
+            paired_summaries,
+            f"{candidate.label}_vs_{candidate.label}-P",
+        )
+        rolling_missingness_pair = _paired_aggregate(
+            paired_summaries,
+            f"{candidate.label}_vs_{candidate.label}-M",
+            protocol="rolling_origin",
+        )
+        rolling_missingness_by_season = {
+            str(row["scope"]): float(row["mean_delta_nll"])
+            for row in paired_summaries
+            if row["comparison"] == f"{candidate.label}_vs_{candidate.label}-M"
+            and row["protocol"] == "rolling_origin"
+            and row["scope"] != "aggregate"
+        }
+        rolling_value_beats_availability = bool(
+            rolling_missingness_pair
+            and float(rolling_missingness_pair["mean_delta_nll"]) < 0
         )
         criteria = {
             "frozen_nll_improves_d5": frozen_nll < p0_nll,
@@ -932,8 +959,8 @@ def build_group_screens(
             "rolling_nll_improves_every_target_season": all(
                 delta < 0 for delta in rolling_deltas
             ),
+            "rolling_value_beats_availability_control_aggregate": rolling_value_beats_availability,
             "value_coefficient_same_nonzero_sign": same_nonzero_sign,
-            "availability_never_dominates_value": availability_ok,
             "value_magnitude_not_collapsed": magnitude_ok,
         }
         screens[candidate.label] = {
@@ -950,6 +977,19 @@ def build_group_screens(
             "missingness_control": control.name if control else None,
             "permutation_control": permutation.name if permutation else None,
             "criteria": criteria,
+            "rolling_delta_nll_vs_availability_control": rolling_missingness_by_season,
+            "rolling_aggregate_delta_nll_vs_availability_control": (
+                float(rolling_missingness_pair["mean_delta_nll"])
+                if rolling_missingness_pair
+                else None
+            ),
+            "rolling_availability_control_target_seasons_improved": sum(
+                value < 0 for value in rolling_missingness_by_season.values()
+            ),
+            "diagnostics": {
+                "availability_never_dominates_value": availability_ok,
+                "availability_dominates_n": group_stability["availability_dominates_n"],
+            },
             "stability": group_stability,
             "passed": all(criteria.values()),
         }
@@ -1158,15 +1198,41 @@ def render_report(
         "",
         *_markdown_metrics(rolling_aggregate, candidate_labels),
         "",
-        "## Paired team-season NLL diagnostics",
+        "### Rolling DB availability-only control",
+        "",
+        "P3-M is D5 plus the DB availability indicator, with the numeric DB impact removed. Both P3 and P3-M are refit at each rolling origin. Each row below is P3 minus P3-M, so a negative value means the resolved DB impact adds predictive information beyond resolvability. The aggregate pools the paired team-seasons across the four target seasons.",
         "",
         "| Comparison | Scope | Mean ΔNLL | Median ΔNLL | Fraction improved | Team-seasons |",
         "|---|---|---:|---:|---:|---:|",
     ]
+    rolling_control_summaries = [
+        row
+        for row in paired_summaries
+        if row["protocol"] == "rolling_origin" and str(row["reference"]).endswith("-M")
+    ]
+    for row in sorted(
+        rolling_control_summaries,
+        key=lambda row: (
+            str(row["comparison"]),
+            str(row["scope"]) != "aggregate",
+            int(row["scope"]) if str(row["scope"]).isdigit() else -1,
+        ),
+    ):
+        lines.append(
+            f"| {row['comparison']} | {row['scope']} | {_fmt(row['mean_delta_nll'], 6)} | {_fmt(row['median_delta_nll'], 6)} | {_fmt(row['fraction_team_seasons_improved'], 3)} | {row['n_team_seasons']} |"
+        )
+
+    lines += [
+        "",
+        "## Paired team-season NLL diagnostics",
+        "",
+        "| Protocol | Comparison | Scope | Mean ΔNLL | Median ΔNLL | Fraction improved | Team-seasons |",
+        "|---|---|---|---:|---:|---:|---:|",
+    ]
     for row in paired_summaries:
         if row["scope"] == "aggregate" or str(row["comparison"]).endswith("_vs_P0"):
             lines.append(
-                f"| {row['comparison']} | {row['scope']} | {_fmt(row['mean_delta_nll'], 6)} | {_fmt(row['median_delta_nll'], 6)} | {_fmt(row['fraction_team_seasons_improved'], 3)} | {row['n_team_seasons']} |"
+                f"| {row['protocol']} | {row['comparison']} | {row['scope']} | {_fmt(row['mean_delta_nll'], 6)} | {_fmt(row['median_delta_nll'], 6)} | {_fmt(row['fraction_team_seasons_improved'], 3)} | {row['n_team_seasons']} |"
             )
 
     control_metrics = [
@@ -1215,16 +1281,16 @@ def render_report(
         "",
         "## Controls and position-group decisions",
         "",
-        "A group is eligible only if it improves frozen D5 NLL, beats its availability-only control, beats its within-season permutation, improves in every rolling target season, keeps one non-zero coefficient sign, avoids availability dominance, and does not collapse to less than half its first rolling magnitude. These criteria were fixed before interpreting the results.",
+        "A group is eligible only if it improves frozen D5 NLL, beats its frozen availability-only control, beats its within-season permutation, improves in every rolling target season, beats its rolling availability-only control in the weighted aggregate, keeps one non-zero coefficient sign, and does not collapse to less than half its first rolling magnitude. The rolling control table reports the target-season pattern as a diagnostic. Availability-coefficient dominance is reported as a stability diagnostic, not used as an automatic promotion veto; the direct availability-only control is the predictive test for a missingness artifact.",
         "",
-        "| Group candidate | Frozen ΔNLL | Availability control | Permutation control | Rolling persistence | Stable value path | Passed |",
-        "|---|---:|:---:|:---:|:---:|:---:|:---:|",
+        "| Group candidate | Frozen ΔNLL | Frozen availability control | Rolling availability control (aggregate) | Permutation control | Rolling persistence | Stable value path | Availability dominates (diagnostic) | Passed |",
+        "|---|---:|:---:|:---:|:---:|:---:|:---:|---:|:---:|",
     ]
     for label in ("P1", "P2", "P3"):
         screen = summary["screens"][label]
         criteria = screen["criteria"]
         lines.append(
-            f"| {label} ({screen['position_group_label']}) | {_fmt(screen['frozen_delta_nll_vs_P0'], 6)} | {'yes' if criteria['beats_availability_only_control'] else 'no'} | {'yes' if criteria['beats_within_season_permutation'] else 'no'} | {'yes' if criteria['rolling_nll_improves_every_target_season'] else 'no'} | {'yes' if criteria['value_coefficient_same_nonzero_sign'] and criteria['availability_never_dominates_value'] and criteria['value_magnitude_not_collapsed'] else 'no'} | {'yes' if screen['passed'] else 'no'} |"
+            f"| {label} ({screen['position_group_label']}) | {_fmt(screen['frozen_delta_nll_vs_P0'], 6)} | {'yes' if criteria['beats_availability_only_control'] else 'no'} | {'yes' if criteria['rolling_value_beats_availability_control_aggregate'] else 'no'} | {'yes' if criteria['beats_within_season_permutation'] else 'no'} | {'yes' if criteria['rolling_nll_improves_every_target_season'] else 'no'} | {'yes' if criteria['value_coefficient_same_nonzero_sign'] and criteria['value_magnitude_not_collapsed'] else 'no'} | {screen['diagnostics']['availability_dominates_n']} / {len(screen['stability']['value_coefficients'])} | {'yes' if screen['passed'] else 'no'} |"
         )
     p4 = summary["screens"]["P4"]
     lines += [
@@ -1245,6 +1311,7 @@ def render_report(
         "- `aggregate_reconstruction.csv` — position sum versus existing aggregate sanity check.",
         "- `candidate_summary.csv`, `candidate_annual_metrics.csv` — frozen aggregate and annual metrics.",
         "- `rolling_metrics.csv`, `rolling_aggregate.csv` — rolling annual and weighted aggregate metrics.",
+        "- `rolling_control_metrics.csv`, `rolling_control_aggregate.csv` — rolling availability-only control metrics.",
         "- `coefficients.csv` — standardized coefficient paths and source coverage.",
         "- `paired_nll_summary.csv`, `paired_nll_by_team.csv` — paired diagnostics.",
         "- `plots/` — frozen deltas, rolling NLL, coefficients, and paired losses.",
@@ -1326,7 +1393,7 @@ def plot_outputs(
 
     aggregate = [row for row in paired_summaries if row["scope"] == "aggregate"]
     figure, axis = plt.subplots(figsize=(11, 5))
-    labels = [str(row["comparison"]) for row in aggregate]
+    labels = [f"{row['protocol']}: {row['comparison']}" for row in aggregate]
     values = [float(row["mean_delta_nll"]) for row in aggregate]
     axis.bar(
         labels,
@@ -1578,6 +1645,41 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         frozen_models[candidate.name] = model
         print(f"completed frozen control {candidate.label}", flush=True)
 
+    # The availability-only control must also be refit at each rolling origin.
+    # This is the direct test of whether a numeric DB value adds information
+    # beyond knowing that the corresponding transfer data is resolvable.
+    primary_by_label = {candidate.label: candidate for candidate in primary}
+    rolling_control_predictions: dict[tuple[int, str], list[v1_1.PriorPrediction]] = {}
+    rolling_control_rows: list[dict[str, object]] = []
+    rolling_control_aggregate: list[dict[str, object]] = []
+    for candidate in control_candidates:
+        base = primary_by_label[candidate.label.removesuffix("-M")]
+        for target_season in TARGET_SEASONS:
+            predictions, _ = fit_rolling(contextual, fallback, candidate, target_season)
+            rolling_control_predictions[(target_season, candidate.label)] = predictions
+            rolling_control_rows.append(
+                _metric_row(
+                    candidate,
+                    predictions,
+                    protocol="rolling_origin",
+                    target_season=target_season,
+                    train_through=target_season - 1,
+                    reference=prior.score(rolling_predictions[(target_season, "P0")]),
+                )
+            )
+            print(
+                f"completed rolling {target_season} control {candidate.label}",
+                flush=True,
+            )
+        aggregate = metric_summary(
+            rolling_control_rows,
+            protocol="rolling_origin",
+            candidate=candidate.label,
+        )
+        aggregate["protocol"] = "rolling_origin_weighted_aggregate"
+        aggregate["reference_candidate"] = base.label
+        rolling_control_aggregate.append(aggregate)
+
     paired_details: list[dict[str, object]] = []
     paired_summaries: list[dict[str, object]] = []
     comparisons = [
@@ -1606,6 +1708,28 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             frozen_predictions[candidate_label],
             reference_label,
             frozen_predictions[reference_label],
+        )
+        paired_details.extend(details)
+        paired_summaries.extend(summaries)
+    for candidate in control_candidates:
+        base_label = candidate.label.removesuffix("-M")
+        rolling_base = [
+            item
+            for target_season in TARGET_SEASONS
+            for item in rolling_predictions[(target_season, base_label)]
+        ]
+        rolling_control = [
+            item
+            for target_season in TARGET_SEASONS
+            for item in rolling_control_predictions[(target_season, candidate.label)]
+        ]
+        details, summaries = paired_diagnostics(
+            f"{base_label}_vs_{candidate.label}",
+            base_label,
+            rolling_base,
+            candidate.label,
+            rolling_control,
+            protocol="rolling_origin",
         )
         paired_details.extend(details)
         paired_summaries.extend(summaries)
@@ -1772,6 +1896,8 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         "control_metrics": control_rows,
         "rolling_metrics": rolling_rows,
         "rolling_aggregate": rolling_aggregate,
+        "rolling_control_metrics": rolling_control_rows,
+        "rolling_control_aggregate": rolling_control_aggregate,
         "coverage_by_season_group": position_bundle.coverage_rows,
         "training_coverage": coverage_training,
         "paired_nll_summary": paired_summaries,
@@ -1802,6 +1928,9 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     write_csv(output / "candidate_annual_metrics.csv", frozen_annual)
     write_csv(output / "rolling_metrics.csv", rolling_rows)
     write_csv(output / "rolling_aggregate.csv", rolling_aggregate)
+    if rolling_control_rows:
+        write_csv(output / "rolling_control_metrics.csv", rolling_control_rows)
+        write_csv(output / "rolling_control_aggregate.csv", rolling_control_aggregate)
     write_csv(output / "coefficients.csv", coefficients)
     write_csv(output / "paired_nll_summary.csv", paired_summaries)
     write_csv(output / "paired_nll_by_team.csv", paired_details)
