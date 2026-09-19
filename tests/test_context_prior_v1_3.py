@@ -15,10 +15,12 @@ from gippyrank.context_prior_v1_3 import (
     D5_CONTEXT_FEATURES,
     LOCATION_FEATURE_NAMES,
     MODEL_FEATURE_NAMES,
+    RETROSPECTIVE_2026_PROVENANCE,
     SCALE_FEATURE_NAMES,
     attach_transfer_features,
     attach_transfer_features_to_inference_rows,
     candidate_guard,
+    load_validated_reconstructed_transfer_features,
     model_specification,
     model_specification_metadata,
     validate_feature_contract,
@@ -79,7 +81,7 @@ def test_frozen_contract_has_exact_features_and_equation_placement() -> None:
     assert spec.spec_version == CONTEXT_PRIOR_CANDIDATE_VERSION == "1.3"
     assert metadata["context_features_affect"] == "location_only"
     assert metadata["history_features_affect"] == ["location", "scale"]
-    assert metadata["active_production_version"] == "1.2"
+    assert metadata["active_production_version"] == "1.3"
 
 
 def test_transfer_attachment_is_attach_only_and_preserves_history() -> None:
@@ -122,11 +124,10 @@ def test_inference_attachment_keeps_target_outcomes_out() -> None:
     attached[0].require_no_target()
 
 
-def test_candidate_guard_does_not_reinterpret_2026() -> None:
+def test_activated_guard_allows_2026_without_relabeling_its_provenance() -> None:
     candidate_guard(2025)
-    with pytest.raises(ValueError, match="2026"):
-        candidate_guard(2026)
-    with pytest.raises(ManifestValidationError, match="2026"):
+    candidate_guard(2026)
+    with pytest.raises(ManifestValidationError):
         from gippyrank.context_prior_v1_3 import (
             load_validated_production_transfer_features,
         )
@@ -201,6 +202,63 @@ def test_production_transfer_validation_requires_manifest_identity(
         )
 
 
+def test_2026_reconstruction_accepts_late_inputs_only_with_explicit_provenance(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    sources = ("portal", "usage", "stats", "roster", "games_players")
+    records = tuple(
+        SnapshotRecord(
+            snapshot_id=f"2026:{source}",
+            target_season=2026,
+            source=source,
+            source_season=2026 if source == "portal" else 2025,
+            path=f"{source}.json",
+            source_filename=f"{source}.json",
+            endpoint=f"/{source}",
+            query_parameters={},
+            retrieval_timestamp="2026-09-01T00:00:00+00:00",
+            target_cutoff="2026-08-15",
+            captured_on_or_before_cutoff=False,
+            sha256=f"{len(source) + 100:064x}",
+            record_count=1,
+            canonical=True,
+        )
+        for source in sources
+    )
+    manifest = SnapshotManifest(tmp_path / "manifest.json", tmp_path, records)
+    monkeypatch.setattr(candidate_module, "load_snapshot_manifest", lambda *args, **kwargs: manifest)
+    feature_path = tmp_path / "features.csv"
+    feature_path.write_text(
+        "season,subdivision,team_id,transfer_in_prior_usage_sum,"
+        "transfer_in_prior_defensive_impact_db_sum,"
+        "transfer_in_prior_defensive_impact_db_available\n"
+        "2026,fbs,alpha,1.0,0.0,1.0\n",
+        encoding="utf-8",
+    )
+    provenance = {
+        "provenance_class": RETROSPECTIVE_2026_PROVENANCE,
+        "target_season": 2026,
+        "cutoff": "2026-08-15",
+        "snapshot_ids": [record.snapshot_id for record in records],
+        "snapshot_sha256": [record.sha256 for record in records],
+        "raw_source_hashes": [record.sha256 for record in records],
+        "retrieval_timestamps": [record.retrieval_timestamp for record in records],
+        "source_endpoints": [record.endpoint for record in records],
+        "derivation_timestamp": "2026-09-01T00:00:00+00:00",
+        "known_absence_of_archived_august_15_transfer_snapshot": True,
+        "provenance_statement": "retrospective reconstruction",
+    }
+    loaded, metadata = load_validated_reconstructed_transfer_features(
+        feature_path,
+        manifest.path,
+        target_season=2026,
+        expected_team_keys=[(2026, "fbs", "alpha")],
+        provenance=provenance,
+    )
+    assert loaded[0]["team_id"] == "alpha"
+    assert metadata["provenance_class"] == RETROSPECTIVE_2026_PROVENANCE
+
+
 def test_candidate_artifacts_are_separate_and_parity_validated() -> None:
     expected_files = {
         "candidate_report.md",
@@ -220,18 +278,18 @@ def test_candidate_artifacts_are_separate_and_parity_validated() -> None:
     assert expected_files <= {path.name for path in CANDIDATE.iterdir()}
     spec = json.loads((CANDIDATE / "model_spec.json").read_text())
     assert spec["spec_version"] == "1.3"
-    assert spec["active_production_version"] == "1.2"
+    assert spec["active_production_version"] == "1.3"
     assert spec["features"] == list(MODEL_FEATURE_NAMES)
     report = json.loads((CANDIDATE / "model_report.json").read_text())
     assert all(value["passed"] for value in report["parity"].values())
     assert report["production_activation"]["ready_for_first_future_season_with_valid_on_time_snapshot"]
-    assert report["production_activation"]["2026_guardrail"].startswith("Context 1.2")
+    assert "retrospective reconstruction" in report["production_activation"]["2026_guardrail"]
 
     with (CANDIDATE / "predictions.csv").open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
     assert len(rows) == 534
     assert {row["spec_version"] for row in rows} == {"1.3"}
-    assert {row["candidate_status"] for row in rows} == {"implemented_not_active"}
+    assert {row["candidate_status"] for row in rows} == {"active_production"}
     assert all(
         str(value) != "" for row in rows for value in json.loads(row["pmf"])
     )

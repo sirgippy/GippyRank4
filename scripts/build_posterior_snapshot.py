@@ -13,6 +13,12 @@ def main() -> None:
     parser.add_argument("--season", type=int, required=True)
     parser.add_argument("--prior-family", choices=("context", "history"), required=True)
     parser.add_argument(
+        "--prior-model-version",
+        choices=("1.2", "1.3"),
+        help="Context lineage to rebuild; defaults to the active version (1.3)",
+    )
+    parser.add_argument("--lineage-suffix")
+    parser.add_argument(
         "--snapshot-type", choices=("preseason", "weekly", "live"), required=True
     )
     parser.add_argument(
@@ -27,6 +33,8 @@ def main() -> None:
         cutoff=cutoff,
         prior_family=args.prior_family,
         snapshot_type=args.snapshot_type,
+        prior_model_version=args.prior_model_version,
+        lineage_suffix=args.lineage_suffix,
     )
     print(snapshot.directory)
 

@@ -1,0 +1,52 @@
+{
+  "prior": {
+    "prediction_count": 138,
+    "prior_path": "data/processed/preseason/context_v1_3/annual/2026/predictions.csv",
+    "prior_sha256": "2ef3cc2e5249271c5de2fca471b862b8762eee66b40aefc9a679abf2a45ef1f5"
+  },
+  "transfer": {
+    "cutoff": {
+      "day": 15,
+      "month": 8
+    },
+    "fail_closed": true,
+    "manifest": "data/raw/cfbd/preseason/transfers/manifest.json",
+    "model_feature_columns": [
+      "transfer_in_prior_usage_sum",
+      "transfer_in_prior_defensive_impact_db_sum",
+      "transfer_in_prior_defensive_impact_db_available"
+    ],
+    "seasons": [
+      {
+        "alias_matches": 0,
+        "ambiguous_matches": 8,
+        "applicable_offensive_transfers": 715,
+        "exact_matches": 705,
+        "identity_alias_matches": 0,
+        "identity_ambiguous_matches": 8,
+        "identity_exact_matches": 1250,
+        "identity_source_team_mismatches": 100,
+        "identity_unresolved_matches": 260,
+        "incoming_db_transfers": 604,
+        "incoming_fbs_transfers": 3069,
+        "legitimate_zero_non_applicable": 1342,
+        "normalization_changed_matches": 7,
+        "resolved_applicable_transfers": 705,
+        "resolved_db_transfers": 518,
+        "season": 2026,
+        "source_team_mapping_failures": 293,
+        "source_team_mismatches": 38,
+        "team_name_mapping_failures": 408,
+        "teams_with_no_incoming_db_transfers": 6,
+        "teams_with_observed_db_feature": 74,
+        "teams_with_unavailable_db_feature": 58,
+        "undetermined_applicability": 1012,
+        "unknown_position_records": 2,
+        "unresolved_applicable": 10,
+        "unresolved_db_transfers": 86,
+        "unresolved_matches": 2364,
+        "usage_weighted_identity_resolution_proxy": 0.9790459604585999
+      }
+    ]
+  }
+}

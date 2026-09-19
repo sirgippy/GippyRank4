@@ -142,7 +142,8 @@
             <div class="methodology-card-grid">
               <article class="methodology-card">
                 <p class="methodology-card-label">Primary predictive family</p>
-                <h3>Predictive Context <span class="version-badge" data-version-key="context_prior" data-version-prefix="C ">C 1.2</span></h3>
+                <h3>Predictive Context <span class="version-badge" data-version-key="context_prior" data-version-prefix="C ">C 1.3</span></h3>
+                <p>Context 1.3 is the active production prior. It retains the validated History-plus-Context placement and adds incoming prior offensive usage, incoming prior defensive-back impact, and DB impact availability while removing the passing, receiving, and rushing returning-PPA components. The 2026 transfer features were retrospectively reconstructed after the August 15 cutoff; this is explicit lineage metadata, not a claim about the preseason information state.</p>
                 <p>Context asks what we knew about this particular team before kickoff. It uses program history plus information about this year's team: recruiting, roster talent, returning production, and coach tenure.</p>
                 <p>These inputs are preseason-semantic facts or historical rank summaries. They are not target-season game outcomes. Missing context uses training-only median imputation plus missingness indicators; rank-history cold starts retain the History fallback.</p>
               </article>
@@ -437,7 +438,7 @@
                   <tr><th scope="row">Should recent games receive temporal decay?</th><td>Rolling residual persistence and recency candidates with development gates</td><td>No candidate cleared the required improvement and robustness thresholds</td><td>Retain the static within-season likelihood; do not add an unvalidated decay weight</td></tr>
                   <tr><th scope="row">Should team quality split into offense and defense?</th><td>Scoreboard-only latent offense/defense candidates against a scalar control</td><td>Stage 0 was informative but no candidate passed the production gate; margin mostly tests the combined sum</td><td>Retain one scalar rank-state coordinate in Posterior V1</td></tr>
                   <tr><th scope="row">Should the score-margin likelihood become more complex?</th><td>Frozen alternatives for scale, total points, and transformed margins</td><td>No candidate qualified on development evidence</td><td>Keep the frozen Student-t Historical Likelihood V1</td></tr>
-                  <tr><th scope="row">Which rank-history prior is defensible?</th><td>Temporally held-out comparison of candidate History specifications</td><td>The long-run baseline was selected for H 1.1; Context C 1.2 then added approved preseason inputs under its own gate</td><td>Keep Context and History as documented alternative prior families</td></tr>
+                  <tr><th scope="row">Which rank-history prior is defensible?</th><td>Temporally held-out comparison of candidate History specifications</td><td>The long-run baseline was selected for H 1.1; active Context C 1.3 adds the frozen approved preseason inputs under its own validated gate</td><td>Keep Context and History as documented alternative prior families</td></tr>
                 </tbody>
               </table>
             </div>
@@ -492,7 +493,7 @@
                 <caption>Current production identifiers</caption>
                 <thead><tr><th scope="col">Contract</th><th scope="col">Identifier</th><th scope="col">Role</th></tr></thead>
                 <tbody>
-                  <tr><th scope="row">Predictive Context starting point</th><td><span data-version-key="context_prior" data-version-prefix="C ">C 1.2</span></td><td>Primary preseason starting point</td></tr>
+                  <tr><th scope="row">Predictive Context starting point</th><td><span data-version-key="context_prior" data-version-prefix="C ">C 1.3</span></td><td>Primary preseason starting point; 2026 reconstructed lineage is selected by model version</td></tr>
                   <tr><th scope="row">Predictive History starting point</th><td><span data-version-key="history_prior" data-version-prefix="H ">H 1.1</span></td><td>Rank-history-only starting point</td></tr>
                   <tr><th scope="row">Historical Likelihood</th><td><span data-version-key="historical_likelihood">V1</span></td><td>Completed-game margin likelihood</td></tr>
                   <tr><th scope="row">Posterior engine</th><td><span data-version-key="posterior">V1</span></td><td>Rank-state inference</td></tr>

@@ -98,7 +98,12 @@ def validate_context_source(source_context: Snapshot, root: Path) -> Path:
     if metadata["snapshot_id"] != source_context.snapshot_id:
         raise PerformanceSnapshotValidationError("Context snapshot ID does not match metadata")
 
-    _teams, _rows, prior_path = load_teams(root, int(metadata["season"]), "context")
+    _teams, _rows, prior_path = load_teams(
+        root,
+        int(metadata["season"]),
+        "context",
+        str(metadata["prior_model_version"]),
+    )
     actual_hash = sha256(prior_path)
     if actual_hash != metadata["prior_artifact_sha256"]:
         raise PerformanceSnapshotValidationError(
@@ -331,7 +336,12 @@ def build_performance_snapshot(
 
     context_pmfs = _pmfs(source_dir / "posterior_pmfs.csv")
     context_rows = _ranking_rows(context)
-    _teams, prior_rows, _ = load_teams(root, int(metadata["season"]), "context")
+    _teams, prior_rows, _ = load_teams(
+        root,
+        int(metadata["season"]),
+        "context",
+        str(metadata["prior_model_version"]),
+    )
     prior_pmfs = {
         team_id: _validated_pmf(json.loads(row["pmf"]), f"Context prior for {team_id}")
         for team_id, row in prior_rows.items()

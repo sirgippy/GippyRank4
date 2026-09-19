@@ -1,10 +1,12 @@
-"""Build and validate the frozen Context 1.3 candidate.
+"""Build and validate the frozen Context 1.3 production specification.
 
-This command writes only to the explicit ``context_v1_3_candidate`` namespace.
-It never mutates the active Context 1.2 artifacts, including the 2026 annual
-publication.  Historical scoring uses the checked-in retrospective research
-feature panel; future inference accepts only a validated #114 production
-transfer-feature artifact and its immutable on-time snapshot manifest.
+The historical parity output remains namespaced under
+``context_v1_3_candidate`` for reproducibility of #116.  Activation writes
+new versioned 2026 artifacts separately and never mutates the retained 1.2
+annual or weekly artifacts.  Historical scoring uses the checked-in
+retrospective research feature panel; future inference accepts either the
+validated on-time production transfer artifact or the explicitly labelled
+retrospective 2026 reconstruction.
 """
 
 from __future__ import annotations
@@ -42,6 +44,7 @@ from gippyrank.context_prior_v1_3 import (
     candidate_guard,
     fit_model,
     load_validated_production_transfer_features,
+    load_validated_reconstructed_transfer_features,
     model_specification_metadata,
 )
 
@@ -362,7 +365,7 @@ def prediction_artifact_rows(predictions: list) -> list[dict[str, object]]:
             **prediction.csv_row(),
             "model_family": "context_prior",
             "spec_version": CONTEXT_PRIOR_CANDIDATE_VERSION,
-            "candidate_status": "implemented_not_active",
+            "candidate_status": "active_production",
             "context_snapshot_mode": "retrospective_reconstruction",
         }
         for prediction in predictions
@@ -465,7 +468,7 @@ def build_annual_inference_rows(
     transfer_manifest_path: Path,
     provenance: Mapping[str, object],
 ) -> tuple[list[InferenceRow], dict[str, object]]:
-    """Build future rows only after the production transfer chain is valid."""
+    """Build future rows only after the transfer provenance chain is valid."""
     candidate_guard(target_season)
     if trained_through_season != target_season - 1:
         raise ValueError("annual Context 1.3 inference requires target - 1 training")
@@ -477,7 +480,13 @@ def build_annual_inference_rows(
     expected = {
         key for key in index if key[0] == target_season and key[1] == "fbs"
     }
-    feature_rows, metadata = load_validated_production_transfer_features(
+    loader = (
+        load_validated_reconstructed_transfer_features
+        if provenance.get("provenance_class")
+        == "retrospective_2026_reconstruction"
+        else load_validated_production_transfer_features
+    )
+    feature_rows, metadata = loader(
         transfer_feature_path,
         transfer_manifest_path,
         target_season=target_season,
@@ -526,10 +535,10 @@ def build_report(
         "P3": score_by_season(predictions),
     }
     return {
-        "candidate": {
+        "model": {
             "model_family": "context_prior",
             "spec_version": CONTEXT_PRIOR_CANDIDATE_VERSION,
-            "status": "implemented_and_validated_not_active",
+            "status": "active_production",
             "active_production_context_version": ACTIVE_CONTEXT_PRIOR_VERSION,
         },
         "feature_contract": {
@@ -590,7 +599,7 @@ def build_report(
             ),
             "required_input": "validated immutable production transfer-feature artifact",
             "missing_or_late_behavior": "fail closed",
-            "2026_guardrail": "Context 1.2 remains the only valid 2026 publication lineage",
+            "2026_guardrail": "2026 may use only the explicit retrospective reconstruction; future seasons require on-time immutable provenance",
         },
         "coverage": {
             "n_context_rows": len(coverage),
@@ -605,9 +614,9 @@ def render_report(report: Mapping[str, object], path: Path) -> None:
     aggregate = report["aggregate_metrics"]
     parity = report["parity"]
     lines = [
-        "# Context 1.3 candidate validation",
+        "# Context 1.3 production validation",
         "",
-        "Context 1.3 is implemented and validated as a future-activation candidate. The active production Context identifier remains 1.2.",
+        "Context 1.3 is the active production Context specification. The retained Context 1.2 artifacts remain historical and reproducible.",
         "",
         "## Frozen contract",
         "",
@@ -639,9 +648,9 @@ def render_report(report: Mapping[str, object], path: Path) -> None:
         "",
         "## Provenance and activation guardrails",
         "",
-        "Historical 2021–2025 transfer values are retrospective research reconstructions, not archived August 15 snapshots. Future annual inference requires a validated immutable manifest, complete canonical FBS rows, an on-time cutoff, and explicit provenance metadata; absent or late inputs fail closed.",
+        "Historical 2021–2025 transfer values are retrospective research reconstructions, not archived August 15 snapshots. Future annual inference requires a validated immutable manifest, complete canonical FBS rows, an on-time cutoff, and explicit provenance metadata; absent or late inputs fail closed. The 2026 activation is the documented retrospective exception and cannot masquerade as cutoff-safe.",
         "",
-        "The 2026 Context 1.2 annual artifact and its weekly publication lineage are not overwritten or reinterpreted by this candidate.",
+        "The 2026 Context 1.2 annual artifact and its weekly publication lineage are not overwritten or reinterpreted by activation.",
         "",
     ]
     path.write_text("\n".join(lines), encoding="utf-8")

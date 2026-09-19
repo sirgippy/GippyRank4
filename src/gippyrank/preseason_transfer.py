@@ -853,12 +853,14 @@ def write_snapshot_manifest(
     cutoff_day: int = DEFAULT_CUTOFF_DAY,
     preserve_existing: bool = True,
     required_specs: Iterable[SnapshotSpec] | None = None,
+    allow_late_canonical: bool = False,
 ) -> Path:
     """Persist a manifest while retaining superseded raw snapshots.
 
     Late snapshots are deliberately retained for diagnosis and provenance but
-    can never become canonical.  In particular, a post-cutoff refresh must
-    not demote an existing on-time production snapshot.
+    can never become canonical by default.  The explicit 2026 retrospective
+    activation may opt into a separate late-canonical manifest; production
+    callers must leave this false.
     """
     existing: list[SnapshotRecord] = []
     existing_required_requests: list[dict[str, Any]] = []
@@ -885,7 +887,9 @@ def write_snapshot_manifest(
             item.path,
         ),
     ):
-        if record.canonical and record.captured_on_or_before_cutoff:
+        if record.canonical and (
+            record.captured_on_or_before_cutoff or allow_late_canonical
+        ):
             newest_by_request[_canonical_key(record)] = record.snapshot_id
     normalized: list[SnapshotRecord] = []
     for record in values:
@@ -1548,9 +1552,12 @@ def _load_target_inputs(
     team_rows: Sequence[Mapping[str, Any]],
     team_aliases: Mapping[str | tuple[int, str], str],
     player_aliases: PlayerAliasResolver,
+    allow_late_snapshots: bool = False,
 ) -> dict[str, Any]:
     records = manifest.for_target(target_season)
-    if any(not item.captured_on_or_before_cutoff for item in records):
+    if not allow_late_snapshots and any(
+        not item.captured_on_or_before_cutoff for item in records
+    ):
         late = [item.path for item in records if not item.captured_on_or_before_cutoff]
         raise ManifestValidationError(
             f"target season {target_season} has snapshots captured after its "
@@ -1674,8 +1681,14 @@ def derive_preseason_transfer_features(
     | Iterable[Mapping[str, Any]]
     | None = None,
     required_seasons: Iterable[int] | None = None,
+    allow_late_snapshots: bool = False,
 ) -> dict[str, Any]:
-    """Derive canonical features entirely from validated immutable snapshots."""
+    """Derive canonical features entirely from validated immutable snapshots.
+
+    ``allow_late_snapshots`` is reserved for the explicitly labelled 2026
+    retrospective reconstruction.  The default production path remains
+    fail-closed at the preseason cutoff.
+    """
     teams = [dict(row) for row in team_rows]
     aliases = dict(team_aliases or {})
     player_alias_resolver = (
@@ -1692,6 +1705,10 @@ def derive_preseason_transfer_features(
         verify_hashes=True,
     )
     target_seasons = requested_seasons or manifest.target_seasons
+    if allow_late_snapshots and set(target_seasons) != {2026}:
+        raise ManifestValidationError(
+            "late transfer snapshots are permitted only for the explicit 2026 reconstruction"
+        )
     all_feature_rows: list[Row] = []
     all_audit_rows: list[Row] = []
     all_mapping_rows: list[Row] = []
@@ -1715,6 +1732,7 @@ def derive_preseason_transfer_features(
             team_rows=teams,
             team_aliases=aliases,
             player_aliases=player_alias_resolver,
+            allow_late_snapshots=allow_late_snapshots,
         )
         offensive = audit_offensive_transfers(
             inputs["records"],

@@ -9,7 +9,7 @@ import json
 import re
 import shutil
 import tempfile
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -387,6 +387,18 @@ def _publication_comparisons(
                 publication_order=order,
                 snapshot_id=snapshot_id,
                 display_label=entry["display_label"],
+                prior_model_version=(
+                    str(metadata.get("prior_model_version"))
+                    if metadata["ranking_family"] == "predictive"
+                    else None
+                ),
+                context_prior_model_version=(
+                    str(metadata["model_versions"]["context_prior"])
+                    if metadata["ranking_family"] == "predictive"
+                    and isinstance(metadata.get("model_versions"), dict)
+                    and metadata["model_versions"].get("context_prior") is not None
+                    else None
+                ),
             )
         )
         sources[snapshot_id] = source
@@ -438,6 +450,34 @@ def _previous_official_comparison(
         snapshot_id=f"candidate:{publication_slot}:{ranking_family}:{prior_family}",
         display_label=publication_slot,
     )
+    previous = resolve_previous_official(current, comparisons)
+    if previous is not None or not comparisons or ranking_family != "predictive":
+        return previous
+
+    # A caller may be preparing a report against a legacy configuration that
+    # predates explicit prior-version metadata.  If the configured family has
+    # exactly one lineage, use it; mixed Context 1.2/1.3 configurations remain
+    # fail-closed and require an explicit candidate version.
+    family_comparisons = [
+        comparison
+        for comparison in comparisons
+        if comparison.ranking_family == ranking_family
+        and comparison.prior_family == prior_family
+    ]
+    if prior_family == "context":
+        versions = {comparison.prior_model_version for comparison in family_comparisons}
+        if len(versions) == 1:
+            current = replace(current, prior_model_version=next(iter(versions)))
+    else:
+        versions = {
+            comparison.context_prior_model_version
+            for comparison in family_comparisons
+        }
+        if len(versions) == 1:
+            current = replace(
+                current,
+                context_prior_model_version=next(iter(versions)),
+            )
     return resolve_previous_official(current, comparisons)
 
 
