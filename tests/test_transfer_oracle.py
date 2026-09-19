@@ -166,3 +166,23 @@ def test_usage_join_is_name_normalized_and_missing_quality_is_not_zero() -> None
 def test_transfer_date_parser_rejects_invalid_text() -> None:
     with pytest.raises(ValueError):
         parse_transfer_date("not-a-date")
+
+
+def test_portal_parser_retains_a_shared_identifier_when_the_source_provides_one() -> (
+    None
+):
+    records = parse_transfer_payload(
+        [
+            {
+                "season": 2022,
+                "id": "shared-1",
+                "firstName": "Player",
+                "lastName": "One",
+                "origin": "Alpha",
+                "destination": "Beta",
+                "transferDate": "2022-08-01",
+            }
+        ],
+        season=2022,
+    )
+    assert records[0].player_id == "shared-1"

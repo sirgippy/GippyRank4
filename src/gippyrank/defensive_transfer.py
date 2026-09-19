@@ -560,6 +560,15 @@ def _player_index(
     return dict(result)
 
 
+def _player_id_index(
+    roster: Sequence[RosterPlayer],
+) -> dict[tuple[int, str, str], list[RosterPlayer]]:
+    result: defaultdict[tuple[int, str, str], list[RosterPlayer]] = defaultdict(list)
+    for item in roster:
+        result[(item.season, item.normalized_team, item.player_id)].append(item)
+    return dict(result)
+
+
 def _defensive_player_index(
     players: Sequence[DefensivePlayerSeason],
 ) -> dict[tuple[int, str, str], list[DefensivePlayerSeason]]:
@@ -570,6 +579,17 @@ def _defensive_player_index(
         result[(item.season, item.normalized_team, item.normalized_player_name)].append(
             item
         )
+    return dict(result)
+
+
+def _defensive_player_id_index(
+    players: Sequence[DefensivePlayerSeason],
+) -> dict[tuple[int, str, str], list[DefensivePlayerSeason]]:
+    result: defaultdict[tuple[int, str, str], list[DefensivePlayerSeason]] = (
+        defaultdict(list)
+    )
+    for item in players:
+        result[(item.season, item.normalized_team, item.player_id)].append(item)
     return dict(result)
 
 
@@ -593,7 +613,9 @@ def audit_transfer_records(
     team_input = [dict(row) for row in team_rows]
     resolver = TeamResolver(team_input, aliases)
     roster_idx = _player_index(roster_list)
+    roster_id_idx = _player_id_index(roster_list)
     player_idx = _defensive_player_index(player_list)
+    player_id_idx = _defensive_player_id_index(player_list)
     zero_impact_by_group = {
         (player.season, player.position_group): player.defensive_impact
         for player in player_list
@@ -683,9 +705,28 @@ def audit_transfer_records(
             audit_rows.append(row)
             continue
         source_team = normalize_team_name(record.origin)
-        matches = roster_idx.get(
-            (prior_season, source_team, normalize_player_name(record.player_name)), []
-        )
+        identity_method = "normalized_name_source_team"
+        if record.player_id:
+            stable_matches = roster_id_idx.get(
+                (prior_season, source_team, record.player_id), []
+            )
+            if stable_matches:
+                matches = stable_matches
+                identity_method = "stable_player_id_source_team"
+            else:
+                matches = roster_idx.get(
+                    (
+                        prior_season,
+                        source_team,
+                        normalize_player_name(record.player_name),
+                    ),
+                    [],
+                )
+        else:
+            matches = roster_idx.get(
+                (prior_season, source_team, normalize_player_name(record.player_name)),
+                [],
+            )
         if len(matches) > 1:
             row.update(
                 {
@@ -720,15 +761,21 @@ def audit_transfer_records(
         prior_group = roster_match.position_group
         row.update(
             {
-                "identity_join_method": "normalized_name_source_team",
+                "identity_join_method": identity_method,
                 "prior_position": roster_match.position,
                 "prior_position_group": prior_group,
                 "prior_player_id": roster_match.player_id,
             }
         )
-        stats_matches = player_idx.get(
-            (prior_season, source_team, normalize_player_name(record.player_name)), []
-        )
+        if identity_method == "stable_player_id_source_team" and record.player_id:
+            stats_matches = player_id_idx.get(
+                (prior_season, source_team, record.player_id), []
+            )
+        else:
+            stats_matches = player_idx.get(
+                (prior_season, source_team, normalize_player_name(record.player_name)),
+                [],
+            )
         if prior_group != row["portal_position_group"]:
             if len(stats_matches) == 1:
                 player = stats_matches[0]

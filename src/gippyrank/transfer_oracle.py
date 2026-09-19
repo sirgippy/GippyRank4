@@ -72,6 +72,7 @@ class TransferRecord:
     rating: float | None
     stars: int | None
     eligibility: str | None
+    player_id: str | None = None
 
     @property
     def position_group(self) -> str | None:
@@ -186,6 +187,11 @@ def parse_transfer_payload(
                 eligibility=(
                     str(item["eligibility"]).strip()
                     if item.get("eligibility")
+                    else None
+                ),
+                player_id=(
+                    str(item.get("id") or item.get("playerId")).strip()
+                    if item.get("id") or item.get("playerId")
                     else None
                 ),
             )

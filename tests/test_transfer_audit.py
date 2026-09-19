@@ -295,3 +295,44 @@ def test_usage_parser_retains_identifier_for_stable_id_audit() -> None:
     )
     assert usage[0].player_id == "123"
     assert usage[0].conference == "TEST"
+
+
+def test_shared_stable_id_is_preferred_over_a_name_mismatch() -> None:
+    records = parse_transfer_payload(
+        [
+            {
+                "season": 2022,
+                "id": "shared-1",
+                "firstName": "Portal",
+                "lastName": "Name",
+                "origin": "Alpha",
+                "destination": "Beta",
+                "position": "QB",
+                "transferDate": "2022-08-01",
+            }
+        ],
+        season=2022,
+    )
+    usage = parse_usage_payload(
+        [
+            {
+                "season": 2021,
+                "id": "shared-1",
+                "name": "Different Source Name",
+                "team": "Alpha",
+                "position": "QB",
+                "usage": {"overall": 0.4},
+            }
+        ],
+        season=2021,
+    )
+    audit = audit_transfer_records(
+        records,
+        usage,
+        _team_rows(),
+        cutoff=date(2025, 8, 15),
+    )
+    row = audit["join_rows"][0]
+    assert row["usage_join_status"] == "joined"
+    assert row["usage_join_method"] == "stable_player_id_and_source_team"
+    assert row["d5_feature_value"] == pytest.approx(0.4)
