@@ -250,6 +250,7 @@ def _usage_indexes(usage: Sequence[UsageRecord]) -> dict[str, Any]:
     by_key: defaultdict[tuple[int, str, str], list[int]] = defaultdict(list)
     by_raw_key: defaultdict[tuple[int, str, str], list[int]] = defaultdict(list)
     by_name: defaultdict[tuple[int, str], list[int]] = defaultdict(list)
+    by_id: defaultdict[tuple[int, str, str], list[int]] = defaultdict(list)
     for index, item in enumerate(usage):
         normalized_team = normalize_team_name(item.team)
         normalized_player = normalize_player_name(item.player_name)
@@ -258,7 +259,14 @@ def _usage_indexes(usage: Sequence[UsageRecord]) -> dict[str, Any]:
             (item.season, normalized_team, _raw_player_name(item.player_name))
         ].append(index)
         by_name[(item.season, normalized_player)].append(index)
-    return {"by_key": by_key, "by_raw_key": by_raw_key, "by_name": by_name}
+        if item.player_id:
+            by_id[(item.season, normalized_team, item.player_id)].append(index)
+    return {
+        "by_key": by_key,
+        "by_raw_key": by_raw_key,
+        "by_name": by_name,
+        "by_id": by_id,
+    }
 
 
 def _participation_indexes(
@@ -452,6 +460,36 @@ def _usage_match(
     """Return status, method, candidate usage rows, and normalization rescue flag."""
     if not record.origin:
         return "missing_origin", "none", [], False
+    if record.player_id:
+        stable_candidates: list[int] = []
+        for team_name, _method in _team_name_candidates(record, source_resolution):
+            stable_candidates.extend(
+                indexes["by_id"].get(
+                    (record.season - 1, team_name, record.player_id), []
+                )
+            )
+        if len(stable_candidates) > 1:
+            return (
+                "ambiguous_usage_join",
+                "stable_player_id_and_source_team",
+                sorted(set(stable_candidates)),
+                False,
+            )
+        if len(stable_candidates) == 1:
+            item = usage[stable_candidates[0]]
+            if item.overall_usage is None:
+                return (
+                    "usage_record_without_overall_value",
+                    "stable_player_id_and_source_team",
+                    stable_candidates,
+                    False,
+                )
+            return (
+                "joined",
+                "stable_player_id_and_source_team",
+                stable_candidates,
+                False,
+            )
     normalized_player = normalize_player_name(record.player_name)
     raw_player = _raw_player_name(record.player_name)
     raw_candidates: list[int] = []
@@ -1285,20 +1323,27 @@ def _median(values: Sequence[float]) -> float | None:
 def _stable_id_assessment(
     records: Sequence[TransferRecord], usage: Sequence[UsageRecord]
 ) -> Row:
+    portal_ids = [item.player_id for item in records if item.player_id]
     usage_ids = [item.player_id for item in usage if item.player_id]
+    shared_ids = set(portal_ids) & set(usage_ids)
     return {
         "portal_records": len(records),
-        "portal_records_with_stable_id": 0,
+        "portal_records_with_stable_id": len(portal_ids),
         "usage_records": len(usage),
         "usage_records_with_stable_id": len(usage_ids),
         "unique_usage_stable_ids": len(set(usage_ids)),
-        "cross_endpoint_stable_id_available": False,
+        "shared_stable_id_count": len(shared_ids),
+        "cross_endpoint_stable_id_available": bool(shared_ids),
         "recommendation": (
-            "retain an explicit normalized player-name + source-team join, use a "
-            "stable ID only if a future portal snapshot exposes the same identifier, "
+            "use a verified shared stable ID with source-team validation when present; "
+            "otherwise retain the explicit normalized player-name + source-team join "
             "and fail closed on ambiguity"
         ),
-        "limitation": "CFBD /player/portal payloads contain no player ID in the audited seasons; /player/usage IDs cannot be linked cross-endpoint",
+        "limitation": (
+            "a player ID is usable only when it is present in both endpoint payloads "
+            "and resolves uniquely within the source team; otherwise the IDs remain "
+            "endpoint-local"
+        ),
     }
 
 

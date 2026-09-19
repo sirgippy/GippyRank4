@@ -1,0 +1,364 @@
+{
+  "target_season": 2022,
+  "retrieval_timestamp": "2022-08-01T12:00:00+00:00",
+  "team_rows": [
+    {
+      "season": 2021,
+      "subdivision": "fbs",
+      "team_id": "fl",
+      "team_name": "Florida"
+    },
+    {
+      "season": 2021,
+      "subdivision": "fbs",
+      "team_id": "ut",
+      "team_name": "Utah"
+    },
+    {
+      "season": 2021,
+      "subdivision": "fcs",
+      "team_id": "pv",
+      "team_name": "Prairie View A&M"
+    },
+    {
+      "season": 2021,
+      "subdivision": "fcs",
+      "team_id": "dart",
+      "team_name": "Dartmouth"
+    },
+    {
+      "season": 2022,
+      "subdivision": "fbs",
+      "team_id": "ucf",
+      "team_name": "UCF"
+    },
+    {
+      "season": 2022,
+      "subdivision": "fbs",
+      "team_id": "wis",
+      "team_name": "Wisconsin"
+    },
+    {
+      "season": 2022,
+      "subdivision": "fbs",
+      "team_id": "ksu",
+      "team_name": "Kansas State"
+    },
+    {
+      "season": 2022,
+      "subdivision": "fbs",
+      "team_id": "syr",
+      "team_name": "Syracuse"
+    },
+    {
+      "season": 2022,
+      "subdivision": "fbs",
+      "team_id": "gamma",
+      "team_name": "Gamma"
+    }
+  ],
+  "snapshots": [
+    {
+      "source": "portal",
+      "source_season": 2022,
+      "endpoint": "/player/portal",
+      "query_parameters": {
+        "year": 2022
+      },
+      "filename": "portal.json",
+      "payload": [
+        {
+          "season": 2022,
+          "id": "off-1",
+          "firstName": "Demarkcus",
+          "lastName": "Bowman",
+          "origin": "Florida",
+          "destination": "UCF",
+          "position": "RB",
+          "transferDate": "2022-08-01"
+        },
+        {
+          "season": 2022,
+          "id": "db-1",
+          "firstName": "Kamo'i",
+          "lastName": "Latu",
+          "origin": "Utah",
+          "destination": "Wisconsin",
+          "position": "DB",
+          "transferDate": "2022-08-02"
+        },
+        {
+          "season": 2022,
+          "id": "db-2",
+          "firstName": "Drake",
+          "lastName": "Cheatum",
+          "origin": "Prairie View A&M",
+          "destination": "Kansas State",
+          "position": "S",
+          "transferDate": "2022-08-03"
+        },
+        {
+          "season": 2022,
+          "firstName": "Isaiah",
+          "lastName": "Johnson",
+          "origin": "Dartmouth",
+          "destination": "Syracuse",
+          "position": "CB",
+          "transferDate": "2022-08-04"
+        }
+      ]
+    },
+    {
+      "source": "usage",
+      "source_season": 2021,
+      "endpoint": "/player/usage",
+      "query_parameters": {
+        "year": 2021
+      },
+      "filename": "usage.json",
+      "payload": [
+        {
+          "season": 2021,
+          "id": "off-1",
+          "name": "Demarkcus Bowman",
+          "team": "Florida",
+          "position": "RB",
+          "usage": {
+            "overall": 0.053
+          }
+        }
+      ]
+    },
+    {
+      "source": "stats",
+      "source_season": 2021,
+      "endpoint": "/stats/player/season",
+      "query_parameters": {
+        "year": 2021
+      },
+      "filename": "stats.json",
+      "payload": [
+        {
+          "season": 2021,
+          "playerId": "off-1",
+          "player": "Demarkcus Bowman",
+          "team": "Florida",
+          "position": "RB",
+          "category": "rushing",
+          "statType": "YDS",
+          "stat": "100"
+        }
+      ]
+    },
+    {
+      "source": "roster",
+      "source_season": 2021,
+      "endpoint": "/roster",
+      "query_parameters": {
+        "classification": "fbs",
+        "year": 2021
+      },
+      "filename": "roster-fbs.json",
+      "payload": [
+        {
+          "id": "db-1",
+          "firstName": "Kamo'i",
+          "lastName": "Latu",
+          "team": "Utah",
+          "position": "DB"
+        },
+        {
+          "id": "db-3",
+          "firstName": "Utah",
+          "lastName": "Baseline",
+          "team": "Utah",
+          "position": "DB"
+        }
+      ]
+    },
+    {
+      "source": "roster",
+      "source_season": 2021,
+      "endpoint": "/roster",
+      "query_parameters": {
+        "classification": "fcs",
+        "year": 2021
+      },
+      "filename": "roster-fcs.json",
+      "payload": [
+        {
+          "id": "db-2",
+          "firstName": "Drake",
+          "lastName": "Cheatum",
+          "team": "Prairie View A&M",
+          "position": "S"
+        },
+        {
+          "id": "db-4",
+          "firstName": "Prairie",
+          "lastName": "Baseline",
+          "team": "Prairie View A&M",
+          "position": "S"
+        }
+      ]
+    },
+    {
+      "source": "games_players",
+      "source_season": 2021,
+      "endpoint": "/games/players",
+      "query_parameters": {
+        "classification": "fbs",
+        "seasonType": "both",
+        "week": 1,
+        "year": 2021
+      },
+      "filename": "games-fbs-week-01.json",
+      "payload": [
+        {
+          "id": "g1",
+          "teams": [
+            {
+              "team": "Utah",
+              "categories": [
+                {
+                  "name": "defensive",
+                  "types": [
+                    {
+                      "name": "TOT",
+                      "athletes": [
+                        {
+                          "id": "db-1",
+                          "name": "Kamo'i Latu",
+                          "stat": "19"
+                        },
+                        {
+                          "id": "db-3",
+                          "name": "Utah Baseline",
+                          "stat": "1"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "PD",
+                      "athletes": [
+                        {
+                          "id": "db-1",
+                          "name": "Kamo'i Latu",
+                          "stat": "3"
+                        },
+                        {
+                          "id": "db-3",
+                          "name": "Utah Baseline",
+                          "stat": "0"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "interceptions",
+                  "types": [
+                    {
+                      "name": "INT",
+                      "athletes": [
+                        {
+                          "id": "db-1",
+                          "name": "Kamo'i Latu",
+                          "stat": "0"
+                        },
+                        {
+                          "id": "db-3",
+                          "name": "Utah Baseline",
+                          "stat": "0"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source": "games_players",
+      "source_season": 2021,
+      "endpoint": "/games/players",
+      "query_parameters": {
+        "classification": "fcs",
+        "seasonType": "both",
+        "week": 2,
+        "year": 2021
+      },
+      "filename": "games-fcs-week-02.json",
+      "payload": [
+        {
+          "id": "g2",
+          "teams": [
+            {
+              "team": "Prairie View A&M",
+              "categories": [
+                {
+                  "name": "defensive",
+                  "types": [
+                    {
+                      "name": "TOT",
+                      "athletes": [
+                        {
+                          "id": "db-2",
+                          "name": "Drake Cheatum",
+                          "stat": "12"
+                        },
+                        {
+                          "id": "db-4",
+                          "name": "Prairie Baseline",
+                          "stat": "2"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "PD",
+                      "athletes": [
+                        {
+                          "id": "db-2",
+                          "name": "Drake Cheatum",
+                          "stat": "0"
+                        },
+                        {
+                          "id": "db-4",
+                          "name": "Prairie Baseline",
+                          "stat": "0"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "interceptions",
+                  "types": [
+                    {
+                      "name": "INT",
+                      "athletes": [
+                        {
+                          "id": "db-2",
+                          "name": "Drake Cheatum",
+                          "stat": "1"
+                        },
+                        {
+                          "id": "db-4",
+                          "name": "Prairie Baseline",
+                          "stat": "0"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
