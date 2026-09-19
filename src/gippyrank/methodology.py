@@ -58,9 +58,9 @@ PRODUCTION_SCHEMA_VERSIONS: Final[dict[str, str]] = {
 # advanced.  The exporter uses these sets for source-artifact validation; the
 # PRODUCTION_* mappings above remain the current values shown on the site.
 SUPPORTED_ARTIFACT_MODEL_VERSIONS: Final[dict[str, frozenset[str]]] = {
-    "context_prior": frozenset(
-        {CONTEXT_PRIOR_VERSION, CONTEXT_PRIOR_CANDIDATE_VERSION}
-    ),
+    # Candidate identifiers remain deliberately unpublishable until the
+    # corresponding production identifier is activated.
+    "context_prior": frozenset({CONTEXT_PRIOR_VERSION}),
     "history_prior": frozenset({HISTORY_PRIOR_VERSION}),
     "historical_likelihood": frozenset({HISTORICAL_LIKELIHOOD_VERSION}),
     "posterior": frozenset({POSTERIOR_VERSION}),
