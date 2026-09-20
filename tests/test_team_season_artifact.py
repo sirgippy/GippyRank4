@@ -31,7 +31,16 @@ def _root(tmp_path: Path) -> Path:
         {"season": 2026, "subdivision": "fbs", "team_id": "2", "team_name": "Two", "conference": "A", "pmf": "[0.3,0.7]"},
     ]
     for family in ("context", "history"):
-        _write(tmp_path / f"data/processed/preseason/{family}/annual/2026/predictions.csv", prior_fields, prior_rows)
+        roots = [family]
+        if family == "context":
+            roots.append("context_v1_3")
+        for family_root in roots:
+            _write(
+                tmp_path
+                / f"data/processed/preseason/{family_root}/annual/2026/predictions.csv",
+                prior_fields,
+                prior_rows,
+            )
     fields = [
         "id", "season", "week", "seasonType", "startDate", "completed", "neutralSite",
         "conferenceGame", "homeId", "homeTeam", "homeClassification", "homeConference",
@@ -106,7 +115,7 @@ def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path:
     config.write_text(json.dumps({"schema_version": "1.0", "publication_slots": [{"id": "2026-09-01", "status": "official"}], "snapshots": [{"source": snapshot.directory.relative_to(root).as_posix(), "display_label": "Test", "publication_slot": "2026-09-01"}]}))
     manifest = build_site_data(root=root, config_path=config, output_directory=root / "site/data")
     entry = manifest["snapshots"][0]
-    assert entry["team_seasons_path"] == "data/team-seasons/2026-weekly-2026-09-01-context.json"
+    assert entry["team_seasons_path"] == "data/team-seasons/2026-weekly-2026-09-01-context-v1.3.json"
     assert (root / "site" / entry["team_seasons_path"]).is_file()
     assert entry["completed_visualization_bytes"] > 0
     assert entry["completed_visualization_bytes_per_game"] > 0

@@ -319,7 +319,7 @@ def run(*, manifest_path: Path = DEFAULT_MANIFEST, output: Path = DEFAULT_OUTPUT
         "target_season": 2026,
         "artifacts": {
             "context_1_2_preseason": "data/processed/snapshots/2026/2026-preseason-context/predictive/context",
-            "context_1_3_reconstructed_preseason": prior["prior_path"],
+            "context_1_3_reconstructed_preseason": "data/processed/snapshots/2026/2026-preseason-context-v1.3/predictive/context",
             "context_1_2_official_week_4": None,
             "context_1_3_official_week_4": None,
         },

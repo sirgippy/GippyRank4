@@ -46,11 +46,16 @@ def _root(tmp_path: Path) -> Path:
         },
     ]
     for family in ("context", "history"):
-        _write(
-            tmp_path / f"data/processed/preseason/{family}/annual/2026/predictions.csv",
-            fields,
-            rows,
-        )
+        roots = [family]
+        if family == "context":
+            roots.append("context_v1_3")
+        for family_root in roots:
+            _write(
+                tmp_path
+                / f"data/processed/preseason/{family_root}/annual/2026/predictions.csv",
+                fields,
+                rows,
+            )
     game_fields = [
         "id",
         "season",
@@ -192,6 +197,29 @@ def test_preseason_snapshot_is_prior_only_and_complete(tmp_path: Path) -> None:
         "diagnostics.json",
     }
     assert len(json.loads((snapshot.directory / "rankings.json").read_text())) == 3
+
+
+def test_missing_active_context_does_not_fall_back_to_legacy_prior(
+    tmp_path: Path,
+) -> None:
+    root = _root(tmp_path)
+    active_prior = (
+        root / "data/processed/preseason/context_v1_3/annual/2026/predictions.csv"
+    )
+    legacy_prior = (
+        root / "data/processed/preseason/context/annual/2026/predictions.csv"
+    )
+    active_prior.unlink()
+    assert legacy_prior.exists()
+
+    with pytest.raises(FileNotFoundError, match="context_v1_3"):
+        build_snapshot(
+            season=2026,
+            cutoff=None,
+            prior_family="context",
+            snapshot_type="preseason",
+            root=root,
+        )
 
 
 def test_cutoff_and_lower_division_policy_are_explicit(tmp_path: Path) -> None:

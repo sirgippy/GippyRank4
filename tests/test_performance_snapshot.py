@@ -34,7 +34,7 @@ def _snapshot(path: Path) -> Snapshot:
 
 
 def test_production_ratio_matches_frozen_research_helper(tmp_path: Path) -> None:
-    _teams, prior_rows, _ = load_teams(ROOT, 2026, "context")
+    _teams, prior_rows, _ = load_teams(ROOT, 2026, "context", "1.2")
     prior = {team_id: np.asarray(json.loads(row["pmf"]), dtype=float) for team_id, row in prior_rows.items()}
     with (CONTEXT_PATH / "posterior_pmfs.csv").open(newline="", encoding="utf-8") as handle:
         posterior_rows = list(csv.DictReader(handle))

@@ -97,10 +97,7 @@ def _prior_path(
     prior_model_version: str | None = None,
 ) -> Path:
     if family == "context":
-        # Keep the low-level loader backwards-compatible for callers that
-        # inspect the original Context artifact directly.  Production
-        # snapshot construction passes the selected active version explicitly.
-        version = prior_model_version or "1.2"
+        version = prior_model_version or CONTEXT_PRIOR_VERSION
         if version == "1.3":
             family_root = "context_v1_3"
         elif version == "1.2":
@@ -469,16 +466,6 @@ def build_snapshot(
         if prior_family == "context"
         else HISTORY_PRIOR_VERSION
     )
-    snapshot_prior_version = selected_prior_version
-    if prior_family == "context" and prior_model_version is None:
-        active_path = _prior_path(root, "context", season, CONTEXT_PRIOR_VERSION)
-        legacy_path = _prior_path(root, "context", season, "1.2")
-        if not active_path.exists() and legacy_path.exists():
-            selected_prior_version = "1.2"
-            # Fixture and legacy roots still use the pre-versioned snapshot
-            # names.  Explicit requests remain versioned and cannot silently
-            # fall back to another prior.
-            snapshot_prior_version = None
     teams, team_rows, prior_path = load_teams(
         root, season, prior_family, selected_prior_version
     )
@@ -539,7 +526,7 @@ def build_snapshot(
         snapshot_type,
         prior_family,
         cutoff,
-        snapshot_prior_version,
+        selected_prior_version,
         lineage_suffix,
     )
     directory = output_root / str(season) / sid / RANKING_FAMILY / prior_family
