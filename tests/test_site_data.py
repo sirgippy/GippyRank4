@@ -920,35 +920,45 @@ def test_publication_status_and_official_comparison_chain(
         if entry["ranking_family"] == "predictive"
         and entry["prior_family"] == "context"
     ]
-    assert len(context_entries) == len(publication_slots)
-    status_by_slot = {
-        entry["publication_slot"]: entry["publication_status"]
+    assert len(context_entries) == len(publication_slots) + 2
+    for entry in context_entries:
+        assert entry["publication_status"] == expected_status_by_slot[
+            entry["publication_slot"]
+        ]
+
+    context_by_slot_version = {
+        (
+            entry["publication_slot"],
+            entry["model_versions"]["context_prior"],
+        ): entry
         for entry in context_entries
     }
-    assert status_by_slot == expected_status_by_slot
-
-    context_by_slot = {
-        entry["publication_slot"]: entry for entry in context_entries
-    }
     for index, slot in enumerate(publication_slots):
-        current = context_by_slot[slot["id"]]
-        current_version = current["model_versions"]["context_prior"]
-        previous_official_slot = next(
-            (
-                previous["id"]
-                for previous in reversed(publication_slots[:index])
-                if previous["status"] == "official"
-                and context_by_slot[previous["id"]]["model_versions"]["context_prior"]
-                == current_version
-            ),
-            None,
-        )
-        expected_snapshot_id = (
-            context_by_slot[previous_official_slot]["snapshot_id"]
-            if previous_official_slot is not None
-            else None
-        )
-        assert current["comparison_snapshot_id"] == expected_snapshot_id
+        versions = {
+            version
+            for publication_slot, version in context_by_slot_version
+            if publication_slot == slot["id"]
+        }
+        for current_version in versions:
+            current = context_by_slot_version[(slot["id"], current_version)]
+            previous_official_slot = next(
+                (
+                    previous["id"]
+                    for previous in reversed(publication_slots[:index])
+                    if previous["status"] == "official"
+                    and (previous["id"], current_version)
+                    in context_by_slot_version
+                ),
+                None,
+            )
+            expected_snapshot_id = (
+                context_by_slot_version[(previous_official_slot, current_version)][
+                    "snapshot_id"
+                ]
+                if previous_official_slot is not None
+                else None
+            )
+            assert current["comparison_snapshot_id"] == expected_snapshot_id
 
     publication_order_by_slot = {
         slot["id"]: index for index, slot in enumerate(publication_slots)

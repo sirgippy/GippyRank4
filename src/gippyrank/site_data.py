@@ -496,6 +496,18 @@ def _comparison_key(
     )
 
 
+def _context_lineage_version(metadata: dict[str, Any]) -> str:
+    """Return the Context prior lineage used by a same-slot companion."""
+    if metadata.get("ranking_family") == "predictive" and metadata.get(
+        "prior_family"
+    ) == "context":
+        return str(metadata.get("prior_model_version") or "1.3")
+    model_versions = metadata.get("model_versions")
+    if isinstance(model_versions, dict) and model_versions.get("context_prior") is not None:
+        return str(model_versions["context_prior"])
+    return str(metadata.get("prior_model_version") or "1.3")
+
+
 def _comparison_descriptor(snapshot: PreparedSnapshot) -> PublicationComparison:
     metadata = snapshot.metadata
     return PublicationComparison(
@@ -2291,15 +2303,22 @@ def _validate_team_season_artifact(
         raise SiteDataValidationError(f"{snapshot_id}: invalid team-season artifact kind")
     source_metadata = anchor_metadata or metadata
     schedule_source = artifact.get("schedule_source")
-    if not isinstance(schedule_source, dict) or (
-        schedule_source.get("kind") != "current_processed_schedule"
-        or schedule_source.get("path") != "data/processed/cfbd/games.csv"
-        or not isinstance(schedule_source.get("sha256"), str)
-        or len(schedule_source.get("sha256", "")) != 64
-        or not all(
-            character in "0123456789abcdefABCDEF"
-            for character in schedule_source.get("sha256", "")
-        )
+    schedule_kind = schedule_source.get("kind") if isinstance(schedule_source, dict) else None
+    valid_schedule_path = (
+        schedule_source.get("path") == "data/processed/cfbd/games.csv"
+        if schedule_kind == "current_processed_schedule"
+        else isinstance(schedule_source.get("path"), str)
+        if schedule_kind == "frozen_included_games" and isinstance(schedule_source, dict)
+        else False
+    )
+    if not isinstance(schedule_source, dict) or schedule_kind not in {
+        "current_processed_schedule",
+        "frozen_included_games",
+    } or not valid_schedule_path or not isinstance(schedule_source.get("sha256"), str) or len(
+        schedule_source.get("sha256", "")
+    ) != 64 or not all(
+        character in "0123456789abcdefABCDEF"
+        for character in schedule_source.get("sha256", "")
     ):
         raise SiteDataValidationError(f"{snapshot_id}: schedule provenance is missing or invalid")
     for field in (
@@ -2640,7 +2659,7 @@ def build_site_data(
     manifest_entries: list[dict[str, Any]] = []
     prepared_snapshots: list[PreparedSnapshot] = []
     seen_ids: set[str] = set()
-    seen_publications: set[tuple[int, str, str, str]] = set()
+    seen_publications: set[tuple[int, str, str | None, str, str | None]] = set()
     published_fbs_identities: set[tuple[str, str]] = set()
     rendered_team_identities: set[tuple[str, str]] = set()
     schedule_path = root / "data/processed/cfbd/games.csv"
@@ -2649,14 +2668,20 @@ def build_site_data(
         selected_snapshot.source: _read_json(selected_snapshot.source / "metadata.json")
         for selected_snapshot in selected
     }
-    context_sources: dict[tuple[int, str], tuple[Path, dict[str, Any]]] = {}
+    context_sources: dict[tuple[int, str, str], tuple[Path, dict[str, Any]]] = {}
     for selected_snapshot in selected:
         metadata = metadata_by_source[selected_snapshot.source]
         if (
             metadata.get("ranking_family") == "predictive"
             and metadata.get("prior_family") == "context"
         ):
-            context_sources[(metadata["season"], selected_snapshot.publication_slot)] = (
+            context_sources[
+                (
+                    metadata["season"],
+                    selected_snapshot.publication_slot,
+                    _context_lineage_version(metadata),
+                )
+            ] = (
                 selected_snapshot.source,
                 metadata,
             )
@@ -2675,6 +2700,11 @@ def build_site_data(
             metadata["ranking_family"],
             metadata.get("prior_family", metadata.get("anchor_family")),
             selected_snapshot.publication_slot,
+            (
+                _context_lineage_version(metadata)
+                if metadata["ranking_family"] != "performance"
+                else str(metadata.get("prior_model_version") or metadata.get("model_version"))
+            ),
         )
         if publication in seen_publications:
             raise SiteDataValidationError(
@@ -2703,7 +2733,13 @@ def build_site_data(
             source=source,
             metadata=metadata,
             rankings=rankings,
-            context_source=context_sources.get((season, selected_snapshot.publication_slot)),
+            context_source=context_sources.get(
+                (
+                    season,
+                    selected_snapshot.publication_slot,
+                    _context_lineage_version(metadata),
+                )
+            ),
         )
         weekly_games = build_weekly_game_artifact(
             team_seasons,
@@ -2798,6 +2834,8 @@ def build_site_data(
             consumer_snapshot.update(
                 {
                     "prior_family": metadata["prior_family"],
+                    "prior_model_version": metadata.get("prior_model_version"),
+                    "prior_lineage": metadata.get("prior_lineage"),
                     **preseason_reference,
                 }
             )
@@ -2808,6 +2846,17 @@ def build_site_data(
                     "method": metadata["method"],
                     "anchor_family": metadata["anchor_family"],
                     "source_context_snapshot_id": metadata["source_context_snapshot_id"],
+                }
+            )
+        if metadata.get("backfill") is True:
+            consumer_snapshot.update(
+                {
+                    "backfill": True,
+                    "backfill_kind": metadata.get("backfill_kind"),
+                    "source_evidence_snapshot_id": metadata.get(
+                        "source_evidence_snapshot_id"
+                    ),
+                    "source_evidence_hash": metadata.get("source_evidence_hash"),
                 }
             )
         _write_json(output_directory / "snapshots" / f"{snapshot_id}.json", consumer_snapshot)
@@ -2974,6 +3023,8 @@ def build_site_data(
             manifest_entry.update(
                 {
                     "prior_family": metadata["prior_family"],
+                    "prior_model_version": metadata.get("prior_model_version"),
+                    "prior_lineage": metadata.get("prior_lineage"),
                     **preseason_reference,
                 }
             )
@@ -2985,6 +3036,17 @@ def build_site_data(
                     "anchor_family": metadata["anchor_family"],
                 }
             )
+        if metadata.get("backfill") is True:
+            backfill_fields = {
+                "backfill": True,
+                "backfill_kind": metadata.get("backfill_kind"),
+                "source_evidence_snapshot_id": metadata.get(
+                    "source_evidence_snapshot_id"
+                ),
+                "source_evidence_hash": metadata.get("source_evidence_hash"),
+            }
+            consumer_snapshot.update(backfill_fields)
+            manifest_entry.update(backfill_fields)
         manifest_entries.append(manifest_entry)
     published_families = {entry["ranking_family"] for entry in manifest_entries}
     published_fbs_logo_audit = _logo_audit(published_fbs_identities)

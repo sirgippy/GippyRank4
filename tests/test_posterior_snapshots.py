@@ -341,6 +341,52 @@ def test_identical_eligible_inputs_produce_identical_ranking_rows(tmp_path: Path
     ).read_bytes()
 
 
+def test_context_replay_uses_frozen_included_games_after_schedule_mutation(
+    tmp_path: Path,
+) -> None:
+    root = _root(tmp_path)
+    likelihood = LikelihoodV1(np.zeros(34), 1.0, 15.0)
+    cutoff = datetime(2026, 9, 11, 23, 59, tzinfo=UTC)
+    source = build_snapshot(
+        season=2026,
+        cutoff=cutoff,
+        prior_family="context",
+        prior_model_version="1.2",
+        snapshot_type="weekly",
+        root=root,
+        output_root=tmp_path / "source-output",
+        likelihood=likelihood,
+    )
+    source_rows = (source.directory / "included_games.csv").read_bytes()
+    games_path = root / "data/processed/cfbd/games.csv"
+    games = []
+    with games_path.open(newline="", encoding="utf-8") as handle:
+        games = list(csv.DictReader(handle))
+    games[-1]["homePoints"] = "99"
+    _write(games_path, list(games[0]), games)
+
+    replay = build_snapshot(
+        season=2026,
+        cutoff=cutoff,
+        prior_family="context",
+        prior_model_version="1.3",
+        snapshot_type="weekly",
+        root=root,
+        output_root=tmp_path / "replay-output",
+        likelihood=likelihood,
+        evidence_snapshot=source.directory,
+    )
+
+    assert (replay.directory / "included_games.csv").read_bytes() == source_rows
+    assert replay.metadata["backfill"] is True
+    assert replay.metadata["source_evidence_snapshot_id"] == source.snapshot_id
+    assert replay.metadata["game_corpus_sha256"] == source.metadata["game_corpus_sha256"]
+    team_seasons = json.loads(
+        (replay.directory / "team_seasons.json").read_text(encoding="utf-8")
+    )
+    assert team_seasons["schedule_source"]["kind"] == "frozen_included_games"
+
+
 def test_posterior_docs_name_the_80_percent_interval() -> None:
     text = Path("docs/posterior_v1.md").read_text(encoding="utf-8")
     assert "80% interval coverage" in text
