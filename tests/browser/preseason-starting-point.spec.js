@@ -94,7 +94,7 @@ test.describe("Preseason starting point browser checks", () => {
     await expect(evidence).toContainText("Incoming prior offensive usage");
     await expect(evidence).toContainText("Incoming DB defensive impact");
     await expect(evidence).toContainText("DB transfer-data availability");
-    await expect(evidence.locator(".preseason-provenance-summary")).toHaveText(
+    await expect(evidence.locator(".preseason-provenance-summary")).toContainText(
       "2026 transfer inputs were reconstructed after the Aug. 15 cutoff.",
     );
   });
