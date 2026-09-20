@@ -1,0 +1,11 @@
+{
+  "artifact_kind": "frozen_preseason_program_history_evidence",
+  "schema_version": "1.0",
+  "target_season": 2026,
+  "row_count": 138,
+  "source": "Massey final constituent-rank distributions",
+  "source_path_at_generation": "data/processed/modeling/team_season_rank_distributions.csv",
+  "source_sha256": "03e4e372017aedb45392ff7d790cea25f461db9b6dc846514c762ff46e2cab00",
+  "included_history_seasons": "2002 through 2025",
+  "derivation": "For each target-season FBS team, preserve lag-1/2/3 consensus-rank summaries and transformed-rank means plus the pre-target long-run mean used by the frozen preseason prior."
+}

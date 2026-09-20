@@ -13,10 +13,7 @@ import csv
 import json
 import math
 from collections.abc import Iterable, Mapping
-from datetime import date
 from pathlib import Path
-
-from gippyrank.context_prior import coach_at_cutoff
 
 PRESEASON_INPUT_SCHEMA_VERSION = "1.0"
 
@@ -141,65 +138,36 @@ def _comparison(
     }
 
 
-def _read_tenures(root: Path) -> dict[str, list[dict[str, object]]]:
-    directory = root / "data/raw/cfbd/preseason/coach_tenures"
-    result: dict[str, list[dict[str, object]]] = {}
-    if not directory.is_dir():
-        return result
-    for path in directory.glob("*.json"):
-        try:
-            payload = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            continue
-        if not isinstance(payload, list):
-            continue
-        for item in payload:
-            if not isinstance(item, dict):
-                continue
-            team = (item.get("team") or {}).get("school")
-            if team:
-                result.setdefault(str(team), []).append(item)
-    return result
-
-
-def _fallback_coach_tenure(row: Mapping[str, str], season: int) -> float | None:
-    value = str(row.get("coach_hire_date") or "")
-    try:
-        hire_year = date.fromisoformat(value[:10]).year
-    except ValueError:
-        return None
-    return float(season - hire_year + 1) if hire_year <= season else None
-
-
-def _rank_records(root: Path, season: int) -> dict[int, dict[str, dict[str, str]]]:
-    path = root / "data/processed/modeling/team_season_rank_distributions.csv"
+def _program_history_records(root: Path, season: int) -> dict[str, dict[str, str]]:
+    path = root / f"data/processed/preseason/program_history_evidence/{season}.csv"
     if not path.is_file():
         return {}
-    result: dict[int, dict[str, dict[str, str]]] = {}
+    result: dict[str, dict[str, str]] = {}
     for row in _read_csv(path):
-        try:
-            row_season = int(row["season"])
-        except (KeyError, ValueError):
+        if (
+            row.get("target_season") != str(season)
+            or row.get("subdivision") != "fbs"
+            or not row.get("team_id")
+        ):
             continue
-        if row_season >= season or row.get("subdivision") != "fbs":
-            continue
-        result.setdefault(row_season, {})[str(row["team_id"])] = row
+        result[str(row["team_id"])] = row
     return result
 
 
-def _rank_observation_z_mean(row: Mapping[str, str]) -> float | None:
-    try:
-        observations = [float(value) for value in json.loads(row["rank_observations"])]
-        population = int(row["team_population"])
-    except (KeyError, TypeError, ValueError, json.JSONDecodeError):
-        return None
-    if population < 1 or not observations:
-        return None
-    transformed = []
-    for rank in observations:
-        percentile = min(max((rank - 0.5) / population, 1.0e-6), 1 - 1.0e-6)
-        transformed.append(math.log(percentile) - math.log1p(-percentile))
-    return sum(transformed) / len(transformed)
+def _coach_tenure_records(root: Path, season: int) -> dict[str, dict[str, str]]:
+    path = root / f"data/processed/preseason/coach_tenure_evidence/{season}.csv"
+    if not path.is_file():
+        return {}
+    result: dict[str, dict[str, str]] = {}
+    for row in _read_csv(path):
+        if (
+            row.get("target_season") != str(season)
+            or row.get("subdivision") != "fbs"
+            or not row.get("team_id")
+        ):
+            continue
+        result[str(row["team_id"])] = row
+    return result
 
 
 def _rank_summary_field(
@@ -210,6 +178,7 @@ def _rank_summary_field(
     rank_values: Mapping[str, float | None],
     team_id: str,
     model_feature: str | None,
+    source: str,
 ) -> dict[str, object]:
     value = _number(row.get("rank_mean") if row is not None else None)
     median = _number(row.get("rank_median") if row is not None else None)
@@ -225,26 +194,35 @@ def _rank_summary_field(
         value,
         description,
         model_feature=model_feature,
-        source="Processed Massey final constituent-rank distributions",
+        source=source,
         comparison=_comparison(rank_values, team_id, direction="lower_is_better"),
     )
 
 
 def _program_history(
-    rank_rows: Mapping[int, Mapping[str, Mapping[str, str]]],
+    history_records: Mapping[str, Mapping[str, str]],
     *,
     season: int,
     team_id: str,
 ) -> dict[str, object]:
-    source = "Processed Massey final constituent-rank distributions"
+    source = (
+        "Frozen preseason program-history evidence (Massey final constituent ranks)"
+    )
     fields: list[dict[str, object]] = []
     for lag, label, model_feature in (
         (1, f"{season - 1} consensus rank", "lag1_rank_distribution"),
         (2, f"{season - 2} consensus rank", "lag2_z_mean"),
         (3, f"{season - 3} consensus rank", "lag3_z_mean"),
     ):
-        rows = rank_rows.get(season - lag, {})
-        ranks = {key: _number(item.get("rank_mean")) for key, item in rows.items()}
+        rows = {
+            key: {
+                "rank_mean": item.get(f"lag{lag}_rank_mean", ""),
+                "rank_median": item.get(f"lag{lag}_rank_median", ""),
+                "usable_systems": item.get(f"lag{lag}_usable_systems", ""),
+            }
+            for key, item in history_records.items()
+        }
+        ranks = {key: _number(item["rank_mean"]) for key, item in rows.items()}
         fields.append(
             _rank_summary_field(
                 field_id=f"season_{season - lag}_consensus_rank",
@@ -253,33 +231,34 @@ def _program_history(
                 rank_values=ranks,
                 team_id=team_id,
                 model_feature=model_feature,
+                source=source,
             )
         )
 
-    history = [
-        row
-        for prior_season, by_team in rank_rows.items()
-        if prior_season < season and (row := by_team.get(team_id)) is not None
-    ]
-    percentiles = [_number(row.get("rank_percentile_mean")) for row in history]
-    raw_value = _mean(percentiles)
-    z_means = [_rank_observation_z_mean(row) for row in history]
+    record = history_records.get(team_id)
+    raw_value = _number(
+        record.get("long_run_rank_percentile_mean") if record is not None else None
+    )
+    model_input = _number(record.get("long_run_z_mean") if record is not None else None)
+    history_seasons = _number(
+        record.get("history_seasons") if record is not None else None
+    )
+    long_run_display = "Unavailable"
+    if raw_value is not None:
+        long_run_display = f"{raw_value * 100:.1f}% mean rank percentile"
+        if history_seasons is not None:
+            long_run_display += f" across {history_seasons:.0f} seasons"
     fields.append(
         _field(
             "long_run_program_level",
             "Long-run program level",
             raw_value,
-            (
-                f"{raw_value * 100:.1f}% mean rank percentile across "
-                f"{len(history)} seasons"
-                if raw_value is not None
-                else "Unavailable"
-            ),
+            long_run_display,
             model_feature="long_run_z_mean",
             source=source,
             detail=(
-                f"Model-input transformed-rank mean: {sum(value for value in z_means if value is not None) / len([value for value in z_means if value is not None]):.3f}"
-                if any(value is not None for value in z_means)
+                f"Model-input transformed-rank mean: {model_input:.3f}"
+                if model_input is not None
                 else None
             ),
         )
@@ -343,9 +322,8 @@ def _context_groups(
     *,
     feature_rows: Mapping[str, Mapping[str, str]],
     historical_recruiting_points: Mapping[str, list[str]],
-    season: int,
     team_id: str,
-    tenures: Mapping[str, list[dict[str, object]]],
+    coach_records: Mapping[str, Mapping[str, str]],
     transfer_rows: Mapping[str, Mapping[str, str]],
     transfer_audits: Mapping[str, Mapping[str, str]],
     include_transfers: bool,
@@ -382,17 +360,21 @@ def _context_groups(
         else None
     )
 
-    team_name = str(current.get("team_name") or "")
-    coach = coach_at_cutoff(
-        list(tenures.get(team_name, [])), team_name, season, f"{season}-08-15"
-    )
+    coach_record = coach_records.get(team_id, {})
+    coach_known_by_cutoff = coach_record.get("known_by_cutoff") == "true"
     coach_tenure = (
-        coach.tenure_seasons
-        if coach.known_by_cutoff
-        else _fallback_coach_tenure(current, season)
+        _number(coach_record.get("coach_tenure_seasons"))
+        if coach_known_by_cutoff
+        else None
     )
-    coach_name = coach.coach_name or current.get("head_coach") or None
-    coach_note = coach.unavailable_reason if not coach.known_by_cutoff else None
+    coach_name = coach_record.get("coach_name") or current.get("head_coach") or None
+    coach_note = (
+        None
+        if coach_known_by_cutoff
+        else str(
+            coach_record.get("unavailable_reason") or "no_cutoff_safe_tenure_evidence"
+        )
+    )
 
     transfer = transfer_rows.get(team_id, {})
     audit = transfer_audits.get(team_id, {})
@@ -418,14 +400,15 @@ def _context_groups(
     groups = {
         "coach": _group(
             "Coaching",
-            "CFBD /coaches/tenures",
+            "Frozen cutoff-safe coach-tenure evidence",
             [
                 _field(
-                    "head_coach",
-                    "Head coach",
+                    "reported_head_coach",
+                    "Reported head coach (supplemental)",
                     coach_name,
                     str(coach_name or "Unavailable"),
-                    source="CFBD /coaches/tenures",
+                    source="Frozen cutoff-safe coach-tenure evidence",
+                    detail="Supplemental context; not a model feature.",
                 ),
                 _field(
                     "coach_tenure_seasons",
@@ -435,10 +418,14 @@ def _context_groups(
                     if coach_tenure is not None
                     else "Unavailable",
                     model_feature="coach_tenure_seasons",
-                    source="CFBD /coaches/tenures",
+                    source="Frozen cutoff-safe coach-tenure evidence",
                     detail=coach_note,
                 ),
             ],
+            note=(
+                "Coach tenure is the only coaching model feature and is shown only "
+                "when cutoff-safe tenure evidence was available."
+            ),
         ),
         "recruiting": _group(
             "Recruiting",
@@ -631,8 +618,8 @@ def build_preseason_input_projection(
             if row.get("season") == str(season) and row.get("subdivision") == "fbs"
         }
 
-    rank_rows = _rank_records(root, season)
-    tenures = _read_tenures(root)
+    history_records = _program_history_records(root, season)
+    coach_records = _coach_tenure_records(root, season)
     projected_teams: dict[str, dict[str, object]] = {}
     for team_id in sorted({str(value) for value in team_ids}):
         current = current_rows.get(team_id)
@@ -640,7 +627,7 @@ def build_preseason_input_projection(
             continue
         groups: dict[str, dict[str, object]] = {
             "program_history": _program_history(
-                rank_rows, season=season, team_id=team_id
+                history_records, season=season, team_id=team_id
             )
         }
         if prior_family == "context":
@@ -648,9 +635,8 @@ def build_preseason_input_projection(
                 _context_groups(
                     feature_rows=current_rows,
                     historical_recruiting_points=historical_recruiting_points,
-                    season=season,
                     team_id=team_id,
-                    tenures=tenures,
+                    coach_records=coach_records,
                     transfer_rows=transfer_rows,
                     transfer_audits=transfer_audits,
                     include_transfers=prior_model_version == "1.3",

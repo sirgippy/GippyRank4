@@ -79,12 +79,18 @@ function marginSide(teamName, value) {
   return `${teamName} by ${marginValue(amount)}`;
 }
 
-function percentileLabel(value) {
+function ordinal(value) {
   const rounded = Math.round(Number(value));
+  if (!Number.isFinite(rounded)) return "Unavailable";
   const suffix = rounded % 100 >= 11 && rounded % 100 <= 13
     ? "th"
     : ({ 1: "st", 2: "nd", 3: "rd" }[rounded % 10] || "th");
-  return `${rounded}${suffix} percentile`;
+  return `${rounded}${suffix}`;
+}
+
+function percentileLabel(value) {
+  const formatted = ordinal(value);
+  return formatted === "Unavailable" ? formatted : `${formatted} percentile`;
 }
 
 function uncertaintyLabel(interval, rankCount) {
@@ -158,6 +164,17 @@ function disclosure(label, content, className = "distribution-disclosure") {
   };
   updateLabel();
   details.addEventListener("toggle", updateLabel);
+  details.append(summary, content);
+  return details;
+}
+
+function labeledDisclosure(label, content, className) {
+  const details = node("details", className);
+  const summary = node("summary", "preseason-provenance-summary");
+  summary.append(
+    node("span", "", label),
+    node("span", "preseason-provenance-chevron", "▾"),
+  );
   details.append(summary, content);
   return details;
 }
@@ -325,7 +342,7 @@ function comparisonText(comparison) {
   const percentile = comparison.fbs_percentile;
   if (!Number.isFinite(Number(rankValue)) || !Number.isFinite(Number(count))) return null;
   const parts = [`FBS #${rankValue}/${count}`];
-  if (Number.isFinite(Number(percentile))) parts.push(`${Math.round(Number(percentile))}th pct.`);
+  if (Number.isFinite(Number(percentile))) parts.push(`${ordinal(percentile)} pct.`);
   return parts.join(" · ");
 }
 
@@ -378,7 +395,7 @@ function renderPreseasonStartingPoint(entry, distribution, sourceArtifact, row) 
     const caveat = inputs?.provenance?.transfer_caveat;
     if (caveat) {
       const body = node("p", "preseason-provenance-detail", caveat.detail || "Transfer evidence is not a literal archived cutoff information state.");
-      children.push(disclosure(caveat.visible_label, body, "preseason-provenance"));
+      children.push(labeledDisclosure(caveat.visible_label, body, "preseason-provenance"));
     }
   } else {
     children.push(node("p", "preseason-starting-point-note", "This retained publication does not include the detailed preseason-evidence payload."));
@@ -501,6 +518,12 @@ function renderSeasonMovement(entry, trajectory, row, rankCount) {
     section.hidden = false;
     context.textContent = `Published ${priorLabel(entry.prior_family)} belief`;
     content.replaceChildren(node("p", "season-movement-unavailable", "This selected snapshot is not present in its published trajectory."));
+    return;
+  }
+  if (points.length < 2) {
+    section.hidden = true;
+    context.textContent = "";
+    content.replaceChildren();
     return;
   }
   section.hidden = false;

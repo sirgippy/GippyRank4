@@ -81,11 +81,11 @@ test.describe("Preseason starting point browser checks", () => {
     await expect(page.locator("#preseason-starting-point-section")).toBeVisible();
     await expect(page.locator("#preseason-starting-point-content")).toContainText("recruiting");
     await expect(page.locator("#preseason-starting-point-content")).toContainText("Team talent composite");
-    await expect(page.locator("#preseason-starting-point-content svg")).toHaveCount(0);
-    await page.locator("#preseason-starting-point-content .distribution-toggle").click();
-    await expect(page.locator("#preseason-starting-point-content svg")).toBeVisible();
-    await expect(page.locator("#season-movement-section")).toBeVisible();
-    await expect(page.locator("#season-movement")).toContainText("Preseason through Preseason");
+    const distribution = page.locator("#preseason-starting-point-content .preseason-distribution-disclosure svg");
+    await expect(distribution).toBeHidden();
+    await page.locator("#preseason-starting-point-content .preseason-distribution-disclosure .distribution-toggle").click();
+    await expect(distribution).toBeVisible();
+    await expect(page.locator("#season-movement-section")).toBeHidden();
   });
 
   test("shows Context 1.3's published transfer inputs with their provenance caveat", async ({ page }) => {
@@ -94,7 +94,9 @@ test.describe("Preseason starting point browser checks", () => {
     await expect(evidence).toContainText("Incoming prior offensive usage");
     await expect(evidence).toContainText("Incoming DB defensive impact");
     await expect(evidence).toContainText("DB transfer-data availability");
-    await expect(evidence).toContainText("reconstructed after the Aug. 15 cutoff");
+    await expect(evidence.locator(".preseason-provenance-summary")).toHaveText(
+      "2026 transfer inputs were reconstructed after the Aug. 15 cutoff.",
+    );
   });
 
   test("keeps the dashboard compact while preserving belief and distribution detail", async ({ page }) => {
@@ -103,12 +105,19 @@ test.describe("Preseason starting point browser checks", () => {
     await expect(page.locator("#season-movement")).toContainText("Week 4");
     await expect(page.locator("#preseason-starting-point-section")).toBeVisible();
     await expect(page.locator("#preseason-starting-point-content")).toContainText("Incoming prior offensive usage");
-    await expect(page.locator("#team-ranking-summary svg")).toHaveCount(0);
-    await page.locator("#team-ranking-summary .distribution-toggle").click();
-    await expect(page.locator("#team-ranking-summary svg")).toBeVisible();
+    const distribution = page.locator("#team-ranking-summary .header-distribution-disclosure svg");
+    await expect(distribution).toBeHidden();
+    await page.locator("#team-ranking-summary .header-distribution-disclosure .distribution-toggle").click();
+    await expect(distribution).toBeVisible();
     await expect(page.locator("#schedule-list")).toContainText("Published belief movement");
     await expect(page.locator("#schedule-list")).toContainText("not attribution to this game alone");
     expect(await page.locator(".team-page").evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBeTruthy();
+    if (page.viewportSize()?.width < 760) {
+      const columnCount = await page.locator("#team-ranking-summary .team-summary-grid").evaluate(
+        (element) => getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/).length,
+      );
+      expect(columnCount).toBe(2);
+    }
   });
 
   test("does not fabricate a preseason comparison for Performance", async ({ page }) => {

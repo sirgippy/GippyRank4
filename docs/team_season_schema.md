@@ -48,6 +48,15 @@ transfer caveat: those transfer fields are a retrospective reconstruction
 retrieved after the August 15 cutoff, not a literal archived August 15
 information state.
 
+For published 2026 projections, program-history values come from the tracked
+`data/processed/preseason/program_history_evidence/2026.csv` frozen evidence
+artifact, and coach tenure comes from the tracked
+`data/processed/preseason/coach_tenure_evidence/2026.csv` cutoff-safe input
+artifact. This keeps static export reproducible without requiring ignored raw
+research files. A missing frozen coach-tenure observation remains missing;
+the exporter never infers tenure from a coach hire date. The displayed coach
+name is supplemental context rather than a model feature.
+
 The simulation object is required whenever snapshot metadata declares
 `season_simulation_version` and `season_simulation_configuration`. Legacy
 retained artifacts may omit it only when those metadata declarations are also

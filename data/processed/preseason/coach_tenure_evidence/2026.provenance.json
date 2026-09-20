@@ -1,0 +1,9 @@
+{
+  "artifact_kind": "frozen_preseason_coach_tenure_evidence",
+  "schema_version": "1.0",
+  "target_season": 2026,
+  "row_count": 138,
+  "source": "CFBD /coaches/tenures cutoff-safe model inputs",
+  "effective_cutoff": "2026-08-15",
+  "derivation": "For each target-season FBS team, preserve the coach selected by the preseason cutoff rule and its exact coach_tenure_seasons model input. Missing cutoff-safe observations remain missing; no hire-date fallback is applied."
+}
