@@ -317,6 +317,106 @@ def _read_included_game_rows(path: Path) -> list[dict[str, str]]:
     return rows
 
 
+def historical_schedule_rows_from_site_artifact(
+    path: Path,
+    *,
+    season: int,
+    expected_snapshot_id: str,
+    expected_included_game_ids: list[str],
+    required_included_game_ids: list[str] | None = None,
+) -> list[dict[str, str]]:
+    """Convert a frozen weekly site schedule into builder-compatible rows.
+
+    A retrospective replay has two intentionally different inputs: the
+    included-game CSV is the immutable inference evidence, while this frozen
+    site artifact supplies the historical schedule surface used for team
+    seasons and future predictions.  Keep the conversion strict so a mutable
+    or mismatched publication cannot silently become presentation input.
+    """
+    if not path.is_file():
+        raise FileNotFoundError(path)
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict) or value.get("artifact_kind") != "weekly_games":
+        raise ValueError(f"{path}: expected a weekly_games artifact")
+    if value.get("snapshot_id") != expected_snapshot_id:
+        raise ValueError(
+            f"{path}: snapshot ID does not match frozen evidence: "
+            f"{value.get('snapshot_id')!r} != {expected_snapshot_id!r}"
+        )
+    declared_included = [str(item) for item in value.get("included_game_ids", [])]
+    expected_included = [str(item) for item in expected_included_game_ids]
+    if declared_included != expected_included:
+        raise ValueError(f"{path}: included game IDs do not match frozen evidence")
+    weeks = value.get("weeks")
+    if not isinstance(weeks, list):
+        raise TypeError(f"{path}: weekly schedule is missing weeks")
+
+    rows: list[dict[str, str]] = []
+    seen_ids: set[str] = set()
+    for week in weeks:
+        if not isinstance(week, dict) or not isinstance(week.get("games"), list):
+            raise TypeError(f"{path}: weekly schedule contains an invalid week")
+        for game in week["games"]:
+            if not isinstance(game, dict):
+                raise TypeError(f"{path}: weekly schedule contains an invalid game")
+            game_id = str(game.get("game_id", ""))
+            if not game_id:
+                raise ValueError(f"{path}: weekly schedule contains a blank game ID")
+            if game_id in seen_ids:
+                raise ValueError(f"{path}: game ID appears more than once: {game_id}")
+            seen_ids.add(game_id)
+            home = game.get("home_team")
+            away = game.get("away_team")
+            if not isinstance(home, dict) or not isinstance(away, dict):
+                raise TypeError(f"{path}: {game_id} is missing team identities")
+            home_id = str(home.get("team_id", ""))
+            away_id = str(away.get("team_id", ""))
+            if not home_id or not away_id:
+                raise ValueError(f"{path}: {game_id} is missing a team ID")
+            score = game.get("score")
+            home_points = ""
+            away_points = ""
+            if score is not None:
+                if not isinstance(score, dict) or "home" not in score or "away" not in score:
+                    raise ValueError(f"{path}: {game_id} has an invalid score")
+                home_points = str(score["home"])
+                away_points = str(score["away"])
+            state = str(game.get("state", ""))
+            rows.append(
+                {
+                    "id": game_id,
+                    "season": str(season),
+                    "week": str(game.get("week", "")),
+                    "seasonType": str(game.get("season_type", "regular") or "regular"),
+                    "startDate": str(game.get("date", "")),
+                    "completed": "True" if state == "completed" and score is not None else "False",
+                    "neutralSite": "True" if bool(game.get("neutral_site")) else "False",
+                    "conferenceGame": "True" if bool(game.get("conference_game")) else "False",
+                    "homeId": home_id,
+                    "homeTeam": str(home.get("team_name", "")),
+                    "homeClassification": str(home.get("subdivision", "")),
+                    "homeConference": str(home.get("conference", "")),
+                    "homePoints": home_points,
+                    "awayId": away_id,
+                    "awayTeam": str(away.get("team_name", "")),
+                    "awayClassification": str(away.get("subdivision", "")),
+                    "awayConference": str(away.get("conference", "")),
+                    "awayPoints": away_points,
+                    "status": "cancelled" if state == "cancelled" else "",
+                }
+            )
+
+    required_ids = (
+        expected_included
+        if required_included_game_ids is None
+        else [str(game_id) for game_id in required_included_game_ids]
+    )
+    missing = [game_id for game_id in required_ids if game_id not in seen_ids]
+    if missing:
+        raise ValueError(f"{path}: frozen schedule is missing included games: {missing}")
+    return rows
+
+
 def _game_from_included_row(row: dict[str, str]) -> Game:
     """Convert one frozen CSV row into the exact inference game object."""
     home_subdivision = row["homeClassification"].casefold()
@@ -798,6 +898,18 @@ def _write_csv(
         writer.writerows(rows)
 
 
+def _validate_presentation_schedule(
+    rows: list[dict[str, str]], *, season: int
+) -> None:
+    schedule_ids = [str(row.get("id", "")) for row in rows]
+    if any(not game_id for game_id in schedule_ids):
+        raise ValueError("presentation schedule contains a blank game ID")
+    if len(schedule_ids) != len(set(schedule_ids)):
+        raise ValueError("presentation schedule contains duplicate game IDs")
+    if any(str(row.get("season", "")) != str(season) for row in rows):
+        raise ValueError("presentation schedule contains a different season")
+
+
 def build_snapshot(
     *,
     season: int,
@@ -815,6 +927,8 @@ def build_snapshot(
     season_simulation_config: SeasonSimulationConfig | None = None,
     generation_timestamp: datetime | None = None,
     evidence_snapshot: Path | None = None,
+    presentation_schedule_rows: list[dict[str, str]] | None = None,
+    presentation_schedule_source: dict[str, str] | None = None,
 ) -> Snapshot:
     """Build an atomic-on-success schema-v1 bundle without any publishing logic."""
     started = time.perf_counter()
@@ -838,6 +952,11 @@ def build_snapshot(
     replay_schedule_rows: list[dict[str, str]] | None = None
     replay_inference_configuration: dict[str, object] | None = None
     source_game_corpus_sha256: str | None = None
+
+    if presentation_schedule_rows is not None and evidence_snapshot is None:
+        raise ValueError(
+            "presentation schedule rows are only supported for frozen evidence replay"
+        )
 
     if evidence_snapshot is not None:
         replay_source = evidence_snapshot
@@ -892,12 +1011,28 @@ def build_snapshot(
                 f"{replay_source}: supplied season simulation configuration differs"
             )
         season_simulation_config = frozen_simulation_config
-        replay_schedule_rows = included
-        replay_schedule_source = {
-            "kind": "frozen_included_games",
-            "path": relative_path(replay_source / "included_games.csv", root),
-            "sha256": sha256(replay_source / "included_games.csv"),
-        }
+        if presentation_schedule_rows is None:
+            replay_schedule_rows = included
+            replay_schedule_source = {
+                "kind": "frozen_included_games",
+                "path": relative_path(replay_source / "included_games.csv", root),
+                "sha256": sha256(replay_source / "included_games.csv"),
+            }
+        else:
+            _validate_presentation_schedule(
+                presentation_schedule_rows,
+                season=season,
+            )
+            if (
+                not isinstance(presentation_schedule_source, dict)
+                or presentation_schedule_source.get("kind")
+                != "frozen_historical_schedule"
+            ):
+                raise ValueError(
+                    "presentation schedule source must be frozen_historical_schedule"
+                )
+            replay_schedule_rows = [dict(row) for row in presentation_schedule_rows]
+            replay_schedule_source = dict(presentation_schedule_source)
         source_game_corpus_value = replay_metadata.get("game_corpus_sha256")
         if not isinstance(source_game_corpus_value, str) or len(
             source_game_corpus_value
@@ -1141,6 +1276,8 @@ def build_snapshot(
                 ),
                 "source_evidence_included_game_rows_sha256": evidence_hash,
                 "source_evidence_hash": evidence_hash,
+                "presentation_schedule_game_count": len(replay_schedule_rows or []),
+                "presentation_schedule_source": replay_schedule_source,
             }
         )
     if likelihood is not None:

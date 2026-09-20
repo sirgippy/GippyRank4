@@ -460,6 +460,8 @@ def build_context_backfill(
     root: Path,
     output_root: Path | None = None,
     generation_timestamp: datetime | None = None,
+    presentation_schedule_rows: list[dict[str, str]] | None = None,
+    presentation_schedule_source: dict[str, str] | None = None,
 ) -> tuple[Path, dict[str, Any]]:
     """Build and validate one retrospective Context 1.3 weekly replay."""
     source_metadata = _read_json(source_context_1_2 / "metadata.json")
@@ -485,6 +487,8 @@ def build_context_backfill(
         snapshot_type="weekly",
         generation_timestamp=generation_timestamp,
         evidence_snapshot=source_context_1_2,
+        presentation_schedule_rows=presentation_schedule_rows,
+        presentation_schedule_source=presentation_schedule_source,
     )
     validation = validate_context_backfill(
         source_context_1_2, generated.directory

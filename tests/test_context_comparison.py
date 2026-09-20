@@ -200,6 +200,37 @@ def test_committed_weekly_context_backfills_have_frozen_lineage(
     assert result["prior_model_versions"] == ["1.2", "1.3"]
 
 
+@pytest.mark.parametrize(
+    ("backfill_name", "expected_future_predictions"),
+    [
+        ("2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.3", 787),
+        ("2026-weekly-2026-09-13T12-02-55.255941Z-context-v1.3", 703),
+    ],
+)
+def test_committed_context_backfills_use_frozen_historical_schedule_surface(
+    backfill_name: str, expected_future_predictions: int
+) -> None:
+    root = Path(__file__).resolve().parents[1]
+    backfill = (
+        root
+        / "data/processed/snapshots/2026"
+        / backfill_name
+        / "predictive/context"
+    )
+    metadata = json.loads((backfill / "metadata.json").read_text(encoding="utf-8"))
+    team_seasons = json.loads(
+        (backfill / "team_seasons.json").read_text(encoding="utf-8")
+    )
+    source = metadata["presentation_schedule_source"]
+
+    assert metadata["presentation_schedule_game_count"] == 888
+    assert source["kind"] == "frozen_historical_schedule"
+    assert source["snapshot_id"] == metadata["source_evidence_snapshot_id"]
+    assert (root / source["path"]).is_file()
+    assert team_seasons["schedule_source"] == source
+    assert len(team_seasons["future_predictions"]) == expected_future_predictions
+
+
 def test_context_backfill_validator_rejects_row_mutation(tmp_path: Path) -> None:
     root = Path(__file__).resolve().parents[1]
     source = (

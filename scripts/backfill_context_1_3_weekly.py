@@ -10,8 +10,13 @@ from pathlib import Path
 from typing import Any
 
 from gippyrank.context_comparison import build_context_backfill
-from gippyrank.posterior.snapshots import relative_path
+from gippyrank.posterior.snapshots import (
+    historical_schedule_rows_from_site_artifact,
+    relative_path,
+    sha256,
+)
 from gippyrank.site_data import build_site_data
+from gippyrank.weekly_update import refresh_frozen_weekly_report
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -36,6 +41,37 @@ def _read_json(path: Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise TypeError(f"{path} must contain a JSON object")
     return value
+
+
+def _presentation_schedule(
+    *, root: Path, source: Path, source_metadata: dict[str, Any]
+) -> tuple[list[dict[str, str]], dict[str, str]]:
+    snapshot_id = str(source_metadata["snapshot_id"])
+    path = root / "site/data/week-games" / f"{snapshot_id}.json"
+    with (source / "included_games.csv").open(
+        newline="", encoding="utf-8"
+    ) as handle:
+        required_included_game_ids = [
+            row["id"]
+            for row in csv.DictReader(handle)
+            if row["homeClassification"].casefold() == "fbs"
+            or row["awayClassification"].casefold() == "fbs"
+        ]
+    rows = historical_schedule_rows_from_site_artifact(
+        path,
+        season=int(source_metadata["season"]),
+        expected_snapshot_id=snapshot_id,
+        expected_included_game_ids=[
+            str(game_id) for game_id in source_metadata["included_game_ids"]
+        ],
+        required_included_game_ids=required_included_game_ids,
+    )
+    return rows, {
+        "kind": "frozen_historical_schedule",
+        "path": relative_path(path, root),
+        "sha256": sha256(path),
+        "snapshot_id": snapshot_id,
+    }
 
 
 def _rank_differences(source: Path, generated: Path) -> list[dict[str, Any]]:
@@ -147,15 +183,23 @@ def main() -> None:
     reports: list[dict[str, Any]] = []
     for checkpoint in CHECKPOINTS:
         source = root / checkpoint["source"]
+        source_metadata = _read_json(source / "metadata.json")
+        presentation_rows, presentation_source = _presentation_schedule(
+            root=root,
+            source=source,
+            source_metadata=source_metadata,
+        )
         generated_path, validation = build_context_backfill(
             source_context_1_2=source,
             root=root,
             generation_timestamp=generation_timestamp,
+            presentation_schedule_rows=presentation_rows,
+            presentation_schedule_source=presentation_source,
         )
         generated_relative = relative_path(generated_path, root)
         source_relative = relative_path(source, root)
-        source_metadata = _read_json(source / "metadata.json")
         generated_metadata = _read_json(generated_path / "metadata.json")
+        generated_team_seasons = _read_json(generated_path / "team_seasons.json")
         report = {
             "lineage_name": checkpoint["name"],
             "source_context_1_2_snapshot": source_metadata["snapshot_id"],
@@ -172,6 +216,11 @@ def main() -> None:
             "included_game_rows_sha256": validation["included_game_rows_sha256"],
             "source_evidence_hash": validation["included_game_rows_sha256"],
             "source_game_corpus_sha256": validation["game_corpus_sha256"],
+            "presentation_schedule_source": presentation_source,
+            "presentation_schedule_game_count": len(presentation_rows),
+            "presentation_future_prediction_count": len(
+                generated_team_seasons["future_predictions"]
+            ),
             "fbs_team_count": validation["fbs_team_count"],
             "fbs_team_keys_sha256": validation["fbs_team_keys_sha256"],
             "prior_model_version": generated_metadata["prior_model_version"],
@@ -187,6 +236,28 @@ def main() -> None:
         root=root,
         config_path=root / "site/publish_config.json",
         output_directory=root / "site/data",
+    )
+    config = _read_json(root / "site/publish_config.json")
+    frozen_week4 = {
+        family: next(
+            root / entry["source"]
+            for entry in config["snapshots"]
+            if entry.get("publication_slot") == "2026-09-20"
+            and entry.get("source", "").endswith(suffix)
+        )
+        for family, suffix in {
+            "context": "/predictive/context",
+            "history": "/predictive/history",
+            "performance": "/performance",
+        }.items()
+    }
+    refresh_frozen_weekly_report(
+        root=root,
+        season=2026,
+        publication_slot="2026-09-20",
+        context_snapshot=frozen_week4["context"],
+        history_snapshot=frozen_week4["history"],
+        performance_snapshot=frozen_week4["performance"],
     )
     print(json.dumps({"backfills": reports}, indent=2, sort_keys=True))
 

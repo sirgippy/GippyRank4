@@ -2308,12 +2308,14 @@ def _validate_team_season_artifact(
         schedule_source.get("path") == "data/processed/cfbd/games.csv"
         if schedule_kind == "current_processed_schedule"
         else isinstance(schedule_source.get("path"), str)
-        if schedule_kind == "frozen_included_games" and isinstance(schedule_source, dict)
+        if schedule_kind in {"frozen_included_games", "frozen_historical_schedule"}
+        and isinstance(schedule_source, dict)
         else False
     )
     if not isinstance(schedule_source, dict) or schedule_kind not in {
         "current_processed_schedule",
         "frozen_included_games",
+        "frozen_historical_schedule",
     } or not valid_schedule_path or not isinstance(schedule_source.get("sha256"), str) or len(
         schedule_source.get("sha256", "")
     ) != 64 or not all(
