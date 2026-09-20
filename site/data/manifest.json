@@ -3,14 +3,14 @@
   "methodology_path": "data/methodology.json",
   "methodology_schema_version": "1.0",
   "payload_stats": {
-    "initial_rankings_page_bytes": 4814049,
+    "initial_rankings_page_bytes": 4819217,
     "lazy_completed_visualization_bytes": 895352,
     "lazy_future_prediction_bytes": 23282613,
     "lazy_future_visualization_bytes": 4962100,
     "lazy_rank_distribution_bytes": 15910177,
     "lazy_team_season_bytes": 61523378,
     "lazy_week_games_bytes": 46146184,
-    "published_ranking_snapshot_bytes": 4814049,
+    "published_ranking_snapshot_bytes": 4819217,
     "published_snapshot_count": 35,
     "season_simulation_browser_bytes": 13949215,
     "season_simulation_bytes": 44948804
@@ -343,8 +343,8 @@
       "week_games_path": "data/week-games/2026-preseason-context-v1.3.json"
     },
     {
-      "comparison_display_label": null,
-      "comparison_snapshot_id": null,
+      "comparison_display_label": "Preseason",
+      "comparison_snapshot_id": "2026-preseason-history",
       "completed_game_count": 0,
       "completed_visualization_bytes": 2,
       "completed_visualization_bytes_per_game": 0,
@@ -505,8 +505,8 @@
       "week_games_path": "data/week-games/2026-live-2026-09-05T23-59-59Z-context.json"
     },
     {
-      "comparison_display_label": "Preseason",
-      "comparison_snapshot_id": "2026-preseason-history",
+      "comparison_display_label": "2026 reconstructed preseason (Context 1.3)",
+      "comparison_snapshot_id": "2026-preseason-history-context-1.3",
       "completed_game_count": 60,
       "completed_visualization_bytes": 7870,
       "completed_visualization_bytes_per_game": 131.16666666666666,
@@ -613,8 +613,8 @@
       "week_games_path": "data/week-games/2026-weekly-2026-09-06T17-34-56.895103Z-context.json"
     },
     {
-      "comparison_display_label": "Preseason",
-      "comparison_snapshot_id": "2026-preseason-history",
+      "comparison_display_label": "2026 reconstructed preseason (Context 1.3)",
+      "comparison_snapshot_id": "2026-preseason-history-context-1.3",
       "completed_game_count": 142,
       "completed_visualization_bytes": 18594,
       "completed_visualization_bytes_per_game": 130.94366197183098,
@@ -770,8 +770,8 @@
       "week_games_path": "data/week-games/2026-weekly-2026-09-07T13-42-50.853587Z-context.json"
     },
     {
-      "comparison_display_label": "Preseason",
-      "comparison_snapshot_id": "2026-preseason-history",
+      "comparison_display_label": "2026 reconstructed preseason (Context 1.3)",
+      "comparison_snapshot_id": "2026-preseason-history-context-1.3",
       "completed_game_count": 148,
       "completed_visualization_bytes": 19385,
       "completed_visualization_bytes_per_game": 130.97972972972974,
@@ -927,8 +927,8 @@
       "week_games_path": "data/week-games/2026-weekly-2026-09-08T11-43-00.275833Z-context.json"
     },
     {
-      "comparison_display_label": "Preseason",
-      "comparison_snapshot_id": "2026-preseason-history",
+      "comparison_display_label": "2026 reconstructed preseason (Context 1.3)",
+      "comparison_snapshot_id": "2026-preseason-history-context-1.3",
       "completed_game_count": 150,
       "completed_visualization_bytes": 19653,
       "completed_visualization_bytes_per_game": 131.02,
@@ -1828,8 +1828,8 @@
       "week_games_path": "data/week-games/2026-weekly-2026-09-19T06-16-20.550476Z-context-v1.3.json"
     },
     {
-      "comparison_display_label": "2026 reconstructed preseason (Context 1.3)",
-      "comparison_snapshot_id": "2026-preseason-history-context-1.3",
+      "comparison_display_label": "Week 3",
+      "comparison_snapshot_id": "2026-weekly-2026-09-13T12-02-55.255941Z-history",
       "completed_game_count": 292,
       "completed_visualization_bytes": 38276,
       "completed_visualization_bytes_per_game": 131.08219178082192,
@@ -1985,8 +1985,8 @@
       "week_games_path": "data/week-games/2026-weekly-2026-09-20T11-00-14.294077Z-context-v1.3.json"
     },
     {
-      "comparison_display_label": "2026 reconstructed preseason (Context 1.3)",
-      "comparison_snapshot_id": "2026-preseason-history-context-1.3",
+      "comparison_display_label": "Week 3",
+      "comparison_snapshot_id": "2026-weekly-2026-09-13T12-02-55.255941Z-history",
       "completed_game_count": 417,
       "completed_visualization_bytes": 54625,
       "completed_visualization_bytes_per_game": 130.99520383693044,
@@ -2094,7 +2094,7 @@
     "index_path": "api/v1/index.json",
     "publication_count": 35,
     "publications_path": "api/v1/publications.json",
-    "resource_bytes": 435161262,
+    "resource_bytes": 435366585,
     "schema_version": "1.0"
   },
   "team_logo_audit": {

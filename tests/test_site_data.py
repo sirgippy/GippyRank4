@@ -960,6 +960,17 @@ def test_publication_status_and_official_comparison_chain(
             )
             assert current["comparison_snapshot_id"] == expected_snapshot_id
 
+    week4_history = next(
+        entry
+        for entry in manifest["snapshots"]
+        if entry["publication_slot"] == "2026-09-20"
+        and entry["ranking_family"] == "predictive"
+        and entry["prior_family"] == "history"
+    )
+    assert week4_history["comparison_snapshot_id"] == (
+        "2026-weekly-2026-09-13T12-02-55.255941Z-history"
+    )
+
     publication_order_by_slot = {
         slot["id"]: index for index, slot in enumerate(publication_slots)
     }

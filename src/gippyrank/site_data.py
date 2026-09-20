@@ -474,24 +474,36 @@ def _ranking_rows(path: Path, metadata: dict[str, Any]) -> list[dict[str, Any]]:
     )
 
 
-def _comparison_key(
+def _movement_comparison_key(
     snapshot: PublicationComparison,
-) -> tuple[int, str, str | None, str | None, str | None]:
+) -> tuple[int, str, str | None, str | None]:
     prior_version = snapshot.prior_model_version
-    context_version = snapshot.context_prior_model_version
     if prior_version is None and snapshot.ranking_family == "predictive":
         # Callers constructing a publication candidate before its metadata is
         # materialized target the active Context lineage.
         prior_version = "1.3" if snapshot.prior_family == "context" else "1.1"
-    if context_version is None and snapshot.ranking_family == "predictive":
-        # History snapshots use History 1.1 as their direct prior, but their
-        # displayed preseason reference still belongs to a Context lineage.
-        context_version = "1.3"
     return (
         snapshot.season,
         snapshot.ranking_family,
         snapshot.prior_family if snapshot.ranking_family == "predictive" else None,
         prior_version,
+    )
+
+
+def _preseason_comparison_key(
+    snapshot: PublicationComparison,
+) -> tuple[int, str, str | None, str | None, str | None]:
+    """Return the movement key plus the companion Context lineage.
+
+    The companion Context version identifies the matching preseason display
+    reference for Predictive History, but it must not partition History's
+    official movement chain.
+    """
+    context_version = snapshot.context_prior_model_version
+    if context_version is None and snapshot.ranking_family == "predictive":
+        context_version = "1.3"
+    return (
+        *_movement_comparison_key(snapshot),
         context_version if snapshot.prior_family == "history" else None,
     )
 
@@ -548,7 +560,7 @@ def resolve_previous_official(
         for snapshot in snapshots
         if snapshot.publication_status == "official"
         and snapshot.publication_order < current.publication_order
-        and _comparison_key(snapshot) == _comparison_key(current)
+        and _movement_comparison_key(snapshot) == _movement_comparison_key(current)
     ]
     return max(compatible, key=lambda snapshot: snapshot.publication_order, default=None)
 
@@ -584,13 +596,13 @@ def _matching_preseason_snapshot(
     if metadata.get("ranking_family") != "predictive":
         return None
 
-    key = _comparison_key(_comparison_descriptor(current))
+    key = _preseason_comparison_key(_comparison_descriptor(current))
     candidates = [
         snapshot
         for snapshot in snapshots
         if snapshot.metadata.get("snapshot_type") == "preseason"
         and snapshot.selected.publication_status == "official"
-        and _comparison_key(_comparison_descriptor(snapshot)) == key
+        and _preseason_comparison_key(_comparison_descriptor(snapshot)) == key
     ]
     if len(candidates) > 1:
         ids = sorted(snapshot.snapshot_id for snapshot in candidates)
