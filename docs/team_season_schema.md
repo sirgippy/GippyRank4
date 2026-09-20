@@ -11,13 +11,42 @@ supported predictive snapshots. Its method and provenance are documented in
 summary from this object and never run Monte Carlo in the browser.
 
 Predictive team pages use the manifest's explicit preseason reference to load
-the matching published preseason distribution alongside the selected
-snapshot's distribution. They show a shared-axis preseason → selected-snapshot
-comparison for the same season and `prior_family`. Historical URLs therefore
-compare against the selected historical snapshot, not the latest publication.
-Preseason pages show the starting distribution and its input-family
-explanation instead of Preseason → Preseason. Performance pages have no
-Predictive preseason prior and do not show a fabricated comparison.
+the matching published preseason distribution and evidence alongside the
+selected snapshot. Their season trajectory begins with that same-family
+preseason point and stops at the selected historical snapshot, never today's
+latest publication. Preseason pages show the starting distribution and its
+input evidence without fabricating a before/after change. Performance pages
+have no Predictive preseason prior and do not show a fabricated comparison.
+
+The static exporter also writes one compact
+`data/team-trajectories/<preseason-snapshot-id>.json` artifact for each
+published Predictive preseason lineage. It contains the configured sequence of
+published snapshots, expected rank, median, central 50/80/95% intervals, Top
+25 probability, and the included-game-ID boundary for every FBS team. Team
+pages stop at the selected snapshot, so a historical URL never reads a later
+belief. A completed-game page may show the prior published point → the first
+published point that included that game, but labels that transition as a shared
+published update rather than causally assigning it to one game.
+
+## Published preseason evidence
+
+The browser-facing preseason team-season artifact may contain a top-level
+`preseason_inputs` projection with schema version `1.0`. It is built during
+static export from the preserved processing inputs; `team.js` never opens
+research/model-training CSVs. Its `teams[team_id]` entries are grouped as
+`program_history`, `coach`, `recruiting`, `talent`, and (for Context 1.3)
+`transfers`. Each field preserves a raw value, display value, availability,
+model-feature name where applicable, source, and available FBS comparison
+context.
+
+History entries intentionally expose only `program_history`. Context 1.3
+entries expose the additional team-specific evidence, including recruiting
+means/trend, talent, returning PPA, incoming offensive usage, incoming DB
+defensive impact, and DB-transfer-data completeness. The projection does not
+contain feature-attribution claims. Its provenance carries the visible 2026
+transfer caveat: those transfer fields are a retrospective reconstruction
+retrieved after the August 15 cutoff, not a literal archived August 15
+information state.
 
 The simulation object is required whenever snapshot metadata declares
 `season_simulation_version` and `season_simulation_configuration`. Legacy

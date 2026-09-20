@@ -194,6 +194,44 @@ def test_exported_team_logos_are_canonical_and_audited(
     assert manifest["methodology_schema_version"] == methodology["schema_version"]
 
 
+def test_site_export_publishes_preseason_evidence_and_belief_trajectory(
+    production_site_data: tuple[Path, dict[str, object]],
+) -> None:
+    output, manifest = production_site_data
+    context = next(
+        entry
+        for entry in manifest["snapshots"]
+        if entry["snapshot_id"] == "2026-weekly-2026-09-20T11-00-14.294077Z-context-v1.3"
+    )
+    assert context["preseason_team_seasons_path"] == (
+        "data/team-seasons/2026-preseason-context-v1.3.json"
+    )
+    assert context["season_trajectory_path"] == (
+        "data/team-trajectories/2026-preseason-context-v1.3.json"
+    )
+    preseason = json.loads(
+        (
+            output
+            / context["preseason_team_seasons_path"].removeprefix("data/")
+        ).read_text(encoding="utf-8")
+    )
+    ohio_state = preseason["preseason_inputs"]["teams"]["194"]
+    assert "recruiting" in ohio_state
+    assert "transfers" in ohio_state
+    assert preseason["preseason_inputs"]["provenance"]["transfer_caveat"][
+        "status"
+    ] == "retrospective_reconstruction"
+    trajectory = json.loads(
+        (output / context["season_trajectory_path"].removeprefix("data/")).read_text(
+            encoding="utf-8"
+        )
+    )
+    assert trajectory["artifact_kind"] == "team_belief_trajectory"
+    assert trajectory["points"][0]["snapshot_type"] == "preseason"
+    assert trajectory["points"][-1]["snapshot_id"] == context["snapshot_id"]
+    assert trajectory["points"][-1]["teams"]["194"]["interval_80"]
+
+
 def test_site_export_includes_static_api_when_requested(tmp_path: Path) -> None:
     source = _copied_snapshot(tmp_path)
     output = tmp_path / "site-data"
@@ -640,16 +678,16 @@ def test_team_schedule_uses_distinct_accessible_performance_and_margin_plots() -
     assert "Central 80% range" in team
     assert ".game-distribution-chart" in css
     assert ".game-distribution-future .distribution-bar" in css
-    assert "More performance detail" in team
-    assert "More predictive detail" in team
-    assert 'node("p", "sr-only", accessible)' in team
-    assert 'node("p", "game-distribution-text", accessible)' not in team
+    assert "distribution-toggle" in team
+    assert "inferred performance distribution" in team
+    assert "predictive margin distribution" in team
+    assert "▾" in team
     assert "Expected performance rank" in team
     assert "expectedPrimary" in team
     assert "Played like" not in team
-    assert "game-prediction-interval" not in team
-    assert "best FBS performance is on the left" in html
-    assert "Even in the middle" in html
+    assert "game-prediction-interval" in team
+    assert "How to read this page" in html
+    assert "Published snapshot changes are not single-game causal attribution." in html
 
 
 def test_future_prediction_range_labels_follow_focal_margin_sign() -> None:

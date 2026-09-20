@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="GippyRank team-season page with snapshot-aware game ratings and future predictions.">
+    <meta name="description" content="GippyRank's snapshot-aware team season dashboard.">
     <title>Team season · GippyRank4</title>
     <link rel="stylesheet" href="./assets/style.css">
   </head>
@@ -34,22 +34,23 @@
         </nav>
       </section>
       <section id="preseason-starting-point-section" class="preseason-starting-point-section" aria-labelledby="preseason-starting-point-title" hidden>
-        <div class="section-heading"><div><h2 id="preseason-starting-point-title">Preseason starting point</h2><p class="section-context">The model's belief before any eligible game evidence.</p></div></div>
+        <div class="section-heading"><div><h2 id="preseason-starting-point-title">Preseason evidence</h2><p class="section-context">The team-specific evidence behind the published starting belief.</p></div></div>
         <div id="preseason-starting-point-content" class="preseason-starting-point-content" aria-live="polite"></div>
       </section>
       <section id="season-movement-section" class="season-movement-section" aria-labelledby="season-movement-title" hidden>
-        <div class="section-heading"><div><h2 id="season-movement-title">Season movement</h2><p id="season-movement-context" class="section-context"></p></div></div>
+        <div class="section-heading"><div><h2 id="season-movement-title">Season belief trajectory</h2><p id="season-movement-context" class="section-context"></p></div></div>
         <div id="season-movement" class="season-movement" aria-live="polite"></div>
       </section>
-      <section class="team-rating-explainer" aria-labelledby="game-ratings-title">
-        <h2 id="game-ratings-title">The season story</h2>
-        <p>Completed games show the inferred performance distribution for that one performance: best FBS performance is on the left, worst is on the right. Future games show the predictive margin distribution from this team's perspective: opponent win on the left, Even in the middle, and focal-team win on the right.</p>
-        <p>Percentile and grade summarize how good a completed performance looks; distribution width shows how certain that assessment is. Win probability and expected margin summarize a future prediction; its distribution shows the plausible range.</p>
-        <p id="prediction-source" class="team-rating-note"></p>
-        <p class="team-rating-note">Ratings remain Context-anchored, even when the header shows Predictive History or Performance. Future games use the selected source shown above. No projected final scores are displayed.</p>
+      <section class="team-rating-explainer" aria-label="How to read this page">
+        <details class="team-page-help">
+          <summary>How to read this page</summary>
+          <p>Completed games pair the result with a published-belief transition and an inferred performance grade. Future games summarize the current prediction. Compact chevrons reveal the underlying uncertainty distributions.</p>
+          <p id="prediction-source" class="team-rating-note"></p>
+          <p class="team-rating-note">Completed-game ratings remain Context-anchored; future games use the source named above. Published snapshot changes are not single-game causal attribution.</p>
+        </details>
       </section>
       <section id="season-outlook-section" class="season-outlook-section" aria-labelledby="season-outlook-title" hidden>
-        <div class="section-heading"><div><h2 id="season-outlook-title">Season outlook</h2><p class="section-context">A probability distribution over final regular-season wins.</p></div></div>
+        <div class="section-heading"><div><h2 id="season-outlook-title">Season outlook</h2><p class="section-context">Expected finish and likely final regular-season record.</p></div></div>
         <div id="season-outlook" class="season-outlook" aria-live="polite"></div>
       </section>
       <section aria-labelledby="schedule-title">
