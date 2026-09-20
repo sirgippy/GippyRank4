@@ -554,6 +554,113 @@ def render_review_markdown(report: dict[str, Any]) -> str:
     )
 
 
+def refresh_frozen_weekly_report(
+    *,
+    root: Path,
+    season: int,
+    publication_slot: str,
+    context_snapshot: Path,
+    history_snapshot: Path,
+    performance_snapshot: Path,
+) -> dict[str, Any]:
+    """Refresh a committed report from already-materialized snapshots only.
+
+    This is intentionally separate from ``prepare_weekly_update``: report
+    lineage can change after a retrospective publication is added, while the
+    current-season corpus and the frozen weekly posterior must not be rebuilt.
+    """
+    config = _load_json(root / "site/publish_config.json")
+    report_path = root / "data/processed/weekly_updates" / f"{publication_slot}.json"
+    report_md_path = report_path.with_suffix(".md")
+    report = _load_json(report_path)
+    if report.get("publication_slot") != publication_slot:
+        raise ValueError(f"{report_path}: report publication slot does not match request")
+
+    def load_snapshot(path: Path) -> Snapshot:
+        metadata = _load_json(path / "metadata.json")
+        if int(metadata["season"]) != season:
+            raise ValueError(f"{path}: snapshot season does not match report request")
+        return Snapshot(str(metadata["snapshot_id"]), path, metadata)
+
+    context = load_snapshot(context_snapshot)
+    history = load_snapshot(history_snapshot)
+    performance = load_snapshot(performance_snapshot)
+    _same_evidence(context, history)
+    if context.metadata.get("snapshot_type") != "weekly":
+        raise ValueError(f"{context_snapshot}: report refresh requires a weekly snapshot")
+
+    previous_context = _previous_rows(
+        root, config, "context", season=season, publication_slot=publication_slot
+    )
+    previous_history = _previous_rows(
+        root, config, "history", season=season, publication_slot=publication_slot
+    )
+    previous_performance = _previous_rows(
+        root, config, "performance", season=season, publication_slot=publication_slot
+    )
+    context_baseline = _previous_official_comparison(
+        root, config, "context", season=season, publication_slot=publication_slot
+    )
+    history_baseline = _previous_official_comparison(
+        root, config, "history", season=season, publication_slot=publication_slot
+    )
+
+    report.update(
+        {
+            "season": context.metadata["season"],
+            "requested_cutoff": context.metadata["requested_cutoff"],
+            "effective_cutoff": context.metadata["effective_cutoff"],
+            "source_retrieved_at": context.metadata["source_retrieved_at"],
+            "source_retrieval_times": context.metadata["source_retrieval_times"],
+            "eligible_game_count": context.metadata["included_game_count"],
+            "excluded_lower_division_games": context.metadata[
+                "excluded_lower_division_games"
+            ],
+            "fcs_population_size": context.metadata["fcs_population_size"],
+            "fcs_fallback_count": context.metadata["fcs_fallback_count"],
+            "context": {**_diagnostics(context), "top25": _top25(context)},
+            "history": {**_diagnostics(history), "top25": _top25(history)},
+            "performance": {
+                **_diagnostics(performance),
+                "top25": _top25(performance),
+                **_performance_counts(performance),
+                "largest_expected_rank_differences": _performance_differences(
+                    context, performance
+                ),
+                "broadest_distributions": _broadest_performance(performance),
+            },
+            "context_movement_baseline": (
+                context_baseline.display_label if context_baseline else None
+            ),
+            "history_movement_baseline": (
+                history_baseline.display_label if history_baseline else None
+            ),
+            "context_movers": _movement(context, previous_context),
+            "history_movers": _movement(history, previous_history),
+            "h_c_disagreements": _disagreements(context, history),
+            "newly_rated_teams": _newly_rated(performance, previous_performance),
+        }
+    )
+    if context_baseline is None:
+        report["new_eligible_game_count"] = len(context.metadata["included_game_ids"])
+    else:
+        _, sources = _publication_comparisons(root, config)
+        previous_path = sources[context_baseline.snapshot_id]
+        with (previous_path / "included_games.csv").open(
+            newline="", encoding="utf-8"
+        ) as handle:
+            previous_ids = {row["id"] for row in csv.DictReader(handle)}
+        report["new_eligible_game_count"] = len(
+            set(context.metadata["included_game_ids"]) - previous_ids
+        )
+
+    report_path.write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    report_md_path.write_text(render_review_markdown(report), encoding="utf-8")
+    return report
+
+
 def prepare_weekly_update(
     *, season: int, root: Path | None = None, display_label: str | None = None,
     publication_slot: str | None = None, retrieved_at: datetime | None = None,

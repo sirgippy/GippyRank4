@@ -448,6 +448,67 @@ def test_default_weekly_root_is_repository_with_project_and_publication_markers(
     assert (weekly_update._root() / "site/publish_config.json").is_file()
 
 
+def test_committed_week4_report_uses_context_1_3_week3_baseline() -> None:
+    config = json.loads((ROOT / "site/publish_config.json").read_text(encoding="utf-8"))
+    report = json.loads(
+        (ROOT / "data/processed/weekly_updates/2026-09-20.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    context_path = next(
+        ROOT / entry["source"]
+        for entry in config["snapshots"]
+        if entry.get("publication_slot") == "2026-09-20"
+        and entry.get("source", "").endswith("/predictive/context")
+    )
+    metadata = json.loads((context_path / "metadata.json").read_text(encoding="utf-8"))
+    context = Snapshot(str(metadata["snapshot_id"]), context_path, metadata)
+    baseline = weekly_update._previous_official_comparison(
+        ROOT, config, "context", season=2026, publication_slot="2026-09-20"
+    )
+
+    assert baseline is not None
+    assert baseline.display_label == "Week 3 (Context 1.3 retrospective)"
+    assert report["context_movement_baseline"] == baseline.display_label
+    assert report["context_movers"] == weekly_update._movement(
+        context,
+        weekly_update._previous_rows(
+            ROOT, config, "context", season=2026, publication_slot="2026-09-20"
+        ),
+    )
+    assert report["effective_cutoff"] == metadata["effective_cutoff"]
+
+
+def test_committed_week4_report_uses_week3_history_baseline() -> None:
+    config = json.loads((ROOT / "site/publish_config.json").read_text(encoding="utf-8"))
+    report = json.loads(
+        (ROOT / "data/processed/weekly_updates/2026-09-20.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    history_path = next(
+        ROOT / entry["source"]
+        for entry in config["snapshots"]
+        if entry.get("publication_slot") == "2026-09-20"
+        and entry.get("source", "").endswith("/predictive/history")
+    )
+    metadata = json.loads((history_path / "metadata.json").read_text(encoding="utf-8"))
+    history = Snapshot(str(metadata["snapshot_id"]), history_path, metadata)
+    baseline = weekly_update._previous_official_comparison(
+        ROOT, config, "history", season=2026, publication_slot="2026-09-20"
+    )
+
+    assert baseline is not None
+    assert baseline.snapshot_id == "2026-weekly-2026-09-13T12-02-55.255941Z-history"
+    assert report["history_movement_baseline"] == baseline.display_label == "Week 3"
+    assert report["history_movers"] == weekly_update._movement(
+        history,
+        weekly_update._previous_rows(
+            ROOT, config, "history", season=2026, publication_slot="2026-09-20"
+        ),
+    )
+
+
 def test_update_rankings_script_reaches_publish_config_with_default_root(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

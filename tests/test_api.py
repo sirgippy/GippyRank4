@@ -9,6 +9,7 @@ from typing import Any
 import pytest
 
 from gippyrank.api.static import build_static_api
+from gippyrank.api.store import AmbiguousPublicationError, PublicationStore
 
 ROOT = Path(__file__).resolve().parents[1]
 FULL_MANIFEST = json.loads(
@@ -172,3 +173,35 @@ def test_static_api_generation_is_deterministic(
     before = _tree_hash(api_root)
     build_static_api(data_dir=api_root.parent.parent / "data", output_directory=api_root)
     assert _tree_hash(api_root) == before
+
+
+def test_same_slot_context_versions_are_distinct_and_snapshot_addressable() -> None:
+    store = PublicationStore.load(ROOT / "site/data")
+    week_2 = store.filter(
+        season=2026,
+        family="predictive",
+        prior="context",
+    )
+    week_2 = [item for item in week_2 if item.metadata.publication_slot == "2026-09-08"]
+
+    assert {
+        item.metadata.snapshot_id for item in week_2
+    } == {
+        "2026-weekly-2026-09-08T11-43-00.275833Z-context",
+        "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.3",
+    }
+    assert {
+        item.metadata.model_versions.context_prior for item in week_2
+    } == {"1.2", "1.3"}
+    assert (
+        store.get("2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.3")
+        .metadata.model_versions.context_prior
+        == "1.3"
+    )
+    with pytest.raises(AmbiguousPublicationError):
+        store.resolve(
+            season=2026,
+            publication_slot="2026-09-08",
+            family="predictive",
+            prior="context",
+        )

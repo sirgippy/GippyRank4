@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import json
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from pathlib import Path
@@ -318,15 +319,18 @@ def build_team_season_artifact(
     likelihood: LikelihoodV1 | None,
     prediction_source: str | None = None,
     season_simulation_config: SeasonSimulationConfig | None = None,
+    schedule_rows: list[dict[str, str]] | None = None,
+    schedule_source: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     """Build the compact, snapshot-aware team-season source artifact.
 
-    The schedule is read from the processed corpus so future rows can be
-    represented without revealing scores. Ratings are generated only for
-    completed games in ``included_rows`` and use the BP state passed by the
-    snapshot builder. Eligible future games receive one canonical compact
-    posterior-predictive summary in ``future_predictions``; schedule entries
-    reference it by game ID rather than duplicating the summary.
+    The schedule defaults to the processed corpus so future rows can be
+    represented without revealing scores; replay callers can provide frozen
+    source rows instead. Ratings are generated only for completed games in
+    ``included_rows`` and use the BP state passed by the snapshot builder.
+    Eligible future games receive one canonical compact posterior-predictive
+    summary in ``future_predictions``; schedule entries reference it by game
+    ID rather than duplicating the summary.
     """
     fbs_teams = {team.team_id: team for team in teams if team.subdivision == "fbs"}
     rank_count = len(next(iter(fbs_teams.values())).prior) if fbs_teams else 0
@@ -357,15 +361,37 @@ def build_team_season_artifact(
         rating["performance_grade"] = performance_grade(percentile)
 
     schedule_path = root / "data/processed/cfbd/games.csv"
-    schedule_corpus_sha256 = (
-        hashlib.sha256(schedule_path.read_bytes()).hexdigest()
-        if schedule_path.is_file()
-        else None
-    )
-    schedule: list[dict[str, str]] = []
-    if schedule_path.is_file():
-        with schedule_path.open(newline="", encoding="utf-8") as handle:
-            schedule = list(csv.DictReader(handle))
+    if schedule_rows is None:
+        schedule_corpus_sha256 = (
+            hashlib.sha256(schedule_path.read_bytes()).hexdigest()
+            if schedule_path.is_file()
+            else None
+        )
+        schedule: list[dict[str, str]] = []
+        if schedule_path.is_file():
+            with schedule_path.open(newline="", encoding="utf-8") as handle:
+                schedule = list(csv.DictReader(handle))
+        resolved_schedule_source = {
+            "kind": "current_processed_schedule",
+            "path": "data/processed/cfbd/games.csv",
+            "sha256": schedule_corpus_sha256 or "",
+        }
+    else:
+        schedule = [dict(row) for row in schedule_rows]
+        schedule_corpus_sha256 = (
+            schedule_source.get("sha256")
+            if schedule_source is not None
+            else hashlib.sha256(
+                json.dumps(schedule, sort_keys=True, separators=(",", ":")).encode(
+                    "utf-8"
+                )
+            ).hexdigest()
+        )
+        resolved_schedule_source = schedule_source or {
+            "kind": "frozen_included_games",
+            "path": "included_games.csv",
+            "sha256": schedule_corpus_sha256,
+        }
 
     future_simulation_games: list[ScheduledGame] = []
     fixed_regular_rows: list[dict[str, str]] = []
@@ -591,11 +617,7 @@ def build_team_season_artifact(
         "source_retrieval_times": metadata.get("source_retrieval_times"),
         "source_response_hashes": metadata.get("source_response_hashes", {}),
         "game_corpus_sha256": metadata.get("game_corpus_sha256"),
-        "schedule_source": {
-            "kind": "current_processed_schedule",
-            "path": "data/processed/cfbd/games.csv",
-            "sha256": schedule_corpus_sha256,
-        },
+        "schedule_source": resolved_schedule_source,
         "included_game_ids": sorted(included_ids),
         "historical_likelihood_version": metadata.get(
             "historical_likelihood_version", HISTORICAL_LIKELIHOOD_VERSION

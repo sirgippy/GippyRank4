@@ -119,7 +119,7 @@ class PublicationStore:
                 )
 
             publications: list[LoadedPublication] = []
-            seen_slots: set[tuple[int, str, str, str | None]] = set()
+            seen_slots: set[tuple[int, str, str, str | None, str | None]] = set()
             for index, entry in enumerate(entries):
                 if not isinstance(entry, dict):
                     raise PublicationDataError(
@@ -142,6 +142,11 @@ class PublicationStore:
                     metadata.publication_slot,
                     metadata.ranking_family,
                     metadata.prior_family,
+                    (
+                        metadata.model_versions.context_prior
+                        if metadata.ranking_family == "predictive"
+                        else metadata.model_versions.performance
+                    ),
                 )
                 if selector_key in seen_slots:
                     raise PublicationDataError(
