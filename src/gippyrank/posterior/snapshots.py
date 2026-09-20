@@ -58,6 +58,19 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def stable_values_sha256(values: list[str]) -> str:
+    """Hash an ordered canonical list without depending on JSON formatting."""
+    return hashlib.sha256("\n".join(values).encode("utf-8")).hexdigest()
+
+
+def relative_path(path: Path, root: Path) -> str:
+    """Return a repository-relative artifact path when possible."""
+    try:
+        return path.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
 def snapshot_id(
     season: int,
     snapshot_type: SnapshotType,
@@ -578,6 +591,29 @@ def build_snapshot(
         if games
         else "prior_passthrough",
     }
+    fbs_team_ids = sorted(
+        team.team_id for team in teams if team.subdivision == "fbs"
+    )
+    included_game_ids = [row["id"] for row in included]
+    posterior_inference_configuration = {
+        "implementation": diagnostics["inference"],
+        "max_iterations": inference_max_iterations,
+        "tolerance": inference_tolerance,
+        "damping": inference_damping,
+    }
+    lower_division_handling = {
+        "excluded_lower_division_games": excluded_lower,
+        "fcs_fallback_team_ids": list(fcs_fallbacks),
+        "fcs_fallback_count": len(fcs_fallbacks),
+        "fcs_population_size": fcs_population,
+        "fcs_population_source": fcs_population_source,
+        "fcs_fallback_kind": "uniform_full_subdivision_rank"
+        if fcs_fallbacks
+        else None,
+        "fcs_fallback_pmf_semantics": "uniform ranks 1..N_FCS"
+        if fcs_fallbacks
+        else None,
+    }
     metadata: dict[str, object] = {
         "schema_version": SCHEMA_VERSION,
         "snapshot_id": sid,
@@ -594,8 +630,10 @@ def build_snapshot(
             else f"{prior_family}_{selected_prior_version}"
         ),
         "posterior_rebuilt_from_prior": True,
+        "prior_artifact_path": relative_path(prior_path, root),
         "prior_artifact_sha256": sha256(prior_path),
         "historical_likelihood_version": HISTORICAL_LIKELIHOOD_VERSION,
+        "posterior_inference_configuration": posterior_inference_configuration,
         "season_simulation_schema_version": SEASON_SIMULATION_SCHEMA_VERSION,
         "season_simulation_version": season_simulation_config.simulation_version,
         "season_simulation_configuration": season_simulation_config.as_dict(),
@@ -619,8 +657,11 @@ def build_snapshot(
             else datetime.now(UTC).isoformat()
         ),
         "game_corpus_sha256": sha256(corpus_path),
-        "included_game_count": len(included),
-        "included_game_ids": [row["id"] for row in included],
+        "included_game_count": len(included_game_ids),
+        "included_game_ids": included_game_ids,
+        "included_game_ids_sha256": stable_values_sha256(included_game_ids),
+        "fbs_team_count": len(fbs_team_ids),
+        "fbs_team_keys_sha256": stable_values_sha256(fbs_team_ids),
         "excluded_lower_division_games": excluded_lower,
         "fcs_fallback_team_ids": list(fcs_fallbacks),
         "fcs_fallback_count": len(fcs_fallbacks),
@@ -643,6 +684,7 @@ def build_snapshot(
         "team_season_schema_version": (
             TEAM_SEASON_SCHEMA_VERSION if prior_family == "context" else None
         ),
+        "lower_division_handling": lower_division_handling,
     }
     if likelihood is not None:
         team_season = build_team_season_artifact(

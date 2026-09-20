@@ -1,0 +1,5414 @@
+{
+  "comparison_display_label": "2026 reconstructed preseason (Context 1.3)",
+  "comparison_snapshot_id": "2026-preseason-context-v1.3",
+  "effective_cutoff": "2026-09-20T11:00:14.294077+00:00",
+  "excluded_lower_division_games": 57,
+  "generation_timestamp": "2026-09-20T11:10:59.833306+00:00",
+  "included_game_count": 410,
+  "model_versions": {
+    "context_prior": "1.3",
+    "historical_likelihood": "V1",
+    "history_prior": "1.1"
+  },
+  "preseason_display_label": "2026 reconstructed preseason (Context 1.3)",
+  "preseason_distribution_path": "data/distributions/2026-preseason-context-v1.3.json",
+  "preseason_snapshot_id": "2026-preseason-context-v1.3",
+  "prior_family": "context",
+  "publication_slot": "2026-09-20",
+  "publication_status": "official",
+  "rank_count": 138,
+  "ranking_family": "predictive",
+  "rankings": [
+    {
+      "conference": "Big Ten",
+      "display_rank": 1,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 4.876227888107541,
+      "interval_50": [
+        2,
+        6
+      ],
+      "interval_80": [
+        1.0,
+        10.0
+      ],
+      "interval_95": [
+        1,
+        17
+      ],
+      "interval_widths": {
+        "50": 5,
+        "80": 10,
+        "95": 17
+      },
+      "median_rank": 4.0,
+      "mode_rank": 2,
+      "previous_official_rank": 2,
+      "rank_1_probability": 0.14617196506396377,
+      "rank_change": 1,
+      "rank_change_accessible": "Up 1 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21911",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "194",
+      "team_name": "Ohio State",
+      "top10_probability": 0.9083335389416853,
+      "top25_probability": 0.994627661421885,
+      "top5_probability": 0.7023976223806511
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 2,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 5.719747081114672,
+      "interval_50": [
+        2,
+        7
+      ],
+      "interval_80": [
+        1.0,
+        12.0
+      ],
+      "interval_95": [
+        1,
+        20
+      ],
+      "interval_widths": {
+        "50": 6,
+        "80": 12,
+        "95": 20
+      },
+      "median_rank": 4.0,
+      "mode_rank": 2,
+      "previous_official_rank": 3,
+      "rank_1_probability": 0.11528404770952377,
+      "rank_change": 1,
+      "rank_change_accessible": "Up 1 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21911",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "61",
+      "team_name": "Georgia",
+      "top10_probability": 0.8670355368596407,
+      "top25_probability": 0.9888901958724401,
+      "top5_probability": 0.6370128432889044
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 3,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 6.5267065947659475,
+      "interval_50": [
+        3,
+        8
+      ],
+      "interval_80": [
+        2.0,
+        13.0
+      ],
+      "interval_95": [
+        1,
+        21
+      ],
+      "interval_widths": {
+        "50": 6,
+        "80": 12,
+        "95": 21
+      },
+      "median_rank": 5.0,
+      "mode_rank": 2,
+      "previous_official_rank": 5,
+      "rank_1_probability": 0.07255483211297323,
+      "rank_change": 2,
+      "rank_change_accessible": "Up 2 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21912",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "251",
+      "team_name": "Texas",
+      "top10_probability": 0.831716664186006,
+      "top25_probability": 0.9867941675790192,
+      "top5_probability": 0.5565765671470043
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 4,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 6.974906823400096,
+      "interval_50": [
+        3,
+        9
+      ],
+      "interval_80": [
+        2.0,
+        15.0
+      ],
+      "interval_95": [
+        1,
+        24
+      ],
+      "interval_widths": {
+        "50": 7,
+        "80": 14,
+        "95": 24
+      },
+      "median_rank": 5.0,
+      "mode_rank": 2,
+      "previous_official_rank": 6,
+      "rank_1_probability": 0.0796219995771047,
+      "rank_change": 2,
+      "rank_change_accessible": "Up 2 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21912",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "84",
+      "team_name": "Indiana",
+      "top10_probability": 0.806892717401959,
+      "top25_probability": 0.9782010559854517,
+      "top5_probability": 0.5448262257015146
+    },
+    {
+      "conference": "FBS Independents",
+      "display_rank": 5,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 7.577522276818538,
+      "interval_50": [
+        3,
+        10
+      ],
+      "interval_80": [
+        2.0,
+        15.0
+      ],
+      "interval_95": [
+        1,
+        25
+      ],
+      "interval_widths": {
+        "50": 8,
+        "80": 14,
+        "95": 25
+      },
+      "median_rank": 6.0,
+      "mode_rank": 3,
+      "previous_official_rank": 10,
+      "rank_1_probability": 0.04879142165389481,
+      "rank_change": 5,
+      "rank_change_accessible": "Up 5 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21915",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "87",
+      "team_name": "Notre Dame",
+      "top10_probability": 0.7795890527315393,
+      "top25_probability": 0.9767677512169491,
+      "top5_probability": 0.4820597815908644
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 6,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 7.663416092968015,
+      "interval_50": [
+        3,
+        10
+      ],
+      "interval_80": [
+        2.0,
+        16.0
+      ],
+      "interval_95": [
+        1,
+        26
+      ],
+      "interval_widths": {
+        "50": 8,
+        "80": 15,
+        "95": 26
+      },
+      "median_rank": 6.0,
+      "mode_rank": 3,
+      "previous_official_rank": 8,
+      "rank_1_probability": 0.05558777606736729,
+      "rank_change": 2,
+      "rank_change_accessible": "Up 2 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21912",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "2390",
+      "team_name": "Miami",
+      "top10_probability": 0.7726313182828459,
+      "top25_probability": 0.9749623474495306,
+      "top5_probability": 0.48406760926037307
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 7,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 8.38214484141772,
+      "interval_50": [
+        3,
+        11
+      ],
+      "interval_80": [
+        2.0,
+        18.0
+      ],
+      "interval_95": [
+        1,
+        33
+      ],
+      "interval_widths": {
+        "50": 9,
+        "80": 17,
+        "95": 33
+      },
+      "median_rank": 6.0,
+      "mode_rank": 2,
+      "previous_official_rank": 1,
+      "rank_1_probability": 0.0967006685089718,
+      "rank_change": -6,
+      "rank_change_accessible": "Down 6 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21936",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "2483",
+      "team_name": "Oregon",
+      "top10_probability": 0.7348657469807625,
+      "top25_probability": 0.954355027629053,
+      "top5_probability": 0.49019517340458085
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 8,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 8.485619611297585,
+      "interval_50": [
+        4,
+        11
+      ],
+      "interval_80": [
+        2.0,
+        17.0
+      ],
+      "interval_95": [
+        1,
+        27
+      ],
+      "interval_widths": {
+        "50": 8,
+        "80": 16,
+        "95": 27
+      },
+      "median_rank": 7.0,
+      "mode_rank": 3,
+      "previous_official_rank": 9,
+      "rank_1_probability": 0.030732078598349713,
+      "rank_change": 1,
+      "rank_change_accessible": "Up 1 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21911",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "99",
+      "team_name": "LSU",
+      "top10_probability": 0.7308013369985784,
+      "top25_probability": 0.9699905787045725,
+      "top5_probability": 0.41406264887564603
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 9,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 8.869259089936888,
+      "interval_50": [
+        4,
+        11
+      ],
+      "interval_80": [
+        3.0,
+        17.0
+      ],
+      "interval_95": [
+        2,
+        27
+      ],
+      "interval_widths": {
+        "50": 8,
+        "80": 15,
+        "95": 26
+      },
+      "median_rank": 7.0,
+      "mode_rank": 4,
+      "previous_official_rank": 15,
+      "rank_1_probability": 0.020491573231754216,
+      "rank_change": 6,
+      "rank_change_accessible": "Up 6 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21916",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "333",
+      "team_name": "Alabama",
+      "top10_probability": 0.712037152434412,
+      "top25_probability": 0.967794573156312,
+      "top5_probability": 0.37827629763656967
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 10,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 10.16117969276348,
+      "interval_50": [
+        4,
+        13
+      ],
+      "interval_80": [
+        2.0,
+        21.0
+      ],
+      "interval_95": [
+        1,
+        36
+      ],
+      "interval_widths": {
+        "50": 10,
+        "80": 20,
+        "95": 36
+      },
+      "median_rank": 7.0,
+      "mode_rank": 3,
+      "previous_official_rank": 7,
+      "rank_1_probability": 0.03838897621313107,
+      "rank_change": -3,
+      "rank_change_accessible": "Down 3 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21933",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "145",
+      "team_name": "Ole Miss",
+      "top10_probability": 0.6545422323620919,
+      "top25_probability": 0.936319279975866,
+      "top5_probability": 0.3681500529189562
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 11,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 11.489249226837796,
+      "interval_50": [
+        5,
+        15
+      ],
+      "interval_80": [
+        3.0,
+        23.0
+      ],
+      "interval_95": [
+        2,
+        37
+      ],
+      "interval_widths": {
+        "50": 11,
+        "80": 21,
+        "95": 36
+      },
+      "median_rank": 9.0,
+      "mode_rank": 5,
+      "previous_official_rank": 20,
+      "rank_1_probability": 0.012415598809952563,
+      "rank_change": 9,
+      "rank_change_accessible": "Up 9 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21919",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "57",
+      "team_name": "Florida",
+      "top10_probability": 0.579405270701673,
+      "top25_probability": 0.9275290036348304,
+      "top5_probability": 0.26617110305886027
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 12,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 12.059551869231653,
+      "interval_50": [
+        5,
+        16
+      ],
+      "interval_80": [
+        3.0,
+        25.0
+      ],
+      "interval_95": [
+        2,
+        40
+      ],
+      "interval_widths": {
+        "50": 12,
+        "80": 23,
+        "95": 39
+      },
+      "median_rank": 9.0,
+      "mode_rank": 4,
+      "previous_official_rank": 14,
+      "rank_1_probability": 0.016377722341239923,
+      "rank_change": 2,
+      "rank_change_accessible": "Up 2 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21912",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "254",
+      "team_name": "Utah",
+      "top10_probability": 0.5659290529056386,
+      "top25_probability": 0.9076876991627618,
+      "top5_probability": 0.27752800593430177
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 13,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 13.796322120867327,
+      "interval_50": [
+        6,
+        18
+      ],
+      "interval_80": [
+        3.0,
+        28.0
+      ],
+      "interval_95": [
+        2,
+        45
+      ],
+      "interval_widths": {
+        "50": 13,
+        "80": 26,
+        "95": 44
+      },
+      "median_rank": 11.0,
+      "mode_rank": 5,
+      "previous_official_rank": 21,
+      "rank_1_probability": 0.010626560054720213,
+      "rank_change": 8,
+      "rank_change_accessible": "Up 8 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21918",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "2633",
+      "team_name": "Tennessee",
+      "top10_probability": 0.4958578227212842,
+      "top25_probability": 0.8738190975855964,
+      "top5_probability": 0.2214861111550475
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 14,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 14.013648852476045,
+      "interval_50": [
+        6,
+        19
+      ],
+      "interval_80": [
+        3.0,
+        29.0
+      ],
+      "interval_95": [
+        2,
+        45
+      ],
+      "interval_widths": {
+        "50": 14,
+        "80": 27,
+        "95": 44
+      },
+      "median_rank": 11.0,
+      "mode_rank": 5,
+      "previous_official_rank": 13,
+      "rank_1_probability": 0.01286382614873623,
+      "rank_change": -1,
+      "rank_change_accessible": "Down 1 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21931",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "245",
+      "team_name": "Texas A&M",
+      "top10_probability": 0.48976790960794664,
+      "top25_probability": 0.8643375819785337,
+      "top5_probability": 0.2256104235930366
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 15,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 14.90217788562145,
+      "interval_50": [
+        7,
+        20
+      ],
+      "interval_80": [
+        4.0,
+        30.0
+      ],
+      "interval_95": [
+        2,
+        46
+      ],
+      "interval_widths": {
+        "50": 14,
+        "80": 27,
+        "95": 45
+      },
+      "median_rank": 12.0,
+      "mode_rank": 6,
+      "previous_official_rank": 28,
+      "rank_1_probability": 0.007625005155242775,
+      "rank_change": 13,
+      "rank_change_accessible": "Up 13 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219113",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "213",
+      "team_name": "Penn State",
+      "top10_probability": 0.4487838081810273,
+      "top25_probability": 0.8486486108709783,
+      "top5_probability": 0.18804116004788807
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 16,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 15.22776718811667,
+      "interval_50": [
+        7,
+        20
+      ],
+      "interval_80": [
+        4.0,
+        32.0
+      ],
+      "interval_95": [
+        2,
+        49
+      ],
+      "interval_widths": {
+        "50": 14,
+        "80": 29,
+        "95": 48
+      },
+      "median_rank": 12.0,
+      "mode_rank": 6,
+      "previous_official_rank": 16,
+      "rank_1_probability": 0.00869602770308667,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "2294",
+      "team_name": "Iowa",
+      "top10_probability": 0.44105903175455513,
+      "top25_probability": 0.8452583307356485,
+      "top5_probability": 0.18473938928780614
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 17,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 16.34385068946431,
+      "interval_50": [
+        8,
+        21
+      ],
+      "interval_80": [
+        5.0,
+        32.0
+      ],
+      "interval_95": [
+        3,
+        48
+      ],
+      "interval_widths": {
+        "50": 14,
+        "80": 28,
+        "95": 46
+      },
+      "median_rank": 13.0,
+      "mode_rank": 8,
+      "previous_official_rank": 58,
+      "rank_1_probability": 0.0017793932944144644,
+      "rank_change": 41,
+      "rank_change_accessible": "Up 41 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219141",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "344",
+      "team_name": "Mississippi State",
+      "top10_probability": 0.38074701455023213,
+      "top25_probability": 0.8273996818801387,
+      "top5_probability": 0.12043177980200157
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 18,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 16.767753251888585,
+      "interval_50": [
+        8,
+        22
+      ],
+      "interval_80": [
+        4.0,
+        33.0
+      ],
+      "interval_95": [
+        2,
+        49
+      ],
+      "interval_widths": {
+        "50": 15,
+        "80": 30,
+        "95": 48
+      },
+      "median_rank": 14.0,
+      "mode_rank": 7,
+      "previous_official_rank": 11,
+      "rank_1_probability": 0.005988866476061751,
+      "rank_change": -7,
+      "rank_change_accessible": "Down 7 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21937",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "201",
+      "team_name": "Oklahoma",
+      "top10_probability": 0.37514328151692206,
+      "top25_probability": 0.8072221447897426,
+      "top5_probability": 0.14565886597676717
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 19,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 18.102737047937318,
+      "interval_50": [
+        7,
+        25
+      ],
+      "interval_80": [
+        3.0,
+        38.0
+      ],
+      "interval_95": [
+        2,
+        57
+      ],
+      "interval_widths": {
+        "50": 19,
+        "80": 36,
+        "95": 56
+      },
+      "median_rank": 14.0,
+      "mode_rank": 4,
+      "previous_official_rank": 4,
+      "rank_1_probability": 0.018715832261682268,
+      "rank_change": -15,
+      "rank_change_accessible": "Down 15 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219315",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "2641",
+      "team_name": "Texas Tech",
+      "top10_probability": 0.3868322003874961,
+      "top25_probability": 0.7545688192678692,
+      "top5_probability": 0.1929887963845996
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 20,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 18.736033445677432,
+      "interval_50": [
+        8,
+        25
+      ],
+      "interval_80": [
+        4.0,
+        39.0
+      ],
+      "interval_95": [
+        2,
+        58
+      ],
+      "interval_widths": {
+        "50": 18,
+        "80": 36,
+        "95": 57
+      },
+      "median_rank": 15.0,
+      "mode_rank": 7,
+      "previous_official_rank": 18,
+      "rank_1_probability": 0.007472290899053607,
+      "rank_change": -2,
+      "rank_change_accessible": "Down 2 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21932",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "252",
+      "team_name": "BYU",
+      "top10_probability": 0.3543733868221994,
+      "top25_probability": 0.7565053157720862,
+      "top5_probability": 0.14547011239040308
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 21,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 19.090483995835616,
+      "interval_50": [
+        9,
+        25
+      ],
+      "interval_80": [
+        5.0,
+        40.0
+      ],
+      "interval_95": [
+        3,
+        58
+      ],
+      "interval_widths": {
+        "50": 17,
+        "80": 36,
+        "95": 56
+      },
+      "median_rank": 15.0,
+      "mode_rank": 8,
+      "previous_official_rank": 32,
+      "rank_1_probability": 0.0030855082191998066,
+      "rank_change": 11,
+      "rank_change_accessible": "Up 11 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219111",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "2306",
+      "team_name": "Kansas State",
+      "top10_probability": 0.33036843782165676,
+      "top25_probability": 0.7595951026120591,
+      "top5_probability": 0.1133289151398373
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 22,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 19.190287097114666,
+      "interval_50": [
+        9,
+        26
+      ],
+      "interval_80": [
+        5.0,
+        39.0
+      ],
+      "interval_95": [
+        3,
+        57
+      ],
+      "interval_widths": {
+        "50": 18,
+        "80": 35,
+        "95": 55
+      },
+      "median_rank": 15.0,
+      "mode_rank": 7,
+      "previous_official_rank": 17,
+      "rank_1_probability": 0.004753667669662379,
+      "rank_change": -5,
+      "rank_change_accessible": "Down 5 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21935",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "4-0",
+      "team_id": "30",
+      "team_name": "USC",
+      "top10_probability": 0.3271257628321202,
+      "top25_probability": 0.7421790993912816,
+      "top5_probability": 0.12596813226705095
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 23,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 19.698053044753223,
+      "interval_50": [
+        9,
+        27
+      ],
+      "interval_80": [
+        5.0,
+        40.0
+      ],
+      "interval_95": [
+        2,
+        59
+      ],
+      "interval_widths": {
+        "50": 19,
+        "80": 36,
+        "95": 58
+      },
+      "median_rank": 16.0,
+      "mode_rank": 8,
+      "previous_official_rank": 12,
+      "rank_1_probability": 0.005658378306814423,
+      "rank_change": -11,
+      "rank_change_accessible": "Down 11 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219311",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "130",
+      "team_name": "Michigan",
+      "top10_probability": 0.31860436904475065,
+      "top25_probability": 0.7331612139294855,
+      "top5_probability": 0.12295755810414516
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 24,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 20.126222239391026,
+      "interval_50": [
+        9,
+        27
+      ],
+      "interval_80": [
+        5.0,
+        42.0
+      ],
+      "interval_95": [
+        3,
+        62
+      ],
+      "interval_widths": {
+        "50": 19,
+        "80": 38,
+        "95": 60
+      },
+      "median_rank": 16.0,
+      "mode_rank": 9,
+      "previous_official_rank": 25,
+      "rank_1_probability": 0.0036513478093531167,
+      "rank_change": 1,
+      "rank_change_accessible": "Up 1 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21911",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "258",
+      "team_name": "Virginia",
+      "top10_probability": 0.3141642421611948,
+      "top25_probability": 0.7332839252807247,
+      "top5_probability": 0.11120454099510588
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 25,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 21.621033838994915,
+      "interval_50": [
+        9,
+        29
+      ],
+      "interval_80": [
+        5.0,
+        45.0
+      ],
+      "interval_95": [
+        3,
+        66
+      ],
+      "interval_widths": {
+        "50": 21,
+        "80": 41,
+        "95": 64
+      },
+      "median_rank": 17.0,
+      "mode_rank": 7,
+      "previous_official_rank": 24,
+      "rank_1_probability": 0.004509978389068599,
+      "rank_change": -1,
+      "rank_change_accessible": "Down 1 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21931",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-0",
+      "team_id": "77",
+      "team_name": "Northwestern",
+      "top10_probability": 0.2990421585613598,
+      "top25_probability": 0.6861311141291082,
+      "top5_probability": 0.11809209330048934
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 26,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 22.089429181229157,
+      "interval_50": [
+        10,
+        29
+      ],
+      "interval_80": [
+        6.0,
+        45.0
+      ],
+      "interval_95": [
+        3,
+        64
+      ],
+      "interval_widths": {
+        "50": 20,
+        "80": 40,
+        "95": 62
+      },
+      "median_rank": 18.0,
+      "mode_rank": 10,
+      "previous_official_rank": 29,
+      "rank_1_probability": 0.0019124358844864857,
+      "rank_change": 3,
+      "rank_change_accessible": "Up 3 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21913",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "97",
+      "team_name": "Louisville",
+      "top10_probability": 0.25559787237623166,
+      "top25_probability": 0.6888162720166331,
+      "top5_probability": 0.0792063906597267
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 27,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 22.488864023161096,
+      "interval_50": [
+        10,
+        30
+      ],
+      "interval_80": [
+        6.0,
+        47.0
+      ],
+      "interval_95": [
+        3,
+        66
+      ],
+      "interval_widths": {
+        "50": 21,
+        "80": 42,
+        "95": 64
+      },
+      "median_rank": 17.0,
+      "mode_rank": 10,
+      "previous_official_rank": 35,
+      "rank_1_probability": 0.0016329168863650275,
+      "rank_change": 8,
+      "rank_change_accessible": "Up 8 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21918",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "248",
+      "team_name": "Houston",
+      "top10_probability": 0.25493293703817765,
+      "top25_probability": 0.683144571247454,
+      "top5_probability": 0.07632477175251456
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 28,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 23.075431478992137,
+      "interval_50": [
+        12,
+        31
+      ],
+      "interval_80": [
+        7.0,
+        45.0
+      ],
+      "interval_95": [
+        4,
+        63
+      ],
+      "interval_widths": {
+        "50": 20,
+        "80": 39,
+        "95": 60
+      },
+      "median_rank": 19.0,
+      "mode_rank": 12,
+      "previous_official_rank": 23,
+      "rank_1_probability": 0.0015694682244953662,
+      "rank_change": -5,
+      "rank_change_accessible": "Down 5 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21935",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "2",
+      "team_name": "Auburn",
+      "top10_probability": 0.21267328874107372,
+      "top25_probability": 0.6558690017645914,
+      "top5_probability": 0.06253849438595645
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 29,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 23.25665699114602,
+      "interval_50": [
+        11,
+        31
+      ],
+      "interval_80": [
+        7.0,
+        45.0
+      ],
+      "interval_95": [
+        4,
+        64
+      ],
+      "interval_widths": {
+        "50": 21,
+        "80": 39,
+        "95": 61
+      },
+      "median_rank": 19.0,
+      "mode_rank": 11,
+      "previous_official_rank": 43,
+      "rank_1_probability": 0.0013996927538087237,
+      "rank_change": 14,
+      "rank_change_accessible": "Up 14 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219114",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "158",
+      "team_name": "Nebraska",
+      "top10_probability": 0.22448665730695713,
+      "top25_probability": 0.6458370579058546,
+      "top5_probability": 0.06921294139304515
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 30,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 24.334188846422943,
+      "interval_50": [
+        12,
+        32
+      ],
+      "interval_80": [
+        8.0,
+        46.0
+      ],
+      "interval_95": [
+        4,
+        65
+      ],
+      "interval_widths": {
+        "50": 21,
+        "80": 39,
+        "95": 62
+      },
+      "median_rank": 20.0,
+      "mode_rank": 13,
+      "previous_official_rank": 51,
+      "rank_1_probability": 0.0005798275632335203,
+      "rank_change": 21,
+      "rank_change_accessible": "Up 21 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219121",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "221",
+      "team_name": "Pittsburgh",
+      "top10_probability": 0.18401973368121288,
+      "top25_probability": 0.6242217155050725,
+      "top5_probability": 0.04556890398378036
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 31,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 26.096851666756198,
+      "interval_50": [
+        13,
+        35
+      ],
+      "interval_80": [
+        7.0,
+        51.0
+      ],
+      "interval_95": [
+        4,
+        72
+      ],
+      "interval_widths": {
+        "50": 23,
+        "80": 45,
+        "95": 69
+      },
+      "median_rank": 22.0,
+      "mode_rank": 12,
+      "previous_official_rank": 38,
+      "rank_1_probability": 0.0014411460223366808,
+      "rank_change": 7,
+      "rank_change_accessible": "Up 7 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21917",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "66",
+      "team_name": "Iowa State",
+      "top10_probability": 0.18984832437653065,
+      "top25_probability": 0.5821840225273862,
+      "top5_probability": 0.05859238061395958
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 32,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 27.600656973404305,
+      "interval_50": [
+        14,
+        37
+      ],
+      "interval_80": [
+        9.0,
+        53.0
+      ],
+      "interval_95": [
+        5,
+        73
+      ],
+      "interval_widths": {
+        "50": 24,
+        "80": 45,
+        "95": 69
+      },
+      "median_rank": 23.0,
+      "mode_rank": 14,
+      "previous_official_rank": 59,
+      "rank_1_probability": 0.00044793671043077385,
+      "rank_change": 27,
+      "rank_change_accessible": "Up 27 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219127",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "26",
+      "team_name": "UCLA",
+      "top10_probability": 0.15046146497474516,
+      "top25_probability": 0.5462684923203079,
+      "top5_probability": 0.036642938662819494
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 33,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 28.26312254368603,
+      "interval_50": [
+        13,
+        39
+      ],
+      "interval_80": [
+        7.0,
+        56.0
+      ],
+      "interval_95": [
+        4,
+        76
+      ],
+      "interval_widths": {
+        "50": 27,
+        "80": 50,
+        "95": 73
+      },
+      "median_rank": 24.0,
+      "mode_rank": 13,
+      "previous_official_rank": 26,
+      "rank_1_probability": 0.0016781838380081646,
+      "rank_change": -7,
+      "rank_change_accessible": "Down 7 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21937",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "142",
+      "team_name": "Missouri",
+      "top10_probability": 0.17417450844880622,
+      "top25_probability": 0.5345395102564795,
+      "top5_probability": 0.056752556424930725
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 34,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 28.42088122251591,
+      "interval_50": [
+        15,
+        38
+      ],
+      "interval_80": [
+        8.0,
+        54.0
+      ],
+      "interval_95": [
+        4,
+        76
+      ],
+      "interval_widths": {
+        "50": 24,
+        "80": 47,
+        "95": 73
+      },
+      "median_rank": 24.0,
+      "mode_rank": 16,
+      "previous_official_rank": 31,
+      "rank_1_probability": 0.0012102735345351197,
+      "rank_change": -3,
+      "rank_change_accessible": "Down 3 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21933",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "2579",
+      "team_name": "South Carolina",
+      "top10_probability": 0.14926155078982814,
+      "top25_probability": 0.5243115887652391,
+      "top5_probability": 0.04479385403119153
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 35,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 28.465583965343214,
+      "interval_50": [
+        15,
+        38
+      ],
+      "interval_80": [
+        9.0,
+        54.0
+      ],
+      "interval_95": [
+        5,
+        74
+      ],
+      "interval_widths": {
+        "50": 24,
+        "80": 46,
+        "95": 70
+      },
+      "median_rank": 24.0,
+      "mode_rank": 15,
+      "previous_official_rank": 45,
+      "rank_1_probability": 0.0006678754291656407,
+      "rank_change": 10,
+      "rank_change_accessible": "Up 10 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219110",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "150",
+      "team_name": "Duke",
+      "top10_probability": 0.14234042599339755,
+      "top25_probability": 0.5244221592150026,
+      "top5_probability": 0.03687748028011134
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 36,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 28.47613952063425,
+      "interval_50": [
+        14,
+        40
+      ],
+      "interval_80": [
+        9.0,
+        56.0
+      ],
+      "interval_95": [
+        5,
+        75
+      ],
+      "interval_widths": {
+        "50": 27,
+        "80": 48,
+        "95": 71
+      },
+      "median_rank": 23.0,
+      "mode_rank": 13,
+      "previous_official_rank": 65,
+      "rank_1_probability": 0.00032431906091189445,
+      "rank_change": 29,
+      "rank_change_accessible": "Up 29 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219129",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "259",
+      "team_name": "Virginia Tech",
+      "top10_probability": 0.15367940252458184,
+      "top25_probability": 0.5447910360814984,
+      "top5_probability": 0.034902691771479
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 37,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 28.766359533710684,
+      "interval_50": [
+        14,
+        40
+      ],
+      "interval_80": [
+        9.0,
+        56.0
+      ],
+      "interval_95": [
+        5,
+        74
+      ],
+      "interval_widths": {
+        "50": 27,
+        "80": 48,
+        "95": 70
+      },
+      "median_rank": 24.0,
+      "mode_rank": 15,
+      "previous_official_rank": 40,
+      "rank_1_probability": 0.0007657990777858351,
+      "rank_change": 3,
+      "rank_change_accessible": "Up 3 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21913",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "2567",
+      "team_name": "SMU",
+      "top10_probability": 0.1439261059981688,
+      "top25_probability": 0.5301286570904019,
+      "top5_probability": 0.03710162401907992
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 38,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 32.3105174600282,
+      "interval_50": [
+        17,
+        44
+      ],
+      "interval_80": [
+        10.0,
+        61.0
+      ],
+      "interval_95": [
+        5,
+        81
+      ],
+      "interval_widths": {
+        "50": 28,
+        "80": 52,
+        "95": 77
+      },
+      "median_rank": 28.0,
+      "mode_rank": 17,
+      "previous_official_rank": 52,
+      "rank_1_probability": 0.0003495232851526262,
+      "rank_change": 14,
+      "rank_change_accessible": "Up 14 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219114",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "120",
+      "team_name": "Maryland",
+      "top10_probability": 0.109210379621533,
+      "top25_probability": 0.45588417199815157,
+      "top5_probability": 0.025566869646445303
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 39,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 33.94872951359978,
+      "interval_50": [
+        17,
+        47
+      ],
+      "interval_80": [
+        10.0,
+        64.0
+      ],
+      "interval_95": [
+        6,
+        83
+      ],
+      "interval_widths": {
+        "50": 31,
+        "80": 55,
+        "95": 78
+      },
+      "median_rank": 30.0,
+      "mode_rank": 15,
+      "previous_official_rank": 57,
+      "rank_1_probability": 0.00029625034678231523,
+      "rank_change": 18,
+      "rank_change_accessible": "Up 18 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219118",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "256",
+      "team_name": "James Madison",
+      "top10_probability": 0.1087396364023653,
+      "top25_probability": 0.43156932883213994,
+      "top5_probability": 0.02465546528297384
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 40,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 33.995731437893625,
+      "interval_50": [
+        18,
+        47
+      ],
+      "interval_80": [
+        11.0,
+        63.0
+      ],
+      "interval_95": [
+        6,
+        81
+      ],
+      "interval_widths": {
+        "50": 30,
+        "80": 53,
+        "95": 76
+      },
+      "median_rank": 30.0,
+      "mode_rank": 17,
+      "previous_official_rank": 27,
+      "rank_1_probability": 0.00042368709907195866,
+      "rank_change": -13,
+      "rank_change_accessible": "Down 13 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219313",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "152",
+      "team_name": "NC State",
+      "top10_probability": 0.0930067703460764,
+      "top25_probability": 0.4207326099946624,
+      "top5_probability": 0.02175406768433467
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 41,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 34.09826175416044,
+      "interval_50": [
+        18,
+        46
+      ],
+      "interval_80": [
+        11.0,
+        63.0
+      ],
+      "interval_95": [
+        6,
+        82
+      ],
+      "interval_widths": {
+        "50": 29,
+        "80": 53,
+        "95": 77
+      },
+      "median_rank": 30.0,
+      "mode_rank": 19,
+      "previous_official_rank": 53,
+      "rank_1_probability": 0.00024366200670892748,
+      "rank_change": 12,
+      "rank_change_accessible": "Up 12 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219112",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "239",
+      "team_name": "Baylor",
+      "top10_probability": 0.08769838046286421,
+      "top25_probability": 0.41027948528754743,
+      "top5_probability": 0.01928003530405179
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 42,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 35.36885598068731,
+      "interval_50": [
+        19,
+        48
+      ],
+      "interval_80": [
+        12.0,
+        65.0
+      ],
+      "interval_95": [
+        6,
+        85
+      ],
+      "interval_widths": {
+        "50": 30,
+        "80": 54,
+        "95": 80
+      },
+      "median_rank": 31.0,
+      "mode_rank": 20,
+      "previous_official_rank": 19,
+      "rank_1_probability": 0.0004960361092947697,
+      "rank_change": -23,
+      "rank_change_accessible": "Down 23 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219323",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "52",
+      "team_name": "Florida State",
+      "top10_probability": 0.08302498121929662,
+      "top25_probability": 0.3883887188989363,
+      "top5_probability": 0.02080695189763502
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 43,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 36.21721745436982,
+      "interval_50": [
+        19,
+        50
+      ],
+      "interval_80": [
+        11.0,
+        67.0
+      ],
+      "interval_95": [
+        6,
+        86
+      ],
+      "interval_widths": {
+        "50": 32,
+        "80": 57,
+        "95": 81
+      },
+      "median_rank": 33.0,
+      "mode_rank": 18,
+      "previous_official_rank": 34,
+      "rank_1_probability": 0.00037396086364187335,
+      "rank_change": -9,
+      "rank_change_accessible": "Down 9 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21939",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "2628",
+      "team_name": "TCU",
+      "top10_probability": 0.08834763322020196,
+      "top25_probability": 0.37834134680016257,
+      "top5_probability": 0.021941541891659196
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 44,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 37.18462630444672,
+      "interval_50": [
+        20,
+        51
+      ],
+      "interval_80": [
+        12.0,
+        67.0
+      ],
+      "interval_95": [
+        7,
+        86
+      ],
+      "interval_widths": {
+        "50": 32,
+        "80": 56,
+        "95": 80
+      },
+      "median_rank": 34.0,
+      "mode_rank": 18,
+      "previous_official_rank": 67,
+      "rank_1_probability": 9.317171659496972e-05,
+      "rank_change": 23,
+      "rank_change_accessible": "Up 23 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219123",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "2116",
+      "team_name": "UCF",
+      "top10_probability": 0.06975823360715594,
+      "top25_probability": 0.3631371501991209,
+      "top5_probability": 0.012554828163835841
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 45,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 37.55665972069091,
+      "interval_50": [
+        21,
+        51
+      ],
+      "interval_80": [
+        13.0,
+        69.0
+      ],
+      "interval_95": [
+        7,
+        88
+      ],
+      "interval_widths": {
+        "50": 31,
+        "80": 57,
+        "95": 82
+      },
+      "median_rank": 33.0,
+      "mode_rank": 25,
+      "previous_official_rank": 49,
+      "rank_1_probability": 0.00016476099454811627,
+      "rank_change": 4,
+      "rank_change_accessible": "Up 4 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21914",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "68",
+      "team_name": "Boise State",
+      "top10_probability": 0.0688341918647439,
+      "top25_probability": 0.3504833105727046,
+      "top5_probability": 0.014706539659177696
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 46,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 38.2055293868834,
+      "interval_50": [
+        21,
+        52
+      ],
+      "interval_80": [
+        12.0,
+        69.0
+      ],
+      "interval_95": [
+        6,
+        88
+      ],
+      "interval_widths": {
+        "50": 32,
+        "80": 58,
+        "95": 83
+      },
+      "median_rank": 35.0,
+      "mode_rank": 23,
+      "previous_official_rank": 61,
+      "rank_1_probability": 0.0006497733301572614,
+      "rank_change": 15,
+      "rank_change_accessible": "Up 15 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219115",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "4-0",
+      "team_id": "2449",
+      "team_name": "North Dakota State",
+      "top10_probability": 0.0770871925149443,
+      "top25_probability": 0.33636305497106467,
+      "top5_probability": 0.02151492809359255
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 47,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 38.85383981155132,
+      "interval_50": [
+        21,
+        53
+      ],
+      "interval_80": [
+        13.0,
+        69.0
+      ],
+      "interval_95": [
+        7,
+        89
+      ],
+      "interval_widths": {
+        "50": 33,
+        "80": 57,
+        "95": 83
+      },
+      "median_rank": 36.0,
+      "mode_rank": 20,
+      "previous_official_rank": 37,
+      "rank_1_probability": 0.00017911967889998646,
+      "rank_change": -10,
+      "rank_change_accessible": "Down 10 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219310",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "9",
+      "team_name": "Arizona State",
+      "top10_probability": 0.05877206530627054,
+      "top25_probability": 0.3272970728384612,
+      "top5_probability": 0.01213901974408953
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 48,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 39.06079132380376,
+      "interval_50": [
+        21,
+        54
+      ],
+      "interval_80": [
+        12.0,
+        71.0
+      ],
+      "interval_95": [
+        6,
+        91
+      ],
+      "interval_widths": {
+        "50": 34,
+        "80": 60,
+        "95": 86
+      },
+      "median_rank": 35.0,
+      "mode_rank": 23,
+      "previous_official_rank": 33,
+      "rank_1_probability": 0.00042228317536269,
+      "rank_change": -15,
+      "rank_change_accessible": "Down 15 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219315",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "58",
+      "team_name": "South Florida",
+      "top10_probability": 0.07382537230484067,
+      "top25_probability": 0.32878821930444935,
+      "top5_probability": 0.019328274506182106
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 49,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 39.64293459242553,
+      "interval_50": [
+        21,
+        54
+      ],
+      "interval_80": [
+        13.0,
+        71.0
+      ],
+      "interval_95": [
+        7,
+        91
+      ],
+      "interval_widths": {
+        "50": 34,
+        "80": 59,
+        "95": 85
+      },
+      "median_rank": 36.0,
+      "mode_rank": 20,
+      "previous_official_rank": 69,
+      "rank_1_probability": 7.18113569709344e-05,
+      "rank_change": 20,
+      "rank_change_accessible": "Up 20 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219120",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "277",
+      "team_name": "West Virginia",
+      "top10_probability": 0.0612727862002167,
+      "top25_probability": 0.323223966005306,
+      "top5_probability": 0.011180605808399736
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 50,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 39.687983197346114,
+      "interval_50": [
+        22,
+        54
+      ],
+      "interval_80": [
+        14.0,
+        71.0
+      ],
+      "interval_95": [
+        7,
+        91
+      ],
+      "interval_widths": {
+        "50": 33,
+        "80": 58,
+        "95": 85
+      },
+      "median_rank": 36.0,
+      "mode_rank": 23,
+      "previous_official_rank": 36,
+      "rank_1_probability": 0.00020873746112402963,
+      "rank_change": -14,
+      "rank_change_accessible": "Down 14 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219314",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "135",
+      "team_name": "Minnesota",
+      "top10_probability": 0.05511341735921808,
+      "top25_probability": 0.3104184357134502,
+      "top5_probability": 0.012299178397326738
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 51,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 40.65907609779777,
+      "interval_50": [
+        23,
+        55
+      ],
+      "interval_80": [
+        14.0,
+        72.0
+      ],
+      "interval_95": [
+        7,
+        91
+      ],
+      "interval_widths": {
+        "50": 33,
+        "80": 59,
+        "95": 85
+      },
+      "median_rank": 37.0,
+      "mode_rank": 24,
+      "previous_official_rank": 42,
+      "rank_1_probability": 0.0002236493932147692,
+      "rank_change": -9,
+      "rank_change_accessible": "Down 9 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21939",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "356",
+      "team_name": "Illinois",
+      "top10_probability": 0.054691224454111925,
+      "top25_probability": 0.29550978354769686,
+      "top5_probability": 0.01250057615013211
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 52,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 40.85000220782416,
+      "interval_50": [
+        23,
+        56
+      ],
+      "interval_80": [
+        13.0,
+        74.0
+      ],
+      "interval_95": [
+        6,
+        93
+      ],
+      "interval_widths": {
+        "50": 34,
+        "80": 62,
+        "95": 88
+      },
+      "median_rank": 37.0,
+      "mode_rank": 28,
+      "previous_official_rank": 22,
+      "rank_1_probability": 0.0006062044433082038,
+      "rank_change": -30,
+      "rank_change_accessible": "Down 30 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219330",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "264",
+      "team_name": "Washington",
+      "top10_probability": 0.07037447766816336,
+      "top25_probability": 0.3020265896625772,
+      "top5_probability": 0.0205723993514079
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 53,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 41.14027931225322,
+      "interval_50": [
+        24,
+        55
+      ],
+      "interval_80": [
+        15.0,
+        72.0
+      ],
+      "interval_95": [
+        8,
+        91
+      ],
+      "interval_widths": {
+        "50": 32,
+        "80": 58,
+        "95": 84
+      },
+      "median_rank": 38.0,
+      "mode_rank": 27,
+      "previous_official_rank": 47,
+      "rank_1_probability": 0.0001518491875820549,
+      "rank_change": -6,
+      "rank_change_accessible": "Down 6 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21936",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "238",
+      "team_name": "Vanderbilt",
+      "top10_probability": 0.04716181940595748,
+      "top25_probability": 0.2783950036440681,
+      "top5_probability": 0.010068627931372996
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 54,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 42.01334515794232,
+      "interval_50": [
+        24,
+        57
+      ],
+      "interval_80": [
+        15.0,
+        75.0
+      ],
+      "interval_95": [
+        8,
+        94
+      ],
+      "interval_widths": {
+        "50": 34,
+        "80": 61,
+        "95": 87
+      },
+      "median_rank": 38.0,
+      "mode_rank": 28,
+      "previous_official_rank": 39,
+      "rank_1_probability": 0.00016501623412059924,
+      "rank_change": -15,
+      "rank_change_accessible": "Down 15 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219315",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "12",
+      "team_name": "Arizona",
+      "top10_probability": 0.04830886266625329,
+      "top25_probability": 0.27545077265068707,
+      "top5_probability": 0.010766263211667754
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 55,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 43.017045186882534,
+      "interval_50": [
+        26,
+        57
+      ],
+      "interval_80": [
+        17.0,
+        76.0
+      ],
+      "interval_95": [
+        10,
+        96
+      ],
+      "interval_widths": {
+        "50": 32,
+        "80": 60,
+        "95": 87
+      },
+      "median_rank": 39.0,
+      "mode_rank": 28,
+      "previous_official_rank": 41,
+      "rank_1_probability": 6.901754030666022e-05,
+      "rank_change": -14,
+      "rank_change_accessible": "Down 14 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219314",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "275",
+      "team_name": "Wisconsin",
+      "top10_probability": 0.03178386264782936,
+      "top25_probability": 0.2443639733327805,
+      "top5_probability": 0.006068037448355522
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 56,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 43.494725360856684,
+      "interval_50": [
+        25,
+        59
+      ],
+      "interval_80": [
+        15.0,
+        76.0
+      ],
+      "interval_95": [
+        8,
+        95
+      ],
+      "interval_widths": {
+        "50": 35,
+        "80": 62,
+        "95": 88
+      },
+      "median_rank": 41.0,
+      "mode_rank": 39,
+      "previous_official_rank": 50,
+      "rank_1_probability": 0.00015006903534926365,
+      "rank_change": -6,
+      "rank_change_accessible": "Down 6 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21936",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "2132",
+      "team_name": "Cincinnati",
+      "top10_probability": 0.051385337296576045,
+      "top25_probability": 0.2636627908162779,
+      "top5_probability": 0.011254790800214375
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 57,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 44.05141161837894,
+      "interval_50": [
+        25,
+        60
+      ],
+      "interval_80": [
+        16.0,
+        77.0
+      ],
+      "interval_95": [
+        9,
+        97
+      ],
+      "interval_widths": {
+        "50": 36,
+        "80": 62,
+        "95": 89
+      },
+      "median_rank": 41.0,
+      "mode_rank": 24,
+      "previous_official_rank": 68,
+      "rank_1_probability": 4.041761251798548e-05,
+      "rank_change": 11,
+      "rank_change_accessible": "Up 11 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219111",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "96",
+      "team_name": "Kentucky",
+      "top10_probability": 0.03666307429454124,
+      "top25_probability": 0.2551498340004677,
+      "top5_probability": 0.006004542230597436
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 58,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 46.062902625219195,
+      "interval_50": [
+        27,
+        62
+      ],
+      "interval_80": [
+        17.0,
+        79.0
+      ],
+      "interval_95": [
+        10,
+        98
+      ],
+      "interval_widths": {
+        "50": 36,
+        "80": 63,
+        "95": 89
+      },
+      "median_rank": 44.0,
+      "mode_rank": 41,
+      "previous_official_rank": 106,
+      "rank_1_probability": 1.5965710256963182e-05,
+      "rank_change": 48,
+      "rank_change_accessible": "Up 48 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219148",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "167",
+      "team_name": "New Mexico",
+      "top10_probability": 0.029790516070615444,
+      "top25_probability": 0.22516319987405772,
+      "top5_probability": 0.004114694467272392
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 59,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 50.00269150914228,
+      "interval_50": [
+        30,
+        67
+      ],
+      "interval_80": [
+        19.0,
+        85.0
+      ],
+      "interval_95": [
+        10,
+        103
+      ],
+      "interval_widths": {
+        "50": 38,
+        "80": 67,
+        "95": 94
+      },
+      "median_rank": 48.0,
+      "mode_rank": 45,
+      "previous_official_rank": 70,
+      "rank_1_probability": 3.792474305133322e-05,
+      "rank_change": 11,
+      "rank_change_accessible": "Up 11 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219111",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "2711",
+      "team_name": "Western Michigan",
+      "top10_probability": 0.026453016668625904,
+      "top25_probability": 0.18476481584008198,
+      "top5_probability": 0.004671636690965038
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 60,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 50.06778197980232,
+      "interval_50": [
+        30,
+        67
+      ],
+      "interval_80": [
+        17.0,
+        85.0
+      ],
+      "interval_95": [
+        10,
+        103
+      ],
+      "interval_widths": {
+        "50": 38,
+        "80": 69,
+        "95": 94
+      },
+      "median_rank": 49.0,
+      "mode_rank": 51,
+      "previous_official_rank": 80,
+      "rank_1_probability": 2.7197108255514806e-05,
+      "rank_change": 20,
+      "rank_change_accessible": "Up 20 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219120",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "197",
+      "team_name": "Oklahoma State",
+      "top10_probability": 0.03170348813076735,
+      "top25_probability": 0.20044990561262976,
+      "top5_probability": 0.005051343168962992
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 61,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 50.245102317384266,
+      "interval_50": [
+        32,
+        67
+      ],
+      "interval_80": [
+        19.0,
+        84.0
+      ],
+      "interval_95": [
+        11,
+        102
+      ],
+      "interval_widths": {
+        "50": 36,
+        "80": 66,
+        "95": 92
+      },
+      "median_rank": 48.0,
+      "mode_rank": 44,
+      "previous_official_rank": 55,
+      "rank_1_probability": 4.248328649405458e-05,
+      "rank_change": -6,
+      "rank_change_accessible": "Down 6 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21936",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "183",
+      "team_name": "Syracuse",
+      "top10_probability": 0.02233880004605847,
+      "top25_probability": 0.173356102175168,
+      "top5_probability": 0.003827631598713896
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 62,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 50.6683960283678,
+      "interval_50": [
+        32,
+        67
+      ],
+      "interval_80": [
+        22.0,
+        85.0
+      ],
+      "interval_95": [
+        13,
+        102
+      ],
+      "interval_widths": {
+        "50": 36,
+        "80": 64,
+        "95": 90
+      },
+      "median_rank": 47.0,
+      "mode_rank": 36,
+      "previous_official_rank": 30,
+      "rank_1_probability": 2.5753117491988526e-05,
+      "rank_change": -32,
+      "rank_change_accessible": "Down 32 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219332",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "228",
+      "team_name": "Clemson",
+      "top10_probability": 0.013347069874421611,
+      "top25_probability": 0.14769368570932107,
+      "top5_probability": 0.002166447248734589
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 63,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 50.93939918897423,
+      "interval_50": [
+        32,
+        67
+      ],
+      "interval_80": [
+        21.0,
+        84.0
+      ],
+      "interval_95": [
+        13,
+        101
+      ],
+      "interval_widths": {
+        "50": 36,
+        "80": 64,
+        "95": 89
+      },
+      "median_rank": 49.0,
+      "mode_rank": 42,
+      "previous_official_rank": 74,
+      "rank_1_probability": 6.822944119780705e-06,
+      "rank_change": 11,
+      "rank_change_accessible": "Up 11 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219111",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "127",
+      "team_name": "Michigan State",
+      "top10_probability": 0.014061472207727892,
+      "top25_probability": 0.15284366212709286,
+      "top5_probability": 0.001718000293162034
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 64,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 53.85385950459417,
+      "interval_50": [
+        35,
+        71
+      ],
+      "interval_80": [
+        23.0,
+        88.0
+      ],
+      "interval_95": [
+        14,
+        104
+      ],
+      "interval_widths": {
+        "50": 37,
+        "80": 66,
+        "95": 91
+      },
+      "median_rank": 52.0,
+      "mode_rank": 47,
+      "previous_official_rank": 64,
+      "rank_1_probability": 7.39716582533383e-06,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "154",
+      "team_name": "Wake Forest",
+      "top10_probability": 0.011092407916766519,
+      "top25_probability": 0.12768292597185768,
+      "top5_probability": 0.0014220906205689827
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 65,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 56.088524646656644,
+      "interval_50": [
+        37,
+        74
+      ],
+      "interval_80": [
+        24.0,
+        91.0
+      ],
+      "interval_95": [
+        14,
+        107
+      ],
+      "interval_widths": {
+        "50": 38,
+        "80": 68,
+        "95": 94
+      },
+      "median_rank": 54.0,
+      "mode_rank": 48,
+      "previous_official_rank": 95,
+      "rank_1_probability": 3.791316765127387e-06,
+      "rank_change": 30,
+      "rank_change_accessible": "Up 30 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219130",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "202",
+      "team_name": "Tulsa",
+      "top10_probability": 0.010566138970767686,
+      "top25_probability": 0.11482952814660084,
+      "top5_probability": 0.0012783742669064588
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 66,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 59.280376681000114,
+      "interval_50": [
+        39,
+        78
+      ],
+      "interval_80": [
+        24.0,
+        97.0
+      ],
+      "interval_95": [
+        13,
+        114
+      ],
+      "interval_widths": {
+        "50": 40,
+        "80": 74,
+        "95": 102
+      },
+      "median_rank": 58.0,
+      "mode_rank": 49,
+      "previous_official_rank": 110,
+      "rank_1_probability": 6.823507763691695e-06,
+      "rank_change": 44,
+      "rank_change_accessible": "Up 44 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219144",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-1",
+      "team_id": "349",
+      "team_name": "Army",
+      "top10_probability": 0.012597550034224794,
+      "top25_probability": 0.11357023924265489,
+      "top5_probability": 0.0016549162302416248
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 67,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 59.33253779205156,
+      "interval_50": [
+        38,
+        79
+      ],
+      "interval_80": [
+        26.0,
+        96.0
+      ],
+      "interval_95": [
+        16,
+        111
+      ],
+      "interval_widths": {
+        "50": 42,
+        "80": 71,
+        "95": 96
+      },
+      "median_rank": 58.0,
+      "mode_rank": 55,
+      "previous_official_rank": 46,
+      "rank_1_probability": 1.25769156515781e-05,
+      "rank_change": -21,
+      "rank_change_accessible": "Down 21 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219321",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "25",
+      "team_name": "California",
+      "top10_probability": 0.008349990087576082,
+      "top25_probability": 0.09806160266447789,
+      "top5_probability": 0.0013079928362138911
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 68,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 59.98397200750384,
+      "interval_50": [
+        40,
+        79
+      ],
+      "interval_80": [
+        27.0,
+        95.0
+      ],
+      "interval_95": [
+        16,
+        111
+      ],
+      "interval_widths": {
+        "50": 40,
+        "80": 69,
+        "95": 96
+      },
+      "median_rank": 59.0,
+      "mode_rank": 55,
+      "previous_official_rank": 79,
+      "rank_1_probability": 3.3882205535527613e-06,
+      "rank_change": 11,
+      "rank_change_accessible": "Up 11 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219111",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "153",
+      "team_name": "North Carolina",
+      "top10_probability": 0.006660348149679599,
+      "top25_probability": 0.08824943066223385,
+      "top5_probability": 0.0008037451989875432
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 69,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 61.976026867598684,
+      "interval_50": [
+        43,
+        80
+      ],
+      "interval_80": [
+        29.0,
+        97.0
+      ],
+      "interval_95": [
+        16,
+        112
+      ],
+      "interval_widths": {
+        "50": 38,
+        "80": 69,
+        "95": 97
+      },
+      "median_rank": 61.0,
+      "mode_rank": 62,
+      "previous_official_rank": 63,
+      "rank_1_probability": 8.040049902246299e-06,
+      "rank_change": -6,
+      "rank_change_accessible": "Down 6 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21936",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "2649",
+      "team_name": "Toledo",
+      "top10_probability": 0.007160572907076857,
+      "top25_probability": 0.07726492902509097,
+      "top5_probability": 0.001045690700387455
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 70,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 64.36511893073846,
+      "interval_50": [
+        45,
+        83
+      ],
+      "interval_80": [
+        31.0,
+        99.0
+      ],
+      "interval_95": [
+        19,
+        114
+      ],
+      "interval_widths": {
+        "50": 39,
+        "80": 69,
+        "95": 96
+      },
+      "median_rank": 64.0,
+      "mode_rank": 59,
+      "previous_official_rank": 72,
+      "rank_1_probability": 2.6765154335773983e-06,
+      "rank_change": 2,
+      "rank_change_accessible": "Up 2 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21912",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "2655",
+      "team_name": "Tulane",
+      "top10_probability": 0.0038885259294703426,
+      "top25_probability": 0.062005353949335054,
+      "top5_probability": 0.00044480377377015756
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 71,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 64.39559045301749,
+      "interval_50": [
+        42,
+        85
+      ],
+      "interval_80": [
+        29.0,
+        102.0
+      ],
+      "interval_95": [
+        17,
+        117
+      ],
+      "interval_widths": {
+        "50": 44,
+        "80": 74,
+        "95": 101
+      },
+      "median_rank": 64.0,
+      "mode_rank": 65,
+      "previous_official_rank": 62,
+      "rank_1_probability": 8.391367646917624e-06,
+      "rank_change": -9,
+      "rank_change_accessible": "Down 9 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21939",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "249",
+      "team_name": "North Texas",
+      "top10_probability": 0.005630010024875633,
+      "top25_probability": 0.0739640307271115,
+      "top5_probability": 0.0008384564054446667
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 72,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 64.71690788074343,
+      "interval_50": [
+        46,
+        83
+      ],
+      "interval_80": [
+        31.0,
+        99.0
+      ],
+      "interval_95": [
+        19,
+        114
+      ],
+      "interval_widths": {
+        "50": 38,
+        "80": 69,
+        "95": 96
+      },
+      "median_rank": 64.0,
+      "mode_rank": 63,
+      "previous_official_rank": 93,
+      "rank_1_probability": 7.420765003926191e-07,
+      "rank_change": 21,
+      "rank_change_accessible": "Up 21 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219121",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "204",
+      "team_name": "Oregon State",
+      "top10_probability": 0.003044848294408894,
+      "top25_probability": 0.058800491569514494,
+      "top5_probability": 0.000276895347330275
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 73,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 64.78660064398231,
+      "interval_50": [
+        44,
+        84
+      ],
+      "interval_80": [
+        30.0,
+        100.0
+      ],
+      "interval_95": [
+        19,
+        115
+      ],
+      "interval_widths": {
+        "50": 41,
+        "80": 71,
+        "95": 97
+      },
+      "median_rank": 64.0,
+      "mode_rank": 64,
+      "previous_official_rank": 78,
+      "rank_1_probability": 2.2650378323959277e-06,
+      "rank_change": 5,
+      "rank_change_accessible": "Up 5 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21915",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "2636",
+      "team_name": "UTSA",
+      "top10_probability": 0.00401240733457987,
+      "top25_probability": 0.06446028657353985,
+      "top5_probability": 0.00046851302122823574
+    },
+    {
+      "conference": "FBS Independents",
+      "display_rank": 74,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 65.03152780464225,
+      "interval_50": [
+        45,
+        84
+      ],
+      "interval_80": [
+        30.0,
+        101.0
+      ],
+      "interval_95": [
+        18,
+        116
+      ],
+      "interval_widths": {
+        "50": 40,
+        "80": 72,
+        "95": 99
+      },
+      "median_rank": 64.0,
+      "mode_rank": 64,
+      "previous_official_rank": 104,
+      "rank_1_probability": 1.989745842069211e-06,
+      "rank_change": 30,
+      "rank_change_accessible": "Up 30 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219130",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "41",
+      "team_name": "UConn",
+      "top10_probability": 0.004588822210052149,
+      "top25_probability": 0.06576743407440411,
+      "top5_probability": 0.0005219273230571184
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 75,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 65.35588726217125,
+      "interval_50": [
+        46,
+        85
+      ],
+      "interval_80": [
+        31.0,
+        100.0
+      ],
+      "interval_95": [
+        19,
+        114
+      ],
+      "interval_widths": {
+        "50": 40,
+        "80": 70,
+        "95": 96
+      },
+      "median_rank": 65.0,
+      "mode_rank": 66,
+      "previous_official_rank": 48,
+      "rank_1_probability": 4.075993521509681e-06,
+      "rank_change": -27,
+      "rank_change_accessible": "Down 27 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219327",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "59",
+      "team_name": "Georgia Tech",
+      "top10_probability": 0.0036848546737788704,
+      "top25_probability": 0.057604606261991785,
+      "top5_probability": 0.0004999350384518771
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 76,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 65.58581574579505,
+      "interval_50": [
+        46,
+        85
+      ],
+      "interval_80": [
+        31.0,
+        101.0
+      ],
+      "interval_95": [
+        19,
+        115
+      ],
+      "interval_widths": {
+        "50": 40,
+        "80": 71,
+        "95": 97
+      },
+      "median_rank": 65.0,
+      "mode_rank": 64,
+      "previous_official_rank": 60,
+      "rank_1_probability": 4.0258614787743026e-06,
+      "rank_change": -16,
+      "rank_change_accessible": "Down 16 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219316",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "2305",
+      "team_name": "Kansas",
+      "top10_probability": 0.003961858784465821,
+      "top25_probability": 0.060579561504359704,
+      "top5_probability": 0.0005143116668193023
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 77,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 66.16475080615056,
+      "interval_50": [
+        46,
+        86
+      ],
+      "interval_80": [
+        31.0,
+        102.0
+      ],
+      "interval_95": [
+        20,
+        115
+      ],
+      "interval_widths": {
+        "50": 41,
+        "80": 72,
+        "95": 96
+      },
+      "median_rank": 66.0,
+      "mode_rank": 64,
+      "previous_official_rank": 89,
+      "rank_1_probability": 1.1960110395192784e-06,
+      "rank_change": 12,
+      "rank_change_accessible": "Up 12 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219112",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "278",
+      "team_name": "Fresno State",
+      "top10_probability": 0.00306069824269929,
+      "top25_probability": 0.055490091450797974,
+      "top5_probability": 0.0003255659603093389
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 78,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 66.92833626197313,
+      "interval_50": [
+        46,
+        87
+      ],
+      "interval_80": [
+        31.0,
+        103.0
+      ],
+      "interval_95": [
+        19,
+        117
+      ],
+      "interval_widths": {
+        "50": 42,
+        "80": 73,
+        "95": 99
+      },
+      "median_rank": 67.0,
+      "mode_rank": 68,
+      "previous_official_rank": 44,
+      "rank_1_probability": 4.935017441644172e-06,
+      "rank_change": -34,
+      "rank_change_accessible": "Down 34 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219334",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "265",
+      "team_name": "Washington State",
+      "top10_probability": 0.0036185635725712074,
+      "top25_probability": 0.05758028594556746,
+      "top5_probability": 0.0005045356228845001
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 79,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 70.43050248838644,
+      "interval_50": [
+        51,
+        90
+      ],
+      "interval_80": [
+        35.0,
+        104.0
+      ],
+      "interval_95": [
+        23,
+        117
+      ],
+      "interval_widths": {
+        "50": 40,
+        "80": 70,
+        "95": 95
+      },
+      "median_rank": 71.0,
+      "mode_rank": 75,
+      "previous_official_rank": 75,
+      "rank_1_probability": 6.249139987371114e-07,
+      "rank_change": -4,
+      "rank_change_accessible": "Down 4 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21934",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "2509",
+      "team_name": "Purdue",
+      "top10_probability": 0.0016723357409448825,
+      "top25_probability": 0.03659788490701848,
+      "top5_probability": 0.0001663936274064801
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 80,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 71.00572091475324,
+      "interval_50": [
+        51,
+        91
+      ],
+      "interval_80": [
+        35.0,
+        106.0
+      ],
+      "interval_95": [
+        22,
+        120
+      ],
+      "interval_widths": {
+        "50": 41,
+        "80": 72,
+        "95": 99
+      },
+      "median_rank": 72.0,
+      "mode_rank": 76,
+      "previous_official_rank": 97,
+      "rank_1_probability": 1.8220360134155855e-06,
+      "rank_change": 17,
+      "rank_change_accessible": "Up 17 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219117",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "48",
+      "team_name": "Delaware",
+      "top10_probability": 0.0025633303503428935,
+      "top25_probability": 0.0417271162404419,
+      "top5_probability": 0.00031059183337000276
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 81,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 71.60239292041739,
+      "interval_50": [
+        52,
+        92
+      ],
+      "interval_80": [
+        35.0,
+        107.0
+      ],
+      "interval_95": [
+        22,
+        119
+      ],
+      "interval_widths": {
+        "50": 41,
+        "80": 73,
+        "95": 98
+      },
+      "median_rank": 72.0,
+      "mode_rank": 82,
+      "previous_official_rank": 54,
+      "rank_1_probability": 1.4992918275170652e-06,
+      "rank_change": -27,
+      "rank_change_accessible": "Down 27 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219327",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "21",
+      "team_name": "San Diego State",
+      "top10_probability": 0.0018938347943292353,
+      "top25_probability": 0.0387824908526491,
+      "top5_probability": 0.0002236778584946604
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 82,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 72.8326558912786,
+      "interval_50": [
+        54,
+        92
+      ],
+      "interval_80": [
+        38.0,
+        107.0
+      ],
+      "interval_95": [
+        24,
+        120
+      ],
+      "interval_widths": {
+        "50": 39,
+        "80": 70,
+        "95": 97
+      },
+      "median_rank": 73.0,
+      "mode_rank": 70,
+      "previous_official_rank": 99,
+      "rank_1_probability": 1.876156180970118e-07,
+      "rank_change": 17,
+      "rank_change_accessible": "Up 17 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219117",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "2348",
+      "team_name": "Louisiana Tech",
+      "top10_probability": 0.0011341974007053285,
+      "top25_probability": 0.02967787553781037,
+      "top5_probability": 8.513345079163576e-05
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 83,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 74.4007723510843,
+      "interval_50": [
+        56,
+        94
+      ],
+      "interval_80": [
+        40.0,
+        108.0
+      ],
+      "interval_95": [
+        24,
+        120
+      ],
+      "interval_widths": {
+        "50": 39,
+        "80": 69,
+        "95": 97
+      },
+      "median_rank": 75.0,
+      "mode_rank": 73,
+      "previous_official_rank": 96,
+      "rank_1_probability": 5.984963122210668e-07,
+      "rank_change": 13,
+      "rank_change_accessible": "Up 13 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219113",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "2026",
+      "team_name": "App State",
+      "top10_probability": 0.0019889927240571963,
+      "top25_probability": 0.029513567220541187,
+      "top5_probability": 0.00021368235492213541
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 84,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 74.98977906878456,
+      "interval_50": [
+        57,
+        93
+      ],
+      "interval_80": [
+        41.0,
+        106.0
+      ],
+      "interval_95": [
+        27,
+        118
+      ],
+      "interval_widths": {
+        "50": 37,
+        "80": 66,
+        "95": 92
+      },
+      "median_rank": 76.0,
+      "mode_rank": 83,
+      "previous_official_rank": 83,
+      "rank_1_probability": 2.3070463024157087e-07,
+      "rank_change": -1,
+      "rank_change_accessible": "Down 1 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21931",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-1",
+      "team_id": "235",
+      "team_name": "Memphis",
+      "top10_probability": 0.0006855096933936739,
+      "top25_probability": 0.020250261319089736,
+      "top5_probability": 6.330063625612285e-05
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 85,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 75.63392512472977,
+      "interval_50": [
+        57,
+        95
+      ],
+      "interval_80": [
+        41.0,
+        109.0
+      ],
+      "interval_95": [
+        27,
+        122
+      ],
+      "interval_widths": {
+        "50": 39,
+        "80": 69,
+        "95": 96
+      },
+      "median_rank": 76.0,
+      "mode_rank": 74,
+      "previous_official_rank": 118,
+      "rank_1_probability": 1.1031891969105259e-07,
+      "rank_change": 33,
+      "rank_change_accessible": "Up 33 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219133",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "324",
+      "team_name": "Coastal Carolina",
+      "top10_probability": 0.0008344176195939452,
+      "top25_probability": 0.021720127782400123,
+      "top5_probability": 6.30904265193089e-05
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 86,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 75.71431766742666,
+      "interval_50": [
+        57,
+        96
+      ],
+      "interval_80": [
+        39.0,
+        110.0
+      ],
+      "interval_95": [
+        25,
+        122
+      ],
+      "interval_widths": {
+        "50": 40,
+        "80": 72,
+        "95": 98
+      },
+      "median_rank": 77.0,
+      "mode_rank": 80,
+      "previous_official_rank": 76,
+      "rank_1_probability": 5.675017509986168e-07,
+      "rank_change": -10,
+      "rank_change_accessible": "Down 10 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219310",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "38",
+      "team_name": "Colorado",
+      "top10_probability": 0.0011241258271336776,
+      "top25_probability": 0.026526764882135605,
+      "top5_probability": 0.00011671479828210949
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 87,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 76.13827067301104,
+      "interval_50": [
+        58,
+        96
+      ],
+      "interval_80": [
+        41.0,
+        110.0
+      ],
+      "interval_95": [
+        26,
+        121
+      ],
+      "interval_widths": {
+        "50": 39,
+        "80": 70,
+        "95": 96
+      },
+      "median_rank": 77.0,
+      "mode_rank": 78,
+      "previous_official_rank": 88,
+      "rank_1_probability": 4.822201206178258e-07,
+      "rank_change": 1,
+      "rank_change_accessible": "Up 1 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21911",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "309",
+      "team_name": "Louisiana",
+      "top10_probability": 0.0011705535098614683,
+      "top25_probability": 0.024699445775828516,
+      "top5_probability": 0.00012093966501036339
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 88,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 76.33383308813568,
+      "interval_50": [
+        57,
+        96
+      ],
+      "interval_80": [
+        40.0,
+        110.0
+      ],
+      "interval_95": [
+        25,
+        123
+      ],
+      "interval_widths": {
+        "50": 40,
+        "80": 71,
+        "95": 99
+      },
+      "median_rank": 77.0,
+      "mode_rank": 77,
+      "previous_official_rank": 124,
+      "rank_1_probability": 2.3712437172725761e-07,
+      "rank_change": 36,
+      "rank_change_accessible": "Up 36 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219136",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "2247",
+      "team_name": "Georgia State",
+      "top10_probability": 0.001196077704145145,
+      "top25_probability": 0.02593306256256209,
+      "top5_probability": 0.00010438626108242743
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 89,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 76.36606667440195,
+      "interval_50": [
+        56,
+        98
+      ],
+      "interval_80": [
+        37.0,
+        111.0
+      ],
+      "interval_95": [
+        24,
+        122
+      ],
+      "interval_widths": {
+        "50": 43,
+        "80": 75,
+        "95": 99
+      },
+      "median_rank": 79.0,
+      "mode_rank": 83,
+      "previous_official_rank": 94,
+      "rank_1_probability": 7.455314296999746e-07,
+      "rank_change": 5,
+      "rank_change_accessible": "Up 5 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21915",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "2335",
+      "team_name": "Liberty",
+      "top10_probability": 0.0018273515315696666,
+      "top25_probability": 0.032477389136262656,
+      "top5_probability": 0.0002079548605372268
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 90,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 82.0403003241689,
+      "interval_50": [
+        65,
+        101
+      ],
+      "interval_80": [
+        47.0,
+        114.0
+      ],
+      "interval_95": [
+        31,
+        124
+      ],
+      "interval_widths": {
+        "50": 37,
+        "80": 68,
+        "95": 94
+      },
+      "median_rank": 84.0,
+      "mode_rank": 91,
+      "previous_official_rank": 111,
+      "rank_1_probability": 1.060543686002607e-07,
+      "rank_change": 21,
+      "rank_change_accessible": "Up 21 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219121",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "6",
+      "team_name": "South Alabama",
+      "top10_probability": 0.00045985176380709754,
+      "top25_probability": 0.012764966535205972,
+      "top5_probability": 3.99482287995831e-05
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 91,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 83.0568060105078,
+      "interval_50": [
+        65,
+        102
+      ],
+      "interval_80": [
+        48.0,
+        115.0
+      ],
+      "interval_95": [
+        31,
+        126
+      ],
+      "interval_widths": {
+        "50": 38,
+        "80": 68,
+        "95": 96
+      },
+      "median_rank": 85.0,
+      "mode_rank": 92,
+      "previous_official_rank": 116,
+      "rank_1_probability": 2.956701403304867e-08,
+      "rank_change": 25,
+      "rank_change_accessible": "Up 25 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219125",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "218",
+      "team_name": "Temple",
+      "top10_probability": 0.00030087332879372565,
+      "top25_probability": 0.011885188075001473,
+      "top5_probability": 1.958344184298545e-05
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 92,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 84.03288017811099,
+      "interval_50": [
+        65,
+        105
+      ],
+      "interval_80": [
+        45.0,
+        117.0
+      ],
+      "interval_95": [
+        30,
+        127
+      ],
+      "interval_widths": {
+        "50": 41,
+        "80": 73,
+        "95": 98
+      },
+      "median_rank": 87.0,
+      "mode_rank": 97,
+      "previous_official_rank": 87,
+      "rank_1_probability": 1.2372053260518267e-07,
+      "rank_change": -5,
+      "rank_change_accessible": "Down 5 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21935",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "326",
+      "team_name": "Texas State",
+      "top10_probability": 0.00039740076074471875,
+      "top25_probability": 0.014057903667364754,
+      "top5_probability": 3.2494294728878e-05
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 93,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 84.88912392684983,
+      "interval_50": [
+        68,
+        104
+      ],
+      "interval_80": [
+        50.0,
+        116.0
+      ],
+      "interval_95": [
+        32,
+        126
+      ],
+      "interval_widths": {
+        "50": 37,
+        "80": 67,
+        "95": 95
+      },
+      "median_rank": 87.0,
+      "mode_rank": 96,
+      "previous_official_rank": 121,
+      "rank_1_probability": 3.7060906535085496e-08,
+      "rank_change": 28,
+      "rank_change_accessible": "Up 28 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219128",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "36",
+      "team_name": "Colorado State",
+      "top10_probability": 0.00030158594810092795,
+      "top25_probability": 0.01047662815549344,
+      "top5_probability": 2.1599118604928865e-05
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 94,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 85.0867491388363,
+      "interval_50": [
+        68,
+        104
+      ],
+      "interval_80": [
+        51.0,
+        115.0
+      ],
+      "interval_95": [
+        34,
+        125
+      ],
+      "interval_widths": {
+        "50": 37,
+        "80": 65,
+        "95": 92
+      },
+      "median_rank": 87.0,
+      "mode_rank": 95,
+      "previous_official_rank": 71,
+      "rank_1_probability": 9.811236302948379e-08,
+      "rank_change": -23,
+      "rank_change_accessible": "Down 23 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219323",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "195",
+      "team_name": "Ohio",
+      "top10_probability": 0.0002535304254310938,
+      "top25_probability": 0.008521311142154939,
+      "top5_probability": 2.229391170235189e-05
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 95,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 85.71195639887901,
+      "interval_50": [
+        70,
+        103
+      ],
+      "interval_80": [
+        54.0,
+        115.0
+      ],
+      "interval_95": [
+        37,
+        124
+      ],
+      "interval_widths": {
+        "50": 34,
+        "80": 62,
+        "95": 88
+      },
+      "median_rank": 88.0,
+      "mode_rank": 95,
+      "previous_official_rank": 98,
+      "rank_1_probability": 1.3833968562501406e-08,
+      "rank_change": 3,
+      "rank_change_accessible": "Up 3 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21913",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-2",
+      "team_id": "55",
+      "team_name": "Jacksonville State",
+      "top10_probability": 0.0001021036380852898,
+      "top25_probability": 0.005158041231407636,
+      "top5_probability": 6.570385348600216e-06
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 96,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 85.7660355655898,
+      "interval_50": [
+        69,
+        105
+      ],
+      "interval_80": [
+        50.0,
+        117.0
+      ],
+      "interval_95": [
+        32,
+        127
+      ],
+      "interval_widths": {
+        "50": 37,
+        "80": 68,
+        "95": 96
+      },
+      "median_rank": 88.0,
+      "mode_rank": 95,
+      "previous_official_rank": 100,
+      "rank_1_probability": 8.516204715024467e-08,
+      "rank_change": 4,
+      "rank_change_accessible": "Up 4 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21914",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "2653",
+      "team_name": "Troy",
+      "top10_probability": 0.00039275906555290773,
+      "top25_probability": 0.011074380523203982,
+      "top5_probability": 3.402757161677087e-05
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 97,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 86.4240130848214,
+      "interval_50": [
+        70,
+        105
+      ],
+      "interval_80": [
+        51.0,
+        117.0
+      ],
+      "interval_95": [
+        34,
+        126
+      ],
+      "interval_widths": {
+        "50": 36,
+        "80": 67,
+        "95": 93
+      },
+      "median_rank": 89.0,
+      "mode_rank": 98,
+      "previous_official_rank": 77,
+      "rank_1_probability": 5.438844681205882e-08,
+      "rank_change": -20,
+      "rank_change_accessible": "Down 20 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219320",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "151",
+      "team_name": "East Carolina",
+      "top10_probability": 0.00020548731564118397,
+      "top25_probability": 0.008221997868669773,
+      "top5_probability": 1.606706066120168e-05
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 98,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 88.19016997372458,
+      "interval_50": [
+        72,
+        107
+      ],
+      "interval_80": [
+        54.0,
+        118.0
+      ],
+      "interval_95": [
+        36,
+        127
+      ],
+      "interval_widths": {
+        "50": 36,
+        "80": 65,
+        "95": 92
+      },
+      "median_rank": 91.0,
+      "mode_rank": 99,
+      "previous_official_rank": 109,
+      "rank_1_probability": 2.914733515081462e-08,
+      "rank_change": 11,
+      "rank_change_accessible": "Up 11 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219111",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "290",
+      "team_name": "Georgia Southern",
+      "top10_probability": 0.00017106737292121743,
+      "top25_probability": 0.006325456385286214,
+      "top5_probability": 1.2949441445209e-05
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 99,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 90.21577468680272,
+      "interval_50": [
+        73,
+        111
+      ],
+      "interval_80": [
+        54.0,
+        122.0
+      ],
+      "interval_95": [
+        34,
+        129
+      ],
+      "interval_widths": {
+        "50": 39,
+        "80": 69,
+        "95": 96
+      },
+      "median_rank": 93.0,
+      "mode_rank": 107,
+      "previous_official_rank": 56,
+      "rank_1_probability": 8.693092822826693e-07,
+      "rank_change": -43,
+      "rank_change_accessible": "Down 43 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219343",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "0-3",
+      "team_id": "164",
+      "team_name": "Rutgers",
+      "top10_probability": 0.0007359182360377805,
+      "top25_probability": 0.010923785790331288,
+      "top5_probability": 0.0001028110773615927
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 100,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 93.15497916290366,
+      "interval_50": [
+        78,
+        112
+      ],
+      "interval_80": [
+        57.0,
+        123.0
+      ],
+      "interval_95": [
+        35,
+        130
+      ],
+      "interval_widths": {
+        "50": 35,
+        "80": 67,
+        "95": 96
+      },
+      "median_rank": 97.0,
+      "mode_rank": 108,
+      "previous_official_rank": 73,
+      "rank_1_probability": 4.151040593087726e-08,
+      "rank_change": -27,
+      "rank_change_accessible": "Down 27 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219327",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "8",
+      "team_name": "Arkansas",
+      "top10_probability": 0.00012790864531200268,
+      "top25_probability": 0.006581666152784797,
+      "top5_probability": 1.0133237766552997e-05
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 101,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 93.8107675171926,
+      "interval_50": [
+        77,
+        114
+      ],
+      "interval_80": [
+        56.0,
+        125.0
+      ],
+      "interval_95": [
+        35,
+        132
+      ],
+      "interval_widths": {
+        "50": 38,
+        "80": 70,
+        "95": 98
+      },
+      "median_rank": 98.0,
+      "mode_rank": 111,
+      "previous_official_rank": 117,
+      "rank_1_probability": 3.948349684472725e-08,
+      "rank_change": 16,
+      "rank_change_accessible": "Up 16 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219116",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-1",
+      "team_id": "2005",
+      "team_name": "Air Force",
+      "top10_probability": 0.0003084512463800021,
+      "top25_probability": 0.008381375993692111,
+      "top5_probability": 2.4666825113052845e-05
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 102,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 94.08384074190045,
+      "interval_50": [
+        77,
+        113
+      ],
+      "interval_80": [
+        59.0,
+        125.0
+      ],
+      "interval_95": [
+        42,
+        133
+      ],
+      "interval_widths": {
+        "50": 37,
+        "80": 67,
+        "95": 92
+      },
+      "median_rank": 97.0,
+      "mode_rank": 102,
+      "previous_official_rank": 137,
+      "rank_1_probability": 4.052864908718398e-09,
+      "rank_change": 35,
+      "rank_change_accessible": "Up 35 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219135",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "2534",
+      "team_name": "Sam Houston",
+      "top10_probability": 9.095964444052326e-05,
+      "top25_probability": 0.003743765999957798,
+      "top5_probability": 4.7712640359517775e-06
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 103,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 94.67367131231654,
+      "interval_50": [
+        79,
+        114
+      ],
+      "interval_80": [
+        60.0,
+        124.0
+      ],
+      "interval_95": [
+        39,
+        131
+      ],
+      "interval_widths": {
+        "50": 36,
+        "80": 65,
+        "95": 93
+      },
+      "median_rank": 98.0,
+      "mode_rank": 108,
+      "previous_official_rank": 105,
+      "rank_1_probability": 2.2641741055296483e-08,
+      "rank_change": 2,
+      "rank_change_accessible": "Up 2 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21912",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "193",
+      "team_name": "Miami (OH)",
+      "top10_probability": 0.00012365981532180576,
+      "top25_probability": 0.0050897196899542555,
+      "top5_probability": 9.124790017367371e-06
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 104,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 95.39287672644056,
+      "interval_50": [
+        81,
+        113
+      ],
+      "interval_80": [
+        63.0,
+        123.0
+      ],
+      "interval_95": [
+        44,
+        130
+      ],
+      "interval_widths": {
+        "50": 33,
+        "80": 61,
+        "95": 87
+      },
+      "median_rank": 99.0,
+      "mode_rank": 109,
+      "previous_official_rank": 114,
+      "rank_1_probability": 1.6615262260295294e-08,
+      "rank_change": 10,
+      "rank_change_accessible": "Up 10 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219110",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "2229",
+      "team_name": "Florida International",
+      "top10_probability": 9.226102856131781e-05,
+      "top25_probability": 0.00313070098574249,
+      "top5_probability": 7.073472204785903e-06
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 105,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 95.60334450933878,
+      "interval_50": [
+        81,
+        114
+      ],
+      "interval_80": [
+        62.0,
+        123.0
+      ],
+      "interval_95": [
+        41,
+        130
+      ],
+      "interval_widths": {
+        "50": 34,
+        "80": 62,
+        "95": 90
+      },
+      "median_rank": 99.0,
+      "mode_rank": 110,
+      "previous_official_rank": 85,
+      "rank_1_probability": 3.938301201776558e-08,
+      "rank_change": -20,
+      "rank_change_accessible": "Down 20 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219320",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "295",
+      "team_name": "Old Dominion",
+      "top10_probability": 0.00010266310032162334,
+      "top25_probability": 0.0038816905563379975,
+      "top5_probability": 9.256366682494565e-06
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 106,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 95.83822032312912,
+      "interval_50": [
+        82,
+        114
+      ],
+      "interval_80": [
+        62.0,
+        123.0
+      ],
+      "interval_95": [
+        40,
+        130
+      ],
+      "interval_widths": {
+        "50": 33,
+        "80": 62,
+        "95": 91
+      },
+      "median_rank": 100.0,
+      "mode_rank": 111,
+      "previous_official_rank": 90,
+      "rank_1_probability": 1.9895482618267846e-08,
+      "rank_change": -16,
+      "rank_change_accessible": "Down 16 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219316",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "0-3",
+      "team_id": "328",
+      "team_name": "Utah State",
+      "top10_probability": 0.00010331653292794193,
+      "top25_probability": 0.004586707000020516,
+      "top5_probability": 7.880876666249235e-06
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 107,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 97.52945530638168,
+      "interval_50": [
+        83,
+        115
+      ],
+      "interval_80": [
+        65.0,
+        124.0
+      ],
+      "interval_95": [
+        45,
+        131
+      ],
+      "interval_widths": {
+        "50": 33,
+        "80": 60,
+        "95": 87
+      },
+      "median_rank": 101.0,
+      "mode_rank": 112,
+      "previous_official_rank": 86,
+      "rank_1_probability": 4.766310612731335e-08,
+      "rank_change": -21,
+      "rank_change_accessible": "Down 21 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219321",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "2439",
+      "team_name": "UNLV",
+      "top10_probability": 9.425291696372174e-05,
+      "top25_probability": 0.002799938288961281,
+      "top5_probability": 9.407779277009704e-06
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 108,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 98.52462168253543,
+      "interval_50": [
+        85,
+        116
+      ],
+      "interval_80": [
+        66.0,
+        125.0
+      ],
+      "interval_95": [
+        43,
+        131
+      ],
+      "interval_widths": {
+        "50": 32,
+        "80": 60,
+        "95": 89
+      },
+      "median_rank": 103.0,
+      "mode_rank": 111,
+      "previous_official_rank": 84,
+      "rank_1_probability": 4.083491000756826e-08,
+      "rank_change": -24,
+      "rank_change_accessible": "Down 24 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219324",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "103",
+      "team_name": "Boston College",
+      "top10_probability": 0.00011050835092475039,
+      "top25_probability": 0.0037784889591108302,
+      "top5_probability": 1.0424799320652667e-05
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 109,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 99.26194010783433,
+      "interval_50": [
+        86,
+        116
+      ],
+      "interval_80": [
+        68.0,
+        124.0
+      ],
+      "interval_95": [
+        47,
+        131
+      ],
+      "interval_widths": {
+        "50": 31,
+        "80": 57,
+        "95": 85
+      },
+      "median_rank": 103.0,
+      "mode_rank": 114,
+      "previous_official_rank": 81,
+      "rank_1_probability": 1.3607576887506548e-08,
+      "rank_change": -28,
+      "rank_change_accessible": "Down 28 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219328",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "276",
+      "team_name": "Marshall",
+      "top10_probability": 4.888571073282793e-05,
+      "top25_probability": 0.0021450659729382823,
+      "top5_probability": 3.93412389667617e-06
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 110,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 99.83822036994395,
+      "interval_50": [
+        86,
+        117
+      ],
+      "interval_80": [
+        68.0,
+        126.0
+      ],
+      "interval_95": [
+        48,
+        132
+      ],
+      "interval_widths": {
+        "50": 32,
+        "80": 59,
+        "95": 85
+      },
+      "median_rank": 104.0,
+      "mode_rank": 115,
+      "previous_official_rank": 108,
+      "rank_1_probability": 5.00445477284632e-09,
+      "rank_change": -2,
+      "rank_change_accessible": "Down 2 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21932",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "2032",
+      "team_name": "Arkansas State",
+      "top10_probability": 3.691852587894553e-05,
+      "top25_probability": 0.001838176067581007,
+      "top5_probability": 2.451143345973584e-06
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 111,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 100.16057514425215,
+      "interval_50": [
+        86,
+        118
+      ],
+      "interval_80": [
+        67.0,
+        127.0
+      ],
+      "interval_95": [
+        46,
+        133
+      ],
+      "interval_widths": {
+        "50": 33,
+        "80": 61,
+        "95": 88
+      },
+      "median_rank": 104.0,
+      "mode_rank": 117,
+      "previous_official_rank": 101,
+      "rank_1_probability": 1.6541579037822934e-08,
+      "rank_change": -10,
+      "rank_change_accessible": "Down 10 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219310",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "338",
+      "team_name": "Kennesaw State",
+      "top10_probability": 6.122678446562622e-05,
+      "top25_probability": 0.00257085969389902,
+      "top5_probability": 4.844597203004744e-06
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 112,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 100.54564017197357,
+      "interval_50": [
+        88,
+        117
+      ],
+      "interval_80": [
+        70.0,
+        125.0
+      ],
+      "interval_95": [
+        49,
+        131
+      ],
+      "interval_widths": {
+        "50": 30,
+        "80": 56,
+        "95": 83
+      },
+      "median_rank": 104.0,
+      "mode_rank": 114,
+      "previous_official_rank": 92,
+      "rank_1_probability": 6.619400971754887e-10,
+      "rank_change": -20,
+      "rank_change_accessible": "Down 20 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219320",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "24",
+      "team_name": "Stanford",
+      "top10_probability": 1.290868204792585e-05,
+      "top25_probability": 0.0013334001367361703,
+      "top5_probability": 5.738626510940118e-07
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 113,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 100.95483386335329,
+      "interval_50": [
+        88,
+        117
+      ],
+      "interval_80": [
+        71.0,
+        126.0
+      ],
+      "interval_95": [
+        49,
+        132
+      ],
+      "interval_widths": {
+        "50": 30,
+        "80": 56,
+        "95": 84
+      },
+      "median_rank": 105.0,
+      "mode_rank": 115,
+      "previous_official_rank": 112,
+      "rank_1_probability": 1.5195879676559422e-09,
+      "rank_change": -1,
+      "rank_change_accessible": "Down 1 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21931",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "2226",
+      "team_name": "Florida Atlantic",
+      "top10_probability": 1.9894548734456304e-05,
+      "top25_probability": 0.0014029539422771638,
+      "top5_probability": 1.0697580407065315e-06
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 114,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 101.116599708494,
+      "interval_50": [
+        88,
+        118
+      ],
+      "interval_80": [
+        69.0,
+        126.0
+      ],
+      "interval_95": [
+        49,
+        132
+      ],
+      "interval_widths": {
+        "50": 31,
+        "80": 58,
+        "95": 84
+      },
+      "median_rank": 105.0,
+      "mode_rank": 117,
+      "previous_official_rank": 82,
+      "rank_1_probability": 6.756605917690894e-09,
+      "rank_change": -32,
+      "rank_change_accessible": "Down 32 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219332",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "2572",
+      "team_name": "Southern Miss",
+      "top10_probability": 3.689957962730169e-05,
+      "top25_probability": 0.0017562855395531517,
+      "top5_probability": 2.6635708941495618e-06
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 115,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 102.87619580815746,
+      "interval_50": [
+        90,
+        119
+      ],
+      "interval_80": [
+        73.0,
+        127.0
+      ],
+      "interval_95": [
+        54,
+        133
+      ],
+      "interval_widths": {
+        "50": 30,
+        "80": 55,
+        "95": 80
+      },
+      "median_rank": 107.0,
+      "mode_rank": 117,
+      "previous_official_rank": 115,
+      "rank_1_probability": 1.1353737132266251e-09,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "5",
+      "team_name": "UAB",
+      "top10_probability": 1.5485901168414653e-05,
+      "top25_probability": 0.0009149165022262585,
+      "top5_probability": 8.518152920408672e-07
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 116,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 104.12145164633696,
+      "interval_50": [
+        91,
+        122
+      ],
+      "interval_80": [
+        72.0,
+        129.0
+      ],
+      "interval_95": [
+        48,
+        134
+      ],
+      "interval_widths": {
+        "50": 32,
+        "80": 58,
+        "95": 87
+      },
+      "median_rank": 109.0,
+      "mode_rank": 122,
+      "previous_official_rank": 113,
+      "rank_1_probability": 3.043249342837969e-08,
+      "rank_change": -3,
+      "rank_change_accessible": "Down 3 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21933",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-1",
+      "team_id": "2426",
+      "team_name": "Navy",
+      "top10_probability": 0.00010869047659584609,
+      "top25_probability": 0.0027035747624130128,
+      "top5_probability": 1.0840390541910227e-05
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 117,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 105.98277306818761,
+      "interval_50": [
+        95,
+        121
+      ],
+      "interval_80": [
+        79.0,
+        128.0
+      ],
+      "interval_95": [
+        57,
+        133
+      ],
+      "interval_widths": {
+        "50": 27,
+        "80": 50,
+        "95": 77
+      },
+      "median_rank": 110.0,
+      "mode_rank": 117,
+      "previous_official_rank": 125,
+      "rank_1_probability": 2.62218984538194e-09,
+      "rank_change": 8,
+      "rank_change_accessible": "Up 8 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21918",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "2440",
+      "team_name": "Nevada",
+      "top10_probability": 2.3478179756870174e-05,
+      "top25_probability": 0.0009793444948677551,
+      "top5_probability": 1.7653510672395624e-06
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 118,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 106.54431091147745,
+      "interval_50": [
+        96,
+        121
+      ],
+      "interval_80": [
+        80.0,
+        128.0
+      ],
+      "interval_95": [
+        60,
+        133
+      ],
+      "interval_widths": {
+        "50": 26,
+        "80": 49,
+        "95": 74
+      },
+      "median_rank": 110.0,
+      "mode_rank": 118,
+      "previous_official_rank": 102,
+      "rank_1_probability": 1.428159626300098e-09,
+      "rank_change": -16,
+      "rank_change_accessible": "Down 16 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219316",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "2117",
+      "team_name": "Central Michigan",
+      "top10_probability": 9.131471588324197e-06,
+      "top25_probability": 0.0005618303874279892,
+      "top5_probability": 6.411257672039461e-07
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 119,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 106.92768987800069,
+      "interval_50": [
+        95,
+        123
+      ],
+      "interval_80": [
+        77.0,
+        130.0
+      ],
+      "interval_95": [
+        54,
+        135
+      ],
+      "interval_widths": {
+        "50": 29,
+        "80": 54,
+        "95": 82
+      },
+      "median_rank": 111.0,
+      "mode_rank": 123,
+      "previous_official_rank": 123,
+      "rank_1_probability": 7.060414907084457e-10,
+      "rank_change": 4,
+      "rank_change_accessible": "Up 4 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21914",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "242",
+      "team_name": "Rice",
+      "top10_probability": 1.0855099428811625e-05,
+      "top25_probability": 0.0009754495119458073,
+      "top5_probability": 5.346005172269656e-07
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 120,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 108.22686771255265,
+      "interval_50": [
+        98,
+        122
+      ],
+      "interval_80": [
+        82.0,
+        129.0
+      ],
+      "interval_95": [
+        62,
+        133
+      ],
+      "interval_widths": {
+        "50": 25,
+        "80": 48,
+        "95": 72
+      },
+      "median_rank": 112.0,
+      "mode_rank": 122,
+      "previous_official_rank": 91,
+      "rank_1_probability": 2.6236053505270174e-09,
+      "rank_change": -29,
+      "rank_change_accessible": "Down 29 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219329",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "62",
+      "team_name": "Hawai'i",
+      "top10_probability": 1.0896932013401657e-05,
+      "top25_probability": 0.00043470814335031644,
+      "top5_probability": 9.030554701587648e-07
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 121,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 109.85986116146879,
+      "interval_50": [
+        99,
+        125
+      ],
+      "interval_80": [
+        82.0,
+        131.0
+      ],
+      "interval_95": [
+        60,
+        135
+      ],
+      "interval_widths": {
+        "50": 27,
+        "80": 50,
+        "95": 76
+      },
+      "median_rank": 114.0,
+      "mode_rank": 125,
+      "previous_official_rank": 107,
+      "rank_1_probability": 3.96744539037021e-09,
+      "rank_change": -14,
+      "rank_change_accessible": "Down 14 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219314",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "2623",
+      "team_name": "Missouri State",
+      "top10_probability": 1.2895729378354752e-05,
+      "top25_probability": 0.0006903080333278003,
+      "top5_probability": 1.0175043852514296e-06
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 122,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 112.22535855850772,
+      "interval_50": [
+        103,
+        126
+      ],
+      "interval_80": [
+        87.0,
+        132.0
+      ],
+      "interval_95": [
+        68,
+        135
+      ],
+      "interval_widths": {
+        "50": 24,
+        "80": 46,
+        "95": 68
+      },
+      "median_rank": 116.0,
+      "mode_rank": 125,
+      "previous_official_rank": 132,
+      "rank_1_probability": 7.564692847530766e-11,
+      "rank_change": 10,
+      "rank_change_accessible": "Up 10 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219110",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-1",
+      "team_id": "2393",
+      "team_name": "Middle Tennessee",
+      "top10_probability": 2.6844162827785534e-06,
+      "top25_probability": 0.0002283783288126834,
+      "top5_probability": 1.2333783703358725e-07
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 123,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 112.53225439338887,
+      "interval_50": [
+        103,
+        127
+      ],
+      "interval_80": [
+        86.0,
+        132.0
+      ],
+      "interval_95": [
+        65,
+        136
+      ],
+      "interval_widths": {
+        "50": 25,
+        "80": 47,
+        "95": 72
+      },
+      "median_rank": 117.0,
+      "mode_rank": 127,
+      "previous_official_rank": 126,
+      "rank_1_probability": 1.5860566167895675e-10,
+      "rank_change": 3,
+      "rank_change_accessible": "Up 3 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21913",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "2006",
+      "team_name": "Akron",
+      "top10_probability": 2.780730741390488e-06,
+      "top25_probability": 0.00026372962421986404,
+      "top5_probability": 1.2939693513895862e-07
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 124,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 114.43597251566796,
+      "interval_50": [
+        106,
+        127
+      ],
+      "interval_80": [
+        92.0,
+        132.0
+      ],
+      "interval_95": [
+        74,
+        135
+      ],
+      "interval_widths": {
+        "50": 22,
+        "80": 41,
+        "95": 62
+      },
+      "median_rank": 118.0,
+      "mode_rank": 125,
+      "previous_official_rank": 128,
+      "rank_1_probability": 8.73520912408612e-12,
+      "rank_change": 4,
+      "rank_change_accessible": "Up 4 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21914",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-2",
+      "team_id": "23",
+      "team_name": "San Jos\u00e9 State",
+      "top10_probability": 3.7234114542423e-07,
+      "top25_probability": 6.423714019219836e-05,
+      "top5_probability": 1.3062729686642238e-08
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 125,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 116.3493337807868,
+      "interval_50": [
+        108,
+        129
+      ],
+      "interval_80": [
+        92.0,
+        134.0
+      ],
+      "interval_95": [
+        72,
+        137
+      ],
+      "interval_widths": {
+        "50": 22,
+        "80": 43,
+        "95": 66
+      },
+      "median_rank": 121.0,
+      "mode_rank": 131,
+      "previous_official_rank": 133,
+      "rank_1_probability": 5.396579516679255e-11,
+      "rank_change": 8,
+      "rank_change_accessible": "Up 8 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21918",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "166",
+      "team_name": "New Mexico State",
+      "top10_probability": 1.6384196149477137e-06,
+      "top25_probability": 0.00014711717460669306,
+      "top5_probability": 7.24935162317868e-08
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 126,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 116.65435827942034,
+      "interval_50": [
+        109,
+        128
+      ],
+      "interval_80": [
+        95.0,
+        133.0
+      ],
+      "interval_95": [
+        78,
+        136
+      ],
+      "interval_widths": {
+        "50": 20,
+        "80": 39,
+        "95": 59
+      },
+      "median_rank": 120.0,
+      "mode_rank": 128,
+      "previous_official_rank": 120,
+      "rank_1_probability": 1.3431695705302073e-11,
+      "rank_change": -6,
+      "rank_change_accessible": "Down 6 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21936",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "0-3",
+      "team_id": "2459",
+      "team_name": "Northern Illinois",
+      "top10_probability": 3.361990942526498e-07,
+      "top25_probability": 6.22393713572502e-05,
+      "top5_probability": 1.3059615529497531e-08
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 127,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 117.33461802301919,
+      "interval_50": [
+        111,
+        128
+      ],
+      "interval_80": [
+        97.0,
+        132.0
+      ],
+      "interval_95": [
+        76,
+        135
+      ],
+      "interval_widths": {
+        "50": 18,
+        "80": 36,
+        "95": 60
+      },
+      "median_rank": 122.0,
+      "mode_rank": 129,
+      "previous_official_rank": 66,
+      "rank_1_probability": 5.361192382395829e-10,
+      "rank_change": -61,
+      "rank_change_accessible": "Down 61 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219361",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "0-3",
+      "team_id": "98",
+      "team_name": "Western Kentucky",
+      "top10_probability": 2.268387316078217e-06,
+      "top25_probability": 0.00019692800710679944,
+      "top5_probability": 1.471235098580417e-07
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 128,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 118.59395627689885,
+      "interval_50": [
+        112,
+        129
+      ],
+      "interval_80": [
+        100.0,
+        133.0
+      ],
+      "interval_95": [
+        82,
+        135
+      ],
+      "interval_widths": {
+        "50": 18,
+        "80": 34,
+        "95": 54
+      },
+      "median_rank": 122.0,
+      "mode_rank": 129,
+      "previous_official_rank": 103,
+      "rank_1_probability": 8.555784025094633e-11,
+      "rank_change": -25,
+      "rank_change_accessible": "Down 25 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219325",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "2751",
+      "team_name": "Wyoming",
+      "top10_probability": 5.751863612715248e-07,
+      "top25_probability": 4.1881801085855455e-05,
+      "top5_probability": 3.984464010765904e-08
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 129,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 122.49473056922837,
+      "interval_50": [
+        115,
+        135
+      ],
+      "interval_80": [
+        99.0,
+        137.0
+      ],
+      "interval_95": [
+        78,
+        138
+      ],
+      "interval_widths": {
+        "50": 21,
+        "80": 39,
+        "95": 61
+      },
+      "median_rank": 128.0,
+      "mode_rank": 138,
+      "previous_official_rank": 138,
+      "rank_1_probability": 8.10798388705605e-12,
+      "rank_change": 9,
+      "rank_change_accessible": "Up 9 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21919",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-0",
+      "team_id": "113",
+      "team_name": "Massachusetts",
+      "top10_probability": 1.0038798984528951e-06,
+      "top25_probability": 0.0001066127118511258,
+      "top5_probability": 3.564733955664685e-08
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 130,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 122.70342808044155,
+      "interval_50": [
+        117,
+        133
+      ],
+      "interval_80": [
+        104.0,
+        136.0
+      ],
+      "interval_95": [
+        85,
+        137
+      ],
+      "interval_widths": {
+        "50": 17,
+        "80": 33,
+        "95": 53
+      },
+      "median_rank": 127.0,
+      "mode_rank": 135,
+      "previous_official_rank": 134,
+      "rank_1_probability": 1.5426528877368657e-11,
+      "rank_change": 4,
+      "rank_change_accessible": "Up 4 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21914",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "0-3",
+      "team_id": "2429",
+      "team_name": "Charlotte",
+      "top10_probability": 4.0588663435236794e-07,
+      "top25_probability": 5.241427227638257e-05,
+      "top5_probability": 1.6968107460387266e-08
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 131,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 122.90282772933969,
+      "interval_50": [
+        117,
+        133
+      ],
+      "interval_80": [
+        105.0,
+        135.0
+      ],
+      "interval_95": [
+        87,
+        137
+      ],
+      "interval_widths": {
+        "50": 17,
+        "80": 31,
+        "95": 51
+      },
+      "median_rank": 127.0,
+      "mode_rank": 134,
+      "previous_official_rank": 130,
+      "rank_1_probability": 3.936922089475743e-12,
+      "rank_change": -1,
+      "rank_change_accessible": "Down 1 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21931",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "2638",
+      "team_name": "UTEP",
+      "top10_probability": 1.669290828643988e-07,
+      "top25_probability": 3.254031111721351e-05,
+      "top5_probability": 5.50435350996239e-09
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 132,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 122.90823087186507,
+      "interval_50": [
+        118,
+        131
+      ],
+      "interval_80": [
+        108.0,
+        134.0
+      ],
+      "interval_95": [
+        94,
+        136
+      ],
+      "interval_widths": {
+        "50": 14,
+        "80": 27,
+        "95": 43
+      },
+      "median_rank": 126.0,
+      "mode_rank": 131,
+      "previous_official_rank": 119,
+      "rank_1_probability": 2.403088088614482e-13,
+      "rank_change": -13,
+      "rank_change_accessible": "Down 13 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219313",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-3",
+      "team_id": "2199",
+      "team_name": "Eastern Michigan",
+      "top10_probability": 7.121584734932662e-09,
+      "top25_probability": 1.899677113161908e-06,
+      "top5_probability": 2.344783996574451e-10
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 133,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 124.51831128203557,
+      "interval_50": [
+        120,
+        133
+      ],
+      "interval_80": [
+        110.0,
+        135.0
+      ],
+      "interval_95": [
+        94,
+        137
+      ],
+      "interval_widths": {
+        "50": 14,
+        "80": 26,
+        "95": 44
+      },
+      "median_rank": 128.0,
+      "mode_rank": 133,
+      "previous_official_rank": 122,
+      "rank_1_probability": 1.038332226747955e-11,
+      "rank_change": -11,
+      "rank_change_accessible": "Down 11 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u219311",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-3",
+      "team_id": "16",
+      "team_name": "Sacramento State",
+      "top10_probability": 6.448258873228482e-08,
+      "top25_probability": 6.762324843869943e-06,
+      "top5_probability": 3.7179300477937284e-09
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 134,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 125.94765589943486,
+      "interval_50": [
+        122,
+        134
+      ],
+      "interval_80": [
+        112.0,
+        136.0
+      ],
+      "interval_95": [
+        97,
+        137
+      ],
+      "interval_widths": {
+        "50": 13,
+        "80": 25,
+        "95": 41
+      },
+      "median_rank": 129.0,
+      "mode_rank": 135,
+      "previous_official_rank": 131,
+      "rank_1_probability": 4.645723768412998e-13,
+      "rank_change": -3,
+      "rank_change_accessible": "Down 3 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21933",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "2084",
+      "team_name": "Buffalo",
+      "top10_probability": 1.8520046580184893e-08,
+      "top25_probability": 4.1573741816390885e-06,
+      "top5_probability": 6.453789089977191e-10
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 135,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 127.07261795676533,
+      "interval_50": [
+        123,
+        134
+      ],
+      "interval_80": [
+        114.0,
+        136.0
+      ],
+      "interval_95": [
+        100,
+        137
+      ],
+      "interval_widths": {
+        "50": 12,
+        "80": 23,
+        "95": 38
+      },
+      "median_rank": 130.0,
+      "mode_rank": 135,
+      "previous_official_rank": 127,
+      "rank_1_probability": 1.769838996718599e-13,
+      "rank_change": -8,
+      "rank_change_accessible": "Down 8 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21938",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "2309",
+      "team_name": "Kent State",
+      "top10_probability": 1.1688445489145968e-08,
+      "top25_probability": 3.8125508288712463e-06,
+      "top5_probability": 3.3069069019915903e-10
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 136,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 127.6434921498122,
+      "interval_50": [
+        124,
+        135
+      ],
+      "interval_80": [
+        115.0,
+        136.0
+      ],
+      "interval_95": [
+        101,
+        138
+      ],
+      "interval_widths": {
+        "50": 12,
+        "80": 22,
+        "95": 38
+      },
+      "median_rank": 131.0,
+      "mode_rank": 136,
+      "previous_official_rank": 136,
+      "rank_1_probability": 1.5430347495712375e-13,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-2",
+      "team_id": "2050",
+      "team_name": "Ball State",
+      "top10_probability": 1.1689262591316886e-08,
+      "top25_probability": 3.0783996828522934e-06,
+      "top5_probability": 3.374662706566547e-10
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 137,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 127.9094418690829,
+      "interval_50": [
+        124,
+        134
+      ],
+      "interval_80": [
+        116.0,
+        136.0
+      ],
+      "interval_95": [
+        103,
+        138
+      ],
+      "interval_widths": {
+        "50": 11,
+        "80": 21,
+        "95": 36
+      },
+      "median_rank": 131.0,
+      "mode_rank": 135,
+      "previous_official_rank": 135,
+      "rank_1_probability": 9.27982594841457e-14,
+      "rank_change": -2,
+      "rank_change_accessible": "Down 2 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21932",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "0-3",
+      "team_id": "2433",
+      "team_name": "UL Monroe",
+      "top10_probability": 5.22735018384806e-09,
+      "top25_probability": 1.384723620193775e-06,
+      "top5_probability": 1.666118226280133e-10
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 138,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 129.24626069551553,
+      "interval_50": [
+        126,
+        135
+      ],
+      "interval_80": [
+        119.0,
+        136.0
+      ],
+      "interval_95": [
+        108,
+        137
+      ],
+      "interval_widths": {
+        "50": 10,
+        "80": 18,
+        "95": 30
+      },
+      "median_rank": 131.0,
+      "mode_rank": 135,
+      "previous_official_rank": 129,
+      "rank_1_probability": 1.161811462184032e-14,
+      "rank_change": -9,
+      "rank_change_accessible": "Down 9 since 2026 reconstructed preseason (Context 1.3)",
+      "rank_change_display": "\u21939",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "0-3",
+      "team_id": "189",
+      "team_name": "Bowling Green",
+      "top10_probability": 7.176211255567077e-10,
+      "top25_probability": 3.1652246334844624e-07,
+      "top5_probability": 1.950837169738178e-11
+    }
+  ],
+  "rated_count": 138,
+  "requested_cutoff": "2026-09-20T11:00:14.294077+00:00",
+  "schema_version": "1.0",
+  "season": 2026,
+  "snapshot_id": "2026-weekly-2026-09-20T11-00-14.294077Z-context-v1.3",
+  "snapshot_type": "weekly",
+  "source_retrieved_at": "2026-09-20T11:00:14.294077+00:00",
+  "team_seasons_path": "data/team-seasons/2026-weekly-2026-09-20T11-00-14.294077Z-context-v1.3.json",
+  "unrated_count": 0
+}
