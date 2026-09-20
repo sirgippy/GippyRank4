@@ -1,13 +1,14 @@
-"""Frozen Context 1.3 candidate contract.
+"""Frozen Context 1.3 production contract.
 
-Context 1.3 is an implemented-but-not-active production candidate.  This
-module owns the small contract that separates the candidate from the active
-Context 1.2 publication path:
+Context 1.3 is the active production prior.  This module owns the small
+contract that keeps the promoted model separate from retained Context 1.2
+publication artifacts:
 
 * the feature list is explicit and ordered;
 * transfer values arrive through the attach-only #114 boundary;
-* target-season transfer artifacts are validated against an immutable,
-  on-time snapshot manifest before inference;
+* target-season transfer artifacts are validated against an immutable snapshot
+  manifest before inference; reconstructed 2026 inputs use a distinct,
+  explicit provenance class;
 * Context features are location-only while History features remain in both
   equations of :class:`gippyrank.preseason.DirectRankModel`.
 
@@ -41,11 +42,15 @@ from gippyrank.preseason_transfer import (
 )
 
 CONTEXT_PRIOR_CANDIDATE_VERSION = "1.3"
-ACTIVE_CONTEXT_PRIOR_VERSION = "1.2"
+ACTIVE_CONTEXT_PRIOR_VERSION = "1.3"
+RETROSPECTIVE_2026_PROVENANCE = "retrospective_2026_reconstruction"
+PRODUCTION_TRANSFER_PROVENANCE = "production_preseason_immutable_snapshot"
 FROZEN_PENALTY = 0.25
 PRODUCTION_CUTOFF_MONTH = 8
 PRODUCTION_CUTOFF_DAY = 15
-INELIGIBLE_CANDIDATE_SEASONS = frozenset({2026})
+# The 2026 artifact is allowed only through the retrospective validator below.
+# Future seasons continue to require the production-safe validator.
+RETROSPECTIVE_RECONSTRUCTION_SEASONS = frozenset({2026})
 
 H_FEATURES = (
     "lag2_z_mean",
@@ -180,7 +185,8 @@ def model_specification_metadata() -> dict[str, object]:
     """Return an artifact-ready specification with equation placement."""
     return {
         **model_specification().metadata(),
-        "candidate": True,
+        "candidate": False,
+        "status": "active_production",
         "active_production_version": ACTIVE_CONTEXT_PRIOR_VERSION,
         "location_feature_names": list(LOCATION_FEATURE_NAMES),
         "scale_feature_names": list(SCALE_FEATURE_NAMES),
@@ -360,40 +366,48 @@ def _read_csv(path: Path) -> list[dict[str, str]]:
 
 
 def _manifest_provenance(
-    manifest: SnapshotManifest, target_season: int
+    manifest: SnapshotManifest,
+    target_season: int,
+    *,
+    provenance_class: str,
 ) -> dict[str, object]:
     records = manifest.for_target(target_season)
     return {
-        "provenance_class": "production_preseason_immutable_snapshot",
+        "provenance_class": provenance_class,
         "target_season": target_season,
         "cutoff": f"{target_season}-{manifest.cutoff_month:02d}-{manifest.cutoff_day:02d}",
         "snapshot_ids": [record.snapshot_id for record in records],
         "snapshot_sha256": [record.sha256 for record in records],
+        "retrieval_timestamps": [record.retrieval_timestamp for record in records],
+        "source_endpoints": [record.endpoint for record in records],
         "all_snapshots_on_or_before_cutoff": all(
             record.captured_on_or_before_cutoff for record in records
         ),
     }
 
 
-def load_validated_production_transfer_features(
+def _load_validated_transfer_features(
     feature_path: Path,
     manifest_path: Path,
     *,
     target_season: int,
     expected_team_keys: Iterable[tuple[int, str, str]],
     provenance: Mapping[str, Any],
+    expected_provenance_class: str,
+    require_on_time_cutoff: bool,
 ) -> tuple[list[dict[str, str]], dict[str, object]]:
     """Load a target artifact only after validating its immutable input chain."""
-    if target_season in INELIGIBLE_CANDIDATE_SEASONS:
-        raise ManifestValidationError(
-            "Context 1.3 candidate is ineligible for the existing 2026 "
-            "publication lineage; keep Context 1.2 for 2026"
-        )
     manifest = load_snapshot_manifest(
         manifest_path, required_seasons=[target_season], verify_hashes=True
     )
     records = manifest.for_target(target_season)
-    if not records or any(not record.captured_on_or_before_cutoff for record in records):
+    if not records:
+        raise ManifestValidationError(
+            f"target season {target_season} has no canonical transfer snapshots"
+        )
+    if require_on_time_cutoff and any(
+        not record.captured_on_or_before_cutoff for record in records
+    ):
         raise ManifestValidationError(
             f"target season {target_season} lacks an on-time production snapshot"
         )
@@ -433,8 +447,10 @@ def load_validated_production_transfer_features(
             f"missing={sorted(expected - set(actual))} "
             f"extra={sorted(set(actual) - expected)}"
         )
-    if provenance.get("provenance_class") != "production_preseason_immutable_snapshot":
-        raise ManifestValidationError("target transfer provenance is not production-safe")
+    if provenance.get("provenance_class") != expected_provenance_class:
+        raise ManifestValidationError(
+            f"target transfer provenance must be {expected_provenance_class}"
+        )
     if int(provenance.get("target_season", -1)) != target_season:
         raise ManifestValidationError("transfer provenance target season is inconsistent")
     expected_cutoff = f"{target_season}-{manifest.cutoff_month:02d}-{manifest.cutoff_day:02d}"
@@ -450,25 +466,108 @@ def load_validated_production_transfer_features(
         raise ManifestValidationError(
             "transfer provenance snapshot hashes do not match the manifest"
         )
-    if provenance.get("all_snapshots_on_or_before_cutoff") is not True:
+    if require_on_time_cutoff and provenance.get("all_snapshots_on_or_before_cutoff") is not True:
         raise ManifestValidationError(
             "transfer provenance does not certify the cutoff boundary"
         )
+    if not require_on_time_cutoff:
+        if target_season not in RETROSPECTIVE_RECONSTRUCTION_SEASONS:
+            raise ManifestValidationError(
+                "retrospective transfer provenance is only supported for 2026"
+            )
+        required = {
+            "derivation_timestamp",
+            "retrieval_timestamps",
+            "source_endpoints",
+            "raw_source_hashes",
+            "known_absence_of_archived_august_15_transfer_snapshot",
+            "provenance_statement",
+        }
+        missing = sorted(field for field in required if field not in provenance)
+        if missing:
+            raise ManifestValidationError(
+                f"retrospective transfer provenance is missing {missing}"
+            )
+        if provenance["known_absence_of_archived_august_15_transfer_snapshot"] is not True:
+            raise ManifestValidationError(
+                "retrospective transfer provenance must acknowledge the absent archived cutoff snapshot"
+            )
+        if provenance["retrieval_timestamps"] != [
+            record.retrieval_timestamp for record in records
+        ]:
+            raise ManifestValidationError(
+                "retrospective transfer retrieval timestamps do not match the manifest"
+            )
+        if provenance["source_endpoints"] != [record.endpoint for record in records]:
+            raise ManifestValidationError(
+                "retrospective transfer source endpoints do not match the manifest"
+            )
+        raw_hashes = provenance["raw_source_hashes"]
+        if not isinstance(raw_hashes, list) or sorted(raw_hashes) != sorted(
+            expected_snapshot_hashes
+        ):
+            raise ManifestValidationError(
+                "retrospective transfer raw source hashes do not match the manifest"
+            )
     metadata = {
-        **_manifest_provenance(manifest, target_season),
+        **_manifest_provenance(
+            manifest, target_season, provenance_class=expected_provenance_class
+        ),
         "feature_artifact": str(feature_path),
         "manifest": str(manifest_path),
     }
     return [actual[key] for key in sorted(actual)], metadata
 
 
+def load_validated_production_transfer_features(
+    feature_path: Path,
+    manifest_path: Path,
+    *,
+    target_season: int,
+    expected_team_keys: Iterable[tuple[int, str, str]],
+    provenance: Mapping[str, Any],
+) -> tuple[list[dict[str, str]], dict[str, object]]:
+    """Validate the normal on-time immutable production transfer chain."""
+    return _load_validated_transfer_features(
+        feature_path,
+        manifest_path,
+        target_season=target_season,
+        expected_team_keys=expected_team_keys,
+        provenance=provenance,
+        expected_provenance_class=PRODUCTION_TRANSFER_PROVENANCE,
+        require_on_time_cutoff=True,
+    )
+
+
+def load_validated_reconstructed_transfer_features(
+    feature_path: Path,
+    manifest_path: Path,
+    *,
+    target_season: int,
+    expected_team_keys: Iterable[tuple[int, str, str]],
+    provenance: Mapping[str, Any],
+) -> tuple[list[dict[str, str]], dict[str, object]]:
+    """Validate the explicit retrospective 2026 reconstruction chain.
+
+    This path intentionally accepts late retrievals only for 2026 and requires
+    metadata that prevents the artifact from masquerading as an August 15
+    production snapshot.
+    """
+    return _load_validated_transfer_features(
+        feature_path,
+        manifest_path,
+        target_season=target_season,
+        expected_team_keys=expected_team_keys,
+        provenance=provenance,
+        expected_provenance_class=RETROSPECTIVE_2026_PROVENANCE,
+        require_on_time_cutoff=False,
+    )
+
+
 def candidate_guard(target_season: int) -> None:
-    """Reject accidental reinterpretation of the currently published 2026 prior."""
-    if target_season in INELIGIBLE_CANDIDATE_SEASONS:
-        raise ValueError(
-            "Context 1.3 is a future-activation candidate; 2026 remains the "
-            "published Context 1.2 artifact"
-        )
+    """Retain the old call boundary while allowing the activated 2026 path."""
+    if target_season < 2003:
+        raise ValueError("Context 1.3 target seasons must be >= 2003")
 
 
 __all__ = [
@@ -482,8 +581,10 @@ __all__ = [
     "INCOMING_OFFENSE_FEATURES",
     "LOCATION_FEATURE_NAMES",
     "MODEL_FEATURE_NAMES",
+    "PRODUCTION_TRANSFER_PROVENANCE",
     "REJECTED_TRANSFER_FEATURES",
     "REMOVED_CONTEXT_1_2_FEATURES",
+    "RETROSPECTIVE_2026_PROVENANCE",
     "RETURNING_FEATURES",
     "SCALE_FEATURE_NAMES",
     "attach_transfer_features",
@@ -491,6 +592,7 @@ __all__ = [
     "candidate_guard",
     "fit_model",
     "load_validated_production_transfer_features",
+    "load_validated_reconstructed_transfer_features",
     "model_specification",
     "model_specification_metadata",
     "validate_feature_contract",

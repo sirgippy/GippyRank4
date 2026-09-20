@@ -51,7 +51,16 @@ def _root(tmp_path: Path) -> Path:
         {"season": 2026, "subdivision": "fbs", "team_id": "2", "team_name": "Two", "conference": "A", "pmf": "[0.3,0.7]"},
     ]
     for family in ("context", "history"):
-        _write_csv(tmp_path / f"data/processed/preseason/{family}/annual/2026/predictions.csv", prior_fields, prior_rows)
+        roots = [family]
+        if family == "context":
+            roots.append("context_v1_3")
+        for family_root in roots:
+            _write_csv(
+                tmp_path
+                / f"data/processed/preseason/{family_root}/annual/2026/predictions.csv",
+                prior_fields,
+                prior_rows,
+            )
     (tmp_path / "data/processed/posterior").mkdir(parents=True)
     (tmp_path / "data/processed/posterior/historical_likelihood_v1.json").write_text(
         json.dumps({"beta": [0.0] * 34, "scale": 1.0, "degrees_of_freedom": 15.0})

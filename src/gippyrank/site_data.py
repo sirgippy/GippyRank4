@@ -88,6 +88,8 @@ class PublicationComparison:
     publication_order: int
     snapshot_id: str
     display_label: str
+    prior_model_version: str | None = None
+    context_prior_model_version: str | None = None
 
 
 @dataclass(frozen=True)
@@ -472,11 +474,25 @@ def _ranking_rows(path: Path, metadata: dict[str, Any]) -> list[dict[str, Any]]:
     )
 
 
-def _comparison_key(snapshot: PublicationComparison) -> tuple[int, str, str | None]:
+def _comparison_key(
+    snapshot: PublicationComparison,
+) -> tuple[int, str, str | None, str | None, str | None]:
+    prior_version = snapshot.prior_model_version
+    context_version = snapshot.context_prior_model_version
+    if prior_version is None and snapshot.ranking_family == "predictive":
+        # Callers constructing a publication candidate before its metadata is
+        # materialized target the active Context lineage.
+        prior_version = "1.3" if snapshot.prior_family == "context" else "1.1"
+    if context_version is None and snapshot.ranking_family == "predictive":
+        # History snapshots use History 1.1 as their direct prior, but their
+        # displayed preseason reference still belongs to a Context lineage.
+        context_version = "1.3"
     return (
         snapshot.season,
         snapshot.ranking_family,
         snapshot.prior_family if snapshot.ranking_family == "predictive" else None,
+        prior_version,
+        context_version if snapshot.prior_family == "history" else None,
     )
 
 
@@ -495,6 +511,18 @@ def _comparison_descriptor(snapshot: PreparedSnapshot) -> PublicationComparison:
         publication_order=snapshot.selected.publication_order,
         snapshot_id=snapshot.snapshot_id,
         display_label=snapshot.selected.display_label,
+        prior_model_version=(
+            str(metadata.get("prior_model_version"))
+            if metadata.get("ranking_family") == "predictive"
+            else None
+        ),
+        context_prior_model_version=(
+            str(metadata["model_versions"]["context_prior"])
+            if metadata.get("ranking_family") == "predictive"
+            and isinstance(metadata.get("model_versions"), dict)
+            and metadata["model_versions"].get("context_prior") is not None
+            else None
+        ),
     )
 
 

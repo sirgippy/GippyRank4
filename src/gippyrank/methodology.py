@@ -24,11 +24,12 @@ PREDICTION_SCHEMA_VERSION: Final = "1.0"
 PERFORMANCE_SCHEMA_VERSION: Final = "1.0"
 SEASON_SIMULATION_SCHEMA_VERSION: Final = "1.0"
 
-CONTEXT_PRIOR_VERSION: Final = "1.2"
-# Context 1.3 is intentionally a candidate identifier only.  Keep it out of
-# PRODUCTION_MODEL_VERSIONS until an eligible on-time preseason snapshot is
-# activated operationally.
-CONTEXT_PRIOR_CANDIDATE_VERSION: Final = "1.3"
+# Context 1.3 is the active production specification.  The retained 1.2
+# artifacts remain valid historical inputs through SUPPORTED_* below.
+CONTEXT_PRIOR_VERSION: Final = "1.3"
+# Compatibility alias for research scripts and serialized validation reports
+# produced before activation.  New artifacts must use CONTEXT_PRIOR_VERSION.
+CONTEXT_PRIOR_CANDIDATE_VERSION: Final = CONTEXT_PRIOR_VERSION
 HISTORY_PRIOR_VERSION: Final = "1.1"
 HISTORICAL_LIKELIHOOD_VERSION: Final = "V1"
 POSTERIOR_VERSION: Final = "V1"
@@ -58,9 +59,7 @@ PRODUCTION_SCHEMA_VERSIONS: Final[dict[str, str]] = {
 # advanced.  The exporter uses these sets for source-artifact validation; the
 # PRODUCTION_* mappings above remain the current values shown on the site.
 SUPPORTED_ARTIFACT_MODEL_VERSIONS: Final[dict[str, frozenset[str]]] = {
-    # Candidate identifiers remain deliberately unpublishable until the
-    # corresponding production identifier is activated.
-    "context_prior": frozenset({CONTEXT_PRIOR_VERSION}),
+    "context_prior": frozenset({"1.2", CONTEXT_PRIOR_VERSION}),
     "history_prior": frozenset({HISTORY_PRIOR_VERSION}),
     "historical_likelihood": frozenset({HISTORICAL_LIKELIHOOD_VERSION}),
     "posterior": frozenset({POSTERIOR_VERSION}),

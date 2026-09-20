@@ -1,6 +1,6 @@
-# Context 1.3 candidate validation
+# Context 1.3 production validation
 
-Context 1.3 is implemented and validated as a future-activation candidate. The active production Context identifier remains 1.2.
+Context 1.3 is the active production Context specification. The retained Context 1.2 artifacts remain historical and reproducible.
 
 ## Frozen contract
 
@@ -28,6 +28,6 @@ Context 1.3 is implemented and validated as a future-activation candidate. The a
 
 ## Provenance and activation guardrails
 
-Historical 2021–2025 transfer values are retrospective research reconstructions, not archived August 15 snapshots. Future annual inference requires a validated immutable manifest, complete canonical FBS rows, an on-time cutoff, and explicit provenance metadata; absent or late inputs fail closed.
+Historical 2021–2025 transfer values are retrospective research reconstructions, not archived August 15 snapshots. Future annual inference requires a validated immutable manifest, complete canonical FBS rows, an on-time cutoff, and explicit provenance metadata; absent or late inputs fail closed. The 2026 activation is the documented retrospective exception and cannot masquerade as cutoff-safe.
 
-The 2026 Context 1.2 annual artifact and its weekly publication lineage are not overwritten or reinterpreted by this candidate.
+The 2026 Context 1.2 annual artifact and its weekly publication lineage are not overwritten or reinterpreted by activation.

@@ -264,7 +264,7 @@ def test_export_refuses_artifact_version_drift(tmp_path: Path) -> None:
         )
 
 
-def test_export_rejects_unactivated_context_candidate_version(tmp_path: Path) -> None:
+def test_export_accepts_activated_context_1_3_version(tmp_path: Path) -> None:
     source = _copied_snapshot(tmp_path)
     metadata_path = source / "metadata.json"
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
@@ -272,12 +272,12 @@ def test_export_rejects_unactivated_context_candidate_version(tmp_path: Path) ->
     metadata["prior_model_version"] = "1.3"
     metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
 
-    with pytest.raises(SiteDataValidationError, match="context_prior model"):
-        build_site_data(
-            root=tmp_path,
-            config_path=_config_for(source, tmp_path),
-            output_directory=tmp_path / "data",
-        )
+    manifest = build_site_data(
+        root=tmp_path,
+        config_path=_config_for(source, tmp_path),
+        output_directory=tmp_path / "data",
+    )
+    assert manifest["snapshots"][0]["model_versions"]["context_prior"] == "1.3"
 
 
 def test_export_accepts_retained_snapshot_when_current_version_advances(
@@ -931,15 +931,18 @@ def test_publication_status_and_official_comparison_chain(
         entry["publication_slot"]: entry for entry in context_entries
     }
     for index, slot in enumerate(publication_slots):
+        current = context_by_slot[slot["id"]]
+        current_version = current["model_versions"]["context_prior"]
         previous_official_slot = next(
             (
                 previous["id"]
                 for previous in reversed(publication_slots[:index])
                 if previous["status"] == "official"
+                and context_by_slot[previous["id"]]["model_versions"]["context_prior"]
+                == current_version
             ),
             None,
         )
-        current = context_by_slot[slot["id"]]
         expected_snapshot_id = (
             context_by_slot[previous_official_slot]["snapshot_id"]
             if previous_official_slot is not None

@@ -160,6 +160,11 @@ def parse_args() -> argparse.Namespace:
         help="capture a new explicitly versioned snapshot instead of using the canonical cache",
     )
     parser.add_argument(
+        "--retrospective-reconstruction",
+        action="store_true",
+        help="allow late canonical inputs only for the explicit 2026 reconstruction",
+    )
+    parser.add_argument(
         "--version",
         help="version suffix for a refresh (default: UTC retrieval timestamp)",
     )
@@ -170,6 +175,10 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     seasons = _season_arguments(args)
+    if args.retrospective_reconstruction and seasons != [2026]:
+        raise ValueError(
+            "--retrospective-reconstruction is restricted to target season 2026"
+        )
     if args.first_week > args.last_week:
         raise ValueError("first week must not exceed last week")
     api_key = os.environ.get("CFBD_API_KEY")
@@ -229,6 +238,7 @@ def main() -> None:
         records,
         raw_root=raw_root,
         required_specs=specs,
+        allow_late_canonical=args.retrospective_reconstruction,
     )
     manifest = load_snapshot_manifest(
         manifest_path, required_seasons=seasons, verify_hashes=True
@@ -248,7 +258,7 @@ def main() -> None:
         "raw_root": str(raw_root),
     }
     print(json.dumps(result, indent=2, sort_keys=True))
-    if late:
+    if late and not args.retrospective_reconstruction:
         raise RuntimeError(
             "snapshots were retrieved after their preseason cutoff; "
             "they are retained but cannot feed production derivation"

@@ -63,37 +63,66 @@ def snapshot_id(
     snapshot_type: SnapshotType,
     prior_family: PriorFamily,
     cutoff: datetime | date | None = None,
+    prior_model_version: str | None = None,
+    lineage_suffix: str | None = None,
 ) -> str:
+    suffix = (
+        f"-v{prior_model_version}"
+        if prior_model_version in {"1.2", "1.3"}
+        else ""
+    )
+    suffix += f"-{lineage_suffix}" if lineage_suffix else ""
     if snapshot_type == "preseason":
-        return f"{season}-preseason-{prior_family}"
+        base = f"{season}-preseason-{prior_family}"
+        return f"{base}{suffix}"
     if cutoff is None:
         raise ValueError("weekly and live snapshots require an explicit cutoff")
     if snapshot_type == "weekly":
         stamp = cutoff.isoformat().replace("+00:00", "Z").replace(":", "-")
-        return f"{season}-weekly-{stamp}-{prior_family}"
+        base = f"{season}-weekly-{stamp}-{prior_family}"
+        return f"{base}{suffix}"
     stamp = cutoff.isoformat().replace("+00:00", "Z").replace(":", "-")
-    return f"{season}-live-{stamp}-{prior_family}"
+    base = f"{season}-live-{stamp}-{prior_family}"
+    return f"{base}{suffix}"
 
 
 def _root() -> Path:
     return Path(__file__).resolve().parents[3]
 
 
-def _prior_path(root: Path, family: PriorFamily, season: int) -> Path:
-    annual = root / f"data/processed/preseason/{family}/annual/{season}/predictions.csv"
+def _prior_path(
+    root: Path,
+    family: PriorFamily,
+    season: int,
+    prior_model_version: str | None = None,
+) -> Path:
+    if family == "context":
+        version = prior_model_version or CONTEXT_PRIOR_VERSION
+        if version == "1.3":
+            family_root = "context_v1_3"
+        elif version == "1.2":
+            family_root = "context"
+        else:
+            raise ValueError(f"unsupported Context prior version: {version}")
+    else:
+        family_root = family
+    annual = root / f"data/processed/preseason/{family_root}/annual/{season}/predictions.csv"
     # Historical prior rows are retained in the frozen multi-season artifact;
     # 2026 additionally has its explicit annually frozen instance.
     return (
         annual
         if annual.exists()
-        else root / f"data/processed/preseason/{family}/predictions.csv"
+        else root / f"data/processed/preseason/{family_root}/predictions.csv"
     )
 
 
 def load_teams(
-    root: Path, season: int, family: PriorFamily
+    root: Path,
+    season: int,
+    family: PriorFamily,
+    prior_model_version: str | None = None,
 ) -> tuple[list[Team], dict[str, dict[str, str]], Path]:
-    path = _prior_path(root, family, season)
+    path = _prior_path(root, family, season, prior_model_version)
     if not path.exists():
         raise FileNotFoundError(
             f"Frozen {family} prior is unavailable for {season}: {path}"
@@ -414,6 +443,8 @@ def build_snapshot(
     cutoff: datetime | date | None,
     prior_family: PriorFamily,
     snapshot_type: SnapshotType,
+    prior_model_version: str | None = None,
+    lineage_suffix: str | None = None,
     root: Path | None = None,
     output_root: Path | None = None,
     likelihood: LikelihoodV1 | None = None,
@@ -430,7 +461,14 @@ def build_snapshot(
     output_root = (
         root / "data/processed/snapshots" if output_root is None else output_root
     )
-    teams, team_rows, prior_path = load_teams(root, season, prior_family)
+    selected_prior_version = (
+        prior_model_version or CONTEXT_PRIOR_VERSION
+        if prior_family == "context"
+        else HISTORY_PRIOR_VERSION
+    )
+    teams, team_rows, prior_path = load_teams(
+        root, season, prior_family, selected_prior_version
+    )
     requested_cutoff = _as_utc_datetime(cutoff) if cutoff is not None else None
     provenance = (
         CorpusProvenance("preseason_prior_only", "none", None, {}, {})
@@ -483,7 +521,14 @@ def build_snapshot(
         )
     else:
         result = infer_posterior(teams, [], LikelihoodV1(np.zeros(34), 1.0, 1.0))
-    sid = snapshot_id(season, snapshot_type, prior_family, cutoff)
+    sid = snapshot_id(
+        season,
+        snapshot_type,
+        prior_family,
+        cutoff,
+        selected_prior_version,
+        lineage_suffix,
+    )
     directory = output_root / str(season) / sid / RANKING_FAMILY / prior_family
     directory.mkdir(parents=True, exist_ok=True)
     rankings, pmf_rows = [], []
@@ -540,11 +585,15 @@ def build_snapshot(
         "snapshot_type": snapshot_type,
         "ranking_family": RANKING_FAMILY,
         "prior_family": prior_family,
-        "prior_model_version": (
-            CONTEXT_PRIOR_VERSION
+        "prior_model_version": selected_prior_version,
+        "prior_lineage": (
+            "context_1_3_reconstructed_2026"
             if prior_family == "context"
-            else HISTORY_PRIOR_VERSION
+            and selected_prior_version == "1.3"
+            and season == 2026
+            else f"{prior_family}_{selected_prior_version}"
         ),
+        "posterior_rebuilt_from_prior": True,
         "prior_artifact_sha256": sha256(prior_path),
         "historical_likelihood_version": HISTORICAL_LIKELIHOOD_VERSION,
         "season_simulation_schema_version": SEASON_SIMULATION_SCHEMA_VERSION,
@@ -584,7 +633,9 @@ def build_snapshot(
         "display_statistic": "expected_rank",
         "valid": result.converged,
         "model_versions": {
-            "context_prior": CONTEXT_PRIOR_VERSION,
+            "context_prior": selected_prior_version
+            if prior_family == "context"
+            else CONTEXT_PRIOR_VERSION,
             "history_prior": HISTORY_PRIOR_VERSION,
             "historical_likelihood": HISTORICAL_LIKELIHOOD_VERSION,
         },

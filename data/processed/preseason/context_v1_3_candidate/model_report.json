@@ -145,12 +145,6 @@
       }
     }
   },
-  "candidate": {
-    "active_production_context_version": "1.2",
-    "model_family": "context_prior",
-    "spec_version": "1.3",
-    "status": "implemented_and_validated_not_active"
-  },
   "coverage": {
     "n_context_rows": 2744,
     "n_context_rows_with_missing_transfer_usage": 2162
@@ -226,6 +220,12 @@
     ],
     "trained_through_season": 2021,
     "transfer_provenance": "retrospective_research_reconstruction"
+  },
+  "model": {
+    "active_production_context_version": "1.3",
+    "model_family": "context_prior",
+    "spec_version": "1.3",
+    "status": "active_production"
   },
   "model_parameters": {
     "d5_location_feature_names": [
@@ -787,7 +787,7 @@
     }
   },
   "production_activation": {
-    "2026_guardrail": "Context 1.2 remains the only valid 2026 publication lineage",
+    "2026_guardrail": "2026 may use only the explicit retrospective reconstruction; future seasons require on-time immutable provenance",
     "missing_or_late_behavior": "fail closed",
     "ready_for_first_future_season_with_valid_on_time_snapshot": true,
     "required_input": "validated immutable production transfer-feature artifact"

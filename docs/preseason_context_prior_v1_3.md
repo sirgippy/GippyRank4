@@ -1,8 +1,14 @@
-# Preseason Context 1.3 candidate
+# Preseason Context 1.3 production model
 
-Context 1.3 is implemented as a validated, future-activation candidate. The
-active production Context version remains 1.2, including the existing 2026
-publication lineage.
+Context 1.3 is the active production Context model. Context 1.2 remains a
+supported historical artifact, including the genuine 2026 preseason artifact
+and its early-season publication lineage.
+
+The 2026 Context 1.3 starting point is explicitly a retrospective
+reconstruction. Its transfer inputs were retrieved after the August 15, 2026
+cutoff because the immutable preseason transfer-snapshot process did not yet
+exist. It must not be described as the information state published before
+kickoff.
 
 ## Frozen model contract
 
@@ -47,13 +53,15 @@ For a future season, the annual inference boundary requires a validated
 immutable snapshot manifest, exactly one canonical portal/usage/stats input,
 canonical roster and game-player coverage, complete FBS team coverage, matching
 snapshot identifiers and hashes in provenance, and an on-time August 15 cutoff.
-Missing, duplicate, late, or unvalidated inputs fail closed. Context 1.3 is
-explicitly ineligible for the existing 2026 artifact.
+Missing, duplicate, or unvalidated inputs fail closed. Late inputs are
+accepted only by the explicit retrospective 2026 reconstruction path; future
+production seasons still require an on-time immutable transfer snapshot.
 
-## Candidate artifacts
+## Validation and activation artifacts
 
 The separate artifact namespace is
-`data/processed/preseason/context_v1_3_candidate/`. It contains the model
+`data/processed/preseason/context_v1_3_candidate/`. It contains the frozen
+historical parity validation for the model
 specification, fitted model metadata, predictions, coverage, provenance,
 evaluation, annual and rolling metrics, coefficients, parity report, and a
 human-readable validation report. The active `context/` artifacts are not
