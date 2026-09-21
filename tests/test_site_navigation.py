@@ -177,16 +177,19 @@ def test_team_pages_have_snapshot_safe_preseason_movement_surfaces() -> None:
     for phrase in (
         'id="preseason-starting-point-section"',
         'id="season-movement-section"',
-        "Preseason starting point",
-        "Season movement",
+        "Preseason evidence",
+        "Season belief trajectory",
     ):
         assert phrase in team
     for phrase in (
         "preseason_snapshot_id",
         "preseason_distribution_path",
-        "same horizontal rank axis",
+        "preseason_team_seasons_path",
+        "season_trajectory_path",
+        "preseason_inputs",
+        "beliefMovementForGame",
+        "adjacent points are not attributed to one specific game",
         "Performance has no preseason starting point",
-        "exact selected snapshot, not today's latest view",
     ):
         assert phrase in team_source
     assert "build-time resolved" in distribution_docs

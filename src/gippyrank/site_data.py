@@ -34,6 +34,7 @@ from gippyrank.redditcfb import (
     audit_team_handle_coverage,
     load_team_handle_mapping,
 )
+from gippyrank.site_preseason_evidence import build_preseason_input_projection
 from gippyrank.team_logos import (
     TEAM_LOGO_URL_TEMPLATE,
     logo_url,
@@ -47,6 +48,7 @@ FUTURE_MARGIN_DISPLAY_MIN = -40.0
 FUTURE_MARGIN_DISPLAY_MAX = 40.0
 FUTURE_MARGIN_DISPLAY_BINS = 40
 DISPLAY_PROBABILITY_SCALE = 1000
+TEAM_TRAJECTORY_SCHEMA_VERSION = "1.0"
 SUPPORTED_SNAPSHOT_SCHEMA_VERSIONS = SUPPORTED_ARTIFACT_SCHEMA_VERSIONS["snapshot"]
 PMF_SUM_TOLERANCE = 1e-9
 SUMMARY_TOLERANCE = 1e-8
@@ -625,6 +627,8 @@ def _preseason_reference_fields(
             "preseason_snapshot_id": None,
             "preseason_display_label": None,
             "preseason_distribution_path": None,
+            "preseason_team_seasons_path": None,
+            "season_trajectory_path": None,
         }
     return {
         "preseason_snapshot_id": preseason.snapshot_id,
@@ -632,7 +636,100 @@ def _preseason_reference_fields(
         "preseason_distribution_path": (
             f"data/distributions/{preseason.snapshot_id}.json"
         ),
+        "preseason_team_seasons_path": (
+            f"data/team-seasons/{preseason.snapshot_id}.json"
+        ),
+        "season_trajectory_path": (
+            f"data/team-trajectories/{preseason.snapshot_id}.json"
+        ),
     }
+
+
+def _trajectory_summary(
+    row: dict[str, Any], distribution: dict[str, Any]
+) -> dict[str, Any]:
+    """Return the compact scalar state used in a team belief trajectory."""
+    summary = distribution["teams"][row["team_id"]]["summary"]
+    return {
+        "display_rank": row["display_rank"],
+        "rated": row["rated"],
+        "expected_rank": row["expected_rank"],
+        "median_rank": row["median_rank"],
+        "interval_50": summary["interval_50"],
+        "interval_80": row["interval_80"],
+        "interval_95": summary["interval_95"],
+        "top25_probability": row["top25_probability"],
+    }
+
+
+def _team_trajectory_artifacts(
+    snapshots: list[PreparedSnapshot],
+) -> dict[str, dict[str, Any]]:
+    """Materialize one compact published-belief sequence per preseason lineage.
+
+    This intentionally follows configured publication order, rather than
+    timestamp/file-name heuristics.  Temporary snapshots are retained because
+    they are published observations; callers viewing an earlier snapshot can
+    stop at that point without reading later values.
+    """
+    groups: defaultdict[str, list[PreparedSnapshot]] = defaultdict(list)
+    preseason_by_id: dict[str, PreparedSnapshot] = {}
+    for current in snapshots:
+        if current.metadata.get("ranking_family") != "predictive":
+            continue
+        preseason = _matching_preseason_snapshot(current, snapshots)
+        if preseason is None:
+            continue
+        groups[preseason.snapshot_id].append(current)
+        preseason_by_id[preseason.snapshot_id] = preseason
+
+    artifacts: dict[str, dict[str, Any]] = {}
+    for preseason_id, members in groups.items():
+        ordered = sorted(
+            {member.snapshot_id: member for member in members}.values(),
+            key=lambda member: member.selected.publication_order,
+        )
+        preseason = preseason_by_id[preseason_id]
+        team_ids = sorted(
+            {
+                str(row["team_id"])
+                for member in ordered
+                for row in member.rankings
+            }
+        )
+        points = []
+        for member in ordered:
+            rows = {str(row["team_id"]): row for row in member.rankings}
+            points.append(
+                {
+                    "snapshot_id": member.snapshot_id,
+                    "display_label": member.selected.display_label,
+                    "publication_slot": member.selected.publication_slot,
+                    "publication_status": member.selected.publication_status,
+                    "publication_order": member.selected.publication_order,
+                    "snapshot_type": member.metadata["snapshot_type"],
+                    "effective_cutoff": member.metadata.get("effective_cutoff"),
+                    "distribution_path": f"data/distributions/{member.snapshot_id}.json",
+                    "included_game_ids": list(member.team_seasons.get("included_game_ids", [])),
+                    "teams": {
+                        team_id: _trajectory_summary(rows[team_id], member.distribution)
+                        for team_id in team_ids
+                        if team_id in rows and team_id in member.distribution["teams"]
+                    },
+                }
+            )
+        artifacts[preseason_id] = {
+            "schema_version": TEAM_TRAJECTORY_SCHEMA_VERSION,
+            "artifact_kind": "team_belief_trajectory",
+            "season": preseason.metadata["season"],
+            "ranking_family": "predictive",
+            "prior_family": preseason.metadata["prior_family"],
+            "prior_model_version": preseason.metadata.get("prior_model_version"),
+            "prior_lineage": preseason.metadata.get("prior_lineage"),
+            "preseason_snapshot_id": preseason.snapshot_id,
+            "points": points,
+        }
+    return artifacts
 
 
 def _rank_change_text(
@@ -2790,11 +2887,35 @@ def build_site_data(
                 weekly_games,
             )
         )
+    # Preseason evidence is projected during export, never reconstructed in
+    # team.js from model-training/research files.  Retained fixture bundles may
+    # lack the original source corpus, in which case the established artifact
+    # shape remains valid and the page reports no detailed input payload.
+    for prepared in prepared_snapshots:
+        if (
+            prepared.metadata.get("ranking_family") != "predictive"
+            or prepared.metadata.get("snapshot_type") != "preseason"
+        ):
+            continue
+        projection = build_preseason_input_projection(
+            root=root,
+            metadata=prepared.metadata,
+            team_ids=prepared.team_seasons.get("teams", {}).keys(),
+        )
+        if projection is not None:
+            prepared.team_seasons["preseason_inputs"] = projection
     methodology = _validate_artifact_methodology_versions(prepared_snapshots)
     for prepared in prepared_snapshots:
         _apply_rank_changes(
             prepared,
             _previous_official_snapshot(prepared, prepared_snapshots),
+        )
+    trajectory_artifacts = _team_trajectory_artifacts(prepared_snapshots)
+    for preseason_id, trajectory in trajectory_artifacts.items():
+        _write_json(
+            output_directory / "team-trajectories" / f"{preseason_id}.json",
+            trajectory,
+            compact=True,
         )
     for prepared in prepared_snapshots:
         selected_snapshot = prepared.selected
@@ -3008,6 +3129,16 @@ def build_site_data(
             ),
             "season_simulation_game_marginals_bytes": game_marginal_bytes,
             "season_simulation_event_decomposition_bytes": event_decomposition_bytes,
+            "season_trajectory_bytes": (
+                (
+                    output_directory
+                    / str(preseason_reference["season_trajectory_path"]).removeprefix(
+                        "data/"
+                    )
+                ).stat().st_size
+                if preseason_reference.get("season_trajectory_path") is not None
+                else 0
+            ),
             "future_prediction_count": len(future_predictions),
             "future_prediction_bytes": future_prediction_bytes,
             "completed_game_count": len(completed_displays),
@@ -3101,6 +3232,10 @@ def build_site_data(
     season_simulation_browser_bytes = sum(
         int(entry["season_simulation_browser_bytes"]) for entry in manifest_entries
     )
+    season_trajectory_bytes = sum(
+        (output_directory / "team-trajectories" / f"{preseason_id}.json").stat().st_size
+        for preseason_id in trajectory_artifacts
+    )
     manifest = {
         "schema_version": SITE_SCHEMA_VERSION,
         "site_url": site_url,
@@ -3152,6 +3287,7 @@ def build_site_data(
             "lazy_future_visualization_bytes": future_visualization_bytes,
             "season_simulation_bytes": season_simulation_bytes,
             "season_simulation_browser_bytes": season_simulation_browser_bytes,
+            "season_trajectory_bytes": season_trajectory_bytes,
             "initial_rankings_page_bytes": ranking_snapshot_bytes,
         },
     }

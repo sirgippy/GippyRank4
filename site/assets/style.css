@@ -2306,6 +2306,424 @@ summary:focus-visible,
   font-size: 10px;
 }
 
+/* Team dashboard: scalar summaries remain primary; detailed evidence and
+   probability shapes live directly beneath compact disclosure controls. */
+.team-summary-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.team-summary-item {
+  margin: 0;
+  min-height: 68px;
+}
+
+.team-summary-item dt {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.team-summary-item dd {
+  margin: 4px 0 0;
+  color: var(--ink);
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.team-summary-note {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.distribution-disclosure {
+  margin-top: 10px;
+}
+
+.distribution-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 24px;
+  color: var(--green);
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
+  list-style: none;
+}
+
+.distribution-toggle::-webkit-details-marker {
+  display: none;
+}
+
+details[open] > .distribution-toggle {
+  transform: rotate(180deg);
+}
+
+.header-distribution-disclosure {
+  width: fit-content;
+  margin-top: 8px;
+}
+
+.rank-distribution-figure,
+.season-trajectory-figure {
+  max-width: 800px;
+  margin: 4px 0 0;
+}
+
+.rank-distribution-chart {
+  height: 118px;
+}
+
+.team-page-help {
+  max-width: 800px;
+}
+
+.team-page-help summary {
+  width: fit-content;
+  color: var(--green);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.team-page-help[open] summary {
+  margin-bottom: 6px;
+}
+
+.preseason-starting-point-summary {
+  max-width: 800px;
+  margin: 0;
+  color: #40534c;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.preseason-input-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  max-width: 1000px;
+  margin-top: 14px;
+}
+
+.preseason-input-group {
+  min-width: 0;
+  padding: 14px;
+  background: var(--wash);
+  border: 1px solid #d7e1da;
+  border-top: 3px solid var(--gold);
+}
+
+.preseason-input-group h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.preseason-input-source,
+.preseason-input-note {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.preseason-input-values {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 7px 12px;
+  margin: 12px 0 0;
+  font-size: 12px;
+}
+
+.preseason-input-values dt {
+  align-self: start;
+  color: var(--muted);
+}
+
+.preseason-input-values dd {
+  margin: 0;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.preseason-input-values dd strong,
+.preseason-input-values dd span {
+  display: block;
+}
+
+.preseason-input-values dd strong {
+  font-size: 13px;
+}
+
+.preseason-input-comparison,
+.preseason-input-detail {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.preseason-provenance {
+  max-width: 800px;
+  margin-top: 13px;
+  padding: 7px 10px;
+  background: #fbf7eb;
+  border-left: 3px solid var(--gold);
+}
+
+.preseason-provenance-summary {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #705317;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+  list-style: none;
+}
+
+.preseason-provenance-summary::-webkit-details-marker {
+  display: none;
+}
+
+.preseason-provenance-chevron {
+  display: inline-block;
+  color: #705317;
+  font-size: 15px;
+  line-height: 1;
+  transition: transform 140ms ease;
+}
+
+.preseason-provenance[open] .preseason-provenance-chevron {
+  transform: rotate(180deg);
+}
+
+.preseason-provenance-detail {
+  margin: 8px 0 2px;
+  color: #594a25;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.season-trajectory-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.trajectory-gridline {
+  stroke: #d9e2dc;
+  stroke-width: 1;
+}
+
+.trajectory-axis-label,
+.trajectory-snapshot-label,
+.trajectory-axis-title {
+  fill: var(--muted);
+  font: 650 11px ui-sans-serif, system-ui, sans-serif;
+}
+
+.trajectory-axis-title {
+  fill: var(--ink);
+  font-weight: 750;
+}
+
+.trajectory-expected-line {
+  fill: none;
+  stroke: var(--green);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.trajectory-interval {
+  stroke: var(--gold);
+  stroke-width: 4;
+  stroke-linecap: round;
+  opacity: 0.76;
+}
+
+.trajectory-point {
+  fill: var(--paper);
+  stroke: var(--green);
+  stroke-width: 2;
+}
+
+.trajectory-point-official {
+  fill: var(--green);
+}
+
+.trajectory-caption {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.trajectory-point-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px 12px;
+  max-width: 1000px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trajectory-point-item {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--wash);
+  border-left: 3px solid var(--green);
+}
+
+.trajectory-point-facts {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 3px 9px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.trajectory-point-facts strong {
+  width: 100%;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.trajectory-distribution-disclosure {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.trajectory-distribution-disclosure[open] {
+  flex-basis: 100%;
+  width: 100%;
+}
+
+.lazy-distribution-content {
+  max-width: 800px;
+}
+
+.distribution-loading,
+.distribution-error {
+  margin: 4px 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.distribution-error {
+  color: var(--danger);
+}
+
+.season-outlook {
+  display: flex;
+  align-items: start;
+  gap: 18px;
+}
+
+.season-outlook-details {
+  min-width: min(100%, 350px);
+}
+
+.season-outlook-disclosure {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.season-outlook-disclosure-content {
+  min-width: 270px;
+  padding-top: 4px;
+}
+
+.season-outlook-disclosure .season-outlook-records {
+  margin-top: 8px;
+}
+
+.game-distribution-disclosure {
+  margin-top: 7px;
+}
+
+.game-distribution-disclosure .distribution-toggle,
+.game-belief-disclosure .distribution-toggle {
+  color: var(--green);
+}
+
+.game-rating-disclosure-content,
+.game-prediction-disclosure-content {
+  max-width: 440px;
+}
+
+.game-belief-movement {
+  margin-bottom: 8px;
+  padding: 9px 10px;
+  background: #eef4ee;
+  border-left: 3px solid var(--green);
+}
+
+.game-belief-movement h4 {
+  margin: 0;
+  color: var(--green);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.game-belief-scope {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.game-belief-facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 10px;
+  margin: 7px 0 0;
+  font-size: 12px;
+}
+
+.game-belief-facts dt {
+  color: var(--muted);
+}
+
+.game-belief-facts dd {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 750;
+}
+
+.game-belief-disclosure {
+  margin-top: 4px;
+}
+
+.game-belief-detail-content p {
+  margin: 6px 0 0;
+  color: #40534c;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.game-belief-detail-content .game-belief-caveat {
+  color: var(--muted);
+}
+
 @media (max-width: 760px) {
   .snapshot-summary,
   footer .shell {
@@ -2405,7 +2823,7 @@ summary:focus-visible,
   }
 
   .team-summary-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .team-prior-switch {
@@ -2416,6 +2834,15 @@ summary:focus-visible,
 
   .preseason-input-list {
     grid-template-columns: 1fr;
+  }
+
+  .preseason-input-groups,
+  .trajectory-point-list {
+    grid-template-columns: 1fr;
+  }
+
+  .preseason-input-values {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
   .season-movement-summary {
@@ -2432,7 +2859,16 @@ summary:focus-visible,
   }
 
   .season-outlook {
+    display: block;
     grid-template-columns: 1fr;
+  }
+
+  .season-outlook-disclosure {
+    margin-top: 12px;
+  }
+
+  .season-outlook-disclosure-content {
+    min-width: 0;
   }
 
   .game-card-header {
