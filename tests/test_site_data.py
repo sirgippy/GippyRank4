@@ -35,6 +35,9 @@ SCHEDULE_FIELDS = [
     "awayClassification",
     "awayConference",
 ]
+SYNTHETIC_PRESEASON_SNAPSHOT_ID = "2032-preseason-context"
+SYNTHETIC_WEEK_1_SNAPSHOT_ID = "2032-week-1-context"
+SYNTHETIC_WEEK_2_SNAPSHOT_ID = "2032-week-2-context"
 
 
 @pytest.fixture(scope="session")
@@ -131,6 +134,250 @@ def _write_pmf_rows(path: Path, fields: list[str], rows: list[dict[str, str]]) -
         writer.writerows(rows)
 
 
+def _write_synthetic_context_snapshot(
+    root: Path,
+    *,
+    snapshot_id: str,
+    snapshot_type: str,
+    cutoff: str | None,
+    alpha_pmf: tuple[float, float],
+    display_label: str,
+    preseason_inputs: dict[str, object] | None = None,
+) -> dict[str, object]:
+    """Write the smallest validated Context bundle needed by trajectory tests."""
+    source = root / "snapshots" / snapshot_id
+    source.mkdir(parents=True)
+    beta_pmf = (alpha_pmf[1], alpha_pmf[0])
+    pmfs = {"alpha": alpha_pmf, "beta": beta_pmf}
+    rankings: list[dict[str, str]] = []
+    for display_rank, (team_id, _) in enumerate(
+        sorted(pmfs.items(), key=lambda item: item[1][0], reverse=True), start=1
+    ):
+        pmf = pmfs[team_id]
+        rankings.append(
+            {
+                "team_id": team_id,
+                "team_name": "Alpha" if team_id == "alpha" else "Beta",
+                "subdivision": "fbs",
+                "conference": "",
+                "expected_rank": str(pmf[0] + 2 * pmf[1]),
+                "median_rank": "1" if pmf[0] >= 0.5 else "2",
+                "interval_80_low": "1",
+                "interval_80_high": "2",
+                "top5_probability": "1",
+                "top10_probability": "1",
+                "top25_probability": "1",
+                "display_rank": str(display_rank),
+            }
+        )
+    with (source / "rankings.csv").open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(rankings[0]))
+        writer.writeheader()
+        writer.writerows(rankings)
+    with (source / "posterior_pmfs.csv").open(
+        "w", newline="", encoding="utf-8"
+    ) as handle:
+        writer = csv.DictWriter(handle, fieldnames=["team_id", "rank", "probability"])
+        writer.writeheader()
+        writer.writerows(
+            {
+                "team_id": team_id,
+                "rank": str(rank),
+                "probability": str(probability),
+            }
+            for team_id, pmf in pmfs.items()
+            for rank, probability in enumerate(pmf, start=1)
+        )
+    with (source / "included_games.csv").open(
+        "w", newline="", encoding="utf-8"
+    ) as handle:
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=[
+                "homeId",
+                "awayId",
+                "homePoints",
+                "awayPoints",
+                "homeClassification",
+                "awayClassification",
+            ],
+        )
+        writer.writeheader()
+
+    metadata: dict[str, object] = {
+        "schema_version": "1.0",
+        "season": 2032,
+        "snapshot_id": snapshot_id,
+        "snapshot_type": snapshot_type,
+        "ranking_family": "predictive",
+        "prior_family": "context",
+        "prior_model_version": "1.3",
+        "prior_lineage": "synthetic_context",
+        "model_versions": {
+            "context_prior": "1.3",
+            "history_prior": "1.1",
+            "historical_likelihood": "V1",
+        },
+        "historical_likelihood_version": "V1",
+        "rank_count": 2,
+        "requested_cutoff": cutoff,
+        "effective_cutoff": cutoff,
+        "generation_timestamp": "2032-08-01T00:00:00+00:00",
+        "source_retrieved_at": None,
+        "source_retrieval_times": {},
+        "source_response_hashes": {},
+        "game_corpus_sha256": "0" * 64,
+        "included_game_ids": [],
+        "included_game_count": 0,
+        "prior_artifact_sha256": "1" * 64,
+        "valid": True,
+    }
+    (source / "metadata.json").write_text(
+        json.dumps(metadata), encoding="utf-8"
+    )
+    team_seasons: dict[str, object] = {
+        "schema_version": "1.0",
+        "artifact_kind": "team_season",
+        "snapshot_id": snapshot_id,
+        "season": 2032,
+        "snapshot_type": snapshot_type,
+        "anchor_family": "context",
+        "source_context_snapshot_id": snapshot_id,
+        "requested_cutoff": cutoff,
+        "effective_cutoff": cutoff,
+        "source_retrieved_at": None,
+        "source_retrieval_times": {},
+        "source_response_hashes": {},
+        "game_corpus_sha256": "0" * 64,
+        "included_game_ids": [],
+        "historical_likelihood_version": "V1",
+        "rank_count": 2,
+        "schedule_source": {
+            "kind": "frozen_included_games",
+            "path": "fixtures/synthetic-included-games.csv",
+            "sha256": "2" * 64,
+        },
+        "teams": {
+            "alpha": {
+                "team_id": "alpha",
+                "team_name": "Alpha",
+                "conference": "Synthetic Conference",
+                "games": [],
+            },
+            "beta": {
+                "team_id": "beta",
+                "team_name": "Beta",
+                "conference": "Synthetic Conference",
+                "games": [],
+            },
+        },
+    }
+    if preseason_inputs is not None:
+        team_seasons["preseason_inputs"] = preseason_inputs
+    (source / "team_seasons.json").write_text(
+        json.dumps(team_seasons), encoding="utf-8"
+    )
+    return {
+        "source": f"snapshots/{snapshot_id}",
+        "display_label": display_label,
+        "publication_slot": snapshot_id,
+    }
+
+
+@pytest.fixture
+def synthetic_context_site_data(tmp_path: Path) -> tuple[Path, dict[str, object]]:
+    """Export preseason, Week 1, and a deliberately later Week 2 fixture."""
+    schedule = tmp_path / "data/processed/cfbd/games.csv"
+    schedule.parent.mkdir(parents=True)
+    _write_schedule(
+        schedule,
+        [
+            _schedule_row(
+                2032,
+                "alpha",
+                "fbs",
+                "Synthetic Conference",
+                "beta",
+                "fbs",
+                "Synthetic Conference",
+            )
+        ],
+    )
+    preseason_inputs = {
+        "schema_version": "1.0",
+        "artifact_kind": "preseason_input_projection",
+        "season": 2032,
+        "prior_family": "context",
+        "prior_model_version": "1.3",
+        "prior_lineage": "synthetic_context",
+        "provenance": {"source": "synthetic preseason evidence"},
+        "teams": {
+            "alpha": {
+                "recruiting": {
+                    "title": "Recruiting",
+                    "availability": "observed",
+                    "fields": [
+                        {
+                            "id": "synthetic_recruiting",
+                            "label": "Synthetic recruiting evidence",
+                            "raw_value": 42.0,
+                            "display_value": "42.0",
+                            "availability": "observed",
+                        }
+                    ],
+                }
+            }
+        },
+    }
+    snapshots = [
+        _write_synthetic_context_snapshot(
+            tmp_path,
+            snapshot_id=SYNTHETIC_PRESEASON_SNAPSHOT_ID,
+            snapshot_type="preseason",
+            cutoff=None,
+            alpha_pmf=(0.7, 0.3),
+            display_label="Preseason",
+            preseason_inputs=preseason_inputs,
+        ),
+        _write_synthetic_context_snapshot(
+            tmp_path,
+            snapshot_id=SYNTHETIC_WEEK_1_SNAPSHOT_ID,
+            snapshot_type="weekly",
+            cutoff="2032-09-07T00:00:00+00:00",
+            alpha_pmf=(0.4, 0.6),
+            display_label="Week 1",
+        ),
+        _write_synthetic_context_snapshot(
+            tmp_path,
+            snapshot_id=SYNTHETIC_WEEK_2_SNAPSHOT_ID,
+            snapshot_type="weekly",
+            cutoff="2032-09-14T00:00:00+00:00",
+            alpha_pmf=(0.8, 0.2),
+            display_label="Week 2",
+        ),
+    ]
+    config = {
+        "schema_version": "1.0",
+        "publication_slots": [
+            {"id": snapshot_id, "status": "official"}
+            for snapshot_id in (
+                SYNTHETIC_PRESEASON_SNAPSHOT_ID,
+                SYNTHETIC_WEEK_1_SNAPSHOT_ID,
+                SYNTHETIC_WEEK_2_SNAPSHOT_ID,
+            )
+        ],
+        "snapshots": snapshots,
+    }
+    config_path = tmp_path / "publish.json"
+    config_path.write_text(json.dumps(config), encoding="utf-8")
+    output = tmp_path / "site-data"
+    return output, build_site_data(
+        root=tmp_path,
+        config_path=config_path,
+        output_directory=output,
+    )
+
+
 def test_publication_slot_status_is_required_and_closed(tmp_path: Path) -> None:
     source = _copied_snapshot(tmp_path)
     config = _config_for(source, tmp_path)
@@ -195,41 +442,82 @@ def test_exported_team_logos_are_canonical_and_audited(
 
 
 def test_site_export_publishes_preseason_evidence_and_belief_trajectory(
-    production_site_data: tuple[Path, dict[str, object]],
+    synthetic_context_site_data: tuple[Path, dict[str, object]],
 ) -> None:
-    output, manifest = production_site_data
-    context = next(
-        entry
-        for entry in manifest["snapshots"]
-        if entry["snapshot_id"] == "2026-weekly-2026-09-20T11-00-14.294077Z-context-v1.3"
+    output, manifest = synthetic_context_site_data
+    entries = {entry["snapshot_id"]: entry for entry in manifest["snapshots"]}
+    preseason_entry = entries[SYNTHETIC_PRESEASON_SNAPSHOT_ID]
+    week_1_entry = entries[SYNTHETIC_WEEK_1_SNAPSHOT_ID]
+    week_2_entry = entries[SYNTHETIC_WEEK_2_SNAPSHOT_ID]
+
+    assert week_1_entry["preseason_snapshot_id"] == SYNTHETIC_PRESEASON_SNAPSHOT_ID
+    assert week_1_entry["preseason_team_seasons_path"] == (
+        f"data/team-seasons/{SYNTHETIC_PRESEASON_SNAPSHOT_ID}.json"
     )
-    assert context["preseason_team_seasons_path"] == (
-        "data/team-seasons/2026-preseason-context-v1.3.json"
-    )
-    assert context["season_trajectory_path"] == (
-        "data/team-trajectories/2026-preseason-context-v1.3.json"
+    assert week_1_entry["season_trajectory_path"] == (
+        f"data/team-trajectories/{SYNTHETIC_WEEK_1_SNAPSHOT_ID}.json"
     )
     preseason = json.loads(
         (
             output
-            / context["preseason_team_seasons_path"].removeprefix("data/")
+            / week_1_entry["preseason_team_seasons_path"].removeprefix("data/")
         ).read_text(encoding="utf-8")
     )
-    ohio_state = preseason["preseason_inputs"]["teams"]["194"]
-    assert "recruiting" in ohio_state
-    assert "transfers" in ohio_state
-    assert preseason["preseason_inputs"]["provenance"]["transfer_caveat"][
-        "status"
-    ] == "retrospective_reconstruction"
-    trajectory = json.loads(
-        (output / context["season_trajectory_path"].removeprefix("data/")).read_text(
+    assert preseason_entry["preseason_snapshot_id"] == SYNTHETIC_PRESEASON_SNAPSHOT_ID
+    assert preseason["preseason_inputs"]["teams"]["alpha"]["recruiting"][
+        "fields"
+    ][0]["raw_value"] == 42.0
+    assert preseason["preseason_inputs"]["provenance"] == {
+        "source": "synthetic preseason evidence"
+    }
+
+    week_2_trajectory = json.loads(
+        (output / week_2_entry["season_trajectory_path"].removeprefix("data/")).read_text(
             encoding="utf-8"
         )
     )
-    assert trajectory["artifact_kind"] == "team_belief_trajectory"
-    assert trajectory["points"][0]["snapshot_type"] == "preseason"
-    assert trajectory["points"][-1]["snapshot_id"] == context["snapshot_id"]
-    assert trajectory["points"][-1]["teams"]["194"]["interval_80"]
+    assert week_2_trajectory["artifact_kind"] == "team_belief_trajectory"
+    assert [point["snapshot_id"] for point in week_2_trajectory["points"]] == [
+        SYNTHETIC_PRESEASON_SNAPSHOT_ID,
+        SYNTHETIC_WEEK_1_SNAPSHOT_ID,
+        SYNTHETIC_WEEK_2_SNAPSHOT_ID,
+    ]
+
+    exported_week_1 = json.loads(
+        (output / week_1_entry["data_path"].removeprefix("data/")).read_text(
+            encoding="utf-8"
+        )
+    )
+    assert exported_week_1["season_trajectory_path"] == week_1_entry[
+        "season_trajectory_path"
+    ]
+    week_1_trajectory = json.loads(
+        (output / exported_week_1["season_trajectory_path"].removeprefix("data/")).read_text(
+            encoding="utf-8"
+        )
+    )
+    assert [point["snapshot_id"] for point in week_1_trajectory["points"]] == [
+        SYNTHETIC_PRESEASON_SNAPSHOT_ID,
+        SYNTHETIC_WEEK_1_SNAPSHOT_ID,
+    ]
+    assert SYNTHETIC_WEEK_2_SNAPSHOT_ID not in json.dumps(week_1_trajectory)
+
+
+def test_production_trajectory_artifacts_end_at_their_selected_snapshot(
+    production_site_data: tuple[Path, dict[str, object]],
+) -> None:
+    """Production smoke invariant that stays true as new snapshots are added."""
+    output, manifest = production_site_data
+    for entry in manifest["snapshots"]:
+        if entry["ranking_family"] != "predictive":
+            continue
+        trajectory = json.loads(
+            (
+                output / entry["season_trajectory_path"].removeprefix("data/")
+            ).read_text(encoding="utf-8")
+        )
+        assert trajectory["preseason_snapshot_id"] == entry["preseason_snapshot_id"]
+        assert trajectory["points"][-1]["snapshot_id"] == entry["snapshot_id"]
 
 
 def test_site_export_includes_static_api_when_requested(tmp_path: Path) -> None:

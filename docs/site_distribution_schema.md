@@ -19,6 +19,12 @@ these fields are null and the browser omits the comparison; the exporter never
 guesses a relationship from snapshot IDs, file order, or dates. Performance
 entries do not receive preseason-reference fields.
 
+Predictive entries additionally provide `preseason_team_seasons_path` and a
+`season_trajectory_path`. The trajectory is specific to that selected
+publication: it starts with the matching preseason point and ends with the
+selected snapshot, so a historical snapshot artifact cannot expose a later
+published belief point.
+
 Each `site/data/distributions/<snapshot-id>.json` artifact is deterministic,
 compact JSON with this contract:
 
