@@ -1,4 +1,5 @@
 const { test, expect } = require("@playwright/test");
+const { installStaticSiteRoute } = require("./static-site");
 
 const contextSnapshot = "2026-weekly-2026-09-11T17-02-26.077461Z-context";
 const historySnapshot = "2026-weekly-2026-09-11T17-02-26.077461Z-history";
@@ -7,6 +8,7 @@ const performanceSnapshot = "2026-weekly-2026-09-11T17-02-26.077461Z-performance
 const logoResponse = `<svg xmlns="http://www.w3.org/2000/svg" width="60" height="40" viewBox="0 0 60 40"><rect width="60" height="40" fill="#d6dfda"/></svg>`;
 
 test.beforeEach(async ({ page }) => {
+  await installStaticSiteRoute(page);
   await page.route("**/*", async (route) => {
     if (route.request().resourceType() === "image") {
       await route.fulfill({
@@ -16,7 +18,7 @@ test.beforeEach(async ({ page }) => {
       });
       return;
     }
-    await route.continue();
+    await route.fallback();
   });
 });
 
