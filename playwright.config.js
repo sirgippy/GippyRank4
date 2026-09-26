@@ -1,6 +1,5 @@
 const { defineConfig, devices } = require("@playwright/test");
 
-const port = Number(process.env.PLAYWRIGHT_PORT || 4173);
 const isCi = Boolean(process.env.CI);
 
 module.exports = defineConfig({
@@ -15,7 +14,7 @@ module.exports = defineConfig({
     ? [["line"], ["html", { outputFolder: "playwright-report", open: "never" }]]
     : "list",
   use: {
-    baseURL: `http://127.0.0.1:${port}`,
+    baseURL: "http://gippyrank.test",
     screenshot: "only-on-failure",
     trace: "retain-on-failure",
     video: "retain-on-failure",
@@ -36,10 +35,4 @@ module.exports = defineConfig({
       },
     },
   ],
-  webServer: {
-    command: `uv run python -m http.server ${port} --bind 127.0.0.1 --directory site`,
-    url: `http://127.0.0.1:${port}/schedule.html`,
-    reuseExistingServer: !isCi,
-    timeout: 30_000,
-  },
 });
