@@ -640,7 +640,7 @@ def _preseason_reference_fields(
             f"data/team-seasons/{preseason.snapshot_id}.json"
         ),
         "season_trajectory_path": (
-            f"data/team-trajectories/{preseason.snapshot_id}.json"
+            f"data/team-trajectories/{current.snapshot_id}.json"
         ),
     }
 
@@ -665,12 +665,12 @@ def _trajectory_summary(
 def _team_trajectory_artifacts(
     snapshots: list[PreparedSnapshot],
 ) -> dict[str, dict[str, Any]]:
-    """Materialize one compact published-belief sequence per preseason lineage.
+    """Materialize a compact, publication-safe belief sequence per snapshot.
 
     This intentionally follows configured publication order, rather than
     timestamp/file-name heuristics.  Temporary snapshots are retained because
-    they are published observations; callers viewing an earlier snapshot can
-    stop at that point without reading later values.
+    they are published observations.  Each artifact ends at its owning
+    snapshot so a retained historical view never exports future belief data.
     """
     groups: defaultdict[str, list[PreparedSnapshot]] = defaultdict(list)
     preseason_by_id: dict[str, PreparedSnapshot] = {}
@@ -718,17 +718,18 @@ def _team_trajectory_artifacts(
                     },
                 }
             )
-        artifacts[preseason_id] = {
-            "schema_version": TEAM_TRAJECTORY_SCHEMA_VERSION,
-            "artifact_kind": "team_belief_trajectory",
-            "season": preseason.metadata["season"],
-            "ranking_family": "predictive",
-            "prior_family": preseason.metadata["prior_family"],
-            "prior_model_version": preseason.metadata.get("prior_model_version"),
-            "prior_lineage": preseason.metadata.get("prior_lineage"),
-            "preseason_snapshot_id": preseason.snapshot_id,
-            "points": points,
-        }
+        for index, member in enumerate(ordered):
+            artifacts[member.snapshot_id] = {
+                "schema_version": TEAM_TRAJECTORY_SCHEMA_VERSION,
+                "artifact_kind": "team_belief_trajectory",
+                "season": preseason.metadata["season"],
+                "ranking_family": "predictive",
+                "prior_family": preseason.metadata["prior_family"],
+                "prior_model_version": preseason.metadata.get("prior_model_version"),
+                "prior_lineage": preseason.metadata.get("prior_lineage"),
+                "preseason_snapshot_id": preseason.snapshot_id,
+                "points": points[: index + 1],
+            }
     return artifacts
 
 
@@ -2911,9 +2912,9 @@ def build_site_data(
             _previous_official_snapshot(prepared, prepared_snapshots),
         )
     trajectory_artifacts = _team_trajectory_artifacts(prepared_snapshots)
-    for preseason_id, trajectory in trajectory_artifacts.items():
+    for snapshot_id, trajectory in trajectory_artifacts.items():
         _write_json(
-            output_directory / "team-trajectories" / f"{preseason_id}.json",
+            output_directory / "team-trajectories" / f"{snapshot_id}.json",
             trajectory,
             compact=True,
         )
@@ -3233,8 +3234,8 @@ def build_site_data(
         int(entry["season_simulation_browser_bytes"]) for entry in manifest_entries
     )
     season_trajectory_bytes = sum(
-        (output_directory / "team-trajectories" / f"{preseason_id}.json").stat().st_size
-        for preseason_id in trajectory_artifacts
+        (output_directory / "team-trajectories" / f"{snapshot_id}.json").stat().st_size
+        for snapshot_id in trajectory_artifacts
     )
     manifest = {
         "schema_version": SITE_SCHEMA_VERSION,
