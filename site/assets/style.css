@@ -2309,7 +2309,7 @@ summary:focus-visible,
 /* Team dashboard: scalar summaries remain primary; detailed evidence and
    probability shapes live directly beneath compact disclosure controls. */
 .team-summary-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(145px, 220px));
 }
 
 .team-summary-item {
@@ -2370,6 +2370,132 @@ details[open] > .distribution-toggle {
   margin-top: 8px;
 }
 
+.scalar-distribution-disclosure {
+  margin: 0;
+}
+
+.scalar-distribution-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  list-style: none;
+}
+
+.scalar-distribution-summary::-webkit-details-marker {
+  display: none;
+}
+
+.scalar-distribution-chevron {
+  display: inline-block;
+  color: var(--green);
+  font-size: 16px;
+  line-height: 1;
+  transition: transform 140ms ease;
+}
+
+.scalar-distribution-disclosure[open] .scalar-distribution-chevron {
+  transform: rotate(180deg);
+}
+
+.scalar-distribution-disclosure > .rank-distribution-figure {
+  margin-top: 8px;
+}
+
+.season-story-section {
+  overflow: hidden;
+  margin: 0 0 22px;
+  background: #f2f6ef;
+  border: 1px solid #cfdbd1;
+  border-left: 4px solid var(--green);
+  border-radius: 8px;
+  box-shadow: 0 3px 12px rgb(19 42 36 / 4%);
+}
+
+.season-story-content {
+  padding: 18px 20px 19px;
+}
+
+.season-story-eyebrow {
+  margin: 0;
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.season-story-content h2 {
+  margin: 3px 0 0;
+  color: var(--ink);
+  font-size: clamp(21px, 3vw, 28px);
+  letter-spacing: -0.03em;
+}
+
+.season-story-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  max-width: 860px;
+  margin: 15px 0 0;
+}
+
+.season-story-metric {
+  min-width: 0;
+  padding: 11px 12px;
+  background: var(--paper);
+  border: 1px solid #d4ded6;
+  border-radius: 5px;
+}
+
+.season-story-metric dt {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.season-story-values {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin: 5px 0 0;
+  color: var(--ink);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.season-story-before {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.season-story-arrow {
+  color: var(--gold);
+  font-weight: 900;
+}
+
+.season-story-current {
+  font-weight: 850;
+}
+
+.season-story-distribution > .rank-distribution-figure {
+  width: min(640px, 100%);
+}
+
+.season-story-uncertainty {
+  margin: 12px 0 0;
+  color: #40534c;
+  font-size: 13px;
+  font-weight: 650;
+}
+
 .rank-distribution-figure,
 .season-trajectory-figure {
   max-width: 800px;
@@ -2406,18 +2532,27 @@ details[open] > .distribution-toggle {
 
 .preseason-input-groups {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: 12px;
   max-width: 1000px;
   margin-top: 14px;
 }
 
 .preseason-input-group {
+  grid-column: span 4;
   min-width: 0;
-  padding: 14px;
+  padding: 12px;
   background: var(--wash);
   border: 1px solid #d7e1da;
   border-top: 3px solid var(--gold);
+}
+
+.preseason-input-group-program_history {
+  grid-column: span 5;
+}
+
+.preseason-input-group-recruiting {
+  grid-column: span 7;
 }
 
 .preseason-input-group h3 {
@@ -2426,50 +2561,73 @@ details[open] > .distribution-toggle {
   font-size: 16px;
 }
 
-.preseason-input-source,
-.preseason-input-note {
-  margin: 4px 0 0;
-  color: var(--muted);
-  font-size: 11px;
-  line-height: 1.35;
-}
-
 .preseason-input-values {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 7px 12px;
-  margin: 12px 0 0;
+  grid-template-columns: repeat(auto-fit, minmax(122px, 1fr));
+  gap: 9px 12px;
+  margin-top: 10px;
   font-size: 12px;
 }
 
-.preseason-input-values dt {
-  align-self: start;
+.preseason-input-value {
+  min-width: 0;
+}
+
+.preseason-input-label {
+  display: block;
   color: var(--muted);
+  font-size: 10px;
+  font-weight: 750;
+  line-height: 1.25;
 }
 
-.preseason-input-values dd {
-  margin: 0;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-.preseason-input-values dd strong,
-.preseason-input-values dd span {
+.preseason-input-value strong,
+.preseason-input-value span {
   display: block;
 }
 
-.preseason-input-values dd strong {
+.preseason-input-value strong {
+  margin-top: 2px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
   font-size: 13px;
 }
 
-.preseason-input-comparison,
-.preseason-input-detail {
+.preseason-input-comparison {
   margin-top: 2px;
   color: var(--muted);
   font-size: 10px;
   font-weight: 650;
   line-height: 1.25;
+}
+
+.preseason-input-provenance-disclosure {
+  margin-top: 9px;
+}
+
+.preseason-input-provenance-disclosure .preseason-provenance-summary {
+  color: var(--green);
+  font-size: 11px;
+}
+
+.preseason-input-provenance {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 5px 9px;
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.preseason-input-provenance dt {
+  color: #40534c;
+  font-weight: 800;
+}
+
+.preseason-input-provenance dd {
+  min-width: 0;
+  margin: 0;
 }
 
 .preseason-provenance {
@@ -2515,6 +2673,28 @@ details[open] > .distribution-toggle {
   line-height: 1.4;
 }
 
+.preseason-provenance-detail-list {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 5px 10px;
+  margin: 8px 0 2px;
+  color: #594a25;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.preseason-provenance-detail-list dt {
+  color: #705317;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.preseason-provenance-detail-list dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .season-trajectory-chart {
   display: block;
   width: 100%;
@@ -2547,11 +2727,9 @@ details[open] > .distribution-toggle {
   stroke-linejoin: round;
 }
 
-.trajectory-interval {
-  stroke: var(--gold);
-  stroke-width: 4;
-  stroke-linecap: round;
-  opacity: 0.76;
+.trajectory-uncertainty-band {
+  fill: #d7a22a;
+  opacity: 0.24;
 }
 
 .trajectory-point {
@@ -2572,7 +2750,7 @@ details[open] > .distribution-toggle {
 
 .trajectory-point-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
   gap: 7px 12px;
   max-width: 1000px;
   margin: 14px 0 0;
@@ -2586,7 +2764,7 @@ details[open] > .distribution-toggle {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 8px 10px;
+  padding: 9px 10px;
   background: var(--wash);
   border-left: 3px solid var(--green);
 }
@@ -2595,7 +2773,7 @@ details[open] > .distribution-toggle {
   display: flex;
   min-width: 0;
   flex-wrap: wrap;
-  gap: 3px 9px;
+  gap: 3px 8px;
   color: var(--muted);
   font-size: 11px;
 }
@@ -2838,6 +3016,20 @@ details[open] > .distribution-toggle {
 
   .preseason-input-groups,
   .trajectory-point-list {
+    grid-template-columns: 1fr;
+  }
+
+  .preseason-input-group,
+  .preseason-input-group-program_history,
+  .preseason-input-group-recruiting {
+    grid-column: 1;
+  }
+
+  .season-story-content {
+    padding: 16px;
+  }
+
+  .season-story-metrics {
     grid-template-columns: 1fr;
   }
 

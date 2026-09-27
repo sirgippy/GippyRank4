@@ -48,7 +48,7 @@ FUTURE_MARGIN_DISPLAY_MIN = -40.0
 FUTURE_MARGIN_DISPLAY_MAX = 40.0
 FUTURE_MARGIN_DISPLAY_BINS = 40
 DISPLAY_PROBABILITY_SCALE = 1000
-TEAM_TRAJECTORY_SCHEMA_VERSION = "1.0"
+TEAM_TRAJECTORY_SCHEMA_VERSION = "1.1"
 SUPPORTED_SNAPSHOT_SCHEMA_VERSIONS = SUPPORTED_ARTIFACT_SCHEMA_VERSIONS["snapshot"]
 PMF_SUM_TOLERANCE = 1e-9
 SUMMARY_TOLERANCE = 1e-8
@@ -650,14 +650,19 @@ def _trajectory_summary(
 ) -> dict[str, Any]:
     """Return the compact scalar state used in a team belief trajectory."""
     summary = distribution["teams"][row["team_id"]]["summary"]
+    interval_80 = row["interval_80"]
     return {
         "display_rank": row["display_rank"],
         "rated": row["rated"],
         "expected_rank": row["expected_rank"],
         "median_rank": row["median_rank"],
         "interval_50": summary["interval_50"],
-        "interval_80": row["interval_80"],
+        "interval_80": interval_80,
+        "interval_80_width": int(interval_80[1]) - int(interval_80[0]) + 1,
+        "interval_80_width_change": None,
         "interval_95": summary["interval_95"],
+        "top5_probability": row["top5_probability"],
+        "top10_probability": row["top10_probability"],
         "top25_probability": row["top25_probability"],
     }
 
@@ -668,9 +673,10 @@ def _team_trajectory_artifacts(
     """Materialize a compact, publication-safe belief sequence per snapshot.
 
     This intentionally follows configured publication order, rather than
-    timestamp/file-name heuristics.  Temporary snapshots are retained because
-    they are published observations.  Each artifact ends at its owning
-    snapshot so a retained historical view never exports future belief data.
+    timestamp/file-name heuristics.  A trajectory contains preseason and
+    official weekly checkpoints, plus its owning snapshot when that selection
+    is an interim publication.  Each artifact ends at its owning snapshot so a
+    retained historical view never exports future belief data.
     """
     groups: defaultdict[str, list[PreparedSnapshot]] = defaultdict(list)
     preseason_by_id: dict[str, PreparedSnapshot] = {}
@@ -697,28 +703,52 @@ def _team_trajectory_artifacts(
                 for row in member.rankings
             }
         )
-        points = []
         for member in ordered:
-            rows = {str(row["team_id"]): row for row in member.rankings}
-            points.append(
-                {
-                    "snapshot_id": member.snapshot_id,
-                    "display_label": member.selected.display_label,
-                    "publication_slot": member.selected.publication_slot,
-                    "publication_status": member.selected.publication_status,
-                    "publication_order": member.selected.publication_order,
-                    "snapshot_type": member.metadata["snapshot_type"],
-                    "effective_cutoff": member.metadata.get("effective_cutoff"),
-                    "distribution_path": f"data/distributions/{member.snapshot_id}.json",
-                    "included_game_ids": list(member.team_seasons.get("included_game_ids", [])),
-                    "teams": {
-                        team_id: _trajectory_summary(rows[team_id], member.distribution)
-                        for team_id in team_ids
-                        if team_id in rows and team_id in member.distribution["teams"]
-                    },
+            visible_members = [
+                candidate
+                for candidate in ordered
+                if candidate.selected.publication_order
+                <= member.selected.publication_order
+                and (
+                    candidate.snapshot_id == member.snapshot_id
+                    or candidate.snapshot_id == preseason.snapshot_id
+                    or (
+                        candidate.metadata["snapshot_type"] == "weekly"
+                        and candidate.selected.publication_status == "official"
+                    )
+                )
+            ]
+            points: list[dict[str, Any]] = []
+            previous_summaries: dict[str, dict[str, Any]] = {}
+            for candidate in visible_members:
+                rows = {str(row["team_id"]): row for row in candidate.rankings}
+                summaries = {
+                    team_id: _trajectory_summary(rows[team_id], candidate.distribution)
+                    for team_id in team_ids
+                    if team_id in rows and team_id in candidate.distribution["teams"]
                 }
-            )
-        for index, member in enumerate(ordered):
+                for team_id, summary in summaries.items():
+                    previous = previous_summaries.get(team_id)
+                    if previous is not None:
+                        summary["interval_80_width_change"] = (
+                            summary["interval_80_width"]
+                            - previous["interval_80_width"]
+                        )
+                    previous_summaries[team_id] = summary
+                points.append(
+                    {
+                        "snapshot_id": candidate.snapshot_id,
+                        "display_label": candidate.selected.display_label,
+                        "publication_slot": candidate.selected.publication_slot,
+                        "publication_status": candidate.selected.publication_status,
+                        "publication_order": candidate.selected.publication_order,
+                        "snapshot_type": candidate.metadata["snapshot_type"],
+                        "effective_cutoff": candidate.metadata.get("effective_cutoff"),
+                        "distribution_path": f"data/distributions/{candidate.snapshot_id}.json",
+                        "included_game_ids": list(candidate.team_seasons.get("included_game_ids", [])),
+                        "teams": summaries,
+                    }
+                )
             artifacts[member.snapshot_id] = {
                 "schema_version": TEAM_TRAJECTORY_SCHEMA_VERSION,
                 "artifact_kind": "team_belief_trajectory",
@@ -728,7 +758,7 @@ def _team_trajectory_artifacts(
                 "prior_model_version": preseason.metadata.get("prior_model_version"),
                 "prior_lineage": preseason.metadata.get("prior_lineage"),
                 "preseason_snapshot_id": preseason.snapshot_id,
-                "points": points[: index + 1],
+                "points": points,
             }
     return artifacts
 

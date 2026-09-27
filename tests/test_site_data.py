@@ -37,6 +37,7 @@ SCHEDULE_FIELDS = [
 ]
 SYNTHETIC_PRESEASON_SNAPSHOT_ID = "2032-preseason-context"
 SYNTHETIC_WEEK_1_SNAPSHOT_ID = "2032-week-1-context"
+SYNTHETIC_INTERIM_SNAPSHOT_ID = "2032-interim-context"
 SYNTHETIC_WEEK_2_SNAPSHOT_ID = "2032-week-2-context"
 
 
@@ -286,7 +287,7 @@ def _write_synthetic_context_snapshot(
 
 @pytest.fixture
 def synthetic_context_site_data(tmp_path: Path) -> tuple[Path, dict[str, object]]:
-    """Export preseason, Week 1, and a deliberately later Week 2 fixture."""
+    """Export official and interim checkpoints for trajectory filtering tests."""
     schedule = tmp_path / "data/processed/cfbd/games.csv"
     schedule.parent.mkdir(parents=True)
     _write_schedule(
@@ -349,6 +350,14 @@ def synthetic_context_site_data(tmp_path: Path) -> tuple[Path, dict[str, object]
         ),
         _write_synthetic_context_snapshot(
             tmp_path,
+            snapshot_id=SYNTHETIC_INTERIM_SNAPSHOT_ID,
+            snapshot_type="weekly",
+            cutoff="2032-09-10T00:00:00+00:00",
+            alpha_pmf=(0.5, 0.5),
+            display_label="Sep. 10",
+        ),
+        _write_synthetic_context_snapshot(
+            tmp_path,
             snapshot_id=SYNTHETIC_WEEK_2_SNAPSHOT_ID,
             snapshot_type="weekly",
             cutoff="2032-09-14T00:00:00+00:00",
@@ -359,12 +368,10 @@ def synthetic_context_site_data(tmp_path: Path) -> tuple[Path, dict[str, object]
     config = {
         "schema_version": "1.0",
         "publication_slots": [
-            {"id": snapshot_id, "status": "official"}
-            for snapshot_id in (
-                SYNTHETIC_PRESEASON_SNAPSHOT_ID,
-                SYNTHETIC_WEEK_1_SNAPSHOT_ID,
-                SYNTHETIC_WEEK_2_SNAPSHOT_ID,
-            )
+            {"id": SYNTHETIC_PRESEASON_SNAPSHOT_ID, "status": "official"},
+            {"id": SYNTHETIC_WEEK_1_SNAPSHOT_ID, "status": "official"},
+            {"id": SYNTHETIC_INTERIM_SNAPSHOT_ID, "status": "temporary"},
+            {"id": SYNTHETIC_WEEK_2_SNAPSHOT_ID, "status": "official"},
         ],
         "snapshots": snapshots,
     }
@@ -482,6 +489,21 @@ def test_site_export_publishes_preseason_evidence_and_belief_trajectory(
         SYNTHETIC_WEEK_1_SNAPSHOT_ID,
         SYNTHETIC_WEEK_2_SNAPSHOT_ID,
     ]
+    alpha_week_2 = week_2_trajectory["points"][-1]["teams"]["alpha"]
+    assert alpha_week_2["interval_80_width"] == 2
+    assert alpha_week_2["interval_80_width_change"] == 0
+
+    interim_entry = entries[SYNTHETIC_INTERIM_SNAPSHOT_ID]
+    interim_trajectory = json.loads(
+        (
+            output / interim_entry["season_trajectory_path"].removeprefix("data/")
+        ).read_text(encoding="utf-8")
+    )
+    assert [point["snapshot_id"] for point in interim_trajectory["points"]] == [
+        SYNTHETIC_PRESEASON_SNAPSHOT_ID,
+        SYNTHETIC_WEEK_1_SNAPSHOT_ID,
+        SYNTHETIC_INTERIM_SNAPSHOT_ID,
+    ]
 
     exported_week_1 = json.loads(
         (output / week_1_entry["data_path"].removeprefix("data/")).read_text(
@@ -508,6 +530,7 @@ def test_production_trajectory_artifacts_end_at_their_selected_snapshot(
 ) -> None:
     """Production smoke invariant that stays true as new snapshots are added."""
     output, manifest = production_site_data
+    entries = {entry["snapshot_id"]: entry for entry in manifest["snapshots"]}
     for entry in manifest["snapshots"]:
         if entry["ranking_family"] != "predictive":
             continue
@@ -518,6 +541,12 @@ def test_production_trajectory_artifacts_end_at_their_selected_snapshot(
         )
         assert trajectory["preseason_snapshot_id"] == entry["preseason_snapshot_id"]
         assert trajectory["points"][-1]["snapshot_id"] == entry["snapshot_id"]
+        for point in trajectory["points"][:-1]:
+            source = entries[point["snapshot_id"]]
+            assert source["snapshot_type"] == "preseason" or (
+                source["snapshot_type"] == "weekly"
+                and source["publication_status"] == "official"
+            )
 
 
 def test_site_export_includes_static_api_when_requested(tmp_path: Path) -> None:
