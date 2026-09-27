@@ -592,6 +592,23 @@ function seasonStoryMetric(label, preseasonValue, currentValue, currentDistribut
   return metric;
 }
 
+function mostInformativeSeasonStoryProbability(preseason, current) {
+  const candidates = [
+    ["Top 5 probability", "top5_probability"],
+    ["Top 10 probability", "top10_probability"],
+    ["Top 25 probability", "top25_probability"],
+  ].filter(([, key]) => Number.isFinite(preseason[key]) && Number.isFinite(current[key]))
+    .map(([label, key]) => ({
+      label,
+      preseasonValue: preseason[key],
+      currentValue: current[key],
+      change: Math.abs(current[key] - preseason[key]),
+    }))
+    .filter((candidate) => candidate.change >= 0.05)
+    .sort((left, right) => right.change - left.change);
+  return candidates[0] ?? null;
+}
+
 function renderSeasonStory(entry, points, row, rankCount, distribution) {
   const section = $("#season-story-section");
   const content = $("#season-story-content");
@@ -615,8 +632,17 @@ function renderSeasonStory(entry, points, row, rankCount, distribution) {
   metrics.append(
     seasonStoryMetric("Expected rank", startsAtPreseason ? null : rank(preseason.teams.expected_rank), currentExpected, currentDistribution),
     seasonStoryMetric("Central 80%", startsAtPreseason ? null : rankRange(preseason.teams.interval_80), rankRange(current.teams.interval_80)),
-    seasonStoryMetric("Top 25", startsAtPreseason ? null : percentage(preseason.teams.top25_probability), percentage(current.teams.top25_probability)),
   );
+  const probability = startsAtPreseason
+    ? null
+    : mostInformativeSeasonStoryProbability(preseason.teams, current.teams);
+  if (probability) {
+    metrics.append(seasonStoryMetric(
+      probability.label,
+      percentage(probability.preseasonValue),
+      percentage(probability.currentValue),
+    ));
+  }
   const heading = startsAtPreseason ? "Preseason belief" : `Preseason → ${checkpointLabel(current)}`;
   const widthText = startsAtPreseason
     ? `The central 80% range starts ${intervalWidth(current.teams)} ranks wide.`

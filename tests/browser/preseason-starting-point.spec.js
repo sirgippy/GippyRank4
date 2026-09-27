@@ -147,6 +147,12 @@ test.describe("Preseason starting point browser checks", () => {
     await expect(page.locator("#season-story-content")).toContainText("Preseason → Week 5");
     await expect(page.locator("#season-story-content")).toContainText("8 ranks wide");
     await expect(page.locator("#season-story-content")).toContainText("narrower than preseason");
+    const probabilityMetric = page.locator(".season-story-metric").filter({
+      has: page.getByText("Top 5 probability", { exact: true }),
+    });
+    await expect(probabilityMetric).toContainText("49%");
+    await expect(probabilityMetric).toContainText("77%");
+    await expect(page.getByText("Top 25 probability", { exact: true })).toHaveCount(0);
     await expect(page.locator("#season-movement")).toContainText("Week 2");
     await expect(page.locator("#season-movement")).not.toContainText("Context 1.3 retrospective");
     const chart = page.locator(".season-trajectory-chart");
@@ -190,5 +196,7 @@ test.describe("Preseason starting point browser checks", () => {
     const domainMaximum = Number(await page.locator(".season-trajectory-chart").getAttribute("data-rank-domain-max"));
     expect(domainMaximum).toBeGreaterThan(100);
     await expect(page.locator(".trajectory-uncertainty-band")).toBeVisible();
+    await expect(page.locator("#season-story-content .season-story-metric")).toHaveCount(2);
+    await expect(page.locator("#season-story-content")).not.toContainText(/Top (5|10|25) probability/);
   });
 });
