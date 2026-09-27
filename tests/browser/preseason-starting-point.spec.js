@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { installStaticSiteRoute } = require("./static-site");
+const { SITE_ORIGIN, installStaticSiteRoute } = require("./static-site");
 
 const contextSnapshot = "2026-weekly-2026-09-11T17-02-26.077461Z-context";
 const historySnapshot = "2026-weekly-2026-09-11T17-02-26.077461Z-history";
@@ -16,6 +16,10 @@ test.beforeEach(async ({ page }) => {
         contentType: "image/svg+xml",
         body: logoResponse,
       });
+      return;
+    }
+    if (new URL(route.request().url()).origin !== SITE_ORIGIN) {
+      await route.fulfill({ status: 204 });
       return;
     }
     await route.fallback();

@@ -2,7 +2,8 @@
   "name": "gippyrank4",
   "private": true,
   "scripts": {
-    "test:js": "node scripts/check-site-js.mjs",
+    "browser:server": "node scripts/browser-server.js",
+    "test:js": "node scripts/check-site-js.mjs && node --test tests/browser/*.node-test.js",
     "test:browser": "playwright test",
     "test:ui": "npm run test:js && npm run test:browser"
   },

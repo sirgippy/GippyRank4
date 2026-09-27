@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { installStaticSiteRoute } = require("./static-site");
+const { SITE_ORIGIN, installStaticSiteRoute } = require("./static-site");
 
 test.beforeEach(async ({ page }) => {
   await installStaticSiteRoute(page);
@@ -9,6 +9,10 @@ test.beforeEach(async ({ page }) => {
         contentType: "image/svg+xml",
         body: '<svg xmlns="http://www.w3.org/2000/svg"/>',
       });
+      return;
+    }
+    if (new URL(route.request().url()).origin !== SITE_ORIGIN) {
+      await route.fulfill({ status: 204 });
       return;
     }
     await route.fallback();

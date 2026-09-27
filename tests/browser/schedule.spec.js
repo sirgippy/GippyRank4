@@ -1,6 +1,6 @@
 const { test, expect } = require("@playwright/test");
 const scheduleLayoutFixture = require("./fixtures/schedule-layout.json");
-const { installStaticSiteRoute } = require("./static-site");
+const { SITE_ORIGIN, installStaticSiteRoute } = require("./static-site");
 
 const scheduleCards = ".weekly-game-card";
 const logoResponse = `<svg xmlns="http://www.w3.org/2000/svg" width="60" height="40" viewBox="0 0 60 40"><rect width="60" height="40" fill="#d6dfda"/></svg>`;
@@ -15,6 +15,10 @@ test.beforeEach(async ({ page }) => {
         contentType: "image/svg+xml",
         body: logoResponse,
       });
+      return;
+    }
+    if (new URL(route.request().url()).origin !== SITE_ORIGIN) {
+      await route.fulfill({ status: 204 });
       return;
     }
     await route.fallback();
