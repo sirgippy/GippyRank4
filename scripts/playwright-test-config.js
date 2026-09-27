@@ -1,9 +1,21 @@
 const { devices } = require("@playwright/test");
 const { discoverWsEndpoint } = require("./playwright-ws-endpoint");
 
-function buildPlaywrightConfig({ env = process.env, endpointFile } = {}) {
+function buildPlaywrightConfig({
+  env = process.env,
+  endpointFile,
+  probeEndpoint,
+  removeEndpointFile,
+  invalidationFile,
+} = {}) {
   const isCi = Boolean(env.CI);
-  const wsEndpoint = discoverWsEndpoint({ env, endpointFile });
+  const wsEndpoint = discoverWsEndpoint({
+    env,
+    endpointFile,
+    probeEndpoint,
+    removeEndpointFile,
+    invalidationFile,
+  });
   const use = {
     baseURL: "http://gippyrank.test",
     screenshot: "only-on-failure",

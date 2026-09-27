@@ -54,6 +54,17 @@ needed. The endpoint is a local browser-control capability: do not commit it
 or share it. `browser:server` binds only `127.0.0.1`, uses an unguessable
 WebSocket path, and removes its endpoint file when stopped with Ctrl-C.
 
+The cached endpoint file is disposable discovery state. Before using it, the
+test configuration probes the endpoint. If the host server was killed and the
+cache is stale, the file is removed and the command stops once with instructions
+to restart `npm run browser:server`; it does not fall back to local Chromium.
+When a sandbox may read but not remove the host cache, it records a temporary
+invalidation marker instead, so that stale endpoint is still rejected once per
+command without repeated connection attempts. A newly published endpoint clears
+the outdated marker automatically.
+An explicitly supplied `PLAYWRIGHT_WS_ENDPOINT` is authoritative and instead
+fails directly if it cannot be reached.
+
 Run `npm ci` in both the host and worker so their Playwright major/minor
 versions match. For a standard Codex worker, enable network access without
 using Full Access in the user configuration:
