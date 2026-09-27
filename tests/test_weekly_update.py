@@ -90,30 +90,32 @@ def _acquisition(root: Path, timestamp: datetime, fcs_timestamp: datetime | None
 def test_weekly_update_pairs_h_c_preserves_preseason_and_is_idempotent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     root = _root(tmp_path)
     timestamp = datetime(2026, 9, 12, 15, tzinfo=UTC)
+    slot = "2026-09-12T15-00-00Z"
     monkeypatch.setattr("gippyrank.weekly_update.fetch_current_season", lambda **_: _acquisition(root, timestamp))
     first = prepare_weekly_update(season=2026, root=root)
-    assert first.published and first.publication_slot == "2026-09-12"
+    assert first.published and first.publication_slot == slot
+    assert first.display_label == "Sep. 12 · 10:00 AM CT"
     assert first.context.metadata["snapshot_type"] == first.history.metadata["snapshot_type"] == "weekly"
     for field in ("included_game_ids", "effective_cutoff", "requested_cutoff", "source_retrieval_times", "source_response_hashes", "game_corpus_sha256"):
         assert first.context.metadata[field] == first.history.metadata[field]
     assert first.context.metadata["included_game_ids"] == ["100"]  # future game cannot enter inference
     config = json.loads((root / "site/publish_config.json").read_text())
-    assert config["default_publication_slot"] == "2026-09-12"
+    assert config["default_publication_slot"] == slot
     assert config["publication_slots"][-1] == {
-        "id": "2026-09-12",
+        "id": slot,
         "status": "temporary",
     }
     assert first.report["publication_status"] == "temporary"
     assert "Publication status: `Interim`" in first.candidate_paths.report_md.read_text()
     entries = config["snapshots"]
-    assert len(entries) == 3 and {entry["publication_slot"] for entry in entries} == {"2026-09-12"}
+    assert len(entries) == 3 and {entry["publication_slot"] for entry in entries} == {slot}
     assert {entry["source"].rsplit("/", 1)[-1] for entry in entries} == {"context", "history", "performance"}
     manifest = json.loads((root / "site/data/manifest.json").read_text())
-    assert manifest["default_publication_slot"] == "2026-09-12"
+    assert manifest["default_publication_slot"] == slot
     assert {
         entry["publication_status"]
         for entry in manifest["snapshots"]
-        if entry["publication_slot"] == "2026-09-12"
+        if entry["publication_slot"] == slot
     } == {"temporary"}
     assert first.candidate_paths is not None
     assert first.candidate_paths.context_snapshot == first.context.directory
@@ -125,8 +127,9 @@ def test_weekly_update_pairs_h_c_preserves_preseason_and_is_idempotent(tmp_path:
     assert outputs["context_snapshot_path"] == first.context.directory.relative_to(root).as_posix()
     assert outputs["history_snapshot_path"] == first.history.directory.relative_to(root).as_posix()
     assert outputs["performance_snapshot_path"] == first.performance.directory.relative_to(root).as_posix()
-    assert outputs["report_md_path"] == "data/processed/weekly_updates/2026-09-12.md"
-    assert outputs["report_json_path"] == "data/processed/weekly_updates/2026-09-12.json"
+    assert outputs["branch"] == "automation/rankings-2026-09-12T15-00-00Z"
+    assert outputs["report_md_path"] == f"data/processed/weekly_updates/{slot}.md"
+    assert outputs["report_json_path"] == f"data/processed/weekly_updates/{slot}.json"
     assert outputs["fbs_schedule_path"] == "data/raw/cfbd/games/2026.json"
     assert outputs["fcs_provenance_path"] == "data/raw/cfbd/games/2026-fcs.json.provenance.json"
     second = prepare_weekly_update(season=2026, root=root)
@@ -148,6 +151,63 @@ def test_weekly_h_c_effective_cutoff_uses_earliest_required_source(tmp_path: Pat
     }
 
 
+def test_same_day_interim_publications_keep_distinct_slots_and_artifacts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = _root(tmp_path)
+    timestamps = iter(
+        (
+            datetime(2026, 9, 26, 12, 9, 11, tzinfo=UTC),
+            datetime(2026, 9, 26, 18, 42, 3, tzinfo=UTC),
+        )
+    )
+    monkeypatch.setattr(
+        "gippyrank.weekly_update.fetch_current_season",
+        lambda **_: _acquisition(root, next(timestamps)),
+    )
+
+    first = prepare_weekly_update(season=2026, root=root)
+    second = prepare_weekly_update(season=2026, root=root)
+
+    assert first.published and second.published
+    assert (first.publication_slot, second.publication_slot) == (
+        "2026-09-26T12-09-11Z",
+        "2026-09-26T18-42-03Z",
+    )
+    assert (first.display_label, second.display_label) == (
+        "Sep. 26 · 7:09 AM CT",
+        "Sep. 26 · 1:42 PM CT",
+    )
+    assert first.candidate_paths is not None and second.candidate_paths is not None
+    assert first.candidate_paths.report_md != second.candidate_paths.report_md
+    assert first.candidate_paths.report_md.is_file()
+    assert second.candidate_paths.report_md.is_file()
+
+    config = json.loads((root / "site/publish_config.json").read_text())
+    assert [entry["id"] for entry in config["publication_slots"]] == [
+        first.publication_slot,
+        second.publication_slot,
+    ]
+    assert {
+        entry["publication_slot"] for entry in config["snapshots"]
+    } == {first.publication_slot, second.publication_slot}
+    assert len(config["snapshots"]) == 6
+
+    manifest = json.loads((root / "site/data/manifest.json").read_text())
+    assert {entry["publication_slot"] for entry in manifest["snapshots"]} == {
+        first.publication_slot,
+        second.publication_slot,
+    }
+    first_outputs = dict(
+        line.split("=", 1) for line in _github_output_lines(first, root=root)
+    )
+    second_outputs = dict(
+        line.split("=", 1) for line in _github_output_lines(second, root=root)
+    )
+    assert first_outputs["branch"] != second_outputs["branch"]
+    assert first_outputs["report_path"] != second_outputs["report_path"]
+
+
 def test_official_weekly_update_marks_one_status_across_all_snapshots(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -161,14 +221,14 @@ def test_official_weekly_update_marks_one_status_across_all_snapshots(
     update = prepare_weekly_update(season=2026, root=root, official=True)
 
     config = json.loads((root / "site/publish_config.json").read_text())
-    assert config["publication_slots"] == [{"id": "2026-09-12", "status": "official"}]
+    assert config["publication_slots"] == [{"id": "2026-09-12T15-00-00Z", "status": "official"}]
     assert update.report["publication_status"] == "official"
     assert "Publication status: `Official`" in update.candidate_paths.report_md.read_text()
     manifest = json.loads((root / "site/data/manifest.json").read_text())
     slot_statuses = {
         entry["publication_status"]
         for entry in manifest["snapshots"]
-        if entry["publication_slot"] == "2026-09-12"
+        if entry["publication_slot"] == "2026-09-12T15-00-00Z"
     }
     assert len(slot_statuses) == 1
     assert slot_statuses == {"official"}
@@ -184,13 +244,19 @@ def test_official_status_change_is_publishable_without_ranking_changes(
         lambda **_: _acquisition(root, timestamp),
     )
 
-    interim = prepare_weekly_update(season=2026, root=root)
-    official = prepare_weekly_update(season=2026, root=root, official=True)
+    interim = prepare_weekly_update(
+        season=2026, root=root, publication_slot="2026-09-12"
+    )
+    official = prepare_weekly_update(
+        season=2026, root=root, publication_slot="2026-09-12", official=True
+    )
 
     assert interim.published
     assert official.published
     config = json.loads((root / "site/publish_config.json").read_text())
     assert config["publication_slots"] == [{"id": "2026-09-12", "status": "official"}]
+    assert len(config["snapshots"]) == 3
+    assert {entry["publication_slot"] for entry in config["snapshots"]} == {"2026-09-12"}
 
 
 def test_new_official_slot_is_publishable_without_ranking_changes(
@@ -212,15 +278,15 @@ def test_new_official_slot_is_publishable_without_ranking_changes(
     assert update.published
     config = json.loads((root / "site/publish_config.json").read_text())
     assert config["publication_slots"] == [
-        {"id": "2026-09-12", "status": "temporary"},
-        {"id": "2026-09-13", "status": "official"},
+        {"id": "2026-09-12T15-00-00Z", "status": "temporary"},
+        {"id": "2026-09-13T15-00-00Z", "status": "official"},
     ]
-    assert config["default_publication_slot"] == "2026-09-13"
+    assert config["default_publication_slot"] == "2026-09-13T15-00-00Z"
     manifest = json.loads((root / "site/data/manifest.json").read_text())
     assert {
         entry["publication_status"]
         for entry in manifest["snapshots"]
-        if entry["publication_slot"] == "2026-09-13"
+        if entry["publication_slot"] == "2026-09-13T15-00-00Z"
     } == {"official"}
 
 
@@ -253,6 +319,13 @@ def test_upserting_a_slot_preserves_preseason_and_older_slots(tmp_path: Path) ->
     value = json.loads(config.read_text())
     assert value["default_publication_slot"] == "2026-09-12"
     assert {entry["publication_slot"] for entry in value["snapshots"]} == {"2026-preseason", "2026-old", "2026-09-12"}
+
+
+@pytest.mark.parametrize(
+    "slot", ["2026-09-26", "2026-preseason", "2026-09-26T12-09-11Z"]
+)
+def test_existing_and_timestamped_publication_slots_are_valid(slot: str) -> None:
+    assert weekly_update._validate_slot(2026, slot) == slot
 
 
 def test_weekly_report_movers_use_latest_earlier_official_slot() -> None:
@@ -316,6 +389,7 @@ def test_update_workflow_is_manual_and_pages_stays_model_and_cfbd_free() -> None
     assert "CFBD_API_KEY" in workflow and "/games/teams" not in workflow
     assert "official:" in workflow
     assert "description: Publish this ranking as Official" in workflow
+    assert "timestamp-derived from acquisition time" in workflow
     assert "default: false" in workflow
     assert 'INPUT_OFFICIAL: ${{ inputs.official }}' in workflow
     assert "pull-requests: write" in workflow and "base: main" in workflow

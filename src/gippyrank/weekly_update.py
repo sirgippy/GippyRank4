@@ -10,9 +10,10 @@ import re
 import shutil
 import tempfile
 from dataclasses import dataclass, replace
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from gippyrank.data.cfbd import fetch_current_season, update_processed_game_corpus
 from gippyrank.performance_snapshot import (
@@ -27,7 +28,13 @@ from gippyrank.site_data import (
     resolve_previous_official,
 )
 
-SLOT_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+# Slot IDs are used in report paths and automation branch names.  Keep explicit
+# IDs conservative while retaining compatibility with the existing date and
+# named forms (for example, ``2026-preseason``).
+SLOT_PATTERN = re.compile(
+    r"^(?P<season>\d{4})-(?!.*(?:\.\.|@\{))[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$"
+)
+CENTRAL_TIME = ZoneInfo("America/Chicago")
 
 
 @dataclass(frozen=True)
@@ -81,12 +88,28 @@ def _root() -> Path:
 
 
 def _label(value: datetime) -> str:
-    return value.strftime("%b. ") + str(value.day)
+    local = value.astimezone(CENTRAL_TIME)
+    return (
+        f"{local.strftime('%b. ')}{local.day} · "
+        f"{local.strftime('%I').lstrip('0')}:{local.strftime('%M %p')} CT"
+    )
+
+
+def _automatic_slot(value: datetime) -> str:
+    """Serialize an acquisition time as a unique, branch-safe slot ID."""
+    timestamp = value.astimezone(UTC)
+    slot = timestamp.strftime("%Y-%m-%dT%H-%M-%S")
+    if timestamp.microsecond:
+        slot += f".{timestamp.microsecond:06d}"
+    return f"{slot}Z"
 
 
 def _validate_slot(season: int, slot: str) -> str:
-    if not SLOT_PATTERN.fullmatch(slot) or not slot.startswith(f"{season}-"):
-        raise ValueError("publication_slot must be an ISO date in the selected season")
+    matched = SLOT_PATTERN.fullmatch(slot)
+    if not matched or int(matched["season"]) != season:
+        raise ValueError(
+            "publication_slot must be a safe identifier in the selected season"
+        )
     return slot
 
 
@@ -195,7 +218,7 @@ def _is_publishable_change(
             if entry.get("status") != publication_status:
                 return True
             break
-    if not slot_exists and publication_status == "official":
+    if not slot_exists:
         return True
     for family, snapshot in (
         ("context", context),
@@ -675,7 +698,7 @@ def prepare_weekly_update(
     acquisition = fetch_current_season(season=season, root=root, retrieved_at=retrieved_at)
     corpus = update_processed_game_corpus(root=root, season=season, schedules=acquisition.schedules)
     requested = acquisition.retrieved_at
-    slot = _validate_slot(season, publication_slot or requested.date().isoformat())
+    slot = _validate_slot(season, publication_slot or _automatic_slot(requested))
     label = display_label.strip() if display_label else _label(requested)
     if not label:
         raise ValueError("display_label must not be blank when supplied")
