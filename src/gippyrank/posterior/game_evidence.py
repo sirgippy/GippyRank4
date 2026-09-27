@@ -39,6 +39,9 @@ from gippyrank.posterior.predictive import (
     posterior_prediction_teams,
     predict_game,
 )
+from gippyrank.posterior.retrospective import (
+    build_retrospective_game_expectations,
+)
 from gippyrank.posterior.season_simulation import (
     CompletedRecord,
     SeasonSimulationConfig,
@@ -350,6 +353,22 @@ def build_team_season_artifact(
                         game_evidence_pmf(game, focal_id, list(teams), likelihood, posterior)
                     )
 
+    retrospective_expectations = None
+    if likelihood is not None:
+        inference = metadata.get("posterior_inference_configuration", {})
+        if not isinstance(inference, dict):
+            raise ValueError("retrospective expectations need inference configuration")
+        retrospective_expectations = build_retrospective_game_expectations(
+            metadata=metadata,
+            teams=teams,
+            games=games,
+            posterior=posterior,
+            likelihood=likelihood,
+            max_iterations=int(inference.get("max_iterations", 500)),
+            tolerance=float(inference.get("tolerance", 1e-9)),
+            damping=float(inference.get("damping", 0.35)),
+        )
+
     performance_reference = [
         float(rating["expected_rank"]) for rating in ratings.values()
     ]
@@ -562,6 +581,13 @@ def build_team_season_artifact(
                 "score": score,
                 "modeled": modeled,
                 "game_rating": ratings.get((game_id, focal_id)) if modeled else None,
+                "retrospective_expectation_id": (
+                    game_id
+                    if modeled
+                    and retrospective_expectations is not None
+                    and game_id in retrospective_expectations["games"]
+                    else None
+                ),
                 "future_prediction_id": (
                     game_id if game_id in future_predictions else None
                 ),
@@ -638,6 +664,7 @@ def build_team_season_artifact(
         },
         "season_simulation": season_simulation,
         "future_predictions": future_predictions,
+        "retrospective_game_expectations": retrospective_expectations,
         "performance_axis": {
             "min_rank": 1,
             "max_rank": rank_count,

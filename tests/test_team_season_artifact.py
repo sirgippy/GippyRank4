@@ -72,6 +72,7 @@ def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path:
     assert [game["game_id"] for game in games] == ["early", "later"]
     early, later = games
     assert early["modeled"] and early["game_rating"] is not None
+    assert early["retrospective_expectation_id"] == "early"
     assert len(early["game_rating"]["display_pmf"]) == 40
     assert sum(early["game_rating"]["display_pmf"]) == 1000
     assert 0 <= early["game_rating"]["performance_percentile"] <= 100
@@ -91,6 +92,14 @@ def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path:
     }
     assert artifact["performance_percentile"]["reference_count"] == 2
     assert later["result"] is None and later["score"] is None and later["game_rating"] is None
+    assert later["retrospective_expectation_id"] is None
+    retrospective = artifact["retrospective_game_expectations"]
+    assert retrospective["source_snapshot_id"] == snapshot.snapshot_id
+    assert retrospective["effective_cutoff"] == snapshot.metadata["effective_cutoff"]
+    assert set(retrospective["games"]) == {"early"}
+    assert retrospective["games"]["early"]["actual_home_margin"] == 10
+    assert snapshot.metadata["retrospective_game_expectations_path"] == "team_seasons.json"
+    assert snapshot.metadata["retrospective_game_expectations_version"] == "1.0"
     prediction = artifact["future_predictions"][later["future_prediction_id"]]
     assert len(prediction["display_distribution"]["masses"]) == 40
     assert sum(prediction["display_distribution"]["masses"]) + prediction["display_distribution"]["lower_tail_probability"] + prediction["display_distribution"]["upper_tail_probability"] == 1000
@@ -121,6 +130,15 @@ def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path:
     assert entry["completed_visualization_bytes_per_game"] > 0
     assert entry["future_visualization_bytes"] > 0
     assert entry["future_visualization_bytes_per_game"] > 0
+    assert entry["retrospective_game_expectation_count"] == 1
+    assert entry["retrospective_game_expectation_bytes"] > 0
+    assert entry["retrospective_visualization_bytes"] > 0
+    published_team_seasons = json.loads(
+        (root / "site" / entry["team_seasons_path"]).read_text(encoding="utf-8")
+    )
+    assert set(published_team_seasons["retrospective_game_expectations"]["games"]) == {
+        "early"
+    }
     assert manifest["payload_stats"]["initial_rankings_page_bytes"] == sum(
         (root / "site" / item["data_path"]).stat().st_size
         for item in manifest["snapshots"]

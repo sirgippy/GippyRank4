@@ -48,6 +48,7 @@ FUTURE_MARGIN_DISPLAY_MIN = -40.0
 FUTURE_MARGIN_DISPLAY_MAX = 40.0
 FUTURE_MARGIN_DISPLAY_BINS = 40
 DISPLAY_PROBABILITY_SCALE = 1000
+RETROSPECTIVE_GAME_EXPECTATIONS_VERSION = "1.0"
 TEAM_TRAJECTORY_SCHEMA_VERSION = "1.1"
 SUPPORTED_SNAPSHOT_SCHEMA_VERSIONS = SUPPORTED_ARTIFACT_SCHEMA_VERSIONS["snapshot"]
 PMF_SUM_TOLERANCE = 1e-9
@@ -1484,6 +1485,202 @@ def _validate_future_display(artifact: dict[str, Any], snapshot_id: str) -> None
             )
 
 
+def _validate_retrospective_game_expectations(
+    artifact: dict[str, Any],
+    source_metadata: dict[str, Any],
+    expected_ids: set[str],
+) -> set[str]:
+    """Validate the snapshot-safe LOO completed-game distribution artifact."""
+
+    snapshot_id = str(source_metadata["snapshot_id"])
+    expectations = artifact.get("retrospective_game_expectations")
+    declared_version = source_metadata.get("retrospective_game_expectations_version")
+    if expectations is None:
+        if declared_version is not None:
+            raise SiteDataValidationError(
+                f"{snapshot_id}: declared retrospective expectations are missing"
+            )
+        return set()
+    if not isinstance(expectations, dict):
+        raise SiteDataValidationError(
+            f"{snapshot_id}: retrospective expectations must be an object"
+        )
+    if (
+        expectations.get("retrospective_game_expectations_version")
+        != RETROSPECTIVE_GAME_EXPECTATIONS_VERSION
+        or declared_version not in {None, RETROSPECTIVE_GAME_EXPECTATIONS_VERSION}
+    ):
+        raise SiteDataValidationError(
+            f"{snapshot_id}: retrospective expectation version is unsupported"
+        )
+    if expectations.get("artifact_kind") != "retrospective_game_expectations":
+        raise SiteDataValidationError(
+            f"{snapshot_id}: retrospective expectation artifact kind is invalid"
+        )
+    for field in (
+        "season",
+        "snapshot_type",
+        "effective_cutoff",
+        "included_game_ids",
+        "historical_likelihood_version",
+    ):
+        if expectations.get(field) != source_metadata.get(field):
+            raise SiteDataValidationError(
+                f"{snapshot_id}: retrospective expectation provenance mismatch: {field}"
+            )
+    if expectations.get("source_snapshot_id") != snapshot_id:
+        raise SiteDataValidationError(
+            f"{snapshot_id}: retrospective expectation source snapshot mismatch"
+        )
+    if expectations.get("margin_orientation") != "home_minus_away":
+        raise SiteDataValidationError(
+            f"{snapshot_id}: retrospective margin orientation is invalid"
+        )
+    interpretation = expectations.get("interpretation")
+    if not isinstance(interpretation, str) or "not the prediction" not in interpretation:
+        raise SiteDataValidationError(
+            f"{snapshot_id}: retrospective interpretation is missing"
+        )
+    inference = expectations.get("inference")
+    if not isinstance(inference, dict) or inference.get("implementation") != (
+        "per_game_leave_one_out_component_bp_recompute"
+    ):
+        raise SiteDataValidationError(
+            f"{snapshot_id}: retrospective inference provenance is invalid"
+        )
+    if inference.get("games_evaluated") != len(expected_ids):
+        raise SiteDataValidationError(
+            f"{snapshot_id}: retrospective game count is invalid"
+        )
+    _finite_number(
+        inference.get("runtime_seconds"),
+        "retrospective runtime",
+        snapshot_id,
+    )
+    axis = expectations.get("margin_axis")
+    if not isinstance(axis, dict) or any(
+        axis.get(field) != expected
+        for field, expected in (
+            ("min_margin", FUTURE_MARGIN_DISPLAY_MIN),
+            ("max_margin", FUTURE_MARGIN_DISPLAY_MAX),
+            ("bins", FUTURE_MARGIN_DISPLAY_BINS),
+            ("direction", "home_minus_away"),
+            ("unit", "points"),
+        )
+    ):
+        raise SiteDataValidationError(
+            f"{snapshot_id}: retrospective margin axis is invalid"
+        )
+    _validate_display_encoding(axis, snapshot_id)
+    games = expectations.get("games")
+    if not isinstance(games, dict) or {str(key) for key in games} != expected_ids:
+        raise SiteDataValidationError(
+            f"{snapshot_id}: retrospective games do not match included evidence"
+        )
+    numeric_fields = (
+        "actual_home_margin",
+        "expected_home_margin",
+        "median_home_margin",
+        "observed_margin_percentile",
+        "lower_tail_probability",
+        "upper_tail_probability",
+    )
+    for game_id, game in games.items():
+        if not isinstance(game, dict) or str(game.get("game_id")) != str(game_id):
+            raise SiteDataValidationError(
+                f"{snapshot_id}: retrospective game ID is invalid"
+            )
+        if game.get("source_snapshot_id") != snapshot_id:
+            raise SiteDataValidationError(
+                f"{snapshot_id}: retrospective game source snapshot is invalid"
+            )
+        if game.get("margin_orientation") != "home_minus_away":
+            raise SiteDataValidationError(
+                f"{snapshot_id}: retrospective game orientation is invalid"
+            )
+        if not all(
+            isinstance(game.get(field), str) and game[field]
+            for field in ("home_team_id", "away_team_id")
+        ) or game["home_team_id"] == game["away_team_id"]:
+            raise SiteDataValidationError(
+                f"{snapshot_id}: retrospective game teams are invalid"
+            )
+        if any(
+            str(game.get(field, "")).casefold() not in {"fbs", "fcs"}
+            for field in ("home_subdivision", "away_subdivision")
+        ) or not isinstance(game.get("neutral_site"), bool):
+            raise SiteDataValidationError(
+                f"{snapshot_id}: retrospective game site semantics are invalid"
+            )
+        for field in numeric_fields:
+            _finite_number(game.get(field), field, snapshot_id)
+        probabilities = [
+            _probability(game.get(field), field, snapshot_id)
+            for field in (
+                "observed_margin_percentile",
+                "lower_tail_probability",
+                "upper_tail_probability",
+            )
+        ]
+        if not math.isclose(
+            probabilities[0], probabilities[1], rel_tol=0.0, abs_tol=1.0e-12
+        ) or not math.isclose(
+            probabilities[1] + probabilities[2], 1.0, rel_tol=0.0, abs_tol=1.0e-10
+        ):
+            raise SiteDataValidationError(
+                f"{snapshot_id}: retrospective observed-margin tails are invalid"
+            )
+        intervals: dict[str, tuple[float, float]] = {}
+        for field in ("margin_interval_50", "margin_interval_80", "margin_interval_95"):
+            value = game.get(field)
+            if not isinstance(value, list) or len(value) != 2:
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: retrospective {field} is invalid"
+                )
+            endpoints = tuple(
+                _finite_number(endpoint, f"{field} endpoint", snapshot_id)
+                for endpoint in value
+            )
+            if endpoints[0] > endpoints[1]:
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: retrospective {field} endpoints are reversed"
+                )
+            intervals[field] = endpoints
+        if not (
+            intervals["margin_interval_80"][0] <= intervals["margin_interval_50"][0]
+            and intervals["margin_interval_50"][1] <= intervals["margin_interval_80"][1]
+            and intervals["margin_interval_95"][0] <= intervals["margin_interval_80"][0]
+            and intervals["margin_interval_80"][1] <= intervals["margin_interval_95"][1]
+        ):
+            raise SiteDataValidationError(
+                f"{snapshot_id}: retrospective intervals are not nested"
+            )
+        display = game.get("display_distribution")
+        if not isinstance(display, dict):
+            raise SiteDataValidationError(
+                f"{snapshot_id}: retrospective display distribution is missing"
+            )
+        masses = _validate_display_masses(
+            display.get("masses"),
+            expected_length=FUTURE_MARGIN_DISPLAY_BINS,
+            label=f"{snapshot_id}: retrospective display",
+            allow_partial=True,
+        )
+        tails = []
+        for field in ("lower_tail_probability", "upper_tail_probability"):
+            value = display.get(field)
+            if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= DISPLAY_PROBABILITY_SCALE:
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: retrospective display {field} is invalid"
+                )
+            tails.append(value)
+        if sum(masses) + sum(tails) != DISPLAY_PROBABILITY_SCALE:
+            raise SiteDataValidationError(
+                f"{snapshot_id}: retrospective display mass is not normalized"
+            )
+    return {str(game_id) for game_id in games}
+
+
 def _validate_future_predictions(
     artifact: dict[str, Any],
     metadata: dict[str, Any],
@@ -2505,6 +2702,8 @@ def _validate_team_season_artifact(
     )
     performance_display = artifact.get("performance_axis") is not None
     ratings_count = 0
+    modeled_fbs_game_ids: set[str] = set()
+    retrospective_references: set[str] = set()
     for team_id in ranking_ids:
         team = by_team[team_id]
         games = team.get("games")
@@ -2531,6 +2730,8 @@ def _validate_team_season_artifact(
                     f"{snapshot_id}: unsupported game state for {team_id}"
                 )
             known_by_snapshot = str(game["game_id"]) in expected_ids
+            if game.get("modeled"):
+                modeled_fbs_game_ids.add(str(game["game_id"]))
             if not known_by_snapshot and (
                 game.get("result") is not None
                 or game.get("score") is not None
@@ -2547,6 +2748,18 @@ def _validate_team_season_artifact(
                     f"{snapshot_id}: future game {game['game_id']} reveals completed evidence"
                 )
             rating = game.get("game_rating")
+            retrospective_id = game.get("retrospective_expectation_id")
+            if retrospective_id is not None:
+                if (
+                    not isinstance(retrospective_id, str)
+                    or not retrospective_id
+                    or retrospective_id != str(game["game_id"])
+                    or not game.get("modeled")
+                ):
+                    raise SiteDataValidationError(
+                        f"{snapshot_id}: invalid retrospective expectation reference"
+                    )
+                retrospective_references.add(retrospective_id)
             if rating is None:
                 continue
             ratings_count += 1
@@ -2595,6 +2808,17 @@ def _validate_team_season_artifact(
                         f"{snapshot_id}: game rating performance grade disagrees with percentile"
                     )
     _validate_performance_display(artifact, snapshot_id, ratings_count)
+    retrospective_ids = _validate_retrospective_game_expectations(
+        artifact, source_metadata, expected_ids
+    )
+    if retrospective_ids and retrospective_references != modeled_fbs_game_ids:
+        raise SiteDataValidationError(
+            f"{snapshot_id}: modeled FBS games are missing retrospective references"
+        )
+    if retrospective_references - retrospective_ids:
+        raise SiteDataValidationError(
+            f"{snapshot_id}: retrospective reference has no expectation"
+        )
     _validate_future_predictions(
         artifact,
         metadata,
@@ -2690,6 +2914,9 @@ def _team_season_artifact(
         merged["prediction_source"] = history_artifact.get("prediction_source")
         merged["prediction_provenance"] = history_artifact.get("prediction_provenance")
         merged["future_predictions"] = history_artifact.get("future_predictions", {})
+        merged["retrospective_game_expectations"] = history_artifact.get(
+            "retrospective_game_expectations"
+        )
         merged["season_simulation"] = history_artifact.get("season_simulation")
         history_teams = history_artifact.get("teams", {})
         merged_teams: dict[str, Any] = {}
@@ -3117,6 +3344,30 @@ def build_site_data(
                 sort_keys=True,
             ).encode("utf-8")
         )
+        retrospective = team_seasons.get("retrospective_game_expectations")
+        retrospective_games = (
+            retrospective.get("games", {}) if isinstance(retrospective, dict) else {}
+        )
+        retrospective_bytes = len(
+            json.dumps(
+                retrospective_games,
+                separators=(",", ":"),
+                sort_keys=True,
+            ).encode("utf-8")
+        )
+        retrospective_displays = {
+            str(game_id): expectation.get("display_distribution")
+            for game_id, expectation in retrospective_games.items()
+            if isinstance(expectation, dict)
+            and expectation.get("display_distribution") is not None
+        }
+        retrospective_visualization_bytes = len(
+            json.dumps(
+                retrospective_displays,
+                separators=(",", ":"),
+                sort_keys=True,
+            ).encode("utf-8")
+        )
         manifest_entry = {
             "season": metadata["season"],
             "snapshot_id": snapshot_id,
@@ -3183,6 +3434,14 @@ def build_site_data(
             "future_visualization_bytes_per_game": (
                 future_visualization_bytes / len(future_displays)
                 if future_displays
+                else 0
+            ),
+            "retrospective_game_expectation_count": len(retrospective_games),
+            "retrospective_game_expectation_bytes": retrospective_bytes,
+            "retrospective_visualization_bytes": retrospective_visualization_bytes,
+            "retrospective_visualization_bytes_per_game": (
+                retrospective_visualization_bytes / len(retrospective_displays)
+                if retrospective_displays
                 else 0
             ),
             "rank_count": distribution["rank_count"],
@@ -3257,6 +3516,14 @@ def build_site_data(
     future_visualization_bytes = sum(
         int(entry["future_visualization_bytes"]) for entry in manifest_entries
     )
+    retrospective_expectation_bytes = sum(
+        int(entry["retrospective_game_expectation_bytes"])
+        for entry in manifest_entries
+    )
+    retrospective_visualization_bytes = sum(
+        int(entry["retrospective_visualization_bytes"])
+        for entry in manifest_entries
+    )
     season_simulation_bytes = sum(
         int(entry["season_simulation_bytes"]) for entry in manifest_entries
     )
@@ -3316,6 +3583,8 @@ def build_site_data(
             "lazy_future_prediction_bytes": future_prediction_bytes,
             "lazy_completed_visualization_bytes": completed_visualization_bytes,
             "lazy_future_visualization_bytes": future_visualization_bytes,
+            "lazy_retrospective_game_expectation_bytes": retrospective_expectation_bytes,
+            "lazy_retrospective_visualization_bytes": retrospective_visualization_bytes,
             "season_simulation_bytes": season_simulation_bytes,
             "season_simulation_browser_bytes": season_simulation_browser_bytes,
             "season_trajectory_bytes": season_trajectory_bytes,

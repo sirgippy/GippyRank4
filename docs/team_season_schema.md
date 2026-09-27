@@ -119,6 +119,23 @@ sugar and never enter inference.
 The artifact records the statistic, direction, reference population, tie
 rule, and reference count in `performance_percentile`.
 
+## Retrospective completed-game expectations
+
+Supported predictive snapshots also include a top-level
+`retrospective_game_expectations` versioned model artifact. Each modeled game
+is keyed by stable game ID and has an exact leave-one-game-out
+posterior-predictive Historical Likelihood V1 margin distribution, its
+home-oriented observed margin, exact summaries/tails, and a compact display
+distribution. Team schedule entries point to their record with
+`retrospective_expectation_id`; this supplements rather than replaces the
+existing `game_rating` performance artifact.
+
+See [retrospective_game_expectations.md](retrospective_game_expectations.md)
+for the statistical interpretation, snapshot boundary, rematch treatment,
+display encoding, and complete contract. In particular, it is not a
+pre-kickoff prediction and it does not attribute a ranking movement to one
+game.
+
 ## Future-game prediction definition
 
 An eligible scheduled game has one canonical entry in the artifact's
