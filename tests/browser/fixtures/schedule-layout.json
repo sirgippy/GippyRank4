@@ -26,7 +26,9 @@
         "fixture-ucf": "ucf",
         "fixture-north-carolina": "north-carolina",
         "fixture-rutgers": "rutgers",
-        "fixture-boston-college": "boston-college"
+        "fixture-boston-college": "boston-college",
+        "fixture-middle-tennessee": "middle-tennessee",
+        "fixture-western-kentucky": "western-kentucky"
       }
     }
   },
@@ -39,7 +41,9 @@
       "fixture-ucf": {"rated": true, "display_rank": 20},
       "fixture-north-carolina": {"rated": true, "display_rank": 35},
       "fixture-rutgers": {"rated": true, "display_rank": 118},
-      "fixture-boston-college": {"rated": true, "display_rank": 110}
+      "fixture-boston-college": {"rated": true, "display_rank": 110},
+      "fixture-middle-tennessee": {"rated": true, "display_rank": 128},
+      "fixture-western-kentucky": {"rated": true, "display_rank": 117}
     },
     "weeks": [
       {
@@ -152,6 +156,26 @@
             "home_team": {
               "team_id": "fixture-boston-college",
               "team_name": "Boston College",
+              "subdivision": "fbs",
+              "conference": "Fixture Conference"
+            }
+          },
+          {
+            "date": "2026-09-05T23:55:00Z",
+            "state": "future",
+            "neutral_site": false,
+            "marquee": false,
+            "game_id": "fixture-middle-tennessee-western-kentucky",
+            "conference_game": false,
+            "away_team": {
+              "team_id": "fixture-middle-tennessee",
+              "team_name": "Middle Tennessee",
+              "subdivision": "fbs",
+              "conference": "Fixture Conference"
+            },
+            "home_team": {
+              "team_id": "fixture-western-kentucky",
+              "team_name": "Western Kentucky",
               "subdivision": "fbs",
               "conference": "Fixture Conference"
             }
