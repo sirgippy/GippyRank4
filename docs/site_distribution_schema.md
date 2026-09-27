@@ -21,9 +21,14 @@ entries do not receive preseason-reference fields.
 
 Predictive entries additionally provide `preseason_team_seasons_path` and a
 `season_trajectory_path`. The trajectory is specific to that selected
-publication: it starts with the matching preseason point and ends with the
-selected snapshot, so a historical snapshot artifact cannot expose a later
-published belief point.
+publication: it starts with the matching preseason point, contains official
+weekly checkpoints only, and ends with the selected snapshot. An interim
+selection is included as that endpoint, but historical interim publications
+are omitted. A historical snapshot artifact cannot expose a later published
+belief point. Each team checkpoint explicitly carries its expected rank,
+central intervals, inclusive central-80% width, width change from the prior
+meaningful checkpoint, and Top 5/10/25 probabilities so browser rendering
+does not have to infer uncertainty movement from labels or file order.
 
 Each `site/data/distributions/<snapshot-id>.json` artifact is deterministic,
 compact JSON with this contract:

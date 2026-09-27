@@ -266,7 +266,8 @@ function distributionTeam(distribution, expectedSnapshotId, expectedRankCount, t
 
 function lazyRankDistributionDisclosure(point, teamId, rankCount, teamName) {
   const body = node("div", "lazy-distribution-content");
-  const details = disclosure(`${point.display_label} rank distribution`, body, "distribution-disclosure trajectory-distribution-disclosure");
+  const label = checkpointLabel(point);
+  const details = disclosure(`${label} rank distribution`, body, "distribution-disclosure trajectory-distribution-disclosure");
   let requested = false;
   details.addEventListener("toggle", async () => {
     if (!details.open || requested) return;
@@ -277,7 +278,7 @@ function lazyRankDistributionDisclosure(point, teamId, rankCount, teamName) {
       if (!response.ok) throw new Error("The published distribution is unavailable.");
       const distribution = await response.json();
       const team = distributionTeam(distribution, point.snapshot_id, rankCount, teamId, "Published snapshot");
-      body.replaceChildren(rankDistributionChart(teamName, team, rankCount, `${point.display_label} rank distribution`));
+      body.replaceChildren(rankDistributionChart(teamName, team, rankCount, `${label} rank distribution`));
     } catch (error) {
       body.replaceChildren(node("p", "distribution-error", error.message));
     }
@@ -298,7 +299,24 @@ function summaryItem(label, value, note = null) {
   return item;
 }
 
-function renderSummary(entry, snapshot, row, simulation, distribution) {
+function scalarDistributionDisclosure(label, summaryText, content, className) {
+  const details = node("details", `${className} scalar-distribution-disclosure`);
+  const summary = node("summary", "scalar-distribution-summary");
+  const text = node("span", "scalar-distribution-text", summaryText);
+  const chevron = node("span", "scalar-distribution-chevron", "▾");
+  const updateLabel = () => {
+    const verb = details.open ? "Hide" : "Show";
+    summary.setAttribute("aria-label", `${summaryText}. ${verb} ${label}`);
+    summary.title = `${verb} ${label}`;
+  };
+  updateLabel();
+  details.addEventListener("toggle", updateLabel);
+  summary.append(text, chevron);
+  details.append(summary, content);
+  return details;
+}
+
+function renderSummary(entry, row) {
   const rankLabel = row.rated === false ? "NR" : `#${row.display_rank}`;
   const logo = teamLogo(row.team_id, "team-logo team-logo-card");
   $("#team-page-logo").replaceChildren(...(logo ? [logo] : []));
@@ -310,29 +328,16 @@ function renderSummary(entry, snapshot, row, simulation, distribution) {
     : `Results and ratings are shown only through ${timestamp(entry.effective_cutoff)}.`;
   $("#prediction-source").textContent = `Future prediction source: ${entry.ranking_family === "performance" ? "Predictive Context" : `Predictive ${priorLabel(entry.prior_family)}`}. Predictions use the posterior available at this snapshot.`;
 
-  const forecast = simulation?.teams?.[row.team_id];
   const summary = node("div", "team-summary-grid");
-  summary.append(
-    summaryItem("Display rank", rankLabel),
-    summaryItem("Expected rank", rank(row.expected_rank)),
-    summaryItem("Median rank", `#${row.median_rank}`),
-    summaryItem("Central 80%", rankRange(row.interval_80)),
-    summaryItem("Top 25 probability", percentage(row.top25_probability)),
-    summaryItem("Modeled record", row.record),
-  );
-  if (forecast?.forecast_status === "available") {
+  summary.append(summaryItem("Published rank", rankLabel), summaryItem("Record", row.record));
+  if (entry.ranking_family === "performance") {
     summary.append(
-      summaryItem("Expected final wins", `${Number(forecast.expected_final_wins).toFixed(1)}`),
-      summaryItem("Likely final record", likelyRecord(forecast)),
+      summaryItem("Expected rank", rank(row.expected_rank)),
+      summaryItem("Central 80%", rankRange(row.interval_80)),
+      summaryItem("Top 25 probability", percentage(row.top25_probability)),
     );
   }
-  const currentTeam = distributionTeam(distribution, entry.snapshot_id, snapshot.rank_count, row.team_id, "Selected snapshot");
-  const currentDistribution = disclosure(
-    "current rank distribution",
-    rankDistributionChart(row.team_name, currentTeam, snapshot.rank_count, "Current rank distribution"),
-    "distribution-disclosure header-distribution-disclosure",
-  );
-  $("#team-ranking-summary").replaceChildren(summary, currentDistribution);
+  $("#team-ranking-summary").replaceChildren(summary);
 }
 
 function comparisonText(comparison) {
@@ -346,23 +351,50 @@ function comparisonText(comparison) {
   return parts.join(" · ");
 }
 
-function preseasonEvidenceGroup(group) {
-  const section = node("article", "preseason-input-group");
+function readableProvenanceValue(value) {
+  if (value === null || value === undefined || value === "") return "Unavailable";
+  return typeof value === "string" ? value : JSON.stringify(value);
+}
+
+function preseasonEvidenceGroup(key, group) {
+  const section = node("article", `preseason-input-group preseason-input-group-${key}`);
   section.append(node("h3", "", group.title));
-  if (group.source) section.append(node("p", "preseason-input-source", group.source));
-  const list = node("dl", "preseason-input-values");
+  const list = node("div", "preseason-input-values");
+  const provenance = [];
+  if (group.source) provenance.push(["Source", group.source]);
   (group.fields || []).forEach((field) => {
-    const term = node("dt", "", field.label);
-    const description = node("dd", "");
-    description.append(node("strong", "", field.display_value));
+    const fact = node("div", "preseason-input-value");
+    fact.append(node("span", "preseason-input-label", field.label), node("strong", "", field.display_value));
     const comparison = comparisonText(field.comparison);
-    if (comparison) description.append(node("span", "preseason-input-comparison", comparison));
-    if (field.detail) description.append(node("span", "preseason-input-detail", field.detail));
-    list.append(term, description);
+    if (comparison) fact.append(node("span", "preseason-input-comparison", comparison));
+    list.append(fact);
+    const detail = [field.source, field.detail, field.model_feature ? `Model feature: ${field.model_feature}` : null]
+      .filter(Boolean)
+      .join(" · ");
+    if (detail) provenance.push([field.label, detail]);
   });
   section.append(list);
-  if (group.note) section.append(node("p", "preseason-input-note", group.note));
+  if (group.note) provenance.push(["Note", group.note]);
+  if (provenance.length) {
+    const detail = node("dl", "preseason-input-provenance");
+    provenance.forEach(([label, value]) => detail.append(node("dt", "", label), node("dd", "", value)));
+    section.append(labeledDisclosure("Source & model detail", detail, "preseason-input-provenance-disclosure"));
+  }
   return section;
+}
+
+function preseasonProvenanceDisclosure(provenance) {
+  if (!provenance || typeof provenance !== "object") return null;
+  const entries = Object.entries(provenance).filter(([key]) => key !== "transfer_caveat");
+  if (!entries.length) return null;
+  const detail = node("dl", "preseason-provenance-detail-list");
+  entries.forEach(([key, value]) => {
+    detail.append(
+      node("dt", "", key.replaceAll("_", " ")),
+      node("dd", "", readableProvenanceValue(value)),
+    );
+  });
+  return labeledDisclosure("Evidence provenance", detail, "preseason-provenance");
 }
 
 function renderPreseasonStartingPoint(entry, distribution, sourceArtifact, row) {
@@ -385,11 +417,17 @@ function renderPreseasonStartingPoint(entry, distribution, sourceArtifact, row) 
         ? "History uses program-history evidence only."
         : "Context combines program history with this team's published preseason context evidence.",
     ),
+    scalarDistributionDisclosure(
+      "preseason rank distribution",
+      `Preseason belief: expected ${rank(team.summary.expected_rank)} · 80% ${rankRange(team.summary.interval_80)}`,
+      rankDistributionChart(row.team_name, team, distribution.rank_count, "Preseason rank distribution"),
+      "preseason-distribution-disclosure",
+    ),
   ];
   if (evidence) {
     const groups = node("div", "preseason-input-groups");
     ["program_history", "coach", "recruiting", "talent", "transfers"].forEach((key) => {
-      if (evidence[key]) groups.append(preseasonEvidenceGroup(evidence[key]));
+      if (evidence[key]) groups.append(preseasonEvidenceGroup(key, evidence[key]));
     });
     children.push(groups);
     const caveat = inputs?.provenance?.transfer_caveat;
@@ -397,17 +435,59 @@ function renderPreseasonStartingPoint(entry, distribution, sourceArtifact, row) 
       const body = node("p", "preseason-provenance-detail", caveat.detail || "Transfer evidence is not a literal archived cutoff information state.");
       children.push(labeledDisclosure(caveat.visible_label, body, "preseason-provenance"));
     }
+    const provenance = preseasonProvenanceDisclosure(inputs?.provenance);
+    if (provenance) children.push(provenance);
   } else {
     children.push(node("p", "preseason-starting-point-note", "This retained publication does not include the detailed preseason-evidence payload."));
   }
-  children.push(
-    disclosure(
-      "preseason rank distribution",
-      rankDistributionChart(row.team_name, team, distribution.rank_count, "Preseason rank distribution"),
-      "distribution-disclosure preseason-distribution-disclosure",
-    ),
-  );
   content.replaceChildren(...children);
+}
+
+function checkpointLabel(point) {
+  if (point.snapshot_type === "preseason") return "Preseason";
+  if (point.publication_status === "official") {
+    return point.display_label.replace(/\s*\([^)]*retrospective[^)]*\)\s*/i, "").trim();
+  }
+  const date = point.effective_cutoff ? formatDate(point.effective_cutoff, false) : point.display_label;
+  return `${date} interim`;
+}
+
+function intervalWidth(summary) {
+  const explicit = Number(summary.interval_80_width);
+  if (Number.isFinite(explicit)) return explicit;
+  return Number(summary.interval_80[1]) - Number(summary.interval_80[0]) + 1;
+}
+
+function intervalWidthMovement(summary) {
+  const change = Number(summary.interval_80_width_change);
+  return intervalWidthChangeDescription(change);
+}
+
+function intervalWidthChangeDescription(change) {
+  if (!Number.isFinite(change)) return "starting range";
+  if (change === 0) return "same width";
+  const ranks = `${Math.abs(change)} rank${Math.abs(change) === 1 ? "" : "s"}`;
+  return `${ranks} ${change < 0 ? "narrower" : "wider"}`;
+}
+
+function adaptiveRankDomain(points, rankCount) {
+  const bounds = points.flatMap((point) => point.teams.interval_80.map(Number));
+  const low = Math.max(1, Math.min(...bounds));
+  const high = Math.min(rankCount, Math.max(...bounds));
+  const padding = Math.max(2, Math.ceil(Math.max(high - low, 1) * 0.16));
+  let minimum = Math.max(1, low - padding);
+  let maximum = Math.min(rankCount, high + padding);
+  const targetSpan = Math.min(Math.max(rankCount - 1, 0), 6);
+  if (maximum - minimum < targetSpan) {
+    const extra = targetSpan - (maximum - minimum);
+    minimum = Math.max(1, minimum - Math.ceil(extra / 2));
+    maximum = Math.min(rankCount, maximum + Math.floor(extra / 2));
+    if (maximum - minimum < targetSpan) {
+      if (minimum === 1) maximum = Math.min(rankCount, minimum + targetSpan);
+      else minimum = Math.max(1, maximum - targetSpan);
+    }
+  }
+  return { minimum, maximum };
 }
 
 function trajectoryChart(teamName, points, rankCount) {
@@ -420,19 +500,22 @@ function trajectoryChart(teamName, points, rankCount) {
   const plotWidth = width - left - right;
   const plotHeight = height - top - bottom;
   const xFor = (index) => left + (points.length <= 1 ? plotWidth / 2 : (index / (points.length - 1)) * plotWidth);
-  const yFor = (value) => top + ((Number(value) - 1) / Math.max(rankCount - 1, 1)) * plotHeight;
+  const domain = adaptiveRankDomain(points, rankCount);
+  const yFor = (value) => top + ((Number(value) - domain.minimum) / Math.max(domain.maximum - domain.minimum, 1)) * plotHeight;
   const svg = svgElement("svg", {
     viewBox: `0 0 ${width} ${height}`,
     class: "season-trajectory-chart",
     role: "img",
     "aria-labelledby": "season-trajectory-chart-title season-trajectory-chart-description",
+    "data-rank-domain-min": domain.minimum,
+    "data-rank-domain-max": domain.maximum,
   });
   const title = svgElement("title", { id: "season-trajectory-chart-title" });
   title.textContent = `${teamName} published expected rank trajectory`;
   const description = svgElement("desc", { id: "season-trajectory-chart-description" });
-  description.textContent = points.map((point) => `${point.display_label}: ${rankSummaryLine(point.teams)}.`).join(" ");
+  description.textContent = `Adaptive rank view #${domain.minimum} through #${domain.maximum}; rank 1 is best. ${points.map((point) => `${checkpointLabel(point)}: expected ${rank(point.teams.expected_rank)}, central 80% ${rankRange(point.teams.interval_80)}, width ${intervalWidth(point.teams)} ranks (${intervalWidthMovement(point.teams)}), Top 25 ${percentage(point.teams.top25_probability)}.`).join(" ")}`;
   svg.append(title, description);
-  const ticks = [...new Set([1, Math.round(rankCount * 0.25), Math.round(rankCount * 0.5), Math.round(rankCount * 0.75), rankCount])].sort((a, b) => a - b);
+  const ticks = [...new Set(Array.from({ length: 5 }, (_, index) => Math.round(domain.minimum + ((domain.maximum - domain.minimum) * index) / 4)))].sort((a, b) => a - b);
   ticks.forEach((value) => {
     const y = yFor(value);
     svg.append(svgElement("line", { x1: left, y1: y, x2: width - right, y2: y, class: "trajectory-gridline" }));
@@ -440,18 +523,17 @@ function trajectoryChart(teamName, points, rankCount) {
     label.textContent = `#${value}`;
     svg.append(label);
   });
+  const bandTop = points.map((point, index) => `${index ? "L" : "M"} ${xFor(index)} ${yFor(point.teams.interval_80[0])}`).join(" ");
+  const bandBottom = [...points].reverse().map((point, reverseIndex) => {
+    const index = points.length - reverseIndex - 1;
+    return `L ${xFor(index)} ${yFor(point.teams.interval_80[1])}`;
+  }).join(" ");
+  svg.append(svgElement("path", { d: `${bandTop} ${bandBottom} Z`, class: "trajectory-uncertainty-band" }));
   const path = points.map((point, index) => `${index ? "L" : "M"} ${xFor(index)} ${yFor(point.teams.expected_rank)}`).join(" ");
   svg.append(svgElement("path", { d: path, class: "trajectory-expected-line" }));
   points.forEach((point, index) => {
     const summary = point.teams;
     const x = xFor(index);
-    svg.append(svgElement("line", {
-      x1: x,
-      y1: yFor(summary.interval_80[0]),
-      x2: x,
-      y2: yFor(summary.interval_80[1]),
-      class: "trajectory-interval",
-    }));
     svg.append(svgElement("circle", {
       cx: x,
       cy: yFor(summary.expected_rank),
@@ -465,15 +547,15 @@ function trajectoryChart(teamName, points, rankCount) {
       transform: `rotate(-35 ${x} ${height - bottom + 22})`,
       class: "trajectory-snapshot-label",
     });
-    label.textContent = point.display_label;
+    label.textContent = checkpointLabel(point);
     svg.append(label);
   });
   const axisTitle = svgElement("text", { x: left + plotWidth / 2, y: height - 7, "text-anchor": "middle", class: "trajectory-axis-title" });
-  axisTitle.textContent = "Published snapshots · rank 1 is best";
+  axisTitle.textContent = `Team view · rank 1 is best · #${domain.minimum}–#${domain.maximum}`;
   svg.append(axisTitle);
   const figure = node("figure", "season-trajectory-figure");
   figure.append(svg);
-  const caption = node("figcaption", "trajectory-caption", "Line: expected rank · vertical bars: central 80% interval · filled points: official publications.");
+  const caption = node("figcaption", "trajectory-caption", "Line: expected rank · shaded band: central 80% interval. The axis adapts to this team's published range.");
   figure.append(caption);
   return figure;
 }
@@ -485,9 +567,10 @@ function trajectoryPointList(points, row, rankCount) {
     const item = node("li", "trajectory-point-item");
     const facts = node("div", "trajectory-point-facts");
     facts.append(
-      node("strong", "", point.display_label),
+      node("strong", "", checkpointLabel(point)),
       node("span", "", `Expected ${rank(summary.expected_rank)}`),
       node("span", "", `80% ${rankRange(summary.interval_80)}`),
+      node("span", "", `Width ${intervalWidth(summary)} · ${intervalWidthMovement(summary)}`),
       node("span", "", `${percentage(summary.top25_probability)} Top 25`),
     );
     item.append(facts, lazyRankDistributionDisclosure(point, row.team_id, rankCount, row.team_name));
@@ -496,17 +579,78 @@ function trajectoryPointList(points, row, rankCount) {
   return list;
 }
 
-function renderSeasonMovement(entry, trajectory, row, rankCount) {
+function seasonStoryMetric(label, preseasonValue, currentValue, currentDistribution = null) {
+  const metric = node("div", "season-story-metric");
+  metric.append(node("dt", "", label));
+  const values = node("dd", "season-story-values");
+  if (preseasonValue !== null) {
+    values.append(node("span", "season-story-before", preseasonValue), node("span", "season-story-arrow", "→"));
+  }
+  if (currentDistribution) values.append(currentDistribution);
+  else values.append(node("strong", "season-story-current", currentValue));
+  metric.append(values);
+  return metric;
+}
+
+function renderSeasonStory(entry, points, row, rankCount, distribution) {
+  const section = $("#season-story-section");
+  const content = $("#season-story-content");
+  if (entry.ranking_family !== "predictive" || !points.length) {
+    section.hidden = true;
+    content.replaceChildren();
+    return;
+  }
+  const preseason = points[0];
+  const current = points.at(-1);
+  const startsAtPreseason = preseason.snapshot_id === current.snapshot_id;
+  const currentTeam = distributionTeam(distribution, entry.snapshot_id, rankCount, row.team_id, "Selected snapshot");
+  const currentExpected = rank(current.teams.expected_rank);
+  const currentDistribution = scalarDistributionDisclosure(
+    "current rank distribution",
+    currentExpected,
+    rankDistributionChart(row.team_name, currentTeam, rankCount, "Current rank distribution"),
+    "season-story-distribution",
+  );
+  const metrics = node("dl", "season-story-metrics");
+  metrics.append(
+    seasonStoryMetric("Expected rank", startsAtPreseason ? null : rank(preseason.teams.expected_rank), currentExpected, currentDistribution),
+    seasonStoryMetric("Central 80%", startsAtPreseason ? null : rankRange(preseason.teams.interval_80), rankRange(current.teams.interval_80)),
+    seasonStoryMetric("Top 25", startsAtPreseason ? null : percentage(preseason.teams.top25_probability), percentage(current.teams.top25_probability)),
+  );
+  const heading = startsAtPreseason ? "Preseason belief" : `Preseason → ${checkpointLabel(current)}`;
+  const widthText = startsAtPreseason
+    ? `The central 80% range starts ${intervalWidth(current.teams)} ranks wide.`
+    : (() => {
+      const change = intervalWidth(current.teams) - intervalWidth(preseason.teams);
+      const comparison = change === 0
+        ? "the same width as preseason"
+        : `${intervalWidthChangeDescription(change)} than preseason`;
+      return `The central 80% range is now ${intervalWidth(current.teams)} ranks wide — ${comparison}.`;
+    })();
+  const title = node("h2", "", heading);
+  title.id = "season-story-title";
+  content.replaceChildren(
+    node("p", "season-story-eyebrow", "Season story"),
+    title,
+    metrics,
+    node("p", "season-story-uncertainty", widthText),
+  );
+  section.hidden = false;
+}
+
+function renderSeasonMovement(entry, trajectory, row, rankCount, distribution) {
   const section = $("#season-movement-section");
   const content = $("#season-movement");
   const context = $("#season-movement-context");
   if (entry.ranking_family === "performance") {
+    renderSeasonStory(entry, [], row, rankCount, distribution);
     section.hidden = false;
     context.textContent = "Performance is a separate view of completed-game evidence.";
     content.replaceChildren(node("p", "season-movement-not-applicable", "Performance has no preseason starting point in the same semantic sense, so this page does not show a preseason-to-current comparison."));
     return;
   }
   if (!trajectory?.points?.length) {
+    renderSeasonStory(entry, [], row, rankCount, distribution);
     section.hidden = false;
     context.textContent = `Published ${priorLabel(entry.prior_family)} belief`;
     content.replaceChildren(node("p", "season-movement-unavailable", "A published belief trajectory is unavailable for this retained snapshot."));
@@ -515,21 +659,24 @@ function renderSeasonMovement(entry, trajectory, row, rankCount) {
   const currentIndex = trajectory.points.findIndex((point) => point.snapshot_id === entry.snapshot_id);
   const points = trajectory.points.slice(0, currentIndex + 1).filter((point) => point.teams?.[row.team_id]).map((point) => ({ ...point, teams: point.teams[row.team_id] }));
   if (currentIndex < 0 || !points.length) {
+    renderSeasonStory(entry, [], row, rankCount, distribution);
     section.hidden = false;
     context.textContent = `Published ${priorLabel(entry.prior_family)} belief`;
     content.replaceChildren(node("p", "season-movement-unavailable", "This selected snapshot is not present in its published trajectory."));
     return;
   }
   if (points.length < 2) {
+    renderSeasonStory(entry, points, row, rankCount, distribution);
     section.hidden = true;
     context.textContent = "";
     content.replaceChildren();
     return;
   }
+  renderSeasonStory(entry, points, row, rankCount, distribution);
   section.hidden = false;
   context.textContent = `Published ${priorLabel(entry.prior_family)} belief · expected rank with central 80% intervals.`;
   content.replaceChildren(
-    node("p", "season-movement-intro", `Preseason through ${entry.display_label}. Each point is a published belief; adjacent points are not attributed to one specific game.`),
+    node("p", "season-movement-intro", "Meaningful weekly checkpoints show what changed in expected rank and in the width of the central 80% range. The adjacent points are not attributed to one specific game. Historical interim publications are omitted."),
     trajectoryChart(row.team_name, points, rankCount),
     trajectoryPointList(points, row, rankCount),
   );
@@ -550,8 +697,13 @@ function renderSeasonOutlook(simulation, team) {
     return;
   }
   const thresholds = Object.entries(summary.threshold_probabilities || {})
-    .filter(([label]) => label.startsWith("wins_"))
-    .map(([label, probability]) => `${label.replace(/^wins_(\d+)_plus$/, "$1+")} ${percentage(probability)}`)
+    .map(([label, probability]) => {
+      const match = /^wins_(\d+)_plus$/.exec(label);
+      return match ? { wins: Number(match[1]), probability } : null;
+    })
+    .filter(Boolean)
+    .sort((left, right) => left.wins - right.wins)
+    .map(({ wins, probability }) => `${wins}+ ${percentage(probability)}`)
     .join(" · ");
   const details = node("dl", "season-outlook-details");
   [
@@ -569,7 +721,15 @@ function renderSeasonOutlook(simulation, team) {
   const recordList = node("ul", "season-outlook-records");
   records.forEach(([record, probability]) => recordList.append(node("li", "", `${record} · ${percentage(probability)}`)));
   contentDetail.append(recordList);
-  content.replaceChildren(details, disclosure("final-win distribution", contentDetail, "distribution-disclosure season-outlook-disclosure"));
+  content.replaceChildren(
+    details,
+    scalarDistributionDisclosure(
+      "final-win distribution",
+      "Final-win distribution",
+      contentDetail,
+      "season-outlook-disclosure",
+    ),
+  );
 }
 
 function orientedPrediction(prediction, team) {
@@ -851,9 +1011,9 @@ async function load() {
   if (!row) throw new Error("This team is not available in the selected ranking snapshot.");
   distributionTeam(distribution, entry.snapshot_id, snapshot.rank_count, teamId, "Selected snapshot");
   updatePriorSwitch(manifest, entry);
-  renderSummary(entry, snapshot, row, artifact.season_simulation, distribution);
+  renderSummary(entry, row);
   renderPreseasonStartingPoint(entry, preseasonDistribution || distribution, preseasonArtifact, row);
-  renderSeasonMovement(entry, trajectory, row, snapshot.rank_count);
+  renderSeasonMovement(entry, trajectory, row, snapshot.rank_count, distribution);
   renderSeasonOutlook(artifact.season_simulation, artifact.teams[teamId]);
   renderSchedule(artifact, entry, trajectory);
 }
