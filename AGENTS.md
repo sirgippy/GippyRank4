@@ -46,7 +46,10 @@ GippyRank4 is a research project for probabilistic college-football ranking.
 
 - The static site has a repo-local Playwright harness using Chromium, with desktop and narrow/mobile projects.
 - For changes affecting user-facing files under `site/` or `site/assets/`, make a best effort to run `npm run test:ui` in addition to the normal Python and Ruff checks.
-- The browser command starts the local `site/` server itself through the configured Python environment; do not claim browser validation is unavailable without first attempting the configured Playwright checks.
+- Browser specs route the worker's own `site/` tree through Playwright request routing; do not add a local HTTP server to the harness.
+- In normal developer shells and CI, `npm ci` followed by `npm run test:browser` launches Chromium locally. In a standard Codex WSL worker, the host must run `npm ci` then `npm run browser:server` outside the sandbox; the worker uses the automatically discovered endpoint file and runs the same `npm ci` then `npm run test:browser` command.
+- Standard Codex WSL workers need `sandbox_workspace_write.network_access = true` to reach the loopback browser server. This does not require Full Access. Keep host and worker Playwright versions aligned with `npm ci`; see `docs/browser_validation.md` for the complete workflow.
+- The endpoint file is disposable discovery state: browser config probes it once, deletes a stale file (or records a temporary invalidation marker when host cache access is read-only), and stops with the host-server recovery command rather than falling back to local Chromium. An explicit `PLAYWRIGHT_WS_ENDPOINT` remains authoritative and fails directly when unreachable.
 - For substantive layout changes, add or update browser-level regression coverage rather than relying solely on static tests.
 - In a fresh environment, install the Node dependencies and Chromium/Linux browser dependencies before running the UI checks; see `docs/browser_validation.md`.
 
