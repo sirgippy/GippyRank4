@@ -262,13 +262,27 @@ test.describe("Schedule browser smoke tests", () => {
 
   test("keeps the matchup horizontal at desktop width", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "This invariant is specific to the desktop viewport.");
+    await useScheduleLayoutFixture(page);
     await loadSchedule(page);
-    await expectGamesRendered(page);
+    const matchup = page.locator(".weekly-matchup").filter({ hasText: "Middle Tennessee" }).first();
+    await expect(matchup).toBeVisible();
 
-    const layout = await page.locator(".weekly-matchup").first().evaluate((element) => {
+    const layout = await matchup.evaluate((element) => {
       const rows = [...element.querySelectorAll(":scope > .weekly-team-row")].map((row) => {
         const box = row.getBoundingClientRect();
-        return { left: box.left, right: box.right, top: box.top, bottom: box.bottom };
+        const link = row.querySelector(".weekly-team-link");
+        const range = document.createRange();
+        range.selectNodeContents(link);
+        return {
+          left: box.left,
+          right: box.right,
+          top: box.top,
+          bottom: box.bottom,
+          name: link.textContent.trim(),
+          rank: row.querySelector(".weekly-team-rank").textContent.trim(),
+          linkWidth: link.getBoundingClientRect().width,
+          linkLineCount: range.getClientRects().length,
+        };
       });
       const separator = element.querySelector(":scope > .weekly-at").getBoundingClientRect();
       return {
@@ -279,6 +293,11 @@ test.describe("Schedule browser smoke tests", () => {
     });
     expect(layout.display).toBe("grid");
     expect(layout.rows).toHaveLength(2);
+    expect(layout.rows.map((row) => [row.name, row.rank])).toEqual([
+      ["Middle Tennessee", "#128"],
+      ["Western Kentucky", "#117"],
+    ]);
+    expect(layout.rows.every((row) => row.linkWidth > 100 && row.linkLineCount === 1)).toBe(true);
     expect(Math.abs(layout.rows[0].top - layout.rows[1].top)).toBeLessThan(4);
     expect(layout.separator.left).toBeGreaterThan(layout.rows[0].left);
     expect(layout.separator.right).toBeLessThan(layout.rows[1].right);
