@@ -6,13 +6,14 @@ const { installStaticSiteRoute } = require("../tests/browser/static-site");
 const output = path.resolve(__dirname, "../docs/visual-evidence/issue-136");
 const current = "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3";
 const historical = "2026-weekly-2026-09-26T12-09-11.589245Z-context-v1.3";
+const logoResponse = '<svg xmlns="http://www.w3.org/2000/svg" width="60" height="40" viewBox="0 0 60 40"><rect width="60" height="40" rx="5" fill="#e0e8e2"/><path d="M12 26h36" stroke="#9bafa3" stroke-width="3"/></svg>';
 
 async function capture(browser, name, team, snapshot, viewport, target, expandGame) {
   const context = await browser.newContext({ viewport, deviceScaleFactor: 1 });
   const page = await context.newPage();
   await installStaticSiteRoute(page);
   await page.route("**/*", (route) => route.request().resourceType() === "image"
-    ? route.fulfill({ status: 204 }) : route.fallback());
+    ? route.fulfill({ status: 200, contentType: "image/svg+xml", body: logoResponse }) : route.fallback());
   await page.goto(`http://gippyrank.test/team.html?team=${team}&season=2026&family=predictive&prior=context&snapshot=${snapshot}`);
   await page.locator("#team-page-status").getByText(/scheduled games/).waitFor();
   if (expandGame) {

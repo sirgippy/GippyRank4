@@ -148,12 +148,12 @@ function densitySvg(masses, {
   return svg;
 }
 
-function disclosure(label, content, className = "distribution-disclosure") {
+function disclosure(label, content, className = "distribution-disclosure", summaryText = null) {
   const details = node("details", className);
   const summary = node("summary", "distribution-toggle", "▾");
   const updateLabel = () => {
     const verb = details.open ? "Hide" : "Show";
-    summary.setAttribute("aria-label", `${verb} ${label}`);
+    summary.setAttribute("aria-label", summaryText ? `${summaryText}. ${verb} ${label}` : `${verb} ${label}`);
     summary.title = `${verb} ${label}`;
   };
   updateLabel();
@@ -218,13 +218,12 @@ function futureChart(prediction, team, axis, oriented) {
 }
 
 function retrospectiveChart(expectation, team, axis, oriented) {
-  const focalIsHome = expectation.home_team_id === team.team_id;
-  const display = expectation.display_distribution;
-  if (!axis || !Array.isArray(display?.masses)) return null;
-  const masses = focalIsHome ? display.masses : [...display.masses].reverse();
+  const display = orientedDisplayDistribution(expectation, team, axis);
+  if (!display) return null;
+  const offAxis = (display.lowerTail + display.upperTail) / displayScale(axis);
   const figure = node("figure", "game-distribution game-distribution-retrospective");
   const label = `${team.team_name} retrospective margin distribution. Expected ${oriented.expectedText}; actual ${oriented.actualText}.`;
-  const svg = densitySvg(masses, {
+  const svg = densitySvg(display.masses, {
     className: "retrospective-distribution-chart",
     label,
     description: "Bars show otherwise expected outcomes; the gold line marks the expected margin and the dark line marks the actual margin. The horizontal axis is from the team's perspective.",
@@ -254,6 +253,9 @@ function retrospectiveChart(expectation, team, axis, oriented) {
     node("span", "retrospective-legend-actual", `Actual ${oriented.actualText}`),
   );
   figure.append(legend);
+  if (offAxis > 0.001) {
+    figure.append(node("p", "distribution-tail-note", `${percentage(offAxis)} of otherwise-expected outcomes lie beyond the visible ±${Math.max(Math.abs(minimum), Math.abs(maximum))}-point range.`));
+  }
   if (Math.abs(oriented.actual) > maximum || Math.abs(oriented.expected) > maximum) {
     figure.append(node("p", "distribution-tail-note", "A marker at the edge is beyond the displayed margin range."));
   }
@@ -818,15 +820,18 @@ function predictionPanel(prediction, team, axis) {
   const favorite = oriented.focalWin >= oriented.opponentWin ? [oriented.focalName, oriented.focalWin] : [oriented.opponentName, oriented.opponentWin];
   const panel = node("div", "game-prediction");
   const expectedText = oriented.expected >= 0 ? marginSide(oriented.focalName, oriented.expected) : marginSide(oriented.opponentName, -oriented.expected);
-  const title = node("strong", "game-prediction-title", `${favorite[0]} ${percentage(favorite[1])} to win · ${expectedText}`);
+  const titleText = `${favorite[0]} ${percentage(favorite[1])} to win · ${expectedText}`;
+  const title = node("strong", "game-prediction-title", titleText);
   const detail = node("div", "game-prediction-disclosure-content");
   const chart = futureChart(prediction, team, axis, oriented);
   if (chart) detail.append(chart);
   const list = node("dl", "game-rating-details");
   [["Focal win probability", percentage(oriented.focalWin)], ["Opponent win probability", percentage(oriented.opponentWin)], ["Expected margin", expectedText], ["Median margin", oriented.median >= 0 ? marginSide(oriented.focalName, oriented.median) : marginSide(oriented.opponentName, -oriented.median)], ["Central 50% range", predictionRange(oriented, oriented.interval50)], ["Central 80% range", predictionRange(oriented, oriented.interval80)], ["Central 95% range", predictionRange(oriented, oriented.interval95)], ["Prediction source", prediction.prediction_source === "predictive_history" ? "Predictive History" : "Predictive Context"]].forEach(([label, value]) => list.append(node("dt", "", label), node("dd", "", value)));
   detail.append(list);
-  const distribution = disclosure("predictive margin distribution", detail, "distribution-disclosure game-distribution-disclosure");
-  distribution.querySelector("summary").replaceChildren(title, node("span", "distribution-chevron", "▾"));
+  const distribution = disclosure("predictive margin distribution", detail, "distribution-disclosure game-distribution-disclosure", titleText);
+  const copy = node("span", "game-summary-copy");
+  copy.append(title);
+  distribution.querySelector("summary").replaceChildren(copy, node("span", "distribution-chevron", "▾"));
   panel.append(distribution);
   return panel;
 }
@@ -852,26 +857,29 @@ function retrospectivePanel(expectation, team, axis, opponentName) {
   const percentile = focalIsHome
     ? expectation.observed_margin_percentile : expectation.upper_tail_probability;
   const panel = node("div", "game-retrospective");
+  const expectedText = `Expected ${oriented.expectedText}`;
+  const actualText = `Actual ${oriented.actualText}`;
+  const tailText = `${tailPercentage(tail)} ${favorable ? "this favorable or better" : "this unfavorable or worse"}`;
   const detail = node("div", "game-retrospective-disclosure-content");
   const chart = retrospectiveChart(expectation, team, axis, oriented);
   if (chart) detail.append(chart);
   const facts = node("dl", "game-rating-details");
   [
     ["Observed percentile", percentileLabel(percentile * 100)],
-    [favorable ? "This favorable or better" : "This unfavorable or worse", tailPercentage(tail)],
     ["Median margin", marginSide(orient(expectation.median_home_margin) >= 0 ? team.team_name : opponentName, orient(expectation.median_home_margin))],
     ["Central 50%", predictionRange(oriented, orientInterval(expectation.margin_interval_50))],
     ["Central 80%", predictionRange(oriented, orientInterval(expectation.margin_interval_80))],
     ["Central 95%", predictionRange(oriented, orientInterval(expectation.margin_interval_95))],
   ].forEach(([label, value]) => facts.append(node("dt", "", label), node("dd", "", value)));
   detail.append(facts);
-  const distribution = disclosure(`${team.team_name} completed-game retrospective distribution`, detail, "distribution-disclosure game-distribution-disclosure");
-  distribution.querySelector("summary").replaceChildren(
-    node("span", "game-retrospective-expected", `Expected ${oriented.expectedText}`),
-    node("span", "game-retrospective-actual", `Actual ${oriented.actualText}`),
-    node("span", "game-retrospective-tail", `${tailPercentage(tail)} ${favorable ? "this favorable or better" : "this unfavorable or worse"}`),
-    node("span", "distribution-chevron", "▾"),
+  const distribution = disclosure(`${team.team_name} completed-game retrospective distribution`, detail, "distribution-disclosure game-distribution-disclosure", `${expectedText}. ${actualText}. ${tailText}`);
+  const copy = node("span", "game-summary-copy");
+  copy.append(
+    node("span", "game-retrospective-expected", expectedText),
+    node("span", "game-retrospective-actual", actualText),
+    node("span", "game-retrospective-tail", tailText),
   );
+  distribution.querySelector("summary").replaceChildren(copy, node("span", "distribution-chevron", "▾"));
   panel.append(distribution);
   return panel;
 }
