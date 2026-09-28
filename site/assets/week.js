@@ -216,7 +216,7 @@ function performancePanel(rating, display, axis, teamName) {
   panel.append(node("p", "sr-only", `${teamName} performance grade ${rating.performance_grade || "unavailable"}; ${ordinal(rating.performance_percentile)} percentile. Central 80 percent interval: ranks ${rating.interval_80[0]} through ${rating.interval_80[1]}.`));
   const details = node("details", "game-rating-details-disclosure");
   details.append(node("summary", "", "More performance detail"));
-  const list = node("dl", "game-rating-details");
+  const list = node("dl", "game-facts");
   [["Expected performance rank", `#${Number(rating.expected_rank).toFixed(1)}`], ["Median", `#${rating.median_rank}`], ["Mode", `#${rating.mode_rank}`], ["50% interval", `${rating.interval_50[0]}–${rating.interval_50[1]}`], ["80% interval", `${rating.interval_80[0]}–${rating.interval_80[1]}`], ["95% interval", `${rating.interval_95[0]}–${rating.interval_95[1]}`], ["Top 25 caliber", percentage(rating.top25_probability)]].forEach(([label, value]) => list.append(node("dt", "", label), node("dd", "", value)));
   details.append(list);
   panel.append(details);
@@ -260,7 +260,7 @@ function predictionPanel(prediction, axis) {
   panel.append(node("p", "sr-only", `${prediction.home_team_name} has a ${percentage(prediction.home_win_probability)} win probability and ${prediction.away_team_name} has a ${percentage(prediction.away_win_probability)} win probability. Expected margin is ${expectedTeam} by ${expectedMargin.toFixed(1)}. Central 80 percent range: ${predictionRange(prediction, prediction.margin_interval_80)}.`));
   const details = node("details", "game-prediction-details");
   details.append(node("summary", "", "More predictive detail"));
-  const list = node("dl", "game-rating-details");
+  const list = node("dl", "game-facts");
   [["Home win probability", percentage(prediction.home_win_probability)], ["Away win probability", percentage(prediction.away_win_probability)], ["Expected margin", expectedTeam === prediction.home_team_name ? marginSide(expectedTeam, prediction.expected_home_margin) : marginSide(expectedTeam, -prediction.expected_home_margin)], ["Median margin", prediction.median_home_margin >= 0 ? marginSide(prediction.home_team_name, prediction.median_home_margin) : marginSide(prediction.away_team_name, -prediction.median_home_margin)], ["Central 50% range", predictionRange(prediction, prediction.margin_interval_50)], ["Central 80% range", predictionRange(prediction, prediction.margin_interval_80)], ["Central 95% range", predictionRange(prediction, prediction.margin_interval_95)], ["Prediction source", prediction.prediction_source === "predictive_history" ? "Predictive History" : "Predictive Context"]].forEach(([label, value]) => list.append(node("dt", "", label), node("dd", "", value)));
   details.append(list);
   panel.append(details);

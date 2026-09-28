@@ -1176,26 +1176,21 @@ summary:focus-visible,
   color: var(--danger);
 }
 
-.team-rating-explainer {
-  margin: 4px 0 20px;
-  padding: 16px 18px;
+.schedule-explainer {
+  margin: 0 0 12px;
+  padding: 12px 16px;
   background: var(--wash);
   border-left: 3px solid var(--green);
 }
 
-.team-rating-explainer h2 {
-  margin: 0;
-  font-size: 19px;
-}
-
-.team-rating-explainer p {
+.schedule-explainer p {
   max-width: 780px;
   margin: 7px 0 0;
   color: #40534c;
   font-size: 13px;
 }
 
-.team-rating-explainer .team-rating-note {
+.schedule-explainer .schedule-source-note {
   color: var(--muted);
   font-size: 12px;
 }
@@ -1274,7 +1269,7 @@ summary:focus-visible,
 
 .schedule-list {
   display: grid;
-  gap: 10px;
+  gap: 5px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -1583,7 +1578,7 @@ summary:focus-visible,
   margin-top: 7px;
 }
 
-.weekly-prediction-panel .game-rating-details {
+.weekly-prediction-panel .game-facts {
   grid-template-columns: repeat(4, auto);
 }
 
@@ -2016,35 +2011,35 @@ summary:focus-visible,
 
 .game-card {
   display: grid;
-  grid-template-columns: minmax(150px, 0.8fr) minmax(150px, 1fr) minmax(260px, 1.5fr);
-  gap: 8px 18px;
-  align-items: start;
-  padding: 14px 16px;
+  grid-template-columns: 90px minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+  min-width: 0;
+  padding: 8px 12px;
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: 6px;
-}
-
-.game-card-header,
-.game-card-body {
-  grid-row: span 2;
 }
 
 .game-card-header {
   display: flex;
   justify-content: space-between;
   gap: 8px;
+  grid-column: 1;
+}
+
+.game-card-body {
+  grid-column: 2 / 4;
+  min-width: 0;
 }
 
 .game-date,
 .game-site,
-.game-meta,
 .game-outcome {
   margin: 0;
 }
 
-.game-date,
-.game-site {
+.game-date {
   color: var(--muted);
   font-size: 12px;
   font-weight: 700;
@@ -2052,38 +2047,33 @@ summary:focus-visible,
 
 .game-site {
   color: var(--green);
+  font-size: 11px;
+  font-weight: 600;
   text-transform: capitalize;
 }
 
 .game-opponent {
   margin: 0;
-  font-size: 18px;
-  line-height: 1.15;
+  font-size: 15px;
+  line-height: 1.2;
 }
 
 .game-opponent-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
+  grid-column: 2;
+  flex-wrap: wrap;
   min-width: 0;
 }
 
-.game-meta {
-  color: var(--muted);
-  font-size: 11px;
-}
-
 .game-outcome {
+  grid-column: 3;
   color: var(--ink);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 800;
-}
-
-.game-rating {
-  padding: 11px 13px;
-  background: #f5f8f5;
-  border: 1px solid #c9d8cf;
-  border-radius: 5px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .game-distribution {
@@ -2145,7 +2135,7 @@ summary:focus-visible,
 }
 
 .distribution-tail-note,
-.game-distribution-text {
+.distribution-marker-note {
   margin: 5px 0 0;
   color: var(--muted);
   font-size: 11px;
@@ -2163,25 +2153,10 @@ summary:focus-visible,
   font-weight: 750;
 }
 
-.game-prediction {
-  padding: 11px 13px;
-  background: #fffaf0;
-  border: 1px solid #dfc98f;
-  border-radius: 5px;
-}
-
-.game-prediction-title {
+.weekly-prediction-panel .game-prediction-title {
   display: block;
   color: var(--green);
   font-size: 16px;
-}
-
-.game-prediction-expected,
-.game-prediction-interval {
-  margin: 4px 0 0;
-  color: var(--ink);
-  font-size: 12px;
-  font-weight: 700;
 }
 
 .game-prediction-details {
@@ -2201,15 +2176,7 @@ summary:focus-visible,
   font-size: 16px;
 }
 
-.game-rating-interval {
-  display: block;
-  margin-top: 2px;
-  color: var(--ink);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.game-rating-details {
+.game-facts {
   display: grid;
   grid-template-columns: repeat(4, auto);
   gap: 3px 10px;
@@ -2218,7 +2185,7 @@ summary:focus-visible,
   font-size: 11px;
 }
 
-.game-rating-details dd {
+.game-facts dd {
   margin: 0;
   color: var(--ink);
   font-weight: 750;
@@ -2833,103 +2800,7 @@ details[open] > .distribution-toggle {
   margin-top: 8px;
 }
 
-.game-distribution-disclosure {
-  margin-top: 7px;
-}
-
-.game-distribution-disclosure .distribution-toggle,
-.game-belief-disclosure .distribution-toggle {
-  color: var(--green);
-}
-
-.game-rating-disclosure-content,
-.game-prediction-disclosure-content {
-  max-width: 440px;
-}
-
-.game-belief-movement {
-  margin-bottom: 8px;
-  padding: 9px 10px;
-  background: #eef4ee;
-  border-left: 3px solid var(--green);
-}
-
-.game-belief-movement h4 {
-  margin: 0;
-  color: var(--green);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.game-belief-scope {
-  margin: 4px 0 0;
-  color: var(--muted);
-  font-size: 11px;
-  line-height: 1.35;
-}
-
-.game-belief-facts {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 3px 10px;
-  margin: 7px 0 0;
-  font-size: 12px;
-}
-
-.game-belief-facts dt {
-  color: var(--muted);
-}
-
-.game-belief-facts dd {
-  margin: 0;
-  color: var(--ink);
-  font-weight: 750;
-}
-
-.game-belief-disclosure {
-  margin-top: 4px;
-}
-
-.game-belief-detail-content p {
-  margin: 6px 0 0;
-  color: #40534c;
-  font-size: 11px;
-  line-height: 1.4;
-}
-
-.game-belief-detail-content .game-belief-caveat {
-  color: var(--muted);
-}
-
 /* Team-season schedule: the result is the first line; model context is a compact second line. */
-.schedule-list {
-  gap: 5px;
-}
-
-.game-card {
-  grid-template-columns: 90px minmax(0, 1fr) auto;
-  gap: 4px 12px;
-  align-items: center;
-  padding: 8px 12px;
-  min-width: 0;
-}
-
-.game-card-header,
-.game-card-body {
-  grid-row: auto;
-}
-
-.game-card-header {
-  grid-column: 1;
-}
-
-.game-opponent-row {
-  grid-column: 2;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
 .game-opponent-row .team-logo-frame {
   width: 30px;
   height: 22px;
@@ -2940,29 +2811,6 @@ details[open] > .distribution-toggle {
   width: 30px;
   height: 22px;
   object-fit: contain;
-}
-
-.game-opponent {
-  font-size: 15px;
-  line-height: 1.2;
-}
-
-.game-site {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: capitalize;
-}
-
-.game-outcome {
-  grid-column: 3;
-  white-space: nowrap;
-  font-size: 15px;
-  font-variant-numeric: tabular-nums;
-}
-
-.game-card-body {
-  grid-column: 2 / 4;
-  min-width: 0;
 }
 
 .game-retrospective,
@@ -2987,19 +2835,26 @@ details[open] > .distribution-toggle {
   font-weight: 700;
 }
 
+.game-retrospective-expected,
+.game-retrospective-actual,
+.game-retrospective-tail {
+  white-space: nowrap;
+}
+
 .game-retrospective-tail {
   color: var(--green);
   font-size: 12px;
   font-weight: 750;
 }
 
-.game-retrospective-tail::before {
-  content: "· ";
-  color: var(--muted);
+.game-prediction-title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 7px;
 }
 
-.game-prediction-title {
-  display: inline;
+.game-prediction-chunk {
+  white-space: nowrap;
 }
 
 .game-card-future .game-outcome,
@@ -3026,6 +2881,7 @@ details[open] > .distribution-toggle {
   border: 0;
   line-height: 1.3;
   list-style: none;
+  color: var(--green);
 }
 
 .game-summary-copy {
@@ -3069,8 +2925,18 @@ details[open] > .distribution-toggle {
   padding: 8px 0 4px;
 }
 
-.game-retrospective-disclosure-content .game-rating-details {
-  grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr);
+.retrospective-facts {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px 20px;
+}
+
+.retrospective-facts .game-facts {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.retrospective-percentile-facts {
+  align-content: start;
 }
 
 .game-distribution-chart {
@@ -3291,7 +3157,6 @@ details[open] > .distribution-toggle {
 
   .season-outlook {
     display: block;
-    grid-template-columns: 1fr;
   }
 
   .season-outlook-disclosure {
@@ -3304,12 +3169,10 @@ details[open] > .distribution-toggle {
 
   .game-card-header {
     grid-column: 1;
-    margin-bottom: 0;
   }
 
   .game-card-body {
     grid-column: 1 / 3;
-    margin-top: 0;
   }
 
   .game-opponent-row {
@@ -3345,8 +3208,12 @@ details[open] > .distribution-toggle {
     gap: 1px 7px;
   }
 
-  .game-retrospective-disclosure-content .game-rating-details {
-    grid-template-columns: auto minmax(0, 1fr);
+  .retrospective-facts {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+
+  .retrospective-facts .game-facts {
     gap: 3px 8px;
   }
 

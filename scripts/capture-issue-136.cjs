@@ -33,8 +33,9 @@ async function main() {
   try {
     const desktop = { width: 1280, height: 900 };
     const mobile = { width: 390, height: 844 };
-    await capture(browser, "georgia-desktop", "61", current, desktop, "#schedule-list", "401856700");
-    await capture(browser, "georgia-mobile", "61", current, mobile, "#schedule-list", "401856700");
+    await capture(browser, "georgia-desktop", "61", current, desktop, 'section[aria-labelledby="schedule-title"]', "401856700");
+    await capture(browser, "georgia-mobile", "61", current, mobile, 'section[aria-labelledby="schedule-title"]', "401856700");
+    await capture(browser, "georgia-clipped-markers", "61", current, desktop, '.game-card[data-game-id="401856658"]', "401856658");
     await capture(browser, "massachusetts-surprising", "113", current, desktop, '.game-card[data-game-id="401858423"]', "401858423");
     await capture(browser, "colorado-near-expectation", "38", current, desktop, '.game-card[data-game-id="401856785"]');
     await capture(browser, "georgia-historical", "61", historical, desktop, "#schedule-list");
