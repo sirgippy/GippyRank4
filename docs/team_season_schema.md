@@ -165,6 +165,9 @@ P(away wins) = P(M < 0) + 0.5 P(M = 0)
 ```
 
 The two stored win probabilities are complements from that same distribution.
+`tie_probability` records the zero mass at an exact tie in this continuous
+margin model. It must be zero; it is not a third outcome to add to the two
+complementary win probabilities.
 
 Future predictions use `predictive_context` on Predictive Context pages,
 `predictive_history` on Predictive History pages, and the same-slot
@@ -190,6 +193,14 @@ completed game has a compact `game_rating` summary containing:
 - Top 5, Top 10, and Top 25 probabilities;
 - the fixed-scale integer 40-bin `display_pmf`, empirical `performance_percentile`, and
   presentation-only `performance_grade`.
+
+The browser-facing schedule also publishes `date_semantics` for each game.
+`kickoff_instant` means a scored game has an observed kickoff timestamp;
+consumers format its date in the viewer's local time zone. This includes
+scored `out_of_scope` games. `calendar_date` means the source timestamp is
+only a calendar anchor for an unscored game; consumers format its UTC calendar
+day without a local time-zone shift. Neither value asserts that a future
+kickoff time is confirmed.
 
 No full per-game PMF is serialized. Games after the selected cutoff retain
 schedule metadata but have null result, score, and rating fields. An eligible

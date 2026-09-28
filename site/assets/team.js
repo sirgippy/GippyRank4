@@ -169,14 +169,15 @@ function offAxisTailNote(display, axis, kind, oriented, widened = false) {
   const lower = display.lowerTail / scale;
   const upper = display.upperTail / scale;
   if (lower + upper < 0.01) return null;
+  const subject = kind === "future" ? "predicted" : "expected";
   const sides = [
     [lower, `${oriented.opponentName} by ${Math.abs(axis.min_margin)}`],
     [upper, `${oriented.focalName} by ${axis.max_margin}`],
   ].filter(([mass]) => mass >= 0.01 || (mass > 0 && lower < 0.01 && upper < 0.01))
-    .map(([mass, edge]) => `${mass < 0.01 ? "<1%" : percentage(mass)} of ${kind === "future" ? "predicted" : "expected"} outcomes lie beyond ${edge}`);
-  const subject = kind === "future" ? "predicted" : "expected";
-  const summary = `${sides.join("; ")}. The standard ${marginAxisRange(axis)}-point range clips these ${subject} outcomes.`;
-  return widened ? `${summary} Intervals use a wider axis.` : summary;
+    .map(([mass, edge]) => `${mass < 0.01 ? "<1%" : percentage(mass)} of ${subject} outcomes extend beyond ${edge}`);
+  const range = marginAxisRange(axis);
+  const rangeNote = range === "±40" ? "" : ` (visible ${range}-point range)`;
+  return `${sides.join("; ")}${rangeNote}${widened ? "; intervals use a wider scale" : ""}.`;
 }
 
 function densitySvg(masses, {
@@ -953,8 +954,8 @@ function predictionPanel(prediction, team, axis) {
   const titleText = `${favoriteText} · ${expectedText}`;
   const title = node("strong", "game-prediction-title");
   const marginChunk = node("span", "game-prediction-chunk game-prediction-margin");
-  marginChunk.append(node("span", "game-summary-separator", "· "), expectedText);
-  title.append(node("span", "game-prediction-chunk", favoriteText), " ", marginChunk);
+  marginChunk.append(node("span", "game-summary-separator", " · "), expectedText);
+  title.append(node("span", "game-prediction-chunk", favoriteText), marginChunk);
   const detail = node("div", "game-prediction-disclosure-content");
   const chart = futureChart(prediction, team, axis, oriented);
   if (chart) detail.append(chart);
@@ -1012,14 +1013,12 @@ function retrospectivePanel(expectation, team, axis, opponentName) {
   const distribution = disclosure(`${team.team_name} completed-game retrospective distribution`, detail, "distribution-disclosure game-distribution-disclosure", `${expectedText}. ${actualText}. ${tailText}`);
   const copy = node("span", "game-summary-copy");
   const actualChunk = node("span", "game-retrospective-actual");
-  actualChunk.append(node("span", "game-summary-separator", "· "), actualText);
+  actualChunk.append(node("span", "game-summary-separator", " · "), actualText);
   const tailChunk = node("span", "game-retrospective-tail");
-  tailChunk.append(node("span", "game-summary-separator", "· "), tailText);
+  tailChunk.append(node("span", "game-summary-separator", " · "), tailText);
   copy.append(
     node("span", "game-retrospective-expected", expectedText),
-    " ",
     actualChunk,
-    " ",
     tailChunk,
   );
   distribution.querySelector("summary").replaceChildren(copy, node("span", "distribution-chevron", "▾"));
@@ -1067,6 +1066,8 @@ function matchesSchedulePrediction(prediction, game, team, artifact) {
   const home = prediction.home_team_id === team.team_id;
   const away = prediction.away_team_id === team.team_id;
   if ((!home && !away) || (home ? prediction.away_team_id : prediction.home_team_id) !== game.opponent_id) return false;
+  if ((home ? prediction.home_team_name : prediction.away_team_name) !== team.team_name
+    || (home ? prediction.away_team_name : prediction.home_team_name) !== game.opponent_name) return false;
   if (!["home", "away", "neutral"].includes(game.site) || typeof prediction.neutral_site !== "boolean") return false;
   return prediction.neutral_site === (game.site === "neutral")
     && (game.site !== "home" || home) && (game.site !== "away" || away);
@@ -1122,12 +1123,16 @@ function renderSchedule(artifact, entry, trajectory) {
   if (!team) throw new Error("This team is not available in the selected season snapshot.");
   const cutoff = artifact.effective_cutoff ? new Date(artifact.effective_cutoff) : null;
   const games = Array.isArray(team.games) ? team.games : [];
+  const teamGameIds = new Set(games.map((game) => game.game_id));
   $("#team-page-status").textContent = games.length ? "" : "No schedule entries are available for this team.";
   $("#team-page-status").hidden = games.length > 0;
   const items = games.map((game) => {
-    const item = node("div", "schedule-entry");
-    item.setAttribute("role", "listitem");
-    item.append(gameCard(game, cutoff, artifact, team));
+    const item = node("article", "schedule-entry");
+    const card = gameCard(game, cutoff, artifact, team);
+    const heading = card.querySelector(".game-opponent");
+    heading.id = `schedule-game-${game.game_id}-opponent`;
+    item.setAttribute("aria-labelledby", heading.id);
+    item.append(card);
     return item;
   });
   const checkpointsByGame = new Map();
@@ -1142,7 +1147,9 @@ function renderSchedule(artifact, entry, trajectory) {
       const afterIds = new Set(after.included_game_ids || []);
       const addedIds = new Set([...afterIds].filter((gameId) => !beforeIds.has(gameId)));
       const removedIds = new Set([...beforeIds].filter((gameId) => !afterIds.has(gameId)));
-      const changedTeamGame = games.some((game) => addedIds.has(game.game_id) || removedIds.has(game.game_id));
+      const teamAdded = [...addedIds].filter((gameId) => teamGameIds.has(gameId));
+      const teamRemoved = [...removedIds].filter((gameId) => teamGameIds.has(gameId));
+      const changedTeamGame = teamAdded.length > 0 || teamRemoved.length > 0;
       let afterGame = -1;
       games.forEach((game, gameIndex) => {
         if (addedIds.has(game.game_id) || removedIds.has(game.game_id)) afterGame = gameIndex;
@@ -1154,13 +1161,12 @@ function renderSchedule(artifact, entry, trajectory) {
       }
       if (!changedTeamGame) {
         checkpoint.dataset.evidenceChange = "none";
-        const change = removedIds.size
-          ? `No ${team.team_name} game changed; ${removedIds.size} game${removedIds.size === 1 ? "" : "s"} removed from evidence`
-          : addedIds.size ? `No new ${team.team_name} game included` : "No new games included";
+        const change = addedIds.size || removedIds.size
+          ? `No ${team.team_name} game changed` : "No new games included";
         checkpoint.querySelector(".schedule-checkpoint-values").append(node("span", "", change));
-      } else if (removedIds.size) {
+      } else if (teamRemoved.length) {
         checkpoint.dataset.evidenceChange = "removed";
-        checkpoint.querySelector(".schedule-checkpoint-values").append(node("span", "", `${removedIds.size} game${removedIds.size === 1 ? "" : "s"} removed from evidence`));
+        checkpoint.querySelector(".schedule-checkpoint-values").append(node("span", "", `${teamRemoved.length} ${team.team_name} game${teamRemoved.length === 1 ? "" : "s"} removed from evidence`));
       }
       insertions.push({ afterGame, checkpoint });
     });

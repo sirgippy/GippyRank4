@@ -117,7 +117,8 @@ def test_future_prediction_requires_exact_matchup_and_both_fbs_references(
     prediction = artifact["future_predictions"]["401856712"]
     if change == "swapped_sides":
         prediction["home_team_id"], prediction["away_team_id"] = (
-            prediction["away_team_id"], prediction["home_team_id"]
+            prediction["away_team_id"],
+            prediction["home_team_id"],
         )
     elif change == "neutral_site":
         prediction["neutral_site"] = True
@@ -128,13 +129,15 @@ def test_future_prediction_requires_exact_matchup_and_both_fbs_references(
         artifact["future_predictions"]["wrong-matchup"]["game_id"] = "wrong-matchup"
         for team_id in ("61", "333"):
             game = next(
-                game for game in artifact["teams"][team_id]["games"]
+                game
+                for game in artifact["teams"][team_id]["games"]
                 if game["game_id"] == "401856712"
             )
             game["future_prediction_id"] = "wrong-matchup"
     else:
         game = next(
-            game for game in artifact["teams"]["333"]["games"]
+            game
+            for game in artifact["teams"]["333"]["games"]
             if game["game_id"] == "401856712"
         )
         game["future_prediction_id"] = None
@@ -146,7 +149,8 @@ def test_future_prediction_requires_exact_matchup_and_both_fbs_references(
 def test_fbs_schedule_projections_share_one_canonical_game(field: str) -> None:
     artifact, metadata = _source("context-v1.3")
     game = next(
-        game for game in artifact["teams"]["61"]["games"]
+        game
+        for game in artifact["teams"]["61"]["games"]
         if game["game_id"] == "401856712"
     )
     game[field] = {
@@ -156,3 +160,90 @@ def test_fbs_schedule_projections_share_one_canonical_game(field: str) -> None:
     }[field]
     with pytest.raises(SiteDataValidationError, match="cross-team schedule mismatch"):
         _validate(artifact, metadata)
+
+
+def test_completed_fbs_game_requires_both_schedule_projections() -> None:
+    artifact, metadata = _source("context-v1.3")
+    artifact["teams"]["201"]["games"] = [
+        game
+        for game in artifact["teams"]["201"]["games"]
+        if game["game_id"] != "401856700"
+    ]
+    with pytest.raises(
+        SiteDataValidationError, match="missing reciprocal FBS schedule projection"
+    ):
+        _validate(artifact, metadata)
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("opponent_name", "Auburn"),
+        ("opponent_classification", "fcs"),
+    ],
+)
+def test_fbs_schedule_display_identity_matches_canonical_team(
+    field: str, value: str
+) -> None:
+    artifact, metadata = _source("context-v1.3")
+    game = next(
+        game
+        for game in artifact["teams"]["61"]["games"]
+        if game["game_id"] == "401856700"
+    )
+    game[field] = value
+    with pytest.raises(
+        SiteDataValidationError, match="cross-team display identity mismatch"
+    ):
+        _validate(artifact, metadata)
+
+
+@pytest.mark.parametrize(
+    "field", ["home_team_name", "away_team_name", "away_subdivision"]
+)
+def test_prediction_display_identity_matches_schedule(field: str) -> None:
+    artifact, metadata = _source("context-v1.3")
+    prediction = artifact["future_predictions"]["401856712"]
+    prediction[field] = "Auburn" if field.endswith("name") else "fcs"
+    with pytest.raises(
+        SiteDataValidationError, match="prediction display identity mismatch"
+    ):
+        _validate(artifact, metadata)
+
+
+def test_prediction_tie_mass_must_be_zero() -> None:
+    artifact, metadata = _source("context-v1.3")
+    artifact["future_predictions"]["401856712"]["tie_probability"] = 0.75
+    with pytest.raises(SiteDataValidationError, match="tie probability must be zero"):
+        _validate(artifact, metadata)
+
+
+@pytest.mark.parametrize("kind", ["predictive", "retrospective"])
+def test_margin_median_must_lie_inside_central_intervals(kind: str) -> None:
+    artifact, metadata = _source("context-v1.3")
+    if kind == "predictive":
+        record = artifact["future_predictions"]["401856712"]
+    else:
+        record = artifact["retrospective_game_expectations"]["games"]["401856700"]
+    record["median_home_margin"] = record["margin_interval_95"][1] + 1
+    with pytest.raises(SiteDataValidationError, match=f"{kind} median lies outside"):
+        _validate(artifact, metadata)
+
+
+def test_scored_out_of_scope_date_is_a_kickoff_instant() -> None:
+    artifact, metadata = _source("context-v1.3")
+    game = next(
+        game
+        for game in artifact["teams"]["61"]["games"]
+        if game["game_id"] == "401856658"
+    )
+    game["game_state"] = "out_of_scope"
+    snapshot = ROOT / "site/data/snapshots" / f"{metadata['snapshot_id']}.json"
+    rankings = json.loads(snapshot.read_text())["rankings"]
+    adapted = _validate_team_season_artifact(artifact, metadata, rankings)
+    selected = next(
+        game
+        for game in adapted["teams"]["61"]["games"]
+        if game["game_id"] == "401856658"
+    )
+    assert selected["date_semantics"] == "kickoff_instant"

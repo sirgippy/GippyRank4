@@ -1708,6 +1708,11 @@ def _validate_retrospective_game_expectations(
             raise SiteDataValidationError(
                 f"{snapshot_id}: retrospective intervals are not nested"
             )
+        median = float(game["median_home_margin"])
+        if any(not low <= median <= high for low, high in intervals.values()):
+            raise SiteDataValidationError(
+                f"{snapshot_id}: retrospective median lies outside its intervals"
+            )
         display = game.get("display_distribution")
         if not isinstance(display, dict):
             raise SiteDataValidationError(
@@ -1849,6 +1854,10 @@ def _validate_future_predictions(
             raise SiteDataValidationError(
                 f"{metadata['snapshot_id']}: prediction probabilities are not complementary"
             )
+        if probabilities[2] > 1.0e-12:
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: prediction tie probability must be zero"
+            )
         intervals: dict[str, tuple[float, float]] = {}
         for field in ("margin_interval_50", "margin_interval_80", "margin_interval_95"):
             value = prediction[field]
@@ -1873,6 +1882,11 @@ def _validate_future_predictions(
         ):
             raise SiteDataValidationError(
                 f"{metadata['snapshot_id']}: predictive intervals are not nested"
+            )
+        median = float(prediction["median_home_margin"])
+        if any(not low <= median <= high for low, high in intervals.values()):
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: predictive median lies outside its intervals"
             )
         if str(prediction["home_subdivision"]).casefold() not in {"fbs", "fcs"} or str(
             prediction["away_subdivision"]
@@ -1920,6 +1934,20 @@ def _validate_future_predictions(
             ):
                 raise SiteDataValidationError(
                     f"{metadata['snapshot_id']}: prediction site orientation mismatch"
+                )
+            home = team_id == str(prediction["home_team_id"])
+            focal_name = prediction["home_team_name"] if home else prediction["away_team_name"]
+            opponent_name = prediction["away_team_name"] if home else prediction["home_team_name"]
+            opponent_subdivision = prediction["away_subdivision"] if home else prediction["home_subdivision"]
+            focal_subdivision = prediction["home_subdivision"] if home else prediction["away_subdivision"]
+            if (
+                focal_name != by_team[team_id].get("team_name")
+                or opponent_name != game.get("opponent_name")
+                or str(opponent_subdivision).casefold() != str(game.get("opponent_classification")).casefold()
+                or str(focal_subdivision).casefold() != "fbs"
+            ):
+                raise SiteDataValidationError(
+                    f"{metadata['snapshot_id']}: prediction display identity mismatch"
                 )
             if game.get("result") is not None or game.get("score") is not None or game.get("game_rating") is not None or game.get("modeled"):
                 raise SiteDataValidationError(
@@ -2911,9 +2939,19 @@ def _validate_team_season_artifact(
                         f"{snapshot_id}: game rating performance grade disagrees with percentile"
                     )
     canonical_games: dict[str, tuple[str, dict[str, Any]]] = {}
+    projection_counts: dict[str, int] = defaultdict(int)
     for team_id in ranking_ids:
         for game in by_team[team_id]["games"]:
             game_id = str(game["game_id"])
+            projection_counts[game_id] += 1
+            opponent_id = str(game.get("opponent_id"))
+            if opponent_id in ranking_ids and (
+                game.get("opponent_name") != by_team[opponent_id].get("team_name")
+                or str(game.get("opponent_classification")).casefold() != "fbs"
+            ):
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: cross-team display identity mismatch for game {game_id}"
+                )
             counterpart = canonical_games.get(game_id)
             if counterpart is None:
                 canonical_games[game_id] = (team_id, game)
@@ -2940,6 +2978,11 @@ def _validate_team_season_artifact(
                 raise SiteDataValidationError(
                     f"{snapshot_id}: cross-team schedule mismatch for game {game_id}"
                 )
+    for game_id, (_, game) in canonical_games.items():
+        if str(game.get("opponent_id")) in ranking_ids and projection_counts[game_id] != 2:
+            raise SiteDataValidationError(
+                f"{snapshot_id}: missing reciprocal FBS schedule projection for game {game_id}"
+            )
     _validate_performance_display(artifact, snapshot_id, ratings_count)
     retrospective_ids = _validate_retrospective_game_expectations(
         artifact, source_metadata, expected_ids, by_team
@@ -2968,10 +3011,10 @@ def _validate_team_season_artifact(
                 {
                     **game,
                     # The source has no reliable kickoff-known flag. A future
-                    # timestamp is a calendar anchor; completed rows have an
-                    # observed kickoff instant.
+                    # timestamp is a calendar anchor; scored rows have an
+                    # observed kickoff instant, including out-of-scope games.
                     "date_semantics": (
-                        "kickoff_instant" if game.get("game_state") == "completed"
+                        "kickoff_instant" if game.get("score") is not None
                         else "calendar_date"
                     ),
                 }

@@ -39,7 +39,8 @@ test("keeps current Georgia results, checkpoint movement, and future predictions
   await expect(completed).toContainText("14% this favorable or better");
   await expect(page.locator(".team-schedule-heading .team-page-help summary")).toHaveText("How to read games");
   await expect(page.locator("#team-page-status")).toBeHidden();
-  await expect(page.getByRole("list", { name: "Scheduled games" }).getByRole("listitem")).toHaveCount(12);
+  await expect(page.getByRole("group", { name: "Scheduled games and model updates" }).getByRole("article")).toHaveCount(12);
+  await expect(page.getByRole("group", { name: "Scheduled games and model updates" }).getByRole("article", { name: "Oklahoma" })).toHaveCount(1);
   await expect(page.locator("#schedule-list").getByRole("note")).toHaveCount(4);
   await expect(page.locator(".schedule-checkpoint")).toHaveCount(4);
   await expect(page.locator(".schedule-checkpoint").last()).toContainText("Week 5 update");
@@ -74,7 +75,7 @@ test("orients an away upset from the focal team and keeps an ordinary result qui
   await expect(upset).toContainText("1.1% this favorable or better");
   await upset.locator(".game-distribution-disclosure summary").click();
   await expect(upset.locator(".game-distribution-retrospective .distribution-tail-note"))
-    .toContainText("16% of expected outcomes lie beyond Rutgers by 40");
+    .toContainText("16% of expected outcomes extend beyond Rutgers by 40");
   await expect(upset.locator(".game-distribution-retrospective .distribution-tail")).toHaveCount(0);
   const ordinary = page.locator('.game-card[data-game-id="401866424"]');
   await expect(ordinary).toContainText("37% this unfavorable or worse");
@@ -144,6 +145,16 @@ test("refuses a future forecast whose matchup orientation conflicts with the sch
   await expect(game.locator(".game-prediction")).toHaveCount(0);
 });
 
+test("refuses a future forecast with a conflicting displayed team name", async ({ page }) => {
+  const artifact = siteArtifact("team-seasons", current);
+  artifact.future_predictions["401856712"].away_team_name = "Auburn";
+  await page.route(`**/data/team-seasons/${current}.json`, (route) => route.fulfill({ json: artifact }));
+  await loadTeam(page, "61");
+  const game = page.locator('.game-card[data-game-id="401856712"]');
+  await expect(game).toContainText("Prediction unavailable because published game data conflict");
+  await expect(game.locator(".game-prediction")).toHaveCount(0);
+});
+
 test("renders cancelled and unresolved entries without fabricated analysis", async ({ page }) => {
   const artifactPath = `site/data/team-seasons/${current}.json`;
   const artifact = JSON.parse(fs.readFileSync(path.join(__dirname, "../..", artifactPath), "utf8"));
@@ -191,7 +202,7 @@ test("opens distinct retrospective and predictive distributions from the keyboar
   ]);
   await expect(retrospective.locator(".distribution-tail")).toHaveCount(0);
   await expect(retrospective.locator(".distribution-tail-note"))
-    .toContainText("4% of expected outcomes lie beyond Georgia by 40");
+    .toContainText("4% of expected outcomes extend beyond Georgia by 40");
   const future = page.locator('.game-card[data-game-id="401856705"]');
   await expect(future.locator(".game-distribution-disclosure summary"))
     .toHaveAccessibleName(/Georgia 91% to win.*Georgia by 20\.7.*Show predictive margin distribution/);
@@ -200,7 +211,7 @@ test("opens distinct retrospective and predictive distributions from the keyboar
   await expect(future.locator(".future-distribution-chart .distribution-zero-label")).toHaveCount(0);
   await expect(future.locator(".distribution-axis .axis-label")).toContainText("Even");
   await expect(future.locator(".distribution-tail")).toHaveCount(0);
-  await expect(future.locator(".distribution-tail-note")).toContainText("predicted outcomes lie beyond Georgia by 40");
+  await expect(future.locator(".distribution-tail-note")).toContainText("predicted outcomes extend beyond Georgia by 40");
   await expect(future.locator(".future-distribution-chart desc")).toContainText("Georgia win probability");
   await expect(future.locator(".future-distribution-chart desc")).toContainText("Vanderbilt win probability");
   await expect(future.locator(".game-facts dt").first()).toHaveText("Georgia win probability");
@@ -219,7 +230,7 @@ test("uses a full interval view when most Tennessee State probability lies beyon
   const expected = game.locator(".margin-marker-expected");
   const actual = game.locator(".margin-marker-actual");
   expect(Number(await expected.getAttribute("x1"))).toBeLessThan(Number(await actual.getAttribute("x1")));
-  await expect(game.locator(".distribution-tail-note")).toContainText("82% of expected outcomes lie beyond Georgia by 40");
+  await expect(game.locator(".distribution-tail-note")).toContainText("82% of expected outcomes extend beyond Georgia by 40");
   await expect(game.locator(".margin-interval-legend")).toHaveText("Central 95%Central 80%Central 50%");
 });
 
@@ -244,7 +255,7 @@ test("uses the same interval view for an off-scale future forecast", async ({ pa
   await expect(game.locator(".future-interval-chart")).toBeVisible();
   await expect(game.locator(".future-distribution-chart")).toHaveCount(0);
   await expect(game.locator(".future-interval")).toHaveCount(3);
-  await expect(game.locator(".distribution-tail-note")).toContainText("71% of predicted outcomes lie beyond LSU by 40");
+  await expect(game.locator(".distribution-tail-note")).toContainText("71% of predicted outcomes extend beyond LSU by 40");
   await expect(game.locator(".game-facts")).toContainText("LSU win probability99.8%");
   await expect(game.locator(".future-interval-chart desc")).toContainText("McNeese win probability 0.2%");
 });
@@ -262,6 +273,16 @@ for (const [caseName, bounds, widened] of [
     const game = page.locator('.game-card[data-game-id="401856700"]');
     await game.locator("summary").click();
     await expect(game.locator(widened ? ".retrospective-interval-chart" : ".retrospective-distribution-chart")).toBeVisible();
+  });
+
+  test(`uses the future standard-axis boundary when the central half is ${caseName}`, async ({ page }) => {
+    const artifact = siteArtifact("team-seasons", current);
+    artifact.future_predictions["401856712"].margin_interval_50 = bounds;
+    await page.route(`**/data/team-seasons/${current}.json`, (route) => route.fulfill({ json: artifact }));
+    await loadTeam(page, "61");
+    const game = page.locator('.game-card[data-game-id="401856712"]');
+    await game.locator("summary").click();
+    await expect(game.locator(widened ? ".future-interval-chart" : ".future-distribution-chart")).toBeVisible();
   });
 }
 
@@ -355,11 +376,29 @@ test("keeps long mobile future predictions and their disclosure controls togethe
     });
     wrapped ||= layout.copyHeight > layout.lineHeight + 1;
     expect(layout.chevronLeft).toBeGreaterThanOrEqual(layout.copyRight - 1);
+    expect(layout.chevronLeft - layout.copyRight).toBeLessThanOrEqual(12);
     expect(layout.chevronTop).toBeLessThan(layout.copyBottom);
-    expect(layout.separatorVisible).toBeFalsy();
+    expect(layout.separatorVisible).toBeTruthy();
   }
   expect(wrapped).toBeTruthy();
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1);
+});
+
+test("keeps desktop disclosure copy beside its chevron and aligned with the matchup", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === "mobile", "This checks the desktop composition.");
+  await loadTeam(page, "61");
+  for (const gameId of ["401856658", "401856700", "401856705"]) {
+    const card = page.locator(`.game-card[data-game-id="${gameId}"]`);
+    const layout = await card.evaluate((element) => {
+      const copy = element.querySelector(".game-summary-copy").getBoundingClientRect();
+      const chevron = element.querySelector(".distribution-chevron").getBoundingClientRect();
+      const heading = element.querySelector(".game-opponent-row").getBoundingClientRect();
+      return { gap: chevron.left - copy.right, indent: copy.left - heading.left };
+    });
+    expect(layout.gap).toBeGreaterThanOrEqual(0);
+    expect(layout.gap).toBeLessThanOrEqual(12);
+    expect(layout.indent).toBeLessThanOrEqual(20);
+  }
 });
 
 test("places a checkpoint after included evidence even when the next kickoff precedes its cutoff", async ({ page }) => {
@@ -378,10 +417,10 @@ test("places a checkpoint after included evidence even when the next kickoff pre
   await expect(entries.nth(0).locator(".schedule-checkpoint")).toHaveCount(0);
   await expect(page.locator("#schedule-list > .schedule-checkpoint")).toHaveCount(1);
   await expect(page.locator("#schedule-list > :nth-child(2)")).toHaveClass(/schedule-checkpoint/);
-  await expect(entries.nth(1)).toHaveAttribute("role", "listitem");
+  await expect(entries.nth(1)).toHaveAttribute("aria-labelledby", /schedule-game/);
 });
 
-test("orders multiple pregame checkpoints and exposes them outside game list items", async ({ page }) => {
+test("orders multiple pregame checkpoints outside the named game articles", async ({ page }) => {
   const trajectory = siteArtifact("team-trajectories", current);
   const before = structuredClone(trajectory.points[0]);
   const middle = structuredClone(trajectory.points.at(-2));
@@ -406,13 +445,28 @@ test("describes evidence removed at a checkpoint", async ({ page }) => {
   const before = structuredClone(trajectory.points.at(-1));
   const after = structuredClone(before);
   before.snapshot_id = "before-removal-test";
-  const gameId = before.included_game_ids[0];
+  const gameId = "401856700";
+  expect(before.included_game_ids).toContain(gameId);
   after.included_game_ids = before.included_game_ids.filter((id) => id !== gameId);
   after.snapshot_id = current;
   trajectory.points = [before, after];
   await page.route(`**/data/team-trajectories/${current}.json`, (route) => route.fulfill({ json: trajectory }));
   await loadTeam(page, "61");
-  await expect(page.locator(".schedule-checkpoint")).toContainText("1 game removed from evidence");
+  await expect(page.locator(".schedule-checkpoint")).toContainText("1 Georgia game removed from evidence");
+});
+
+test("does not attach an unrelated global removal to a team's checkpoint", async ({ page }) => {
+  const trajectory = siteArtifact("team-trajectories", current);
+  const before = structuredClone(trajectory.points[0]);
+  const after = structuredClone(trajectory.points.at(-1));
+  before.included_game_ids = ["unrelated-game"];
+  after.included_game_ids = ["401856700"];
+  trajectory.points = [before, after];
+  await page.route(`**/data/team-trajectories/${current}.json`, (route) => route.fulfill({ json: trajectory }));
+  await loadTeam(page, "61");
+  const checkpoint = page.locator(".schedule-checkpoint");
+  await expect(checkpoint).toHaveCount(1);
+  await expect(checkpoint).not.toContainText("removed from evidence");
 });
 
 test("describes a checkpoint with no newly included games", async ({ page }) => {
@@ -426,7 +480,7 @@ test("describes a checkpoint with no newly included games", async ({ page }) => 
   const checkpoint = page.locator(".schedule-checkpoint");
   await expect(checkpoint).toHaveAttribute("data-evidence-change", "none");
   await expect(checkpoint).toContainText("No new games included");
-  await expect(page.getByRole("list", { name: "Scheduled games" }).getByRole("listitem")).toHaveCount(12);
+  await expect(page.getByRole("group", { name: "Scheduled games and model updates" }).getByRole("article")).toHaveCount(12);
 });
 
 test.describe("schedule date semantics", () => {

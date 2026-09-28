@@ -2883,10 +2883,10 @@ details[open] > .distribution-toggle {
 }
 
 .game-distribution-disclosure .distribution-toggle {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: flex-start;
+  gap: 6px;
   min-width: 0;
   width: 100%;
   height: auto;
@@ -2901,7 +2901,12 @@ details[open] > .distribution-toggle {
   display: flex;
   flex-wrap: wrap;
   gap: 2px 10px;
+  flex: 0 1 auto;
   min-width: 0;
+}
+
+.game-distribution-disclosure .distribution-chevron {
+  flex: 0 0 auto;
 }
 
 .game-distribution-disclosure[open] > .distribution-toggle {
@@ -3271,11 +3276,32 @@ details[open] > .distribution-toggle {
   }
 
   .game-summary-copy {
-    gap: 1px 7px;
+    display: grid;
+    grid-template-columns: 10px minmax(0, 1fr);
+    gap: 2px 0;
   }
 
-  .game-summary-separator {
-    display: none;
+  .game-retrospective-expected {
+    grid-column: 2;
+  }
+
+  .game-retrospective-actual,
+  .game-retrospective-tail,
+  .game-prediction-margin {
+    display: grid;
+    grid-template-columns: 10px minmax(0, 1fr);
+    grid-column: 1 / -1;
+  }
+
+  .game-prediction-title {
+    display: grid;
+    grid-template-columns: 10px minmax(0, 1fr);
+    gap: 2px 0;
+    grid-column: 1 / -1;
+  }
+
+  .game-prediction-title > .game-prediction-chunk:first-child {
+    grid-column: 2;
   }
 
   .retrospective-facts {
