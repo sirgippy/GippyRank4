@@ -28,14 +28,16 @@ async function capture(browser, name, team, snapshot, viewport, target, expandGa
 
 async function main() {
   await fs.mkdir(output, { recursive: true });
-  const endpoint = (await fs.readFile(path.join(process.env.HOME, ".cache/gippyrank/playwright-ws-endpoint"), "utf8")).trim();
-  const browser = await chromium.connect(endpoint);
+  const endpointPath = path.join(process.env.HOME, ".cache/gippyrank/playwright-ws-endpoint");
+  const endpoint = process.env.PLAYWRIGHT_WS_ENDPOINT || await fs.readFile(endpointPath, "utf8").then((value) => value.trim(), () => null);
+  const browser = endpoint ? await chromium.connect(endpoint) : await chromium.launch();
   try {
     const desktop = { width: 1280, height: 900 };
     const mobile = { width: 390, height: 844 };
     await capture(browser, "georgia-desktop", "61", current, desktop, 'section[aria-labelledby="schedule-title"]', "401856700");
     await capture(browser, "georgia-mobile", "61", current, mobile, 'section[aria-labelledby="schedule-title"]', "401856700");
     await capture(browser, "georgia-offscale-intervals", "61", current, desktop, '.game-card[data-game-id="401856658"]', "401856658");
+    await capture(browser, "georgia-offscale-intervals-mobile", "61", current, mobile, '.game-card[data-game-id="401856658"]', "401856658");
     await capture(browser, "lsu-future-intervals", "99", current, desktop, '.game-card[data-game-id="401856706"]', "401856706");
     await capture(browser, "massachusetts-surprising", "113", current, desktop, '.game-card[data-game-id="401858423"]', "401858423");
     await capture(browser, "colorado-near-expectation", "38", current, desktop, '.game-card[data-game-id="401856785"]');

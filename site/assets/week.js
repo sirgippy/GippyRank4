@@ -1,3 +1,5 @@
+import { percentage } from "./probability.js";
+
 const $ = (selector) => document.querySelector(selector);
 const params = new URLSearchParams(window.location.search);
 const state = {
@@ -32,18 +34,6 @@ function svgElement(name, attributes = {}) {
   const value = document.createElementNS("http://www.w3.org/2000/svg", name);
   Object.entries(attributes).forEach(([key, attribute]) => value.setAttribute(key, String(attribute)));
   return value;
-}
-
-function percentage(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return "Unavailable";
-  if (numeric === 1) return "100%";
-  if (numeric === 0) return "0%";
-  const percent = numeric * 100;
-  if (percent < 0.01) return "<0.01%";
-  if (percent < 1) return `${percent.toFixed(1)}%`;
-  if (percent >= 99.95) return "<100%";
-  return `${Math.round(percent)}%`;
 }
 
 function ordinal(rank) {

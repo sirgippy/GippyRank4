@@ -2755,16 +2755,21 @@ def _validate_team_season_artifact(
     )
     performance_display = artifact.get("performance_axis") is not None
     ratings_count = 0
-    modeled_fbs_game_ids: set[str] = set()
-    retrospective_references: set[str] = set()
+    modeled_fbs_games: set[tuple[str, str]] = set()
+    retrospective_references: set[tuple[str, str]] = set()
     for team_id in ranking_ids:
         team = by_team[team_id]
         games = team.get("games")
         if not isinstance(games, list):
             raise SiteDataValidationError(f"{snapshot_id}: games for {team_id} must be a list")
+        seen_game_ids: set[str] = set()
         for game in games:
             if not isinstance(game, dict) or not game.get("game_id"):
                 raise SiteDataValidationError(f"{snapshot_id}: invalid team-season game for {team_id}")
+            game_id = str(game["game_id"])
+            if game_id in seen_game_ids:
+                raise SiteDataValidationError(f"{snapshot_id}: duplicate game {game_id} for {team_id}")
+            seen_game_ids.add(game_id)
             try:
                 datetime.fromisoformat(str(game.get("date")))
             except (TypeError, ValueError) as error:
@@ -2782,9 +2787,27 @@ def _validate_team_season_artifact(
                 raise SiteDataValidationError(
                     f"{snapshot_id}: unsupported game state for {team_id}"
                 )
-            known_by_snapshot = str(game["game_id"]) in expected_ids
+            known_by_snapshot = game_id in expected_ids
             if game.get("modeled"):
-                modeled_fbs_game_ids.add(str(game["game_id"]))
+                modeled_fbs_games.add((team_id, game_id))
+            result = game.get("result")
+            score = game.get("score")
+            if (result is None) != (score is None):
+                raise SiteDataValidationError(f"{snapshot_id}: incomplete result for game {game_id}")
+            if score is not None:
+                if (
+                    not isinstance(score, dict)
+                    or any(type(score.get(side)) is not int or score[side] < 0 for side in ("team", "opponent"))
+                    or result not in {"W", "L", "T"}
+                ):
+                    raise SiteDataValidationError(f"{snapshot_id}: invalid score or result for game {game_id}")
+                difference = score["team"] - score["opponent"]
+                if (difference > 0 and result != "W") or (difference < 0 and result != "L") or (difference == 0 and result != "T"):
+                    raise SiteDataValidationError(f"{snapshot_id}: result contradicts score for game {game_id}")
+            if game_state == "completed" and score is None:
+                raise SiteDataValidationError(f"{snapshot_id}: completed game {game_id} lacks a result")
+            if game_state in {"future", "unresolved", "cancelled"} and score is not None:
+                raise SiteDataValidationError(f"{snapshot_id}: {game_state} game {game_id} has a result")
             if not known_by_snapshot and (
                 game.get("result") is not None
                 or game.get("score") is not None
@@ -2812,7 +2835,7 @@ def _validate_team_season_artifact(
                     raise SiteDataValidationError(
                         f"{snapshot_id}: invalid retrospective expectation reference"
                     )
-                retrospective_references.add(retrospective_id)
+                retrospective_references.add((team_id, retrospective_id))
             if rating is None:
                 continue
             ratings_count += 1
@@ -2864,11 +2887,11 @@ def _validate_team_season_artifact(
     retrospective_ids = _validate_retrospective_game_expectations(
         artifact, source_metadata, expected_ids, by_team
     )
-    if retrospective_ids and retrospective_references != modeled_fbs_game_ids:
+    if artifact.get("retrospective_game_expectations") is not None and retrospective_references != modeled_fbs_games:
         raise SiteDataValidationError(
             f"{snapshot_id}: modeled FBS games are missing retrospective references"
         )
-    if retrospective_references - retrospective_ids:
+    if {game_id for _, game_id in retrospective_references} - retrospective_ids:
         raise SiteDataValidationError(
             f"{snapshot_id}: retrospective reference has no expectation"
         )
@@ -2885,6 +2908,30 @@ def _validate_team_season_artifact(
     adapted["season"] = metadata["season"]
     adapted["snapshot_type"] = metadata["snapshot_type"]
     return adapted
+
+
+def _validate_matching_team_schedules(
+    context_artifact: dict[str, Any], history_artifact: dict[str, Any], snapshot_id: str
+) -> None:
+    """Prove the Context rows can safely carry History predictions and expectations."""
+    schedule_fields = (
+        "game_id", "opponent_id", "date", "week", "site", "game_state",
+        "result", "score", "modeled", "retrospective_expectation_id",
+    )
+    context_teams = context_artifact.get("teams", {})
+    history_teams = history_artifact.get("teams", {})
+    if set(context_teams) != set(history_teams):
+        raise SiteDataValidationError(f"{snapshot_id}: Context/History schedule teams differ")
+    for team_id, context_team in context_teams.items():
+        context_games = context_team.get("games", [])
+        history_games_list = history_teams[team_id].get("games", [])
+        if len(context_games) != len(history_games_list) or any(
+            any(context_game.get(field) != history_game.get(field) for field in schedule_fields)
+            for context_game, history_game in zip(context_games, history_games_list, strict=True)
+        ):
+            raise SiteDataValidationError(
+                f"{snapshot_id}: Context/History schedule differs for {team_id}"
+            )
 
 
 def _team_season_artifact(
@@ -2960,6 +3007,12 @@ def _team_season_artifact(
             metadata,
             anchor_metadata=context_metadata,
         )
+        # Both inputs were validated independently; this checks the boundary
+        # where schedule rows from one publication carry the other's forecasts.
+        _validate_matching_team_schedules(
+            context_artifact, history_artifact, str(metadata["snapshot_id"])
+        )
+        history_teams = history_artifact["teams"]
         merged = dict(context_artifact)
         merged["prediction_schema_version"] = history_artifact.get(
             "prediction_schema_version"
@@ -2971,7 +3024,6 @@ def _team_season_artifact(
             "retrospective_game_expectations"
         )
         merged["season_simulation"] = history_artifact.get("season_simulation")
-        history_teams = history_artifact.get("teams", {})
         merged_teams: dict[str, Any] = {}
         for team_id, context_team in context_artifact.get("teams", {}).items():
             history_games = {

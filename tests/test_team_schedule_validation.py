@@ -1,0 +1,101 @@
+"""Adversarial checks at the published team-schedule boundary."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+
+from gippyrank.site_data import (
+    SiteDataValidationError,
+    _validate_matching_team_schedules,
+    _validate_team_season_artifact,
+)
+
+ROOT = Path(__file__).resolve().parents[1]
+SLOT = "2026-weekly-2026-09-27T12-27-35.698895Z"
+
+
+def _source(prior: str) -> tuple[dict, dict]:
+    folder = ROOT / "data/processed/snapshots/2026" / f"{SLOT}-{prior}"
+    folder = folder / "predictive" / ("context" if prior == "context-v1.3" else prior)
+    return (
+        json.loads((folder / "team_seasons.json").read_text()),
+        json.loads((folder / "metadata.json").read_text()),
+    )
+
+
+def _validate(artifact: dict, metadata: dict) -> None:
+    snapshot = ROOT / "site/data/snapshots" / f"{metadata['snapshot_id']}.json"
+    rankings = json.loads(snapshot.read_text())["rankings"]
+    _validate_team_season_artifact(artifact, metadata, rankings)
+
+
+def test_each_fbs_participant_must_reference_its_retrospective() -> None:
+    artifact, metadata = _source("context-v1.3")
+    game = next(
+        game
+        for game in artifact["teams"]["201"]["games"]
+        if game["game_id"] == "401856700"
+    )
+    game["retrospective_expectation_id"] = None
+    with pytest.raises(
+        SiteDataValidationError, match="missing retrospective references"
+    ):
+        _validate(artifact, metadata)
+
+
+def test_duplicate_game_for_team_is_rejected() -> None:
+    artifact, metadata = _source("context-v1.3")
+    artifact["teams"]["61"]["games"].append(dict(artifact["teams"]["61"]["games"][0]))
+    with pytest.raises(SiteDataValidationError, match="duplicate game"):
+        _validate(artifact, metadata)
+
+
+@pytest.mark.parametrize(
+    ("change", "message"),
+    [
+        ({"result": "L"}, "result contradicts score"),
+        ({"score": {"team": -3, "opponent": 17}}, "invalid score or result"),
+        ({"score": {"team": 41.0, "opponent": 13}}, "invalid score or result"),
+        ({"score": None}, "incomplete result"),
+        ({"result": None, "score": None}, "completed game .* lacks a result"),
+        ({"game_state": "unresolved"}, "unresolved game .* has a result"),
+        ({"game_state": "cancelled"}, "cancelled game .* has a result"),
+    ],
+)
+def test_completed_evidence_cannot_contradict_itself(
+    change: dict, message: str
+) -> None:
+    artifact, metadata = _source("context-v1.3")
+    game = next(
+        game
+        for game in artifact["teams"]["61"]["games"]
+        if game["game_id"] == "401856700"
+    )
+    game.update(change)
+    with pytest.raises(SiteDataValidationError, match=message):
+        _validate(artifact, metadata)
+
+
+def test_history_merge_refuses_changed_matchup() -> None:
+    context, _ = _source("context-v1.3")
+    history, metadata = _source("history")
+    history["teams"]["61"]["games"][0]["opponent_id"] = "different-team"
+    with pytest.raises(
+        SiteDataValidationError, match="Context/History schedule differs"
+    ):
+        _validate_matching_team_schedules(context, history, metadata["snapshot_id"])
+
+
+def test_future_game_cannot_publish_completed_evidence() -> None:
+    artifact, metadata = _source("context-v1.3")
+    game = next(
+        game
+        for game in artifact["teams"]["61"]["games"]
+        if game["game_state"] == "future"
+    )
+    game.update({"result": "W", "score": {"team": 21, "opponent": 7}})
+    with pytest.raises(SiteDataValidationError, match="future game .* has a result"):
+        _validate(artifact, metadata)

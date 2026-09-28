@@ -1285,6 +1285,15 @@ summary:focus-visible,
   list-style: none;
 }
 
+.schedule-entry {
+  display: grid;
+  gap: 5px;
+}
+
+.game-artifact-error {
+  color: var(--danger);
+}
+
 .schedule-page {
   padding-bottom: 28px;
 }
@@ -2977,6 +2986,33 @@ details[open] > .distribution-toggle {
   opacity: 0.6;
 }
 
+.margin-interval-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 6px 0 0;
+  font-size: 11px;
+}
+
+.margin-interval-key::before {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 9px;
+  margin-right: 5px;
+  background: var(--green);
+  vertical-align: middle;
+}
+
+.margin-interval-key-95::before { opacity: 0.2; }
+.margin-interval-key-80::before { opacity: 0.35; }
+.margin-interval-key-50::before { opacity: 0.6; }
+
+.distribution-zero-label {
+  fill: var(--muted);
+  font-size: 10px;
+}
+
 .retrospective-chart-legend,
 .future-interval-legend {
   display: flex;
@@ -3047,9 +3083,6 @@ details[open] > .distribution-toggle {
     font-size: 11px;
   }
 
-  .game-summary-separator {
-    display: none;
-  }
   .snapshot-summary,
   footer .shell {
     display: block;

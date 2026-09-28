@@ -9,7 +9,8 @@ uses local neutral 60×40 image placeholders to preserve opponent-logo geometry.
 | --- | --- |
 | [Georgia desktop](georgia-desktop.png) | Schedule-specific help, completed games, separate weekly belief rows, a future matchup, and the opened Oklahoma retrospective distribution. |
 | [Georgia mobile](georgia-mobile.png) | The same schedule at 390 px, with the distribution open and no horizontal overflow. |
-| [Georgia vs Tennessee State](georgia-offscale-intervals.png) | With 82% of mass outside ±40, the chart switches to a wider view of the central 50%, 80%, and 95% intervals, expected margin, and actual margin. |
+| [Georgia vs Tennessee State](georgia-offscale-intervals.png) | The central 50% lies beyond ±40, so the chart uses a wider view of the labeled central intervals, expected margin, and actual margin. |
+| [Georgia vs Tennessee State mobile](georgia-offscale-intervals-mobile.png) | The expanded interval view and facts at 390 px. |
 | [LSU vs McNeese](lsu-future-intervals.png) | A future forecast with 71% of mass outside ±40 uses the same wider interval view. |
 | [Massachusetts at Rutgers](massachusetts-surprising.png) | An away win by 16 despite an otherwise expected Rutgers margin of 24.1; only 1.1% of outcomes are this favorable or better for Massachusetts. |
 | [Colorado vs Weber State](colorado-near-expectation.png) | Actual margin 31, expected 30.7, and a near-center 50% tail. |

@@ -1,3 +1,5 @@
+import { percentage, matchupProbability } from "./probability.js";
+
 const $ = (selector) => document.querySelector(selector);
 const params = new URLSearchParams(window.location.search);
 let logoUrlTemplate = null;
@@ -36,27 +38,7 @@ function teamLogo(teamId, className = "team-logo") {
 function formatDate(value, includeYear = true) {
   return new Intl.DateTimeFormat("en-US", {
     month: "short", day: "numeric", ...(includeYear ? { year: "numeric" } : {}),
-    timeZone: "UTC",
   }).format(new Date(value));
-}
-
-function percentage(value) {
-  if (value === 1) return "100%";
-  if (value === 0) return "0%";
-  const percent = Number(value) * 100;
-  if (!Number.isFinite(percent)) return "Unavailable";
-  if (percent < 0.01) return "<0.01%";
-  if (percent < 1) return `${percent.toFixed(1)}%`;
-  if (percent > 99) return `${percent.toFixed(1)}%`;
-  return `${Math.round(percent)}%`;
-}
-
-function matchupProbability(value, other) {
-  if (Math.round(Math.max(value, other) * 100) !== 50) return percentage(value);
-  if (value === other) return "50% (even)";
-  let digits = 1;
-  while (digits < 5 && (value * 100).toFixed(digits) === (other * 100).toFixed(digits)) digits += 1;
-  return `${(value * 100).toFixed(digits)}%`;
 }
 
 function tailPercentage(value) {
@@ -121,7 +103,10 @@ const DISTRIBUTION_PLOT = Object.freeze({
   barMaxHeight: 52, zeroTop: 6, markerTop: 4, markerBottom: 69,
   splitExpectedBottom: 34, splitActualTop: 39,
 });
-const MARGIN_INTERVAL_VIEW_THRESHOLD = 0.25;
+// A compact histogram is misleading once it clips the central half of outcomes.
+function needsIntervalView(interval50, axis) {
+  return interval50[0] < Number(axis.min_margin) || interval50[1] > Number(axis.max_margin);
+}
 
 function plotX(value, minimum, maximum) {
   const clipped = Math.max(minimum, Math.min(maximum, value));
@@ -132,6 +117,56 @@ function marginAxisRange(axis) {
   const minimum = Number(axis.min_margin);
   const maximum = Number(axis.max_margin);
   return minimum === -maximum ? `±${maximum}` : `${minimum} to ${maximum}`;
+}
+
+function addZeroReference(svg, minimum, maximum) {
+  if (minimum > 0 || maximum < 0) return;
+  const x = plotX(0, minimum, maximum);
+  svg.append(svgElement("line", { x1: x, y1: DISTRIBUTION_PLOT.zeroTop, x2: x, y2: DISTRIBUTION_PLOT.baseline + 3, class: "distribution-zero" }));
+  const label = svgElement("text", { x: x + 3, y: 81, class: "distribution-zero-label" });
+  label.textContent = "Even";
+  svg.append(label);
+}
+
+function addMarginMarkers(svg, markers, minimum, maximum, retrospective) {
+  const placed = markers.map((marker) => ({
+    ...marker,
+    x: plotX(marker.value, minimum, maximum),
+    side: marker.value < minimum ? "lower" : marker.value > maximum ? "upper" : null,
+  }));
+  const collide = placed.length > 1 && Math.abs(placed[0].x - placed[1].x) < 2;
+  for (const marker of placed) {
+    svg.append(svgElement("line", {
+      x1: marker.x,
+      y1: collide && marker.kind === "actual" ? DISTRIBUTION_PLOT.splitActualTop : DISTRIBUTION_PLOT.markerTop,
+      x2: marker.x,
+      y2: collide && marker.kind === "expected" ? DISTRIBUTION_PLOT.splitExpectedBottom : DISTRIBUTION_PLOT.markerBottom,
+      class: retrospective ? `retrospective-marker retrospective-marker-${marker.kind}` : "future-interval-marker",
+      "data-margin": marker.value,
+      ...(marker.side ? { "data-clipped": marker.side } : {}),
+    }));
+  }
+  return { placed, collide };
+}
+
+function addMarkerLegend(figure, markers, retrospective) {
+  const legend = node("p", retrospective ? "retrospective-chart-legend" : "future-interval-legend");
+  markers.forEach((marker) => legend.append(node("span", marker.kind === "expected" ? "retrospective-legend-expected" : "retrospective-legend-actual", `${marker.kind === "expected" ? "Expected" : "Actual"} ${marker.text}`)));
+  figure.append(legend);
+}
+
+function offAxisTailNote(display, axis, kind, oriented, widened = false) {
+  const scale = displayScale(axis);
+  const lower = display.lowerTail / scale;
+  const upper = display.upperTail / scale;
+  if (lower + upper < 0.01) return null;
+  const sides = [
+    [lower, `${oriented.opponentName} by ${Math.abs(axis.min_margin)}`],
+    [upper, `${oriented.focalName} by ${axis.max_margin}`],
+  ].filter(([mass]) => mass >= 0.001).map(([mass, edge]) => `${percentage(mass)} of ${kind === "future" ? "predicted" : "expected"} outcomes lie beyond ${edge}`);
+  const subject = kind === "future" ? "predicted" : "expected";
+  const summary = `${sides.join("; ")}. The standard ${marginAxisRange(axis)}-point range clips these ${subject} outcomes.`;
+  return widened ? `${summary} Intervals use a wider axis.` : summary;
 }
 
 function densitySvg(masses, {
@@ -156,10 +191,7 @@ function densitySvg(masses, {
   desc.textContent = description;
   svg.append(title, desc);
   svg.append(svgElement("line", { x1: left, y1: baseline, x2: right, y2: baseline, class: "distribution-baseline" }));
-  if (zeroAxis && Number(zeroAxis.min_margin) <= 0 && Number(zeroAxis.max_margin) >= 0) {
-    const zeroX = plotX(0, Number(zeroAxis.min_margin), Number(zeroAxis.max_margin));
-    svg.append(svgElement("line", { x1: zeroX, y1: DISTRIBUTION_PLOT.zeroTop, x2: zeroX, y2: baseline + 3, class: "distribution-zero" }));
-  }
+  if (zeroAxis) addZeroReference(svg, Number(zeroAxis.min_margin), Number(zeroAxis.max_margin));
   const barWidth = plotWidth / values.length;
   values.forEach((value, index) => {
     const barHeight = (value / maximum) * DISTRIBUTION_PLOT.barMaxHeight;
@@ -232,28 +264,28 @@ function futureChart(prediction, team, axis, oriented) {
   const display = orientedMarginDistribution(prediction, team, axis);
   if (!display) return null;
   const label = `Predictive margin distribution from ${oriented.opponentName} by ${Math.abs(axis.min_margin)} to ${oriented.focalName} by ${axis.max_margin}; zero is even.`;
-  const tailProbability = (display.lowerTail + display.upperTail) / displayScale(axis);
-  if (tailProbability >= MARGIN_INTERVAL_VIEW_THRESHOLD) {
+  const tailNote = offAxisTailNote(display, axis, "future", oriented);
+  if (needsIntervalView(oriented.interval50, axis)) {
     const expectedText = oriented.expected >= 0
       ? marginSide(oriented.focalName, oriented.expected)
       : marginSide(oriented.opponentName, -oriented.expected);
     return marginIntervalChart({
-      kind: "future", oriented, axis, offAxis: tailProbability,
+      kind: "future", oriented, axis, display,
       intervals: [oriented.interval95, oriented.interval80, oriented.interval50],
       markers: [{ kind: "expected", value: oriented.expected, text: expectedText }],
     });
   }
-  const description = `The distribution is oriented from ${oriented.focalName}'s perspective. ${oriented.focalName} win probability ${matchupProbability(oriented.focalWin, oriented.opponentWin)}; ${oriented.opponentName} win probability ${matchupProbability(oriented.opponentWin, oriented.focalWin)}.${tailProbability >= 0.01 ? ` ${percentage(tailProbability)} of predicted outcomes fall outside the chart's ${marginAxisRange(axis)}-point range.` : ""}`;
+  const description = `The distribution is oriented from ${oriented.focalName}'s perspective. ${oriented.focalName} win probability ${matchupProbability(oriented.focalWin, oriented.opponentWin)}; ${oriented.opponentName} win probability ${matchupProbability(oriented.opponentWin, oriented.focalWin)}.${tailNote ? ` ${tailNote}` : ""}`;
   const figure = node("figure", "game-distribution game-distribution-future");
   figure.append(densitySvg(display.masses, { className: "future-distribution-chart", label, description, zeroAxis: axis }));
   const caption = node("figcaption", "distribution-axis");
   caption.append(node("span", "axis-start", `${oriented.opponentName} by ${Math.abs(axis.min_margin)}`), node("span", "axis-label", "Predictive margin · Even"), node("span", "axis-end", `${oriented.focalName} by ${axis.max_margin}`));
   figure.append(caption);
-  if (tailProbability >= 0.01) figure.append(node("p", "distribution-tail-note", `${percentage(tailProbability)} of predicted outcomes fall outside the chart's ${marginAxisRange(axis)}-point range.`));
+  if (tailNote) figure.append(node("p", "distribution-tail-note", tailNote));
   return figure;
 }
 
-function marginIntervalChart({ kind, oriented, axis, offAxis, intervals, markers }) {
+function marginIntervalChart({ kind, oriented, axis, display, intervals, markers }) {
   const values = [...intervals.flat(), ...markers.map((marker) => marker.value)];
   const width = Math.max(...values) - Math.min(...values);
   const padding = Math.max(5, width * 0.06);
@@ -282,38 +314,33 @@ function marginIntervalChart({ kind, oriented, axis, offAxis, intervals, markers
       class: `margin-interval margin-interval-${[95, 80, 50][index]} ${kind === "retrospective" ? "retrospective-interval" : "future-interval"}`,
     }));
   });
-  for (const marker of markers) {
-    const x = plotX(marker.value, minimum, maximum);
-    svg.append(svgElement("line", {
-      x1: x, y1: DISTRIBUTION_PLOT.markerTop, x2: x, y2: DISTRIBUTION_PLOT.markerBottom,
-      class: kind === "retrospective"
-        ? `retrospective-marker retrospective-marker-${marker.kind}`
-        : "future-interval-marker",
-      "data-margin": marker.value,
-    }));
-  }
+  addZeroReference(svg, minimum, maximum);
+  const { collide } = addMarginMarkers(svg, markers, minimum, maximum, kind === "retrospective");
+  if (collide) desc.textContent += " Expected and actual markers are vertically separated where their values overlap.";
   const figure = node("figure", `game-distribution game-distribution-${kind} game-distribution-interval`);
   figure.append(svg);
   const caption = node("figcaption", "distribution-axis");
-  caption.append(node("span", "axis-start", endpoint(minimum)), node("span", "axis-label", "Central 95% / 80% / 50%"), node("span", "axis-end", endpoint(maximum)));
+  caption.append(node("span", "axis-start", endpoint(minimum)), node("span", "axis-label", "Margin intervals"), node("span", "axis-end", endpoint(maximum)));
   figure.append(caption);
-  const legend = node("p", kind === "retrospective" ? "retrospective-chart-legend" : "future-interval-legend");
-  markers.forEach((marker) => legend.append(node("span", marker.kind === "expected" ? "retrospective-legend-expected" : "retrospective-legend-actual", `${marker.kind === "expected" ? "Expected" : "Actual"} ${marker.text}`)));
-  figure.append(legend);
-  figure.append(node("p", "distribution-tail-note", `${percentage(offAxis)} of ${kind === "future" ? "predicted" : "expected"} outcomes fall outside the standard ${marginAxisRange(axis)}-point histogram. Intervals use a wider axis.`));
+  const bands = node("p", "margin-interval-legend");
+  [95, 80, 50].forEach((level) => bands.append(node("span", `margin-interval-key margin-interval-key-${level}`, `Central ${level}%`)));
+  figure.append(bands);
+  addMarkerLegend(figure, markers, kind === "retrospective");
+  const tailNote = offAxisTailNote(display, axis, kind, oriented, true);
+  if (tailNote) figure.append(node("p", "distribution-tail-note", tailNote));
   return figure;
 }
 
 function retrospectiveChart(expectation, team, axis, oriented) {
   const display = orientedMarginDistribution(expectation, team, axis);
   if (!display) return null;
-  const offAxis = (display.lowerTail + display.upperTail) / displayScale(axis);
-  if (offAxis >= MARGIN_INTERVAL_VIEW_THRESHOLD) {
-    const homePerspective = expectation.home_team_id === oriented.focalId;
-    const orientInterval = (interval) => homePerspective ? interval : [-interval[1], -interval[0]];
+  const homePerspective = expectation.home_team_id === oriented.focalId;
+  const orientInterval = (interval) => homePerspective ? interval : [-interval[1], -interval[0]];
+  const interval50 = orientInterval(expectation.margin_interval_50);
+  if (needsIntervalView(interval50, axis)) {
     return marginIntervalChart({
-      kind: "retrospective", oriented, axis, offAxis,
-      intervals: [expectation.margin_interval_95, expectation.margin_interval_80, expectation.margin_interval_50].map(orientInterval),
+      kind: "retrospective", oriented, axis, display,
+      intervals: [expectation.margin_interval_95, expectation.margin_interval_80].map(orientInterval).concat([interval50]),
       markers: [
         { kind: "expected", value: oriented.expected, text: oriented.expectedText },
         { kind: "actual", value: oriented.actual, text: oriented.actualText },
@@ -330,18 +357,11 @@ function retrospectiveChart(expectation, team, axis, oriented) {
   });
   const minimum = Number(axis.min_margin);
   const maximum = Number(axis.max_margin);
-  const markers = [["expected", oriented.expected, oriented.expectedText], ["actual", oriented.actual, oriented.actualText]]
-    .map(([kind, value, text]) => ({ kind, value, text, x: plotX(value, minimum, maximum), side: value < minimum ? "lower" : value > maximum ? "upper" : null }));
-  const markersCollide = Math.abs(markers[0].x - markers[1].x) < 2;
-  for (const { kind, value, x, side } of markers) {
-    svg.append(svgElement("line", {
-      x1: x, y1: markersCollide && kind === "actual" ? DISTRIBUTION_PLOT.splitActualTop : DISTRIBUTION_PLOT.markerTop,
-      x2: x, y2: markersCollide && kind === "expected" ? DISTRIBUTION_PLOT.splitExpectedBottom : DISTRIBUTION_PLOT.markerBottom,
-      class: `retrospective-marker retrospective-marker-${kind}`,
-      "data-margin": value,
-      ...(side ? { "data-clipped": side } : {}),
-    }));
-  }
+  const markers = [
+    { kind: "expected", value: oriented.expected, text: oriented.expectedText },
+    { kind: "actual", value: oriented.actual, text: oriented.actualText },
+  ];
+  const { placed, collide: markersCollide } = addMarginMarkers(svg, markers, minimum, maximum, true);
   figure.append(svg);
   const caption = node("figcaption", "distribution-axis");
   caption.append(
@@ -350,16 +370,10 @@ function retrospectiveChart(expectation, team, axis, oriented) {
     node("span", "axis-end", `${oriented.focalName} by ${maximum}`),
   );
   figure.append(caption);
-  const legend = node("p", "retrospective-chart-legend");
-  legend.append(
-    node("span", "retrospective-legend-expected", `Expected ${oriented.expectedText}`),
-    node("span", "retrospective-legend-actual", `Actual ${oriented.actualText}`),
-  );
-  figure.append(legend);
-  if (offAxis >= 0.01) {
-    figure.append(node("p", "distribution-tail-note", `${percentage(offAxis)} of expected outcomes fall outside the chart's ${minimum === -maximum ? `±${maximum}` : `${minimum} to ${maximum}`}-point range.`));
-  }
-  const clipped = markers.filter(({ side }) => side);
+  addMarkerLegend(figure, markers, true);
+  const tailNote = offAxisTailNote(display, axis, "retrospective", oriented);
+  if (tailNote) figure.append(node("p", "distribution-tail-note", tailNote));
+  const clipped = placed.filter(({ side }) => side);
   if (clipped.length) {
     const note = clipped.map(({ kind, text, side }) => `${kind === "expected" ? "Expected" : "Actual"} ${text} exceeds the chart's ${side === "lower" ? `${oriented.opponentName} by ${Math.abs(minimum)}` : `${oriented.focalName} by ${maximum}`} edge.`).join(" ");
     figure.append(node("p", "distribution-marker-note", note));
@@ -1037,7 +1051,6 @@ function matchesScheduleExpectation(expectation, game, team) {
 
 function gameCard(game, cutoff, artifact, team) {
   const item = node("div", "game-card");
-  item.setAttribute("role", "listitem");
   item.dataset.gameId = game.game_id;
   const header = node("div", "game-card-header");
   header.append(node("p", "game-date", game.week === null ? formatDate(game.date, false) : `W${game.week} · ${formatDate(game.date, false)}`));
@@ -1065,6 +1078,9 @@ function gameCard(game, cutoff, artifact, team) {
     const expectation = expectations?.games?.[game.retrospective_expectation_id || game.game_id];
     if (expectation && expectation.source_snapshot_id === expectations.source_snapshot_id && matchesScheduleExpectation(expectation, game, team)) {
       body.append(retrospectivePanel(expectation, team, expectations.margin_axis, game.opponent_name || "Opponent"));
+    } else if (expectation) {
+      body.append(node("p", "game-artifact-error", "Retrospective expectation unavailable because published game data conflict."));
+      console.error("Retrospective expectation conflicts with the schedule", { gameId: game.game_id, teamId: team.team_id });
     } else body.append(node("p", "game-not-modeled", "No retrospective expectation available"));
   }
   item.classList.add(`game-card-${state}`);
@@ -1081,7 +1097,12 @@ function renderSchedule(artifact, entry, trajectory) {
   const games = Array.isArray(team.games) ? team.games : [];
   $("#team-page-status").textContent = games.length ? "" : "No schedule entries are available for this team.";
   $("#team-page-status").hidden = games.length > 0;
-  const items = games.map((game) => gameCard(game, cutoff, artifact, team));
+  const items = games.map((game) => {
+    const item = node("div", "schedule-entry");
+    item.setAttribute("role", "listitem");
+    item.append(gameCard(game, cutoff, artifact, team));
+    return item;
+  });
   const selectedIndex = trajectory?.points?.findIndex((point) => point.snapshot_id === entry.snapshot_id) ?? -1;
   if (selectedIndex > 0) {
     const points = trajectory.points.slice(0, selectedIndex + 1);
@@ -1089,14 +1110,30 @@ function renderSchedule(artifact, entry, trajectory) {
     points.slice(1).forEach((after, index) => {
       const checkpoint = checkpointPanel(points[index], after, teamId);
       if (!checkpoint) return;
-      const cutoffTime = new Date(after.effective_cutoff).getTime();
+      const beforeIds = new Set(points[index].included_game_ids || []);
+      const afterIds = new Set(after.included_game_ids || []);
+      const addedIds = new Set([...afterIds].filter((gameId) => !beforeIds.has(gameId)));
+      const addedTeamGame = games.some((game) => addedIds.has(game.game_id));
       let afterGame = -1;
       games.forEach((game, gameIndex) => {
-        if (new Date(game.date).getTime() <= cutoffTime) afterGame = gameIndex;
+        if (afterIds.has(game.game_id) && (addedIds.has(game.game_id) || !addedIds.size)) afterGame = gameIndex;
       });
+      if (afterGame < 0) {
+        games.forEach((game, gameIndex) => {
+          if (beforeIds.has(game.game_id)) afterGame = gameIndex;
+        });
+      }
+      if (!addedTeamGame) {
+        checkpoint.dataset.evidenceChange = "none";
+        checkpoint.querySelector(".schedule-checkpoint-values").append(node("span", "", addedIds.size ? `No new ${team.team_name} game included` : "No new games included"));
+      }
       insertions.push({ afterGame, checkpoint });
     });
-    insertions.reverse().forEach(({ afterGame, checkpoint }) => items.splice(afterGame + 1, 0, checkpoint));
+    insertions.forEach(({ afterGame, checkpoint }) => {
+      if (afterGame >= 0) items[afterGame].append(checkpoint);
+      else if (items.length) items[0].prepend(checkpoint);
+      else items.push(checkpoint);
+    });
   }
   $("#schedule-list").replaceChildren(...items);
 }
