@@ -31,9 +31,9 @@
         "mean": 0.45454611868301675,
         "median": 0.5022862802634331
       },
-      "full_posterior_tail_behavior": {
-        "loo_and_full_both_two_sided_tail_below_5pct": 14,
-        "loo_two_sided_tail_below_5pct_and_full_tail_at_least_10pct": 12,
+      "full_posterior_observed_direction_tail_behavior": {
+        "loo_and_full_both_tail_below_5pct": 14,
+        "loo_tail_below_5pct_and_full_tail_at_least_10pct": 12,
         "median_reduction_in_absolute_distance_from_50th_percentile": 0.05061646986599855,
         "percent_games_moved_closer_to_50th_percentile": 0.9660377358490566
       },
@@ -73,6 +73,407 @@
         "absolute_over_10_points_share": 0.062264150943396226,
         "absolute_over_20_points_share": 0.0,
         "absolute_p90": 0.09345736733018907
+      },
+      "population_summaries": {
+        "all_modeled_games": {
+          "absolute_residual_normalization": {
+            "largest_same_sign_reductions": [
+              {
+                "absolute_residual_reduction": 13.492910487885808,
+                "actual_home_margin": -40.0,
+                "away_team": "Montana",
+                "full_expected_home_margin": -10.732485728775382,
+                "full_observed_direction_tail_probability": 0.03964699585462961,
+                "full_residual_home": -29.26751427122462,
+                "game_id": "401868113",
+                "home_team": "UC Davis",
+                "loo_expected_home_margin": 2.760424759110426,
+                "loo_observed_direction_tail_probability": 0.008851619410530243,
+                "loo_residual_home": -42.76042475911043
+              },
+              {
+                "absolute_residual_reduction": 13.389529733842778,
+                "actual_home_margin": 34.0,
+                "away_team": "Mississippi Valley State",
+                "full_expected_home_margin": 15.328366659809715,
+                "full_observed_direction_tail_probability": 0.13273857482319718,
+                "full_residual_home": 18.671633340190283,
+                "game_id": "401868962",
+                "home_team": "Nicholls",
+                "loo_expected_home_margin": 1.938836925966939,
+                "loo_observed_direction_tail_probability": 0.04271317604520952,
+                "loo_residual_home": 32.06116307403306
+              },
+              {
+                "absolute_residual_reduction": 13.014664443131732,
+                "actual_home_margin": -12.0,
+                "away_team": "Idaho State",
+                "full_expected_home_margin": 10.35361021226841,
+                "full_observed_direction_tail_probability": 0.09669333307490625,
+                "full_residual_home": -22.35361021226841,
+                "game_id": "401860880",
+                "home_team": "Utah State",
+                "loo_expected_home_margin": 23.368274655400146,
+                "loo_observed_direction_tail_probability": 0.02412289202706639,
+                "loo_residual_home": -35.36827465540014
+              },
+              {
+                "absolute_residual_reduction": 12.836690936134985,
+                "actual_home_margin": -31.0,
+                "away_team": "Illinois State",
+                "full_expected_home_margin": -9.533582066686023,
+                "full_observed_direction_tail_probability": 0.09897724212013004,
+                "full_residual_home": -21.466417933313977,
+                "game_id": "401867845",
+                "home_team": "Western Illinois",
+                "loo_expected_home_margin": 3.303108869448966,
+                "loo_observed_direction_tail_probability": 0.02979393720194437,
+                "loo_residual_home": -34.30310886944896
+              },
+              {
+                "absolute_residual_reduction": 12.616076000065839,
+                "actual_home_margin": 35.0,
+                "away_team": "Western Kentucky",
+                "full_expected_home_margin": 5.823373858867811,
+                "full_observed_direction_tail_probability": 0.04129911771992156,
+                "full_residual_home": 29.17662614113219,
+                "game_id": "401864432",
+                "home_team": "Nevada",
+                "loo_expected_home_margin": -6.79270214119803,
+                "loo_observed_direction_tail_probability": 0.008987345725785079,
+                "loo_residual_home": 41.79270214119803
+              }
+            ],
+            "reduced_by_at_least_3_points_share": 0.5188679245283019,
+            "reduced_by_at_least_5_points_share": 0.3018867924528302,
+            "reduced_residual_share": 0.9716981132075472,
+            "reduction_distribution_points": {
+              "count": 530,
+              "median": 3.1648649466850283,
+              "p10": 0.6054414071262685,
+              "p25": 1.457176479871212,
+              "p75": 5.481886277450519,
+              "p90": 8.103983388162387
+            },
+            "relative_reduction_for_loo_absolute_residual_at_least_5": {
+              "count": 399,
+              "denominator_threshold_points": 5,
+              "median": 0.3216915358080296,
+              "p10": 0.19085948649215959,
+              "p25": 0.25344324652143924,
+              "p75": 0.3741020042706199,
+              "p90": 0.42184872932485523,
+              "share_reduced_by_at_least_25pct": 0.7619047619047619
+            },
+            "residual_grew_share": 0.02830188679245283,
+            "residual_sign_changed_count": 5,
+            "same_sign_reduced_by_at_least_5_points_count": 160
+          },
+          "expected_margin_shift_full_minus_loo": {
+            "absolute_shift_distribution": {
+              "count": 530,
+              "median": 3.164864946685028,
+              "p10": 0.657286008126714,
+              "p25": 1.4571764798712121,
+              "p75": 5.481886277450519,
+              "p90": 8.103983388162387
+            },
+            "absolute_shift_over_threshold_share": {
+              "1": 0.8415094339622642,
+              "10": 0.052830188679245285,
+              "3": 0.5188679245283019,
+              "5": 0.3018867924528302
+            },
+            "signed_mean": 0.45454611868301675,
+            "signed_median": 0.5022862802634331
+          },
+          "game_count": 530,
+          "observed_direction_tail_probability": {
+            "both_below_5pct_count": 14,
+            "full_below_5pct_count": 14,
+            "loo_below_5pct_count": 49,
+            "loo_below_5pct_full_at_least_10pct_count": 12
+          },
+          "observed_percentile_movement": {
+            "absolute_change_at_least_10_points_share": 0.062264150943396226,
+            "absolute_change_at_least_20_points_share": 0.0,
+            "absolute_change_distribution": {
+              "count": 530,
+              "median": 0.05061646986599855,
+              "p10": 0.01166322013989734,
+              "p25": 0.028641074122039353,
+              "p75": 0.07377521112208259,
+              "p90": 0.09345736733018907
+            },
+            "closer_to_50th_percentile_share": 0.9660377358490566
+          }
+        },
+        "at_least_one_fbs_team": {
+          "absolute_residual_normalization": {
+            "largest_same_sign_reductions": [
+              {
+                "absolute_residual_reduction": 13.014664443131732,
+                "actual_home_margin": -12.0,
+                "away_team": "Idaho State",
+                "full_expected_home_margin": 10.35361021226841,
+                "full_observed_direction_tail_probability": 0.09669333307490625,
+                "full_residual_home": -22.35361021226841,
+                "game_id": "401860880",
+                "home_team": "Utah State",
+                "loo_expected_home_margin": 23.368274655400146,
+                "loo_observed_direction_tail_probability": 0.02412289202706639,
+                "loo_residual_home": -35.36827465540014
+              },
+              {
+                "absolute_residual_reduction": 12.616076000065839,
+                "actual_home_margin": 35.0,
+                "away_team": "Western Kentucky",
+                "full_expected_home_margin": 5.823373858867811,
+                "full_observed_direction_tail_probability": 0.04129911771992156,
+                "full_residual_home": 29.17662614113219,
+                "game_id": "401864432",
+                "home_team": "Nevada",
+                "loo_expected_home_margin": -6.79270214119803,
+                "loo_observed_direction_tail_probability": 0.008987345725785079,
+                "loo_residual_home": 41.79270214119803
+              },
+              {
+                "absolute_residual_reduction": 12.270137102224332,
+                "actual_home_margin": 56.0,
+                "away_team": "Bryant",
+                "full_expected_home_margin": 29.199421221180273,
+                "full_observed_direction_tail_probability": 0.050003540805078184,
+                "full_residual_home": 26.800578778819727,
+                "game_id": "401862701",
+                "home_team": "Army",
+                "loo_expected_home_margin": 16.92928411895594,
+                "loo_observed_direction_tail_probability": 0.01414358645386149,
+                "loo_residual_home": 39.07071588104406
+              },
+              {
+                "absolute_residual_reduction": 12.239100988584184,
+                "actual_home_margin": -16.0,
+                "away_team": "Massachusetts",
+                "full_expected_home_margin": 11.86018023139637,
+                "full_observed_direction_tail_probability": 0.055118231090806186,
+                "full_residual_home": -27.86018023139637,
+                "game_id": "401858423",
+                "home_team": "Rutgers",
+                "loo_expected_home_margin": 24.09928121998055,
+                "loo_observed_direction_tail_probability": 0.010694748704231937,
+                "loo_residual_home": -40.099281219980554
+              },
+              {
+                "absolute_residual_reduction": 12.1961381716672,
+                "actual_home_margin": -51.0,
+                "away_team": "UCLA",
+                "full_expected_home_margin": -9.81523516872658,
+                "full_observed_direction_tail_probability": 0.006612229641779661,
+                "full_residual_home": -41.18476483127342,
+                "game_id": "401858462",
+                "home_team": "Maryland",
+                "loo_expected_home_margin": 2.3809030029406206,
+                "loo_observed_direction_tail_probability": 0.001536159391318182,
+                "loo_residual_home": -53.38090300294062
+              }
+            ],
+            "reduced_by_at_least_3_points_share": 0.46827794561933533,
+            "reduced_by_at_least_5_points_share": 0.24773413897280966,
+            "reduced_residual_share": 0.9758308157099698,
+            "reduction_distribution_points": {
+              "count": 331,
+              "median": 2.8108787594893982,
+              "p10": 0.5378828245338916,
+              "p25": 1.393734861086502,
+              "p75": 4.941024921085489,
+              "p90": 6.907265067379136
+            },
+            "relative_reduction_for_loo_absolute_residual_at_least_5": {
+              "count": 247,
+              "denominator_threshold_points": 5,
+              "median": 0.2926454294031155,
+              "p10": 0.17153420642389663,
+              "p25": 0.23509325931733896,
+              "p75": 0.335250499949036,
+              "p90": 0.3723756925877776,
+              "share_reduced_by_at_least_25pct": 0.6882591093117408
+            },
+            "residual_grew_share": 0.02416918429003021,
+            "residual_sign_changed_count": 2,
+            "same_sign_reduced_by_at_least_5_points_count": 82
+          },
+          "expected_margin_shift_full_minus_loo": {
+            "absolute_shift_distribution": {
+              "count": 331,
+              "median": 2.8108787594893982,
+              "p10": 0.5378828245338916,
+              "p25": 1.393734861086502,
+              "p75": 4.941024921085489,
+              "p90": 6.907265067379136
+            },
+            "absolute_shift_over_threshold_share": {
+              "1": 0.8308157099697885,
+              "10": 0.030211480362537766,
+              "3": 0.46827794561933533,
+              "5": 0.24773413897280966
+            },
+            "signed_mean": 0.44233662390121187,
+            "signed_median": 0.6585671040228922
+          },
+          "game_count": 331,
+          "observed_direction_tail_probability": {
+            "both_below_5pct_count": 8,
+            "full_below_5pct_count": 8,
+            "loo_below_5pct_count": 30,
+            "loo_below_5pct_full_at_least_10pct_count": 4
+          },
+          "observed_percentile_movement": {
+            "absolute_change_at_least_10_points_share": 0.0030211480362537764,
+            "absolute_change_at_least_20_points_share": 0.0,
+            "absolute_change_distribution": {
+              "count": 331,
+              "median": 0.045290553113018106,
+              "p10": 0.011230015085550105,
+              "p25": 0.028087188664506046,
+              "p75": 0.06573886867937614,
+              "p90": 0.0816980238830266
+            },
+            "closer_to_50th_percentile_share": 0.9697885196374623
+          }
+        },
+        "fbs_vs_fbs": {
+          "absolute_residual_normalization": {
+            "largest_same_sign_reductions": [
+              {
+                "absolute_residual_reduction": 12.616076000065839,
+                "actual_home_margin": 35.0,
+                "away_team": "Western Kentucky",
+                "full_expected_home_margin": 5.823373858867811,
+                "full_observed_direction_tail_probability": 0.04129911771992156,
+                "full_residual_home": 29.17662614113219,
+                "game_id": "401864432",
+                "home_team": "Nevada",
+                "loo_expected_home_margin": -6.79270214119803,
+                "loo_observed_direction_tail_probability": 0.008987345725785079,
+                "loo_residual_home": 41.79270214119803
+              },
+              {
+                "absolute_residual_reduction": 12.239100988584184,
+                "actual_home_margin": -16.0,
+                "away_team": "Massachusetts",
+                "full_expected_home_margin": 11.86018023139637,
+                "full_observed_direction_tail_probability": 0.055118231090806186,
+                "full_residual_home": -27.86018023139637,
+                "game_id": "401858423",
+                "home_team": "Rutgers",
+                "loo_expected_home_margin": 24.09928121998055,
+                "loo_observed_direction_tail_probability": 0.010694748704231937,
+                "loo_residual_home": -40.099281219980554
+              },
+              {
+                "absolute_residual_reduction": 12.1961381716672,
+                "actual_home_margin": -51.0,
+                "away_team": "UCLA",
+                "full_expected_home_margin": -9.81523516872658,
+                "full_observed_direction_tail_probability": 0.006612229641779661,
+                "full_residual_home": -41.18476483127342,
+                "game_id": "401858462",
+                "home_team": "Maryland",
+                "loo_expected_home_margin": 2.3809030029406206,
+                "loo_observed_direction_tail_probability": 0.001536159391318182,
+                "loo_residual_home": -53.38090300294062
+              },
+              {
+                "absolute_residual_reduction": 12.120897308047365,
+                "actual_home_margin": 38.0,
+                "away_team": "UNLV",
+                "full_expected_home_margin": 12.116022090904185,
+                "full_observed_direction_tail_probability": 0.0605786883781797,
+                "full_residual_home": 25.883977909095815,
+                "game_id": "401862705",
+                "home_team": "North Texas",
+                "loo_expected_home_margin": -0.0048752171431820125,
+                "loo_observed_direction_tail_probability": 0.01571404647678698,
+                "loo_residual_home": 38.00487521714318
+              },
+              {
+                "absolute_residual_reduction": 12.053063541000213,
+                "actual_home_margin": -28.0,
+                "away_team": "UConn",
+                "full_expected_home_margin": -3.647742447516833,
+                "full_observed_direction_tail_probability": 0.07409455433412854,
+                "full_residual_home": -24.352257552483167,
+                "game_id": "401861963",
+                "home_team": "Southern Miss",
+                "loo_expected_home_margin": 8.405321093483376,
+                "loo_observed_direction_tail_probability": 0.019629657160607626,
+                "loo_residual_home": -36.40532109348338
+              }
+            ],
+            "reduced_by_at_least_3_points_share": 0.4325581395348837,
+            "reduced_by_at_least_5_points_share": 0.2372093023255814,
+            "reduced_residual_share": 0.9720930232558139,
+            "reduction_distribution_points": {
+              "count": 215,
+              "median": 2.4788384641645216,
+              "p10": 0.4005282752036083,
+              "p25": 1.3184346506437228,
+              "p75": 4.656590229834821,
+              "p90": 6.6085045014660455
+            },
+            "relative_reduction_for_loo_absolute_residual_at_least_5": {
+              "count": 156,
+              "denominator_threshold_points": 5,
+              "median": 0.30044053087230554,
+              "p10": 0.1612948172408069,
+              "p25": 0.24038770990873015,
+              "p75": 0.3442837039689506,
+              "p90": 0.3775997490212108,
+              "share_reduced_by_at_least_25pct": 0.7243589743589743
+            },
+            "residual_grew_share": 0.027906976744186046,
+            "residual_sign_changed_count": 1,
+            "same_sign_reduced_by_at_least_5_points_count": 51
+          },
+          "expected_margin_shift_full_minus_loo": {
+            "absolute_shift_distribution": {
+              "count": 215,
+              "median": 2.4788384641645216,
+              "p10": 0.4643947445796922,
+              "p25": 1.3184346506437228,
+              "p75": 4.656590229834821,
+              "p90": 6.608504501466046
+            },
+            "absolute_shift_over_threshold_share": {
+              "1": 0.813953488372093,
+              "10": 0.037209302325581395,
+              "3": 0.4325581395348837,
+              "5": 0.2372093023255814
+            },
+            "signed_mean": 0.0324813841783636,
+            "signed_median": -0.021726645317140303
+          },
+          "game_count": 215,
+          "observed_direction_tail_probability": {
+            "both_below_5pct_count": 4,
+            "full_below_5pct_count": 4,
+            "loo_below_5pct_count": 18,
+            "loo_below_5pct_full_at_least_10pct_count": 3
+          },
+          "observed_percentile_movement": {
+            "absolute_change_at_least_10_points_share": 0.004651162790697674,
+            "absolute_change_at_least_20_points_share": 0.0,
+            "absolute_change_distribution": {
+              "count": 215,
+              "median": 0.04445984667823866,
+              "p10": 0.009599979458180032,
+              "p25": 0.026701118434507454,
+              "p75": 0.06542725805468763,
+              "p90": 0.08421549535469801
+            },
+            "closer_to_50th_percentile_share": 0.9720930232558139
+          }
+        }
       },
       "prior_family": "context",
       "prior_path": "data/processed/preseason/context_v1_3/annual/2026/predictions.csv",
@@ -201,9 +602,9 @@
         "mean": 0.5866183361100087,
         "median": 0.6672161767137514
       },
-      "full_posterior_tail_behavior": {
-        "loo_and_full_both_two_sided_tail_below_5pct": 12,
-        "loo_two_sided_tail_below_5pct_and_full_tail_at_least_10pct": 10,
+      "full_posterior_observed_direction_tail_behavior": {
+        "loo_and_full_both_tail_below_5pct": 12,
+        "loo_tail_below_5pct_and_full_tail_at_least_10pct": 10,
         "median_reduction_in_absolute_distance_from_50th_percentile": 0.053713203632819645,
         "percent_games_moved_closer_to_50th_percentile": 0.9622641509433962
       },
@@ -241,6 +642,407 @@
         "absolute_over_10_points_share": 0.0660377358490566,
         "absolute_over_20_points_share": 0.0,
         "absolute_p90": 0.09374275320412605
+      },
+      "population_summaries": {
+        "all_modeled_games": {
+          "absolute_residual_normalization": {
+            "largest_same_sign_reductions": [
+              {
+                "absolute_residual_reduction": 13.445727998681956,
+                "actual_home_margin": -40.0,
+                "away_team": "Montana",
+                "full_expected_home_margin": -10.74883511294244,
+                "full_observed_direction_tail_probability": 0.039718818495020014,
+                "full_residual_home": -29.25116488705756,
+                "game_id": "401868113",
+                "home_team": "UC Davis",
+                "loo_expected_home_margin": 2.6968928857395165,
+                "loo_observed_direction_tail_probability": 0.008890238356798539,
+                "loo_residual_home": -42.696892885739516
+              },
+              {
+                "absolute_residual_reduction": 13.413725195801085,
+                "actual_home_margin": 34.0,
+                "away_team": "Mississippi Valley State",
+                "full_expected_home_margin": 14.724569210877563,
+                "full_observed_direction_tail_probability": 0.1254659570122436,
+                "full_residual_home": 19.27543078912244,
+                "game_id": "401868962",
+                "home_team": "Nicholls",
+                "loo_expected_home_margin": 1.3108440150764777,
+                "loo_observed_direction_tail_probability": 0.039053163770965904,
+                "loo_residual_home": 32.689155984923524
+              },
+              {
+                "absolute_residual_reduction": 13.188974131141705,
+                "actual_home_margin": 38.0,
+                "away_team": "UNLV",
+                "full_expected_home_margin": 11.52922079783155,
+                "full_observed_direction_tail_probability": 0.058499115067452645,
+                "full_residual_home": 26.47077920216845,
+                "game_id": "401862705",
+                "home_team": "North Texas",
+                "loo_expected_home_margin": -1.659753333310156,
+                "loo_observed_direction_tail_probability": 0.013385017987090575,
+                "loo_residual_home": 39.65975333331016
+              },
+              {
+                "absolute_residual_reduction": 13.126239152558568,
+                "actual_home_margin": -51.0,
+                "away_team": "UCLA",
+                "full_expected_home_margin": -10.555103585251464,
+                "full_observed_direction_tail_probability": 0.008056754973898631,
+                "full_residual_home": -40.444896414748534,
+                "game_id": "401858462",
+                "home_team": "Maryland",
+                "loo_expected_home_margin": 2.5711355673071012,
+                "loo_observed_direction_tail_probability": 0.001587365690229761,
+                "loo_residual_home": -53.5711355673071
+              },
+              {
+                "absolute_residual_reduction": 13.052594705190188,
+                "actual_home_margin": -12.0,
+                "away_team": "Idaho State",
+                "full_expected_home_margin": 9.292785879847242,
+                "full_observed_direction_tail_probability": 0.10844705970153203,
+                "full_residual_home": -21.292785879847244,
+                "game_id": "401860880",
+                "home_team": "Utah State",
+                "loo_expected_home_margin": 22.345380585037432,
+                "loo_observed_direction_tail_probability": 0.028194686226280796,
+                "loo_residual_home": -34.34538058503743
+              }
+            ],
+            "reduced_by_at_least_3_points_share": 0.5490566037735849,
+            "reduced_by_at_least_5_points_share": 0.2943396226415094,
+            "reduced_residual_share": 0.9679245283018868,
+            "reduction_distribution_points": {
+              "count": 530,
+              "median": 3.288546745227058,
+              "p10": 0.6441056784009503,
+              "p25": 1.5624041729964349,
+              "p75": 5.684713187967134,
+              "p90": 8.509010571543776
+            },
+            "relative_reduction_for_loo_absolute_residual_at_least_5": {
+              "count": 395,
+              "denominator_threshold_points": 5,
+              "median": 0.3314492333313572,
+              "p10": 0.2004820803007199,
+              "p25": 0.2612336440374621,
+              "p75": 0.37749821582081167,
+              "p90": 0.41740644057482523,
+              "share_reduced_by_at_least_25pct": 0.7873417721518987
+            },
+            "residual_grew_share": 0.03207547169811321,
+            "residual_sign_changed_count": 9,
+            "same_sign_reduced_by_at_least_5_points_count": 156
+          },
+          "expected_margin_shift_full_minus_loo": {
+            "absolute_shift_distribution": {
+              "count": 530,
+              "median": 3.288546745227058,
+              "p10": 0.6587616726061061,
+              "p25": 1.5624041729964349,
+              "p75": 5.684713187967135,
+              "p90": 8.509010571543776
+            },
+            "absolute_shift_over_threshold_share": {
+              "1": 0.8320754716981132,
+              "10": 0.05849056603773585,
+              "3": 0.5490566037735849,
+              "5": 0.2943396226415094
+            },
+            "signed_mean": 0.5866183361100087,
+            "signed_median": 0.6672161767137514
+          },
+          "game_count": 530,
+          "observed_direction_tail_probability": {
+            "both_below_5pct_count": 12,
+            "full_below_5pct_count": 12,
+            "loo_below_5pct_count": 48,
+            "loo_below_5pct_full_at_least_10pct_count": 10
+          },
+          "observed_percentile_movement": {
+            "absolute_change_at_least_10_points_share": 0.0660377358490566,
+            "absolute_change_at_least_20_points_share": 0.0,
+            "absolute_change_distribution": {
+              "count": 530,
+              "median": 0.053713203632819645,
+              "p10": 0.013637754533714522,
+              "p25": 0.02935588905846176,
+              "p75": 0.07620274254761442,
+              "p90": 0.09374275320412605
+            },
+            "closer_to_50th_percentile_share": 0.9622641509433962
+          }
+        },
+        "at_least_one_fbs_team": {
+          "absolute_residual_normalization": {
+            "largest_same_sign_reductions": [
+              {
+                "absolute_residual_reduction": 13.188974131141705,
+                "actual_home_margin": 38.0,
+                "away_team": "UNLV",
+                "full_expected_home_margin": 11.52922079783155,
+                "full_observed_direction_tail_probability": 0.058499115067452645,
+                "full_residual_home": 26.47077920216845,
+                "game_id": "401862705",
+                "home_team": "North Texas",
+                "loo_expected_home_margin": -1.659753333310156,
+                "loo_observed_direction_tail_probability": 0.013385017987090575,
+                "loo_residual_home": 39.65975333331016
+              },
+              {
+                "absolute_residual_reduction": 13.126239152558568,
+                "actual_home_margin": -51.0,
+                "away_team": "UCLA",
+                "full_expected_home_margin": -10.555103585251464,
+                "full_observed_direction_tail_probability": 0.008056754973898631,
+                "full_residual_home": -40.444896414748534,
+                "game_id": "401858462",
+                "home_team": "Maryland",
+                "loo_expected_home_margin": 2.5711355673071012,
+                "loo_observed_direction_tail_probability": 0.001587365690229761,
+                "loo_residual_home": -53.5711355673071
+              },
+              {
+                "absolute_residual_reduction": 13.052594705190188,
+                "actual_home_margin": -12.0,
+                "away_team": "Idaho State",
+                "full_expected_home_margin": 9.292785879847242,
+                "full_observed_direction_tail_probability": 0.10844705970153203,
+                "full_residual_home": -21.292785879847244,
+                "game_id": "401860880",
+                "home_team": "Utah State",
+                "loo_expected_home_margin": 22.345380585037432,
+                "loo_observed_direction_tail_probability": 0.028194686226280796,
+                "loo_residual_home": -34.34538058503743
+              },
+              {
+                "absolute_residual_reduction": 13.005629610142158,
+                "actual_home_margin": -24.0,
+                "away_team": "Maryland",
+                "full_expected_home_margin": 1.3848597751074498,
+                "full_observed_direction_tail_probability": 0.06971560425550662,
+                "full_residual_home": -25.38485977510745,
+                "game_id": "401858444",
+                "home_team": "UConn",
+                "loo_expected_home_margin": 14.390489385249609,
+                "loo_observed_direction_tail_probability": 0.015592749604169892,
+                "loo_residual_home": -38.39048938524961
+              },
+              {
+                "absolute_residual_reduction": 12.625104615569366,
+                "actual_home_margin": -16.0,
+                "away_team": "Massachusetts",
+                "full_expected_home_margin": 7.900091561962885,
+                "full_observed_direction_tail_probability": 0.08614367187927635,
+                "full_residual_home": -23.900091561962885,
+                "game_id": "401858423",
+                "home_team": "Rutgers",
+                "loo_expected_home_margin": 20.52519617753225,
+                "loo_observed_direction_tail_probability": 0.019306724625595892,
+                "loo_residual_home": -36.52519617753225
+              }
+            ],
+            "reduced_by_at_least_3_points_share": 0.5196374622356495,
+            "reduced_by_at_least_5_points_share": 0.23564954682779457,
+            "reduced_residual_share": 0.9697885196374623,
+            "reduction_distribution_points": {
+              "count": 331,
+              "median": 3.055594796380099,
+              "p10": 0.647244722447951,
+              "p25": 1.5425164897279637,
+              "p75": 4.9777274300314485,
+              "p90": 7.487906240527963
+            },
+            "relative_reduction_for_loo_absolute_residual_at_least_5": {
+              "count": 245,
+              "denominator_threshold_points": 5,
+              "median": 0.3041595502314959,
+              "p10": 0.18779033383921445,
+              "p25": 0.24749747525937418,
+              "p75": 0.34505069012016915,
+              "p90": 0.3797017947932428,
+              "share_reduced_by_at_least_25pct": 0.7306122448979592
+            },
+            "residual_grew_share": 0.030211480362537766,
+            "residual_sign_changed_count": 5,
+            "same_sign_reduced_by_at_least_5_points_count": 78
+          },
+          "expected_margin_shift_full_minus_loo": {
+            "absolute_shift_distribution": {
+              "count": 331,
+              "median": 3.055594796380099,
+              "p10": 0.647244722447951,
+              "p25": 1.5425164897279637,
+              "p75": 4.9777274300314485,
+              "p90": 7.487906240527963
+            },
+            "absolute_shift_over_threshold_share": {
+              "1": 0.8217522658610272,
+              "10": 0.03625377643504532,
+              "3": 0.5196374622356495,
+              "5": 0.23564954682779457
+            },
+            "signed_mean": 0.6422821946150118,
+            "signed_median": 0.8002837187516363
+          },
+          "game_count": 331,
+          "observed_direction_tail_probability": {
+            "both_below_5pct_count": 6,
+            "full_below_5pct_count": 6,
+            "loo_below_5pct_count": 31,
+            "loo_below_5pct_full_at_least_10pct_count": 4
+          },
+          "observed_percentile_movement": {
+            "absolute_change_at_least_10_points_share": 0.006042296072507553,
+            "absolute_change_at_least_20_points_share": 0.0,
+            "absolute_change_distribution": {
+              "count": 331,
+              "median": 0.049782797068035456,
+              "p10": 0.013687626992759494,
+              "p25": 0.028539066032721605,
+              "p75": 0.06850318706398152,
+              "p90": 0.08404413573272215
+            },
+            "closer_to_50th_percentile_share": 0.9697885196374623
+          }
+        },
+        "fbs_vs_fbs": {
+          "absolute_residual_normalization": {
+            "largest_same_sign_reductions": [
+              {
+                "absolute_residual_reduction": 13.188974131141705,
+                "actual_home_margin": 38.0,
+                "away_team": "UNLV",
+                "full_expected_home_margin": 11.52922079783155,
+                "full_observed_direction_tail_probability": 0.058499115067452645,
+                "full_residual_home": 26.47077920216845,
+                "game_id": "401862705",
+                "home_team": "North Texas",
+                "loo_expected_home_margin": -1.659753333310156,
+                "loo_observed_direction_tail_probability": 0.013385017987090575,
+                "loo_residual_home": 39.65975333331016
+              },
+              {
+                "absolute_residual_reduction": 13.126239152558568,
+                "actual_home_margin": -51.0,
+                "away_team": "UCLA",
+                "full_expected_home_margin": -10.555103585251464,
+                "full_observed_direction_tail_probability": 0.008056754973898631,
+                "full_residual_home": -40.444896414748534,
+                "game_id": "401858462",
+                "home_team": "Maryland",
+                "loo_expected_home_margin": 2.5711355673071012,
+                "loo_observed_direction_tail_probability": 0.001587365690229761,
+                "loo_residual_home": -53.5711355673071
+              },
+              {
+                "absolute_residual_reduction": 13.005629610142158,
+                "actual_home_margin": -24.0,
+                "away_team": "Maryland",
+                "full_expected_home_margin": 1.3848597751074498,
+                "full_observed_direction_tail_probability": 0.06971560425550662,
+                "full_residual_home": -25.38485977510745,
+                "game_id": "401858444",
+                "home_team": "UConn",
+                "loo_expected_home_margin": 14.390489385249609,
+                "loo_observed_direction_tail_probability": 0.015592749604169892,
+                "loo_residual_home": -38.39048938524961
+              },
+              {
+                "absolute_residual_reduction": 12.625104615569366,
+                "actual_home_margin": -16.0,
+                "away_team": "Massachusetts",
+                "full_expected_home_margin": 7.900091561962885,
+                "full_observed_direction_tail_probability": 0.08614367187927635,
+                "full_residual_home": -23.900091561962885,
+                "game_id": "401858423",
+                "home_team": "Rutgers",
+                "loo_expected_home_margin": 20.52519617753225,
+                "loo_observed_direction_tail_probability": 0.019306724625595892,
+                "loo_residual_home": -36.52519617753225
+              },
+              {
+                "absolute_residual_reduction": 11.963683823910618,
+                "actual_home_margin": 28.0,
+                "away_team": "Tulsa",
+                "full_expected_home_margin": 6.453523234314448,
+                "full_observed_direction_tail_probability": 0.10506688781183582,
+                "full_residual_home": 21.54647676568555,
+                "game_id": "401856697",
+                "home_team": "Arkansas",
+                "loo_expected_home_margin": -5.510160589596171,
+                "loo_observed_direction_tail_probability": 0.029584290170425076,
+                "loo_residual_home": 33.51016058959617
+              }
+            ],
+            "reduced_by_at_least_3_points_share": 0.4744186046511628,
+            "reduced_by_at_least_5_points_share": 0.2186046511627907,
+            "reduced_residual_share": 0.9534883720930233,
+            "reduction_distribution_points": {
+              "count": 215,
+              "median": 2.7878725705915137,
+              "p10": 0.5442984050106753,
+              "p25": 1.3622996126529425,
+              "p75": 4.846107922796338,
+              "p90": 7.327738923121144
+            },
+            "relative_reduction_for_loo_absolute_residual_at_least_5": {
+              "count": 153,
+              "denominator_threshold_points": 5,
+              "median": 0.3197593845785266,
+              "p10": 0.17559908632226087,
+              "p25": 0.24767634370579936,
+              "p75": 0.3575952801302321,
+              "p90": 0.38634354039845237,
+              "share_reduced_by_at_least_25pct": 0.7450980392156863
+            },
+            "residual_grew_share": 0.046511627906976744,
+            "residual_sign_changed_count": 4,
+            "same_sign_reduced_by_at_least_5_points_count": 47
+          },
+          "expected_margin_shift_full_minus_loo": {
+            "absolute_shift_distribution": {
+              "count": 215,
+              "median": 2.7878725705915137,
+              "p10": 0.5482340309402381,
+              "p25": 1.3622996126529427,
+              "p75": 4.846107922796338,
+              "p90": 7.327738923121145
+            },
+            "absolute_shift_over_threshold_share": {
+              "1": 0.8046511627906977,
+              "10": 0.04186046511627907,
+              "3": 0.4744186046511628,
+              "5": 0.2186046511627907
+            },
+            "signed_mean": 0.18407570545215926,
+            "signed_median": 0.14517457736152828
+          },
+          "game_count": 215,
+          "observed_direction_tail_probability": {
+            "both_below_5pct_count": 3,
+            "full_below_5pct_count": 3,
+            "loo_below_5pct_count": 17,
+            "loo_below_5pct_full_at_least_10pct_count": 2
+          },
+          "observed_percentile_movement": {
+            "absolute_change_at_least_10_points_share": 0.009302325581395349,
+            "absolute_change_at_least_20_points_share": 0.0,
+            "absolute_change_distribution": {
+              "count": 215,
+              "median": 0.048180746681634856,
+              "p10": 0.011496941745496859,
+              "p25": 0.026638267977541347,
+              "p75": 0.06831950419598584,
+              "p90": 0.08614666334097269
+            },
+            "closer_to_50th_percentile_share": 0.9534883720930233
+          }
+        }
       },
       "prior_family": "history",
       "prior_path": "data/processed/preseason/history/annual/2026/predictions.csv",

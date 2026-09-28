@@ -4,93 +4,127 @@
 
 This study measures how removing the evaluated game changes the retrospective
 margin distribution shown for it. The primary sample is the default Sep. 27,
-2026 publication slot: Context 1.3 and History each contribute the same 530
-modeled games through Week 4. These are two prior-family sensitivity checks at
-the same evidence boundary, not 1,060 independent games. Neither calculation
-uses evidence after its selected snapshot.
+2026 publication slot. Context 1.3 and History each have the same 530 modeled
+games through Week 4. These are two prior-family checks at one evidence
+boundary, not 1,060 independent games. Neither calculation uses evidence
+later than its selected snapshot.
 
 For each game, the existing leave-one-game-out (LOO) result comes from that
 snapshot's saved `retrospective_game_expectations`. The comparison uses the
-same snapshot's saved full-posterior PMFs for both teams. Both sides use the
-same frozen Historical Likelihood V1 margin surface, home-minus-away
-orientation, product of team marginal PMFs, and exact finite Student-t mixture
-for means and observed-margin CDFs. LOO removes the exact game ID and reruns
-deterministic damped BP on the connected component; full posterior uses the
-ordinary PMFs that include that game. The only intended difference is whether
-the evaluated game's evidence contributes to those PMFs.
+same snapshot's saved full-posterior PMFs for both teams. Both use the same
+Historical Likelihood V1 margin surface, home-minus-away orientation, product
+of team marginal PMFs, and exact finite Student-t mixture. LOO removes the
+exact game ID and reruns deterministic damped BP on the connected component;
+full posterior uses the ordinary PMFs that include that game. The intended
+difference is whether the evaluated score contributes to those PMFs.
 
 The signed margin change is `full-posterior expected home margin - LOO
-expected home margin`. Percentile changes use the exact mixture CDF at the
-observed margin. For tail summaries, the two-sided tail is `min(p, 1-p)`; “LOO
-surprising, full ordinary” means LOO two-sided tail below 5% and full tail at
-least 10%. Team residuals are actual minus expected margin oriented for each
-focal team. Rank changes are full-posterior mean rank minus frozen prior mean
-rank, so a negative value means the team moved toward a better rank. The
-script also computes exact central 80% intervals for representative games.
+expected home margin`. Percentile `p` is the observed margin's lower-tail
+probability. The study's **observed-direction one-sided tail probability** is
+`min(p, 1-p)`: the probability of a result at least as favorable or
+unfavorable as the observed result, in the observed direction. This matches
+the existing UI meaning. The reported probability is intentionally not
+doubled. A value below 5% means the result is beyond the
+5th or 95th percentile; a value at least 10% places it between the 10th and
+90th percentiles.
 
-The study script writes one row per game and per FBS team to the machine-readable
-files linked below. It validates game IDs, LOO source snapshot, likelihood
-version, prior hash, and full-posterior PMFs before comparing anything.
+For a game, absolute-residual reduction is
+`abs(actual - LOO expected) - abs(actual - full expected)`. Positive values
+mean full posterior reduced the residual magnitude. Relative reduction is
+reported only when the LOO absolute residual is at least 5 points, avoiding
+unstable ratios near zero. It is the absolute-residual reduction divided by
+the LOO absolute residual. Rank changes are full-posterior mean rank minus
+frozen prior mean rank; a negative value means movement toward a better rank.
 
-## Aggregate margin and percentile movement
+The main product population is every modeled game with at least one FBS team,
+since those games appear on FBS team-season pages. FBS-vs-FBS is reported
+separately; the complete 530-game set remains a broader model diagnostic.
 
-| Prior family | Games | Median absolute margin shift | 90th percentile | Moved over 3 points | Over 5 points | Over 10 points | Median absolute percentile change |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Context 1.3 | 530 | 3.16 | 8.10 | 51.9% | 30.2% | 5.3% | 5.1 percentage points |
-| History | 530 | 3.29 | 8.51 | 54.9% | 29.4% | 5.8% | 5.4 percentage points |
+The reproducible script validates game IDs and row hashes, the LOO source
+snapshot and likelihood version, the prior hash, and full-posterior PMF
+coverage before comparing results. It writes per-game and per-team tables as
+well as aggregate summaries.
 
-The signed mean margin shift is small (+0.45 points for Context and +0.59 for
-History, home-oriented). The absolute shifts are not negligible for every
-game: only 84 Context and 89 History games move by less than one point. The
-largest absolute shift is 13.5 points in both models. Context's week-level
-mean absolute shifts are 4.11, 3.80, 3.39, and 3.94 points for Weeks 1–4;
-History is similar at 4.26, 3.99, 3.51, and 4.06. There is no monotonic early
-versus late pattern in this sample.
+## Product-population margin shifts
 
-The observed percentile moves closer to the 50th percentile in 96.6% of
-Context games and 96.2% of History games. A shift of at least 10 percentile
-points occurs in 6.2% and 6.6%, respectively; none shifts by 20 points. This
-is the expected self-inclusion effect and makes the full-posterior percentile
-an in-sample compatibility description, not an independent measure of
-over- or under-performance.
+All values are from the home-minus-away expected margin. Threshold shares are
+the fraction with an absolute shift strictly greater than the named threshold.
 
-The tail check shows a limited but visible interpretation change. Twelve
-Context games (10 History games) move from an LOO two-sided tail below 5% to a
-full-posterior two-sided tail of at least 10%. Fourteen Context games (12
-History games) remain beyond a 5% two-sided tail under both methods. Thus the
-full posterior does make some games ordinary, while a set of the most unusual
-results remains unusual. It does not make almost every result ordinary.
+| Prior family | Population | Games | Median absolute shift | 90th percentile | >3 points | >5 points | >10 points |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Context 1.3 | At least one FBS team | 331 | 2.81 | 6.91 | 46.8% | 24.8% | 3.0% |
+| Context 1.3 | FBS vs. FBS | 215 | 2.48 | 6.61 | 43.3% | 23.7% | 3.7% |
+| History | At least one FBS team | 331 | 3.06 | 7.49 | 52.0% | 23.6% | 3.6% |
+| History | FBS vs. FBS | 215 | 2.79 | 7.33 | 47.4% | 21.9% | 4.2% |
 
-## Representative games
+The signed mean shift is small in these populations: +0.44 to +0.64 points for
+games involving an FBS team, and +0.03 to +0.18 for FBS-vs-FBS games. Expected
+margins move by a few points for many games, but large shifts are uncommon.
 
-Margins and intervals below are home-minus-away. Percentiles are the observed
-margin's lower tail.
+## Product-population percentile and tail movement
 
-| Context game | Actual | LOO expected (80% interval) | Full expected (80% interval) | LOO → full percentile | Reading |
-| --- | ---: | --- | --- | ---: | --- |
-| Vanderbilt vs. Austin Peay | +19 | +18.65 `[-1.47, 38.81]` | +18.66 `[-1.06, 38.44]` | 50.9% → 51.0% | Expectations and uncertainty nearly agree. |
-| Nicholls vs. Mississippi Valley State | +34 | +1.94 `[-22.04, 25.84]` | +15.33 `[-6.67, 36.76]` | 95.7% → 86.7% | A LOO tail surprise becomes ordinary by the stated 10% two-sided threshold; the result remains near the full 80% interval's upper edge. |
-| UC Davis vs. Montana | −40 | +2.76 `[-19.84, 25.36]` | −10.73 `[-32.00, 10.88]` | 0.9% → 4.0% | A 13.5-point expectation shift still leaves the result outside the full 80% interval and below a 5% two-sided tail. |
+| Prior family | Population | Median absolute percentile change | Moved closer to 50th percentile | Changed by ≥10 percentile points | LOO tail <5%, full tail ≥10% | Tail <5% under both |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| Context 1.3 | At least one FBS team | 4.5 pp | 97.0% | 0.3% | 4 / 331 | 8 / 331 |
+| Context 1.3 | FBS vs. FBS | 4.4 pp | 97.2% | 0.5% | 3 / 215 | 4 / 215 |
+| History | At least one FBS team | 5.0 pp | 97.0% | 0.6% | 4 / 331 | 6 / 331 |
+| History | FBS vs. FBS | 4.8 pp | 95.3% | 0.9% | 2 / 215 | 3 / 215 |
 
-The same change occurs in FBS-only games. Minnesota's home loss to Mississippi
-State (Week 2) is −25 points: expected margin moves from +3.5 LOO to −5.5 full
-posterior, and its two-sided tail moves from 4.8% to 11.2%. Tulsa's +14 home
-win over Oklahoma State moves from a −16.0 to −6.9 expected margin, with its
-tail moving from 3.8% to 10.9%.
+A full-posterior percentile moves toward the 50th percentile for about 95–97%
+of games in the product populations. Four FBS-involved games in each prior
+family cross from an observed-direction tail below 5% under LOO to at least
+10% under full posterior; two to four games, depending on family and
+population, remain below 5% under both. Thus some individual interpretations
+change, but the full posterior does not make every result ordinary.
 
-Uncertainty changes are smaller than the mean shifts in these examples. For
-Vanderbilt, the central 80% width changes from 40.3 to 39.5 points. For UC
-Davis–Montana it narrows from 45.2 to 42.9 points while the center shifts by
-13.5. The full result can therefore look less surprising from both a moved
-center and modestly narrower uncertainty.
+## Residual-magnitude normalization
+
+| Prior family | Population | Median reduction | 10th–90th percentile | Residual shrank | Shrunk ≥5 points | Same-sign shrunk ≥5 points | Median relative reduction when LOO residual ≥5 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Context 1.3 | At least one FBS team | 3.06 | 0.65–7.49 | 97.6% | 24.8% | 82 / 331 | 29.3% (n=247) |
+| Context 1.3 | FBS vs. FBS | 2.79 | 0.54–7.33 | 97.2% | 23.7% | 51 / 215 | 30.0% (n=156) |
+| History | At least one FBS team | 3.06 | 0.65–7.49 | 97.0% | 23.6% | 78 / 331 | 30.4% (n=245) |
+| History | FBS vs. FBS | 2.79 | 0.54–7.33 | 95.3% | 21.9% | 47 / 215 | 32.0% (n=153) |
+
+The full posterior usually reduces residual magnitude while keeping its sign.
+Among FBS-involved games, the median reduction is about 3.1 points; for cases
+where the LOO residual starts at 5 points or more, the median relative
+reduction is about 29–30%. FBS-vs-FBS results are similar. There are just two
+Context and five History game-level sign changes in the FBS-involved
+population; most of the change is in how large the residual looks, not which
+side of expectation it falls on.
+
+These FBS examples have substantial magnitude changes without sign changes.
+Margins and residuals are home-oriented; tail probabilities use the
+observed-direction one-sided definition above.
+
+| Game | Actual margin | LOO expected | Full expected | LOO residual → full residual | Residual reduction | LOO → full tail |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Nevada vs. Western Kentucky (FBS-FBS) | +35 | −6.8 | +5.8 | +41.8 → +29.2 | 12.6 | 0.9% → 4.1% |
+| Maryland vs. UCLA (FBS-FBS) | −51 | +2.6 | −10.6 | −53.4 → −40.4 | 13.1 | 0.15% → 0.66% |
+| Utah State vs. Idaho State (FBS-FCS) | −12 | +23.4 | +10.4 | −35.4 → −22.4 | 13.0 | 2.4% → 9.7% |
+
+The tail probability increases in all three examples, but remains below 10%.
+The expected margins move materially while the residual direction stays the
+same.
+
+## Broader model-population diagnostic
+
+The full 530-game population includes games with no FBS participant. Its
+median absolute margin shift is 3.16 points for Context and 3.29 for History;
+90th percentiles are 8.10 and 8.51. Median absolute percentile changes are
+5.1 and 5.4 points. Twelve Context and 10 History games move from a LOO
+observed-direction tail below 5% to a full tail of at least 10%; 14 and 12,
+respectively, remain below 5% under both. Median absolute-residual reductions
+are 3.16 and 3.29 points, and residual magnitude decreases in 97.2% and 96.8%
+of games.
 
 ## Team-level narrative
 
-The table uses the Context 1.3 snapshot. Team examples are selected
-mechanically: Georgia; the FBS team with the smallest prior-to-posterior mean
-rank movement among teams with at least three games; the largest improvement
-and decline by the same measure; and the team with the largest posterior rank
-standard deviation.
+The following examples use Context 1.3. Team selection is mechanical: Georgia;
+the FBS team with the smallest prior-to-posterior mean-rank movement among
+teams with at least three games; the largest improvement and decline by that
+measure; and the team with the largest posterior rank standard deviation.
 
 | Team | Prior → posterior mean rank (posterior SD) | Games above expectation, LOO → full | Mean focal residual, LOO → full |
 | --- | --- | ---: | ---: |
@@ -102,47 +136,35 @@ standard deviation.
 
 Georgia's four focal-team margins were +60, +50, +28, and +28. Its LOO
 expected margins were +53.4, +33.5, +18.1, and +11.3; full-posterior margins
-were +54.6, +35.5, +19.6, and +15.3. Every game remains above expectation
-under both constructions. Georgia's posterior moves from a mean rank of 9.2
-to 4.1, so the full-posterior story is that the model learned a stronger
-Georgia and still leaves positive residuals; it does not erase the repeated
-pattern.
+were +54.6, +35.5, +19.6, and +15.3. All four remain above expectation.
+Georgia's posterior moves from mean rank 9.2 to 4.1. The full posterior learns
+a stronger Georgia, but still leaves positive residuals for these games.
 
 Across the 138 FBS teams with at least three included games, 45 Context teams
-have positive residuals in at least 75% of their games under LOO, versus 44
-under full posterior. Thirty-two teams have negative residuals in at least
-75% under either method. In History, positive-pattern counts are 45 versus
-46, and negative-pattern counts are 30 under either method. Only a few
-individual FBS game residual signs change: three Context team-game signs
-across Colorado–Weber State and Michigan–Iowa. Their expected margins move by
-less than one point and the observed margins are near expectation in both
-cases. The repeated team-level over/under-performance counts barely move.
+have positive residuals in at least 75% of games under LOO, versus 44 under
+full posterior. Thirty-two teams have negative residuals at that rate under
+either method. In History, positive-pattern counts are 45 versus 46, and
+negative-pattern counts are 30 under both methods. This agrees with the
+game-level result: magnitudes usually shrink, while repeated team-level
+patterns and residual signs rarely change.
 
-As a simple uncertainty slice for FBS-vs-FBS matchups, mean absolute shifts
-are 3.62 points for 81 games when the two teams' average posterior rank SD is
-at least 20, versus 3.07 across 134 games below 20 in Context; History is 3.82
-across 98 games versus 3.19 across 117. The effect is a little larger for less
-certain matchups, but not dramatically so. Mean shifts
-for games with an absolute margin of at least 35 are 4.52 points in Context
-and 4.90 in History.
+## Product interpretation
 
-## Recommendation
+The evidence does not select one statistic without first choosing what the
+page is asking:
 
-For a team-season claim that a team repeatedly **outperformed or
-underperformed expectation**, keep the LOO expectation as the comparison. It
-prevents the evaluated score from setting the expectation used to judge that
-same score. The evidence does not show a broad LOO-created season narrative:
-the counts of teams with consistently positive or negative residuals barely
-change, and Georgia's four-game pattern survives in full.
+- If the page asks, “How did this game compare with expectations formed from
+  all other available evidence in this snapshot?”, LOO is the matching
+  statistic.
+- If the page asks, “How compatible is this game with our complete hindsight
+  understanding of the teams, including this game?”, full posterior is the
+  matching statistic.
 
-Label that statistic as “compared with expectations from the selected
-snapshot's other games.” It is retrospective because later games through the
-selected cutoff can inform team beliefs; it is not a kickoff-time forecast.
-If the product instead wants to describe how compatible a game is with the
-team profiles learned from the complete selected snapshot, full-posterior
-expectations answer that separate question. Their percentile should be
-identified as in-sample compatibility: it moves most games toward the center
-and normalizes a small set of otherwise tail-surprising games.
+The measured effect of switching is usually a smaller apparent residual and a
+percentile closer to the center, not a reversed season narrative. That
+includes Georgia: its four positive residuals survive both methods. A small
+number of individual games move materially in tail interpretation, so the
+page's wording should make the chosen question clear.
 
 ## Reproduction and limits
 
@@ -161,7 +183,7 @@ The outputs are [per-game comparisons](../data/processed/retrospective_expectati
 and an [aggregate summary](../data/processed/retrospective_expectation_holdout/summary.json).
 
 This is one unfinished 2026 season at a late-September snapshot, not a
-cross-season calibration study. The full-posterior comparison is in-sample by
-construction, and neither statistic is a pregame forecast. The study does not
+cross-season calibration study. Full-posterior percentiles are in-sample by
+construction; neither statistic is a pregame forecast. This study does not
 change the published artifact, team-season UI, PR #137 semantics, or
 production expectation implementation.

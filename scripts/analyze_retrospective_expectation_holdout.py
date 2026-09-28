@@ -174,6 +174,9 @@ def _analyze_source(
         loo = loo_records[game.game_id]
         loo_expected = float(loo["expected_home_margin"])
         loo_percentile = float(loo["observed_margin_percentile"])
+        loo_residual = actual - loo_expected
+        full_residual = actual - full_expected
+        absolute_residual_reduction = abs(loo_residual) - abs(full_residual)
         result: dict[str, Any] = {
             "snapshot_id": snapshot_id,
             "prior_family": prior_family,
@@ -195,10 +198,21 @@ def _analyze_source(
             "loo_observed_percentile": loo_percentile,
             "full_observed_percentile": full_percentile,
             "percentile_change": full_percentile - loo_percentile,
-            "loo_two_sided_tail": min(loo_percentile, 1.0 - loo_percentile),
-            "full_two_sided_tail": min(full_percentile, 1.0 - full_percentile),
-            "loo_focal_residual_home": actual - loo_expected,
-            "full_focal_residual_home": actual - full_expected,
+            "loo_observed_direction_tail_probability": min(
+                loo_percentile, 1.0 - loo_percentile
+            ),
+            "full_observed_direction_tail_probability": min(
+                full_percentile, 1.0 - full_percentile
+            ),
+            "loo_focal_residual_home": loo_residual,
+            "full_focal_residual_home": full_residual,
+            "absolute_residual_reduction": absolute_residual_reduction,
+            "relative_absolute_residual_reduction": (
+                absolute_residual_reduction / abs(loo_residual)
+                if abs(loo_residual) >= 5.0
+                else None
+            ),
+            "residual_sign_changed": (loo_residual > 0) != (full_residual > 0),
         }
         game_rows.append(result)
 
@@ -339,6 +353,148 @@ def _percentile(values: list[float], probability: float) -> float | None:
     return float(np.quantile(values, probability)) if values else None
 
 
+def _distribution(values: list[float]) -> dict[str, Any]:
+    return {
+        "count": len(values),
+        "p10": _percentile(values, 0.10),
+        "p25": _percentile(values, 0.25),
+        "median": _percentile(values, 0.50),
+        "p75": _percentile(values, 0.75),
+        "p90": _percentile(values, 0.90),
+    }
+
+
+def _summarize_population(games: list[dict[str, Any]]) -> dict[str, Any]:
+    """Summarize margin, tail, and residual changes for one game population."""
+
+    deltas = [float(game["full_minus_loo_expected_margin"]) for game in games]
+    absolute_deltas = [abs(value) for value in deltas]
+    percentile_changes = [abs(float(game["percentile_change"])) for game in games]
+    loo_surprise = [abs(float(game["loo_observed_percentile"]) - 0.5) for game in games]
+    full_surprise = [
+        abs(float(game["full_observed_percentile"]) - 0.5) for game in games
+    ]
+    loo_tails = [
+        float(game["loo_observed_direction_tail_probability"]) for game in games
+    ]
+    full_tails = [
+        float(game["full_observed_direction_tail_probability"]) for game in games
+    ]
+    residual_reductions = [float(game["absolute_residual_reduction"]) for game in games]
+    relative_reductions = [
+        float(game["relative_absolute_residual_reduction"])
+        for game in games
+        if game["relative_absolute_residual_reduction"] is not None
+    ]
+    same_sign_reductions = [
+        game
+        for game in games
+        if not bool(game["residual_sign_changed"])
+        and float(game["absolute_residual_reduction"]) >= 5.0
+    ]
+    loo_surprise_full_ordinary = [
+        game
+        for game in games
+        if float(game["loo_observed_direction_tail_probability"]) < 0.05
+        and float(game["full_observed_direction_tail_probability"]) >= 0.10
+    ]
+    surprising_both = [
+        game
+        for game in games
+        if float(game["loo_observed_direction_tail_probability"]) < 0.05
+        and float(game["full_observed_direction_tail_probability"]) < 0.05
+    ]
+    examples = [
+        {
+            "game_id": str(game["game_id"]),
+            "home_team": game["home_team"],
+            "away_team": game["away_team"],
+            "actual_home_margin": float(game["actual_home_margin"]),
+            "loo_expected_home_margin": float(game["loo_expected_home_margin"]),
+            "full_expected_home_margin": float(game["full_expected_home_margin"]),
+            "loo_residual_home": float(game["loo_focal_residual_home"]),
+            "full_residual_home": float(game["full_focal_residual_home"]),
+            "absolute_residual_reduction": float(game["absolute_residual_reduction"]),
+            "loo_observed_direction_tail_probability": float(
+                game["loo_observed_direction_tail_probability"]
+            ),
+            "full_observed_direction_tail_probability": float(
+                game["full_observed_direction_tail_probability"]
+            ),
+        }
+        for game in sorted(
+            same_sign_reductions,
+            key=lambda item: float(item["absolute_residual_reduction"]),
+            reverse=True,
+        )[:5]
+    ]
+    return {
+        "game_count": len(games),
+        "expected_margin_shift_full_minus_loo": {
+            "signed_mean": float(np.mean(deltas)),
+            "signed_median": float(np.median(deltas)),
+            "absolute_shift_distribution": _distribution(absolute_deltas),
+            "absolute_shift_over_threshold_share": {
+                str(threshold): sum(value > threshold for value in absolute_deltas)
+                / len(games)
+                for threshold in (1, 3, 5, 10)
+            },
+        },
+        "observed_percentile_movement": {
+            "absolute_change_distribution": _distribution(percentile_changes),
+            "absolute_change_at_least_10_points_share": sum(
+                value >= 0.10 for value in percentile_changes
+            )
+            / len(games),
+            "absolute_change_at_least_20_points_share": sum(
+                value >= 0.20 for value in percentile_changes
+            )
+            / len(games),
+            "closer_to_50th_percentile_share": sum(
+                full < loo
+                for loo, full in zip(loo_surprise, full_surprise, strict=True)
+            )
+            / len(games),
+        },
+        "observed_direction_tail_probability": {
+            "loo_below_5pct_count": sum(value < 0.05 for value in loo_tails),
+            "full_below_5pct_count": sum(value < 0.05 for value in full_tails),
+            "loo_below_5pct_full_at_least_10pct_count": len(loo_surprise_full_ordinary),
+            "both_below_5pct_count": len(surprising_both),
+        },
+        "absolute_residual_normalization": {
+            "reduction_distribution_points": _distribution(residual_reductions),
+            "reduced_residual_share": sum(value > 0 for value in residual_reductions)
+            / len(games),
+            "reduced_by_at_least_3_points_share": sum(
+                value >= 3 for value in residual_reductions
+            )
+            / len(games),
+            "reduced_by_at_least_5_points_share": sum(
+                value >= 5 for value in residual_reductions
+            )
+            / len(games),
+            "residual_grew_share": sum(value < 0 for value in residual_reductions)
+            / len(games),
+            "relative_reduction_for_loo_absolute_residual_at_least_5": {
+                **_distribution(relative_reductions),
+                "denominator_threshold_points": 5,
+                "share_reduced_by_at_least_25pct": sum(
+                    value >= 0.25 for value in relative_reductions
+                )
+                / len(relative_reductions)
+                if relative_reductions
+                else None,
+            },
+            "residual_sign_changed_count": sum(
+                bool(game["residual_sign_changed"]) for game in games
+            ),
+            "same_sign_reduced_by_at_least_5_points_count": len(same_sign_reductions),
+            "largest_same_sign_reductions": examples,
+        },
+    }
+
+
 def _summarize(
     snapshot_id: str,
     prior_family: str,
@@ -359,11 +515,14 @@ def _summarize(
     surprise_cases = [
         game
         for game in games
-        if float(game["loo_two_sided_tail"]) < 0.05
-        and float(game["full_two_sided_tail"]) >= 0.10
+        if float(game["loo_observed_direction_tail_probability"]) < 0.05
+        and float(game["full_observed_direction_tail_probability"]) >= 0.10
     ]
     surprising_both = [
-        game for game in games if float(game["full_two_sided_tail"]) < 0.05
+        game
+        for game in games
+        if float(game["loo_observed_direction_tail_probability"]) < 0.05
+        and float(game["full_observed_direction_tail_probability"]) < 0.05
     ]
     stable_cases = [
         game
@@ -425,19 +584,32 @@ def _summarize(
             )
             / len(games),
         },
-        "full_posterior_tail_behavior": {
+        "full_posterior_observed_direction_tail_behavior": {
             "percent_games_moved_closer_to_50th_percentile": sum(moved_toward_center)
             / len(games),
             "median_reduction_in_absolute_distance_from_50th_percentile": float(
                 np.median(np.asarray(loo_surprise) - np.asarray(full_surprise))
             ),
-            "loo_two_sided_tail_below_5pct_and_full_tail_at_least_10pct": len(
-                surprise_cases
+            "loo_tail_below_5pct_and_full_tail_at_least_10pct": len(surprise_cases),
+            "loo_and_full_both_tail_below_5pct": len(surprising_both),
+        },
+        "population_summaries": {
+            "all_modeled_games": _summarize_population(games),
+            "at_least_one_fbs_team": _summarize_population(
+                [
+                    game
+                    for game in games
+                    if game["home_subdivision"] == "fbs"
+                    or game["away_subdivision"] == "fbs"
+                ]
             ),
-            "loo_and_full_both_two_sided_tail_below_5pct": sum(
-                float(game["loo_two_sided_tail"]) < 0.05
-                and float(game["full_two_sided_tail"]) < 0.05
-                for game in games
+            "fbs_vs_fbs": _summarize_population(
+                [
+                    game
+                    for game in games
+                    if game["home_subdivision"] == "fbs"
+                    and game["away_subdivision"] == "fbs"
+                ]
             ),
         },
         "context_slices": {
