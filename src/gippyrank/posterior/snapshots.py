@@ -242,7 +242,8 @@ def corpus_provenance(root: Path, season: int) -> CorpusProvenance:
 
 
 def filter_games(
-    root: Path, season: int, cutoff: datetime | date | None, snapshot_type: SnapshotType
+    root: Path, season: int, cutoff: datetime | date | None, snapshot_type: SnapshotType,
+    *, source_retrieved_at: datetime | None = None,
 ) -> tuple[list[Game], list[dict[str, str]], int, Path]:
     path = root / "data/processed/cfbd/games.csv"
     if not path.exists():
@@ -262,12 +263,19 @@ def filter_games(
                 # season builder will classify them as unresolved schedule
                 # state rather than silently dropping them.
                 continue
-            # The schedule date is a calendar anchor unless kickoff precision
-            # is independently established. A same-day score cannot prove it
-            # was available at an interim cutoff earlier that day.
-            when = when if when.tzinfo is not None else when.replace(tzinfo=UTC)
+            if when.tzinfo is None or when.utcoffset() is None:
+                raise ValueError(f"completed game {row['id']} needs a timezone-aware date")
             if snapshot_type == "preseason" or (
-                cutoff_dt is not None and when.astimezone(UTC).date() >= cutoff_dt.date()
+                cutoff_dt is not None and when > cutoff_dt
+            ):
+                continue
+            # A later source retrieval cannot establish whether a score on
+            # the requested cutoff day was already final at that earlier time.
+            if (
+                cutoff_dt is not None
+                and source_retrieved_at is not None
+                and source_retrieved_at > cutoff_dt
+                and when.astimezone(UTC).date() == cutoff_dt.astimezone(UTC).date()
             ):
                 continue
             if cutoff_dt is None:
@@ -1060,7 +1068,8 @@ def build_snapshot(
         if provenance.source_retrieved_at is not None and requested_cutoff is not None:
             effective_cutoff = min(requested_cutoff, provenance.source_retrieved_at)
         games, included, excluded_lower, corpus_path = filter_games(
-            root, season, effective_cutoff, snapshot_type
+            root, season, effective_cutoff, snapshot_type,
+            source_retrieved_at=provenance.source_retrieved_at,
         )
         scheduled_future_fcs = _scheduled_future_fcs_rows(
             root, season, effective_cutoff, snapshot_type

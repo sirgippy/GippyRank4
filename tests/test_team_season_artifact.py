@@ -13,11 +13,12 @@ from gippyrank.performance_snapshot import build_performance_snapshot
 from gippyrank.posterior.engine import LikelihoodV1, Team, infer_posterior
 from gippyrank.posterior.game_evidence import (
     _future_at_snapshot,
+    _schedule_datetime,
     _schedule_state,
     _week,
     build_team_season_artifact,
 )
-from gippyrank.posterior.snapshots import build_snapshot
+from gippyrank.posterior.snapshots import build_snapshot, filter_games
 from gippyrank.site_data import SiteDataValidationError, build_site_data
 
 
@@ -62,18 +63,22 @@ def _root(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def test_gameday_calendar_anchor_remains_future_until_included() -> None:
+def test_completed_gameday_result_is_unresolved_until_included() -> None:
     row = {
-        "id": "gameday", "seasonType": "regular",
-        "startDate": "2026-10-10T00:00:00Z", "completed": "True",
-        "homePoints": "31", "awayPoints": "17",
+        "id": "gameday",
+        "seasonType": "regular",
+        "startDate": "2026-10-10T00:00:00Z",
+        "completed": "True",
+        "homePoints": "31",
+        "awayPoints": "17",
     }
     metadata = {
-        "snapshot_type": "live", "effective_cutoff": "2026-10-10T12:00:00Z",
+        "snapshot_type": "live",
+        "effective_cutoff": "2026-10-10T12:00:00Z",
         "included_game_ids": [],
     }
-    assert _future_at_snapshot(row, metadata)
-    assert _schedule_state(row, metadata) == "future"
+    assert not _future_at_snapshot(row, metadata)
+    assert _schedule_state(row, metadata) == "unresolved"
     metadata["included_game_ids"] = ["gameday"]
     assert _schedule_state(row, metadata) == "completed"
     metadata["effective_cutoff"] = "2026-10-09T12:00:00Z"
@@ -81,7 +86,7 @@ def test_gameday_calendar_anchor_remains_future_until_included() -> None:
     assert _schedule_state(row, metadata) == "future"
 
 
-def test_gameday_snapshot_does_not_consume_same_day_score(tmp_path: Path) -> None:
+def test_live_gameday_snapshot_consumes_known_same_day_score(tmp_path: Path) -> None:
     snapshot = build_snapshot(
         season=2026,
         cutoff=datetime(2026, 9, 10, 12, tzinfo=UTC),
@@ -90,12 +95,66 @@ def test_gameday_snapshot_does_not_consume_same_day_score(tmp_path: Path) -> Non
         root=_root(tmp_path),
         likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
     )
-    assert snapshot.metadata["included_game_ids"] == ["early"]
+    assert snapshot.metadata["included_game_ids"] == ["early", "later"]
     artifact = json.loads((snapshot.directory / "team_seasons.json").read_text())
-    game = next(game for game in artifact["teams"]["1"]["games"] if game["game_id"] == "later")
-    assert game["game_state"] == "future"
-    assert game["score"] is None
-    assert game["future_prediction_id"] == "later"
+    game = next(
+        game for game in artifact["teams"]["1"]["games"] if game["game_id"] == "later"
+    )
+    assert game["game_state"] == "completed"
+    assert game["score"] == {"team": 7, "opponent": 24}
+    assert game["future_prediction_id"] is None
+
+
+def test_later_retrieval_cannot_prove_same_day_result_at_historical_cutoff(
+    tmp_path: Path,
+) -> None:
+    games, rows, _, _ = filter_games(
+        _root(tmp_path),
+        2026,
+        datetime(2026, 9, 10, 12, tzinfo=UTC),
+        "live",
+        source_retrieved_at=datetime(2026, 9, 11, 12, tzinfo=UTC),
+    )
+    assert [game.game_id for game in games] == ["early"]
+    assert [row["id"] for row in rows] == ["early"]
+
+
+def test_date_cutoff_includes_its_calendar_day(tmp_path: Path) -> None:
+    games, _, _, _ = filter_games(_root(tmp_path), 2026, date(2026, 8, 29), "weekly")
+    assert [game.game_id for game in games] == ["early"]
+
+
+def test_schedule_datetime_requires_timezone() -> None:
+    assert _schedule_datetime("2026-09-10T12:00:00") is None
+
+
+@pytest.mark.parametrize(
+    ("start_date", "message"),
+    [
+        ("2026-09-10T00:00:00", "timezone-aware date"),
+        ("2026-09-10T00:00:00-05:00", "UTC calendar anchor"),
+    ],
+)
+def test_producer_rejects_dates_that_publication_cannot_accept(
+    tmp_path: Path, start_date: str, message: str
+) -> None:
+    root = _root(tmp_path)
+    schedule_path = root / "data/processed/cfbd/games.csv"
+    with schedule_path.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    rows[1]["completed"] = "False"
+    rows[1]["homePoints"] = rows[1]["awayPoints"] = ""
+    rows[1]["startDate"] = start_date
+    _write(schedule_path, list(rows[0]), rows)
+    with pytest.raises(ValueError, match=message):
+        build_snapshot(
+            season=2026,
+            cutoff=date(2026, 9, 1),
+            prior_family="context",
+            snapshot_type="weekly",
+            root=root,
+            likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
+        )
 
 
 @pytest.mark.parametrize("week", ["Bowl", "-1"])
@@ -146,7 +205,7 @@ def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path:
     assert set(retrospective["games"]) == {"early"}
     assert retrospective["games"]["early"]["actual_home_margin"] == 10
     assert snapshot.metadata["retrospective_game_expectations_path"] == "team_seasons.json"
-    assert snapshot.metadata["retrospective_game_expectations_version"] == "1.0"
+    assert snapshot.metadata["retrospective_game_expectations_version"] == "2.0"
     prediction = artifact["future_predictions"][later["future_prediction_id"]]
     assert len(prediction["display_distribution"]["masses"]) == 40
     assert sum(prediction["display_distribution"]["masses"]) + prediction["display_distribution"]["lower_tail_probability"] + prediction["display_distribution"]["upper_tail_probability"] == 1000

@@ -222,6 +222,7 @@ def test_browser_artifact_excludes_fcs_only_retrospectives() -> None:
     projection = adapted["retrospective_game_expectations"]
     browser_games = projection["games"]
     assert projection["artifact_kind"] == "retrospective_game_expectations_site_projection"
+    assert projection["site_projection_version"] == "1.0"
     assert projection["coverage"] == "fbs_team_schedules"
     assert set(projection["published_game_ids"]) == set(browser_games)
     assert len(projection["included_game_ids"]) == len(source_games)

@@ -367,7 +367,7 @@ function retrospectiveChart(expectation, team, axis, oriented) {
   const svg = densitySvg(display.masses, {
     className: "retrospective-distribution-chart",
     label,
-    description: "Bars show otherwise expected outcomes; the gold line marks the expected margin and the dark line marks the actual margin. The horizontal axis is from the team's perspective.",
+    description: "Bars show expected outcomes given what GippyRank knows at this snapshot; the gold line marks the expected margin and the dark line marks the actual margin. The horizontal axis is from the team's perspective.",
     zeroAxis: axis,
   });
   const minimum = Number(axis.min_margin);
@@ -485,7 +485,7 @@ function renderSummary(entry, row) {
   $("#team-page-kind").textContent = `${entry.season} ${entry.display_label} · ${publicationStatusLabel(entry)} publication`;
   $("#team-page-title").textContent = row.team_name;
   $("#team-page-meta").textContent = `${row.conference || "Independent"} · ${entry.snapshot_type === "preseason" ? "Before game evidence" : `Through ${formatDate(entry.effective_cutoff)}`} · ${entry.ranking_family === "performance" ? "Performance" : `Predictive ${priorLabel(entry.prior_family)}`}`;
-  $("#prediction-source").textContent = `Completed-game expectations compare each result with the selected snapshot's other evidence, excluding that game. They are retrospective, not pregame forecasts. Checkpoint rows show shared published belief changes. Future matchups use ${entry.ranking_family === "performance" ? "Predictive Context" : `Predictive ${priorLabel(entry.prior_family)}`} at this snapshot.`;
+  $("#prediction-source").textContent = `Completed-game expectations compare each result with what GippyRank knows at the selected snapshot, including that game. They are retrospective, not pregame forecasts. Checkpoint rows show shared published belief changes. Future matchups use ${entry.ranking_family === "performance" ? "Predictive Context" : `Predictive ${priorLabel(entry.prior_family)}`} at this snapshot.`;
 
   const summary = node("div", "team-summary-grid");
   summary.append(summaryItem("Published rank", rankLabel), summaryItem("Record", row.record));

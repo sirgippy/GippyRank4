@@ -28,7 +28,7 @@ def test_retained_predictive_snapshots_publish_completed_game_expectations() -> 
             (source / "team_seasons.json").read_text(encoding="utf-8")
         )
         artifact = team_seasons["retrospective_game_expectations"]
-        assert metadata["retrospective_game_expectations_version"] == "1.0"
+        assert metadata["retrospective_game_expectations_version"] == "2.0"
         assert artifact["source_snapshot_id"] == metadata["snapshot_id"]
         assert set(artifact["games"]) == set(metadata["included_game_ids"])
         assert len(artifact["games"]) == metadata["included_game_count"]

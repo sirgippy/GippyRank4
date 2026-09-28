@@ -123,9 +123,9 @@ rule, and reference count in `performance_percentile`.
 
 Supported predictive snapshots also include a top-level
 `retrospective_game_expectations` versioned model artifact. Each modeled game
-is keyed by stable game ID and has a leave-one-game-out
-posterior-predictive Historical Likelihood V1 margin distribution under
-GippyRank's deterministic loopy BP and predictive semantics, its home-oriented
+is keyed by stable game ID and has a full-posterior
+Historical Likelihood V1 margin distribution under
+GippyRank's selected-snapshot loopy BP marginals and predictive semantics, its home-oriented
 observed margin, mixture summaries/tails, and a compact display
 distribution. Team schedule entries point to their record with
 `retrospective_expectation_id`; this supplements rather than replaces the
@@ -136,7 +136,7 @@ retained FBS/FBS record has two matching team schedule projections; an FBS/FCS
 record has one. The original source artifact remains unchanged.
 
 See [retrospective_game_expectations.md](retrospective_game_expectations.md)
-for the statistical interpretation, snapshot boundary, rematch treatment,
+for the statistical interpretation, snapshot boundary,
 display encoding, and complete contract. In particular, it is not a
 pre-kickoff prediction and it does not attribute a ranking movement to one
 game.

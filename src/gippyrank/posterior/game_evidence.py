@@ -181,7 +181,7 @@ def _schedule_datetime(value: object) -> datetime | None:
         parsed = datetime.fromisoformat(str(value))
     except ValueError:
         return None
-    return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=UTC)
+    return parsed if parsed.tzinfo is not None else None
 
 
 def _future_at_snapshot(row: dict[str, str], metadata: dict[str, Any]) -> bool:
@@ -194,7 +194,11 @@ def _future_at_snapshot(row: dict[str, str], metadata: dict[str, Any]) -> bool:
     if cutoff_value is None:
         return True
     cutoff = _schedule_datetime(cutoff_value)
-    return cutoff is not None and when.astimezone(UTC).date() >= cutoff.astimezone(UTC).date()
+    if cutoff is None:
+        return False
+    if _bool(row.get("completed")):
+        return when > cutoff
+    return when.astimezone(UTC).date() >= cutoff.astimezone(UTC).date()
 
 
 def _schedule_state(row: dict[str, str], metadata: dict[str, Any]) -> str:
@@ -211,15 +215,27 @@ def _schedule_state(row: dict[str, str], metadata: dict[str, Any]) -> str:
     cutoff = _schedule_datetime(metadata.get("effective_cutoff"))
     if when is None or cutoff is None:
         return "unresolved"
-    if _future_at_snapshot(row, metadata) and str(row.get("id", "")) not in {
-        str(game_id) for game_id in metadata.get("included_game_ids", [])
-    }:
+    if when.astimezone(UTC).date() > cutoff.astimezone(UTC).date():
         return "future"
+    included = str(row.get("id", "")) in {
+        str(game_id) for game_id in metadata.get("included_game_ids", [])
+    }
     if _bool(row.get("completed")):
         home_points = _int_or_none(row.get("homePoints"))
         away_points = _int_or_none(row.get("awayPoints"))
         if home_points is not None and away_points is not None:
-            return "completed"
+            retrieved = _schedule_datetime(metadata.get("source_retrieved_at"))
+            if included or (
+                when <= cutoff
+                and (
+                    when.astimezone(UTC).date() < cutoff.astimezone(UTC).date()
+                    or (retrieved is not None and retrieved <= cutoff)
+                )
+            ):
+                return "completed"
+            return "unresolved"
+    if _future_at_snapshot(row, metadata):
+        return "future"
     return "unresolved"
 
 
@@ -360,18 +376,12 @@ def build_team_season_artifact(
 
     retrospective_expectations = None
     if likelihood is not None:
-        inference = metadata.get("posterior_inference_configuration", {})
-        if not isinstance(inference, dict):
-            raise ValueError("retrospective expectations need inference configuration")
         retrospective_expectations = build_retrospective_game_expectations(
             metadata=metadata,
             teams=teams,
             games=games,
             posterior=posterior,
             likelihood=likelihood,
-            max_iterations=int(inference.get("max_iterations", 500)),
-            tolerance=float(inference.get("tolerance", 1e-9)),
-            damping=float(inference.get("damping", 0.35)),
         )
 
     performance_reference = [
@@ -417,6 +427,19 @@ def build_team_season_artifact(
             "sha256": schedule_corpus_sha256,
         }
 
+    for row in schedule:
+        if str(row.get("season", "")) != str(metadata["season"]):
+            continue
+        when = _schedule_datetime(row.get("startDate"))
+        if when is None or when.utcoffset() is None:
+            raise ValueError(
+                f"schedule game {row.get('id')} needs a timezone-aware date"
+            )
+        if not _bool(row.get("completed")) and when.utcoffset().total_seconds() != 0:
+            raise ValueError(
+                f"unscored schedule game {row.get('id')} needs a UTC calendar anchor"
+            )
+
     future_simulation_games: list[ScheduledGame] = []
     fixed_regular_rows: list[dict[str, str]] = []
     excluded_schedule_games: list[dict[str, Any]] = []
@@ -445,6 +468,16 @@ def build_team_season_artifact(
                     "home_team_id": row.get("homeId", ""),
                     "away_team_id": row.get("awayId", ""),
                     "reason": "cancelled_or_postponed",
+                }
+            )
+            continue
+        if state == "unresolved" and _bool(row.get("completed")):
+            excluded_schedule_games.append(
+                {
+                    "game_id": game_id,
+                    "home_team_id": row.get("homeId", ""),
+                    "away_team_id": row.get("awayId", ""),
+                    "reason": "result_not_confirmed_at_cutoff",
                 }
             )
             continue

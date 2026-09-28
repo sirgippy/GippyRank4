@@ -48,7 +48,7 @@ FUTURE_MARGIN_DISPLAY_MIN = -40.0
 FUTURE_MARGIN_DISPLAY_MAX = 40.0
 FUTURE_MARGIN_DISPLAY_BINS = 40
 DISPLAY_PROBABILITY_SCALE = 1000
-RETROSPECTIVE_GAME_EXPECTATIONS_VERSION = "1.0"
+RETROSPECTIVE_GAME_EXPECTATIONS_VERSION = "2.0"
 TEAM_TRAJECTORY_SCHEMA_VERSION = "1.1"
 SUPPORTED_SNAPSHOT_SCHEMA_VERSIONS = SUPPORTED_ARTIFACT_SCHEMA_VERSIONS["snapshot"]
 PMF_SUM_TOLERANCE = 1e-9
@@ -1491,7 +1491,7 @@ def _validate_retrospective_game_expectations(
     expected_ids: set[str],
     by_team: dict[str, Any],
 ) -> set[str]:
-    """Validate the snapshot-safe LOO completed-game distribution artifact."""
+    """Validate the selected snapshot's full-posterior game distributions."""
 
     snapshot_id = str(source_metadata["snapshot_id"])
     expectations = artifact.get("retrospective_game_expectations")
@@ -1538,13 +1538,13 @@ def _validate_retrospective_game_expectations(
             f"{snapshot_id}: retrospective margin orientation is invalid"
         )
     interpretation = expectations.get("interpretation")
-    if not isinstance(interpretation, str) or "not the prediction" not in interpretation:
+    if not isinstance(interpretation, str) or "including this game" not in interpretation:
         raise SiteDataValidationError(
             f"{snapshot_id}: retrospective interpretation is missing"
         )
     inference = expectations.get("inference")
     if not isinstance(inference, dict) or inference.get("implementation") != (
-        "per_game_leave_one_out_component_bp_recompute"
+        "selected_snapshot_full_posterior_pmfs"
     ):
         raise SiteDataValidationError(
             f"{snapshot_id}: retrospective inference provenance is invalid"
@@ -3137,6 +3137,7 @@ def _validate_team_season_artifact(
         adapted["retrospective_game_expectations"] = {
             **artifact["retrospective_game_expectations"],
             "artifact_kind": "retrospective_game_expectations_site_projection",
+            "site_projection_version": "1.0",
             "coverage": "fbs_team_schedules",
             "published_game_ids": sorted(published_retrospective_ids),
             "games": {

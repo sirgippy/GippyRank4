@@ -1,4 +1,4 @@
-"""Add retrospective game expectations to retained predictive publications.
+"""Refresh full-posterior game expectations in retained predictive publications.
 
 Use each snapshot's frozen game CSV, prior, and inference configuration. The
 existing posterior, rankings, schedule, and game ratings are not regenerated.
@@ -72,7 +72,7 @@ def _posterior(source: Path) -> PosteriorResult:
     )
 
 
-def backfill(source: Path, *, workers: int | None = None) -> None:
+def backfill(source: Path) -> None:
     metadata_path = source / "metadata.json"
     metadata = _read_json(metadata_path)
     artifact_path = source / "team_seasons.json"
@@ -102,7 +102,6 @@ def backfill(source: Path, *, workers: int | None = None) -> None:
         team_rows=team_rows,
     )
     games = [_game_from_included_row(row) for row in rows]
-    inference = metadata.get("posterior_inference_configuration") or {}
     expectation = build_retrospective_game_expectations(
         metadata=metadata,
         teams=teams,
@@ -111,10 +110,6 @@ def backfill(source: Path, *, workers: int | None = None) -> None:
         likelihood=load_likelihood(
             ROOT / "data/processed/posterior/historical_likelihood_v1.json"
         ),
-        max_iterations=int(inference.get("max_iterations", 500)),
-        tolerance=float(inference.get("tolerance", 1e-9)),
-        damping=float(inference.get("damping", 0.35)),
-        workers=workers,
     )
     artifact["retrospective_game_expectations"] = expectation
     for team in artifact["teams"].values():
@@ -152,19 +147,23 @@ def sync_performance_sources() -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path, help="One retained predictive source")
-    parser.add_argument("--workers", type=int)
     parser.add_argument(
         "--force", action="store_true", help="Recompute existing records"
     )
     args = parser.parse_args()
     sources = [ROOT / args.source] if args.source else _retained_sources()
     for source in sources:
-        if not args.force and "retrospective_game_expectations" in _read_json(
-            source / "team_seasons.json"
+        existing = _read_json(source / "team_seasons.json").get(
+            "retrospective_game_expectations", {}
+        )
+        if (
+            not args.force
+            and existing.get("retrospective_game_expectations_version") == "2.0"
         ):
             continue
-        backfill(source, workers=args.workers)
-    sync_performance_sources()
+        backfill(source)
+    if args.source is None:
+        sync_performance_sources()
 
 
 if __name__ == "__main__":
