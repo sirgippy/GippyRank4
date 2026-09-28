@@ -2902,6 +2902,234 @@ details[open] > .distribution-toggle {
   color: var(--muted);
 }
 
+/* Team-season schedule: the result is the first line; model context is a compact second line. */
+.schedule-list {
+  gap: 5px;
+}
+
+.game-card {
+  grid-template-columns: 90px minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+  padding: 8px 12px;
+  min-width: 0;
+}
+
+.game-card-header,
+.game-card-body {
+  grid-row: auto;
+}
+
+.game-card-header {
+  grid-column: 1;
+}
+
+.game-opponent-row {
+  grid-column: 2;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.game-opponent-row .team-logo-frame {
+  width: 30px;
+  height: 22px;
+  flex: 0 0 30px;
+}
+
+.game-opponent-row .team-logo {
+  width: 30px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.game-opponent {
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.game-site {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.game-outcome {
+  grid-column: 3;
+  white-space: nowrap;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.game-card-body {
+  grid-column: 2 / 4;
+  min-width: 0;
+}
+
+.game-retrospective,
+.game-prediction {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.game-retrospective-expected,
+.game-retrospective-actual,
+.game-prediction-title {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.game-retrospective-tail {
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.game-retrospective-tail::before {
+  content: "· ";
+  color: var(--muted);
+}
+
+.game-prediction-title {
+  display: inline;
+}
+
+.game-card-future .game-outcome,
+.game-card-future .game-prediction-title {
+  color: #775b1d;
+}
+
+.game-distribution-disclosure {
+  margin: 0;
+  width: 100%;
+}
+
+.game-distribution-disclosure .distribution-toggle {
+  display: flex;
+  justify-content: flex-start;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  min-width: 0;
+  width: 100%;
+  height: auto;
+  padding: 0;
+  border: 0;
+  line-height: 1.3;
+  list-style: none;
+}
+
+.game-distribution-disclosure[open] > .distribution-toggle {
+  transform: none;
+}
+
+.game-distribution-disclosure .distribution-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.game-distribution-disclosure .distribution-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 23px;
+  min-height: 23px;
+  padding: 0 5px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--green);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.game-distribution-disclosure[open] .distribution-chevron {
+  transform: rotate(180deg);
+}
+
+.game-retrospective-disclosure-content,
+.game-prediction-disclosure-content {
+  max-width: 510px;
+  min-width: 0;
+  padding: 8px 0 4px;
+}
+
+.game-retrospective-disclosure-content .game-rating-details {
+  grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr);
+}
+
+.game-distribution-chart {
+  max-width: 100%;
+}
+
+.retrospective-marker {
+  stroke-width: 2.2;
+}
+
+.retrospective-marker-expected {
+  stroke: #b08016;
+  stroke-dasharray: 4 2;
+}
+
+.retrospective-marker-actual {
+  stroke: #172b34;
+}
+
+.retrospective-chart-legend {
+  display: flex;
+  gap: 6px 18px;
+  flex-wrap: wrap;
+  margin: 6px 0 0;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.retrospective-legend-expected::before,
+.retrospective-legend-actual::before {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  margin-right: 5px;
+  vertical-align: middle;
+  border-top: 2px solid #172b34;
+}
+
+.retrospective-legend-expected::before {
+  border-color: #b08016;
+  border-top-style: dashed;
+}
+
+.schedule-checkpoint {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 3px 16px;
+  padding: 6px 12px;
+  border-left: 3px solid var(--green);
+  background: #eef4ee;
+  color: #40534c;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.schedule-checkpoint-title {
+  color: var(--green);
+  font-weight: 800;
+}
+
+.schedule-checkpoint-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 16px;
+  font-variant-numeric: tabular-nums;
+}
+
 @media (max-width: 760px) {
   .snapshot-summary,
   footer .shell {
@@ -3047,7 +3275,9 @@ details[open] > .distribution-toggle {
   }
 
   .game-card {
-    display: block;
+    grid-template-columns: 1fr auto;
+    gap: 4px 8px;
+    padding: 8px 10px;
   }
 
   .season-outlook {
@@ -3064,11 +3294,51 @@ details[open] > .distribution-toggle {
   }
 
   .game-card-header {
-    margin-bottom: 5px;
+    grid-column: 1;
+    margin-bottom: 0;
   }
 
   .game-card-body {
-    margin-top: 12px;
+    grid-column: 1 / 3;
+    margin-top: 0;
+  }
+
+  .game-opponent-row {
+    grid-column: 1;
+  }
+
+  .game-outcome {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: center;
+  }
+
+  .game-retrospective,
+  .game-prediction {
+    gap: 1px 7px;
+  }
+
+  .game-retrospective-expected,
+  .game-retrospective-actual,
+  .game-prediction-title {
+    font-size: 11px;
+  }
+
+  .game-retrospective-tail {
+    font-size: 11px;
+  }
+
+  .game-distribution-disclosure .distribution-toggle {
+    gap: 1px 7px;
+  }
+
+  .game-retrospective-disclosure-content .game-rating-details {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 3px 8px;
+  }
+
+  .schedule-checkpoint {
+    padding: 6px 10px;
   }
 
   .weekly-game-grid,

@@ -980,31 +980,31 @@ def test_static_site_uses_manifest_logo_config_and_decorative_fallback() -> None
     assert "loading = \"lazy\"" in app
 
 
-def test_team_schedule_uses_distinct_accessible_performance_and_margin_plots() -> None:
+def test_team_schedule_uses_distinct_accessible_retrospective_and_predictive_plots() -> None:
     team = (ROOT / "site/assets/team.js").read_text(encoding="utf-8")
     css = (ROOT / "site/assets/style.css").read_text(encoding="utf-8")
     html = (ROOT / "site/team.html").read_text(encoding="utf-8")
 
-    assert "performanceChart" in team
+    assert "retrospectiveChart" in team
     assert "futureChart" in team
-    assert "performance_axis" in team
+    assert "retrospective_game_expectations" in team
     assert "future_margin_axis" in team
     assert "probability_encoding" in team
     assert "role: \"img\"" in team
     assert "aria-label" in team
     assert "Central 80% range" in team
     assert ".game-distribution-chart" in css
-    assert ".game-distribution-future .distribution-bar" in css
+    assert ".retrospective-marker-actual" in css
     assert "distribution-toggle" in team
-    assert "inferred performance distribution" in team
+    assert "completed-game retrospective distribution" in team
     assert "predictive margin distribution" in team
     assert "▾" in team
-    assert "Expected performance rank" in team
+    assert "Observed percentile" in team
     assert "expectedPrimary" in team
     assert "Played like" not in team
-    assert "game-prediction-interval" in team
+    assert "No retrospective expectation available" in team
     assert "How to read this page" in html
-    assert "Published snapshot changes are not single-game causal attribution." in html
+    assert "Results show a retrospective expectation" in html
 
 
 def test_future_prediction_range_labels_follow_focal_margin_sign() -> None:

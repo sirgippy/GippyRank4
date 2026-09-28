@@ -122,8 +122,9 @@ test.describe("Preseason starting point browser checks", () => {
     await expect(distribution).toBeHidden();
     await page.locator("#season-story-content .season-story-distribution .scalar-distribution-summary").click();
     await expect(distribution).toBeVisible();
-    await expect(page.locator("#schedule-list")).toContainText("Published belief movement");
-    await expect(page.locator("#schedule-list")).toContainText("not attribution to this game alone");
+    await expect(page.locator(".schedule-checkpoint").first()).toContainText("published belief");
+    await expect(page.locator(".schedule-checkpoint").first()).toContainText("Expected rank");
+    await expect(page.locator(".game-card").first()).not.toContainText("published belief");
     expect(await page.locator(".team-page").evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBeTruthy();
     if (page.viewportSize()?.width < 760) {
       const columnCount = await page.locator("#team-ranking-summary .team-summary-grid").evaluate(
