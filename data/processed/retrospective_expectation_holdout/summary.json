@@ -1,0 +1,342 @@
+{
+  "snapshots": [
+    {
+      "context_slices": {
+        "fbs_fbs_game_count": 215,
+        "fbs_fbs_game_count_posterior_rank_sd_average_at_least_20": 81,
+        "fbs_fbs_game_count_posterior_rank_sd_average_below_20": 134,
+        "mean_absolute_margin_shift_by_game_week": {
+          "1": 4.1087600677229315,
+          "2": 3.802405393976522,
+          "3": 3.3911874261281296,
+          "4": 3.943628287172563
+        },
+        "mean_absolute_shift_abs_actual_margin_at_least_35": 4.524820193418215,
+        "mean_absolute_shift_posterior_rank_sd_average_at_least_20": 3.6214792384089756,
+        "mean_absolute_shift_posterior_rank_sd_average_below_20": 3.0738846271912124
+      },
+      "effective_cutoff": "2026-09-27T12:27:35.698895+00:00",
+      "expected_margin_shift_full_minus_loo": {
+        "absolute_max": 13.492910487885808,
+        "absolute_median": 3.164864946685028,
+        "absolute_over_threshold_share": {
+          "1": 0.8415094339622642,
+          "10": 0.052830188679245285,
+          "3": 0.5188679245283019,
+          "5": 0.3018867924528302
+        },
+        "absolute_p75": 5.481886277450519,
+        "absolute_p90": 8.103983388162387,
+        "absolute_p95": 10.305397525275266,
+        "mean": 0.45454611868301675,
+        "median": 0.5022862802634331
+      },
+      "full_posterior_tail_behavior": {
+        "loo_and_full_both_two_sided_tail_below_5pct": 14,
+        "loo_two_sided_tail_below_5pct_and_full_tail_at_least_10pct": 12,
+        "median_reduction_in_absolute_distance_from_50th_percentile": 0.05061646986599855,
+        "percent_games_moved_closer_to_50th_percentile": 0.9660377358490566
+      },
+      "game_count": 530,
+      "interpretation_examples": {
+        "largest_absolute_margin_shift_game_ids": [
+          "401868113",
+          "401868962",
+          "401860880",
+          "401867845",
+          "401864432"
+        ],
+        "loo_surprising_but_full_ordinary_game_ids": [
+          "401856677",
+          "401856772",
+          "401866429",
+          "401866617",
+          "401866628",
+          "401868009",
+          "401868071",
+          "401868187",
+          "401868255",
+          "401868346",
+          "401868962",
+          "401868967"
+        ],
+        "near_identical_margin_expectation_games": 84,
+        "representative_game_ids": {
+          "largest_expected_margin_shift": "401868113",
+          "loo_surprising_full_ordinary": "401868962",
+          "near_identical_expectations": "401856669",
+          "remains_surprising_under_both": "401868113"
+        }
+      },
+      "observed_percentile_change": {
+        "absolute_median": 0.05061646986599855,
+        "absolute_over_10_points_share": 0.062264150943396226,
+        "absolute_over_20_points_share": 0.0,
+        "absolute_p90": 0.09345736733018907
+      },
+      "prior_family": "context",
+      "prior_path": "data/processed/preseason/context_v1_3/annual/2026/predictions.csv",
+      "representative_game_interval_summaries": [
+        {
+          "actual_home_margin": 19.0,
+          "away_team": "Austin Peay",
+          "full_expected_home_margin": 18.659340720277548,
+          "full_interval_80": [
+            -1.0606743362124162,
+            38.43999525764424
+          ],
+          "game_id": "401856669",
+          "home_team": "Vanderbilt",
+          "label": "near_identical_expectations",
+          "loo_expected_home_margin": 18.653973984479123,
+          "loo_interval_80": [
+            -1.4686694154216493,
+            38.814036010211524
+          ],
+          "loo_observed_percentile": 0.5094606211710633
+        },
+        {
+          "actual_home_margin": -40.0,
+          "away_team": "Montana",
+          "full_expected_home_margin": -10.732485728775382,
+          "full_interval_80": [
+            -32.00483992059529,
+            10.876630931070435
+          ],
+          "game_id": "401868113",
+          "home_team": "UC Davis",
+          "label": "largest_expected_margin_shift",
+          "loo_expected_home_margin": 2.760424759110426,
+          "loo_interval_80": [
+            -19.843083791242925,
+            25.357292443272847
+          ],
+          "loo_observed_percentile": 0.008851619410530243
+        },
+        {
+          "actual_home_margin": 34.0,
+          "away_team": "Mississippi Valley State",
+          "full_expected_home_margin": 15.328366659809715,
+          "full_interval_80": [
+            -6.669827148385535,
+            36.75675342286272
+          ],
+          "game_id": "401868962",
+          "home_team": "Nicholls",
+          "label": "loo_surprising_full_ordinary",
+          "loo_expected_home_margin": 1.938836925966939,
+          "loo_interval_80": [
+            -22.04309569582185,
+            25.838090710516827
+          ],
+          "loo_observed_percentile": 0.9572868239547905
+        },
+        {
+          "actual_home_margin": -40.0,
+          "away_team": "Montana",
+          "full_expected_home_margin": -10.732485728775382,
+          "full_interval_80": [
+            -32.00483992059529,
+            10.876630931070435
+          ],
+          "game_id": "401868113",
+          "home_team": "UC Davis",
+          "label": "remains_surprising_under_both",
+          "loo_expected_home_margin": 2.760424759110426,
+          "loo_interval_80": [
+            -19.843083791242925,
+            25.357292443272847
+          ],
+          "loo_observed_percentile": 0.008851619410530243
+        }
+      ],
+      "season": 2026,
+      "selected_team_examples": {
+        "closest_posterior_to_prior_with_3plus_games": "2393",
+        "georgia": "61",
+        "highest_posterior_rank_uncertainty_with_3plus_games": "8",
+        "largest_posterior_rank_decline_with_3plus_games": "98",
+        "largest_posterior_rank_improvement_with_3plus_games": "167"
+      },
+      "snapshot_id": "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3",
+      "source_path": "data/processed/snapshots/2026/2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3/predictive/context",
+      "team_count_fbs": 138,
+      "team_residual_sign_checks": {
+        "teams_full_negative_share_at_least_75pct": 32,
+        "teams_full_positive_share_at_least_75pct": 44,
+        "teams_loo_negative_share_at_least_75pct": 32,
+        "teams_loo_positive_share_at_least_75pct": 45,
+        "teams_with_3plus_games": 138,
+        "total_residual_sign_flips": 3
+      }
+    },
+    {
+      "context_slices": {
+        "fbs_fbs_game_count": 215,
+        "fbs_fbs_game_count_posterior_rank_sd_average_at_least_20": 98,
+        "fbs_fbs_game_count_posterior_rank_sd_average_below_20": 117,
+        "mean_absolute_margin_shift_by_game_week": {
+          "1": 4.258056749317767,
+          "2": 3.992155092245201,
+          "3": 3.512142039453546,
+          "4": 4.058844679658632
+        },
+        "mean_absolute_shift_abs_actual_margin_at_least_35": 4.902978786119181,
+        "mean_absolute_shift_posterior_rank_sd_average_at_least_20": 3.816234997787648,
+        "mean_absolute_shift_posterior_rank_sd_average_below_20": 3.185875064838728
+      },
+      "effective_cutoff": "2026-09-27T12:27:35.698895+00:00",
+      "expected_margin_shift_full_minus_loo": {
+        "absolute_max": 13.445727998681956,
+        "absolute_median": 3.288546745227058,
+        "absolute_over_threshold_share": {
+          "1": 0.8320754716981132,
+          "10": 0.05849056603773585,
+          "3": 0.5490566037735849,
+          "5": 0.2943396226415094
+        },
+        "absolute_p75": 5.684713187967135,
+        "absolute_p90": 8.509010571543776,
+        "absolute_p95": 10.244908525047382,
+        "mean": 0.5866183361100087,
+        "median": 0.6672161767137514
+      },
+      "full_posterior_tail_behavior": {
+        "loo_and_full_both_two_sided_tail_below_5pct": 12,
+        "loo_two_sided_tail_below_5pct_and_full_tail_at_least_10pct": 10,
+        "median_reduction_in_absolute_distance_from_50th_percentile": 0.053713203632819645,
+        "percent_games_moved_closer_to_50th_percentile": 0.9622641509433962
+      },
+      "game_count": 530,
+      "interpretation_examples": {
+        "largest_absolute_margin_shift_game_ids": [
+          "401868113",
+          "401868962",
+          "401862705",
+          "401858462",
+          "401860880"
+        ],
+        "loo_surprising_but_full_ordinary_game_ids": [
+          "401856697",
+          "401860880",
+          "401866412",
+          "401866429",
+          "401866628",
+          "401868009",
+          "401868255",
+          "401868346",
+          "401868962",
+          "401868967"
+        ],
+        "near_identical_margin_expectation_games": 89,
+        "representative_game_ids": {
+          "largest_expected_margin_shift": "401868113",
+          "loo_surprising_full_ordinary": "401868962",
+          "near_identical_expectations": "401858201",
+          "remains_surprising_under_both": "401868113"
+        }
+      },
+      "observed_percentile_change": {
+        "absolute_median": 0.053713203632819645,
+        "absolute_over_10_points_share": 0.0660377358490566,
+        "absolute_over_20_points_share": 0.0,
+        "absolute_p90": 0.09374275320412605
+      },
+      "prior_family": "history",
+      "prior_path": "data/processed/preseason/history/annual/2026/predictions.csv",
+      "representative_game_interval_summaries": [
+        {
+          "actual_home_margin": 10.0,
+          "away_team": "Hawai'i",
+          "full_expected_home_margin": 10.76807061521179,
+          "full_interval_80": [
+            -10.464665191377314,
+            31.798531431769714
+          ],
+          "game_id": "401858201",
+          "home_team": "Stanford",
+          "label": "near_identical_expectations",
+          "loo_expected_home_margin": 10.763935302588584,
+          "loo_interval_80": [
+            -11.054173615192186,
+            32.31907786485415
+          ],
+          "loo_observed_percentile": 0.47796541261116143
+        },
+        {
+          "actual_home_margin": -40.0,
+          "away_team": "Montana",
+          "full_expected_home_margin": -10.74883511294244,
+          "full_interval_80": [
+            -32.01677941163109,
+            10.847893155984504
+          ],
+          "game_id": "401868113",
+          "home_team": "UC Davis",
+          "label": "largest_expected_margin_shift",
+          "loo_expected_home_margin": 2.6968928857395165,
+          "loo_interval_80": [
+            -19.883317752562363,
+            25.275725272815286
+          ],
+          "loo_observed_percentile": 0.008890238356798539
+        },
+        {
+          "actual_home_margin": 34.0,
+          "away_team": "Mississippi Valley State",
+          "full_expected_home_margin": 14.724569210877563,
+          "full_interval_80": [
+            -7.268896232714492,
+            36.200404202171
+          ],
+          "game_id": "401868962",
+          "home_team": "Nicholls",
+          "label": "loo_surprising_full_ordinary",
+          "loo_expected_home_margin": 1.3108440150764777,
+          "loo_interval_80": [
+            -22.502107701544684,
+            25.05992979896146
+          ],
+          "loo_observed_percentile": 0.9609468362290341
+        },
+        {
+          "actual_home_margin": -40.0,
+          "away_team": "Montana",
+          "full_expected_home_margin": -10.74883511294244,
+          "full_interval_80": [
+            -32.01677941163109,
+            10.847893155984504
+          ],
+          "game_id": "401868113",
+          "home_team": "UC Davis",
+          "label": "remains_surprising_under_both",
+          "loo_expected_home_margin": 2.6968928857395165,
+          "loo_interval_80": [
+            -19.883317752562363,
+            25.275725272815286
+          ],
+          "loo_observed_percentile": 0.008890238356798539
+        }
+      ],
+      "season": 2026,
+      "selected_team_examples": {
+        "closest_posterior_to_prior_with_3plus_games": "145",
+        "georgia": "61",
+        "highest_posterior_rank_uncertainty_with_3plus_games": "8",
+        "largest_posterior_rank_decline_with_3plus_games": "98",
+        "largest_posterior_rank_improvement_with_3plus_games": "26"
+      },
+      "snapshot_id": "2026-weekly-2026-09-27T12-27-35.698895Z-history",
+      "source_path": "data/processed/snapshots/2026/2026-weekly-2026-09-27T12-27-35.698895Z-history/predictive/history",
+      "team_count_fbs": 138,
+      "team_residual_sign_checks": {
+        "teams_full_negative_share_at_least_75pct": 30,
+        "teams_full_positive_share_at_least_75pct": 46,
+        "teams_loo_negative_share_at_least_75pct": 30,
+        "teams_loo_positive_share_at_least_75pct": 45,
+        "teams_with_3plus_games": 138,
+        "total_residual_sign_flips": 9
+      }
+    }
+  ]
+}
