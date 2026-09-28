@@ -34,7 +34,9 @@ test("keeps current Georgia results, checkpoint movement, and future predictions
   await expect(page.locator(".schedule-checkpoint")).toHaveCount(4);
   await expect(page.locator(".schedule-checkpoint").last()).toContainText("Week 5 · published belief");
   await expect(future).toContainText("Upcoming");
-  await expect(future).toContainText("win");
+  await expect(future.locator(".game-prediction-title")).toHaveText("Georgia 91% to win · Georgia by 20.7");
+  await expect(page.locator('.game-card[data-game-id="401856712"] .game-prediction-title'))
+    .toHaveText("Alabama 52% to win · Alabama by 0.6");
   await expect(future.locator(".game-retrospective")).toHaveCount(0);
   const maximumCollapsedHeight = testInfo.project.name === "mobile" ? 125 : 85;
   expect((await page.locator(".game-card").first().boundingBox()).height).toBeLessThan(maximumCollapsedHeight);
@@ -101,6 +103,17 @@ test("opens distinct retrospective and predictive distributions from the keyboar
   const expectedMargin = Number(await retrospective.locator(".retrospective-marker-expected").getAttribute("data-margin"));
   expect(expectedMargin).toBeCloseTo(11.298375740164296, 10);
   await expect(retrospective.locator(".retrospective-marker-actual")).toHaveAttribute("data-margin", "28");
+  await expect(retrospective.locator(".retrospective-chart-legend")).toContainText("Expected Georgia by 11.3");
+  await expect(retrospective.locator(".retrospective-chart-legend")).toContainText("Actual Georgia by 28.0");
+  await expect(retrospective.locator("dt")).toHaveText([
+    "Observed percentile",
+    "This favorable or better",
+    "Median margin",
+    "Central 50%",
+    "Central 80%",
+    "Central 95%",
+  ]);
+  await expect(retrospective.locator(".distribution-tail")).toHaveCount(0);
   const future = page.locator('.game-card[data-game-id="401856705"]');
   await expect(future.locator(".game-distribution-disclosure summary")).toHaveAttribute("aria-label", /Show predictive margin distribution/);
   await future.locator(".game-distribution-disclosure summary").click();

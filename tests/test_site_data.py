@@ -1000,7 +1000,7 @@ def test_team_schedule_uses_distinct_accessible_retrospective_and_predictive_plo
     assert "predictive margin distribution" in team
     assert "▾" in team
     assert "Observed percentile" in team
-    assert "expectedPrimary" in team
+    assert "to win · ${expectedText}" in team
     assert "Played like" not in team
     assert "No retrospective expectation available" in team
     assert "How to read this page" in html

@@ -229,7 +229,6 @@ function retrospectiveChart(expectation, team, axis, oriented) {
     label,
     description: "Bars show otherwise expected outcomes; the gold line marks the expected margin and the dark line marks the actual margin. The horizontal axis is from the team's perspective.",
     zero: true,
-    tail: (display.lower_tail_probability + display.upper_tail_probability) > 0,
   });
   const minimum = Number(axis.min_margin);
   const maximum = Number(axis.max_margin);
@@ -819,9 +818,7 @@ function predictionPanel(prediction, team, axis) {
   const favorite = oriented.focalWin >= oriented.opponentWin ? [oriented.focalName, oriented.focalWin] : [oriented.opponentName, oriented.opponentWin];
   const panel = node("div", "game-prediction");
   const expectedText = oriented.expected >= 0 ? marginSide(oriented.focalName, oriented.expected) : marginSide(oriented.opponentName, -oriented.expected);
-  const expectedTeam = oriented.expected >= 0 ? oriented.focalName : oriented.opponentName;
-  const expectedPrimary = Math.abs(oriented.expected) < 0.05 ? "expected Even" : expectedTeam === favorite[0] ? `expected by ${marginValue(oriented.expected)}` : `expected ${expectedTeam} by ${marginValue(oriented.expected)}`;
-  const title = node("strong", "game-prediction-title", `${favorite[0]} win ${percentage(favorite[1])} · ${expectedPrimary}`);
+  const title = node("strong", "game-prediction-title", `${favorite[0]} ${percentage(favorite[1])} to win · ${expectedText}`);
   const detail = node("div", "game-prediction-disclosure-content");
   const chart = futureChart(prediction, team, axis, oriented);
   if (chart) detail.append(chart);
@@ -860,8 +857,6 @@ function retrospectivePanel(expectation, team, axis, opponentName) {
   if (chart) detail.append(chart);
   const facts = node("dl", "game-rating-details");
   [
-    ["Expected margin", oriented.expectedText],
-    ["Actual margin", oriented.actualText],
     ["Observed percentile", percentileLabel(percentile * 100)],
     [favorable ? "This favorable or better" : "This unfavorable or worse", tailPercentage(tail)],
     ["Median margin", marginSide(orient(expectation.median_home_margin) >= 0 ? team.team_name : opponentName, orient(expectation.median_home_margin))],
