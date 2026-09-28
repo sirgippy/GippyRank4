@@ -50,17 +50,15 @@
       </section>
       <section aria-labelledby="schedule-title">
         <div class="section-heading team-schedule-heading">
-          <div><h2 id="schedule-title">Season schedule</h2><p id="schedule-context" class="section-context"></p></div>
-        </div>
-        <div class="schedule-explainer">
+          <h2 id="schedule-title">Season schedule</h2>
           <details class="team-page-help">
-            <summary>How to read game expectations</summary>
+            <summary>How to read games</summary>
             <p>Results show a retrospective expectation and the share of otherwise expected outcomes at least as favorable or unfavorable. Open a game to compare its margin with the distribution.</p>
             <p id="prediction-source" class="schedule-source-note"></p>
           </details>
         </div>
         <p id="team-page-status" class="team-page-status" aria-live="polite">Loading schedule…</p>
-        <ol id="schedule-list" class="schedule-list"></ol>
+        <div id="schedule-list" class="schedule-list" role="list" aria-label="Scheduled games"></div>
       </section>
     </main>
     <footer><div class="shell"><p>GippyRank rankings are model outputs, not AP, Coaches, or CFP poll inputs.</p><a href="./methodology.html">Methodology</a></div></footer>

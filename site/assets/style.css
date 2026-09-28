@@ -1176,21 +1176,14 @@ summary:focus-visible,
   color: var(--danger);
 }
 
-.schedule-explainer {
-  margin: 0 0 12px;
-  padding: 12px 16px;
-  background: var(--wash);
-  border-left: 3px solid var(--green);
-}
-
-.schedule-explainer p {
+.team-schedule-heading .team-page-help p {
   max-width: 780px;
   margin: 7px 0 0;
   color: #40534c;
   font-size: 13px;
 }
 
-.schedule-explainer .schedule-source-note {
+.team-schedule-heading .schedule-source-note {
   color: var(--muted);
   font-size: 12px;
 }
@@ -1255,6 +1248,23 @@ summary:focus-visible,
 
 .team-schedule-heading {
   margin-top: 0;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.team-schedule-heading .team-page-help {
+  max-width: min(100%, 440px);
+  margin-left: auto;
+  text-align: right;
+}
+
+.team-schedule-heading .team-page-help[open] {
+  text-align: left;
+}
+
+.team-schedule-heading .team-page-help summary {
+  margin-left: auto;
+  font-size: 12px;
 }
 
 .team-page-status {
@@ -2107,14 +2117,6 @@ summary:focus-visible,
   stroke-width: 1.5;
 }
 
-.distribution-tail {
-  fill: none;
-  stroke: var(--muted);
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.5;
-}
-
 .distribution-axis {
   display: flex;
   justify-content: space-between;
@@ -2857,6 +2859,10 @@ details[open] > .distribution-toggle {
   white-space: nowrap;
 }
 
+.game-summary-separator {
+  color: var(--muted);
+}
+
 .game-card-future .game-outcome,
 .game-card-future .game-prediction-title {
   color: #775b1d;
@@ -2956,7 +2962,23 @@ details[open] > .distribution-toggle {
   stroke: #172b34;
 }
 
-.retrospective-chart-legend {
+.margin-interval-95 {
+  fill: var(--green);
+  opacity: 0.2;
+}
+
+.margin-interval-80 {
+  fill: var(--green);
+  opacity: 0.35;
+}
+
+.margin-interval-50 {
+  fill: var(--green);
+  opacity: 0.6;
+}
+
+.retrospective-chart-legend,
+.future-interval-legend {
   display: flex;
   gap: 6px 18px;
   flex-wrap: wrap;
@@ -2978,6 +3000,12 @@ details[open] > .distribution-toggle {
 .retrospective-legend-expected::before {
   border-color: #b08016;
   border-top-style: dashed;
+}
+
+.future-interval-marker {
+  stroke: #b08016;
+  stroke-width: 2.2;
+  stroke-dasharray: 4 2;
 }
 
 .schedule-checkpoint {
@@ -3006,6 +3034,22 @@ details[open] > .distribution-toggle {
 }
 
 @media (max-width: 760px) {
+  .team-schedule-heading {
+    gap: 8px;
+    padding: 14px 12px;
+  }
+
+  .team-schedule-heading h2 {
+    font-size: 20px;
+  }
+
+  .team-schedule-heading .team-page-help summary {
+    font-size: 11px;
+  }
+
+  .game-summary-separator {
+    display: none;
+  }
   .snapshot-summary,
   footer .shell {
     display: block;

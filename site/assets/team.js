@@ -47,7 +47,16 @@ function percentage(value) {
   if (!Number.isFinite(percent)) return "Unavailable";
   if (percent < 0.01) return "<0.01%";
   if (percent < 1) return `${percent.toFixed(1)}%`;
+  if (percent > 99) return `${percent.toFixed(1)}%`;
   return `${Math.round(percent)}%`;
+}
+
+function matchupProbability(value, other) {
+  if (Math.round(Math.max(value, other) * 100) !== 50) return percentage(value);
+  if (value === other) return "50% (even)";
+  let digits = 1;
+  while (digits < 5 && (value * 100).toFixed(digits) === (other * 100).toFixed(digits)) digits += 1;
+  return `${(value * 100).toFixed(digits)}%`;
 }
 
 function tailPercentage(value) {
@@ -83,8 +92,9 @@ function marginSide(teamName, value) {
 
 function scoreMarginSide(teamName, value) {
   const amount = Number(value);
+  if (!Number.isInteger(amount)) throw new Error("A completed-game margin must be an integer.");
   if (amount === 0) return "Even";
-  return `${teamName} by ${Math.abs(amount).toFixed(0)}`;
+  return `${teamName} by ${Math.abs(amount)}`;
 }
 
 function ordinal(value) {
@@ -106,18 +116,31 @@ function displayScale(axis) {
   return Number.isFinite(scale) && scale > 0 ? scale : 1;
 }
 
+const DISTRIBUTION_PLOT = Object.freeze({
+  width: 340, height: 90, left: 5, right: 335, baseline: 65,
+  barMaxHeight: 52, zeroTop: 6, markerTop: 4, markerBottom: 69,
+  splitExpectedBottom: 34, splitActualTop: 39,
+});
+const MARGIN_INTERVAL_VIEW_THRESHOLD = 0.25;
+
+function plotX(value, minimum, maximum) {
+  const clipped = Math.max(minimum, Math.min(maximum, value));
+  return DISTRIBUTION_PLOT.left + (DISTRIBUTION_PLOT.right - DISTRIBUTION_PLOT.left) * (clipped - minimum) / (maximum - minimum);
+}
+
+function marginAxisRange(axis) {
+  const minimum = Number(axis.min_margin);
+  const maximum = Number(axis.max_margin);
+  return minimum === -maximum ? `±${maximum}` : `${minimum} to ${maximum}`;
+}
+
 function densitySvg(masses, {
   className,
   label,
   description,
-  zero = false,
-  tail = false,
+  zeroAxis = null,
 }) {
-  const width = 340;
-  const height = 90;
-  const left = 5;
-  const right = width - 5;
-  const baseline = 65;
+  const { width, height, left, right, baseline } = DISTRIBUTION_PLOT;
   const plotWidth = right - left;
   const values = masses.map((value) => Math.max(0, Number(value) || 0));
   const maximum = Math.max(...values, 1e-12);
@@ -133,13 +156,13 @@ function densitySvg(masses, {
   desc.textContent = description;
   svg.append(title, desc);
   svg.append(svgElement("line", { x1: left, y1: baseline, x2: right, y2: baseline, class: "distribution-baseline" }));
-  if (zero) {
-    const zeroX = left + plotWidth / 2;
-    svg.append(svgElement("line", { x1: zeroX, y1: 6, x2: zeroX, y2: baseline + 3, class: "distribution-zero" }));
+  if (zeroAxis && Number(zeroAxis.min_margin) <= 0 && Number(zeroAxis.max_margin) >= 0) {
+    const zeroX = plotX(0, Number(zeroAxis.min_margin), Number(zeroAxis.max_margin));
+    svg.append(svgElement("line", { x1: zeroX, y1: DISTRIBUTION_PLOT.zeroTop, x2: zeroX, y2: baseline + 3, class: "distribution-zero" }));
   }
   const barWidth = plotWidth / values.length;
   values.forEach((value, index) => {
-    const barHeight = (value / maximum) * 52;
+    const barHeight = (value / maximum) * DISTRIBUTION_PLOT.barMaxHeight;
     svg.append(svgElement("rect", {
       x: left + index * barWidth + 0.25,
       y: baseline - barHeight,
@@ -148,9 +171,6 @@ function densitySvg(masses, {
       class: "distribution-bar",
     }));
   });
-  if (tail) {
-    svg.append(svgElement("path", { d: `M ${left - 2} 12 l 5 -5 l 5 5 M ${right + 2} 12 l -5 -5 l -5 5`, class: "distribution-tail" }));
-  }
   return svg;
 }
 
@@ -213,13 +233,74 @@ function futureChart(prediction, team, axis, oriented) {
   if (!display) return null;
   const label = `Predictive margin distribution from ${oriented.opponentName} by ${Math.abs(axis.min_margin)} to ${oriented.focalName} by ${axis.max_margin}; zero is even.`;
   const tailProbability = (display.lowerTail + display.upperTail) / displayScale(axis);
-  const description = `The distribution is oriented from ${oriented.focalName}'s perspective. ${percentage(oriented.focalWin)} focal-team win probability and ${percentage(oriented.opponentWin)} opponent win probability. ${percentage(tailProbability)} of mass is outside the visible ${axis.min_margin} to ${axis.max_margin} point range.`;
+  if (tailProbability >= MARGIN_INTERVAL_VIEW_THRESHOLD) {
+    const expectedText = oriented.expected >= 0
+      ? marginSide(oriented.focalName, oriented.expected)
+      : marginSide(oriented.opponentName, -oriented.expected);
+    return marginIntervalChart({
+      kind: "future", oriented, axis, offAxis: tailProbability,
+      intervals: [oriented.interval95, oriented.interval80, oriented.interval50],
+      markers: [{ kind: "expected", value: oriented.expected, text: expectedText }],
+    });
+  }
+  const description = `The distribution is oriented from ${oriented.focalName}'s perspective. ${oriented.focalName} win probability ${matchupProbability(oriented.focalWin, oriented.opponentWin)}; ${oriented.opponentName} win probability ${matchupProbability(oriented.opponentWin, oriented.focalWin)}.${tailProbability >= 0.01 ? ` ${percentage(tailProbability)} of predicted outcomes fall outside the chart's ${marginAxisRange(axis)}-point range.` : ""}`;
   const figure = node("figure", "game-distribution game-distribution-future");
-  figure.append(densitySvg(display.masses, { className: "future-distribution-chart", label, description, zero: true, tail: tailProbability > 0.001 }));
+  figure.append(densitySvg(display.masses, { className: "future-distribution-chart", label, description, zeroAxis: axis }));
   const caption = node("figcaption", "distribution-axis");
   caption.append(node("span", "axis-start", `${oriented.opponentName} by ${Math.abs(axis.min_margin)}`), node("span", "axis-label", "Predictive margin · Even"), node("span", "axis-end", `${oriented.focalName} by ${axis.max_margin}`));
   figure.append(caption);
-  if (tailProbability > 0.001) figure.append(node("p", "distribution-tail-note", `${percentage(tailProbability)} of predictive mass is beyond the visible ±${Math.max(Math.abs(axis.min_margin), Math.abs(axis.max_margin))}-point range.`));
+  if (tailProbability >= 0.01) figure.append(node("p", "distribution-tail-note", `${percentage(tailProbability)} of predicted outcomes fall outside the chart's ${marginAxisRange(axis)}-point range.`));
+  return figure;
+}
+
+function marginIntervalChart({ kind, oriented, axis, offAxis, intervals, markers }) {
+  const values = [...intervals.flat(), ...markers.map((marker) => marker.value)];
+  const width = Math.max(...values) - Math.min(...values);
+  const padding = Math.max(5, width * 0.06);
+  const minimum = Math.floor((Math.min(...values) - padding) / 5) * 5;
+  const maximum = Math.ceil((Math.max(...values) + padding) / 5) * 5;
+  const endpoint = (value) => value < 0
+    ? `${oriented.opponentName} by ${Math.abs(value)}`
+    : value > 0 ? `${oriented.focalName} by ${value}` : "Even";
+  const label = `${oriented.focalName} ${kind === "future" ? "predictive" : "retrospective"} margin intervals. ${markers.map((marker) => `${marker.kind} ${marker.text}`).join("; ")}.`;
+  const svg = svgElement("svg", {
+    viewBox: `0 0 ${DISTRIBUTION_PLOT.width} ${DISTRIBUTION_PLOT.height}`,
+    class: `game-distribution-chart ${kind}-interval-chart`,
+    role: "img",
+    "aria-label": label,
+  });
+  const title = svgElement("title");
+  title.textContent = label;
+  const desc = svgElement("desc");
+  desc.textContent = `Central 95%, 80%, and 50% margin intervals are shown on a wider ${minimum} to ${maximum} point axis. The gold marker is the expected margin.${kind === "retrospective" ? " The dark marker is the actual margin." : ` ${oriented.focalName} win probability ${matchupProbability(oriented.focalWin, oriented.opponentWin)}; ${oriented.opponentName} win probability ${matchupProbability(oriented.opponentWin, oriented.focalWin)}.`}`;
+  svg.append(title, desc);
+  intervals.forEach(([lower, upper], index) => {
+    const start = plotX(lower, minimum, maximum);
+    const end = plotX(upper, minimum, maximum);
+    svg.append(svgElement("rect", {
+      x: start, y: 38 + index * 2, width: Math.max(end - start, 1), height: 18 - index * 4,
+      class: `margin-interval margin-interval-${[95, 80, 50][index]} ${kind === "retrospective" ? "retrospective-interval" : "future-interval"}`,
+    }));
+  });
+  for (const marker of markers) {
+    const x = plotX(marker.value, minimum, maximum);
+    svg.append(svgElement("line", {
+      x1: x, y1: DISTRIBUTION_PLOT.markerTop, x2: x, y2: DISTRIBUTION_PLOT.markerBottom,
+      class: kind === "retrospective"
+        ? `retrospective-marker retrospective-marker-${marker.kind}`
+        : "future-interval-marker",
+      "data-margin": marker.value,
+    }));
+  }
+  const figure = node("figure", `game-distribution game-distribution-${kind} game-distribution-interval`);
+  figure.append(svg);
+  const caption = node("figcaption", "distribution-axis");
+  caption.append(node("span", "axis-start", endpoint(minimum)), node("span", "axis-label", "Central 95% / 80% / 50%"), node("span", "axis-end", endpoint(maximum)));
+  figure.append(caption);
+  const legend = node("p", kind === "retrospective" ? "retrospective-chart-legend" : "future-interval-legend");
+  markers.forEach((marker) => legend.append(node("span", marker.kind === "expected" ? "retrospective-legend-expected" : "retrospective-legend-actual", `${marker.kind === "expected" ? "Expected" : "Actual"} ${marker.text}`)));
+  figure.append(legend);
+  figure.append(node("p", "distribution-tail-note", `${percentage(offAxis)} of ${kind === "future" ? "predicted" : "expected"} outcomes fall outside the standard ${marginAxisRange(axis)}-point histogram. Intervals use a wider axis.`));
   return figure;
 }
 
@@ -227,24 +308,35 @@ function retrospectiveChart(expectation, team, axis, oriented) {
   const display = orientedMarginDistribution(expectation, team, axis);
   if (!display) return null;
   const offAxis = (display.lowerTail + display.upperTail) / displayScale(axis);
+  if (offAxis >= MARGIN_INTERVAL_VIEW_THRESHOLD) {
+    const homePerspective = expectation.home_team_id === oriented.focalId;
+    const orientInterval = (interval) => homePerspective ? interval : [-interval[1], -interval[0]];
+    return marginIntervalChart({
+      kind: "retrospective", oriented, axis, offAxis,
+      intervals: [expectation.margin_interval_95, expectation.margin_interval_80, expectation.margin_interval_50].map(orientInterval),
+      markers: [
+        { kind: "expected", value: oriented.expected, text: oriented.expectedText },
+        { kind: "actual", value: oriented.actual, text: oriented.actualText },
+      ],
+    });
+  }
   const figure = node("figure", "game-distribution game-distribution-retrospective");
   const label = `${team.team_name} retrospective margin distribution. Expected ${oriented.expectedText}; actual ${oriented.actualText}.`;
   const svg = densitySvg(display.masses, {
     className: "retrospective-distribution-chart",
     label,
     description: "Bars show otherwise expected outcomes; the gold line marks the expected margin and the dark line marks the actual margin. The horizontal axis is from the team's perspective.",
-    zero: true,
+    zeroAxis: axis,
   });
   const minimum = Number(axis.min_margin);
   const maximum = Number(axis.max_margin);
   const markers = [["expected", oriented.expected, oriented.expectedText], ["actual", oriented.actual, oriented.actualText]]
-    .map(([kind, value, text]) => ({ kind, value, text, side: value < minimum ? "lower" : value > maximum ? "upper" : null }));
-  const sameClippedEdge = markers[0].side && markers[0].side === markers[1].side;
-  for (const { kind, value, side } of markers) {
-    const x = 5 + 330 * (Math.max(minimum, Math.min(maximum, value)) - minimum) / (maximum - minimum);
+    .map(([kind, value, text]) => ({ kind, value, text, x: plotX(value, minimum, maximum), side: value < minimum ? "lower" : value > maximum ? "upper" : null }));
+  const markersCollide = Math.abs(markers[0].x - markers[1].x) < 2;
+  for (const { kind, value, x, side } of markers) {
     svg.append(svgElement("line", {
-      x1: x, y1: sameClippedEdge && kind === "actual" ? 39 : 4,
-      x2: x, y2: sameClippedEdge && kind === "expected" ? 34 : 69,
+      x1: x, y1: markersCollide && kind === "actual" ? DISTRIBUTION_PLOT.splitActualTop : DISTRIBUTION_PLOT.markerTop,
+      x2: x, y2: markersCollide && kind === "expected" ? DISTRIBUTION_PLOT.splitExpectedBottom : DISTRIBUTION_PLOT.markerBottom,
       class: `retrospective-marker retrospective-marker-${kind}`,
       "data-margin": value,
       ...(side ? { "data-clipped": side } : {}),
@@ -271,7 +363,7 @@ function retrospectiveChart(expectation, team, axis, oriented) {
   if (clipped.length) {
     const note = clipped.map(({ kind, text, side }) => `${kind === "expected" ? "Expected" : "Actual"} ${text} exceeds the chart's ${side === "lower" ? `${oriented.opponentName} by ${Math.abs(minimum)}` : `${oriented.focalName} by ${maximum}`} edge.`).join(" ");
     figure.append(node("p", "distribution-marker-note", note));
-    svg.querySelector("desc").textContent += ` ${note}${sameClippedEdge ? " The expected marker occupies the upper half of that edge and the actual marker the lower half." : ""}`;
+    svg.querySelector("desc").textContent += ` ${note}${markersCollide ? " The expected marker occupies the upper half of that edge and the actual marker the lower half." : ""}`;
   }
   return figure;
 }
@@ -364,9 +456,6 @@ function renderSummary(entry, row) {
   $("#team-page-kind").textContent = `${entry.season} ${entry.display_label} · ${publicationStatusLabel(entry)} publication`;
   $("#team-page-title").textContent = row.team_name;
   $("#team-page-meta").textContent = `${row.conference || "Independent"} · ${entry.snapshot_type === "preseason" ? "Before game evidence" : `Through ${formatDate(entry.effective_cutoff)}`} · ${entry.ranking_family === "performance" ? "Performance" : `Predictive ${priorLabel(entry.prior_family)}`}`;
-  $("#schedule-context").textContent = entry.snapshot_type === "preseason"
-    ? "Before the season"
-    : `Through ${formatDate(entry.effective_cutoff, false)}`;
   $("#prediction-source").textContent = `Completed-game expectations compare each result with the selected snapshot's other evidence, excluding that game. They are retrospective, not pregame forecasts. Checkpoint rows show shared published belief changes. Future matchups use ${entry.ranking_family === "performance" ? "Predictive Context" : `Predictive ${priorLabel(entry.prior_family)}`} at this snapshot.`;
 
   const summary = node("div", "team-summary-grid");
@@ -837,12 +926,14 @@ function predictionPanel(prediction, team, axis) {
   const favoriteText = Math.round(favorite[1] * 100) === 50 ? "Near-even matchup" : `${favorite[0]} ${percentage(favorite[1])} to win`;
   const titleText = `${favoriteText} · ${expectedText}`;
   const title = node("strong", "game-prediction-title");
-  title.append(node("span", "game-prediction-chunk", `${favoriteText} ·`), " ", node("span", "game-prediction-chunk game-prediction-margin", expectedText));
+  const marginChunk = node("span", "game-prediction-chunk game-prediction-margin");
+  marginChunk.append(node("span", "game-summary-separator", "· "), expectedText);
+  title.append(node("span", "game-prediction-chunk", favoriteText), " ", marginChunk);
   const detail = node("div", "game-prediction-disclosure-content");
   const chart = futureChart(prediction, team, axis, oriented);
   if (chart) detail.append(chart);
   const list = node("dl", "game-facts");
-  [["Focal win probability", percentage(oriented.focalWin)], ["Opponent win probability", percentage(oriented.opponentWin)], ["Expected margin", expectedText], ["Median margin", oriented.median >= 0 ? marginSide(oriented.focalName, oriented.median) : marginSide(oriented.opponentName, -oriented.median)], ["Central 50% range", predictionRange(oriented, oriented.interval50)], ["Central 80% range", predictionRange(oriented, oriented.interval80)], ["Central 95% range", predictionRange(oriented, oriented.interval95)], ["Prediction source", prediction.prediction_source === "predictive_history" ? "Predictive History" : "Predictive Context"]].forEach(([label, value]) => list.append(node("dt", "", label), node("dd", "", value)));
+  [[`${oriented.focalName} win probability`, matchupProbability(oriented.focalWin, oriented.opponentWin)], [`${oriented.opponentName} win probability`, matchupProbability(oriented.opponentWin, oriented.focalWin)], ["Expected margin", expectedText], ["Median margin", oriented.median >= 0 ? marginSide(oriented.focalName, oriented.median) : marginSide(oriented.opponentName, -oriented.median)], ["Central 50% range", predictionRange(oriented, oriented.interval50)], ["Central 80% range", predictionRange(oriented, oriented.interval80)], ["Central 95% range", predictionRange(oriented, oriented.interval95)], ["Prediction source", prediction.prediction_source === "predictive_history" ? "Predictive History" : "Predictive Context"]].forEach(([label, value]) => list.append(node("dt", "", label), node("dd", "", value)));
   detail.append(list);
   const distribution = disclosure("predictive margin distribution", detail, "distribution-disclosure game-distribution-disclosure", titleText);
   const copy = node("span", "game-summary-copy");
@@ -859,6 +950,7 @@ function retrospectivePanel(expectation, team, axis, opponentName) {
   const expected = orient(expectation.expected_home_margin);
   const actual = orient(expectation.actual_home_margin);
   const oriented = {
+    focalId: team.team_id,
     focalName: team.team_name,
     opponentName,
     expected,
@@ -893,12 +985,16 @@ function retrospectivePanel(expectation, team, axis, opponentName) {
   detail.append(facts);
   const distribution = disclosure(`${team.team_name} completed-game retrospective distribution`, detail, "distribution-disclosure game-distribution-disclosure", `${expectedText}. ${actualText}. ${tailText}`);
   const copy = node("span", "game-summary-copy");
+  const actualChunk = node("span", "game-retrospective-actual");
+  actualChunk.append(node("span", "game-summary-separator", "· "), actualText);
+  const tailChunk = node("span", "game-retrospective-tail");
+  tailChunk.append(node("span", "game-summary-separator", "· "), tailText);
   copy.append(
-    node("span", "game-retrospective-expected", `${expectedText} ·`),
+    node("span", "game-retrospective-expected", expectedText),
     " ",
-    node("span", "game-retrospective-actual", `${actualText} ·`),
+    actualChunk,
     " ",
-    node("span", "game-retrospective-tail", tailText),
+    tailChunk,
   );
   distribution.querySelector("summary").replaceChildren(copy, node("span", "distribution-chevron", "▾"));
   panel.append(distribution);
@@ -909,8 +1005,9 @@ function checkpointPanel(before, after, teamId) {
   const earlier = before.teams?.[teamId];
   const later = after.teams?.[teamId];
   if (!earlier || !later) return null;
-  const item = node("li", "schedule-checkpoint");
-  const title = node("span", "schedule-checkpoint-title", `${checkpointLabel(after)} · published belief`);
+  const item = node("div", "schedule-checkpoint");
+  item.setAttribute("role", "note");
+  const title = node("span", "schedule-checkpoint-title", `${checkpointLabel(after)} update`);
   const values = node("span", "schedule-checkpoint-values");
   const rankBefore = rank(earlier.expected_rank);
   const rankAfter = rank(later.expected_rank);
@@ -924,8 +1021,23 @@ function checkpointPanel(before, after, teamId) {
   return item;
 }
 
+function matchesScheduleExpectation(expectation, game, team) {
+  if (!expectation || expectation.game_id !== game.game_id || game.retrospective_expectation_id !== game.game_id) return false;
+  const home = expectation.home_team_id === team.team_id;
+  const away = expectation.away_team_id === team.team_id;
+  if ((!home && !away) || (home ? expectation.away_team_id : expectation.home_team_id) !== game.opponent_id) return false;
+  if (!["home", "away", "neutral"].includes(game.site) || typeof expectation.neutral_site !== "boolean") return false;
+  if (expectation.neutral_site !== (game.site === "neutral")) return false;
+  if ((game.site === "home" && !home) || (game.site === "away" && !away)) return false;
+  const score = game.score;
+  if (!score || !Number.isInteger(score.team) || !Number.isInteger(score.opponent)) return false;
+  return Number.isInteger(expectation.actual_home_margin)
+    && expectation.actual_home_margin === (home ? score.team - score.opponent : score.opponent - score.team);
+}
+
 function gameCard(game, cutoff, artifact, team) {
-  const item = node("li", "game-card");
+  const item = node("div", "game-card");
+  item.setAttribute("role", "listitem");
   item.dataset.gameId = game.game_id;
   const header = node("div", "game-card-header");
   header.append(node("p", "game-date", game.week === null ? formatDate(game.date, false) : `W${game.week} · ${formatDate(game.date, false)}`));
@@ -936,27 +1048,28 @@ function gameCard(game, cutoff, artifact, team) {
   opponentHeading.append(opponent);
   opponentHeading.append(node("span", "game-site", game.site));
   const outcome = node("p", "game-outcome");
-  const future = game.game_state ? game.game_state === "future" : cutoff === null || new Date(game.date) > cutoff;
-  if (game.result && game.score) outcome.textContent = `${game.result} ${game.score.team}–${game.score.opponent}`;
-  else if (game.game_state === "cancelled") outcome.textContent = "Cancelled or postponed";
-  else if (future) outcome.textContent = "Upcoming";
+  const state = game.game_state || (cutoff === null || new Date(game.date) > cutoff ? "future" : game.result ? "completed" : "unresolved");
+  if (state === "cancelled") outcome.textContent = "Cancelled or postponed";
+  else if (state === "out_of_scope" && !game.score) outcome.textContent = "Outside model scope";
+  else if (game.result && game.score) outcome.textContent = `${game.result} ${game.score.team}–${game.score.opponent}`;
+  else if (state === "future") outcome.textContent = "Upcoming";
+  else if (state === "completed") outcome.textContent = "Completed";
   else outcome.textContent = "Pending";
   const body = node("div", "game-card-body");
-  if (future) {
+  if (state === "future") {
     const prediction = artifact.future_predictions?.[game.future_prediction_id];
     if (prediction) body.append(predictionPanel(prediction, team, artifact.future_margin_axis));
     else body.append(node("p", "game-not-modeled", "Prediction unavailable"));
-  } else if (game.result || game.game_state === "completed") {
+  } else if (state === "completed") {
     const expectations = artifact.retrospective_game_expectations;
     const expectation = expectations?.games?.[game.retrospective_expectation_id || game.game_id];
-    if (expectation && expectation.source_snapshot_id === expectations.source_snapshot_id) {
+    if (expectation && expectation.source_snapshot_id === expectations.source_snapshot_id && matchesScheduleExpectation(expectation, game, team)) {
       body.append(retrospectivePanel(expectation, team, expectations.margin_axis, game.opponent_name || "Opponent"));
     } else body.append(node("p", "game-not-modeled", "No retrospective expectation available"));
-  } else {
-    body.append(node("p", "game-not-modeled", "No result at this snapshot"));
   }
-  item.classList.add(future ? "game-card-future" : "game-card-completed");
-  item.append(header, opponentHeading, outcome, body);
+  item.classList.add(`game-card-${state}`);
+  item.append(header, opponentHeading, outcome);
+  if (body.childElementCount) item.append(body);
   return item;
 }
 
@@ -966,7 +1079,8 @@ function renderSchedule(artifact, entry, trajectory) {
   if (!team) throw new Error("This team is not available in the selected season snapshot.");
   const cutoff = artifact.effective_cutoff ? new Date(artifact.effective_cutoff) : null;
   const games = Array.isArray(team.games) ? team.games : [];
-  $("#team-page-status").textContent = games.length ? `${games.length} scheduled games` : "No schedule entries are available for this team.";
+  $("#team-page-status").textContent = games.length ? "" : "No schedule entries are available for this team.";
+  $("#team-page-status").hidden = games.length > 0;
   const items = games.map((game) => gameCard(game, cutoff, artifact, team));
   const selectedIndex = trajectory?.points?.findIndex((point) => point.snapshot_id === entry.snapshot_id) ?? -1;
   if (selectedIndex > 0) {
@@ -1113,6 +1227,7 @@ async function load() {
 
 load().catch((error) => {
   updateBackLink(null);
+  $("#team-page-status").hidden = false;
   $("#team-page-status").textContent = error.message;
   $("#team-page-status").className = "team-page-status team-page-error";
 });

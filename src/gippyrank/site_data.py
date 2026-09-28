@@ -1489,6 +1489,7 @@ def _validate_retrospective_game_expectations(
     artifact: dict[str, Any],
     source_metadata: dict[str, Any],
     expected_ids: set[str],
+    by_team: dict[str, Any],
 ) -> set[str]:
     """Validate the snapshot-safe LOO completed-game distribution artifact."""
 
@@ -1578,13 +1579,18 @@ def _validate_retrospective_game_expectations(
             f"{snapshot_id}: retrospective games do not match included evidence"
         )
     numeric_fields = (
-        "actual_home_margin",
         "expected_home_margin",
         "median_home_margin",
         "observed_margin_percentile",
         "lower_tail_probability",
         "upper_tail_probability",
     )
+    references: dict[str, list[tuple[str, dict[str, Any]]]] = defaultdict(list)
+    for team_id, team in by_team.items():
+        for schedule_game in team.get("games", []):
+            reference = schedule_game.get("retrospective_expectation_id")
+            if reference is not None:
+                references[str(reference)].append((str(team_id), schedule_game))
     for game_id, game in games.items():
         if not isinstance(game, dict) or str(game.get("game_id")) != str(game_id):
             raise SiteDataValidationError(
@@ -1614,6 +1620,53 @@ def _validate_retrospective_game_expectations(
             )
         for field in numeric_fields:
             _finite_number(game.get(field), field, snapshot_id)
+        actual_margin = _finite_number(
+            game.get("actual_home_margin"), "actual_home_margin", snapshot_id
+        )
+        if not actual_margin.is_integer():
+            raise SiteDataValidationError(
+                f"{snapshot_id}: retrospective game {game_id} actual margin is not integral"
+            )
+        for team_id, schedule_game in references.get(str(game_id), []):
+            if str(schedule_game.get("game_id")) != str(game_id):
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: retrospective game {game_id} reference points at another matchup"
+                )
+            home_id = str(game["home_team_id"])
+            away_id = str(game["away_team_id"])
+            if team_id not in {home_id, away_id}:
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: retrospective game {game_id} is attached to the wrong team"
+                )
+            opponent_id = away_id if team_id == home_id else home_id
+            if str(schedule_game.get("opponent_id")) != opponent_id:
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: retrospective game {game_id} opponent mismatch"
+                )
+            site = schedule_game.get("site")
+            if (
+                (site == "neutral") != game["neutral_site"]
+                or (site == "home" and team_id != home_id)
+                or (site == "away" and team_id != away_id)
+                or site not in {"home", "away", "neutral"}
+            ):
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: retrospective game {game_id} site orientation mismatch"
+                )
+            score = schedule_game.get("score")
+            if not isinstance(score, dict) or not all(
+                isinstance(score.get(side), int) and not isinstance(score[side], bool)
+                for side in ("team", "opponent")
+            ):
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: retrospective game {game_id} score is invalid"
+                )
+            score_margin = score["team"] - score["opponent"]
+            home_margin = score_margin if team_id == home_id else -score_margin
+            if actual_margin != home_margin:
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: retrospective game {game_id} actual margin disagrees with score"
+                )
         probabilities = [
             _probability(game.get(field), field, snapshot_id)
             for field in (
@@ -2809,7 +2862,7 @@ def _validate_team_season_artifact(
                     )
     _validate_performance_display(artifact, snapshot_id, ratings_count)
     retrospective_ids = _validate_retrospective_game_expectations(
-        artifact, source_metadata, expected_ids
+        artifact, source_metadata, expected_ids, by_team
     )
     if retrospective_ids and retrospective_references != modeled_fbs_game_ids:
         raise SiteDataValidationError(

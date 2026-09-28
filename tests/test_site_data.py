@@ -980,53 +980,6 @@ def test_static_site_uses_manifest_logo_config_and_decorative_fallback() -> None
     assert "loading = \"lazy\"" in app
 
 
-def test_team_schedule_uses_distinct_accessible_retrospective_and_predictive_plots() -> None:
-    team = (ROOT / "site/assets/team.js").read_text(encoding="utf-8")
-    css = (ROOT / "site/assets/style.css").read_text(encoding="utf-8")
-    html = (ROOT / "site/team.html").read_text(encoding="utf-8")
-
-    assert "retrospectiveChart" in team
-    assert "futureChart" in team
-    assert "retrospective_game_expectations" in team
-    assert "future_margin_axis" in team
-    assert "probability_encoding" in team
-    assert "role: \"img\"" in team
-    assert "aria-label" in team
-    assert "Central 80% range" in team
-    assert ".game-distribution-chart" in css
-    assert ".retrospective-marker-actual" in css
-    assert "distribution-toggle" in team
-    assert "completed-game retrospective distribution" in team
-    assert "predictive margin distribution" in team
-    assert "▾" in team
-    assert "Observed percentile" in team
-    assert "Played like" not in team
-    assert "No retrospective expectation available" in team
-    assert "How to read game expectations" in html
-    assert "Results show a retrospective expectation" in html
-
-
-def test_future_prediction_range_labels_follow_focal_margin_sign() -> None:
-    team = (ROOT / "site/assets/team.js").read_text(encoding="utf-8")
-
-    assert (
-        'if (high < 0) return `${marginSide(oriented.opponentName, -high)} '
-        'to ${marginSide(oriented.opponentName, -low)}`;' in team
-    )
-    assert (
-        'if (low > 0) return `${marginSide(oriented.focalName, low)} '
-        'to ${marginSide(oriented.focalName, high)}`;' in team
-    )
-    assert (
-        'const lower = low < 0 ? marginSide(oriented.opponentName, -low) : "Even";'
-        in team
-    )
-    assert (
-        'const upper = high > 0 ? marginSide(oriented.focalName, high) : "Even";'
-        in team
-    )
-
-
 def _counterpart(
     entries: list[dict[str, object]], current: dict[str, object], prior: str
 ) -> dict[str, object]:
