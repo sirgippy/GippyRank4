@@ -1299,6 +1299,12 @@ def build_snapshot(
         )
         metadata["team_season_path"] = "team_seasons.json"
         metadata["team_season_schema_version"] = team_season["schema_version"]
+        retrospective = team_season.get("retrospective_game_expectations")
+        if isinstance(retrospective, dict):
+            metadata["retrospective_game_expectations_path"] = "team_seasons.json"
+            metadata["retrospective_game_expectations_version"] = retrospective.get(
+                "retrospective_game_expectations_version"
+            )
         (directory / "team_seasons.json").write_text(
             json.dumps(team_season, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
