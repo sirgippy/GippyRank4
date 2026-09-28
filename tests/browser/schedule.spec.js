@@ -25,6 +25,26 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
+test.describe("cross-surface date display", () => {
+  test.use({ timezoneId: "America/Los_Angeles" });
+
+  test("keeps a future calendar anchor on the same day without a kickoff time", async ({ page }) => {
+    const snapshot = "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3";
+    const gameId = "401856712";
+    await page.goto(`/team.html?team=61&season=2026&family=predictive&prior=context&snapshot=${snapshot}`);
+    const teamDate = page.locator(`.game-card[data-game-id="${gameId}"] .game-date`);
+    await expect(teamDate).toContainText("Oct 10");
+
+    await loadSchedule(page, `/schedule.html?season=2026&family=predictive&prior=context&snapshot=${snapshot}&week=6`);
+    const weekly = page.locator(`.weekly-game-card[data-game-id="${gameId}"]`);
+    await expect(weekly.locator(".weekly-game-date strong")).toHaveText("Oct 10");
+    await expect(weekly.locator(".weekly-game-date span")).toHaveCount(0);
+    await expect(weekly.locator(".weekly-date-heading")).toHaveCount(0);
+    await expect(weekly.locator("xpath=ancestor::section[contains(@class,'weekly-date-group')]").locator(".weekly-date-heading"))
+      .toHaveText("Oct 10, 2026");
+  });
+});
+
 async function loadSchedule(page, path = "/schedule.html") {
   await page.goto(path);
   await expect(page.locator("#schedule-page-title")).toHaveText("Schedule");

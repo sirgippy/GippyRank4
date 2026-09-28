@@ -40,7 +40,7 @@ test("keeps current Georgia results, checkpoint movement, and future predictions
   await expect(page.locator(".team-schedule-heading .team-page-help summary")).toHaveText("How to read games");
   await expect(page.locator("#team-page-status")).toBeHidden();
   await expect(page.getByRole("group", { name: "Scheduled games and model updates" }).getByRole("article")).toHaveCount(12);
-  await expect(page.getByRole("group", { name: "Scheduled games and model updates" }).getByRole("article", { name: "Oklahoma" })).toHaveCount(1);
+  await expect(page.getByRole("group", { name: "Scheduled games and model updates" }).getByRole("article", { name: /W4 · Sep 26 Oklahoma/ })).toHaveCount(1);
   await expect(page.locator("#schedule-list").getByRole("note")).toHaveCount(4);
   await expect(page.locator(".schedule-checkpoint")).toHaveCount(4);
   await expect(page.locator(".schedule-checkpoint").last()).toContainText("Week 5 update");
@@ -153,6 +153,17 @@ test("refuses a future forecast with a conflicting displayed team name", async (
   const game = page.locator('.game-card[data-game-id="401856712"]');
   await expect(game).toContainText("Prediction unavailable because published game data conflict");
   await expect(game.locator(".game-prediction")).toHaveCount(0);
+});
+
+test("rejects an invalid probability pair instead of calling it near-even", async ({ page }) => {
+  const artifact = siteArtifact("team-seasons", current);
+  artifact.future_predictions["401856712"].home_win_probability = 0.4;
+  artifact.future_predictions["401856712"].away_win_probability = 0.4;
+  await page.route(`**/data/team-seasons/${current}.json`, (route) => route.fulfill({ json: artifact }));
+  await loadTeam(page, "61");
+  const game = page.locator('.game-card[data-game-id="401856712"]');
+  await expect(game).toContainText("Prediction unavailable because published game data conflict");
+  await expect(game).not.toContainText("Near-even matchup");
 });
 
 test("renders cancelled and unresolved entries without fabricated analysis", async ({ page }) => {
@@ -401,6 +412,20 @@ test("keeps desktop disclosure copy beside its chevron and aligned with the matc
   }
 });
 
+test("uses desktop detail width without wrapping ordinary margin ranges", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop");
+  await loadTeam(page, "61");
+  const game = page.locator('.game-card[data-game-id="401856700"]');
+  await game.locator(".game-distribution-disclosure summary").click();
+  const range = game.locator(".retrospective-margin-facts dd").nth(1);
+  const lines = await range.evaluate((element) => {
+    const selection = document.createRange();
+    selection.selectNodeContents(element);
+    return selection.getClientRects().length;
+  });
+  expect(lines).toBe(1);
+});
+
 test("places a checkpoint after included evidence even when the next kickoff precedes its cutoff", async ({ page }) => {
   const artifact = siteArtifact("team-seasons", current);
   const trajectory = siteArtifact("team-trajectories", current);
@@ -453,6 +478,22 @@ test("describes evidence removed at a checkpoint", async ({ page }) => {
   await page.route(`**/data/team-trajectories/${current}.json`, (route) => route.fulfill({ json: trajectory }));
   await loadTeam(page, "61");
   await expect(page.locator(".schedule-checkpoint")).toContainText("1 Georgia game removed from evidence");
+});
+
+test("describes both sides of a mixed evidence correction", async ({ page }) => {
+  const trajectory = siteArtifact("team-trajectories", current);
+  const before = structuredClone(trajectory.points.at(-1));
+  const after = structuredClone(before);
+  before.snapshot_id = "before-correction-test";
+  before.included_game_ids = before.included_game_ids.filter((id) => id !== "401856686");
+  after.included_game_ids = after.included_game_ids.filter((id) => id !== "401856700");
+  trajectory.points = [before, after];
+  await page.route(`**/data/team-trajectories/${current}.json`, (route) => route.fulfill({ json: trajectory }));
+  await loadTeam(page, "61");
+  const checkpoint = page.locator(".schedule-checkpoint");
+  await expect(checkpoint).toHaveAttribute("data-evidence-change", "mixed");
+  await expect(checkpoint).toContainText("1 Georgia game added to evidence");
+  await expect(checkpoint).toContainText("1 Georgia game removed from evidence");
 });
 
 test("does not attach an unrelated global removal to a team's checkpoint", async ({ page }) => {

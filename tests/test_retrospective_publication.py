@@ -35,14 +35,9 @@ def test_retained_predictive_snapshots_publish_completed_game_expectations() -> 
 
 
 def test_retrospective_records_match_schedule_participants_site_and_score() -> None:
-    path = ROOT / "site/data/team-seasons/2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3.json"
-    original = json.loads(path.read_text(encoding="utf-8"))
-    metadata = {
-        **original,
-        "retrospective_game_expectations_version": original[
-            "retrospective_game_expectations"
-        ]["retrospective_game_expectations_version"],
-    }
+    source = ROOT / "data/processed/snapshots/2026/2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3/predictive/context"
+    original = json.loads((source / "team_seasons.json").read_text(encoding="utf-8"))
+    metadata = json.loads((source / "metadata.json").read_text(encoding="utf-8"))
     expected_ids = set(original["included_game_ids"])
 
     def validate(artifact: dict) -> None:
@@ -60,7 +55,7 @@ def test_retrospective_records_match_schedule_participants_site_and_score() -> N
         return next(game for game in data["teams"]["61"]["games"] if game["game_id"] == game_id)
 
     mutations = (
-        (lambda data: record(data).update(home_team_id="999", away_team_id="998"), "wrong team"),
+        (lambda data: record(data).update(home_team_id="194", away_team_id="333"), "wrong team"),
         (lambda data: schedule_game(data).update(opponent_id="999"), "opponent mismatch"),
         (lambda data: schedule_game(data).update(game_id="other-game"), "another matchup"),
         (lambda data: record(data).update(neutral_site=True), "site orientation mismatch"),

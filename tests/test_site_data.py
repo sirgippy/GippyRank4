@@ -723,6 +723,19 @@ def test_weekly_artifact_deduplicates_games_and_reuses_canonical_sources(
     assert future["future_prediction_id"] in weekly["future_predictions"]
     assert future["home_performance"] is None
     assert future["away_performance"] is None
+    assert completed["date_display_mode"] == "local_time"
+    assert future["date_display_mode"] == "utc_calendar"
+    invalid = json.loads(json.dumps(weekly))
+    changed = next(
+        game for week in invalid["weeks"] for game in week["games"]
+        if game["game_id"] == future["game_id"]
+    )
+    changed["date_display_mode"] = "local_time"
+    rankings = json.loads(
+        (output / entry["data_path"].removeprefix("data/")).read_text()
+    )["rankings"]
+    with pytest.raises(SiteDataValidationError, match="weekly date display mode mismatch"):
+        site_data._validate_weekly_game_artifact(invalid, team_seasons, entry, rankings)
 
 
 def test_weekly_rank_lookup_matches_every_selected_ranking_view(
@@ -828,6 +841,7 @@ def test_weekly_builder_freezes_rank_and_marquee_v1_semantics() -> None:
             "game_id": game_id,
             "week": 2,
             "date": "2026-09-12T12:00:00Z",
+            "date_display_mode": "local_time" if state == "completed" else "utc_calendar",
             "opponent_id": away_id,
             "opponent_name": f"Team {away_id}",
             "opponent_classification": away_classification,
@@ -950,16 +964,9 @@ def test_weekly_kickoff_labels_and_groups_use_browser_local_time() -> None:
     week = (ROOT / "site/assets/week.js").read_text(encoding="utf-8")
     kickoff = datetime.fromisoformat("2026-09-13T02:15:00+00:00")
     assert kickoff.astimezone(ZoneInfo("America/Chicago")).date().isoformat() == "2026-09-12"
-    assert "function localDateKey(value)" in week
-    assert "date.getFullYear()" in week
-    assert "date.getMonth() + 1" in week
+    assert "function localDateKey(value, mode" in week
+    assert "date.getUTCDate()" in week
     assert "date.getDate()" in week
-    assert "const key = game.date ? localDateKey(game.date) : \"unknown\";" in week
-    assert "formatDate(group.date, true)" in week
-    date_formatter = week[week.index("function formatDate"):week.index("function formatTime")]
-    time_formatter = week[week.index("function formatTime"):week.index("function localDateKey")]
-    assert 'timeZone: "UTC"' not in date_formatter
-    assert 'timeZone: "UTC"' not in time_formatter
 
 
 def test_static_site_uses_manifest_logo_config_and_decorative_fallback() -> None:

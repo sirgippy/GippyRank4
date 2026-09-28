@@ -14,6 +14,8 @@ for (const [label, first, second, expected] of [
   ["less than 0.01%", 0.9999999, 0.0000001, [">99.99%", "<0.01%"]],
   ["invalid sum", 0.5, 0.4, ["Unavailable", "Unavailable"]],
   ["out of bounds", -0.1, 1.1, ["Unavailable", "Unavailable"]],
+  ["missing value", null, 1, ["Unavailable", "Unavailable"]],
+  ["nonnumeric value", "0.5", 0.5, ["Unavailable", "Unavailable"]],
 ]) {
   test(`matchupProbabilityPair: ${label}`, async () => {
     const { matchupProbabilityPair } = await modulePromise;

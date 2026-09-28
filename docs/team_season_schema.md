@@ -130,6 +130,10 @@ observed margin, mixture summaries/tails, and a compact display
 distribution. Team schedule entries point to their record with
 `retrospective_expectation_id`; this supplements rather than replaces the
 existing `game_rating` performance artifact.
+The source model artifact can also contain FCS/FCS evidence, but the published
+FBS team-season artifact retains only records with an FBS participant. Every
+retained FBS/FBS record has two matching team schedule projections; an FBS/FCS
+record has one. The original source artifact remains unchanged.
 
 See [retrospective_game_expectations.md](retrospective_game_expectations.md)
 for the statistical interpretation, snapshot boundary, rematch treatment,
@@ -194,13 +198,14 @@ completed game has a compact `game_rating` summary containing:
 - the fixed-scale integer 40-bin `display_pmf`, empirical `performance_percentile`, and
   presentation-only `performance_grade`.
 
-The browser-facing schedule also publishes `date_semantics` for each game.
-`kickoff_instant` means a scored game has an observed kickoff timestamp;
-consumers format its date in the viewer's local time zone. This includes
-scored `out_of_scope` games. `calendar_date` means the source timestamp is
-only a calendar anchor for an unscored game; consumers format its UTC calendar
-day without a local time-zone shift. Neither value asserts that a future
-kickoff time is confirmed.
+The browser-facing team and weekly schedules publish `date_display_mode` for
+each game. This is a display policy because the source has no reliable flag
+for a confirmed kickoff time. `local_time` applies to scored games, including
+scored `out_of_scope` games; consumers show their timezone-aware timestamp in
+the viewer's local time zone. `utc_calendar` applies to unscored games;
+consumers preserve the source timestamp's UTC calendar day and omit a kickoff
+time. A score establishes that the game happened, not the precision or original
+meaning of its timestamp.
 
 No full per-game PMF is serialized. Games after the selected cutoff retain
 schedule metadata but have null result, score, and rating fields. An eligible

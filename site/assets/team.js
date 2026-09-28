@@ -43,7 +43,7 @@ function formatDate(value, includeYear = true, timeZone = "UTC") {
 }
 
 function formatGameDate(game) {
-  const zone = game.date_semantics === "kickoff_instant"
+  const zone = game.date_display_mode === "local_time"
     ? Intl.DateTimeFormat().resolvedOptions().timeZone : "UTC";
   return formatDate(game.date, false, zone);
 }
@@ -1063,6 +1063,7 @@ function matchesScheduleExpectation(expectation, game, team) {
 function matchesSchedulePrediction(prediction, game, team, artifact) {
   if (!prediction || game.future_prediction_id !== game.game_id || prediction.game_id !== game.game_id
     || prediction.source_snapshot_id !== artifact.prediction_provenance?.source_snapshot_id) return false;
+  if (matchupProbabilityPair(prediction.home_win_probability, prediction.away_win_probability)[0] === "Unavailable") return false;
   const home = prediction.home_team_id === team.team_id;
   const away = prediction.away_team_id === team.team_id;
   if ((!home && !away) || (home ? prediction.away_team_id : prediction.home_team_id) !== game.opponent_id) return false;
@@ -1130,8 +1131,10 @@ function renderSchedule(artifact, entry, trajectory) {
     const item = node("article", "schedule-entry");
     const card = gameCard(game, cutoff, artifact, team);
     const heading = card.querySelector(".game-opponent");
+    const date = card.querySelector(".game-date");
+    date.id = `schedule-game-${game.game_id}-date`;
     heading.id = `schedule-game-${game.game_id}-opponent`;
-    item.setAttribute("aria-labelledby", heading.id);
+    item.setAttribute("aria-labelledby", `${date.id} ${heading.id}`);
     item.append(card);
     return item;
   });
@@ -1164,9 +1167,12 @@ function renderSchedule(artifact, entry, trajectory) {
         const change = addedIds.size || removedIds.size
           ? `No ${team.team_name} game changed` : "No new games included";
         checkpoint.querySelector(".schedule-checkpoint-values").append(node("span", "", change));
-      } else if (teamRemoved.length) {
-        checkpoint.dataset.evidenceChange = "removed";
-        checkpoint.querySelector(".schedule-checkpoint-values").append(node("span", "", `${teamRemoved.length} ${team.team_name} game${teamRemoved.length === 1 ? "" : "s"} removed from evidence`));
+      } else if (teamAdded.length || teamRemoved.length) {
+        checkpoint.dataset.evidenceChange = teamAdded.length && teamRemoved.length ? "mixed" : teamAdded.length ? "added" : "removed";
+        const changes = [];
+        if (teamAdded.length) changes.push(`${teamAdded.length} ${team.team_name} game${teamAdded.length === 1 ? "" : "s"} added to evidence`);
+        if (teamRemoved.length) changes.push(`${teamRemoved.length} ${team.team_name} game${teamRemoved.length === 1 ? "" : "s"} removed from evidence`);
+        checkpoint.querySelector(".schedule-checkpoint-values").append(node("span", "", changes.join(" · ")));
       }
       insertions.push({ afterGame, checkpoint });
     });

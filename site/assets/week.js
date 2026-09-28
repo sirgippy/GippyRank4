@@ -43,12 +43,13 @@ function ordinal(rank) {
   return `${rounded}${suffix}`;
 }
 
-function formatDate(value, includeYear = false) {
+function formatDate(value, includeYear = false, mode = "local_time") {
   if (!value) return "Date unavailable";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Date unavailable";
   return new Intl.DateTimeFormat("en-US", {
     month: "short", day: "numeric", ...(includeYear ? { year: "numeric" } : {}),
+    ...(mode === "utc_calendar" ? { timeZone: "UTC" } : {}),
   }).format(date);
 }
 
@@ -61,12 +62,13 @@ function formatTime(value) {
   }).format(date);
 }
 
-function localDateKey(value) {
+function localDateKey(value, mode = "local_time") {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "unknown";
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
+  const calendar = mode === "utc_calendar";
+  const month = String((calendar ? date.getUTCMonth() : date.getMonth()) + 1).padStart(2, "0");
+  const day = String(calendar ? date.getUTCDate() : date.getDate()).padStart(2, "0");
+  return `${calendar ? date.getUTCFullYear() : date.getFullYear()}-${month}-${day}`;
 }
 
 function publicationStatusLabel(entry) {
@@ -298,9 +300,11 @@ function stateLabel(game) {
 
 function gameCard(game, artifact, entry, week) {
   const article = node("article", `weekly-game-card weekly-game-${game.state}`);
+  article.dataset.gameId = game.game_id;
   const header = node("header", "weekly-game-header");
   const date = node("div", "weekly-game-date");
-  date.append(node("strong", "", formatDate(game.date)), node("span", "", formatTime(game.date)));
+  date.append(node("strong", "", formatDate(game.date, false, game.date_display_mode)));
+  if (game.date_display_mode === "local_time") date.append(node("span", "", formatTime(game.date)));
   header.append(date, node("span", "weekly-game-state", stateLabel(game)));
   const matchup = node("div", "weekly-matchup");
   const homeScore = game.score ? game.score.home : null;
@@ -410,17 +414,17 @@ function renderSchedule(week, artifact, entry) {
   const groups = [];
   const games = state.view === "marquee" ? (week.games || []).filter((game) => game.marquee) : (week.games || []);
   for (const game of games) {
-    const key = game.date ? localDateKey(game.date) : "unknown";
+    const key = game.date ? localDateKey(game.date, game.date_display_mode) : "unknown";
     let group = groups.find((item) => item.key === key);
     if (!group) {
-      group = { key, date: game.date, games: [] };
+      group = { key, games: [] };
       groups.push(group);
     }
     group.games.push(game);
   }
   const sections = groups.map((group) => {
     const section = node("section", "weekly-date-group");
-    section.append(node("h3", "weekly-date-heading", group.key === "unknown" ? "Date unavailable" : formatDate(group.date, true)));
+    section.append(node("h3", "weekly-date-heading", group.key === "unknown" ? "Date unavailable" : formatDate(`${group.key}T00:00:00Z`, true, "utc_calendar")));
     const cards = node("div", "weekly-game-grid");
     cards.append(...group.games.map((game) => gameCard(game, artifact, entry, week.key)));
     section.append(cards);

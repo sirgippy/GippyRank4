@@ -2938,14 +2938,15 @@ details[open] > .distribution-toggle {
 
 .game-retrospective-disclosure-content,
 .game-prediction-disclosure-content {
-  max-width: 510px;
+  width: 850px;
+  max-width: 100%;
   min-width: 0;
   padding: 8px 0 4px;
 }
 
 .retrospective-facts {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(140px, 0.6fr) minmax(0, 2fr);
   gap: 12px 20px;
 }
 

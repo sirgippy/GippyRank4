@@ -15,6 +15,7 @@ export function matchupProbability(value, other) {
 }
 
 export function matchupProbabilityPair(value, other) {
+  if (typeof value !== "number" || typeof other !== "number") return ["Unavailable", "Unavailable"];
   const first = Number(value);
   const second = Number(other);
   if (!Number.isFinite(first) || !Number.isFinite(second)

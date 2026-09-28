@@ -175,6 +175,95 @@ def test_completed_fbs_game_requires_both_schedule_projections() -> None:
         _validate(artifact, metadata)
 
 
+def test_retained_retrospective_requires_a_schedule_projection() -> None:
+    artifact, metadata = _source("context-v1.3")
+    for team_id in ("61", "201"):
+        artifact["teams"][team_id]["games"] = [
+            game for game in artifact["teams"][team_id]["games"]
+            if game["game_id"] != "401856700"
+        ]
+    with pytest.raises(SiteDataValidationError, match="missing schedule projections"):
+        _validate(artifact, metadata)
+
+
+def test_fbs_fcs_retrospective_requires_its_fbs_schedule_projection() -> None:
+    artifact, metadata = _source("context-v1.3")
+    artifact["teams"]["61"]["games"] = [
+        game for game in artifact["teams"]["61"]["games"]
+        if game["game_id"] != "401856658"
+    ]
+    with pytest.raises(SiteDataValidationError, match="missing schedule projections"):
+        _validate(artifact, metadata)
+
+
+def test_browser_artifact_excludes_fcs_only_retrospectives() -> None:
+    artifact, metadata = _source("context-v1.3")
+    source_games = artifact["retrospective_game_expectations"]["games"]
+    assert any(game["home_subdivision"] == game["away_subdivision"] == "fcs" for game in source_games.values())
+    snapshot = ROOT / "site/data/snapshots" / f"{metadata['snapshot_id']}.json"
+    rankings = json.loads(snapshot.read_text())["rankings"]
+    adapted = _validate_team_season_artifact(artifact, metadata, rankings)
+    browser_games = adapted["retrospective_game_expectations"]["games"]
+    assert all(game["home_subdivision"] == "fbs" or game["away_subdivision"] == "fbs" for game in browser_games.values())
+    assert len(browser_games) < len(source_games)
+
+
+def test_team_schedule_must_follow_date_order() -> None:
+    artifact, metadata = _source("context-v1.3")
+    games = artifact["teams"]["61"]["games"]
+    games[4], games[5] = games[5], games[4]
+    with pytest.raises(SiteDataValidationError, match="schedule .*order"):
+        _validate(artifact, metadata)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("site", "unknown", "invalid site"),
+        ("opponent_classification", "fcs", "invalid opponent classification"),
+        ("opponent_id", "missing-fbs", "invalid opponent classification"),
+        ("conference_game", "false", "invalid conference flag"),
+    ],
+)
+def test_schedule_row_base_contract(field: str, value: object, message: str) -> None:
+    artifact, metadata = _source("context-v1.3")
+    game = next(game for game in artifact["teams"]["61"]["games"] if game["game_id"] == "401856712")
+    game[field] = value
+    with pytest.raises(SiteDataValidationError, match=message):
+        _validate(artifact, metadata)
+
+
+@pytest.mark.parametrize("field,value", [("team_id", "201"), ("team_name", "Oklahoma")])
+def test_team_identity_is_rooted_in_rankings(field: str, value: str) -> None:
+    artifact, metadata = _source("context-v1.3")
+    artifact["teams"]["61"][field] = value
+    with pytest.raises(SiteDataValidationError, match="team identity differs from rankings"):
+        _validate(artifact, metadata)
+
+
+def test_consistently_rewritten_display_identity_still_fails_ranking_anchor() -> None:
+    artifact, metadata = _source("context-v1.3")
+    artifact["teams"]["61"]["team_name"] = "Fake Georgia"
+    for team in artifact["teams"].values():
+        for game in team["games"]:
+            if game["opponent_id"] == "61":
+                game["opponent_name"] = "Fake Georgia"
+    for prediction in artifact["future_predictions"].values():
+        for side in ("home", "away"):
+            if prediction[f"{side}_team_id"] == "61":
+                prediction[f"{side}_team_name"] = "Fake Georgia"
+    with pytest.raises(SiteDataValidationError, match="team identity differs from rankings"):
+        _validate(artifact, metadata)
+
+
+def test_scored_game_requires_timezone_aware_date() -> None:
+    artifact, metadata = _source("context-v1.3")
+    game = next(game for game in artifact["teams"]["61"]["games"] if game["game_id"] == "401856700")
+    game["date"] = game["date"].replace("Z", "").split("+")[0]
+    with pytest.raises(SiteDataValidationError, match="timezone-aware date"):
+        _validate(artifact, metadata)
+
+
 @pytest.mark.parametrize(
     "field,value",
     [
@@ -192,9 +281,8 @@ def test_fbs_schedule_display_identity_matches_canonical_team(
         if game["game_id"] == "401856700"
     )
     game[field] = value
-    with pytest.raises(
-        SiteDataValidationError, match="cross-team display identity mismatch"
-    ):
+    message = "invalid opponent classification" if field == "opponent_classification" else "cross-team display identity mismatch"
+    with pytest.raises(SiteDataValidationError, match=message):
         _validate(artifact, metadata)
 
 
@@ -230,7 +318,7 @@ def test_margin_median_must_lie_inside_central_intervals(kind: str) -> None:
         _validate(artifact, metadata)
 
 
-def test_scored_out_of_scope_date_is_a_kickoff_instant() -> None:
+def test_scored_out_of_scope_date_uses_local_display_policy() -> None:
     artifact, metadata = _source("context-v1.3")
     game = next(
         game
@@ -246,4 +334,4 @@ def test_scored_out_of_scope_date_is_a_kickoff_instant() -> None:
         for game in adapted["teams"]["61"]["games"]
         if game["game_id"] == "401856658"
     )
-    assert selected["date_semantics"] == "kickoff_instant"
+    assert selected["date_display_mode"] == "local_time"
