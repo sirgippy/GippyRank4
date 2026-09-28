@@ -99,3 +99,60 @@ def test_future_game_cannot_publish_completed_evidence() -> None:
     game.update({"result": "W", "score": {"team": 21, "opponent": 7}})
     with pytest.raises(SiteDataValidationError, match="future game .* has a result"):
         _validate(artifact, metadata)
+
+
+@pytest.mark.parametrize(
+    ("change", "message"),
+    [
+        ("swapped_sides", "prediction site orientation mismatch"),
+        ("neutral_site", "prediction site orientation mismatch"),
+        ("wrong_game_id", "prediction reference points at another matchup"),
+        ("missing_side", "missing FBS participant references"),
+    ],
+)
+def test_future_prediction_requires_exact_matchup_and_both_fbs_references(
+    change: str, message: str
+) -> None:
+    artifact, metadata = _source("context-v1.3")
+    prediction = artifact["future_predictions"]["401856712"]
+    if change == "swapped_sides":
+        prediction["home_team_id"], prediction["away_team_id"] = (
+            prediction["away_team_id"], prediction["home_team_id"]
+        )
+    elif change == "neutral_site":
+        prediction["neutral_site"] = True
+    elif change == "wrong_game_id":
+        artifact["future_predictions"]["wrong-matchup"] = artifact[
+            "future_predictions"
+        ].pop("401856712")
+        artifact["future_predictions"]["wrong-matchup"]["game_id"] = "wrong-matchup"
+        for team_id in ("61", "333"):
+            game = next(
+                game for game in artifact["teams"][team_id]["games"]
+                if game["game_id"] == "401856712"
+            )
+            game["future_prediction_id"] = "wrong-matchup"
+    else:
+        game = next(
+            game for game in artifact["teams"]["333"]["games"]
+            if game["game_id"] == "401856712"
+        )
+        game["future_prediction_id"] = None
+    with pytest.raises(SiteDataValidationError, match=message):
+        _validate(artifact, metadata)
+
+
+@pytest.mark.parametrize("field", ["date", "week", "game_state"])
+def test_fbs_schedule_projections_share_one_canonical_game(field: str) -> None:
+    artifact, metadata = _source("context-v1.3")
+    game = next(
+        game for game in artifact["teams"]["61"]["games"]
+        if game["game_id"] == "401856712"
+    )
+    game[field] = {
+        "date": "2026-10-11T04:00:00.000Z",
+        "week": 7,
+        "game_state": "unresolved",
+    }[field]
+    with pytest.raises(SiteDataValidationError, match="cross-team schedule mismatch"):
+        _validate(artifact, metadata)

@@ -9,7 +9,7 @@ const historical = "2026-weekly-2026-09-26T12-09-11.589245Z-context-v1.3";
 const logoResponse = '<svg xmlns="http://www.w3.org/2000/svg" width="60" height="40" viewBox="0 0 60 40"><rect width="60" height="40" rx="5" fill="#e0e8e2"/><path d="M12 26h36" stroke="#9bafa3" stroke-width="3"/></svg>';
 
 async function capture(browser, name, team, snapshot, viewport, target, expandGame) {
-  const context = await browser.newContext({ viewport, deviceScaleFactor: 1 });
+  const context = await browser.newContext({ viewport, deviceScaleFactor: 1, timezoneId: "America/Chicago" });
   const page = await context.newPage();
   await installStaticSiteRoute(page);
   await page.route("**/*", (route) => route.request().resourceType() === "image"

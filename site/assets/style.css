@@ -2883,14 +2883,12 @@ details[open] > .distribution-toggle {
 }
 
 .game-distribution-disclosure .distribution-toggle {
-  display: inline-flex;
-  justify-content: flex-start;
-  align-items: flex-end;
-  flex-wrap: nowrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
   gap: 8px;
   min-width: 0;
-  width: max-content;
-  max-width: 100%;
+  width: 100%;
   height: auto;
   padding: 0;
   border: 0;
@@ -2958,19 +2956,6 @@ details[open] > .distribution-toggle {
   max-width: 100%;
 }
 
-.retrospective-marker {
-  stroke-width: 2.2;
-}
-
-.retrospective-marker-expected {
-  stroke: #b08016;
-  stroke-dasharray: 4 2;
-}
-
-.retrospective-marker-actual {
-  stroke: #172b34;
-}
-
 .margin-interval-95 {
   fill: var(--green);
   opacity: 0.2;
@@ -3013,8 +2998,7 @@ details[open] > .distribution-toggle {
   font-size: 10px;
 }
 
-.retrospective-chart-legend,
-.future-interval-legend {
+.margin-marker-legend {
   display: flex;
   gap: 6px 18px;
   flex-wrap: wrap;
@@ -3023,8 +3007,8 @@ details[open] > .distribution-toggle {
   font-weight: 700;
 }
 
-.retrospective-legend-expected::before,
-.retrospective-legend-actual::before {
+.margin-marker-legend-expected::before,
+.margin-marker-legend-actual::before {
   content: "";
   display: inline-block;
   width: 12px;
@@ -3033,15 +3017,20 @@ details[open] > .distribution-toggle {
   border-top: 2px solid #172b34;
 }
 
-.retrospective-legend-expected::before {
+.margin-marker-legend-expected::before {
   border-color: #b08016;
   border-top-style: dashed;
 }
 
-.future-interval-marker {
+.margin-marker {
   stroke: #b08016;
   stroke-width: 2.2;
   stroke-dasharray: 4 2;
+}
+
+.margin-marker-actual {
+  stroke: #172b34;
+  stroke-dasharray: none;
 }
 
 .schedule-checkpoint {
@@ -3283,6 +3272,10 @@ details[open] > .distribution-toggle {
 
   .game-summary-copy {
     gap: 1px 7px;
+  }
+
+  .game-summary-separator {
+    display: none;
   }
 
   .retrospective-facts {

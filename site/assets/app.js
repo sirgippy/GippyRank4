@@ -1,3 +1,5 @@
+import { rankingPercentage as percentage } from "./probability.js";
+
 const pageParams = new URLSearchParams(window.location.search);
 const requestedSeason = pageParams.has("season") ? Number(pageParams.get("season")) : null;
 const state = {
@@ -69,17 +71,6 @@ function selectedEntry() { return choices().find((entry) => entry.publication_sl
 function familyLabel() { return state.family === "performance" ? "Performance" : "Predictive"; }
 function formatDate(value) { return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }).format(new Date(value)); }
 function formatTimestamp(value) { return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC", timeZoneName: "short" }).format(new Date(value)); }
-function percentage(value) {
-  const valueAsPercent = value * 100;
-  if (value === 1) return "100%";
-  if (valueAsPercent === 0) return "0%";
-  if (valueAsPercent < 0.01) return "<0.01%";
-  if (valueAsPercent < 1) return `${valueAsPercent.toFixed(valueAsPercent < 0.1 ? 2 : 1)}%`;
-  if (valueAsPercent < 10) return `${valueAsPercent.toFixed(1)}%`;
-  if (valueAsPercent >= 99.95) return "<100%";
-  if (valueAsPercent >= 95) return `${valueAsPercent.toFixed(1)}%`;
-  return `${Math.round(valueAsPercent)}%`;
-}
 
 function displayedRatedRows(snapshot) {
   return [...(snapshot?.rankings?.filter((row) => row.rated !== false) ?? [])].sort((left, right) => (

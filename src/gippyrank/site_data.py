@@ -1888,11 +1888,19 @@ def _validate_future_predictions(
                 f"{metadata['snapshot_id']}: schedule references missing prediction {prediction_id}"
             )
         prediction = prediction_map[prediction_id]
+        if len(references) != len({team_id for team_id, _ in references}):
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: duplicate prediction reference {prediction_id}"
+            )
         if prediction_id in expected_ids:
             raise SiteDataValidationError(
                 f"{metadata['snapshot_id']}: completed evidence has a future prediction"
             )
         for team_id, game in references:
+            if str(game.get("game_id")) != prediction_id:
+                raise SiteDataValidationError(
+                    f"{metadata['snapshot_id']}: prediction reference points at another matchup"
+                )
             if team_id not in {prediction["home_team_id"], prediction["away_team_id"]}:
                 raise SiteDataValidationError(
                     f"{metadata['snapshot_id']}: prediction is attached to the wrong team"
@@ -1901,6 +1909,17 @@ def _validate_future_predictions(
             if str(game.get("opponent_id")) != str(opponent_id):
                 raise SiteDataValidationError(
                     f"{metadata['snapshot_id']}: prediction opponent mismatch"
+                )
+            site = game.get("site")
+            if (
+                not isinstance(prediction["neutral_site"], bool)
+                or site not in {"home", "away", "neutral"}
+                or (site == "neutral") != prediction["neutral_site"]
+                or (site == "home" and team_id != str(prediction["home_team_id"]))
+                or (site == "away" and team_id != str(prediction["away_team_id"]))
+            ):
+                raise SiteDataValidationError(
+                    f"{metadata['snapshot_id']}: prediction site orientation mismatch"
                 )
             if game.get("result") is not None or game.get("score") is not None or game.get("game_rating") is not None or game.get("modeled"):
                 raise SiteDataValidationError(
@@ -1916,6 +1935,14 @@ def _validate_future_predictions(
         if str(prediction_id) not in referenced_ids:
             raise SiteDataValidationError(
                 f"{metadata['snapshot_id']}: unreferenced future prediction {prediction_id}"
+            )
+        prediction = prediction_map[prediction_id]
+        participants = {str(prediction["home_team_id"]), str(prediction["away_team_id"])}
+        required = participants & set(by_team)
+        referenced = {team_id for team_id, _ in referenced_ids[str(prediction_id)]}
+        if referenced != required:
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: prediction {prediction_id} is missing FBS participant references"
             )
     _validate_future_display(artifact, str(metadata["snapshot_id"]))
 
@@ -2883,6 +2910,36 @@ def _validate_team_season_artifact(
                     raise SiteDataValidationError(
                         f"{snapshot_id}: game rating performance grade disagrees with percentile"
                     )
+    canonical_games: dict[str, tuple[str, dict[str, Any]]] = {}
+    for team_id in ranking_ids:
+        for game in by_team[team_id]["games"]:
+            game_id = str(game["game_id"])
+            counterpart = canonical_games.get(game_id)
+            if counterpart is None:
+                canonical_games[game_id] = (team_id, game)
+                continue
+            other_team_id, other = counterpart
+            shared_fields = (
+                "date", "week", "game_state", "season_type", "conference_game", "modeled"
+            )
+            if (
+                str(game.get("opponent_id")) != other_team_id
+                or str(other.get("opponent_id")) != team_id
+                or any(game.get(field) != other.get(field) for field in shared_fields)
+                or (game.get("site"), other.get("site")) not in {
+                    ("home", "away"), ("away", "home"), ("neutral", "neutral")
+                }
+                or game.get("score") != (
+                    {"team": other["score"].get("opponent"), "opponent": other["score"].get("team")}
+                    if isinstance(other.get("score"), dict) else None
+                )
+                or game.get("result") != {
+                    "W": "L", "L": "W", "T": "T", None: None
+                }.get(other.get("result"), "invalid")
+            ):
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: cross-team schedule mismatch for game {game_id}"
+                )
     _validate_performance_display(artifact, snapshot_id, ratings_count)
     retrospective_ids = _validate_retrospective_game_expectations(
         artifact, source_metadata, expected_ids, by_team
@@ -2904,6 +2961,25 @@ def _validate_team_season_artifact(
     )
     _validate_season_simulation(artifact, source_metadata, rankings)
     adapted = dict(artifact)
+    adapted["teams"] = {
+        team_id: {
+            **team,
+            "games": [
+                {
+                    **game,
+                    # The source has no reliable kickoff-known flag. A future
+                    # timestamp is a calendar anchor; completed rows have an
+                    # observed kickoff instant.
+                    "date_semantics": (
+                        "kickoff_instant" if game.get("game_state") == "completed"
+                        else "calendar_date"
+                    ),
+                }
+                for game in team.get("games", [])
+            ],
+        }
+        for team_id, team in by_team.items()
+    }
     adapted["snapshot_id"] = snapshot_id
     adapted["season"] = metadata["season"]
     adapted["snapshot_type"] = metadata["snapshot_type"]

@@ -1867,10 +1867,11 @@ def test_uncertainty_copy_uses_central_interval_language() -> None:
 
 
 def test_percentage_formatter_preserves_nonzero_and_noncertainty_distinctions() -> None:
-    """Keep lightweight static coverage because this dependency-free site has no JS runner."""
+    """Rankings deliberately retain finer tails through the shared formatter."""
     app = (ROOT / "site/assets/app.js").read_text(encoding="utf-8")
-    assert 'if (value === 1) return "100%";' in app
-    assert 'if (valueAsPercent < 0.01) return "<0.01%";' in app
-    assert 'if (valueAsPercent >= 99.95) return "<100%";' in app
-    assert 'if (valueAsPercent >= 95) return `${valueAsPercent.toFixed(1)}%`;' in app
-    assert 'return `${Math.round(valueAsPercent)}%`;' in app
+    probability = (ROOT / "site/assets/probability.js").read_text(encoding="utf-8")
+    assert 'import { rankingPercentage as percentage } from "./probability.js";' in app
+    assert 'if (percent === 100) return "100%";' in probability
+    assert 'if (percent < 0.01) return "<0.01%";' in probability
+    assert 'if (percent >= 99.95) return "<100%";' in probability
+    assert 'if (percent < 10 || percent >= 95)' in probability

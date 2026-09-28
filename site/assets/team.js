@@ -1,4 +1,4 @@
-import { percentage, matchupProbability } from "./probability.js";
+import { percentage, matchupProbability, matchupProbabilityPair } from "./probability.js";
 
 const $ = (selector) => document.querySelector(selector);
 const params = new URLSearchParams(window.location.search);
@@ -35,10 +35,17 @@ function teamLogo(teamId, className = "team-logo") {
   return frame;
 }
 
-function formatDate(value, includeYear = true) {
+function formatDate(value, includeYear = true, timeZone = "UTC") {
   return new Intl.DateTimeFormat("en-US", {
     month: "short", day: "numeric", ...(includeYear ? { year: "numeric" } : {}),
+    timeZone,
   }).format(new Date(value));
+}
+
+function formatGameDate(game) {
+  const zone = game.date_semantics === "kickoff_instant"
+    ? Intl.DateTimeFormat().resolvedOptions().timeZone : "UTC";
+  return formatDate(game.date, false, zone);
 }
 
 function tailPercentage(value) {
@@ -119,16 +126,18 @@ function marginAxisRange(axis) {
   return minimum === -maximum ? `±${maximum}` : `${minimum} to ${maximum}`;
 }
 
-function addZeroReference(svg, minimum, maximum) {
+function addZeroReference(svg, minimum, maximum, labelZero = true) {
   if (minimum > 0 || maximum < 0) return;
   const x = plotX(0, minimum, maximum);
   svg.append(svgElement("line", { x1: x, y1: DISTRIBUTION_PLOT.zeroTop, x2: x, y2: DISTRIBUTION_PLOT.baseline + 3, class: "distribution-zero" }));
-  const label = svgElement("text", { x: x + 3, y: 81, class: "distribution-zero-label" });
-  label.textContent = "Even";
-  svg.append(label);
+  if (labelZero) {
+    const label = svgElement("text", { x: x + 3, y: 81, class: "distribution-zero-label" });
+    label.textContent = "Even";
+    svg.append(label);
+  }
 }
 
-function addMarginMarkers(svg, markers, minimum, maximum, retrospective) {
+function addMarginMarkers(svg, markers, minimum, maximum) {
   const placed = markers.map((marker) => ({
     ...marker,
     x: plotX(marker.value, minimum, maximum),
@@ -141,7 +150,7 @@ function addMarginMarkers(svg, markers, minimum, maximum, retrospective) {
       y1: collide && marker.kind === "actual" ? DISTRIBUTION_PLOT.splitActualTop : DISTRIBUTION_PLOT.markerTop,
       x2: marker.x,
       y2: collide && marker.kind === "expected" ? DISTRIBUTION_PLOT.splitExpectedBottom : DISTRIBUTION_PLOT.markerBottom,
-      class: retrospective ? `retrospective-marker retrospective-marker-${marker.kind}` : "future-interval-marker",
+      class: `margin-marker margin-marker-${marker.kind}`,
       "data-margin": marker.value,
       ...(marker.side ? { "data-clipped": marker.side } : {}),
     }));
@@ -149,9 +158,9 @@ function addMarginMarkers(svg, markers, minimum, maximum, retrospective) {
   return { placed, collide };
 }
 
-function addMarkerLegend(figure, markers, retrospective) {
-  const legend = node("p", retrospective ? "retrospective-chart-legend" : "future-interval-legend");
-  markers.forEach((marker) => legend.append(node("span", marker.kind === "expected" ? "retrospective-legend-expected" : "retrospective-legend-actual", `${marker.kind === "expected" ? "Expected" : "Actual"} ${marker.text}`)));
+function addMarkerLegend(figure, markers) {
+  const legend = node("p", "margin-marker-legend");
+  markers.forEach((marker) => legend.append(node("span", `margin-marker-legend-${marker.kind}`, `${marker.kind === "expected" ? "Expected" : "Actual"} ${marker.text}`)));
   figure.append(legend);
 }
 
@@ -163,7 +172,8 @@ function offAxisTailNote(display, axis, kind, oriented, widened = false) {
   const sides = [
     [lower, `${oriented.opponentName} by ${Math.abs(axis.min_margin)}`],
     [upper, `${oriented.focalName} by ${axis.max_margin}`],
-  ].filter(([mass]) => mass >= 0.001).map(([mass, edge]) => `${percentage(mass)} of ${kind === "future" ? "predicted" : "expected"} outcomes lie beyond ${edge}`);
+  ].filter(([mass]) => mass >= 0.01 || (mass > 0 && lower < 0.01 && upper < 0.01))
+    .map(([mass, edge]) => `${mass < 0.01 ? "<1%" : percentage(mass)} of ${kind === "future" ? "predicted" : "expected"} outcomes lie beyond ${edge}`);
   const subject = kind === "future" ? "predicted" : "expected";
   const summary = `${sides.join("; ")}. The standard ${marginAxisRange(axis)}-point range clips these ${subject} outcomes.`;
   return widened ? `${summary} Intervals use a wider axis.` : summary;
@@ -191,7 +201,7 @@ function densitySvg(masses, {
   desc.textContent = description;
   svg.append(title, desc);
   svg.append(svgElement("line", { x1: left, y1: baseline, x2: right, y2: baseline, class: "distribution-baseline" }));
-  if (zeroAxis) addZeroReference(svg, Number(zeroAxis.min_margin), Number(zeroAxis.max_margin));
+  if (zeroAxis) addZeroReference(svg, Number(zeroAxis.min_margin), Number(zeroAxis.max_margin), false);
   const barWidth = plotWidth / values.length;
   values.forEach((value, index) => {
     const barHeight = (value / maximum) * DISTRIBUTION_PLOT.barMaxHeight;
@@ -315,7 +325,7 @@ function marginIntervalChart({ kind, oriented, axis, display, intervals, markers
     }));
   });
   addZeroReference(svg, minimum, maximum);
-  const { collide } = addMarginMarkers(svg, markers, minimum, maximum, kind === "retrospective");
+  const { collide } = addMarginMarkers(svg, markers, minimum, maximum);
   if (collide) desc.textContent += " Expected and actual markers are vertically separated where their values overlap.";
   const figure = node("figure", `game-distribution game-distribution-${kind} game-distribution-interval`);
   figure.append(svg);
@@ -325,7 +335,7 @@ function marginIntervalChart({ kind, oriented, axis, display, intervals, markers
   const bands = node("p", "margin-interval-legend");
   [95, 80, 50].forEach((level) => bands.append(node("span", `margin-interval-key margin-interval-key-${level}`, `Central ${level}%`)));
   figure.append(bands);
-  addMarkerLegend(figure, markers, kind === "retrospective");
+  addMarkerLegend(figure, markers);
   const tailNote = offAxisTailNote(display, axis, kind, oriented, true);
   if (tailNote) figure.append(node("p", "distribution-tail-note", tailNote));
   return figure;
@@ -361,7 +371,7 @@ function retrospectiveChart(expectation, team, axis, oriented) {
     { kind: "expected", value: oriented.expected, text: oriented.expectedText },
     { kind: "actual", value: oriented.actual, text: oriented.actualText },
   ];
-  const { placed, collide: markersCollide } = addMarginMarkers(svg, markers, minimum, maximum, true);
+  const { placed, collide: markersCollide } = addMarginMarkers(svg, markers, minimum, maximum);
   figure.append(svg);
   const caption = node("figcaption", "distribution-axis");
   caption.append(
@@ -370,7 +380,7 @@ function retrospectiveChart(expectation, team, axis, oriented) {
     node("span", "axis-end", `${oriented.focalName} by ${maximum}`),
   );
   figure.append(caption);
-  addMarkerLegend(figure, markers, true);
+  addMarkerLegend(figure, markers);
   const tailNote = offAxisTailNote(display, axis, "retrospective", oriented);
   if (tailNote) figure.append(node("p", "distribution-tail-note", tailNote));
   const clipped = placed.filter(({ side }) => side);
@@ -934,10 +944,12 @@ function predictionRange(oriented, interval) {
 
 function predictionPanel(prediction, team, axis) {
   const oriented = orientedPrediction(prediction, team);
-  const favorite = oriented.focalWin >= oriented.opponentWin ? [oriented.focalName, oriented.focalWin] : [oriented.opponentName, oriented.opponentWin];
+  const [focalProbability, opponentProbability] = matchupProbabilityPair(oriented.focalWin, oriented.opponentWin);
+  const favorite = oriented.focalWin >= oriented.opponentWin
+    ? [oriented.focalName, focalProbability] : [oriented.opponentName, opponentProbability];
   const panel = node("div", "game-prediction");
   const expectedText = oriented.expected >= 0 ? marginSide(oriented.focalName, oriented.expected) : marginSide(oriented.opponentName, -oriented.expected);
-  const favoriteText = Math.round(favorite[1] * 100) === 50 ? "Near-even matchup" : `${favorite[0]} ${percentage(favorite[1])} to win`;
+  const favoriteText = focalProbability === opponentProbability ? "Near-even matchup" : `${favorite[0]} ${favorite[1]} to win`;
   const titleText = `${favoriteText} · ${expectedText}`;
   const title = node("strong", "game-prediction-title");
   const marginChunk = node("span", "game-prediction-chunk game-prediction-margin");
@@ -947,7 +959,7 @@ function predictionPanel(prediction, team, axis) {
   const chart = futureChart(prediction, team, axis, oriented);
   if (chart) detail.append(chart);
   const list = node("dl", "game-facts");
-  [[`${oriented.focalName} win probability`, matchupProbability(oriented.focalWin, oriented.opponentWin)], [`${oriented.opponentName} win probability`, matchupProbability(oriented.opponentWin, oriented.focalWin)], ["Expected margin", expectedText], ["Median margin", oriented.median >= 0 ? marginSide(oriented.focalName, oriented.median) : marginSide(oriented.opponentName, -oriented.median)], ["Central 50% range", predictionRange(oriented, oriented.interval50)], ["Central 80% range", predictionRange(oriented, oriented.interval80)], ["Central 95% range", predictionRange(oriented, oriented.interval95)], ["Prediction source", prediction.prediction_source === "predictive_history" ? "Predictive History" : "Predictive Context"]].forEach(([label, value]) => list.append(node("dt", "", label), node("dd", "", value)));
+  [[`${oriented.focalName} win probability`, focalProbability], [`${oriented.opponentName} win probability`, opponentProbability], ["Expected margin", expectedText], ["Median margin", oriented.median >= 0 ? marginSide(oriented.focalName, oriented.median) : marginSide(oriented.opponentName, -oriented.median)], ["Central 50% range", predictionRange(oriented, oriented.interval50)], ["Central 80% range", predictionRange(oriented, oriented.interval80)], ["Central 95% range", predictionRange(oriented, oriented.interval95)], ["Prediction source", prediction.prediction_source === "predictive_history" ? "Predictive History" : "Predictive Context"]].forEach(([label, value]) => list.append(node("dt", "", label), node("dd", "", value)));
   detail.append(list);
   const distribution = disclosure("predictive margin distribution", detail, "distribution-disclosure game-distribution-disclosure", titleText);
   const copy = node("span", "game-summary-copy");
@@ -1049,11 +1061,22 @@ function matchesScheduleExpectation(expectation, game, team) {
     && expectation.actual_home_margin === (home ? score.team - score.opponent : score.opponent - score.team);
 }
 
+function matchesSchedulePrediction(prediction, game, team, artifact) {
+  if (!prediction || game.future_prediction_id !== game.game_id || prediction.game_id !== game.game_id
+    || prediction.source_snapshot_id !== artifact.prediction_provenance?.source_snapshot_id) return false;
+  const home = prediction.home_team_id === team.team_id;
+  const away = prediction.away_team_id === team.team_id;
+  if ((!home && !away) || (home ? prediction.away_team_id : prediction.home_team_id) !== game.opponent_id) return false;
+  if (!["home", "away", "neutral"].includes(game.site) || typeof prediction.neutral_site !== "boolean") return false;
+  return prediction.neutral_site === (game.site === "neutral")
+    && (game.site !== "home" || home) && (game.site !== "away" || away);
+}
+
 function gameCard(game, cutoff, artifact, team) {
   const item = node("div", "game-card");
   item.dataset.gameId = game.game_id;
   const header = node("div", "game-card-header");
-  header.append(node("p", "game-date", game.week === null ? formatDate(game.date, false) : `W${game.week} · ${formatDate(game.date, false)}`));
+  header.append(node("p", "game-date", game.week === null ? formatGameDate(game) : `W${game.week} · ${formatGameDate(game)}`));
   const opponent = node("h3", "game-opponent", game.opponent_name || game.opponent_id || "Unknown opponent");
   const opponentHeading = node("div", "game-opponent-row");
   const logo = teamLogo(game.opponent_id);
@@ -1071,8 +1094,12 @@ function gameCard(game, cutoff, artifact, team) {
   const body = node("div", "game-card-body");
   if (state === "future") {
     const prediction = artifact.future_predictions?.[game.future_prediction_id];
-    if (prediction) body.append(predictionPanel(prediction, team, artifact.future_margin_axis));
-    else body.append(node("p", "game-not-modeled", "Prediction unavailable"));
+    if (prediction && matchesSchedulePrediction(prediction, game, team, artifact)) {
+      body.append(predictionPanel(prediction, team, artifact.future_margin_axis));
+    } else if (prediction || game.future_prediction_id || artifact.future_predictions?.[game.game_id]) {
+      body.append(node("p", "game-artifact-error", "Prediction unavailable because published game data conflict."));
+      console.error("Future prediction conflicts with the schedule", { gameId: game.game_id, teamId: team.team_id });
+    } else body.append(node("p", "game-not-modeled", "Prediction unavailable"));
   } else if (state === "completed") {
     const expectations = artifact.retrospective_game_expectations;
     const expectation = expectations?.games?.[game.retrospective_expectation_id || game.game_id];
@@ -1103,6 +1130,7 @@ function renderSchedule(artifact, entry, trajectory) {
     item.append(gameCard(game, cutoff, artifact, team));
     return item;
   });
+  const checkpointsByGame = new Map();
   const selectedIndex = trajectory?.points?.findIndex((point) => point.snapshot_id === entry.snapshot_id) ?? -1;
   if (selectedIndex > 0) {
     const points = trajectory.points.slice(0, selectedIndex + 1);
@@ -1113,29 +1141,37 @@ function renderSchedule(artifact, entry, trajectory) {
       const beforeIds = new Set(points[index].included_game_ids || []);
       const afterIds = new Set(after.included_game_ids || []);
       const addedIds = new Set([...afterIds].filter((gameId) => !beforeIds.has(gameId)));
-      const addedTeamGame = games.some((game) => addedIds.has(game.game_id));
+      const removedIds = new Set([...beforeIds].filter((gameId) => !afterIds.has(gameId)));
+      const changedTeamGame = games.some((game) => addedIds.has(game.game_id) || removedIds.has(game.game_id));
       let afterGame = -1;
       games.forEach((game, gameIndex) => {
-        if (afterIds.has(game.game_id) && (addedIds.has(game.game_id) || !addedIds.size)) afterGame = gameIndex;
+        if (addedIds.has(game.game_id) || removedIds.has(game.game_id)) afterGame = gameIndex;
       });
       if (afterGame < 0) {
         games.forEach((game, gameIndex) => {
           if (beforeIds.has(game.game_id)) afterGame = gameIndex;
         });
       }
-      if (!addedTeamGame) {
+      if (!changedTeamGame) {
         checkpoint.dataset.evidenceChange = "none";
-        checkpoint.querySelector(".schedule-checkpoint-values").append(node("span", "", addedIds.size ? `No new ${team.team_name} game included` : "No new games included"));
+        const change = removedIds.size
+          ? `No ${team.team_name} game changed; ${removedIds.size} game${removedIds.size === 1 ? "" : "s"} removed from evidence`
+          : addedIds.size ? `No new ${team.team_name} game included` : "No new games included";
+        checkpoint.querySelector(".schedule-checkpoint-values").append(node("span", "", change));
+      } else if (removedIds.size) {
+        checkpoint.dataset.evidenceChange = "removed";
+        checkpoint.querySelector(".schedule-checkpoint-values").append(node("span", "", `${removedIds.size} game${removedIds.size === 1 ? "" : "s"} removed from evidence`));
       }
       insertions.push({ afterGame, checkpoint });
     });
     insertions.forEach(({ afterGame, checkpoint }) => {
-      if (afterGame >= 0) items[afterGame].append(checkpoint);
-      else if (items.length) items[0].prepend(checkpoint);
-      else items.push(checkpoint);
+      if (!checkpointsByGame.has(afterGame)) checkpointsByGame.set(afterGame, []);
+      checkpointsByGame.get(afterGame).push(checkpoint);
     });
   }
-  $("#schedule-list").replaceChildren(...items);
+  const content = [...(checkpointsByGame.get(-1) || [])];
+  items.forEach((item, index) => content.push(item, ...(checkpointsByGame.get(index) || [])));
+  $("#schedule-list").replaceChildren(...content);
 }
 
 function publicationStatusLabel(entry) {

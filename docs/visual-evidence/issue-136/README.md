@@ -4,6 +4,7 @@ These PNGs were rendered from the retained 2026 production artifacts with
 `node scripts/capture-issue-136.cjs` against the repository's Playwright
 Chromium server. The script routes this worktree's `site/` files directly and
 uses local neutral 60×40 image placeholders to preserve opponent-logo geometry.
+The browser timezone is fixed to America/Chicago for reproducible dates.
 
 | Capture | What to inspect |
 | --- | --- |
