@@ -162,13 +162,16 @@ def _int_or_none(value: object) -> int | None:
         return None
 
 
-def _week(value: object) -> int | str | None:
+def _week(value: object) -> int | None:
     if value is None or str(value).strip() == "":
         return None
     try:
-        return int(value)
-    except (TypeError, ValueError):
-        return str(value)
+        week = int(value)
+    except (TypeError, ValueError) as error:
+        raise ValueError(f"unsupported schedule week: {value!r}") from error
+    if week < 0:
+        raise ValueError(f"unsupported schedule week: {value!r}")
+    return week
 
 
 def _schedule_datetime(value: object) -> datetime | None:
@@ -182,7 +185,7 @@ def _schedule_datetime(value: object) -> datetime | None:
 
 
 def _future_at_snapshot(row: dict[str, str], metadata: dict[str, Any]) -> bool:
-    """Return whether a schedule row is strictly after the snapshot cutoff."""
+    """Treat an unscored schedule date as a UTC calendar anchor, not kickoff."""
 
     when = _schedule_datetime(row.get("startDate"))
     if when is None:
@@ -191,7 +194,7 @@ def _future_at_snapshot(row: dict[str, str], metadata: dict[str, Any]) -> bool:
     if cutoff_value is None:
         return True
     cutoff = _schedule_datetime(cutoff_value)
-    return cutoff is not None and when > cutoff
+    return cutoff is not None and when.astimezone(UTC).date() >= cutoff.astimezone(UTC).date()
 
 
 def _schedule_state(row: dict[str, str], metadata: dict[str, Any]) -> str:
@@ -208,7 +211,9 @@ def _schedule_state(row: dict[str, str], metadata: dict[str, Any]) -> str:
     cutoff = _schedule_datetime(metadata.get("effective_cutoff"))
     if when is None or cutoff is None:
         return "unresolved"
-    if when > cutoff:
+    if _future_at_snapshot(row, metadata) and str(row.get("id", "")) not in {
+        str(game_id) for game_id in metadata.get("included_game_ids", [])
+    }:
         return "future"
     if _bool(row.get("completed")):
         home_points = _int_or_none(row.get("homePoints"))
@@ -597,7 +602,7 @@ def build_team_season_artifact(
             team_games[focal_id].append(entry)
 
     for entries in team_games.values():
-        entries.sort(key=lambda entry: (str(entry["date"]), str(entry["game_id"])))
+        entries.sort(key=lambda entry: (_schedule_datetime(entry["date"]), str(entry["game_id"])))
 
     season_simulation = None
     if likelihood is not None:

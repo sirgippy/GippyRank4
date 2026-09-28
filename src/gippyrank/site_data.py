@@ -1650,6 +1650,13 @@ def _validate_retrospective_game_expectations(
                 raise SiteDataValidationError(
                     f"{snapshot_id}: retrospective game {game_id} opponent mismatch"
                 )
+            opponent_side = "away" if team_id == home_id else "home"
+            if schedule_game.get("opponent_classification") != str(
+                game[f"{opponent_side}_subdivision"]
+            ).casefold():
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: retrospective game {game_id} opponent subdivision mismatch"
+                )
             site = schedule_game.get("site")
             if (
                 (site == "neutral") != game["neutral_site"]
@@ -1962,9 +1969,9 @@ def _validate_future_predictions(
                 )
             if cutoff is not None:
                 game_date = _iso_datetime(game.get("date"))
-                if game_date is None or game_date <= cutoff:
+                if game_date is None or game_date.astimezone(UTC).date() < cutoff.astimezone(UTC).date():
                     raise SiteDataValidationError(
-                        f"{metadata['snapshot_id']}: future prediction is not strictly after cutoff"
+                        f"{metadata['snapshot_id']}: future prediction precedes cutoff calendar day"
                     )
     for prediction_id in prediction_map:
         if str(prediction_id) not in referenced_ids:
@@ -2543,6 +2550,14 @@ def build_weekly_game_artifact(
             else:
                 if (record["home_team_id"], record["away_team_id"]) != (home_id, away_id):
                     raise SiteDataValidationError(f"weekly game {game_id} has inconsistent home/away sides")
+                if record["home_team"] != _weekly_team_descriptor(
+                    home_id, home_name, home_subdivision, home_conference
+                ) or record["away_team"] != _weekly_team_descriptor(
+                    away_id, away_name, away_subdivision, away_conference
+                ):
+                    raise SiteDataValidationError(
+                        f"weekly game {game_id} has conflicting team descriptors"
+                    )
                 if (
                     record["week"] != entry.get("week")
                     or record["date"] != entry.get("date")
@@ -2825,6 +2840,7 @@ def _validate_team_season_artifact(
     if not isinstance(by_team, dict):
         raise SiteDataValidationError(f"{snapshot_id}: team-season teams must be an object")
     ranking_names = {str(row["team_id"]): row["team_name"] for row in rankings}
+    ranking_conferences = {str(row["team_id"]): str(row.get("conference") or "") for row in rankings}
     ranking_ids = set(ranking_names)
     if set(by_team) != ranking_ids:
         raise SiteDataValidationError(f"{snapshot_id}: team-season FBS teams differ from rankings")
@@ -2844,6 +2860,10 @@ def _validate_team_season_artifact(
             or team.get("team_name") != ranking_names[team_id]
         ):
             raise SiteDataValidationError(f"{snapshot_id}: team identity differs from rankings for {team_id}")
+        # Retained source team objects can omit conference, but a nonblank
+        # claim must agree with the publication's ranking identity table.
+        if team.get("conference") not in {"", ranking_conferences[team_id]}:
+            raise SiteDataValidationError(f"{snapshot_id}: team conference differs from rankings for {team_id}")
         games = team.get("games")
         if not isinstance(games, list):
             raise SiteDataValidationError(f"{snapshot_id}: games for {team_id} must be a list")
@@ -2862,11 +2882,13 @@ def _validate_team_season_artifact(
                 raise SiteDataValidationError(
                     f"{snapshot_id}: invalid team-season date for {team_id}"
                 ) from error
-            if game.get("score") is not None and (
-                game_date.tzinfo is None or game_date.utcoffset() is None
-            ):
+            if game_date.tzinfo is None or game_date.utcoffset() is None:
                 raise SiteDataValidationError(
-                    f"{snapshot_id}: scored game {game_id} needs a timezone-aware date"
+                    f"{snapshot_id}: game {game_id} needs a timezone-aware date"
+                )
+            if game.get("score") is None and game_date.utcoffset().total_seconds() != 0:
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: unscored game {game_id} needs a UTC calendar anchor"
                 )
             week = game.get("week")
             if week is not None:
@@ -2878,10 +2900,17 @@ def _validate_team_season_artifact(
             if game.get("site") not in {"home", "away", "neutral"}:
                 raise SiteDataValidationError(f"{snapshot_id}: invalid site for game {game_id}")
             opponent_id = game.get("opponent_id")
-            if not isinstance(opponent_id, str) or not opponent_id or (
-                str(game.get("opponent_classification", "")).casefold() == "fbs"
+            classification = game.get("opponent_classification")
+            if not isinstance(opponent_id, str) or not opponent_id or classification not in {"fbs", "fcs"} or (
+                classification == "fbs"
             ) != (opponent_id in ranking_ids):
                 raise SiteDataValidationError(f"{snapshot_id}: invalid opponent classification for game {game_id}")
+            if opponent_id in ranking_ids and game.get("opponent_conference") not in {
+                "", ranking_conferences[opponent_id]
+            }:
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: opponent conference differs from rankings for game {game_id}"
+                )
             if type(game.get("conference_game")) is not bool:
                 raise SiteDataValidationError(f"{snapshot_id}: invalid conference flag for game {game_id}")
             game_state = game.get("game_state")
@@ -2991,7 +3020,9 @@ def _validate_team_season_artifact(
                     raise SiteDataValidationError(
                         f"{snapshot_id}: game rating performance grade disagrees with percentile"
                     )
-        if games != sorted(games, key=lambda game: (str(game["date"]), str(game["game_id"]))):
+        if games != sorted(games, key=lambda game: (
+            datetime.fromisoformat(str(game["date"])).astimezone(UTC), str(game["game_id"])
+        )):
             raise SiteDataValidationError(f"{snapshot_id}: schedule order is invalid for {team_id}")
     canonical_games: dict[str, tuple[str, dict[str, Any]]] = {}
     projection_counts: dict[str, int] = defaultdict(int)
@@ -3081,9 +3112,15 @@ def _validate_team_season_artifact(
     adapted["teams"] = {
         team_id: {
             **team,
+            "conference": ranking_conferences[team_id],
             "games": [
                 {
                     **game,
+                    "opponent_conference": (
+                        ranking_conferences[game["opponent_id"]]
+                        if game["opponent_id"] in ranking_ids
+                        else game.get("opponent_conference", "")
+                    ),
                     # The source has no reliable kickoff-known flag. This is
                     # a display policy based on whether a score is present.
                     "date_display_mode": (
@@ -3099,6 +3136,9 @@ def _validate_team_season_artifact(
     if retrospective_ids:
         adapted["retrospective_game_expectations"] = {
             **artifact["retrospective_game_expectations"],
+            "artifact_kind": "retrospective_game_expectations_site_projection",
+            "coverage": "fbs_team_schedules",
+            "published_game_ids": sorted(published_retrospective_ids),
             "games": {
                 game_id: game for game_id, game in artifact["retrospective_game_expectations"]["games"].items()
                 if game_id in published_retrospective_ids
@@ -3117,6 +3157,8 @@ def _validate_matching_team_schedules(
     schedule_fields = (
         "game_id", "opponent_id", "date", "week", "site", "game_state",
         "result", "score", "modeled", "retrospective_expectation_id",
+        "opponent_name", "opponent_classification", "opponent_conference",
+        "conference_game", "season_type", "date_display_mode",
     )
     context_teams = context_artifact.get("teams", {})
     history_teams = history_artifact.get("teams", {})

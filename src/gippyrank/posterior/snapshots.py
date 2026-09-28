@@ -262,8 +262,12 @@ def filter_games(
                 # season builder will classify them as unresolved schedule
                 # state rather than silently dropping them.
                 continue
+            # The schedule date is a calendar anchor unless kickoff precision
+            # is independently established. A same-day score cannot prove it
+            # was available at an interim cutoff earlier that day.
+            when = when if when.tzinfo is not None else when.replace(tzinfo=UTC)
             if snapshot_type == "preseason" or (
-                cutoff_dt is not None and when > cutoff_dt
+                cutoff_dt is not None and when.astimezone(UTC).date() >= cutoff_dt.date()
             ):
                 continue
             if cutoff_dt is None:
@@ -776,7 +780,7 @@ def _scheduled_future_fcs_rows(
                 rows.append(row)
                 continue
             when = when if when.tzinfo is not None else when.replace(tzinfo=UTC)
-            if cutoff_dt is None or when > cutoff_dt:
+            if cutoff_dt is None or when.astimezone(UTC).date() >= cutoff_dt.date():
                 rows.append(row)
     return rows
 

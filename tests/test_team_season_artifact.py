@@ -3,7 +3,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
-from datetime import date
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import numpy as np
@@ -11,7 +11,12 @@ import pytest
 
 from gippyrank.performance_snapshot import build_performance_snapshot
 from gippyrank.posterior.engine import LikelihoodV1, Team, infer_posterior
-from gippyrank.posterior.game_evidence import build_team_season_artifact
+from gippyrank.posterior.game_evidence import (
+    _future_at_snapshot,
+    _schedule_state,
+    _week,
+    build_team_season_artifact,
+)
 from gippyrank.posterior.snapshots import build_snapshot
 from gippyrank.site_data import SiteDataValidationError, build_site_data
 
@@ -55,6 +60,48 @@ def _root(tmp_path: Path) -> Path:
         ],
     )
     return tmp_path
+
+
+def test_gameday_calendar_anchor_remains_future_until_included() -> None:
+    row = {
+        "id": "gameday", "seasonType": "regular",
+        "startDate": "2026-10-10T00:00:00Z", "completed": "True",
+        "homePoints": "31", "awayPoints": "17",
+    }
+    metadata = {
+        "snapshot_type": "live", "effective_cutoff": "2026-10-10T12:00:00Z",
+        "included_game_ids": [],
+    }
+    assert _future_at_snapshot(row, metadata)
+    assert _schedule_state(row, metadata) == "future"
+    metadata["included_game_ids"] = ["gameday"]
+    assert _schedule_state(row, metadata) == "completed"
+    metadata["effective_cutoff"] = "2026-10-09T12:00:00Z"
+    metadata["included_game_ids"] = []
+    assert _schedule_state(row, metadata) == "future"
+
+
+def test_gameday_snapshot_does_not_consume_same_day_score(tmp_path: Path) -> None:
+    snapshot = build_snapshot(
+        season=2026,
+        cutoff=datetime(2026, 9, 10, 12, tzinfo=UTC),
+        prior_family="context",
+        snapshot_type="live",
+        root=_root(tmp_path),
+        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
+    )
+    assert snapshot.metadata["included_game_ids"] == ["early"]
+    artifact = json.loads((snapshot.directory / "team_seasons.json").read_text())
+    game = next(game for game in artifact["teams"]["1"]["games"] if game["game_id"] == "later")
+    assert game["game_state"] == "future"
+    assert game["score"] is None
+    assert game["future_prediction_id"] == "later"
+
+
+@pytest.mark.parametrize("week", ["Bowl", "-1"])
+def test_producer_rejects_unsupported_week(week: str) -> None:
+    with pytest.raises(ValueError, match="unsupported schedule week"):
+        _week(week)
 
 
 def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path: Path) -> None:

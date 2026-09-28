@@ -224,11 +224,11 @@ def test_missing_active_context_does_not_fall_back_to_legacy_prior(
 
 def test_cutoff_and_lower_division_policy_are_explicit(tmp_path: Path) -> None:
     root = _root(tmp_path)
-    # No likelihood is needed when cutoff is before the first game; this proves
-    # filtering happens before any inference attempt.
+    # The first supported game is on the cutoff day, so conservative calendar
+    # filtering leaves it out before any inference attempt.
     snapshot = build_snapshot(
         season=2026,
-        cutoff=date(2026, 8, 28),
+        cutoff=date(2026, 8, 29),
         prior_family="history",
         snapshot_type="weekly",
         root=root,

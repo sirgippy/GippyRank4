@@ -37,7 +37,8 @@ The selected snapshot controls game state:
 
 - `completed`: the score is known at that snapshot; eligible games carry both
   canonical completed performance summaries.
-- `future`: the kickoff is strictly after the snapshot cutoff; an eligible
+- `future`: the unscored schedule's UTC calendar day is on or after the snapshot
+  cutoff day and the game is absent from included evidence; an eligible
   game references one canonical future prediction.
 - `unresolved`: the schedule did not provide durable completed evidence at the
   cutoff; no score, rating, or fabricated prediction is shown.

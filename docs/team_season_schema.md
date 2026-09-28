@@ -178,19 +178,29 @@ Future predictions use `predictive_context` on Predictive Context pages,
 `predictive_context` artifact on Performance pages.  A Performance page labels
 that source in the browser.  Completed-game ratings remain Context-anchored.
 
-Eligibility is strict: the scheduled kickoff must be after the selected
-snapshot's effective cutoff, the game must not be in the included evidence,
+Eligibility uses the unscored game's UTC calendar day because the source does
+not reliably identify a kickoff instant. That day must be on or after the
+snapshot's effective cutoff day, the game must not be in the included evidence,
 and both teams must have supported V1 rank representations.  Existing FCS
 fallback variables are reused when present; unsupported matchups remain
 visible without a prediction.  Neutral games use the neutral V1 site row, and
 FBS/FCS games use the stable FBS-first V1 coordinate orientation before the
 stored home-oriented margin is restored.
 
+New snapshot inference conservatively excludes a completed row dated on the
+cutoff's UTC calendar day. Its score alone does not establish that the game
+had ended by an interim cutoff earlier that day. Retained snapshots keep their
+frozen included-game evidence; the browser uses that evidence to distinguish
+completed results from same-day future games.
+
 ## JSON shape
 
 Each team contains schedule entries with stable IDs, date/week, opponent
-metadata, site, result/score when known at the cutoff, and `modeled`. A modeled
-completed game has a compact `game_rating` summary containing:
+metadata, site, result/score when known at the cutoff, and `modeled`. The
+team-season producer accepts nonnegative numeric weeks or a missing week; it
+rejects named weeks because the publication order contract is numeric.
+
+A modeled completed game has a compact `game_rating` summary containing:
 
 - expected rank, median, and mode;
 - central 50%, 80%, and 95% intervals;
@@ -203,11 +213,12 @@ each game. This is a display policy because the source has no reliable flag
 for a confirmed kickoff time. `local_time` applies to scored games, including
 scored `out_of_scope` games; consumers show their timezone-aware timestamp in
 the viewer's local time zone. `utc_calendar` applies to unscored games;
-consumers preserve the source timestamp's UTC calendar day and omit a kickoff
-time. A score establishes that the game happened, not the precision or original
-meaning of its timestamp.
+consumers preserve the source timestamp's lexical UTC calendar day and omit a
+kickoff time. A score establishes that the game happened, not the precision or original
+meaning of its timestamp. All dates must carry a timezone; unscored calendar
+anchors must have a UTC offset.
 
-No full per-game PMF is serialized. Games after the selected cutoff retain
+No full per-game PMF is serialized. Games outside the selected evidence retain
 schedule metadata but have null result, score, and rating fields. An eligible
 future row has `future_prediction_id`; the ID resolves into the single
 canonical `future_predictions` map entry. Ineligible completed games remain
@@ -282,6 +293,6 @@ and the paired Context provenance; it does not compare a retained artifact's
 schedule hash with a later mutable schedule corpus.
 
 Results and scores are shown only when the game ID is in the snapshot's durable
-`included_game_ids` evidence. A kickoff before the cutoff is not enough: a game
+`included_game_ids` evidence. A schedule date before the cutoff is not enough: a game
 that was in progress or otherwise absent from that evidence remains redacted,
 even if the current schedule corpus now contains a final score.

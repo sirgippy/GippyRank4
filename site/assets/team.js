@@ -43,6 +43,10 @@ function formatDate(value, includeYear = true, timeZone = "UTC") {
 }
 
 function formatGameDate(game) {
+  if (game.date_display_mode === "utc_calendar") {
+    const key = String(game.date || "").match(/^\d{4}-\d{2}-\d{2}/)?.[0];
+    return key ? formatDate(`${key}T12:00:00Z`, false, "UTC") : "Date unavailable";
+  }
   const zone = game.date_display_mode === "local_time"
     ? Intl.DateTimeFormat().resolvedOptions().timeZone : "UTC";
   return formatDate(game.date, false, zone);
@@ -1000,7 +1004,7 @@ function retrospectivePanel(expectation, team, axis, opponentName) {
   if (chart) detail.append(chart);
   const facts = node("div", "retrospective-facts");
   const percentileFacts = node("dl", "game-facts retrospective-percentile-facts");
-  percentileFacts.append(node("dt", "", "Observed percentile"), node("dd", "", percentileLabel(percentile * 100)));
+  percentileFacts.append(node("dt", "", "Observed result"), node("dd", "", percentileLabel(percentile * 100)));
   const marginFacts = node("dl", "game-facts retrospective-margin-facts");
   [
     ["Median margin", marginSide(orient(expectation.median_home_margin) >= 0 ? team.team_name : opponentName, orient(expectation.median_home_margin))],
@@ -1170,9 +1174,9 @@ function renderSchedule(artifact, entry, trajectory) {
       } else if (teamAdded.length || teamRemoved.length) {
         checkpoint.dataset.evidenceChange = teamAdded.length && teamRemoved.length ? "mixed" : teamAdded.length ? "added" : "removed";
         const changes = [];
-        if (teamAdded.length) changes.push(`${teamAdded.length} ${team.team_name} game${teamAdded.length === 1 ? "" : "s"} added to evidence`);
+        if (teamAdded.length && (teamAdded.length > 1 || teamRemoved.length)) changes.push(`${teamAdded.length} ${team.team_name} game${teamAdded.length === 1 ? "" : "s"} added to evidence`);
         if (teamRemoved.length) changes.push(`${teamRemoved.length} ${team.team_name} game${teamRemoved.length === 1 ? "" : "s"} removed from evidence`);
-        checkpoint.querySelector(".schedule-checkpoint-values").append(node("span", "", changes.join(" · ")));
+        if (changes.length) checkpoint.querySelector(".schedule-checkpoint-values").append(node("span", "", changes.join(" · ")));
       }
       insertions.push({ afterGame, checkpoint });
     });

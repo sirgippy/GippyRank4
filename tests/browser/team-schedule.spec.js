@@ -44,6 +44,7 @@ test("keeps current Georgia results, checkpoint movement, and future predictions
   await expect(page.locator("#schedule-list").getByRole("note")).toHaveCount(4);
   await expect(page.locator(".schedule-checkpoint")).toHaveCount(4);
   await expect(page.locator(".schedule-checkpoint").last()).toContainText("Week 5 update");
+  await expect(page.locator("#schedule-list")).not.toContainText("1 Georgia game added to evidence");
   await expect(future).toContainText("Upcoming");
   await expect(future.locator(".game-prediction-title")).toHaveText("Georgia 91% to win · Georgia by 20.7");
   await expect(page.locator('.game-card[data-game-id="401856712"] .game-prediction-title'))
@@ -202,10 +203,10 @@ test("opens distinct retrospective and predictive distributions from the keyboar
   await expect(retrospective.locator(".margin-marker-legend")).toContainText("Expected Georgia by 11.3");
   await expect(retrospective.locator(".margin-marker-legend")).toContainText("Actual Georgia by 28");
   await expect(retrospective.locator(".retrospective-distribution-chart .distribution-zero-label")).toHaveCount(0);
-  await expect(retrospective.locator(".retrospective-percentile-facts dt")).toHaveText("Observed percentile");
+  await expect(retrospective.locator(".retrospective-percentile-facts dt")).toHaveText("Observed result");
   await expect(retrospective.locator(".retrospective-margin-facts dt")).toHaveText(["Median margin", "Central 50%", "Central 80%", "Central 95%"]);
   await expect(retrospective.locator("dt")).toHaveText([
-    "Observed percentile",
+    "Observed result",
     "Median margin",
     "Central 50%",
     "Central 80%",

@@ -122,11 +122,12 @@ home orientation.
 
 The source model artifact retains retrospective records for every included
 game, including FCS/FCS evidence. Static publication validates that source
-and publishes only games with an FBS participant in the browser-facing
-team-season artifact. Its `included_game_ids` and `inference.games_evaluated`
-still describe the full source evidence set; its `games` map contains the FBS
-schedule records. Every published record has the required FBS participant
-schedule reference or references.
+and publishes only games with an FBS participant in a distinct
+`retrospective_game_expectations_site_projection`. Its `included_game_ids` and
+`inference.games_evaluated` still describe the full source evidence set;
+`coverage: fbs_team_schedules` and `published_game_ids` describe the browser
+projection and must match its `games` keys. Every published record has the
+required FBS participant schedule reference or references.
 
 ## Production sanity check: 2026-09-27 Context 1.3
 

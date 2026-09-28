@@ -45,7 +45,8 @@ function ordinal(rank) {
 
 function formatDate(value, includeYear = false, mode = "local_time") {
   if (!value) return "Date unavailable";
-  const date = new Date(value);
+  const key = mode === "utc_calendar" ? String(value).match(/^\d{4}-\d{2}-\d{2}/)?.[0] : null;
+  const date = new Date(key ? `${key}T12:00:00Z` : value);
   if (Number.isNaN(date.getTime())) return "Date unavailable";
   return new Intl.DateTimeFormat("en-US", {
     month: "short", day: "numeric", ...(includeYear ? { year: "numeric" } : {}),
@@ -63,6 +64,7 @@ function formatTime(value) {
 }
 
 function localDateKey(value, mode = "local_time") {
+  if (mode === "utc_calendar") return String(value || "").match(/^\d{4}-\d{2}-\d{2}/)?.[0] || "unknown";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "unknown";
   const calendar = mode === "utc_calendar";
