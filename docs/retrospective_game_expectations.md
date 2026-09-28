@@ -120,9 +120,18 @@ The displayed values are illustrative. A later UI may reverse the sign for an
 away focal team as presentation only; it must preserve the stored canonical
 home orientation.
 
+The source model artifact retains retrospective records for every included
+game, including FCS/FCS evidence. Static publication validates that source
+and publishes only games with an FBS participant in the browser-facing
+team-season artifact. Its `included_game_ids` and `inference.games_evaluated`
+still describe the full source evidence set; its `games` map contains the FBS
+schedule records. Every published record has the required FBS participant
+schedule reference or references.
+
 ## Production sanity check: 2026-09-27 Context 1.3
 
-The selected snapshot contains 530 modeled completed games. The table below
+The selected source snapshot contains 530 modeled completed games; 331 have an
+FBS participant and appear in the published team-season artifact. The table below
 reads its committed leave-one-out records directly. Margins and intervals are
 home minus away; the percentile is the observed-margin lower tail. Numbers are
 rounded only for this table.
@@ -155,8 +164,9 @@ with one worker. These timings include inference and mixture summaries for
 each held-out game; static site export reads the saved artifacts.
 
 The production manifest has 41 publications, including paired Performance
-copies. Across those publications it reports 10,094 expectation records and
-10,020,156 bytes of compact serialized expectation payload, of which
-1,895,228 bytes are display distributions. Each current predictive snapshot
-adds about 0.53 MB of expectation payload. The four preseason distributions
+copies. Across those publications it reports 6,214 browser-facing expectation
+records and 6,147,679 bytes of compact serialized expectation payload, of
+which 1,150,929 bytes are display distributions. The current Context 1.3
+snapshot contributes 331 records and 328,296 bytes of expectation payload.
+The four preseason distributions
 are empty by design.
