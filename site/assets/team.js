@@ -923,9 +923,10 @@ function gameCard(game, cutoff, artifact, team) {
     if (prediction) body.append(predictionPanel(prediction, team, artifact.future_margin_axis));
     else body.append(node("p", "game-not-modeled", "Prediction unavailable"));
   } else if (game.result || game.game_state === "completed") {
-    const expectation = artifact.retrospective_game_expectations?.games?.[game.retrospective_expectation_id || game.game_id];
-    if (expectation?.source_snapshot_id === artifact.snapshot_id) {
-      body.append(retrospectivePanel(expectation, team, artifact.retrospective_game_expectations.margin_axis, game.opponent_name || "Opponent"));
+    const expectations = artifact.retrospective_game_expectations;
+    const expectation = expectations?.games?.[game.retrospective_expectation_id || game.game_id];
+    if (expectation && expectation.source_snapshot_id === expectations.source_snapshot_id) {
+      body.append(retrospectivePanel(expectation, team, expectations.margin_axis, game.opponent_name || "Opponent"));
     } else body.append(node("p", "game-not-modeled", "No retrospective expectation available"));
   } else {
     body.append(node("p", "game-not-modeled", "No result at this snapshot"));

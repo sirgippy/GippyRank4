@@ -4,6 +4,7 @@ const { test, expect } = require("@playwright/test");
 const { installStaticSiteRoute } = require("./static-site");
 
 const current = "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3";
+const currentPerformance = `${current}-performance`;
 const historical = "2026-weekly-2026-09-26T12-09-11.589245Z-context-v1.3";
 
 function teamUrl(team, snapshot = current) {
@@ -38,6 +39,17 @@ test("keeps current Georgia results, checkpoint movement, and future predictions
   const maximumCollapsedHeight = testInfo.project.name === "mobile" ? 125 : 85;
   expect((await page.locator(".game-card").first().boundingBox()).height).toBeLessThan(maximumCollapsedHeight);
   expect((await future.boundingBox()).height).toBeLessThan(maximumCollapsedHeight);
+});
+
+test("shows Context-anchored retrospective expectations on a Performance page", async ({ page }) => {
+  await page.goto(`/team.html?team=61&season=2026&family=performance&snapshot=${currentPerformance}`);
+  await expect(page.locator("#team-page-status")).toHaveText(/scheduled games/);
+  await expect(page.locator("#team-page-meta")).toContainText("Performance");
+  const completed = page.locator('.game-card[data-game-id="401856700"]');
+  await expect(completed).toContainText("W 41–13");
+  await expect(completed.locator(".game-retrospective")).toContainText("Expected Georgia by 11.3");
+  await expect(completed.locator(".game-retrospective")).toContainText("Actual Georgia by 28.0");
+  await expect(completed).not.toContainText("No retrospective expectation available");
 });
 
 test("orients an away upset from the focal team and keeps an ordinary result quiet", async ({ page }) => {
