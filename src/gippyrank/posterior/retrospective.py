@@ -37,9 +37,7 @@ from gippyrank.posterior.predictive import (
 )
 
 RETROSPECTIVE_GAME_EXPECTATIONS_VERSION = "1.0"
-RETROSPECTIVE_INFERENCE_IMPLEMENTATION = (
-    "per_game_leave_one_out_component_bp_recompute"
-)
+RETROSPECTIVE_INFERENCE_IMPLEMENTATION = "per_game_leave_one_out_component_bp_recompute"
 RETROSPECTIVE_INTERPRETATION = (
     "This is a retrospective leave-one-game-out posterior predictive "
     "distribution. It describes how the observed result compares with what "
@@ -113,9 +111,11 @@ def _leave_one_out_result(
     tolerance: float,
     damping: float,
 ) -> _LeaveOneOutResult:
-    """Recompute the exact selected-model BP problem with one game absent."""
+    """Recompute BP with the exact selected game removed from the evidence."""
 
-    retained_games = [candidate for candidate in games if candidate.game_id != game.game_id]
+    retained_games = [
+        candidate for candidate in games if candidate.game_id != game.game_id
+    ]
     component_ids, component_games = _participant_component(game, retained_games)
     component_teams = [teams_by_id[team_id] for team_id in sorted(component_ids)]
     posterior = infer_posterior(
@@ -227,12 +227,14 @@ def build_retrospective_game_expectations(
         raise ValueError(
             "retrospective expectations require a converged production posterior"
         )
-    requested_workers = workers if workers is not None else min(8, len(games))
+    # Large connected seasons hold a full BP replay state per worker. One
+    # worker bounds peak memory without a measured runtime penalty here.
+    requested_workers = workers if workers is not None else 1
     worker_count = max(1, min(int(requested_workers), len(games) or 1))
     started = perf_counter()
 
-    def replay(game: Game) -> _LeaveOneOutResult:
-        return _leave_one_out_result(
+    def replay(game: Game) -> tuple[dict[str, Any], int, int, int]:
+        result = _leave_one_out_result(
             game,
             teams_by_id=team_by_id,
             games=games,
@@ -241,6 +243,18 @@ def build_retrospective_game_expectations(
             tolerance=tolerance,
             damping=damping,
         )
+        record = _expectation_record(
+            result,
+            teams_by_id=team_by_id,
+            likelihood=likelihood,
+            source_snapshot_id=source_snapshot_id,
+        )
+        return (
+            record,
+            result.component_team_count,
+            result.component_game_count,
+            result.posterior.iterations,
+        )
 
     if worker_count > 1:
         with ThreadPoolExecutor(max_workers=worker_count) as executor:
@@ -248,18 +262,10 @@ def build_retrospective_game_expectations(
     else:
         replays = [replay(game) for game in games]
 
-    records = {
-        replay_result.game.game_id: _expectation_record(
-            replay_result,
-            teams_by_id=team_by_id,
-            likelihood=likelihood,
-            source_snapshot_id=source_snapshot_id,
-        )
-        for replay_result in replays
-    }
-    component_team_counts = [result.component_team_count for result in replays]
-    component_game_counts = [result.component_game_count for result in replays]
-    iteration_counts = [result.posterior.iterations for result in replays]
+    records = {record["game_id"]: record for record, _, _, _ in replays}
+    component_team_counts = [team_count for _, team_count, _, _ in replays]
+    component_game_counts = [game_count for _, _, game_count, _ in replays]
+    iteration_counts = [iteration_count for _, _, _, iteration_count in replays]
     return {
         "retrospective_game_expectations_version": RETROSPECTIVE_GAME_EXPECTATIONS_VERSION,
         "artifact_kind": "retrospective_game_expectations",

@@ -40,10 +40,26 @@ from the held-out game through a schedule cycle. When teams have a rematch,
 removing one game rebuilds their grouped pair factor from the other game(s), so
 the other rematch is retained in `E_snapshot \ {g}`.
 
+The evidence boundary is exact by game ID. The inferred rank PMFs are the
+output of deterministic **loopy BP**, which is approximate on graphs with
+cycles. As in GippyRank's future-game predictions, the margin mixture uses
+the product of the two BP marginal PMFs rather than their joint posterior.
+The scalar mixture integrations are exact given those recomputed marginals;
+this artifact does not claim an exact joint Bayesian posterior predictive.
+
 The artifact's `inference` object records implementation, component-size
 bounds, BP-iteration bounds, worker count, and wall-clock runtime. Static-site
 manifest entries expose per-snapshot expected-outcome and display-payload byte
 counts, making runtime and storage impact measurable at publication time.
+Each replay is summarized before the next one is retained, and production uses
+one worker to bound peak memory on large connected schedules.
+
+Retained publications are materialized with
+`uv run python scripts/backfill_retrospective_game_expectations.py`. That
+command reads each configured predictive source's frozen `included_games.csv`,
+checks its prior hash, and adds the expectation field without changing the
+saved posterior or rankings. It also refreshes paired Performance artifacts
+and their Context metadata hashes before rebuilding static site data.
 
 ## Distribution and orientation
 
@@ -63,14 +79,14 @@ An entry provides the observed margin, expected and median margin, central
 50%, 80%, and 95% intervals, and an observed-margin percentile. The
 Historical Likelihood mixture is continuous, so `lower_tail_probability =
 P(M <= observed)` equals the percentile and `upper_tail_probability = P(M >=
-observed)` is its complement. Exact scalars are calculated from the mixture,
+observed)` is its complement. Scalar summaries are calculated from the mixture,
 never from display bins.
 
 `display_distribution` uses the same fixed `-40` to `+40` 40-bin margin axis
 as future-game displays. It has deterministic fixed-scale integer mass,
 explicit lower and upper off-axis tail mass, and a total encoded mass of 1000.
 For large mixtures, the deterministic display approximation affects only those
-bins; it cannot alter an entry's exact summaries or tails.
+bins; it cannot alter an entry's mixture summaries or tails.
 
 ## Shape
 
@@ -103,3 +119,44 @@ bins; it cannot alter an entry's exact summaries or tails.
 The displayed values are illustrative. A later UI may reverse the sign for an
 away focal team as presentation only; it must preserve the stored canonical
 home orientation.
+
+## Production sanity check: 2026-09-27 Context 1.3
+
+The selected snapshot contains 530 modeled completed games. The table below
+reads its committed leave-one-out records directly. Margins and intervals are
+home minus away; the percentile is the observed-margin lower tail. Numbers are
+rounded only for this table.
+
+| Case (away at home) | Actual | Expected | 50% interval | 80% interval | 95% interval | Observed percentile |
+| --- | ---: | ---: | --- | --- | --- | ---: |
+| Near expectation: Hawai'i at Stanford | +10 | +10.0 | [-1.3, 21.4] | [-11.8, 31.6] | [-24.0, 43.3] | 49.6% |
+| Strong favorite loses: Massachusetts at Rutgers | -16 | +24.1 | [13.3, 35.1] | [2.9, 44.8] | [-9.4, 56.2] | 1.1% |
+| Large favorite wins: Ball State at Ohio State | +53 | +38.8 | [29.3, 48.2] | [20.5, 57.0] | [9.7, 67.6] | 84.4% |
+| Close game: Iowa at Michigan | -1 | -0.7 | [-12.1, 10.6] | [-22.2, 21.1] | [-33.9, 33.2] | 49.5% |
+| Early game with later evidence: UCLA at California | -21 | -7.8 | [-19.0, 3.3] | [-29.0, 13.8] | [-40.5, 26.1] | 21.3% |
+| FBS/FCS: Maine at Boston College | +6 | +42.7 | [32.1, 53.4] | [22.1, 63.1] | [10.3, 74.4] | 1.4% |
+| Neutral site: West Virginia at Virginia | -11 | +20.3 | [10.2, 30.6] | [0.6, 39.9] | [-11.0, 50.9] | 2.5% |
+
+UCLA at California was played in Week 1. Its expected home margin changed
+from +4.5 in the 2026-09-19 Context 1.3 snapshot to -7.8 here, with the
+same prior family and held-out result. This is later-season evidence changing
+the retrospective assessment, not a pregame forecast. The retained snapshot
+has no repeated team pair; rematch self-exclusion is covered by the synthetic
+regression test. The examples check orientation, numerical summaries, site and
+subdivision handling, and observed tails; they do not establish calibration.
+
+## Measured publication cost
+
+The one-time backfill evaluated 6,941 game distributions across 30 configured
+predictive sources (four preseason sources contain zero completed games). The
+sum of the recorded replay runtimes was 5,049.9 seconds. At the current 530
+game publication, Context took 757.8 seconds and History took 742.0 seconds
+with one worker. These timings include inference and mixture summaries for
+each held-out game; static site export reads the saved artifacts.
+
+The production manifest has 41 publications, including paired Performance
+copies. Across those publications it reports 10,094 expectation records and
+10,020,156 bytes of compact serialized expectation payload, of which
+1,895,228 bytes are display distributions. Each current predictive snapshot
+adds about 0.53 MB of expectation payload. The four preseason distributions
+are empty by design.

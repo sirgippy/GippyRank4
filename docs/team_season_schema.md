@@ -123,9 +123,10 @@ rule, and reference count in `performance_percentile`.
 
 Supported predictive snapshots also include a top-level
 `retrospective_game_expectations` versioned model artifact. Each modeled game
-is keyed by stable game ID and has an exact leave-one-game-out
-posterior-predictive Historical Likelihood V1 margin distribution, its
-home-oriented observed margin, exact summaries/tails, and a compact display
+is keyed by stable game ID and has a leave-one-game-out
+posterior-predictive Historical Likelihood V1 margin distribution under
+GippyRank's deterministic loopy BP and predictive semantics, its home-oriented
+observed margin, mixture summaries/tails, and a compact display
 distribution. Team schedule entries point to their record with
 `retrospective_expectation_id`; this supplements rather than replaces the
 existing `game_rating` performance artifact.
