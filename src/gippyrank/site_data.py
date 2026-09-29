@@ -18,7 +18,9 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
+from gippyrank.likelihood_provenance import supplied_likelihood_sha256
 from gippyrank.methodology import (
+    HISTORICAL_LIKELIHOOD_SHA256,
     HISTORICAL_LIKELIHOOD_VERSION,
     METHODOLOGY_SCHEMA_VERSION,
     RETROSPECTIVE_CONDITIONING,
@@ -36,6 +38,7 @@ from gippyrank.redditcfb import (
     audit_team_handle_coverage,
     load_team_handle_mapping,
 )
+from gippyrank.result_provenance import known_unmodeled_result
 from gippyrank.site_preseason_evidence import build_preseason_input_projection
 from gippyrank.team_logos import (
     TEAM_LOGO_URL_TEMPLATE,
@@ -1576,6 +1579,18 @@ def _validate_retrospective_game_expectations(
         )
     if expectations.get("historical_likelihood_sha256") != source_metadata.get("historical_likelihood_sha256"):
         raise SiteDataValidationError(f"{snapshot_id}: retrospective likelihood hash mismatch")
+    likelihood_hash = source_metadata.get("historical_likelihood_sha256")
+    if source_metadata.get("historical_likelihood_provenance") == "supplied_parameters":
+        parameters = source_metadata.get("historical_likelihood_parameters")
+        if not isinstance(parameters, dict) or likelihood_hash != supplied_likelihood_sha256(parameters):
+            raise SiteDataValidationError(f"{snapshot_id}: supplied likelihood hash is invalid")
+    elif source_metadata.get("historical_likelihood_provenance") == "loaded_from_artifact":
+        if not isinstance(likelihood_hash, str) or len(likelihood_hash) != 64 or any(
+            character not in "0123456789abcdef" for character in likelihood_hash
+        ):
+            raise SiteDataValidationError(f"{snapshot_id}: loaded likelihood hash is invalid")
+    elif likelihood_hash != HISTORICAL_LIKELIHOOD_SHA256:
+        raise SiteDataValidationError(f"{snapshot_id}: retrospective likelihood is not pinned V1")
     if expectations.get("conditioning") != RETROSPECTIVE_CONDITIONING:
         raise SiteDataValidationError(
             f"{snapshot_id}: retrospective conditioning is invalid"
@@ -2993,18 +3008,17 @@ def _validate_team_season_artifact(
             if game_state in {"future", "unresolved", "cancelled"} and score is not None:
                 raise SiteDataValidationError(f"{snapshot_id}: {game_state} game {game_id} has a result")
             source_available = source_metadata.get("combined_source_available_at", source_metadata.get("source_retrieved_at"))
-            cutoff = source_metadata.get("effective_cutoff")
             known_unmodeled_score = (
                 score is not None
                 and game_state in {"completed", "out_of_scope"}
-                and source_metadata.get("snapshot_type") != "preseason"
-                and isinstance(cutoff, str)
-                and game_date <= datetime.fromisoformat(cutoff)
-                and schedule_source.get("sha256") == source_metadata.get("game_corpus_sha256")
-                and (
-                    source_metadata.get("source_mode") == "historical_frozen"
-                    or isinstance(source_available, str)
-                    and datetime.fromisoformat(source_available) <= datetime.fromisoformat(cutoff)
+                and known_unmodeled_result(
+                    game_date=game_date,
+                    cutoff=_iso_datetime(source_metadata.get("effective_cutoff")),
+                    snapshot_type=source_metadata.get("snapshot_type"),
+                    schedule_source=schedule_source,
+                    game_corpus_sha256=source_metadata.get("game_corpus_sha256"),
+                    source_available_at=_iso_datetime(source_available),
+                    frozen_source=source_metadata.get("source_mode") == "historical_frozen",
                 )
             )
             if not known_by_snapshot and (

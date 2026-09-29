@@ -683,6 +683,7 @@ def build_team_season_artifact(
         "requested_cutoff": metadata.get("requested_cutoff"),
         "effective_cutoff": metadata.get("effective_cutoff"),
         "source_retrieved_at": metadata.get("source_retrieved_at"),
+        "source_mode": metadata.get("source_mode"),
         "combined_source_available_at": metadata.get("combined_source_available_at"),
         "source_retrieved_at_contract": metadata.get("source_retrieved_at_contract"),
         "source_retrieval_times": metadata.get("source_retrieval_times"),

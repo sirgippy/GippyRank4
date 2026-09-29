@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import csv
 import json
+import runpy
+import shutil
 from copy import deepcopy
 from pathlib import Path
 
@@ -28,6 +30,9 @@ from gippyrank.posterior.snapshots import (
 from gippyrank.site_data import SiteDataValidationError
 
 ROOT = Path(__file__).resolve().parents[1]
+BACKFILL_SCRIPT = runpy.run_path(str(ROOT / "scripts/backfill_retrospective_game_expectations.py"))
+backfill = BACKFILL_SCRIPT["backfill"]
+sync_performance_sources = BACKFILL_SCRIPT["sync_performance_sources"]
 
 
 def test_retained_likelihood_bytes_are_pinned(tmp_path: Path) -> None:
@@ -83,6 +88,18 @@ def test_empty_preseason_site_projection_keeps_projection_contract() -> None:
     assert retrospective["games"] == {}
 
 
+def test_static_publication_rejects_unverified_likelihood() -> None:
+    source = ROOT / "data/processed/snapshots/2026/2026-preseason-context/predictive/context"
+    artifact = json.loads((source / "team_seasons.json").read_text())
+    metadata = json.loads((source / "metadata.json").read_text())
+    metadata["historical_likelihood_sha256"] = None
+    artifact["retrospective_game_expectations"]["historical_likelihood_sha256"] = None
+    with pytest.raises(SiteDataValidationError, match="not pinned V1"):
+        site_data._validate_retrospective_game_expectations(
+            artifact, metadata, set(), artifact["teams"]
+        )
+
+
 def test_backfill_rejects_untrusted_posterior_rows(tmp_path: Path) -> None:
     teams = [Team("a", "A", "fbs", np.array([0.5, 0.5]))]
     pmfs = {"a": np.array([0.4, 0.6])}
@@ -131,6 +148,50 @@ def test_backfill_preserves_only_equivalent_frozen_records() -> None:
     preserve_equivalent_retrospective_records(existing, refreshed)
     assert refreshed["games"]["stable"] is existing["games"]["stable"]
     assert refreshed["games"]["changed"] is not existing["games"]["changed"]
+    different_probability = {**provenance, "games": {
+        "stable": {"expected_home_margin": 0.50000000001, "actual_home_margin": 17},
+        "changed": refreshed["games"]["changed"],
+    }}
+    preserve_equivalent_retrospective_records(existing, different_probability)
+    assert different_probability["games"]["stable"] is not existing["games"]["stable"]
+
+
+def test_forced_preseason_backfill_is_byte_identical(tmp_path: Path) -> None:
+    source = ROOT / "data/processed/snapshots/2026/2026-preseason-context/predictive/context"
+    copied = tmp_path / "preseason"
+    shutil.copytree(source, copied)
+    backfill(copied)
+    first = (copied / "team_seasons.json").read_bytes()
+    first_metadata = (copied / "metadata.json").read_bytes()
+    backfill(copied)
+    assert (copied / "team_seasons.json").read_bytes() == first
+    assert (copied / "metadata.json").read_bytes() == first_metadata
+
+
+def test_targeted_backfill_syncs_only_dependent_performance(tmp_path: Path) -> None:
+    base = tmp_path / "data/processed/snapshots/2026"
+    changed = base / "changed/predictive/context"
+    other = base / "other/predictive/context"
+    for source, value in ((changed, "new"), (other, "other")):
+        source.mkdir(parents=True)
+        (source / "metadata.json").write_text(json.dumps({
+            "combined_source_available_at": value,
+            "source_retrieved_at_contract": "combined_latest",
+        }))
+        (source / "team_seasons.json").write_text(value)
+    for name in ("changed", "other"):
+        performance = base / name / "performance"
+        performance.mkdir()
+        (performance / "metadata.json").write_text(json.dumps({
+            "source_context_path": str((base / name / "predictive/context").relative_to(tmp_path)),
+            "source_context_metadata_sha256": "old",
+        }))
+        (performance / "team_seasons.json").write_text("old")
+    sync_performance_sources({changed.resolve()}, root=tmp_path)
+    assert (base / "changed/performance/team_seasons.json").read_text() == "new"
+    assert (base / "other/performance/team_seasons.json").read_text() == "old"
+    metadata = json.loads((base / "changed/performance/metadata.json").read_text())
+    assert metadata["source_context_metadata_sha256"] == sha256(changed / "metadata.json")
 
 
 def test_retrospective_records_match_schedule_participants_site_and_score() -> None:

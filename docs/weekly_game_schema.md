@@ -47,10 +47,13 @@ The selected snapshot controls game state:
 
 Started-but-unincluded games remain redacted.  Games outside the Historical
 Likelihood eligibility boundary remain visible as schedule context, but their
-scores are shown only when the snapshot explicitly includes durable completion
-evidence; otherwise they remain unresolved and marked not modeled.  This
-prevents current-corpus lower-division results from leaking into older
-snapshots.
+scores can be shown as `out_of_scope` when the selected schedule corpus matches
+the snapshot's recorded corpus, the game date is no later than the cutoff, and
+the frozen source or both mutable FBS/FCS responses were available by then.
+The later response time controls mutable-source availability. These results
+are football facts, separate from `included_game_ids` model evidence, and
+carry no rating or retrospective expectation. Otherwise they remain unresolved
+and marked not modeled.
 
 ## Canonical game shape
 

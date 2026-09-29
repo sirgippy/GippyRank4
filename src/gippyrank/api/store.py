@@ -19,6 +19,8 @@ from typing import Any
 
 from pydantic import ValidationError
 
+from gippyrank.result_provenance import known_unmodeled_result
+
 from .models import (
     API_VERSION,
     CanonicalGame,
@@ -652,6 +654,30 @@ def _load_distributions(
     return result
 
 
+def _known_unmodeled_score(
+    artifact: dict[str, Any], game_date: datetime | None, cutoff: datetime | None
+) -> bool:
+    schedule_source = artifact.get("schedule_source")
+    available = artifact.get(
+        "combined_source_available_at", artifact.get("source_retrieved_at")
+    )
+    return known_unmodeled_result(
+        game_date=game_date,
+        cutoff=cutoff,
+        snapshot_type=artifact.get("snapshot_type"),
+        schedule_source=schedule_source,
+        game_corpus_sha256=artifact.get("game_corpus_sha256"),
+        source_available_at=_parse_datetime(available),
+        frozen_source=(
+            artifact.get("source_mode") == "historical_frozen"
+            or (
+                isinstance(schedule_source, dict)
+                and schedule_source.get("kind") == "frozen_historical_schedule"
+            )
+        ),
+    )
+
+
 def _validate_team_season_artifact(
     artifact: dict[str, Any], metadata: PublicationMetadata, rankings: list[RankRow]
 ) -> None:
@@ -737,9 +763,7 @@ def _validate_team_season_artifact(
                 game.get("game_state") == "out_of_scope"
                 and game.get("score") is not None
                 and game.get("result") is not None
-                and cutoff is not None
-                and game_date is not None
-                and game_date <= cutoff
+                and _known_unmodeled_score(artifact, game_date, cutoff)
             )
             if game_id not in included_ids and (
                 ((game.get("result") is not None or game.get("score") is not None) and not known_unmodeled_score)
@@ -922,9 +946,9 @@ def _load_weekly_artifact(
             known_unmodeled_score = (
                 game.state == "out_of_scope"
                 and game.score is not None
-                and game.date is not None
-                and metadata.effective_cutoff is not None
-                and game.date <= metadata.effective_cutoff
+                and _known_unmodeled_score(
+                    team_season, game.date, metadata.effective_cutoff
+                )
             )
             if game_id not in included_game_ids and (
                 ((game.state == "completed" or game.score is not None) and not known_unmodeled_score)

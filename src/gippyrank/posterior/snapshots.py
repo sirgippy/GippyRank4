@@ -13,6 +13,10 @@ from typing import Literal
 
 import numpy as np
 
+from gippyrank.likelihood_provenance import (
+    supplied_likelihood_parameters,
+    supplied_likelihood_sha256,
+)
 from gippyrank.methodology import (
     CONTEXT_PRIOR_VERSION,
     HISTORICAL_LIKELIHOOD_SHA256,
@@ -70,6 +74,7 @@ class CorpusProvenance:
     source_retrieved_at: datetime | None
     source_retrieval_times: dict[str, datetime]
     source_response_hashes: dict[str, str]
+    source_retrieved_at_contract: str
 
 
 def sha256(path: Path) -> str:
@@ -241,7 +246,7 @@ def corpus_provenance(root: Path, season: int) -> CorpusProvenance:
     if any(present) and not all(present):
         raise ValueError("current-season CFBD corpus needs both retrieval manifests")
     if not any(present):
-        return CorpusProvenance("historical_frozen", "frozen_game_corpus", None, {}, {})
+        return CorpusProvenance("historical_frozen", "frozen_game_corpus", None, {}, {}, "combined_latest")
     values = [json.loads(path.read_text(encoding="utf-8")) for path in manifests]
     retrieval_times = {
         classification: datetime.fromisoformat(value["retrieved_at"]).astimezone(UTC)
@@ -253,6 +258,7 @@ def corpus_provenance(root: Path, season: int) -> CorpusProvenance:
         max(retrieval_times.values()),
         retrieval_times,
         {path.name: value["content_sha256"] for path, value in zip(manifests, values)},
+        "combined_latest",
     )
 
 
@@ -416,7 +422,7 @@ def historical_schedule_rows_from_site_artifact(
                     "week": str(game.get("week", "")),
                     "seasonType": str(game.get("season_type", "regular") or "regular"),
                     "startDate": str(game.get("date", "")),
-                    "completed": "True" if state == "completed" and score is not None else "False",
+                    "completed": "True" if state in {"completed", "out_of_scope"} and score is not None else "False",
                     "neutralSite": "True" if bool(game.get("neutral_site")) else "False",
                     "conferenceGame": "True" if bool(game.get("conference_game")) else "False",
                     "homeId": home_id,
@@ -488,21 +494,30 @@ def _frozen_provenance(metadata: dict[str, object], source: Path) -> CorpusProve
     response_values = metadata.get("source_response_hashes", {})
     if not isinstance(retrieval_values, dict) or not isinstance(response_values, dict):
         raise TypeError(f"{source}: frozen source provenance maps are invalid")
+    retrieved_at = _metadata_datetime(
+        metadata.get("source_retrieved_at"), field="source_retrieved_at", source=source
+    )
+    retrieval_times = {
+        str(key): value
+        for key, raw in retrieval_values.items()
+        if (value := _metadata_datetime(raw, field="source_retrieval_times", source=source))
+        is not None
+    }
+    contract = metadata.get("source_retrieved_at_contract")
+    if contract is None:
+        if retrieved_at is not None and not retrieval_times:
+            contract = "legacy_unverified_availability"
+        elif retrieved_at is not None and retrieval_times and retrieved_at == min(retrieval_times.values()) and retrieved_at < max(retrieval_times.values()):
+            contract = "legacy_first_response"
+        else:
+            contract = "combined_latest"
     return CorpusProvenance(
         str(metadata.get("source_mode", "historical_frozen")),
         str(metadata.get("source_kind", "frozen_game_corpus")),
-        _metadata_datetime(
-            metadata.get("source_retrieved_at"),
-            field="source_retrieved_at",
-            source=source,
-        ),
-        {
-            str(key): value
-            for key, raw in retrieval_values.items()
-            if (value := _metadata_datetime(raw, field="source_retrieval_times", source=source))
-            is not None
-        },
+        retrieved_at,
+        retrieval_times,
         {str(key): str(value) for key, value in response_values.items()},
+        str(contract),
     )
 
 
@@ -1089,7 +1104,7 @@ def build_snapshot(
     else:
         requested_cutoff = _as_utc_datetime(cutoff) if cutoff is not None else None
         provenance = (
-            CorpusProvenance("preseason_prior_only", "none", None, {}, {})
+            CorpusProvenance("preseason_prior_only", "none", None, {}, {}, "combined_latest")
             if snapshot_type == "preseason"
             else corpus_provenance(root, season)
         )
@@ -1226,6 +1241,7 @@ def build_snapshot(
         if fcs_fallbacks
         else None,
     }
+    supplied_parameters = supplied_likelihood_parameters(likelihood) if supplied_likelihood else None
     metadata: dict[str, object] = {
         "schema_version": SCHEMA_VERSION,
         "snapshot_id": sid,
@@ -1246,10 +1262,16 @@ def build_snapshot(
         "prior_artifact_sha256": sha256(prior_path),
         "historical_likelihood_version": HISTORICAL_LIKELIHOOD_VERSION,
         "historical_likelihood_sha256": (
-            sha256(likelihood_path)
-            if likelihood is not None and not supplied_likelihood and likelihood_path.is_file()
+            supplied_likelihood_sha256(supplied_parameters)
+            if supplied_parameters is not None
+            else sha256(likelihood_path)
+            if likelihood is not None and likelihood_path.is_file()
             else None
         ),
+        "historical_likelihood_provenance": (
+            "supplied_parameters" if supplied_likelihood else "loaded_from_artifact"
+        ),
+        "historical_likelihood_parameters": supplied_parameters,
         "posterior_pmfs_sha256": posterior_pmfs_sha256(result.pmfs),
         "posterior_inference_configuration": posterior_inference_configuration,
         "season_simulation_schema_version": SEASON_SIMULATION_SCHEMA_VERSION,
@@ -1268,7 +1290,7 @@ def build_snapshot(
             max(provenance.source_retrieval_times.values()).isoformat()
             if provenance.source_retrieval_times else None
         ),
-        "source_retrieved_at_contract": "combined_latest",
+        "source_retrieved_at_contract": provenance.source_retrieved_at_contract,
         "source_retrieval_times": {
             source: retrieved_at.isoformat()
             for source, retrieved_at in provenance.source_retrieval_times.items()

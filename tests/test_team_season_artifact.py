@@ -792,3 +792,49 @@ def test_context_history_and_performance_use_declared_prediction_sources(
         assert prediction["home_win_probability"] + prediction["away_win_probability"] == pytest.approx(1.0)
         assert artifact["teams"]["1"]["games"][1]["future_prediction_id"] == "later"
         assert artifact["teams"]["2"]["games"][1]["future_prediction_id"] == "later"
+
+
+def test_legacy_replay_contract_publishes_static_site(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    prior = root / "data/processed/preseason/context_v1_3/annual/2026/predictions.csv"
+    prior.write_text(prior.read_text().replace("[0.7,0.3]", "[0.6,0.4]"))
+    likelihood = LikelihoodV1(np.zeros(34), 1.0, 15.0)
+    cutoff = date(2026, 9, 1)
+    source = build_snapshot(
+        season=2026, cutoff=cutoff, prior_family="context",
+        prior_model_version="1.2", snapshot_type="weekly", root=root,
+        likelihood=likelihood,
+    )
+    source_path = source.directory / "metadata.json"
+    metadata = json.loads(source_path.read_text())
+    metadata["snapshot_id"] = metadata["snapshot_id"].removesuffix("-v1.2")
+    metadata["source_mode"] = "current_cached_cfbd"
+    metadata["source_kind"] = "cfbd_api_schedule"
+    metadata["source_retrieved_at"] = "2026-09-01T12:00:00+00:00"
+    metadata["source_retrieval_times"] = {
+        "fbs": "2026-09-01T12:00:00+00:00",
+        "fcs": "2026-09-01T12:00:01+00:00",
+    }
+    metadata["combined_source_available_at"] = "2026-09-01T12:00:01+00:00"
+    metadata["source_retrieved_at_contract"] = "legacy_first_response"
+    source_path.write_text(json.dumps(metadata))
+    replay = build_snapshot(
+        season=2026, cutoff=cutoff, prior_family="context",
+        prior_model_version="1.3", snapshot_type="weekly", root=root,
+        likelihood=likelihood, evidence_snapshot=source.directory,
+    )
+    config = root / "site/publish_config.json"
+    config.parent.mkdir(parents=True)
+    config.write_text(json.dumps({
+        "schema_version": "1.0",
+        "publication_slots": [{"id": "2026-09-01", "status": "official"}],
+        "snapshots": [{
+            "source": replay.directory.relative_to(root).as_posix(),
+            "display_label": "Replay", "publication_slot": "2026-09-01",
+        }],
+    }))
+    manifest = build_site_data(
+        root=root, config_path=config, output_directory=root / "site/data"
+    )
+    assert manifest["snapshots"][0]["snapshot_id"] == replay.snapshot_id
+    assert replay.metadata["source_retrieved_at_contract"] == "legacy_first_response"

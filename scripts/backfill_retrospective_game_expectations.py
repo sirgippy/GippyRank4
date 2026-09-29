@@ -126,13 +126,17 @@ def backfill(source: Path) -> None:
     )
 
 
-def sync_performance_sources() -> None:
+def sync_performance_sources(
+    changed_sources: set[Path] | None = None, *, root: Path = ROOT
+) -> None:
     for metadata_path in sorted(
-        ROOT.glob("data/processed/snapshots/2026/*/performance/metadata.json")
+        root.glob("data/processed/snapshots/2026/*/performance/metadata.json")
     ):
         performance = metadata_path.parent
         metadata = _read_json(metadata_path)
-        source = ROOT / metadata["source_context_path"]
+        source = root / metadata["source_context_path"]
+        if changed_sources is not None and source.resolve() not in changed_sources:
+            continue
         metadata["source_context_metadata_sha256"] = sha256(source / "metadata.json")
         source_metadata = _read_json(source / "metadata.json")
         for field in ("combined_source_available_at", "source_retrieved_at_contract"):
@@ -152,6 +156,7 @@ def main() -> None:
         ROOT / "data/processed/posterior/historical_likelihood_v1.json"
     )
     sources = [ROOT / args.source] if args.source else _retained_sources()
+    changed_sources: set[Path] = set()
     for source in sources:
         metadata = _read_json(source / "metadata.json")
         existing = _read_json(source / "team_seasons.json").get(
@@ -169,8 +174,8 @@ def main() -> None:
         ):
             continue
         backfill(source)
-    if args.source is None:
-        sync_performance_sources()
+        changed_sources.add(source.resolve())
+    sync_performance_sources(changed_sources if args.source else None)
 
 
 if __name__ == "__main__":

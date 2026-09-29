@@ -8,13 +8,17 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from gippyrank.context_comparison import validate_context_backfill
 from gippyrank.posterior.engine import LikelihoodV1
 from gippyrank.posterior.snapshots import (
+    _frozen_provenance,
     build_snapshot,
     corpus_provenance,
     filter_games,
+    historical_schedule_rows_from_site_artifact,
     snapshot_id,
 )
+from gippyrank.site_data import _validate_metadata
 
 
 def _write(path: Path, fields: list[str], rows: list[dict[str, str]]) -> None:
@@ -398,6 +402,11 @@ def test_context_replay_uses_frozen_included_games_after_schedule_mutation(
     tmp_path: Path,
 ) -> None:
     root = _root(tmp_path)
+    _write_current_provenance(root, datetime(2026, 8, 30, 12, tzinfo=UTC))
+    context_1_3_prior = root / "data/processed/preseason/context_v1_3/annual/2026/predictions.csv"
+    context_1_3_prior.write_text(
+        context_1_3_prior.read_text().replace("[0.7,0.3]", "[0.6,0.4]")
+    )
     likelihood = LikelihoodV1(np.zeros(34), 1.0, 15.0)
     cutoff = datetime(2026, 9, 11, 23, 59, tzinfo=UTC)
     source = build_snapshot(
@@ -411,6 +420,13 @@ def test_context_replay_uses_frozen_included_games_after_schedule_mutation(
         likelihood=likelihood,
     )
     source_rows = (source.directory / "included_games.csv").read_bytes()
+    source_metadata_path = source.directory / "metadata.json"
+    source_metadata = json.loads(source_metadata_path.read_text())
+    source_metadata["snapshot_id"] = source_metadata["snapshot_id"].removesuffix("-v1.2")
+    source_metadata["source_retrieval_times"]["fcs"] = "2026-08-30T12:00:01+00:00"
+    source_metadata["combined_source_available_at"] = "2026-08-30T12:00:01+00:00"
+    source_metadata["source_retrieved_at_contract"] = "legacy_first_response"
+    source_metadata_path.write_text(json.dumps(source_metadata))
     games_path = root / "data/processed/cfbd/games.csv"
     games = []
     with games_path.open(newline="", encoding="utf-8") as handle:
@@ -432,8 +448,12 @@ def test_context_replay_uses_frozen_included_games_after_schedule_mutation(
 
     assert (replay.directory / "included_games.csv").read_bytes() == source_rows
     assert replay.metadata["backfill"] is True
-    assert replay.metadata["source_evidence_snapshot_id"] == source.snapshot_id
+    assert replay.metadata["source_evidence_snapshot_id"] == source_metadata["snapshot_id"]
     assert replay.metadata["game_corpus_sha256"] == source.metadata["game_corpus_sha256"]
+    assert replay.metadata["source_retrieved_at_contract"] == "legacy_first_response"
+    assert replay.metadata["combined_source_available_at"] == "2026-08-30T12:00:01+00:00"
+    validate_context_backfill(source.directory, replay.directory)
+    _validate_metadata(replay.metadata, replay.directory)
     team_seasons = json.loads(
         (replay.directory / "team_seasons.json").read_text(encoding="utf-8")
     )
@@ -444,6 +464,41 @@ def test_posterior_docs_name_the_80_percent_interval() -> None:
     text = Path("docs/posterior_v1.md").read_text(encoding="utf-8")
     assert "80% interval coverage" in text
     assert "90%" not in text
+
+
+def test_frozen_schedule_round_trips_scored_out_of_scope_game(tmp_path: Path) -> None:
+    path = tmp_path / "weekly.json"
+    path.write_text(json.dumps({
+        "artifact_kind": "weekly_games",
+        "snapshot_id": "frozen",
+        "included_game_ids": [],
+        "weeks": [{"games": [{
+            "game_id": "unmodeled",
+            "week": 1,
+            "date": "2026-09-01T18:00:00+00:00",
+            "state": "out_of_scope",
+            "score": {"home": 31, "away": 7},
+            "home_team": {"team_id": "1", "team_name": "One", "subdivision": "fbs"},
+            "away_team": {"team_id": "3", "team_name": "Three", "subdivision": "fcs"},
+        }]}],
+    }), encoding="utf-8")
+    rows = historical_schedule_rows_from_site_artifact(
+        path, season=2026, expected_snapshot_id="frozen",
+        expected_included_game_ids=[],
+    )
+    assert rows[0]["completed"] == "True"
+    assert (rows[0]["homePoints"], rows[0]["awayPoints"]) == ("31", "7")
+
+
+def test_legacy_frozen_provenance_infers_missing_contract(tmp_path: Path) -> None:
+    provenance = _frozen_provenance({
+        "source_retrieved_at": "2026-09-01T12:00:00+00:00",
+        "source_retrieval_times": {
+            "fbs": "2026-09-01T12:00:00+00:00",
+            "fcs": "2026-09-01T12:00:01+00:00",
+        },
+    }, tmp_path)
+    assert provenance.source_retrieved_at_contract == "legacy_first_response"
 
 
 def test_snapshot_ids_are_stable_and_human_readable() -> None:

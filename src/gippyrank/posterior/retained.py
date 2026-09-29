@@ -20,8 +20,10 @@ def _equivalent_values(left: Any, right: Any) -> bool:
     if type(left) is not type(right):
         return False
     if isinstance(left, float):
-        return math.isfinite(left) and math.isfinite(right) and math.isclose(
-            left, right, rel_tol=0.0, abs_tol=1e-11
+        return (
+            math.isfinite(left)
+            and math.isfinite(right)
+            and abs(left - right) <= 4 * max(math.ulp(left), math.ulp(right))
         )
     if isinstance(left, dict):
         return left.keys() == right.keys() and all(

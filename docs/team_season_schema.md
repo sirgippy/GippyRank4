@@ -299,7 +299,11 @@ path, and SHA-256. Static export validates the provenance object's structure
 and the paired Context provenance; it does not compare a retained artifact's
 schedule hash with a later mutable schedule corpus.
 
-Results and scores are shown only when the game ID is in the snapshot's durable
-`included_game_ids` evidence. A schedule date before the cutoff is not enough: a game
-that was in progress or otherwise absent from that evidence remains redacted,
-even if the current schedule corpus now contains a final score.
+`included_game_ids` identifies model evidence, not every safely known football
+result. A scored game outside model evidence can retain its result as
+`out_of_scope` when the selected schedule corpus is the snapshot's recorded
+corpus, the game date is no later than the cutoff, and either the frozen source
+or both source responses were available by the cutoff. For mutable CFBD data,
+the later FBS/FCS response time is the availability boundary. In-progress
+games and results from later source responses remain redacted. Such games never
+receive a model rating or retrospective expectation.
