@@ -2,180 +2,214 @@
 
 ## Recommendation
 
-**A — keep History 1.1 as a first-class production predictive lineage.** In a
-matched four-season replay, Context 1.3 is the better preseason and first
-checkpoint forecast, but History 1.1 has better late posterior NLL, CRPS,
-expected-rank error, and 80% interval coverage in three of four seasons. The
-2023–2025 final-checkpoint NLL gaps (C minus H) are 0.072, 0.078, and 0.085
-nats per team. History is therefore a useful independently maintained
-comparison, even though the two rankings become very similar in order. This
-study makes **no** publication or model change.
+**A — keep History 1.1 as a first-class production predictive lineage.** The
+rolling-origin Context 1.3 comparison supports this more directly than the
+frozen-through-2021 comparison alone. Context has lower preseason NLL in all
+four seasons. History first has lower posterior NLL at the **September 17, 2023,
+September 19, 2024, and September 19, 2025** checkpoints, and keeps that lead at
+every observed October, November, and postseason checkpoint in those years.
+2022 is the exception: Context remains slightly ahead. The four-season mean
+also changes sign at the September checkpoint, from a rolling Context advantage
+of 0.034 nats per team in August to a History advantage of 0.013 in September.
+This is evidence for useful in-season publication, not merely a postseason
+comparison. No publication or model behavior changes in this study.
 
-Context 1.2 needs **artifact-reading and reconstruction support only** for its
-retained 2026 preseason and early weekly publications. This is a separate
-compatibility question; the evidence here does not justify active Context 1.2
-generation after Context 1.3 activation.
+The rolling comparison improves Context's final pooled posterior NLL by 0.004
+relative to the frozen comparison, but History still leads by 0.054. That lead
+is 0.079, 0.072, and 0.070 nats per team in 2023–2025, with better target-mass
+80% coverage in each. History also has lower final pooled CRPS and expected-rank
+error. The high agreement in ranking order means its value lies mainly in the
+probability distributions and calibration, rather than a wholly different
+ordering.
 
-## Method and inputs
+Context 1.2 needs **retained-artifact reading and reconstruction support only**
+for its 2026 preseason and early weekly publications. This compatibility
+question is separate from whether History 1.1 merits active publication.
 
-The study replays the seven actual-date checkpoints from the existing rolling
-posterior backtest for each of 2022–2025. The population is all matched FBS
-teams with a frozen final Massey constituent-rank PMF: 131, 133, 134, and 136
-teams respectively. Each team receives the same target at every checkpoint.
-The target is a distribution, so NLL is target-weighted cross entropy and 80%
-coverage is target probability mass inside the forecast interval. It is not a
-single assumed true rank. CRPS and expected-rank absolute error supplement
-NLL. The seven checkpoints are season depths, not fixed calendar weeks.
+## Method and provenance
 
-- **C prior:** Context 1.3 P3 historical research PMFs from
-  `data/processed/preseason/context_v1_3_candidate/predictions.csv`. Their
-  model was frozen through 2021 and applied to 2022–2025, with H-based
-  cold-start fallback rows. They are the validated historical C1.3
-  specification, not a newly fitted model for this study.
-- **H prior:** frozen History 1.1 PMFs from
-  `data/processed/preseason/history/predictions.csv`.
-- **Shared update:** pinned Historical Likelihood V1, SHA-256
-  `89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153`,
-  and the existing deterministic damped loopy sum-product inference with 100
-  maximum iterations, 1e-6 tolerance, and 0.35 damping. All 56 runs converged.
-  Each C/H checkpoint uses the same completed games, cutoff, FCS population,
-  uniform FCS fallback rule, and FBS team IDs. Neither prior, likelihood, nor
-  inference semantics were changed.
+We replay seven actual-date checkpoints in each of 2022–2025, using the
+retained rolling posterior backtest dates. The matched population is all FBS
+teams with a frozen final Massey constituent-rank target PMF: 131, 133, 134,
+and 136 teams. Each team's target distribution is reused at every checkpoint.
+NLL is target-weighted cross entropy; 80% coverage is target probability mass
+inside the forecast interval, not a binary hit against an assumed single true
+rank. CRPS and expected-rank absolute error provide complementary scores.
 
-The processed historical CFBD game CSV is not checked into this worktree, so
-the study reconstructs its game rows from the cached raw FBS/FCS schedule
-responses, rejecting conflicting duplicate game IDs. The final-rank target
-corpus is likewise supplied as an external processed input. Input and
-reconstructed-corpus hashes are in
+The historical arms are:
+
+- **Frozen Context 1.3:** validated P3 research PMFs from
+  `data/processed/preseason/context_v1_3_candidate/predictions.csv`, fitted
+  through 2021 and applied to every target season. This leakage-safe
+  architecture comparison remains in the results.
+- **Rolling-origin Context 1.3:** the same validated P3 specification refitted
+  through 2021 for 2022, through 2022 for 2023, through 2023 for 2024, and
+  through 2024 for 2025. The study calls the existing Context 1.3 fit and
+  prediction functions, checks each season's prior scores against the retained
+  validated `rolling_metrics.csv` at 1e-8 tolerance, and uses the resulting
+  team PMFs in the posterior replay. It does not refit on a target season's
+  outcomes.
+- **History 1.1:** retained historical PMFs from
+  `data/processed/preseason/history/predictions.csv`. The same History
+  posterior is reused as the matched comparator for both Context arms.
+
+Every checkpoint uses the pinned Historical Likelihood V1 (SHA-256
+`89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153`),
+identical included games, cutoff, FCS population and fallback rule, and FBS
+team IDs. Inference uses the current production snapshot configuration: **500
+maximum iterations, 1e-9 tolerance, 0.35 damping**. All 84 historical runs
+converged, requiring at most 135 iterations. The independent History replay
+stays within 0.00155 NLL of the older retained backtest at every checkpoint;
+that diagnostic is recorded in
+[`historical_evidence.csv`](../data/processed/history_context_posterior_study/historical_evidence.csv).
+
+The processed historical CFBD game CSV is not checked into this worktree. The
+study reconstructs it from cached raw FBS/FCS schedule responses and rejects
+conflicting duplicate game IDs. The final-rank target corpus is another local
+input. Input hashes, including the Context feature panel and coaching sources
+used for rolling fits, are in
 [`provenance.json`](../data/processed/history_context_posterior_study/provenance.json).
-The independent History replay differs from the older retained backtest by at
-most 0.00155 NLL (2024 final), consistent with a small processed-corpus or
-implementation difference. Its difference is recorded at every checkpoint in
-[`historical_evidence.csv`](../data/processed/history_context_posterior_study/historical_evidence.csv),
-and every C/H result here is a fresh, matched replay rather than a comparison
-against those retained History numbers.
+Historical Context transfer values remain **retrospective research
+reconstructions**, not archived August 15 inputs. Rolling-origin fitting
+addresses model updating as modern seasons enter training; it does not remove
+this data-timing limitation. The 28 checkpoints and 7,476 arm-specific
+team-checkpoint rows repeatedly score 534 team-seasons, so they are not 7,476
+independent observations.
 
-Historical 2021–2025 Context transfer values are retrospective research
-reconstructions, not archived August 15 snapshots. These results evaluate the
-frozen C1.3 historical artifact's predictive behavior, subject to that data
-timing limitation. They do not imply those transfer features were available
-to a live operator in those years. The four season outcomes are also related;
-28 checkpoints and 3,738 team-checkpoint rows are repeated observations, not
-3,738 independent trials.
+## Calendar crossover and matched checkpoints
 
-## Matched historical checkpoints
+Positive Δ means History has lower NLL; Δ = Context minus History, in nats per
+team. Dates are UTC. The first History-leading checkpoint is September 17 in
+2023 and September 19 in 2024 and 2025 **under both Context arms**. History
+remains ahead at all later observed dates in those three seasons. In 2022,
+Context leads at every checkpoint, though its edge narrows to 0.004 by
+December 10. The four-season aggregate first turns History-leading at
+checkpoint 2, which falls on September 17–22 by season.
 
-The table gives posterior NLL and target-mass coverage; lower NLL is better.
-`Δ` is C minus H in nats per team. C/H 80% interval widths are in rank slots.
-The full prior, posterior, CRPS, error, coverage, width, and ranking-agreement
-metrics for every checkpoint and transfer group are in
+| Season | Depth | Date | H NLL | Frozen C NLL | Frozen Δ | Rolling C NLL | Rolling Δ |
+|---|---:|---|---:|---:|---:|---:|---:|
+| 2022 | 1 | Aug 27 | 4.519 | 4.448 | -0.071 | 4.448 | -0.071 |
+| 2022 | 2 | Sep 22 | 4.311 | 4.282 | -0.029 | 4.282 | -0.029 |
+| 2022 | 3 | Oct 07 | 4.183 | 4.158 | -0.026 | 4.158 | -0.026 |
+| 2022 | 4 | Oct 27 | 4.078 | 4.068 | -0.010 | 4.068 | -0.010 |
+| 2022 | 5 | Nov 09 | 3.994 | 3.980 | -0.014 | 3.980 | -0.014 |
+| 2022 | 6 | Nov 23 | 3.861 | 3.852 | -0.009 | 3.852 | -0.009 |
+| 2022 | 7 | Dec 10 | 3.801 | 3.797 | -0.004 | 3.797 | -0.004 |
+| 2023 | 1 | Aug 26 | 4.492 | 4.474 | -0.018 | 4.476 | -0.017 |
+| 2023 | 2 | Sep 17 | 4.306 | 4.337 | +0.032 | 4.339 | +0.034 |
+| 2023 | 3 | Oct 06 | 4.244 | 4.274 | +0.030 | 4.277 | +0.033 |
+| 2023 | 4 | Oct 21 | 4.049 | 4.077 | +0.028 | 4.081 | +0.032 |
+| 2023 | 5 | Nov 04 | 3.945 | 4.005 | +0.060 | 4.010 | +0.065 |
+| 2023 | 6 | Nov 18 | 3.873 | 3.929 | +0.057 | 3.934 | +0.062 |
+| 2023 | 7 | Dec 09 | 3.836 | 3.908 | +0.072 | 3.915 | +0.079 |
+| 2024 | 1 | Aug 24 | 4.585 | 4.548 | -0.036 | 4.553 | -0.032 |
+| 2024 | 2 | Sep 19 | 4.375 | 4.410 | +0.035 | 4.403 | +0.028 |
+| 2024 | 3 | Oct 06 | 4.193 | 4.232 | +0.039 | 4.225 | +0.033 |
+| 2024 | 4 | Oct 24 | 4.113 | 4.171 | +0.058 | 4.164 | +0.051 |
+| 2024 | 5 | Nov 08 | 4.037 | 4.116 | +0.079 | 4.106 | +0.069 |
+| 2024 | 6 | Nov 23 | 3.897 | 3.981 | +0.083 | 3.974 | +0.077 |
+| 2024 | 7 | Dec 14 | 3.798 | 3.876 | +0.078 | 3.870 | +0.072 |
+| 2025 | 1 | Aug 23 | 4.564 | 4.547 | -0.017 | 4.545 | -0.019 |
+| 2025 | 2 | Sep 19 | 4.340 | 4.364 | +0.024 | 4.358 | +0.018 |
+| 2025 | 3 | Oct 08 | 4.195 | 4.247 | +0.052 | 4.238 | +0.043 |
+| 2025 | 4 | Oct 24 | 4.067 | 4.117 | +0.050 | 4.109 | +0.042 |
+| 2025 | 5 | Nov 09 | 3.967 | 4.037 | +0.070 | 4.027 | +0.060 |
+| 2025 | 6 | Nov 23 | 3.947 | 4.022 | +0.075 | 4.008 | +0.061 |
+| 2025 | 7 | Dec 13 | 3.860 | 3.945 | +0.085 | 3.929 | +0.070 |
+
+The full prior, posterior, CRPS, error, coverage, width, and ranking agreement
+metrics by season, checkpoint, Context arm, and transfer group are in
 [`historical_checkpoints.csv`](../data/processed/history_context_posterior_study/historical_checkpoints.csv).
+The team-level paired observations are in
+[`historical_teams.csv`](../data/processed/history_context_posterior_study/historical_teams.csv).
 
-| Season | Depth | Cutoff (UTC) | C NLL | H NLL | Δ | C cover | H cover | C/H width |
-|---|---:|---|---:|---:|---:|---:|---:|---:|
-| 2022 | 1 | Aug 27 | 4.448 | 4.519 | -0.071 | .834 | .846 | 69.9 / 74.7 |
-| 2022 | 2 | Sep 22 | 4.282 | 4.311 | -0.029 | .800 | .797 | 48.5 / 50.3 |
-| 2022 | 3 | Oct 07 | 4.158 | 4.183 | -0.026 | .792 | .783 | 42.4 / 43.6 |
-| 2022 | 4 | Oct 27 | 4.068 | 4.078 | -0.010 | .776 | .770 | 36.1 / 36.9 |
-| 2022 | 5 | Nov 09 | 3.980 | 3.994 | -0.014 | .769 | .767 | 33.0 / 33.6 |
-| 2022 | 6 | Nov 23 | 3.852 | 3.861 | -0.009 | .805 | .799 | 30.2 / 30.8 |
-| 2022 | 7 | Dec 10 | 3.797 | 3.801 | -0.004 | .805 | .801 | 29.0 / 29.5 |
-| 2023 | 1 | Aug 26 | 4.475 | 4.493 | -0.018 | .864 | .865 | 70.2 / 76.0 |
-| 2023 | 2 | Sep 17 | 4.337 | 4.306 | +0.032 | .780 | .807 | 49.3 / 51.4 |
-| 2023 | 3 | Oct 06 | 4.274 | 4.244 | +0.030 | .737 | .756 | 42.0 / 43.4 |
-| 2023 | 4 | Oct 21 | 4.077 | 4.049 | +0.028 | .771 | .787 | 36.6 / 37.5 |
-| 2023 | 5 | Nov 04 | 4.005 | 3.945 | +0.060 | .775 | .798 | 33.2 / 34.0 |
-| 2023 | 6 | Nov 18 | 3.929 | 3.873 | +0.057 | .779 | .804 | 30.5 / 31.3 |
-| 2023 | 7 | Dec 09 | 3.908 | 3.836 | +0.072 | .753 | .794 | 28.6 / 29.3 |
-| 2024 | 1 | Aug 24 | 4.548 | 4.585 | -0.036 | .810 | .803 | 68.9 / 76.6 |
-| 2024 | 2 | Sep 19 | 4.410 | 4.375 | +0.035 | .753 | .765 | 50.2 / 53.4 |
-| 2024 | 3 | Oct 06 | 4.232 | 4.193 | +0.039 | .764 | .763 | 40.2 / 42.2 |
-| 2024 | 4 | Oct 24 | 4.171 | 4.113 | +0.058 | .769 | .776 | 35.9 / 37.4 |
-| 2024 | 5 | Nov 08 | 4.116 | 4.037 | +0.080 | .756 | .775 | 32.9 / 34.3 |
-| 2024 | 6 | Nov 23 | 3.981 | 3.897 | +0.083 | .773 | .798 | 29.9 / 31.1 |
-| 2024 | 7 | Dec 14 | 3.876 | 3.798 | +0.078 | .792 | .821 | 28.5 / 29.6 |
-| 2025 | 1 | Aug 23 | 4.547 | 4.564 | -0.017 | .829 | .841 | 71.2 / 78.0 |
-| 2025 | 2 | Sep 19 | 4.364 | 4.340 | +0.024 | .774 | .805 | 48.7 / 51.6 |
-| 2025 | 3 | Oct 08 | 4.247 | 4.195 | +0.052 | .750 | .768 | 39.4 / 41.1 |
-| 2025 | 4 | Oct 24 | 4.117 | 4.067 | +0.050 | .766 | .786 | 35.7 / 37.0 |
-| 2025 | 5 | Nov 09 | 4.037 | 3.967 | +0.070 | .757 | .786 | 32.1 / 33.2 |
-| 2025 | 6 | Nov 23 | 4.022 | 3.947 | +0.075 | .746 | .776 | 29.4 / 30.3 |
-| 2025 | 7 | Dec 13 | 3.945 | 3.860 | +0.085 | .762 | .793 | 28.1 / 29.1 |
+## September, October, November, and postseason behavior
+
+These are team-weighted means across the four seasons; October and November
+each contain two checkpoints per season. August is the first checkpoint, before
+most game evidence. Coverage is target mass in the forecast's 80% interval.
+
+| Period | Frozen Δ NLL | Rolling Δ NLL | Rolling C / H coverage | Rolling C / H width |
+|---|---:|---:|---:|---:|
+| August | -0.035 | -0.034 | .833 / .839 | 70.1 / 76.4 |
+| September | +0.016 | +0.013 | .777 / .793 | 49.2 / 51.7 |
+| October | +0.028 | +0.025 | .766 / .774 | 38.5 / 39.9 |
+| November | +0.051 | +0.047 | .771 / .788 | 31.4 / 32.3 |
+| Postseason (December) | +0.058 | +0.054 | .778 / .802 | 28.6 / 29.4 |
+
+The History advantage begins in September in 2023–2025, persists in October,
+and grows in November and December. Rolling Context narrows the pooled gap by
+roughly 0.003–0.004 NLL from September onward; it does not move the observed
+crossover or erase the repeated coverage difference.
 
 ## Prior improvement, calibration, and uncertainty
 
-Both posteriors improve materially over their own prior. At the final depth,
-the team-weighted aggregate C/H prior NLL is 4.506/4.544; posterior NLL is
-3.882/3.824. Thus C improves 0.624 and H improves 0.720 nats per team.
-Average 80% interval width contracts from 70.6 to 28.6 ranks for C and from
-77.0 to 29.4 for H. The H posterior is still slightly wider, yet has better
-final aggregate coverage (0.802 versus C's 0.778). Across the four final
-season checkpoints, H's coverage is 0.801, 0.794, 0.821, 0.793; C's is
-0.805, 0.753, 0.792, 0.762. This is a recurring C undercoverage pattern in
-2023–2025, not only a ranking-order difference.
+At the final checkpoint, the team-weighted rolling Context prior/posterior NLL
+is 4.507/3.878, an improvement of 0.629. History's is 4.544/3.824, an
+improvement of 0.720. Frozen Context improves from 4.506 to 3.882, or 0.624.
+Both priors therefore benefit substantially from the same game likelihood.
 
-At final depth, H also has lower aggregate CRPS (0.0194 versus 0.0225) and
-expected-rank absolute error (7.66 versus 8.29). The season exception is 2022:
-C has slightly better final NLL, CRPS, and expected-rank error. Thus H does
-not dominate every metric or year. Early C is materially sharper and better
-in NLL: aggregate first-depth C minus H NLL is -0.035. At the middle fourth
-checkpoint it is +0.032, and at final depth +0.058. The median team-level
-final difference is only +0.018, with 10th/90th percentiles -0.136/+0.324;
-H has lower final NLL for 302 of 534 teams. The mean reflects some sizable
-individual H gains as well as a broad shift.
+The rolling Context final 80% interval narrows from 70.7 to 28.6 ranks;
+History's narrows from 77.0 to 29.4. History is slightly wider yet has more
+target mass inside its interval, 0.802 versus 0.778 pooled. In 2023, 2024,
+and 2025, rolling Context final coverage is 0.752, 0.794, and 0.762, versus
+History's 0.794, 0.821, and 0.793. The 2022 exception is 0.805 for Context
+versus 0.801 for History. Final pooled CRPS is 0.0223 for rolling Context
+versus 0.0194 for History; expected-rank absolute error is 8.23 versus 7.66.
 
-The two posterior expected-rank orders converge during each season: within-year
-C/H Spearman correlations are 0.93–0.94 at depth 1 and 0.996–0.998 at depth
-7. Across years, adjacent-checkpoint mean absolute expected-rank movement
-falls from 13.2 to 2.8 for C and 15.1 to 2.9 for H. H moves more early, but
-both become stable late. That high rank agreement coexists with meaningful
-distributional differences in NLL and coverage.
+The team-level final rolling Δ NLL median is +0.017, with 10th/90th
+percentiles -0.132/+0.304; History has lower NLL for 293 of 534 team-seasons.
+The mean advantage therefore includes some large gains and substantial
+heterogeneity. Expected-rank order remains similar: within-season Spearman
+correlation between rolling Context and History is 0.932–0.951 in August and
+0.996–0.998 by the final checkpoint. Adjacent-checkpoint mean absolute
+expected-rank movement falls from 13.3 to 2.8 for rolling Context and from
+15.1 to 2.9 for History. Similar rank stability does not imply equal
+probability quality.
 
 ## Transfer availability and notable disagreements
 
-Transfer completeness is determined from the frozen historical C1.3 coverage
-artifact **before imputation**: both incoming prior-usage and defensive DB
-impact sums must be marked available. It does not assert that every actual
-transfer was identified. Across 534 team-seasons there are 488 complete, 40
-incomplete, and 6 History fallback rows with no contextual coverage record.
-The DB-sum availability flag is true throughout this four-season target panel;
-the incomplete group therefore primarily reflects missing prior usage. These
-are 40 distinct team-season observations repeated across depths, not 280
-independent teams.
+Transfer completeness is based on the historical Context 1.3 coverage artifact
+**before imputation**. Both incoming prior-usage and defensive DB impact sums
+must be marked available. This says whether those feature sums were available,
+not whether every real-world transfer was identified. Across 534
+team-seasons, 488 are complete, 40 incomplete, and 6 use a History fallback
+without a Context coverage record. The DB-sum availability flag is true
+throughout this panel, so the incomplete split primarily reflects missing
+prior usage. The small incomplete and fallback groups limit subgroup claims.
 
-| Group | Team-seasons | First Δ NLL | Middle Δ NLL | Final Δ NLL | Final C−H coverage |
+| Group | Team-seasons | Rolling August Δ | Rolling September Δ | Rolling final Δ | Rolling final C−H coverage |
 |---|---:|---:|---:|---:|---:|
-| Complete | 488 | -0.034 | +0.033 | +0.062 | -0.025 |
-| Incomplete | 40 | -0.069 | +0.012 | +0.016 | -0.013 |
-| History fallback | 6 | +0.037 | +0.049 | +0.052 | -0.031 |
+| Complete | 488 | -0.032 | +0.016 | +0.058 | -0.026 |
+| Incomplete | 40 | -0.072 | -0.023 | +0.018 | -0.009 |
+| History fallback | 6 | +0.043 | -0.008 | +0.033 | -0.029 |
 
-The final H advantage is **larger among transfer-complete teams**, the opposite
-of the proposed missing-transfer concentration. Year by year, final C−H NLL
-among complete teams is -0.005, +0.079, +0.078, +0.088 in 2022–2025. The
-incomplete estimates are +0.001, +0.025, +0.148, -0.098 on counts of 19,
-14, 4, and 3, so their late variation is too noisy for a firm subgroup
-conclusion. The fallback group is too small to support an inference.
+The final History advantage is larger among transfer-complete teams, so it is
+not concentrated in the missing-transfer group. For complete teams, rolling
+final Δ NLL by year is -0.005, +0.086, +0.071, and +0.072. For incomplete
+teams it is +0.001, +0.031, +0.137, and -0.094, on annual counts of 19, 14,
+4, and 3. The 2024–2025 incomplete results are especially unstable because
+those groups are tiny.
 
-Examples of large final team-level differences in target-weighted NLL (C−H)
-from [`historical_teams.csv`](../data/processed/history_context_posterior_study/historical_teams.csv):
-
-- H advantage: 2023 James Madison +1.368, 2025 Navy +1.235, 2024 Buffalo
-  +0.838. All three are transfer-complete.
-- C advantage: 2022 Nevada -0.778 and 2023 East Carolina -0.608 are
-  transfer-complete; 2025 Northern Illinois -0.695 is incomplete.
-
-These examples illustrate heterogeneity. The multi-season late aggregate and
-coverage pattern is more persuasive than any one team's loss.
+Examples of large final rolling team-level differences in target-weighted NLL
+(C−H) are 2023 James Madison +1.398, 2025 Navy +1.008, and 2024 Buffalo
++0.820, all transfer-complete. Context instead does better for 2022 Nevada
+-0.779 and 2023 East Carolina -0.680, also complete, and for 2025 Northern
+Illinois -0.655, incomplete. These examples show why the mean should be read
+alongside the distribution of team differences and the year-by-year pattern.
 
 ## Current 2026 checkpoints: descriptive only
 
-Six retained C1.3/H1.1 weekly snapshot pairs from September 8–27 use matched
-effective cutoff and identical included-game rows. The table describes the
-138 FBS teams; there is no final 2026 rank-distribution target, so **no 2026
-NLL or calibration claim** is made. Context 1.3's 2026 prior is explicitly a
+Six retained Context 1.3/History 1.1 weekly snapshot pairs from September
+8–27 use matched effective cutoffs and identical included-game rows. The table
+describes 138 FBS teams. There is no final 2026 rank-distribution target, so
+**no 2026 NLL or calibration claim** is made. Context 1.3's 2026 prior is a
 retrospective reconstruction using transfer inputs retrieved after the
 preseason cutoff. Full per-team values are in
 [`current_2026_descriptive.csv`](../data/processed/history_context_posterior_study/current_2026_descriptive.csv).
+Some older retained History snapshot metadata does not record its inference
+configuration; any configuration that is recorded is checked against the
+current 500 / 1e-9 / 0.35 settings.
 
 | Date | Included games | C/H mean 80% width | Mean absolute C/H expected-rank gap | C/H rank Spearman | Top-25 overlap |
 |---|---:|---:|---:|---:|---:|
@@ -186,10 +220,10 @@ preseason cutoff. Full per-team values are in
 | Sep 26 | 417 | 49.6 / 52.4 | 5.42 | .989 | 22 |
 | Sep 27 | 530 | 46.2 / 48.4 | 5.11 | .991 | 21 |
 
-The 2026 rankings are already highly correlated, while the two lineages still
-assign different uncertainty and top-25 memberships. The snapshot comparison
-supports keeping both available during the incomplete season; it cannot decide
-which is better calibrated.
+The two rankings are already highly correlated, while the lineages still
+assign different uncertainty and top-25 memberships. These snapshots show
+current descriptive divergence; they cannot establish which lineage is better
+calibrated in 2026.
 
 ## Reproduction
 
@@ -203,7 +237,8 @@ uv run python scripts/study_history_context_posterior.py \
 ```
 
 The script writes only `data/processed/history_context_posterior_study/`.
-The checked-in CSVs retain the team-level observations, all checkpoint and
+The committed CSVs contain the arm-specific team results, checkpoint and
 transfer-group summaries, evidence diagnostics, and the 2026 descriptive
-sample. The retained historical backtest was used for dates and a replay
-diagnostic, not as the H arm of the comparison.
+sample. The retained historical posterior backtest supplies dates and a
+History replay diagnostic, not an unmatched comparator. The validated rolling
+P3 prior metrics are checked before posterior scoring.

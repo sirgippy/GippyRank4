@@ -10,10 +10,12 @@ import argparse
 import csv
 import hashlib
 import json
+import sys
 import tempfile
 from collections import defaultdict
 from contextlib import contextmanager
 from datetime import datetime
+from inspect import signature
 from pathlib import Path
 
 import numpy as np
@@ -23,6 +25,7 @@ from gippyrank.posterior.engine import Team, infer_posterior
 from gippyrank.posterior.snapshots import (
     _scheduled_future_fcs_rows,
     add_fcs_fallbacks,
+    build_snapshot,
     filter_games,
     load_pinned_likelihood,
     load_teams,
@@ -30,6 +33,9 @@ from gippyrank.posterior.snapshots import (
 from gippyrank.preseason import pmf_summaries
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+import build_preseason_context_prior_v1_3 as c13
+
 OUT = ROOT / "data/processed/history_context_posterior_study"
 SEASONS = (2022, 2023, 2024, 2025)
 CONTEXT = ROOT / "data/processed/preseason/context_v1_3_candidate/predictions.csv"
@@ -59,6 +65,12 @@ GAME_FIELDS = (
     "awayPoints",
 )
 BACKTEST = ROOT / "data/processed/posterior_backtest"
+CONTEXT_ARMS = ("frozen_2021", "rolling_origin")
+SNAPSHOT_PARAMETERS = signature(build_snapshot).parameters
+INFERENCE = {
+    key: SNAPSHOT_PARAMETERS[f"inference_{key}"].default
+    for key in ("max_iterations", "tolerance", "damping")
+}
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
@@ -87,6 +99,40 @@ def load_context(season: int) -> tuple[list[Team], dict[str, dict[str, str]]]:
         for key, row in rows.items()
     ]
     return teams, rows
+
+
+def load_rolling_context() -> dict[int, tuple[list[Team], dict[str, dict[str, str]]]]:
+    """Recreate the validated P3 rolling fits, checking their retained prior scores."""
+    rows, cold, _ = c13.load_candidate_rows()
+    retained = {
+        int(row["target_season"]): row
+        for row in read_csv(c13.OUTPUT / "rolling_metrics.csv")
+        if row["candidate"] == "P3"
+    }
+    result = {}
+    for season in SEASONS:
+        predictions, _ = c13.fit_rolling(
+            rows,
+            cold,
+            context_features=c13.CONTEXT_1_3_FEATURES,
+            label="P3",
+            target_season=season,
+        )
+        actual = c13.score(predictions)
+        if season not in retained or any(
+            abs(actual[metric] - float(retained[season][metric])) > 1e-8
+            for metric in c13.METRICS
+        ):
+            raise ValueError(f"{season}: rolling P3 prior fails retained parity")
+        current = [item for item in predictions if item.season == season]
+        teams = [
+            Team(item.team_id, item.team_name, "fbs", item.pmf)
+            for item in current
+            if item.subdivision == "fbs"
+        ]
+        meta = {item.team_id: {"team_name": item.team_name} for item in current}
+        result[season] = teams, meta
+    return result
 
 
 def load_targets(season: int, target_path: Path) -> dict[str, np.ndarray]:
@@ -144,7 +190,11 @@ def mean(rows: list[dict[str, object]], field: str) -> float:
 
 
 def summarize(
-    rows: list[dict[str, object]], season: int, checkpoint: int, group: str
+    rows: list[dict[str, object]],
+    season: int,
+    checkpoint: int,
+    group: str,
+    context_arm: str,
 ) -> dict[str, object]:
     selected = (
         [row for row in rows if row["transfer_group"] == group]
@@ -154,6 +204,7 @@ def summarize(
     result: dict[str, object] = {
         "season": season,
         "checkpoint": checkpoint,
+        "context_arm": context_arm,
         "transfer_group": group,
         "teams": len(selected),
     }
@@ -233,14 +284,25 @@ def historical(
     team_rows: list[dict[str, object]] = []
     summary_rows: list[dict[str, object]] = []
     evidence_rows: list[dict[str, object]] = []
+    rolling_context = load_rolling_context()
     for season in SEASONS:
-        context, context_meta = load_context(season)
+        frozen_context, frozen_meta = load_context(season)
+        contexts = {
+            "frozen_2021": (frozen_context, frozen_meta),
+            "rolling_origin": rolling_context[season],
+        }
         history, history_meta, _ = load_teams(ROOT, season, "history")
-        c_keys = {team.team_id for team in context}
+        c_keys = {team.team_id for team in frozen_context}
         h_keys = {team.team_id for team in history if team.subdivision == "fbs"}
         targets = load_targets(season, target_path)
         season_fcs_population = fcs_population(season, target_path)
-        if c_keys != h_keys or c_keys != set(targets):
+        if (
+            c_keys != h_keys
+            or c_keys != set(targets)
+            or any(
+                {team.team_id for team in arm[0]} != c_keys for arm in contexts.values()
+            )
+        ):
             raise ValueError(f"{season}: unmatched Context/History/target FBS keys")
         groups = transfer_groups(season, c_keys)
         old_panel = json.loads((BACKTEST / f"{season}_rolling.json").read_text())
@@ -253,7 +315,8 @@ def historical(
             outputs = {}
             history_replay_nll_delta = 0.0
             for family, original, meta in (
-                ("context", context, context_meta),
+                ("frozen_2021", *contexts["frozen_2021"]),
+                ("rolling_origin", *contexts["rolling_origin"]),
                 ("history", history, history_meta),
             ):
                 with_fcs, fallback = add_fcs_fallbacks(
@@ -267,9 +330,7 @@ def historical(
                     with_fcs,
                     games,
                     likelihood,
-                    max_iterations=100,
-                    tolerance=1e-6,
-                    damping=0.35,
+                    **INFERENCE,
                 )
                 if not result.converged:
                     raise RuntimeError(
@@ -304,50 +365,62 @@ def historical(
                         ),
                     }
                 )
-            prior = {
-                "context": {team.team_id: team.prior for team in context},
-                "history": {
-                    team.team_id: team.prior
-                    for team in history
-                    if team.subdivision == "fbs"
-                },
-            }
-            at_checkpoint = []
-            for key in sorted(c_keys):
-                row: dict[str, object] = {
-                    "season": season,
-                    "checkpoint": checkpoint,
-                    "cutoff": old["cutoff"],
-                    "team_id": key,
-                    "team_name": context_meta[key]["team_name"],
-                    "transfer_group": groups[key],
+            for context_arm in CONTEXT_ARMS:
+                context, context_meta = contexts[context_arm]
+                prior = {
+                    "context": {team.team_id: team.prior for team in context},
+                    "history": {
+                        team.team_id: team.prior
+                        for team in history
+                        if team.subdivision == "fbs"
+                    },
                 }
-                for family in ("context", "history"):
-                    for stage, pmf in (
-                        ("prior", prior[family][key]),
-                        ("posterior", outputs[family][key]),
+                at_checkpoint = []
+                for key in sorted(c_keys):
+                    row: dict[str, object] = {
+                        "season": season,
+                        "checkpoint": checkpoint,
+                        "context_arm": context_arm,
+                        "cutoff": old["cutoff"],
+                        "team_id": key,
+                        "team_name": context_meta[key]["team_name"],
+                        "transfer_group": groups[key],
+                    }
+                    for family in ("context", "history"):
+                        for stage, pmf in (
+                            ("prior", prior[family][key]),
+                            (
+                                "posterior",
+                                outputs[
+                                    context_arm if family == "context" else "history"
+                                ][key],
+                            ),
+                        ):
+                            row.update(
+                                {
+                                    f"{family}_{stage}_{metric}": value
+                                    for metric, value in score(
+                                        pmf, targets[key]
+                                    ).items()
+                                }
+                            )
+                    row["posterior_c_minus_h_nll"] = float(
+                        row["context_posterior_nll"]
+                    ) - float(row["history_posterior_nll"])
+                    row["posterior_c_minus_h_expected_rank"] = float(
+                        row["context_posterior_expected_rank"]
+                    ) - float(row["history_posterior_expected_rank"])
+                    at_checkpoint.append(row)
+                team_rows.extend(at_checkpoint)
+                for group in ("all", "complete", "incomplete", "history_fallback"):
+                    if group == "all" or any(
+                        row["transfer_group"] == group for row in at_checkpoint
                     ):
-                        row.update(
-                            {
-                                f"{family}_{stage}_{metric}": value
-                                for metric, value in score(pmf, targets[key]).items()
-                            }
+                        summary_rows.append(
+                            summarize(
+                                at_checkpoint, season, checkpoint, group, context_arm
+                            )
                         )
-                row["posterior_c_minus_h_nll"] = float(
-                    row["context_posterior_nll"]
-                ) - float(row["history_posterior_nll"])
-                row["posterior_c_minus_h_expected_rank"] = float(
-                    row["context_posterior_expected_rank"]
-                ) - float(row["history_posterior_expected_rank"])
-                at_checkpoint.append(row)
-            team_rows.extend(at_checkpoint)
-            for group in ("all", "complete", "incomplete", "history_fallback"):
-                if group == "all" or any(
-                    row["transfer_group"] == group for row in at_checkpoint
-                ):
-                    summary_rows.append(
-                        summarize(at_checkpoint, season, checkpoint, group)
-                    )
             print(f"completed {season} checkpoint {checkpoint}", flush=True)
     return team_rows, summary_rows, evidence_rows
 
@@ -392,6 +465,14 @@ def current_season() -> list[dict[str, object]]:
         ):
             if field in c_meta and field in h_meta and c_meta[field] != h_meta[field]:
                 raise ValueError(f"2026 {cutoff}: evidence/config mismatch in {field}")
+        for metadata in (c_meta, h_meta):
+            configuration = metadata.get("posterior_inference_configuration")
+            if configuration is not None and any(
+                configuration.get(key) != value for key, value in INFERENCE.items()
+            ):
+                raise ValueError(
+                    f"2026 {cutoff}: production inference configuration differs"
+                )
         c_pmfs, h_pmfs = snapshot_pmfs(c_path), snapshot_pmfs(h_path)
         c_prior, _, _ = load_teams(ROOT, 2026, "context")
         h_prior, _, _ = load_teams(ROOT, 2026, "history")
@@ -432,6 +513,58 @@ def current_season() -> list[dict[str, object]]:
     return rows
 
 
+def write_provenance(
+    target_path: Path, game_hash: str, source_hashes: dict[str, str]
+) -> None:
+    provenance = {
+        str(path.relative_to(ROOT)): sha256(path)
+        for path in (
+            CONTEXT,
+            COVERAGE,
+            HISTORY,
+            LIKELIHOOD,
+            c13.HISTORICAL_TRANSFER_FEATURES,
+            c13.OUTPUT / "rolling_metrics.csv",
+            c13.OUTPUT / "model_spec.json",
+            c13.OUTPUT / "parity_report.json",
+            ROOT / "data/processed/preseason/team_season_features.csv",
+        )
+    }
+    provenance["data/processed/modeling/team_season_rank_distributions.csv"] = sha256(
+        target_path
+    )
+    provenance["reconstructed historical games.csv"] = game_hash
+    (OUT / "provenance.json").write_text(
+        json.dumps(
+            {
+                "models": {
+                    "context_frozen_2021": "1.3 research P3 fitted through 2021",
+                    "context_rolling_origin": {
+                        str(season): f"1.3 research P3 fitted through {season - 1}"
+                        for season in SEASONS
+                    },
+                    "history": "1.1",
+                    "likelihood": "Historical Likelihood V1",
+                },
+                "inference": INFERENCE,
+                "source_sha256": provenance,
+                "raw_game_source_sha256": {
+                    Path(key).name: value for key, value in source_hashes.items()
+                },
+                "raw_coach_tenure_source_sha256": {
+                    path.name: sha256(path)
+                    for path in sorted(c13.c12.TENURES.glob("*.json"))
+                },
+                "historical_seasons": SEASONS,
+                "historical_cutoffs": "exact dates from retained rolling posterior backtest",
+                "current_2026": "retained matched published snapshots; descriptive only, no final-rank target",
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--targets", type=Path, default=TARGETS)
@@ -456,39 +589,7 @@ def main() -> None:
     write_csv(OUT / "historical_evidence.csv", evidence)
     current = current_season()
     write_csv(OUT / "current_2026_descriptive.csv", current)
-    provenance = {
-        str(path.relative_to(ROOT)): sha256(path)
-        for path in (CONTEXT, COVERAGE, HISTORY, LIKELIHOOD)
-    }
-    provenance["data/processed/modeling/team_season_rank_distributions.csv"] = sha256(
-        target_path
-    )
-    provenance["reconstructed historical games.csv"] = game_hash
-    (OUT / "provenance.json").write_text(
-        json.dumps(
-            {
-                "models": {
-                    "context": "1.3 frozen research P3 fitted through 2021",
-                    "history": "1.1",
-                    "likelihood": "Historical Likelihood V1",
-                },
-                "inference": {
-                    "max_iterations": 100,
-                    "tolerance": 1e-6,
-                    "damping": 0.35,
-                },
-                "source_sha256": provenance,
-                "raw_game_source_sha256": {
-                    Path(key).name: value for key, value in source_hashes.items()
-                },
-                "historical_seasons": SEASONS,
-                "historical_cutoffs": "exact dates from retained rolling posterior backtest",
-                "current_2026": "retained matched published snapshots; descriptive only, no final-rank target",
-            },
-            indent=2,
-        )
-        + "\n"
-    )
+    write_provenance(target_path, game_hash, source_hashes)
 
 
 if __name__ == "__main__":
