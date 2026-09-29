@@ -1,3 +1,5 @@
+import { percentage, matchupProbability, matchupProbabilityPair } from "./probability.js";
+
 const $ = (selector) => document.querySelector(selector);
 const params = new URLSearchParams(window.location.search);
 let logoUrlTemplate = null;
@@ -33,28 +35,30 @@ function teamLogo(teamId, className = "team-logo") {
   return frame;
 }
 
-function formatDate(value, includeYear = true) {
+function formatDate(value, includeYear = true, timeZone = "UTC") {
   return new Intl.DateTimeFormat("en-US", {
     month: "short", day: "numeric", ...(includeYear ? { year: "numeric" } : {}),
-    timeZone: "UTC",
+    timeZone,
   }).format(new Date(value));
 }
 
-function timestamp(value) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short", day: "numeric", year: "numeric", hour: "numeric",
-    minute: "2-digit", timeZone: "UTC", timeZoneName: "short",
-  }).format(new Date(value));
+function formatGameDate(game) {
+  if (game.date_display_mode === "utc_calendar") {
+    const key = String(game.date || "").match(/^\d{4}-\d{2}-\d{2}/)?.[0];
+    return key ? formatDate(`${key}T12:00:00Z`, false, "UTC") : "Date unavailable";
+  }
+  const zone = game.date_display_mode === "local_time"
+    ? Intl.DateTimeFormat().resolvedOptions().timeZone : "UTC";
+  return formatDate(game.date, false, zone);
 }
 
-function percentage(value) {
-  if (value === 1) return "100%";
-  if (value === 0) return "0%";
+function tailPercentage(value) {
   const percent = Number(value) * 100;
-  if (!Number.isFinite(percent)) return "Unavailable";
+  if (!Number.isFinite(percent) || percent >= 10) return percentage(value);
+  if (percent === 0) return "0%";
   if (percent < 0.01) return "<0.01%";
-  if (percent < 1) return `${percent.toFixed(1)}%`;
-  return `${Math.round(percent)}%`;
+  if (percent < 1) return `${percent.toFixed(2)}%`;
+  return `${percent.toFixed(1)}%`;
 }
 
 function rank(value) {
@@ -79,6 +83,13 @@ function marginSide(teamName, value) {
   return `${teamName} by ${marginValue(amount)}`;
 }
 
+function scoreMarginSide(teamName, value) {
+  const amount = Number(value);
+  if (!Number.isInteger(amount)) throw new Error("A completed-game margin must be an integer.");
+  if (amount === 0) return "Even";
+  return `${teamName} by ${Math.abs(amount)}`;
+}
+
 function ordinal(value) {
   const rounded = Math.round(Number(value));
   if (!Number.isFinite(rounded)) return "Unavailable";
@@ -93,31 +104,93 @@ function percentileLabel(value) {
   return formatted === "Unavailable" ? formatted : `${formatted} percentile`;
 }
 
-function uncertaintyLabel(interval, rankCount) {
-  const width = Number(interval[1]) - Number(interval[0]) + 1;
-  const fraction = width / Math.max(Number(rankCount), 1);
-  if (fraction <= 0.2) return "relatively narrow";
-  if (fraction >= 0.45) return "relatively broad";
-  return "moderate";
-}
-
 function displayScale(axis) {
   const scale = Number(axis?.probability_encoding?.scale);
   return Number.isFinite(scale) && scale > 0 ? scale : 1;
+}
+
+const DISTRIBUTION_PLOT = Object.freeze({
+  width: 340, height: 90, left: 5, right: 335, baseline: 65,
+  barMaxHeight: 52, zeroTop: 6, markerTop: 4, markerBottom: 69,
+  splitExpectedBottom: 34, splitActualTop: 39,
+});
+// A compact histogram is misleading once it clips the central half of outcomes.
+function needsIntervalView(interval50, axis) {
+  return interval50[0] < Number(axis.min_margin) || interval50[1] > Number(axis.max_margin);
+}
+
+function plotX(value, minimum, maximum) {
+  const clipped = Math.max(minimum, Math.min(maximum, value));
+  return DISTRIBUTION_PLOT.left + (DISTRIBUTION_PLOT.right - DISTRIBUTION_PLOT.left) * (clipped - minimum) / (maximum - minimum);
+}
+
+function marginAxisRange(axis) {
+  const minimum = Number(axis.min_margin);
+  const maximum = Number(axis.max_margin);
+  return minimum === -maximum ? `±${maximum}` : `${minimum} to ${maximum}`;
+}
+
+function addZeroReference(svg, minimum, maximum, labelZero = true) {
+  if (minimum > 0 || maximum < 0) return;
+  const x = plotX(0, minimum, maximum);
+  svg.append(svgElement("line", { x1: x, y1: DISTRIBUTION_PLOT.zeroTop, x2: x, y2: DISTRIBUTION_PLOT.baseline + 3, class: "distribution-zero" }));
+  if (labelZero) {
+    const label = svgElement("text", { x: x + 3, y: 81, class: "distribution-zero-label" });
+    label.textContent = "Even";
+    svg.append(label);
+  }
+}
+
+function addMarginMarkers(svg, markers, minimum, maximum) {
+  const placed = markers.map((marker) => ({
+    ...marker,
+    x: plotX(marker.value, minimum, maximum),
+    side: marker.value < minimum ? "lower" : marker.value > maximum ? "upper" : null,
+  }));
+  const collide = placed.length > 1 && Math.abs(placed[0].x - placed[1].x) < 2;
+  for (const marker of placed) {
+    svg.append(svgElement("line", {
+      x1: marker.x,
+      y1: collide && marker.kind === "actual" ? DISTRIBUTION_PLOT.splitActualTop : DISTRIBUTION_PLOT.markerTop,
+      x2: marker.x,
+      y2: collide && marker.kind === "expected" ? DISTRIBUTION_PLOT.splitExpectedBottom : DISTRIBUTION_PLOT.markerBottom,
+      class: `margin-marker margin-marker-${marker.kind}`,
+      "data-margin": marker.value,
+      ...(marker.side ? { "data-clipped": marker.side } : {}),
+    }));
+  }
+  return { placed, collide };
+}
+
+function addMarkerLegend(figure, markers) {
+  const legend = node("p", "margin-marker-legend");
+  markers.forEach((marker) => legend.append(node("span", `margin-marker-legend-${marker.kind}`, `${marker.kind === "expected" ? "Expected" : "Actual"} ${marker.text}`)));
+  figure.append(legend);
+}
+
+function offAxisTailNote(display, axis, kind, oriented, widened = false) {
+  const scale = displayScale(axis);
+  const lower = display.lowerTail / scale;
+  const upper = display.upperTail / scale;
+  if (lower + upper < 0.01) return null;
+  const subject = kind === "future" ? "predicted" : "expected";
+  const sides = [
+    [lower, `${oriented.opponentName} by ${Math.abs(axis.min_margin)}`],
+    [upper, `${oriented.focalName} by ${axis.max_margin}`],
+  ].filter(([mass]) => mass >= 0.01 || (mass > 0 && lower < 0.01 && upper < 0.01))
+    .map(([mass, edge]) => `${mass < 0.01 ? "<1%" : percentage(mass)} of ${subject} outcomes extend beyond ${edge}`);
+  const range = marginAxisRange(axis);
+  const rangeNote = range === "±40" ? "" : ` (visible ${range}-point range)`;
+  return `${sides.join("; ")}${rangeNote}${widened ? "; intervals use a wider scale" : ""}.`;
 }
 
 function densitySvg(masses, {
   className,
   label,
   description,
-  zero = false,
-  tail = false,
+  zeroAxis = null,
 }) {
-  const width = 340;
-  const height = 90;
-  const left = 5;
-  const right = width - 5;
-  const baseline = 65;
+  const { width, height, left, right, baseline } = DISTRIBUTION_PLOT;
   const plotWidth = right - left;
   const values = masses.map((value) => Math.max(0, Number(value) || 0));
   const maximum = Math.max(...values, 1e-12);
@@ -133,13 +206,10 @@ function densitySvg(masses, {
   desc.textContent = description;
   svg.append(title, desc);
   svg.append(svgElement("line", { x1: left, y1: baseline, x2: right, y2: baseline, class: "distribution-baseline" }));
-  if (zero) {
-    const zeroX = left + plotWidth / 2;
-    svg.append(svgElement("line", { x1: zeroX, y1: 6, x2: zeroX, y2: baseline + 3, class: "distribution-zero" }));
-  }
+  if (zeroAxis) addZeroReference(svg, Number(zeroAxis.min_margin), Number(zeroAxis.max_margin), false);
   const barWidth = plotWidth / values.length;
   values.forEach((value, index) => {
-    const barHeight = (value / maximum) * 52;
+    const barHeight = (value / maximum) * DISTRIBUTION_PLOT.barMaxHeight;
     svg.append(svgElement("rect", {
       x: left + index * barWidth + 0.25,
       y: baseline - barHeight,
@@ -148,18 +218,15 @@ function densitySvg(masses, {
       class: "distribution-bar",
     }));
   });
-  if (tail) {
-    svg.append(svgElement("path", { d: `M ${left - 2} 12 l 5 -5 l 5 5 M ${right + 2} 12 l -5 -5 l -5 5`, class: "distribution-tail" }));
-  }
   return svg;
 }
 
-function disclosure(label, content, className = "distribution-disclosure") {
+function disclosure(label, content, className = "distribution-disclosure", summaryText = null) {
   const details = node("details", className);
   const summary = node("summary", "distribution-toggle", "▾");
   const updateLabel = () => {
     const verb = details.open ? "Hide" : "Show";
-    summary.setAttribute("aria-label", `${verb} ${label}`);
+    summary.setAttribute("aria-label", summaryText ? `${summaryText}. ${verb} ${label}` : `${verb} ${label}`);
     summary.title = `${verb} ${label}`;
   };
   updateLabel();
@@ -197,21 +264,9 @@ function rankDistributionChart(teamName, team, rankCount, label = "Rank distribu
   return figure;
 }
 
-function performanceChart(rating, axis) {
-  if (!axis || !Array.isArray(rating.display_pmf)) return null;
-  const label = `Inferred performance distribution from rank 1 through rank ${axis.max_rank}; best performances are on the left.`;
-  const description = `The distribution has ${rating.display_pmf.length} fixed rank bins. The central 80 percent interval is ranks ${rating.interval_80[0]} through ${rating.interval_80[1]}.`;
-  const figure = node("figure", "game-distribution game-distribution-performance");
-  figure.append(densitySvg(rating.display_pmf, { className: "performance-distribution-chart", label, description }));
-  const caption = node("figcaption", "distribution-axis");
-  caption.append(node("span", "axis-start", "#1 best"), node("span", "axis-label", "Inferred performance"), node("span", "axis-end", `#${axis.max_rank} worst`));
-  figure.append(caption);
-  return figure;
-}
-
-function orientedDisplayDistribution(prediction, team, axis) {
-  const focalIsHome = prediction.home_team_id === team.team_id;
-  const display = prediction.display_distribution;
+function orientedMarginDistribution(record, team, axis) {
+  const focalIsHome = record.home_team_id === team.team_id;
+  const display = record.display_distribution;
   if (!axis || !display || !Array.isArray(display.masses)) return null;
   return {
     masses: focalIsHome ? display.masses : [...display.masses].reverse(),
@@ -221,17 +276,124 @@ function orientedDisplayDistribution(prediction, team, axis) {
 }
 
 function futureChart(prediction, team, axis, oriented) {
-  const display = orientedDisplayDistribution(prediction, team, axis);
+  const display = orientedMarginDistribution(prediction, team, axis);
   if (!display) return null;
   const label = `Predictive margin distribution from ${oriented.opponentName} by ${Math.abs(axis.min_margin)} to ${oriented.focalName} by ${axis.max_margin}; zero is even.`;
-  const tailProbability = (display.lowerTail + display.upperTail) / displayScale(axis);
-  const description = `The distribution is oriented from ${oriented.focalName}'s perspective. ${percentage(oriented.focalWin)} focal-team win probability and ${percentage(oriented.opponentWin)} opponent win probability. ${percentage(tailProbability)} of mass is outside the visible ${axis.min_margin} to ${axis.max_margin} point range.`;
+  const tailNote = offAxisTailNote(display, axis, "future", oriented);
+  if (needsIntervalView(oriented.interval50, axis)) {
+    const expectedText = oriented.expected >= 0
+      ? marginSide(oriented.focalName, oriented.expected)
+      : marginSide(oriented.opponentName, -oriented.expected);
+    return marginIntervalChart({
+      kind: "future", oriented, axis, display,
+      intervals: [oriented.interval95, oriented.interval80, oriented.interval50],
+      markers: [{ kind: "expected", value: oriented.expected, text: expectedText }],
+    });
+  }
+  const description = `The distribution is oriented from ${oriented.focalName}'s perspective. ${oriented.focalName} win probability ${matchupProbability(oriented.focalWin, oriented.opponentWin)}; ${oriented.opponentName} win probability ${matchupProbability(oriented.opponentWin, oriented.focalWin)}.${tailNote ? ` ${tailNote}` : ""}`;
   const figure = node("figure", "game-distribution game-distribution-future");
-  figure.append(densitySvg(display.masses, { className: "future-distribution-chart", label, description, zero: true, tail: tailProbability > 0.001 }));
+  figure.append(densitySvg(display.masses, { className: "future-distribution-chart", label, description, zeroAxis: axis }));
   const caption = node("figcaption", "distribution-axis");
   caption.append(node("span", "axis-start", `${oriented.opponentName} by ${Math.abs(axis.min_margin)}`), node("span", "axis-label", "Predictive margin · Even"), node("span", "axis-end", `${oriented.focalName} by ${axis.max_margin}`));
   figure.append(caption);
-  if (tailProbability > 0.001) figure.append(node("p", "distribution-tail-note", `${percentage(tailProbability)} of predictive mass is beyond the visible ±${Math.max(Math.abs(axis.min_margin), Math.abs(axis.max_margin))}-point range.`));
+  if (tailNote) figure.append(node("p", "distribution-tail-note", tailNote));
+  return figure;
+}
+
+function marginIntervalChart({ kind, oriented, axis, display, intervals, markers }) {
+  const values = [...intervals.flat(), ...markers.map((marker) => marker.value)];
+  const width = Math.max(...values) - Math.min(...values);
+  const padding = Math.max(5, width * 0.06);
+  const minimum = Math.floor((Math.min(...values) - padding) / 5) * 5;
+  const maximum = Math.ceil((Math.max(...values) + padding) / 5) * 5;
+  const endpoint = (value) => value < 0
+    ? `${oriented.opponentName} by ${Math.abs(value)}`
+    : value > 0 ? `${oriented.focalName} by ${value}` : "Even";
+  const label = `${oriented.focalName} ${kind === "future" ? "predictive" : "retrospective"} margin intervals. ${markers.map((marker) => `${marker.kind} ${marker.text}`).join("; ")}.`;
+  const svg = svgElement("svg", {
+    viewBox: `0 0 ${DISTRIBUTION_PLOT.width} ${DISTRIBUTION_PLOT.height}`,
+    class: `game-distribution-chart ${kind}-interval-chart`,
+    role: "img",
+    "aria-label": label,
+  });
+  const title = svgElement("title");
+  title.textContent = label;
+  const desc = svgElement("desc");
+  desc.textContent = `Central 95%, 80%, and 50% margin intervals are shown on a wider ${minimum} to ${maximum} point axis. The gold marker is the expected margin.${kind === "retrospective" ? " The dark marker is the actual margin." : ` ${oriented.focalName} win probability ${matchupProbability(oriented.focalWin, oriented.opponentWin)}; ${oriented.opponentName} win probability ${matchupProbability(oriented.opponentWin, oriented.focalWin)}.`}`;
+  svg.append(title, desc);
+  intervals.forEach(([lower, upper], index) => {
+    const start = plotX(lower, minimum, maximum);
+    const end = plotX(upper, minimum, maximum);
+    svg.append(svgElement("rect", {
+      x: start, y: 38 + index * 2, width: Math.max(end - start, 1), height: 18 - index * 4,
+      class: `margin-interval margin-interval-${[95, 80, 50][index]} ${kind === "retrospective" ? "retrospective-interval" : "future-interval"}`,
+    }));
+  });
+  addZeroReference(svg, minimum, maximum);
+  const { collide } = addMarginMarkers(svg, markers, minimum, maximum);
+  if (collide) desc.textContent += " Expected and actual markers are vertically separated where their values overlap.";
+  const figure = node("figure", `game-distribution game-distribution-${kind} game-distribution-interval`);
+  figure.append(svg);
+  const caption = node("figcaption", "distribution-axis");
+  caption.append(node("span", "axis-start", endpoint(minimum)), node("span", "axis-label", "Margin intervals"), node("span", "axis-end", endpoint(maximum)));
+  figure.append(caption);
+  const bands = node("p", "margin-interval-legend");
+  [95, 80, 50].forEach((level) => bands.append(node("span", `margin-interval-key margin-interval-key-${level}`, `Central ${level}%`)));
+  figure.append(bands);
+  addMarkerLegend(figure, markers);
+  const tailNote = offAxisTailNote(display, axis, kind, oriented, true);
+  if (tailNote) figure.append(node("p", "distribution-tail-note", tailNote));
+  return figure;
+}
+
+function retrospectiveChart(expectation, team, axis, oriented) {
+  const display = orientedMarginDistribution(expectation, team, axis);
+  if (!display) return null;
+  const homePerspective = expectation.home_team_id === oriented.focalId;
+  const orientInterval = (interval) => homePerspective ? interval : [-interval[1], -interval[0]];
+  const interval50 = orientInterval(expectation.margin_interval_50);
+  if (needsIntervalView(interval50, axis)) {
+    return marginIntervalChart({
+      kind: "retrospective", oriented, axis, display,
+      intervals: [expectation.margin_interval_95, expectation.margin_interval_80].map(orientInterval).concat([interval50]),
+      markers: [
+        { kind: "expected", value: oriented.expected, text: oriented.expectedText },
+        { kind: "actual", value: oriented.actual, text: oriented.actualText },
+      ],
+    });
+  }
+  const figure = node("figure", "game-distribution game-distribution-retrospective");
+  const label = `${team.team_name} retrospective margin distribution. Expected ${oriented.expectedText}; actual ${oriented.actualText}.`;
+  const svg = densitySvg(display.masses, {
+    className: "retrospective-distribution-chart",
+    label,
+    description: "Bars show expected outcomes given what GippyRank knows at this snapshot; the gold line marks the expected margin and the dark line marks the actual margin. The horizontal axis is from the team's perspective.",
+    zeroAxis: axis,
+  });
+  const minimum = Number(axis.min_margin);
+  const maximum = Number(axis.max_margin);
+  const markers = [
+    { kind: "expected", value: oriented.expected, text: oriented.expectedText },
+    { kind: "actual", value: oriented.actual, text: oriented.actualText },
+  ];
+  const { placed, collide: markersCollide } = addMarginMarkers(svg, markers, minimum, maximum);
+  figure.append(svg);
+  const caption = node("figcaption", "distribution-axis");
+  caption.append(
+    node("span", "axis-start", `${oriented.opponentName} by ${Math.abs(minimum)}`),
+    node("span", "axis-label", "Even"),
+    node("span", "axis-end", `${oriented.focalName} by ${maximum}`),
+  );
+  figure.append(caption);
+  addMarkerLegend(figure, markers);
+  const tailNote = offAxisTailNote(display, axis, "retrospective", oriented);
+  if (tailNote) figure.append(node("p", "distribution-tail-note", tailNote));
+  const clipped = placed.filter(({ side }) => side);
+  if (clipped.length) {
+    const note = clipped.map(({ kind, text, side }) => `${kind === "expected" ? "Expected" : "Actual"} ${text} exceeds the chart's ${side === "lower" ? `${oriented.opponentName} by ${Math.abs(minimum)}` : `${oriented.focalName} by ${maximum}`} edge.`).join(" ");
+    figure.append(node("p", "distribution-marker-note", note));
+    svg.querySelector("desc").textContent += ` ${note}${markersCollide ? " The expected marker occupies the upper half of that edge and the actual marker the lower half." : ""}`;
+  }
   return figure;
 }
 
@@ -323,10 +485,7 @@ function renderSummary(entry, row) {
   $("#team-page-kind").textContent = `${entry.season} ${entry.display_label} · ${publicationStatusLabel(entry)} publication`;
   $("#team-page-title").textContent = row.team_name;
   $("#team-page-meta").textContent = `${row.conference || "Independent"} · ${entry.snapshot_type === "preseason" ? "Before game evidence" : `Through ${formatDate(entry.effective_cutoff)}`} · ${entry.ranking_family === "performance" ? "Performance" : `Predictive ${priorLabel(entry.prior_family)}`}`;
-  $("#schedule-context").textContent = entry.snapshot_type === "preseason"
-    ? "Schedule metadata is shown without any season results."
-    : `Results and ratings are shown only through ${timestamp(entry.effective_cutoff)}.`;
-  $("#prediction-source").textContent = `Future prediction source: ${entry.ranking_family === "performance" ? "Predictive Context" : `Predictive ${priorLabel(entry.prior_family)}`}. Predictions use the posterior available at this snapshot.`;
+  $("#prediction-source").textContent = `Completed-game expectations compare each result with what GippyRank knows at the selected snapshot, including that game. They are retrospective, not pregame forecasts. Checkpoint rows show shared published belief changes. Future matchups use ${entry.ranking_family === "performance" ? "Predictive Context" : `Predictive ${priorLabel(entry.prior_family)}`} at this snapshot.`;
 
   const summary = node("div", "team-summary-grid");
   summary.append(summaryItem("Published rank", rankLabel), summaryItem("Record", row.record));
@@ -790,123 +949,176 @@ function predictionRange(oriented, interval) {
 
 function predictionPanel(prediction, team, axis) {
   const oriented = orientedPrediction(prediction, team);
-  const favorite = oriented.focalWin >= oriented.opponentWin ? [oriented.focalName, oriented.focalWin] : [oriented.opponentName, oriented.opponentWin];
+  const [focalProbability, opponentProbability] = matchupProbabilityPair(oriented.focalWin, oriented.opponentWin);
+  const favorite = oriented.focalWin >= oriented.opponentWin
+    ? [oriented.focalName, focalProbability] : [oriented.opponentName, opponentProbability];
   const panel = node("div", "game-prediction");
   const expectedText = oriented.expected >= 0 ? marginSide(oriented.focalName, oriented.expected) : marginSide(oriented.opponentName, -oriented.expected);
-  const expectedTeam = oriented.expected >= 0 ? oriented.focalName : oriented.opponentName;
-  const expectedPrimary = Math.abs(oriented.expected) < 0.05 ? "expected Even" : expectedTeam === favorite[0] ? `expected by ${marginValue(oriented.expected)}` : `expected ${expectedTeam} by ${marginValue(oriented.expected)}`;
-  panel.append(
-    node("strong", "game-prediction-title", `${favorite[0]} ${percentage(favorite[1])} · ${expectedPrimary}`),
-    node("span", "game-prediction-interval", `80% ${predictionRange(oriented, oriented.interval80)}`),
-  );
+  const favoriteText = focalProbability === opponentProbability ? "Near-even matchup" : `${favorite[0]} ${favorite[1]} to win`;
+  const titleText = `${favoriteText} · ${expectedText}`;
+  const title = node("strong", "game-prediction-title");
+  const marginChunk = node("span", "game-prediction-chunk game-prediction-margin");
+  marginChunk.append(node("span", "game-summary-separator", " · "), expectedText);
+  title.append(node("span", "game-prediction-chunk", favoriteText), marginChunk);
   const detail = node("div", "game-prediction-disclosure-content");
   const chart = futureChart(prediction, team, axis, oriented);
   if (chart) detail.append(chart);
-  const list = node("dl", "game-rating-details");
-  [["Focal win probability", percentage(oriented.focalWin)], ["Opponent win probability", percentage(oriented.opponentWin)], ["Expected margin", expectedText], ["Median margin", oriented.median >= 0 ? marginSide(oriented.focalName, oriented.median) : marginSide(oriented.opponentName, -oriented.median)], ["Central 50% range", predictionRange(oriented, oriented.interval50)], ["Central 80% range", predictionRange(oriented, oriented.interval80)], ["Central 95% range", predictionRange(oriented, oriented.interval95)], ["Prediction source", prediction.prediction_source === "predictive_history" ? "Predictive History" : "Predictive Context"]].forEach(([label, value]) => list.append(node("dt", "", label), node("dd", "", value)));
+  const list = node("dl", "game-facts");
+  [[`${oriented.focalName} win probability`, focalProbability], [`${oriented.opponentName} win probability`, opponentProbability], ["Expected margin", expectedText], ["Median margin", oriented.median >= 0 ? marginSide(oriented.focalName, oriented.median) : marginSide(oriented.opponentName, -oriented.median)], ["Central 50% range", predictionRange(oriented, oriented.interval50)], ["Central 80% range", predictionRange(oriented, oriented.interval80)], ["Central 95% range", predictionRange(oriented, oriented.interval95)], ["Prediction source", prediction.prediction_source === "predictive_history" ? "Predictive History" : "Predictive Context"]].forEach(([label, value]) => list.append(node("dt", "", label), node("dd", "", value)));
   detail.append(list);
-  panel.append(disclosure("predictive margin distribution", detail, "distribution-disclosure game-distribution-disclosure"));
-  panel.setAttribute("aria-label", `${favorite[0]} has a ${percentage(favorite[1])} win probability. Expected margin: ${expectedText}. Central 80% range: ${predictionRange(oriented, oriented.interval80)}.`);
+  const distribution = disclosure("predictive margin distribution", detail, "distribution-disclosure game-distribution-disclosure", titleText);
+  const copy = node("span", "game-summary-copy");
+  copy.append(title);
+  distribution.querySelector("summary").replaceChildren(copy, node("span", "distribution-chevron", "▾"));
+  panel.append(distribution);
   return panel;
 }
 
-function ratingPanel(rating, axis) {
-  const panel = node("div", "game-rating");
-  const percentile = rating.performance_percentile === undefined ? null : percentileLabel(rating.performance_percentile);
-  const grade = rating.performance_grade ? `${rating.performance_grade} · ` : "";
-  const title = node("strong", "game-rating-title", percentile ? `${grade}${percentile}` : "Inferred performance");
-  const interval = node("span", "game-rating-interval", percentile ? `${uncertaintyLabel(rating.interval_80, rating.rank_count)} uncertainty · 80% ${rankRange(rating.interval_80)}` : `80% ${rankRange(rating.interval_80)}`);
-  interval.setAttribute("aria-label", `central 80 percent interval from rank ${rating.interval_80[0]} through rank ${rating.interval_80[1]}`);
-  const detail = node("div", "game-rating-disclosure-content");
-  const chart = performanceChart(rating, axis);
+function retrospectivePanel(expectation, team, axis, opponentName) {
+  const focalIsHome = expectation.home_team_id === team.team_id;
+  const orient = (value) => focalIsHome ? Number(value) : -Number(value);
+  const orientInterval = (interval) => focalIsHome ? interval : [-interval[1], -interval[0]];
+  const expected = orient(expectation.expected_home_margin);
+  const actual = orient(expectation.actual_home_margin);
+  const oriented = {
+    focalId: team.team_id,
+    focalName: team.team_name,
+    opponentName,
+    expected,
+    actual,
+    expectedText: marginSide(expected >= 0 ? team.team_name : opponentName, expected),
+    actualText: scoreMarginSide(actual >= 0 ? team.team_name : opponentName, actual),
+  };
+  const favorable = actual >= expected;
+  const tail = favorable
+    ? (focalIsHome ? expectation.upper_tail_probability : expectation.lower_tail_probability)
+    : (focalIsHome ? expectation.lower_tail_probability : expectation.upper_tail_probability);
+  const percentile = focalIsHome
+    ? expectation.observed_margin_percentile : expectation.upper_tail_probability;
+  const panel = node("div", "game-retrospective");
+  const expectedText = `Expected ${oriented.expectedText}`;
+  const actualText = `Actual ${oriented.actualText}`;
+  const tailText = `${tailPercentage(tail)} ${favorable ? "this favorable or better" : "this unfavorable or worse"}`;
+  const detail = node("div", "game-retrospective-disclosure-content");
+  const chart = retrospectiveChart(expectation, team, axis, oriented);
   if (chart) detail.append(chart);
-  const list = node("dl", "game-rating-details");
-  [["Expected performance rank", rank(rating.expected_rank)], ["Median", `#${rating.median_rank}`], ["Mode", `#${rating.mode_rank}`], ["50% interval", rankRange(rating.interval_50)], ["80% interval", rankRange(rating.interval_80)], ["95% interval", rankRange(rating.interval_95)], ["Top 5", percentage(rating.top5_probability)], ["Top 10", percentage(rating.top10_probability)], ["Top 25", percentage(rating.top25_probability)]].forEach(([label, value]) => list.append(node("dt", "", label), node("dd", "", value)));
-  detail.append(list);
-  panel.append(title, interval, disclosure("inferred performance distribution", detail, "distribution-disclosure game-distribution-disclosure"));
+  const facts = node("div", "retrospective-facts");
+  const percentileFacts = node("dl", "game-facts retrospective-percentile-facts");
+  percentileFacts.append(node("dt", "", "Observed result"), node("dd", "", percentileLabel(percentile * 100)));
+  const marginFacts = node("dl", "game-facts retrospective-margin-facts");
+  [
+    ["Median margin", marginSide(orient(expectation.median_home_margin) >= 0 ? team.team_name : opponentName, orient(expectation.median_home_margin))],
+    ["Central 50%", predictionRange(oriented, orientInterval(expectation.margin_interval_50))],
+    ["Central 80%", predictionRange(oriented, orientInterval(expectation.margin_interval_80))],
+    ["Central 95%", predictionRange(oriented, orientInterval(expectation.margin_interval_95))],
+  ].forEach(([label, value]) => marginFacts.append(node("dt", "", label), node("dd", "", value)));
+  facts.append(percentileFacts, marginFacts);
+  detail.append(facts);
+  const distribution = disclosure(`${team.team_name} completed-game retrospective distribution`, detail, "distribution-disclosure game-distribution-disclosure", `${expectedText}. ${actualText}. ${tailText}`);
+  const copy = node("span", "game-summary-copy");
+  const actualChunk = node("span", "game-retrospective-actual");
+  actualChunk.append(node("span", "game-summary-separator", " · "), actualText);
+  const tailChunk = node("span", "game-retrospective-tail");
+  tailChunk.append(node("span", "game-summary-separator", " · "), tailText);
+  copy.append(
+    node("span", "game-retrospective-expected", expectedText),
+    actualChunk,
+    tailChunk,
+  );
+  distribution.querySelector("summary").replaceChildren(copy, node("span", "distribution-chevron", "▾"));
+  panel.append(distribution);
   return panel;
 }
 
-function expectedDelta(before, after) {
-  const delta = Number(before.expected_rank) - Number(after.expected_rank);
-  if (Math.abs(delta) < 0.05) return "—";
-  return `${delta > 0 ? "↑" : "↓"}${Math.abs(delta).toFixed(1)}`;
-}
-
-function beliefMovementForGame(game, trajectory, entry, teamId) {
-  if (!trajectory?.points?.length) return null;
-  const selectedIndex = trajectory.points.findIndex((point) => point.snapshot_id === entry.snapshot_id);
-  if (selectedIndex < 1) return null;
-  const visible = trajectory.points.slice(0, selectedIndex + 1);
-  const afterIndex = visible.findIndex((point, index) => {
-    if (!index || !Array.isArray(point.included_game_ids)) return false;
-    const beforeIds = new Set(visible[index - 1].included_game_ids || []);
-    return point.included_game_ids.includes(game.game_id) && !beforeIds.has(game.game_id);
-  });
-  if (afterIndex < 1) return null;
-  const before = visible[afterIndex - 1];
-  const after = visible[afterIndex];
-  const beforeSummary = before.teams?.[teamId];
-  const afterSummary = after.teams?.[teamId];
-  if (!beforeSummary || !afterSummary) return null;
-  const priorIds = new Set(before.included_game_ids || []);
-  const addedGames = (after.included_game_ids || []).filter((gameId) => !priorIds.has(gameId)).length;
-  return { before, after, beforeSummary, afterSummary, addedGames };
-}
-
-function beliefMovementPanel(game, trajectory, entry, teamId) {
-  const movement = beliefMovementForGame(game, trajectory, entry, teamId);
-  if (!movement) return null;
-  const panel = node("section", "game-belief-movement");
-  panel.append(node("h4", "", "Published belief movement"));
-  panel.append(node("p", "game-belief-scope", "Shared published update — it can include several newly included results, not a causal attribution to this game alone."));
-  const facts = node("dl", "game-belief-facts");
-  facts.append(
-    node("dt", "", "Before"), node("dd", "", `${movement.before.display_label} · ${rank(movement.beforeSummary.expected_rank)}`),
-    node("dt", "", "After"), node("dd", "", `${movement.after.display_label} · ${rank(movement.afterSummary.expected_rank)}`),
-    node("dt", "", "Change"), node("dd", "", expectedDelta(movement.beforeSummary, movement.afterSummary)),
+function checkpointPanel(before, after, teamId) {
+  const earlier = before.teams?.[teamId];
+  const later = after.teams?.[teamId];
+  if (!earlier || !later) return null;
+  const item = node("div", "schedule-checkpoint");
+  item.setAttribute("role", "note");
+  const title = node("span", "schedule-checkpoint-title", `${checkpointLabel(after)} update`);
+  const values = node("span", "schedule-checkpoint-values");
+  const rankBefore = rank(earlier.expected_rank);
+  const rankAfter = rank(later.expected_rank);
+  const intervalBefore = rankRange(earlier.interval_80);
+  const intervalAfter = rankRange(later.interval_80);
+  values.append(
+    node("span", "", `Expected rank ${rankBefore}${rankBefore === rankAfter ? "" : ` → ${rankAfter}`}`),
+    node("span", "", `80% ${intervalBefore}${intervalBefore === intervalAfter ? "" : ` → ${intervalAfter}`}`),
   );
-  const detail = node("div", "game-belief-detail-content");
-  detail.append(
-    node("p", "", `Top 25: ${percentage(movement.beforeSummary.top25_probability)} → ${percentage(movement.afterSummary.top25_probability)} · 80%: ${rankRange(movement.beforeSummary.interval_80)} → ${rankRange(movement.afterSummary.interval_80)}.`),
-    node("p", "game-belief-caveat", `This is ${movement.before.display_label} published belief → ${movement.after.display_label} published belief. The transition incorporated ${movement.addedGames} newly included result${movement.addedGames === 1 ? "" : "s"}; it is not attribution to this game alone.`),
-  );
-  panel.append(facts, disclosure("published belief details", detail, "distribution-disclosure game-belief-disclosure"));
-  return panel;
+  item.append(title, values);
+  return item;
 }
 
-function gameCard(game, cutoff, artifact, team, trajectory, entry) {
-  const item = node("li", "game-card");
+function matchesScheduleExpectation(expectation, game, team) {
+  if (!expectation || expectation.game_id !== game.game_id || game.retrospective_expectation_id !== game.game_id) return false;
+  const home = expectation.home_team_id === team.team_id;
+  const away = expectation.away_team_id === team.team_id;
+  if ((!home && !away) || (home ? expectation.away_team_id : expectation.home_team_id) !== game.opponent_id) return false;
+  if (!["home", "away", "neutral"].includes(game.site) || typeof expectation.neutral_site !== "boolean") return false;
+  if (expectation.neutral_site !== (game.site === "neutral")) return false;
+  if ((game.site === "home" && !home) || (game.site === "away" && !away)) return false;
+  const score = game.score;
+  if (!score || !Number.isInteger(score.team) || !Number.isInteger(score.opponent)) return false;
+  return Number.isInteger(expectation.actual_home_margin)
+    && expectation.actual_home_margin === (home ? score.team - score.opponent : score.opponent - score.team);
+}
+
+function matchesSchedulePrediction(prediction, game, team, artifact) {
+  if (!prediction || game.future_prediction_id !== game.game_id || prediction.game_id !== game.game_id
+    || prediction.source_snapshot_id !== artifact.prediction_provenance?.source_snapshot_id) return false;
+  if (matchupProbabilityPair(prediction.home_win_probability, prediction.away_win_probability)[0] === "Unavailable") return false;
+  const home = prediction.home_team_id === team.team_id;
+  const away = prediction.away_team_id === team.team_id;
+  if ((!home && !away) || (home ? prediction.away_team_id : prediction.home_team_id) !== game.opponent_id) return false;
+  if ((home ? prediction.home_team_name : prediction.away_team_name) !== team.team_name
+    || (home ? prediction.away_team_name : prediction.home_team_name) !== game.opponent_name) return false;
+  if (!["home", "away", "neutral"].includes(game.site) || typeof prediction.neutral_site !== "boolean") return false;
+  return prediction.neutral_site === (game.site === "neutral")
+    && (game.site !== "home" || home) && (game.site !== "away" || away);
+}
+
+function gameCard(game, cutoff, artifact, team) {
+  const item = node("div", "game-card");
+  item.dataset.gameId = game.game_id;
   const header = node("div", "game-card-header");
-  const week = game.week === null ? "" : `Week ${game.week} · `;
-  header.append(node("p", "game-date", `${week}${formatDate(game.date, false)}`), node("span", "game-site", game.site));
+  header.append(node("p", "game-date", game.week === null ? formatGameDate(game) : `W${game.week} · ${formatGameDate(game)}`));
   const opponent = node("h3", "game-opponent", game.opponent_name || game.opponent_id || "Unknown opponent");
   const opponentHeading = node("div", "game-opponent-row");
   const logo = teamLogo(game.opponent_id);
   if (logo) opponentHeading.append(logo);
   opponentHeading.append(opponent);
-  const meta = node("p", "game-meta", `${game.opponent_classification.toUpperCase()}${game.opponent_conference ? ` · ${game.opponent_conference}` : ""}`);
+  opponentHeading.append(node("span", "game-site", game.site));
   const outcome = node("p", "game-outcome");
-  const future = game.game_state ? game.game_state === "future" : cutoff === null || new Date(game.date) > cutoff;
-  if (game.result && game.score) outcome.textContent = `${game.result} ${game.score.team}–${game.score.opponent}`;
-  else if (game.game_state === "cancelled") outcome.textContent = "Cancelled or postponed";
-  else if (future) outcome.textContent = "Future at this snapshot";
-  else outcome.textContent = "Not completed by this snapshot";
+  const state = game.game_state || (cutoff === null || new Date(game.date) > cutoff ? "future" : game.result ? "completed" : "unresolved");
+  if (state === "cancelled") outcome.textContent = "Cancelled or postponed";
+  else if (state === "out_of_scope" && !game.score) outcome.textContent = "Outside model scope";
+  else if (game.result && game.score) outcome.textContent = `${game.result} ${game.score.team}–${game.score.opponent}`;
+  else if (state === "future") outcome.textContent = "Upcoming";
+  else if (state === "completed") outcome.textContent = "Completed";
+  else outcome.textContent = "Pending";
   const body = node("div", "game-card-body");
-  if (game.game_rating) {
-    const movement = beliefMovementPanel(game, trajectory, entry, team.team_id);
-    if (movement) body.append(movement);
-    body.append(ratingPanel(game.game_rating, artifact.performance_axis));
-  } else if (future) {
+  if (state === "future") {
     const prediction = artifact.future_predictions?.[game.future_prediction_id];
-    if (prediction) body.append(predictionPanel(prediction, team, artifact.future_margin_axis));
-    else body.append(node("p", "game-not-modeled", "Prediction unavailable — the matchup lacks sufficient supported model representation."));
-  } else if (game.result || game.game_state === "completed") {
-    body.append(node("p", "game-not-modeled", "Not modeled — this game is outside the eligible Historical Likelihood evidence."));
-  } else {
-    body.append(node("p", "game-not-modeled", "Not modeled — no completed evidence was available at the cutoff."));
+    if (prediction && matchesSchedulePrediction(prediction, game, team, artifact)) {
+      body.append(predictionPanel(prediction, team, artifact.future_margin_axis));
+    } else if (prediction || game.future_prediction_id || artifact.future_predictions?.[game.game_id]) {
+      body.append(node("p", "game-artifact-error", "Prediction unavailable because published game data conflict."));
+      console.error("Future prediction conflicts with the schedule", { gameId: game.game_id, teamId: team.team_id });
+    } else body.append(node("p", "game-not-modeled", "Prediction unavailable"));
+  } else if (state === "completed") {
+    const expectations = artifact.retrospective_game_expectations;
+    const expectation = expectations?.games?.[game.retrospective_expectation_id || game.game_id];
+    if (expectation && expectation.source_snapshot_id === expectations.source_snapshot_id && matchesScheduleExpectation(expectation, game, team)) {
+      body.append(retrospectivePanel(expectation, team, expectations.margin_axis, game.opponent_name || "Opponent"));
+    } else if (expectation) {
+      body.append(node("p", "game-artifact-error", "Retrospective expectation unavailable because published game data conflict."));
+      console.error("Retrospective expectation conflicts with the schedule", { gameId: game.game_id, teamId: team.team_id });
+    } else body.append(node("p", "game-not-modeled", "No retrospective expectation available"));
   }
-  item.append(header, opponentHeading, meta, outcome, body);
+  item.classList.add(`game-card-${state}`);
+  item.append(header, opponentHeading, outcome);
+  if (body.childElementCount) item.append(body);
   return item;
 }
 
@@ -916,8 +1128,66 @@ function renderSchedule(artifact, entry, trajectory) {
   if (!team) throw new Error("This team is not available in the selected season snapshot.");
   const cutoff = artifact.effective_cutoff ? new Date(artifact.effective_cutoff) : null;
   const games = Array.isArray(team.games) ? team.games : [];
-  $("#team-page-status").textContent = games.length ? `${games.length} scheduled games · compact summaries reveal distributions on demand` : "No schedule entries are available for this team.";
-  $("#schedule-list").replaceChildren(...games.map((game) => gameCard(game, cutoff, artifact, team, trajectory, entry)));
+  const teamGameIds = new Set(games.map((game) => game.game_id));
+  $("#team-page-status").textContent = games.length ? "" : "No schedule entries are available for this team.";
+  $("#team-page-status").hidden = games.length > 0;
+  const items = games.map((game) => {
+    const item = node("article", "schedule-entry");
+    const card = gameCard(game, cutoff, artifact, team);
+    const heading = card.querySelector(".game-opponent");
+    const date = card.querySelector(".game-date");
+    date.id = `schedule-game-${game.game_id}-date`;
+    heading.id = `schedule-game-${game.game_id}-opponent`;
+    item.setAttribute("aria-labelledby", `${date.id} ${heading.id}`);
+    item.append(card);
+    return item;
+  });
+  const checkpointsByGame = new Map();
+  const selectedIndex = trajectory?.points?.findIndex((point) => point.snapshot_id === entry.snapshot_id) ?? -1;
+  if (selectedIndex > 0) {
+    const points = trajectory.points.slice(0, selectedIndex + 1);
+    const insertions = [];
+    points.slice(1).forEach((after, index) => {
+      const checkpoint = checkpointPanel(points[index], after, teamId);
+      if (!checkpoint) return;
+      const beforeIds = new Set(points[index].included_game_ids || []);
+      const afterIds = new Set(after.included_game_ids || []);
+      const addedIds = new Set([...afterIds].filter((gameId) => !beforeIds.has(gameId)));
+      const removedIds = new Set([...beforeIds].filter((gameId) => !afterIds.has(gameId)));
+      const teamAdded = [...addedIds].filter((gameId) => teamGameIds.has(gameId));
+      const teamRemoved = [...removedIds].filter((gameId) => teamGameIds.has(gameId));
+      const changedTeamGame = teamAdded.length > 0 || teamRemoved.length > 0;
+      let afterGame = -1;
+      games.forEach((game, gameIndex) => {
+        if (addedIds.has(game.game_id) || removedIds.has(game.game_id)) afterGame = gameIndex;
+      });
+      if (afterGame < 0) {
+        games.forEach((game, gameIndex) => {
+          if (beforeIds.has(game.game_id)) afterGame = gameIndex;
+        });
+      }
+      if (!changedTeamGame) {
+        checkpoint.dataset.evidenceChange = "none";
+        const change = addedIds.size || removedIds.size
+          ? `No ${team.team_name} game changed` : "No new games included";
+        checkpoint.querySelector(".schedule-checkpoint-values").append(node("span", "", change));
+      } else if (teamAdded.length || teamRemoved.length) {
+        checkpoint.dataset.evidenceChange = teamAdded.length && teamRemoved.length ? "mixed" : teamAdded.length ? "added" : "removed";
+        const changes = [];
+        if (teamAdded.length && (teamAdded.length > 1 || teamRemoved.length)) changes.push(`${teamAdded.length} ${team.team_name} game${teamAdded.length === 1 ? "" : "s"} added to evidence`);
+        if (teamRemoved.length) changes.push(`${teamRemoved.length} ${team.team_name} game${teamRemoved.length === 1 ? "" : "s"} removed from evidence`);
+        if (changes.length) checkpoint.querySelector(".schedule-checkpoint-values").append(node("span", "", changes.join(" · ")));
+      }
+      insertions.push({ afterGame, checkpoint });
+    });
+    insertions.forEach(({ afterGame, checkpoint }) => {
+      if (!checkpointsByGame.has(afterGame)) checkpointsByGame.set(afterGame, []);
+      checkpointsByGame.get(afterGame).push(checkpoint);
+    });
+  }
+  const content = [...(checkpointsByGame.get(-1) || [])];
+  items.forEach((item, index) => content.push(item, ...(checkpointsByGame.get(index) || [])));
+  $("#schedule-list").replaceChildren(...content);
 }
 
 function publicationStatusLabel(entry) {
@@ -1046,6 +1316,7 @@ async function load() {
 
 load().catch((error) => {
   updateBackLink(null);
+  $("#team-page-status").hidden = false;
   $("#team-page-status").textContent = error.message;
   $("#team-page-status").className = "team-page-status team-page-error";
 });

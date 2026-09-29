@@ -126,6 +126,16 @@ def test_canonical_home_orientation_reorients_for_the_away_page() -> None:
     assert away_interval[0] < away_interval[1]
 
 
+def test_public_prediction_entrypoints_validate_team_orientation() -> None:
+    likelihood = LikelihoodV1(np.zeros(34), 2.0, 15.0)
+    home, away = _teams([1.0, 0.0], [0.0, 1.0])
+    game = _game()
+    with pytest.raises(ValueError, match="orientation"):
+        predict_game(game, away, home, likelihood)
+    with pytest.raises(ValueError, match="orientation"):
+        margin_display_distribution(game, away, home, likelihood)
+
+
 def test_home_away_neutral_and_fbs_fcs_site_semantics() -> None:
     beta = np.zeros(34)
     beta[8] = 4.0  # same-subdivision non-neutral home effect

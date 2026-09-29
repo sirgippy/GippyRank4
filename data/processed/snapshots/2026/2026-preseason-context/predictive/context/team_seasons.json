@@ -1,6 +1,7 @@
 {
   "anchor_family": "context",
   "artifact_kind": "team_season",
+  "combined_source_available_at": null,
   "effective_cutoff": null,
   "future_margin_axis": {
     "bins": 40,
@@ -57135,27 +57136,17 @@
   "requested_cutoff": null,
   "retrospective_game_expectations": {
     "artifact_kind": "retrospective_game_expectations",
+    "conditioning": "selected_snapshot_full_posterior_including_game",
     "effective_cutoff": null,
     "games": {},
+    "historical_likelihood_sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
     "historical_likelihood_version": "V1",
     "included_game_ids": [],
     "inference": {
-      "component_game_count_max": 0,
-      "component_game_count_min": 0,
-      "component_scope": "connected components containing either game participant after exclusion",
-      "component_team_count_max": 0,
-      "component_team_count_min": 0,
-      "configured_workers": 1,
-      "excluded_evidence": "one exact game ID per distribution",
       "games_evaluated": 0,
-      "implementation": "per_game_leave_one_out_component_bp_recompute",
-      "initialization": "uniform deterministic BP messages independent of the held-out score",
-      "recompute_iteration_count_max": 0,
-      "recompute_iteration_count_min": 0,
-      "rematch_handling": "retain every other eligible game, including other games between the same teams",
-      "runtime_seconds": 3.4999975468963385e-06
+      "implementation": "selected_snapshot_full_posterior_pmfs"
     },
-    "interpretation": "This is a retrospective leave-one-game-out posterior predictive distribution. It describes how the observed result compares with what GippyRank would expect given all other evidence available at the selected snapshot. It is not the prediction GippyRank would have made before the game was played.",
+    "interpretation": "This retrospective distribution compares the observed result with what GippyRank expects given everything known at the selected snapshot, including this game. It is not a prediction made before the game.",
     "margin_axis": {
       "bins": 40,
       "direction": "home_minus_away",
@@ -57171,7 +57162,8 @@
       "unit": "points"
     },
     "margin_orientation": "home_minus_away",
-    "retrospective_game_expectations_version": "1.0",
+    "posterior_pmfs_sha256": "515ab44fe89261634da05af44fb7e5b4b03daf27e0676ff2398dc6ad25eb32fb",
+    "retrospective_game_expectations_version": "2.0",
     "season": 2026,
     "snapshot_type": "preseason",
     "source_snapshot_id": "2026-preseason-context"
@@ -112787,7 +112779,9 @@
   "source_context_snapshot_id": "2026-preseason-context",
   "source_response_hashes": {},
   "source_retrieval_times": null,
+  "source_mode": "preseason_prior_only",
   "source_retrieved_at": null,
+  "source_retrieved_at_contract": "combined_latest",
   "teams": {
     "103": {
       "conference": "",

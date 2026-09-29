@@ -19,6 +19,8 @@ from typing import Any
 
 from pydantic import ValidationError
 
+from gippyrank.result_provenance import known_unmodeled_result
+
 from .models import (
     API_VERSION,
     CanonicalGame,
@@ -652,6 +654,24 @@ def _load_distributions(
     return result
 
 
+def _known_unmodeled_score(
+    artifact: dict[str, Any], game_date: datetime | None, cutoff: datetime | None
+) -> bool:
+    schedule_source = artifact.get("schedule_source")
+    available = artifact.get(
+        "combined_source_available_at", artifact.get("source_retrieved_at")
+    )
+    return known_unmodeled_result(
+        game_date=game_date,
+        cutoff=cutoff,
+        snapshot_type=artifact.get("snapshot_type"),
+        source_mode=artifact.get("source_mode"),
+        schedule_source=schedule_source,
+        game_corpus_sha256=artifact.get("game_corpus_sha256"),
+        source_available_at=_parse_datetime(available),
+    )
+
+
 def _validate_team_season_artifact(
     artifact: dict[str, Any], metadata: PublicationMetadata, rankings: list[RankRow]
 ) -> None:
@@ -733,9 +753,14 @@ def _validate_team_season_artifact(
                 raise PublicationDataError(
                     f"{metadata.snapshot_id}: future prediction reference is invalid"
                 )
+            known_unmodeled_score = (
+                game.get("game_state") == "out_of_scope"
+                and game.get("score") is not None
+                and game.get("result") is not None
+                and _known_unmodeled_score(artifact, game_date, cutoff)
+            )
             if game_id not in included_ids and (
-                game.get("result") is not None
-                or game.get("score") is not None
+                ((game.get("result") is not None or game.get("score") is not None) and not known_unmodeled_score)
                 or game.get("game_rating") is not None
                 or game.get("modeled") is True
             ):
@@ -912,9 +937,15 @@ def _load_weekly_artifact(
                 raise PublicationDataError(
                     f"{snapshot_id}: weekly game exposes evidence after the cutoff"
                 )
+            known_unmodeled_score = (
+                game.state == "out_of_scope"
+                and game.score is not None
+                and _known_unmodeled_score(
+                    team_season, game.date, metadata.effective_cutoff
+                )
+            )
             if game_id not in included_game_ids and (
-                game.state == "completed"
-                or game.score is not None
+                ((game.state == "completed" or game.score is not None) and not known_unmodeled_score)
                 or game.home_performance is not None
                 or game.away_performance is not None
             ):

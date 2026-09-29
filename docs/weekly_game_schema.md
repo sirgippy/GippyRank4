@@ -37,7 +37,8 @@ The selected snapshot controls game state:
 
 - `completed`: the score is known at that snapshot; eligible games carry both
   canonical completed performance summaries.
-- `future`: the kickoff is strictly after the snapshot cutoff; an eligible
+- `future`: the unscored schedule's UTC calendar day is on or after the snapshot
+  cutoff day and the game is absent from included evidence; an eligible
   game references one canonical future prediction.
 - `unresolved`: the schedule did not provide durable completed evidence at the
   cutoff; no score, rating, or fabricated prediction is shown.
@@ -46,10 +47,15 @@ The selected snapshot controls game state:
 
 Started-but-unincluded games remain redacted.  Games outside the Historical
 Likelihood eligibility boundary remain visible as schedule context, but their
-scores are shown only when the snapshot explicitly includes durable completion
-evidence; otherwise they remain unresolved and marked not modeled.  This
-prevents current-corpus lower-division results from leaking into older
-snapshots.
+scores can be shown as `out_of_scope` when the game date is no later than the
+cutoff and the schedule source is trustworthy. A current processed schedule
+must match the snapshot's model-corpus hash; if the source is mutable, both
+FBS/FCS responses must have been available by then. A frozen historical schedule is trusted as its
+own selected artifact; its hash need not equal the model-corpus hash.
+The later response time controls mutable-source availability. These results
+are football facts, separate from `included_game_ids` model evidence, and
+carry no rating or retrospective expectation. Otherwise they remain unresolved
+and marked not modeled.
 
 ## Canonical game shape
 

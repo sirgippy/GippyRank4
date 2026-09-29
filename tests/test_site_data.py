@@ -12,6 +12,7 @@ import pytest
 
 from gippyrank import site_data
 from gippyrank.methodology import (
+    HISTORICAL_LIKELIHOOD_SHA256,
     PRODUCTION_MODEL_VERSIONS,
     PRODUCTION_SCHEMA_VERSIONS,
     production_methodology_metadata,
@@ -220,6 +221,7 @@ def _write_synthetic_context_snapshot(
             "historical_likelihood": "V1",
         },
         "historical_likelihood_version": "V1",
+        "historical_likelihood_sha256": HISTORICAL_LIKELIHOOD_SHA256,
         "rank_count": 2,
         "requested_cutoff": cutoff,
         "effective_cutoff": cutoff,
@@ -228,6 +230,7 @@ def _write_synthetic_context_snapshot(
         "source_retrieval_times": {},
         "source_response_hashes": {},
         "game_corpus_sha256": "0" * 64,
+        "source_mode": "historical_frozen",
         "included_game_ids": [],
         "included_game_count": 0,
         "prior_artifact_sha256": "1" * 64,
@@ -250,6 +253,7 @@ def _write_synthetic_context_snapshot(
         "source_retrieval_times": {},
         "source_response_hashes": {},
         "game_corpus_sha256": "0" * 64,
+        "source_mode": "historical_frozen",
         "included_game_ids": [],
         "historical_likelihood_version": "V1",
         "rank_count": 2,
@@ -723,6 +727,19 @@ def test_weekly_artifact_deduplicates_games_and_reuses_canonical_sources(
     assert future["future_prediction_id"] in weekly["future_predictions"]
     assert future["home_performance"] is None
     assert future["away_performance"] is None
+    assert completed["date_display_mode"] == "local_time"
+    assert future["date_display_mode"] == "utc_calendar"
+    invalid = json.loads(json.dumps(weekly))
+    changed = next(
+        game for week in invalid["weeks"] for game in week["games"]
+        if game["game_id"] == future["game_id"]
+    )
+    changed["date_display_mode"] = "local_time"
+    rankings = json.loads(
+        (output / entry["data_path"].removeprefix("data/")).read_text()
+    )["rankings"]
+    with pytest.raises(SiteDataValidationError, match="weekly date display mode mismatch"):
+        site_data._validate_weekly_game_artifact(invalid, team_seasons, entry, rankings)
 
 
 def test_weekly_rank_lookup_matches_every_selected_ranking_view(
@@ -828,6 +845,7 @@ def test_weekly_builder_freezes_rank_and_marquee_v1_semantics() -> None:
             "game_id": game_id,
             "week": 2,
             "date": "2026-09-12T12:00:00Z",
+            "date_display_mode": "local_time" if state == "completed" else "utc_calendar",
             "opponent_id": away_id,
             "opponent_name": f"Team {away_id}",
             "opponent_classification": away_classification,
@@ -950,16 +968,9 @@ def test_weekly_kickoff_labels_and_groups_use_browser_local_time() -> None:
     week = (ROOT / "site/assets/week.js").read_text(encoding="utf-8")
     kickoff = datetime.fromisoformat("2026-09-13T02:15:00+00:00")
     assert kickoff.astimezone(ZoneInfo("America/Chicago")).date().isoformat() == "2026-09-12"
-    assert "function localDateKey(value)" in week
-    assert "date.getFullYear()" in week
-    assert "date.getMonth() + 1" in week
+    assert "function localDateKey(value, mode" in week
+    assert "date.getUTCDate()" in week
     assert "date.getDate()" in week
-    assert "const key = game.date ? localDateKey(game.date) : \"unknown\";" in week
-    assert "formatDate(group.date, true)" in week
-    date_formatter = week[week.index("function formatDate"):week.index("function formatTime")]
-    time_formatter = week[week.index("function formatTime"):week.index("function localDateKey")]
-    assert 'timeZone: "UTC"' not in date_formatter
-    assert 'timeZone: "UTC"' not in time_formatter
 
 
 def test_static_site_uses_manifest_logo_config_and_decorative_fallback() -> None:
@@ -978,54 +989,6 @@ def test_static_site_uses_manifest_logo_config_and_decorative_fallback() -> None
     assert 'opponent_logo_handle' not in app + team
     assert ".team-logo-frame" in css
     assert "loading = \"lazy\"" in app
-
-
-def test_team_schedule_uses_distinct_accessible_performance_and_margin_plots() -> None:
-    team = (ROOT / "site/assets/team.js").read_text(encoding="utf-8")
-    css = (ROOT / "site/assets/style.css").read_text(encoding="utf-8")
-    html = (ROOT / "site/team.html").read_text(encoding="utf-8")
-
-    assert "performanceChart" in team
-    assert "futureChart" in team
-    assert "performance_axis" in team
-    assert "future_margin_axis" in team
-    assert "probability_encoding" in team
-    assert "role: \"img\"" in team
-    assert "aria-label" in team
-    assert "Central 80% range" in team
-    assert ".game-distribution-chart" in css
-    assert ".game-distribution-future .distribution-bar" in css
-    assert "distribution-toggle" in team
-    assert "inferred performance distribution" in team
-    assert "predictive margin distribution" in team
-    assert "▾" in team
-    assert "Expected performance rank" in team
-    assert "expectedPrimary" in team
-    assert "Played like" not in team
-    assert "game-prediction-interval" in team
-    assert "How to read this page" in html
-    assert "Published snapshot changes are not single-game causal attribution." in html
-
-
-def test_future_prediction_range_labels_follow_focal_margin_sign() -> None:
-    team = (ROOT / "site/assets/team.js").read_text(encoding="utf-8")
-
-    assert (
-        'if (high < 0) return `${marginSide(oriented.opponentName, -high)} '
-        'to ${marginSide(oriented.opponentName, -low)}`;' in team
-    )
-    assert (
-        'if (low > 0) return `${marginSide(oriented.focalName, low)} '
-        'to ${marginSide(oriented.focalName, high)}`;' in team
-    )
-    assert (
-        'const lower = low < 0 ? marginSide(oriented.opponentName, -low) : "Even";'
-        in team
-    )
-    assert (
-        'const upper = high > 0 ? marginSide(oriented.focalName, high) : "Even";'
-        in team
-    )
 
 
 def _counterpart(
@@ -1652,6 +1615,32 @@ def test_preseason_and_in_season_distribution_exports_work(
     assert len(distribution["teams"]) == 138
 
 
+def test_team_season_source_mode_must_match_snapshot(tmp_path: Path) -> None:
+    source = _copied_snapshot(tmp_path)
+    path = source / "team_seasons.json"
+    artifact = json.loads(path.read_text(encoding="utf-8"))
+    artifact["source_mode"] = "historical_frozen"
+    path.write_text(json.dumps(artifact), encoding="utf-8")
+    with pytest.raises(SiteDataValidationError, match="provenance mismatch: source_mode"):
+        build_site_data(
+            root=tmp_path, config_path=_config_for(source, tmp_path),
+            output_directory=tmp_path / "data",
+        )
+
+
+def test_schedule_sha256_requires_producer_lowercase_hex(tmp_path: Path) -> None:
+    source = _copied_snapshot(tmp_path)
+    path = source / "team_seasons.json"
+    artifact = json.loads(path.read_text(encoding="utf-8"))
+    artifact["schedule_source"]["sha256"] = "A" * 64
+    path.write_text(json.dumps(artifact), encoding="utf-8")
+    with pytest.raises(SiteDataValidationError, match="schedule provenance"):
+        build_site_data(
+            root=tmp_path, config_path=_config_for(source, tmp_path),
+            output_directory=tmp_path / "data",
+        )
+
+
 def test_context_and_history_export_distinct_distribution_artifacts(
     production_site_data: tuple[Path, dict[str, object]],
 ) -> None:
@@ -1724,6 +1713,56 @@ def test_unnormalized_pmf_is_refused_without_renormalizing(tmp_path: Path) -> No
     _write_pmf_rows(path, fields, rows)
     with pytest.raises(SiteDataValidationError, match="sum to"):
         build_site_data(root=tmp_path, config_path=_config_for(source, tmp_path), output_directory=tmp_path / "data")
+
+
+HASHED_WEEKLY_SOURCE = (
+    "data/processed/snapshots/2026/"
+    "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.3/predictive/context"
+)
+
+
+def test_declared_included_game_rows_hash_rejects_changed_evidence(tmp_path: Path) -> None:
+    source = _copied_snapshot(tmp_path, HASHED_WEEKLY_SOURCE)
+    path = source / "included_games.csv"
+    with path.open(newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle)
+        fields = list(reader.fieldnames or [])
+        rows = list(reader)
+    rows[0]["neutralSite"] = "false" if rows[0]["neutralSite"] == "true" else "true"
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
+    with pytest.raises(SiteDataValidationError, match="included_game_rows_sha256 disagrees"):
+        build_site_data(
+            root=tmp_path, config_path=_config_for(source, tmp_path),
+            output_directory=tmp_path / "data",
+        )
+
+
+def test_declared_posterior_hash_rejects_normalized_fcs_change(tmp_path: Path) -> None:
+    source = _copied_snapshot(tmp_path, HASHED_WEEKLY_SOURCE)
+    with (source / "rankings.csv").open(newline="", encoding="utf-8") as handle:
+        fcs_id = next(
+            row["team_id"] for row in csv.DictReader(handle)
+            if row["subdivision"].casefold() == "fcs"
+        )
+    path, fields, rows = _pmf_rows(source)
+    fcs_rows = [row for row in rows if row["team_id"] == fcs_id]
+    first, second = next(
+        (first, second)
+        for first in fcs_rows for second in fcs_rows
+        if first["probability"] != second["probability"]
+    )
+    first["probability"], second["probability"] = (
+        second["probability"], first["probability"]
+    )
+    _write_pmf_rows(path, fields, rows)
+    with pytest.raises(SiteDataValidationError, match="posterior_pmfs_sha256 disagrees"):
+        build_site_data(
+            root=tmp_path, config_path=_config_for(source, tmp_path),
+            output_directory=tmp_path / "data",
+        )
 
 
 def test_invalid_snapshot_is_refused(tmp_path: Path) -> None:
@@ -1915,10 +1954,11 @@ def test_uncertainty_copy_uses_central_interval_language() -> None:
 
 
 def test_percentage_formatter_preserves_nonzero_and_noncertainty_distinctions() -> None:
-    """Keep lightweight static coverage because this dependency-free site has no JS runner."""
+    """Rankings deliberately retain finer tails through the shared formatter."""
     app = (ROOT / "site/assets/app.js").read_text(encoding="utf-8")
-    assert 'if (value === 1) return "100%";' in app
-    assert 'if (valueAsPercent < 0.01) return "<0.01%";' in app
-    assert 'if (valueAsPercent >= 99.95) return "<100%";' in app
-    assert 'if (valueAsPercent >= 95) return `${valueAsPercent.toFixed(1)}%`;' in app
-    assert 'return `${Math.round(valueAsPercent)}%`;' in app
+    probability = (ROOT / "site/assets/probability.js").read_text(encoding="utf-8")
+    assert 'import { rankingPercentage as percentage } from "./probability.js";' in app
+    assert 'if (percent === 100) return "100%";' in probability
+    assert 'if (percent < 0.01) return "<0.01%";' in probability
+    assert 'if (percent >= 99.95) return "<100%";' in probability
+    assert 'if (percent < 10 || percent >= 95)' in probability

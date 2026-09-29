@@ -123,16 +123,20 @@ rule, and reference count in `performance_percentile`.
 
 Supported predictive snapshots also include a top-level
 `retrospective_game_expectations` versioned model artifact. Each modeled game
-is keyed by stable game ID and has a leave-one-game-out
-posterior-predictive Historical Likelihood V1 margin distribution under
-GippyRank's deterministic loopy BP and predictive semantics, its home-oriented
+is keyed by stable game ID and has a full-posterior
+Historical Likelihood V1 margin distribution under
+GippyRank's selected-snapshot loopy BP marginals and predictive semantics, its home-oriented
 observed margin, mixture summaries/tails, and a compact display
 distribution. Team schedule entries point to their record with
 `retrospective_expectation_id`; this supplements rather than replaces the
 existing `game_rating` performance artifact.
+The source model artifact can also contain FCS/FCS evidence, but the published
+FBS team-season artifact retains only records with an FBS participant. Every
+retained FBS/FBS record has two matching team schedule projections; an FBS/FCS
+record has one. The original source artifact remains unchanged.
 
 See [retrospective_game_expectations.md](retrospective_game_expectations.md)
-for the statistical interpretation, snapshot boundary, rematch treatment,
+for the statistical interpretation, snapshot boundary,
 display encoding, and complete contract. In particular, it is not a
 pre-kickoff prediction and it does not attribute a ranking movement to one
 game.
@@ -165,25 +169,44 @@ P(away wins) = P(M < 0) + 0.5 P(M = 0)
 ```
 
 The two stored win probabilities are complements from that same distribution.
+`tie_probability` records the zero mass at an exact tie in this continuous
+margin model. It must be zero; it is not a third outcome to add to the two
+complementary win probabilities.
 
 Future predictions use `predictive_context` on Predictive Context pages,
 `predictive_history` on Predictive History pages, and the same-slot
 `predictive_context` artifact on Performance pages.  A Performance page labels
 that source in the browser.  Completed-game ratings remain Context-anchored.
 
-Eligibility is strict: the scheduled kickoff must be after the selected
-snapshot's effective cutoff, the game must not be in the included evidence,
+Eligibility uses the unscored game's UTC calendar day because the source does
+not reliably identify a kickoff instant. That day must be on or after the
+snapshot's effective cutoff day, the game must not be in the included evidence,
 and both teams must have supported V1 rank representations.  Existing FCS
 fallback variables are reused when present; unsupported matchups remain
 visible without a prediction.  Neutral games use the neutral V1 site row, and
 FBS/FCS games use the stable FBS-first V1 coordinate orientation before the
 stored home-oriented margin is restored.
 
+Completed scores enter a new snapshot's inference only when their scheduled
+start is no later than the exact effective cutoff and the complete mutable
+source corpus was retrieved by that cutoff. A scheduled start never proves
+when a game became final. If the source was retrieved later, every completed
+score from that mutable response remains unresolved at the historical cutoff,
+including games that started on a previous UTC day. Retained publications use
+their frozen included-game evidence instead. An unscored future schedule uses
+the UTC calendar day of its date anchor, so a game on the cutoff day can
+remain forecast-eligible without an exact kickoff time. The combined FBS/FCS
+corpus retrieval timestamp is the later of its two constituent retrievals;
+the individual timestamps remain in provenance.
+
 ## JSON shape
 
 Each team contains schedule entries with stable IDs, date/week, opponent
-metadata, site, result/score when known at the cutoff, and `modeled`. A modeled
-completed game has a compact `game_rating` summary containing:
+metadata, site, result/score when known at the cutoff, and `modeled`. The
+team-season producer accepts nonnegative numeric weeks or a missing week; it
+rejects named weeks because the publication order contract is numeric.
+
+A modeled completed game has a compact `game_rating` summary containing:
 
 - expected rank, median, and mode;
 - central 50%, 80%, and 95% intervals;
@@ -191,7 +214,17 @@ completed game has a compact `game_rating` summary containing:
 - the fixed-scale integer 40-bin `display_pmf`, empirical `performance_percentile`, and
   presentation-only `performance_grade`.
 
-No full per-game PMF is serialized. Games after the selected cutoff retain
+The browser-facing team and weekly schedules publish `date_display_mode` for
+each game. This is a display policy because the source has no reliable flag
+for a confirmed kickoff time. `local_time` applies to scored games, including
+scored `out_of_scope` games; consumers show their timezone-aware timestamp in
+the viewer's local time zone. `utc_calendar` applies to unscored games;
+consumers preserve the source timestamp's lexical UTC calendar day and omit a
+kickoff time. A score establishes that the game happened, not the precision or original
+meaning of its timestamp. All dates must carry a timezone; unscored calendar
+anchors must have a UTC offset.
+
+No full per-game PMF is serialized. Games outside the selected evidence retain
 schedule metadata but have null result, score, and rating fields. An eligible
 future row has `future_prediction_id`; the ID resolves into the single
 canonical `future_predictions` map entry. Ineligible completed games remain
@@ -234,9 +267,10 @@ The prediction map contains compact summaries, not sampled distributions:
 }
 ```
 
-The values above are illustrative.  Static export validates the prediction
-source, provenance, complementarity, nested interval ordering, strict cutoff,
-and cross-team references before publishing.
+The values above are illustrative. Static export validates the prediction
+source, provenance, complementarity, nested interval ordering, the selected
+snapshot's frozen evidence boundary, calendar-day eligibility for unscored
+schedules, and cross-team references before publishing.
 
 The `future_margin_axis` is fixed at `-40` through `+40` points in 40 bins,
 with the home-oriented convention `margin = home points - away points`.
@@ -258,14 +292,24 @@ omitted from that map and listed in the manifest audit; the browser keeps the
 text name when no logo is available.
 
 The artifact repeats the historical inference provenance (`effective_cutoff`,
-`game_corpus_sha256`, included game IDs, and source retrieval evidence). Because
+`game_corpus_sha256`, `source_mode`, included game IDs, and source retrieval evidence).
+Static publication requires `source_mode` to equal the source snapshot's value.
+Because
 backfilled historical artifacts may use a newer schedule corpus for display
 metadata, `schedule_source` separately records that corpus's kind, repository
 path, and SHA-256. Static export validates the provenance object's structure
 and the paired Context provenance; it does not compare a retained artifact's
 schedule hash with a later mutable schedule corpus.
 
-Results and scores are shown only when the game ID is in the snapshot's durable
-`included_game_ids` evidence. A kickoff before the cutoff is not enough: a game
-that was in progress or otherwise absent from that evidence remains redacted,
-even if the current schedule corpus now contains a final score.
+`included_game_ids` identifies model evidence, not every safely known football
+result. A scored game outside model evidence can retain its result as
+`out_of_scope` when the game date is no later than the cutoff and schedule
+provenance establishes its result. A `current_processed_schedule` must hash to
+`game_corpus_sha256`. For a mutable source, both responses must have been
+available by the cutoff. A `frozen_historical_schedule` is itself the selected historical source;
+its SHA-256 identifies that schedule artifact and can differ from the model
+corpus hash. `source_mode` records the original acquisition mode, including on
+frozen replay. For mutable CFBD data,
+the later FBS/FCS response time is the availability boundary. In-progress
+games and results from later source responses remain redacted. Such games never
+receive a model rating or retrospective expectation.

@@ -1,66 +1,46 @@
-"""Retrospective leave-one-game-out expected-outcome distributions.
-
-This module answers a deliberately different question from a historical
-forecast: given all *other* evidence included by one selected snapshot, how
-unusual was a completed game's observed home-oriented margin?  The held-out
-game is removed before belief propagation is rerun, so its score cannot enter
-the posterior PMFs used in its own Historical Likelihood mixture.
-"""
+"""Completed-game hindsight distributions from a selected snapshot's posterior."""
 
 from __future__ import annotations
 
-from collections import defaultdict, deque
 from collections.abc import Mapping, Sequence
-from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
-from time import perf_counter
 from typing import Any
 
-from gippyrank.methodology import HISTORICAL_LIKELIHOOD_VERSION
-from gippyrank.posterior.engine import (
-    Game,
-    LikelihoodV1,
-    PosteriorResult,
-    Team,
-    infer_posterior,
+from gippyrank.methodology import (
+    HISTORICAL_LIKELIHOOD_VERSION,
+    RETROSPECTIVE_CONDITIONING,
+    RETROSPECTIVE_GAME_EXPECTATIONS_VERSION,
 )
+from gippyrank.posterior.engine import Game, LikelihoodV1, PosteriorResult, Team
 from gippyrank.posterior.predictive import (
     FUTURE_MARGIN_DISPLAY_BINS,
     FUTURE_MARGIN_DISPLAY_MAX,
     FUTURE_MARGIN_DISPLAY_MIN,
     ScheduledGame,
-    margin_display_distribution,
+    _margin_display_distribution_from_components,
+    _predict_game_from_components,
     mixture_cdf,
     posterior_prediction_team,
-    predict_game,
     predictive_components,
 )
 
-RETROSPECTIVE_GAME_EXPECTATIONS_VERSION = "1.0"
-RETROSPECTIVE_INFERENCE_IMPLEMENTATION = "per_game_leave_one_out_component_bp_recompute"
+RETROSPECTIVE_INFERENCE_IMPLEMENTATION = "selected_snapshot_full_posterior_pmfs"
 RETROSPECTIVE_INTERPRETATION = (
-    "This is a retrospective leave-one-game-out posterior predictive "
-    "distribution. It describes how the observed result compares with what "
-    "GippyRank would expect given all other evidence available at the "
-    "selected snapshot. It is not the prediction GippyRank would have made "
-    "before the game was played."
+    "This retrospective distribution compares the observed result with what "
+    "GippyRank expects given everything known at the selected snapshot, "
+    "including this game. It is not a prediction made before the game."
 )
 
 
-@dataclass(frozen=True)
-class _LeaveOneOutResult:
-    """One held-out posterior plus compact recomputation diagnostics."""
-
-    game: Game
-    posterior: PosteriorResult
-    component_team_count: int
-    component_game_count: int
-
-
-def _scheduled_game(game: Game) -> ScheduledGame:
-    """Convert observed evidence to the home-oriented predictive contract."""
-
-    return ScheduledGame(
+def _expectation_record(
+    game: Game,
+    *,
+    teams_by_id: Mapping[str, Team],
+    posterior: PosteriorResult,
+    likelihood: LikelihoodV1,
+    source_snapshot_id: str,
+) -> dict[str, Any]:
+    """Use the canonical Historical Likelihood mixture and home orientation."""
+    scheduled = ScheduledGame(
         game_id=game.game_id,
         home_id=game.home_id,
         away_id=game.away_id,
@@ -69,108 +49,25 @@ def _scheduled_game(game: Game) -> ScheduledGame:
         neutral_site=game.neutral_site,
         schedule_status="completed",
     )
-
-
-def _participant_component(
-    game: Game, retained_games: Sequence[Game]
-) -> tuple[set[str], list[Game]]:
-    """Return only the retained factor-graph components touching a game.
-
-    Components disconnected from both participants cannot influence either
-    posterior marginal.  Recomputing just this union is equivalent to a
-    season-wide replay for the two required PMFs and avoids needless work for
-    separately connected schedule regions.
-    """
-
-    adjacency: dict[str, set[str]] = defaultdict(set)
-    for retained in retained_games:
-        adjacency[retained.home_id].add(retained.away_id)
-        adjacency[retained.away_id].add(retained.home_id)
-    component = {game.home_id, game.away_id}
-    pending = deque(component)
-    while pending:
-        team_id = pending.popleft()
-        for neighbor in adjacency[team_id]:
-            if neighbor not in component:
-                component.add(neighbor)
-                pending.append(neighbor)
-    return component, [
-        retained
-        for retained in retained_games
-        if retained.home_id in component and retained.away_id in component
-    ]
-
-
-def _leave_one_out_result(
-    game: Game,
-    *,
-    teams_by_id: Mapping[str, Team],
-    games: Sequence[Game],
-    likelihood: LikelihoodV1,
-    max_iterations: int,
-    tolerance: float,
-    damping: float,
-) -> _LeaveOneOutResult:
-    """Recompute BP with the exact selected game removed from the evidence."""
-
-    retained_games = [
-        candidate for candidate in games if candidate.game_id != game.game_id
-    ]
-    component_ids, component_games = _participant_component(game, retained_games)
-    component_teams = [teams_by_id[team_id] for team_id in sorted(component_ids)]
-    posterior = infer_posterior(
-        component_teams,
-        component_games,
-        likelihood,
-        max_iterations=max_iterations,
-        tolerance=tolerance,
-        damping=damping,
-    )
-    if not posterior.converged:
-        raise RuntimeError(
-            "leave-one-game-out posterior did not converge for "
-            f"{game.game_id} after {posterior.iterations} iterations "
-            f"(max delta {posterior.max_message_delta})"
-        )
-    return _LeaveOneOutResult(
-        game=game,
-        posterior=posterior,
-        component_team_count=len(component_teams),
-        component_game_count=len(component_games),
-    )
-
-
-def _expectation_record(
-    leave_one_out: _LeaveOneOutResult,
-    *,
-    teams_by_id: Mapping[str, Team],
-    likelihood: LikelihoodV1,
-    source_snapshot_id: str,
-) -> dict[str, Any]:
-    """Summarize a held-out posterior using the canonical margin machinery."""
-
-    game = leave_one_out.game
-    scheduled = _scheduled_game(game)
-    home = posterior_prediction_team(
-        teams_by_id[game.home_id], leave_one_out.posterior.pmfs
-    )
-    away = posterior_prediction_team(
-        teams_by_id[game.away_id], leave_one_out.posterior.pmfs
-    )
-    summary = predict_game(scheduled, home, away, likelihood)
+    home = posterior_prediction_team(teams_by_id[game.home_id], posterior.pmfs)
+    away = posterior_prediction_team(teams_by_id[game.away_id], posterior.pmfs)
     locations, weights = predictive_components(scheduled, home, away, likelihood)
-    actual_home_margin = float(game.home_points - game.away_points)
-    lower_tail = mixture_cdf(
-        actual_home_margin,
-        locations,
-        weights,
-        likelihood.scale,
-        likelihood.degrees_of_freedom,
+    components = (locations, weights)
+    summary = _predict_game_from_components(likelihood, components)
+    actual_home_margin = game.home_points - game.away_points
+    lower_tail = min(
+        max(
+            mixture_cdf(
+                float(actual_home_margin),
+                locations,
+                weights,
+                likelihood.scale,
+                likelihood.degrees_of_freedom,
+            ),
+            0.0,
+        ),
+        1.0,
     )
-    # The V1 Student-t mixture is continuous, so <= and >= tails meet at the
-    # observed margin with no point mass. Clamp tiny floating error only.
-    lower_tail = min(max(lower_tail, 0.0), 1.0)
-    upper_tail = min(max(1.0 - lower_tail, 0.0), 1.0)
     return {
         "game_id": game.game_id,
         "source_snapshot_id": source_snapshot_id,
@@ -183,9 +80,9 @@ def _expectation_record(
         "actual_home_margin": actual_home_margin,
         "observed_margin_percentile": lower_tail,
         "lower_tail_probability": lower_tail,
-        "upper_tail_probability": upper_tail,
-        "display_distribution": margin_display_distribution(
-            scheduled, home, away, likelihood
+        "upper_tail_probability": min(max(1.0 - lower_tail, 0.0), 1.0),
+        "display_distribution": _margin_display_distribution_from_components(
+            likelihood, components
         ),
         **summary.as_dict(),
     }
@@ -198,19 +95,9 @@ def build_retrospective_game_expectations(
     games: Sequence[Game],
     posterior: PosteriorResult,
     likelihood: LikelihoodV1,
-    max_iterations: int,
-    tolerance: float,
-    damping: float,
-    workers: int | None = None,
+    likelihood_sha256: str | None = None,
 ) -> dict[str, Any]:
-    """Build true LOO expected outcomes for every modeled completed game.
-
-    Each target is removed from the retained game list before inference,
-    including when the target shares a grouped pair factor with another
-    rematch. The replay starts from score-independent messages; pair cavities
-    from the full posterior could retain indirect feedback from the target.
-    """
-
+    """Summarize completed games using already-computed full posterior PMFs."""
     source_snapshot_id = str(metadata["snapshot_id"])
     team_by_id = {team.team_id: team for team in teams}
     if len(team_by_id) != len(teams):
@@ -227,45 +114,16 @@ def build_retrospective_game_expectations(
         raise ValueError(
             "retrospective expectations require a converged production posterior"
         )
-    # Large connected seasons hold a full BP replay state per worker. One
-    # worker bounds peak memory without a measured runtime penalty here.
-    requested_workers = workers if workers is not None else 1
-    worker_count = max(1, min(int(requested_workers), len(games) or 1))
-    started = perf_counter()
-
-    def replay(game: Game) -> tuple[dict[str, Any], int, int, int]:
-        result = _leave_one_out_result(
+    records = {
+        game.game_id: _expectation_record(
             game,
             teams_by_id=team_by_id,
-            games=games,
-            likelihood=likelihood,
-            max_iterations=max_iterations,
-            tolerance=tolerance,
-            damping=damping,
-        )
-        record = _expectation_record(
-            result,
-            teams_by_id=team_by_id,
+            posterior=posterior,
             likelihood=likelihood,
             source_snapshot_id=source_snapshot_id,
         )
-        return (
-            record,
-            result.component_team_count,
-            result.component_game_count,
-            result.posterior.iterations,
-        )
-
-    if worker_count > 1:
-        with ThreadPoolExecutor(max_workers=worker_count) as executor:
-            replays = list(executor.map(replay, games))
-    else:
-        replays = [replay(game) for game in games]
-
-    records = {record["game_id"]: record for record, _, _, _ in replays}
-    component_team_counts = [team_count for _, team_count, _, _ in replays]
-    component_game_counts = [game_count for _, _, game_count, _ in replays]
-    iteration_counts = [iteration_count for _, _, _, iteration_count in replays]
+        for game in games
+    }
     return {
         "retrospective_game_expectations_version": RETROSPECTIVE_GAME_EXPECTATIONS_VERSION,
         "artifact_kind": "retrospective_game_expectations",
@@ -277,25 +135,14 @@ def build_retrospective_game_expectations(
         "historical_likelihood_version": metadata.get(
             "historical_likelihood_version", HISTORICAL_LIKELIHOOD_VERSION
         ),
+        "historical_likelihood_sha256": likelihood_sha256,
+        "posterior_pmfs_sha256": metadata.get("posterior_pmfs_sha256"),
+        "conditioning": RETROSPECTIVE_CONDITIONING,
         "margin_orientation": "home_minus_away",
         "interpretation": RETROSPECTIVE_INTERPRETATION,
         "inference": {
             "implementation": RETROSPECTIVE_INFERENCE_IMPLEMENTATION,
-            "excluded_evidence": "one exact game ID per distribution",
-            "rematch_handling": "retain every other eligible game, including other games between the same teams",
-            "initialization": (
-                "uniform deterministic BP messages independent of the held-out score"
-            ),
-            "component_scope": "connected components containing either game participant after exclusion",
-            "configured_workers": worker_count,
-            "runtime_seconds": perf_counter() - started,
-            "games_evaluated": len(replays),
-            "component_team_count_min": min(component_team_counts, default=0),
-            "component_team_count_max": max(component_team_counts, default=0),
-            "component_game_count_min": min(component_game_counts, default=0),
-            "component_game_count_max": max(component_game_counts, default=0),
-            "recompute_iteration_count_min": min(iteration_counts, default=0),
-            "recompute_iteration_count_max": max(iteration_counts, default=0),
+            "games_evaluated": len(records),
         },
         "margin_axis": {
             "min_margin": FUTURE_MARGIN_DISPLAY_MIN,

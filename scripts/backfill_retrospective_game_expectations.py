@@ -1,4 +1,4 @@
-"""Add retrospective game expectations to retained predictive publications.
+"""Refresh full-posterior game expectations in retained predictive publications.
 
 Use each snapshot's frozen game CSV, prior, and inference configuration. The
 existing posterior, rankings, schedule, and game ratings are not regenerated.
@@ -11,16 +11,23 @@ import csv
 import json
 import shutil
 from pathlib import Path
+from time import perf_counter
 
-import numpy as np
-
-from gippyrank.posterior.engine import PosteriorResult
+from gippyrank.methodology import (
+    HISTORICAL_LIKELIHOOD_SHA256,
+    RETROSPECTIVE_CONDITIONING,
+    RETROSPECTIVE_GAME_EXPECTATIONS_VERSION,
+)
+from gippyrank.posterior.retained import (
+    load_retained_posterior,
+    preserve_equivalent_retrospective_records,
+)
 from gippyrank.posterior.retrospective import build_retrospective_game_expectations
 from gippyrank.posterior.snapshots import (
     _frozen_fcs_fallbacks,
     _game_from_included_row,
     included_game_rows_sha256,
-    load_likelihood,
+    load_pinned_likelihood,
     load_teams,
     sha256,
 )
@@ -52,29 +59,12 @@ def _retained_sources() -> list[Path]:
     )
 
 
-def _posterior(source: Path) -> PosteriorResult:
-    diagnostics = _read_json(source / "diagnostics.json")
-    if not diagnostics["converged"]:
-        raise ValueError(f"{source}: production posterior did not converge")
-    pmfs: dict[str, list[float]] = {}
-    with (source / "posterior_pmfs.csv").open(newline="", encoding="utf-8") as handle:
-        for row in csv.DictReader(handle):
-            pmfs.setdefault(row["team_id"], []).append(float(row["probability"]))
-    return PosteriorResult(
-        pmfs={team_id: np.asarray(pmf) for team_id, pmf in pmfs.items()},
-        converged=True,
-        iterations=int(diagnostics["iterations"]),
-        max_message_delta=float(diagnostics["max_message_delta"]),
-        objective=float(diagnostics["objective_surrogate"]),
-        raw_game_factor_count=int(diagnostics["raw_game_likelihood_count"]),
-        unique_pair_factor_count=int(diagnostics["unique_pairwise_factor_count"]),
-        max_team_degree=int(diagnostics["maximum_team_degree"]),
-    )
-
-
-def backfill(source: Path, *, workers: int | None = None) -> None:
+def backfill(source: Path) -> None:
+    started = perf_counter()
     metadata_path = source / "metadata.json"
     metadata = _read_json(metadata_path)
+    if metadata.get("historical_likelihood_sha256") != HISTORICAL_LIKELIHOOD_SHA256:
+        raise ValueError(f"{source}: frozen likelihood hash differs from pinned V1")
     artifact_path = source / "team_seasons.json"
     artifact = _read_json(artifact_path)
     with (source / "included_games.csv").open(newline="", encoding="utf-8") as handle:
@@ -102,19 +92,18 @@ def backfill(source: Path, *, workers: int | None = None) -> None:
         team_rows=team_rows,
     )
     games = [_game_from_included_row(row) for row in rows]
-    inference = metadata.get("posterior_inference_configuration") or {}
     expectation = build_retrospective_game_expectations(
         metadata=metadata,
         teams=teams,
         games=games,
-        posterior=_posterior(source),
-        likelihood=load_likelihood(
+        posterior=load_retained_posterior(source, metadata, teams),
+        likelihood=load_pinned_likelihood(
             ROOT / "data/processed/posterior/historical_likelihood_v1.json"
         ),
-        max_iterations=int(inference.get("max_iterations", 500)),
-        tolerance=float(inference.get("tolerance", 1e-9)),
-        damping=float(inference.get("damping", 0.35)),
-        workers=workers,
+        likelihood_sha256=HISTORICAL_LIKELIHOOD_SHA256,
+    )
+    preserve_equivalent_retrospective_records(
+        artifact.get("retrospective_game_expectations"), expectation
     )
     artifact["retrospective_game_expectations"] = expectation
     for team in artifact["teams"].values():
@@ -132,19 +121,26 @@ def backfill(source: Path, *, workers: int | None = None) -> None:
     _write_json(metadata_path, metadata)
     print(
         f"{metadata['snapshot_id']}: {len(games)} games, "
-        f"{expectation['inference']['runtime_seconds']:.1f}s",
+        f"{perf_counter() - started:.1f}s",
         flush=True,
     )
 
 
-def sync_performance_sources() -> None:
+def sync_performance_sources(
+    changed_sources: set[Path] | None = None, *, root: Path = ROOT
+) -> None:
     for metadata_path in sorted(
-        ROOT.glob("data/processed/snapshots/2026/*/performance/metadata.json")
+        root.glob("data/processed/snapshots/2026/*/performance/metadata.json")
     ):
         performance = metadata_path.parent
         metadata = _read_json(metadata_path)
-        source = ROOT / metadata["source_context_path"]
+        source = root / metadata["source_context_path"]
+        if changed_sources is not None and source.resolve() not in changed_sources:
+            continue
         metadata["source_context_metadata_sha256"] = sha256(source / "metadata.json")
+        source_metadata = _read_json(source / "metadata.json")
+        for field in ("combined_source_available_at", "source_retrieved_at_contract"):
+            metadata[field] = source_metadata.get(field)
         _write_json(metadata_path, metadata)
         shutil.copyfile(source / "team_seasons.json", performance / "team_seasons.json")
 
@@ -152,19 +148,34 @@ def sync_performance_sources() -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path, help="One retained predictive source")
-    parser.add_argument("--workers", type=int)
     parser.add_argument(
         "--force", action="store_true", help="Recompute existing records"
     )
     args = parser.parse_args()
+    load_pinned_likelihood(
+        ROOT / "data/processed/posterior/historical_likelihood_v1.json"
+    )
     sources = [ROOT / args.source] if args.source else _retained_sources()
+    changed_sources: set[Path] = set()
     for source in sources:
-        if not args.force and "retrospective_game_expectations" in _read_json(
-            source / "team_seasons.json"
+        metadata = _read_json(source / "metadata.json")
+        existing = _read_json(source / "team_seasons.json").get(
+            "retrospective_game_expectations", {}
+        )
+        if (
+            not args.force
+            and existing.get("retrospective_game_expectations_version")
+            == RETROSPECTIVE_GAME_EXPECTATIONS_VERSION
+            and existing.get("historical_likelihood_sha256")
+            == HISTORICAL_LIKELIHOOD_SHA256
+            and existing.get("conditioning") == RETROSPECTIVE_CONDITIONING
+            and existing.get("posterior_pmfs_sha256") == metadata.get("posterior_pmfs_sha256")
+            and "runtime_seconds" not in existing.get("inference", {})
         ):
             continue
-        backfill(source, workers=args.workers)
-    sync_performance_sources()
+        backfill(source)
+        changed_sources.add(source.resolve())
+    sync_performance_sources(changed_sources if args.source else None)
 
 
 if __name__ == "__main__":

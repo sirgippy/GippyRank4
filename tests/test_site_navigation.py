@@ -187,7 +187,7 @@ def test_team_pages_have_snapshot_safe_preseason_movement_surfaces() -> None:
         "preseason_team_seasons_path",
         "season_trajectory_path",
         "preseason_inputs",
-        "beliefMovementForGame",
+        "checkpointPanel",
         "adjacent points are not attributed to one specific game",
         "Performance has no preseason starting point",
     ):

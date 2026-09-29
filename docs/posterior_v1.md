@@ -52,7 +52,7 @@ Schema `1.0` bundles live under
 `data/processed/snapshots/<season>/<snapshot-id>/predictive/<prior-family>/`:
 
 - `metadata.json`: requested/effective cutoff, source acquisition provenance,
-  input hashes, included IDs, versions, validity, and lower-division audit
+  input hashes (including a canonical hash of the posterior PMFs), included IDs, versions, validity, and lower-division audit
   count.
 - `rankings.json` and `rankings.csv`: small static-client display rows.
 - `posterior_pmfs.csv`: normalized per-team discrete PMFs.
@@ -62,8 +62,14 @@ Schema `1.0` bundles live under
 `context` and `history` are equal first-class prior-family values. A preseason
 snapshot is the same contract with zero games. Historical snapshots use
 `historical_frozen` source mode. A live current-season snapshot records its
-requested cutoff, the explicit CFBD retrieval time, and an effective cutoff no
-later than either; game filtering uses the effective cutoff. Snapshot
+requested cutoff, both CFBD retrieval times, the later combined-source
+availability, and an effective cutoff no later than either; game filtering
+uses the effective cutoff. Retained publications whose older metadata recorded
+the first response keep that value under `source_retrieved_at` and mark
+`source_retrieved_at_contract: legacy_first_response`; their
+`combined_source_available_at` records the later response without changing
+the frozen effective cutoff or evidence. Older live snapshots without both
+retrieval times mark the combined source availability as unverified. Snapshot
 construction has no publishing, website, polling, or ballot code.
 
 Only final FBS/FCS-vs-FBS/FCS games at or before the cutoff are factors. Every

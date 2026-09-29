@@ -512,11 +512,25 @@ def margin_display_distribution(
     clipped distribution without treating the endpoints as hard limits.
     Exact summaries must continue to come from :func:`predict_game`.
     """
+    components = predictive_components(game, home, away, likelihood)
+    return _margin_display_distribution_from_components(
+        likelihood, components, minimum=minimum, maximum=maximum, bins=bins
+    )
+
+
+def _margin_display_distribution_from_components(
+    likelihood: LikelihoodV1,
+    components: tuple[np.ndarray, np.ndarray],
+    *,
+    minimum: float = FUTURE_MARGIN_DISPLAY_MIN,
+    maximum: float = FUTURE_MARGIN_DISPLAY_MAX,
+    bins: int = FUTURE_MARGIN_DISPLAY_BINS,
+) -> dict[str, Any]:
     if not np.isfinite(minimum) or not np.isfinite(maximum) or minimum >= maximum:
         raise ValueError("margin display bounds must be finite and ordered")
     if bins < 1:
         raise ValueError("margin display needs at least one bin")
-    locations, weights = predictive_components(game, home, away, likelihood)
+    locations, weights = components
     edges = np.linspace(float(minimum), float(maximum), bins + 1)
     locations, weights = _display_components(locations, weights)
     cdf = _display_cdf(edges, locations, weights, likelihood)
@@ -577,7 +591,16 @@ def predict_game(
 ) -> PredictiveMarginSummary:
     """Compute the exact posterior-predictive summary for one scheduled game."""
 
-    locations, weights = predictive_components(game, home, away, likelihood)
+    return _predict_game_from_components(
+        likelihood, predictive_components(game, home, away, likelihood)
+    )
+
+
+def _predict_game_from_components(
+    likelihood: LikelihoodV1,
+    components: tuple[np.ndarray, np.ndarray],
+) -> PredictiveMarginSummary:
+    locations, weights = components
     cdf_at_zero = mixture_cdf(
         0.0,
         locations,

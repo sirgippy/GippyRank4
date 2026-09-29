@@ -1,3 +1,5 @@
+const fs = require("node:fs");
+const path = require("node:path");
 const { test, expect } = require("@playwright/test");
 const scheduleLayoutFixture = require("./fixtures/schedule-layout.json");
 const { SITE_ORIGIN, installStaticSiteRoute } = require("./static-site");
@@ -22,6 +24,50 @@ test.beforeEach(async ({ page }) => {
       return;
     }
     await route.fallback();
+  });
+});
+
+test.describe("cross-surface date display", () => {
+  test.use({ timezoneId: "America/Los_Angeles" });
+
+  test("keeps a future calendar anchor on the same day without a kickoff time", async ({ page }) => {
+    const snapshot = "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3";
+    const gameId = "401856712";
+    await page.goto(`/team.html?team=61&season=2026&family=predictive&prior=context&snapshot=${snapshot}`);
+    const teamDate = page.locator(`.game-card[data-game-id="${gameId}"] .game-date`);
+    await expect(teamDate).toContainText("Oct 10");
+
+    await loadSchedule(page, `/schedule.html?season=2026&family=predictive&prior=context&snapshot=${snapshot}&week=6`);
+    const weekly = page.locator(`.weekly-game-card[data-game-id="${gameId}"]`);
+    await expect(weekly.locator(".weekly-game-date strong")).toHaveText("Oct 10");
+    await expect(weekly.locator(".weekly-game-date span")).toHaveCount(0);
+    await expect(weekly.locator(".weekly-date-heading")).toHaveCount(0);
+    await expect(weekly.locator("xpath=ancestor::section[contains(@class,'weekly-date-group')]").locator(".weekly-date-heading"))
+      .toHaveText("Oct 10, 2026");
+  });
+});
+
+test.describe("calendar anchor with no timezone in a malformed browser payload", () => {
+  test.use({ timezoneId: "Asia/Tokyo" });
+
+  test("preserves the lexical calendar day on both schedule surfaces", async ({ page }) => {
+    const snapshot = "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3";
+    const gameId = "401856712";
+    for (const folder of ["team-seasons", "week-games"]) {
+      const artifact = JSON.parse(fs.readFileSync(path.join(__dirname, "../..", `site/data/${folder}/${snapshot}.json`), "utf8"));
+      const games = folder === "team-seasons"
+        ? Object.values(artifact.teams).flatMap((team) => team.games)
+        : artifact.weeks.flatMap((week) => week.games);
+      for (const game of games) if (game.game_id === gameId) game.date = "2026-10-10T00:00:00";
+      await page.route(`**/data/${folder}/${snapshot}.json`, (route) => route.fulfill({ json: artifact }));
+    }
+    await page.goto(`/team.html?team=61&season=2026&family=predictive&prior=context&snapshot=${snapshot}`);
+    await expect(page.locator(`.game-card[data-game-id="${gameId}"] .game-date`)).toContainText("Oct 10");
+    await loadSchedule(page, `/schedule.html?season=2026&family=predictive&prior=context&snapshot=${snapshot}&week=6`);
+    const weekly = page.locator(`.weekly-game-card[data-game-id="${gameId}"]`);
+    await expect(weekly.locator(".weekly-game-date strong")).toHaveText("Oct 10");
+    await expect(weekly.locator("xpath=ancestor::section[contains(@class,'weekly-date-group')]").locator(".weekly-date-heading"))
+      .toHaveText("Oct 10, 2026");
   });
 });
 

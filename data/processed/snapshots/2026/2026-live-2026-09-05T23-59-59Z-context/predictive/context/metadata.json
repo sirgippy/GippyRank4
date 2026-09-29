@@ -1,4 +1,5 @@
 {
+  "combined_source_available_at": null,
   "display_statistic": "expected_rank",
   "effective_cutoff": "2026-09-05T20:11:12.864212+00:00",
   "excluded_lower_division_games": 27,
@@ -105,6 +106,7 @@
   "fcs_population_source": "cfbd_full_season_schedule",
   "game_corpus_sha256": "17fd499a8f37220c556b733653032d3d353f02e10bc79d157861ccb66edae0ed",
   "generation_timestamp": "2026-09-05T20:12:08.549822+00:00",
+  "historical_likelihood_sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
   "historical_likelihood_version": "V1",
   "included_game_count": 86,
   "included_game_ids": [
@@ -200,13 +202,14 @@
     "historical_likelihood": "V1",
     "history_prior": "1.1"
   },
+  "posterior_pmfs_sha256": "c8938998792aef7f5b2001ac185ed6604bcd6c1e1615aa7e86c48857d021ade2",
   "prior_artifact_sha256": "641182890ec88ea8bc6150cc97047ddc688d0c680486d9fcc63a58d7bfae9132",
   "prior_family": "context",
   "prior_model_version": "1.2",
   "ranking_family": "predictive",
   "requested_cutoff": "2026-09-05T23:59:59+00:00",
   "retrospective_game_expectations_path": "team_seasons.json",
-  "retrospective_game_expectations_version": "1.0",
+  "retrospective_game_expectations_version": "2.0",
   "schema_version": "1.0",
   "season": 2026,
   "season_simulation_configuration": {
@@ -230,6 +233,7 @@
     "2026.json.provenance.json": "0f1b590e14b07f8a294325d2de2145560b556cfdcffa24eb03dcee7a2c1e9e11"
   },
   "source_retrieved_at": "2026-09-05T20:11:12.864212+00:00",
+  "source_retrieved_at_contract": "legacy_unverified_availability",
   "team_season_path": "team_seasons.json",
   "team_season_schema_version": "1.0",
   "valid": true

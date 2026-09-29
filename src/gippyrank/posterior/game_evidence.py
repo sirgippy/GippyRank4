@@ -47,6 +47,7 @@ from gippyrank.posterior.season_simulation import (
     SeasonSimulationConfig,
     simulate_season,
 )
+from gippyrank.result_provenance import known_unmodeled_result
 
 PERFORMANCE_DISPLAY_BINS = 40
 
@@ -162,13 +163,16 @@ def _int_or_none(value: object) -> int | None:
         return None
 
 
-def _week(value: object) -> int | str | None:
+def _week(value: object) -> int | None:
     if value is None or str(value).strip() == "":
         return None
     try:
-        return int(value)
-    except (TypeError, ValueError):
-        return str(value)
+        week = int(value)
+    except (TypeError, ValueError) as error:
+        raise ValueError(f"unsupported schedule week: {value!r}") from error
+    if week < 0:
+        raise ValueError(f"unsupported schedule week: {value!r}")
+    return week
 
 
 def _schedule_datetime(value: object) -> datetime | None:
@@ -178,11 +182,11 @@ def _schedule_datetime(value: object) -> datetime | None:
         parsed = datetime.fromisoformat(str(value))
     except ValueError:
         return None
-    return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=UTC)
+    return parsed if parsed.tzinfo is not None else None
 
 
 def _future_at_snapshot(row: dict[str, str], metadata: dict[str, Any]) -> bool:
-    """Return whether a schedule row is strictly after the snapshot cutoff."""
+    """Treat an unscored schedule date as a UTC calendar anchor, not kickoff."""
 
     when = _schedule_datetime(row.get("startDate"))
     if when is None:
@@ -191,10 +195,17 @@ def _future_at_snapshot(row: dict[str, str], metadata: dict[str, Any]) -> bool:
     if cutoff_value is None:
         return True
     cutoff = _schedule_datetime(cutoff_value)
-    return cutoff is not None and when > cutoff
+    if cutoff is None:
+        return False
+    if _bool(row.get("completed")):
+        return when > cutoff
+    return when.astimezone(UTC).date() >= cutoff.astimezone(UTC).date()
 
 
-def _schedule_state(row: dict[str, str], metadata: dict[str, Any]) -> str:
+def _schedule_state(
+    row: dict[str, str], metadata: dict[str, Any],
+    schedule_source: dict[str, str] | None = None,
+) -> str:
     """Classify a regular schedule row without consulting later results."""
     season_type = str(row.get("seasonType", "regular") or "regular").casefold()
     if season_type not in {"", "regular"}:
@@ -208,14 +219,41 @@ def _schedule_state(row: dict[str, str], metadata: dict[str, Any]) -> str:
     cutoff = _schedule_datetime(metadata.get("effective_cutoff"))
     if when is None or cutoff is None:
         return "unresolved"
-    if when > cutoff:
+    if when.astimezone(UTC).date() > cutoff.astimezone(UTC).date():
         return "future"
     if _bool(row.get("completed")):
-        home_points = _int_or_none(row.get("homePoints"))
-        away_points = _int_or_none(row.get("awayPoints"))
-        if home_points is not None and away_points is not None:
-            return "completed"
+        return "completed" if _result_available(row, metadata, schedule_source) else "unresolved"
+    if _future_at_snapshot(row, metadata):
+        return "future"
     return "unresolved"
+
+
+def _result_available(
+    row: dict[str, str], metadata: dict[str, Any],
+    schedule_source: dict[str, str] | None = None,
+) -> bool:
+    """Whether the score is fixed by the selected snapshot's source boundary."""
+    if metadata.get("snapshot_type") == "preseason" or not _bool(row.get("completed")):
+        return False
+    if _int_or_none(row.get("homePoints")) is None or _int_or_none(row.get("awayPoints")) is None:
+        return False
+    when = _schedule_datetime(row.get("startDate"))
+    cutoff = _schedule_datetime(metadata.get("effective_cutoff"))
+    if when is None or cutoff is None or when > cutoff:
+        return False
+    if str(row.get("id", "")) in {str(value) for value in metadata.get("included_game_ids", [])}:
+        return True
+    return known_unmodeled_result(
+        game_date=when,
+        cutoff=cutoff,
+        snapshot_type=metadata.get("snapshot_type"),
+        source_mode=metadata.get("source_mode"),
+        schedule_source=schedule_source,
+        game_corpus_sha256=metadata.get("game_corpus_sha256"),
+        source_available_at=_schedule_datetime(
+            metadata.get("combined_source_available_at", metadata.get("source_retrieved_at"))
+        ),
+    )
 
 
 def _prediction_source(metadata: dict[str, Any]) -> str:
@@ -320,6 +358,7 @@ def build_team_season_artifact(
     included_rows: list[dict[str, str]],
     posterior: PosteriorResult,
     likelihood: LikelihoodV1 | None,
+    likelihood_sha256: str | None = None,
     prediction_source: str | None = None,
     season_simulation_config: SeasonSimulationConfig | None = None,
     schedule_rows: list[dict[str, str]] | None = None,
@@ -355,18 +394,13 @@ def build_team_season_artifact(
 
     retrospective_expectations = None
     if likelihood is not None:
-        inference = metadata.get("posterior_inference_configuration", {})
-        if not isinstance(inference, dict):
-            raise ValueError("retrospective expectations need inference configuration")
         retrospective_expectations = build_retrospective_game_expectations(
             metadata=metadata,
             teams=teams,
             games=games,
             posterior=posterior,
             likelihood=likelihood,
-            max_iterations=int(inference.get("max_iterations", 500)),
-            tolerance=float(inference.get("tolerance", 1e-9)),
-            damping=float(inference.get("damping", 0.35)),
+            likelihood_sha256=likelihood_sha256,
         )
 
     performance_reference = [
@@ -412,13 +446,26 @@ def build_team_season_artifact(
             "sha256": schedule_corpus_sha256,
         }
 
+    for row in schedule:
+        if str(row.get("season", "")) != str(metadata["season"]):
+            continue
+        when = _schedule_datetime(row.get("startDate"))
+        if when is None or when.utcoffset() is None:
+            raise ValueError(
+                f"schedule game {row.get('id')} needs a timezone-aware date"
+            )
+        if not _bool(row.get("completed")) and when.utcoffset().total_seconds() != 0:
+            raise ValueError(
+                f"unscored schedule game {row.get('id')} needs a UTC calendar anchor"
+            )
+
     future_simulation_games: list[ScheduledGame] = []
     fixed_regular_rows: list[dict[str, str]] = []
     excluded_schedule_games: list[dict[str, Any]] = []
     for row in schedule:
         if str(row.get("season", "")) != str(metadata["season"]):
             continue
-        state = _schedule_state(row, metadata)
+        state = _schedule_state(row, metadata, resolved_schedule_source)
         if state == "out_of_scope":
             continue
         game_id = str(row.get("id", ""))
@@ -440,6 +487,16 @@ def build_team_season_artifact(
                     "home_team_id": row.get("homeId", ""),
                     "away_team_id": row.get("awayId", ""),
                     "reason": "cancelled_or_postponed",
+                }
+            )
+            continue
+        if state == "unresolved" and _bool(row.get("completed")):
+            excluded_schedule_games.append(
+                {
+                    "game_id": game_id,
+                    "home_team_id": row.get("homeId", ""),
+                    "away_team_id": row.get("awayId", ""),
+                    "reason": "result_not_confirmed_at_cutoff",
                 }
             )
             continue
@@ -475,7 +532,7 @@ def build_team_season_artifact(
             if str(row.get("season", "")) != str(metadata["season"]):
                 continue
             game_id = str(row.get("id", ""))
-            schedule_state = _schedule_state(row, metadata)
+            schedule_state = _schedule_state(row, metadata, resolved_schedule_source)
             home_id, away_id = row.get("homeId", ""), row.get("awayId", "")
             home_subdivision = row.get("homeClassification", "").casefold()
             away_subdivision = row.get("awayClassification", "").casefold()
@@ -536,7 +593,7 @@ def build_team_season_artifact(
             (away_id, home_id, "awayTeam", "homeTeam", "homeClassification", "homeConference"),
         ]
         game_id = str(row.get("id", ""))
-        schedule_state = _schedule_state(row, metadata)
+        schedule_state = _schedule_state(row, metadata, resolved_schedule_source)
         eligible_matchup = (
             row.get("homeClassification", "").casefold() in {"fbs", "fcs"}
             and row.get("awayClassification", "").casefold() in {"fbs", "fcs"}
@@ -546,17 +603,15 @@ def build_team_season_artifact(
             and eligible_matchup
             and game_id in game_by_id
         )
-        # The processed schedule is current-corpus data and may contain a
-        # final score that was unavailable at this snapshot cutoff.  Only an
-        # explicitly included game is durable snapshot evidence; fail closed
-        # for unsupported games rather than leaking a later lower-division
-        # result into an older artifact.
-        reveal_completed_result = schedule_state == "completed" and game_id in included_ids
-        display_state = (
-            schedule_state
-            if reveal_completed_result or schedule_state != "completed"
-            else "unresolved"
-        )
+        # A completed score can be known at the cutoff without belonging to
+        # the model evidence (for example, a lower-division opponent).
+        reveal_completed_result = schedule_state in {"completed", "out_of_scope"} and _result_available(row, metadata, resolved_schedule_source)
+        if reveal_completed_result and not eligible_matchup:
+            display_state = "out_of_scope"
+        elif schedule_state == "completed" and not reveal_completed_result:
+            display_state = "unresolved"
+        else:
+            display_state = schedule_state
         for focal_id, opponent_id, focal_name_field, opponent_name_field, opponent_class_field, opponent_conf_field in focal_sides:
             if focal_id not in fbs_teams:
                 continue
@@ -597,7 +652,7 @@ def build_team_season_artifact(
             team_games[focal_id].append(entry)
 
     for entries in team_games.values():
-        entries.sort(key=lambda entry: (str(entry["date"]), str(entry["game_id"])))
+        entries.sort(key=lambda entry: (_schedule_datetime(entry["date"]), str(entry["game_id"])))
 
     season_simulation = None
     if likelihood is not None:
@@ -640,6 +695,9 @@ def build_team_season_artifact(
         "requested_cutoff": metadata.get("requested_cutoff"),
         "effective_cutoff": metadata.get("effective_cutoff"),
         "source_retrieved_at": metadata.get("source_retrieved_at"),
+        "source_mode": metadata.get("source_mode"),
+        "combined_source_available_at": metadata.get("combined_source_available_at"),
+        "source_retrieved_at_contract": metadata.get("source_retrieved_at_contract"),
         "source_retrieval_times": metadata.get("source_retrieval_times"),
         "source_response_hashes": metadata.get("source_response_hashes", {}),
         "game_corpus_sha256": metadata.get("game_corpus_sha256"),

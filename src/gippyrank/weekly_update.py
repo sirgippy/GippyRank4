@@ -168,9 +168,12 @@ def _github_output_lines(update: WeeklyUpdate, *, root: Path) -> list[str]:
 
 def _same_evidence(context: Snapshot, history: Snapshot) -> None:
     fields = (
-        "requested_cutoff", "effective_cutoff", "source_retrieved_at",
+        "requested_cutoff", "effective_cutoff", "source_mode", "source_kind",
+        "source_retrieved_at",
         "source_retrieval_times", "source_response_hashes", "game_corpus_sha256",
-        "included_game_ids",
+        "included_game_ids", "included_game_rows_sha256",
+        "combined_source_available_at", "source_retrieved_at_contract",
+        "historical_likelihood_sha256",
     )
     for field in fields:
         if context.metadata[field] != history.metadata[field]:

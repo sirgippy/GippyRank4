@@ -44,24 +44,21 @@
         <div class="section-heading"><div><h2 id="season-movement-title">Season belief trajectory</h2><p id="season-movement-context" class="section-context"></p></div></div>
         <div id="season-movement" class="season-movement" aria-live="polite"></div>
       </section>
-      <section class="team-rating-explainer" aria-label="How to read this page">
-        <details class="team-page-help">
-          <summary>How to read this page</summary>
-          <p>Completed games pair the result with a published-belief transition and an inferred performance grade. Future games summarize the current prediction. Compact chevrons reveal the underlying uncertainty distributions.</p>
-          <p id="prediction-source" class="team-rating-note"></p>
-          <p class="team-rating-note">Completed-game ratings remain Context-anchored; future games use the source named above. Published snapshot changes are not single-game causal attribution.</p>
-        </details>
-      </section>
       <section id="season-outlook-section" class="season-outlook-section" aria-labelledby="season-outlook-title" hidden>
         <div class="section-heading"><div><h2 id="season-outlook-title">Season outlook</h2><p class="section-context">Expected finish and likely final regular-season record.</p></div></div>
         <div id="season-outlook" class="season-outlook" aria-live="polite"></div>
       </section>
       <section aria-labelledby="schedule-title">
         <div class="section-heading team-schedule-heading">
-          <div><h2 id="schedule-title">Season schedule</h2><p id="schedule-context" class="section-context"></p></div>
+          <h2 id="schedule-title">Season schedule</h2>
+          <details class="team-page-help">
+            <summary>How to read games</summary>
+            <p>Results show an expectation given what GippyRank knows at this snapshot and the share of expected outcomes at least as favorable or unfavorable. Open a game to compare its margin with the distribution.</p>
+            <p id="prediction-source" class="schedule-source-note"></p>
+          </details>
         </div>
         <p id="team-page-status" class="team-page-status" aria-live="polite">Loading schedule…</p>
-        <ol id="schedule-list" class="schedule-list"></ol>
+        <div id="schedule-list" class="schedule-list" role="group" aria-label="Scheduled games and model updates"></div>
       </section>
     </main>
     <footer><div class="shell"><p>GippyRank rankings are model outputs, not AP, Coaches, or CFP poll inputs.</p><a href="./methodology.html">Methodology</a></div></footer>

@@ -3,7 +3,8 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
-from datetime import date
+import shutil
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import numpy as np
@@ -11,8 +12,14 @@ import pytest
 
 from gippyrank.performance_snapshot import build_performance_snapshot
 from gippyrank.posterior.engine import LikelihoodV1, Team, infer_posterior
-from gippyrank.posterior.game_evidence import build_team_season_artifact
-from gippyrank.posterior.snapshots import build_snapshot
+from gippyrank.posterior.game_evidence import (
+    _future_at_snapshot,
+    _schedule_datetime,
+    _schedule_state,
+    _week,
+    build_team_season_artifact,
+)
+from gippyrank.posterior.snapshots import build_snapshot, filter_games
 from gippyrank.site_data import SiteDataValidationError, build_site_data
 
 
@@ -25,6 +32,12 @@ def _write(path: Path, fields: list[str], rows: list[dict[str, object]]) -> None
 
 
 def _root(tmp_path: Path) -> Path:
+    likelihood_path = tmp_path / "data/processed/posterior/historical_likelihood_v1.json"
+    likelihood_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(
+        Path(__file__).resolve().parents[1] / "data/processed/posterior/historical_likelihood_v1.json",
+        likelihood_path,
+    )
     prior_fields = ["season", "subdivision", "team_id", "team_name", "conference", "pmf"]
     prior_rows = [
         {"season": 2026, "subdivision": "fbs", "team_id": "1", "team_name": "One", "conference": "A", "pmf": "[0.7,0.3]"},
@@ -57,6 +70,131 @@ def _root(tmp_path: Path) -> Path:
     return tmp_path
 
 
+def test_completed_gameday_result_is_unresolved_until_included() -> None:
+    row = {
+        "id": "gameday",
+        "seasonType": "regular",
+        "startDate": "2026-10-10T00:00:00Z",
+        "completed": "True",
+        "homePoints": "31",
+        "awayPoints": "17",
+    }
+    metadata = {
+        "snapshot_type": "live",
+        "effective_cutoff": "2026-10-10T12:00:00Z",
+        "included_game_ids": [],
+    }
+    assert not _future_at_snapshot(row, metadata)
+    assert _schedule_state(row, metadata) == "unresolved"
+    metadata["included_game_ids"] = ["gameday"]
+    assert _schedule_state(row, metadata) == "completed"
+    metadata["effective_cutoff"] = "2026-10-09T12:00:00Z"
+    metadata["included_game_ids"] = []
+    assert _schedule_state(row, metadata) == "future"
+
+
+def test_live_gameday_snapshot_consumes_known_same_day_score(tmp_path: Path) -> None:
+    snapshot = build_snapshot(
+        season=2026,
+        cutoff=datetime(2026, 9, 10, 12, tzinfo=UTC),
+        prior_family="context",
+        snapshot_type="live",
+        root=_root(tmp_path),
+    )
+    assert snapshot.metadata["included_game_ids"] == ["early", "later"]
+    artifact = json.loads((snapshot.directory / "team_seasons.json").read_text())
+    game = next(
+        game for game in artifact["teams"]["1"]["games"] if game["game_id"] == "later"
+    )
+    assert game["game_state"] == "completed"
+    assert game["score"] == {"team": 7, "opponent": 24}
+    assert game["future_prediction_id"] is None
+
+
+def test_later_retrieval_cannot_prove_same_day_result_at_historical_cutoff(
+    tmp_path: Path,
+) -> None:
+    games, rows, _, _ = filter_games(
+        _root(tmp_path),
+        2026,
+        datetime(2026, 9, 10, 12, tzinfo=UTC),
+        "live",
+        source_retrieved_at=datetime(2026, 9, 11, 12, tzinfo=UTC),
+    )
+    assert games == []
+    assert rows == []
+
+
+def test_later_retrieval_cannot_prove_result_across_utc_midnight(
+    tmp_path: Path,
+) -> None:
+    root = _root(tmp_path)
+    path = root / "data/processed/cfbd/games.csv"
+    with path.open(newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle)
+        fields = list(reader.fieldnames or [])
+        rows = list(reader)
+    midnight_game = dict(rows[-1])
+    midnight_game.update(id="midnight", startDate="2026-09-09T23:30:00Z")
+    _write(path, fields, [*rows, midnight_game])
+    cutoff = datetime(2026, 9, 10, 0, 15, tzinfo=UTC)
+    games, included, _, _ = filter_games(
+        root, 2026, cutoff, "live",
+        source_retrieved_at=datetime(2026, 9, 11, 12, tzinfo=UTC),
+    )
+    assert games == []
+    assert included == []
+    assert _schedule_state(midnight_game, {
+        "snapshot_type": "live",
+        "effective_cutoff": cutoff.isoformat(),
+        "source_retrieved_at": "2026-09-11T12:00:00+00:00",
+        "included_game_ids": [],
+    }) == "unresolved"
+
+
+def test_date_cutoff_includes_its_calendar_day(tmp_path: Path) -> None:
+    games, _, _, _ = filter_games(_root(tmp_path), 2026, date(2026, 8, 29), "weekly")
+    assert [game.game_id for game in games] == ["early"]
+
+
+def test_schedule_datetime_requires_timezone() -> None:
+    assert _schedule_datetime("2026-09-10T12:00:00") is None
+
+
+@pytest.mark.parametrize(
+    ("start_date", "message"),
+    [
+        ("2026-09-10T00:00:00", "timezone-aware date"),
+        ("2026-09-10T00:00:00-05:00", "UTC calendar anchor"),
+    ],
+)
+def test_producer_rejects_dates_that_publication_cannot_accept(
+    tmp_path: Path, start_date: str, message: str
+) -> None:
+    root = _root(tmp_path)
+    schedule_path = root / "data/processed/cfbd/games.csv"
+    with schedule_path.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    rows[1]["completed"] = "False"
+    rows[1]["homePoints"] = rows[1]["awayPoints"] = ""
+    rows[1]["startDate"] = start_date
+    _write(schedule_path, list(rows[0]), rows)
+    with pytest.raises(ValueError, match=message):
+        build_snapshot(
+            season=2026,
+            cutoff=date(2026, 9, 1),
+            prior_family="context",
+            snapshot_type="weekly",
+            root=root,
+            )
+
+
+@pytest.mark.parametrize("week", ["Bowl", "-1"])
+def test_producer_rejects_unsupported_week(week: str) -> None:
+    with pytest.raises(ValueError, match="unsupported schedule week"):
+        _week(week)
+
+
 def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path: Path) -> None:
     root = _root(tmp_path)
     snapshot = build_snapshot(
@@ -65,7 +203,6 @@ def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path:
         prior_family="context",
         snapshot_type="weekly",
         root=root,
-        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
     )
     artifact = json.loads((snapshot.directory / "team_seasons.json").read_text())
     games = artifact["teams"]["1"]["games"]
@@ -99,7 +236,7 @@ def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path:
     assert set(retrospective["games"]) == {"early"}
     assert retrospective["games"]["early"]["actual_home_margin"] == 10
     assert snapshot.metadata["retrospective_game_expectations_path"] == "team_seasons.json"
-    assert snapshot.metadata["retrospective_game_expectations_version"] == "1.0"
+    assert snapshot.metadata["retrospective_game_expectations_version"] == "2.0"
     prediction = artifact["future_predictions"][later["future_prediction_id"]]
     assert len(prediction["display_distribution"]["masses"]) == 40
     assert sum(prediction["display_distribution"]["masses"]) + prediction["display_distribution"]["lower_tail_probability"] + prediction["display_distribution"]["upper_tail_probability"] == 1000
@@ -195,7 +332,6 @@ def test_unresolved_future_schedule_is_fail_closed_for_season_forecast(tmp_path:
         prior_family="context",
         snapshot_type="weekly",
         root=root,
-        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
     )
     artifact = json.loads((snapshot.directory / "team_seasons.json").read_text())
 
@@ -253,7 +389,6 @@ def test_schedule_accounting_keeps_unresolved_and_excluded_completed_games(
         prior_family="context",
         snapshot_type="weekly",
         root=root,
-        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
     )
     simulation = json.loads((snapshot.directory / "team_seasons.json").read_text())[
         "season_simulation"
@@ -279,7 +414,6 @@ def test_team_artifact_provenance_mismatch_fails_closed(tmp_path: Path) -> None:
         prior_family="context",
         snapshot_type="weekly",
         root=root,
-        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
     )
     artifact_path = snapshot.directory / "team_seasons.json"
     artifact = json.loads(artifact_path.read_text())
@@ -300,7 +434,6 @@ def test_declared_season_simulation_missing_fails_closed(tmp_path: Path) -> None
         prior_family="context",
         snapshot_type="weekly",
         root=root,
-        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
     )
     artifact_path = snapshot.directory / "team_seasons.json"
     artifact = json.loads(artifact_path.read_text())
@@ -335,7 +468,6 @@ def test_declared_team_artifact_missing_fails_closed(tmp_path: Path) -> None:
         prior_family="context",
         snapshot_type="weekly",
         root=root,
-        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
     )
     (snapshot.directory / "team_seasons.json").unlink()
     config = root / "site/publish_config.json"
@@ -397,8 +529,16 @@ def test_started_but_unincluded_game_stays_redacted(tmp_path: Path) -> None:
         assert not game["modeled"]
 
 
-def test_completed_lower_division_game_without_snapshot_evidence_stays_redacted(
-    tmp_path: Path,
+@pytest.mark.parametrize(
+    ("source_mode", "retrieved_at", "known"),
+    [
+        ("current_cached_cfbd", "2026-09-02T12:00:00+00:00", False),
+        ("current_cached_cfbd", "2026-08-31T12:00:00+00:00", True),
+        ("historical_frozen", None, True),
+    ],
+)
+def test_completed_lower_division_score_requires_available_source_but_not_model_membership(
+    tmp_path: Path, source_mode: str, retrieved_at: str | None, known: bool,
 ) -> None:
     root = _root(tmp_path)
     schedule_path = root / "data/processed/cfbd/games.csv"
@@ -434,10 +574,12 @@ def test_completed_lower_division_game_without_snapshot_evidence_stays_redacted(
             "snapshot_type": "weekly",
             "requested_cutoff": "2026-09-01T23:59:59+00:00",
             "effective_cutoff": "2026-09-01T23:59:59+00:00",
-            "source_retrieved_at": None,
+            "source_retrieved_at": retrieved_at,
+            "combined_source_available_at": retrieved_at,
+            "source_mode": source_mode,
             "source_retrieval_times": {},
             "source_response_hashes": {},
-            "game_corpus_sha256": "historical-evidence-corpus",
+            "game_corpus_sha256": hashlib.sha256(schedule_path.read_bytes()).hexdigest(),
             "included_game_ids": [],
         },
         teams=teams,
@@ -450,11 +592,50 @@ def test_completed_lower_division_game_without_snapshot_evidence_stays_redacted(
     game = next(
         game for game in artifact["teams"]["1"]["games"] if game["game_id"] == "lower-division"
     )
-    assert game["game_state"] == "unresolved"
-    assert game["result"] is None
-    assert game["score"] is None
+    assert game["game_state"] == ("out_of_scope" if known else "unresolved")
+    assert game["result"] == ("W" if known else None)
+    assert game["score"] == ({"team": 31, "opponent": 7} if known else None)
     assert game["game_rating"] is None
+    assert game["retrospective_expectation_id"] is None
     assert not game["modeled"]
+
+
+def test_known_unmodeled_result_exports_with_local_time(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    schedule_path = root / "data/processed/cfbd/games.csv"
+    with schedule_path.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    lower = dict(rows[0])
+    lower.update({
+        "id": "known-lower-division", "homeId": "1", "homeTeam": "One",
+        "homeClassification": "fbs", "homePoints": "31",
+        "awayId": "99", "awayTeam": "Lower", "awayClassification": "ii",
+        "awayConference": "Division II", "awayPoints": "7",
+    })
+    _write(schedule_path, list(rows[0]), [*rows, lower])
+    snapshot = build_snapshot(
+        season=2026, cutoff=date(2026, 9, 1), prior_family="context",
+        snapshot_type="weekly", root=root,
+    )
+    config = root / "site/publish_config.json"
+    config.parent.mkdir(parents=True, exist_ok=True)
+    config.write_text(json.dumps({
+        "schema_version": "1.0",
+        "publication_slots": [{"id": "2026-09-01", "status": "official"}],
+        "snapshots": [{
+            "source": snapshot.directory.relative_to(root).as_posix(),
+            "display_label": "Test", "publication_slot": "2026-09-01",
+        }],
+    }))
+    build_site_data(root=root, config_path=config, output_directory=root / "site/data")
+    published = json.loads((root / "site/data/team-seasons" / f"{snapshot.snapshot_id}.json").read_text())
+    game = next(game for game in published["teams"]["1"]["games"] if game["game_id"] == "known-lower-division")
+    assert game["game_state"] == "out_of_scope"
+    assert game["result"] == "W"
+    assert game["score"] == {"team": 31, "opponent": 7}
+    assert game["modeled"] is False
+    assert game["retrospective_expectation_id"] is None
+    assert game["date_display_mode"] == "local_time"
 
 
 def test_validator_rejects_unincluded_completed_result(tmp_path: Path) -> None:
@@ -472,7 +653,6 @@ def test_validator_rejects_unincluded_completed_result(tmp_path: Path) -> None:
         prior_family="context",
         snapshot_type="weekly",
         root=root,
-        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
     )
 
     for row in rows:
@@ -506,7 +686,6 @@ def test_historical_artifact_survives_later_schedule_refresh(tmp_path: Path) -> 
         prior_family="context",
         snapshot_type="weekly",
         root=root,
-        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
     )
     artifact_path = snapshot.directory / "team_seasons.json"
     original_artifact = artifact_path.read_bytes()
@@ -542,16 +721,12 @@ def test_context_history_and_performance_use_declared_prediction_sources(
     history_rows[1]["pmf"] = "[0.9,0.1]"
     _write(history_prior, history_fields, history_rows)
 
-    beta = np.zeros(34)
-    beta[0] = 10.0
-    likelihood = LikelihoodV1(beta, 1.0, 15.0)
     context = build_snapshot(
         season=2026,
         cutoff=date(2026, 9, 1),
         prior_family="context",
         snapshot_type="weekly",
         root=root,
-        likelihood=likelihood,
     )
     history = build_snapshot(
         season=2026,
@@ -559,7 +734,6 @@ def test_context_history_and_performance_use_declared_prediction_sources(
         prior_family="history",
         snapshot_type="weekly",
         root=root,
-        likelihood=likelihood,
     )
     performance = build_performance_snapshot(
         context,
@@ -609,3 +783,47 @@ def test_context_history_and_performance_use_declared_prediction_sources(
         assert prediction["home_win_probability"] + prediction["away_win_probability"] == pytest.approx(1.0)
         assert artifact["teams"]["1"]["games"][1]["future_prediction_id"] == "later"
         assert artifact["teams"]["2"]["games"][1]["future_prediction_id"] == "later"
+
+
+def test_legacy_replay_contract_publishes_static_site(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    prior = root / "data/processed/preseason/context_v1_3/annual/2026/predictions.csv"
+    prior.write_text(prior.read_text().replace("[0.7,0.3]", "[0.6,0.4]"))
+    cutoff = date(2026, 9, 1)
+    source = build_snapshot(
+        season=2026, cutoff=cutoff, prior_family="context",
+        prior_model_version="1.2", snapshot_type="weekly", root=root,
+    )
+    source_path = source.directory / "metadata.json"
+    metadata = json.loads(source_path.read_text())
+    metadata["snapshot_id"] = metadata["snapshot_id"].removesuffix("-v1.2")
+    metadata["source_mode"] = "current_cached_cfbd"
+    metadata["source_kind"] = "cfbd_api_schedule"
+    metadata["source_retrieved_at"] = "2026-09-01T12:00:00+00:00"
+    metadata["source_retrieval_times"] = {
+        "fbs": "2026-09-01T12:00:00+00:00",
+        "fcs": "2026-09-01T12:00:01+00:00",
+    }
+    metadata["combined_source_available_at"] = "2026-09-01T12:00:01+00:00"
+    metadata["source_retrieved_at_contract"] = "legacy_first_response"
+    source_path.write_text(json.dumps(metadata))
+    replay = build_snapshot(
+        season=2026, cutoff=cutoff, prior_family="context",
+        prior_model_version="1.3", snapshot_type="weekly", root=root,
+        evidence_snapshot=source.directory,
+    )
+    config = root / "site/publish_config.json"
+    config.parent.mkdir(parents=True)
+    config.write_text(json.dumps({
+        "schema_version": "1.0",
+        "publication_slots": [{"id": "2026-09-01", "status": "official"}],
+        "snapshots": [{
+            "source": replay.directory.relative_to(root).as_posix(),
+            "display_label": "Replay", "publication_slot": "2026-09-01",
+        }],
+    }))
+    manifest = build_site_data(
+        root=root, config_path=config, output_directory=root / "site/data"
+    )
+    assert manifest["snapshots"][0]["snapshot_id"] == replay.snapshot_id
+    assert replay.metadata["source_retrieved_at_contract"] == "legacy_first_response"

@@ -1,3 +1,5 @@
+import { percentage } from "./probability.js";
+
 const $ = (selector) => document.querySelector(selector);
 const params = new URLSearchParams(window.location.search);
 const state = {
@@ -34,18 +36,6 @@ function svgElement(name, attributes = {}) {
   return value;
 }
 
-function percentage(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return "Unavailable";
-  if (numeric === 1) return "100%";
-  if (numeric === 0) return "0%";
-  const percent = numeric * 100;
-  if (percent < 0.01) return "<0.01%";
-  if (percent < 1) return `${percent.toFixed(1)}%`;
-  if (percent >= 99.95) return "<100%";
-  return `${Math.round(percent)}%`;
-}
-
 function ordinal(rank) {
   const rounded = Math.round(Number(rank));
   const remainder = rounded % 100;
@@ -53,12 +43,14 @@ function ordinal(rank) {
   return `${rounded}${suffix}`;
 }
 
-function formatDate(value, includeYear = false) {
+function formatDate(value, includeYear = false, mode = "local_time") {
   if (!value) return "Date unavailable";
-  const date = new Date(value);
+  const key = mode === "utc_calendar" ? String(value).match(/^\d{4}-\d{2}-\d{2}/)?.[0] : null;
+  const date = new Date(key ? `${key}T12:00:00Z` : value);
   if (Number.isNaN(date.getTime())) return "Date unavailable";
   return new Intl.DateTimeFormat("en-US", {
     month: "short", day: "numeric", ...(includeYear ? { year: "numeric" } : {}),
+    ...(mode === "utc_calendar" ? { timeZone: "UTC" } : {}),
   }).format(date);
 }
 
@@ -71,12 +63,14 @@ function formatTime(value) {
   }).format(date);
 }
 
-function localDateKey(value) {
+function localDateKey(value, mode = "local_time") {
+  if (mode === "utc_calendar") return String(value || "").match(/^\d{4}-\d{2}-\d{2}/)?.[0] || "unknown";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "unknown";
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
+  const calendar = mode === "utc_calendar";
+  const month = String((calendar ? date.getUTCMonth() : date.getMonth()) + 1).padStart(2, "0");
+  const day = String(calendar ? date.getUTCDate() : date.getDate()).padStart(2, "0");
+  return `${calendar ? date.getUTCFullYear() : date.getFullYear()}-${month}-${day}`;
 }
 
 function publicationStatusLabel(entry) {
@@ -216,7 +210,7 @@ function performancePanel(rating, display, axis, teamName) {
   panel.append(node("p", "sr-only", `${teamName} performance grade ${rating.performance_grade || "unavailable"}; ${ordinal(rating.performance_percentile)} percentile. Central 80 percent interval: ranks ${rating.interval_80[0]} through ${rating.interval_80[1]}.`));
   const details = node("details", "game-rating-details-disclosure");
   details.append(node("summary", "", "More performance detail"));
-  const list = node("dl", "game-rating-details");
+  const list = node("dl", "game-facts");
   [["Expected performance rank", `#${Number(rating.expected_rank).toFixed(1)}`], ["Median", `#${rating.median_rank}`], ["Mode", `#${rating.mode_rank}`], ["50% interval", `${rating.interval_50[0]}–${rating.interval_50[1]}`], ["80% interval", `${rating.interval_80[0]}–${rating.interval_80[1]}`], ["95% interval", `${rating.interval_95[0]}–${rating.interval_95[1]}`], ["Top 25 caliber", percentage(rating.top25_probability)]].forEach(([label, value]) => list.append(node("dt", "", label), node("dd", "", value)));
   details.append(list);
   panel.append(details);
@@ -260,7 +254,7 @@ function predictionPanel(prediction, axis) {
   panel.append(node("p", "sr-only", `${prediction.home_team_name} has a ${percentage(prediction.home_win_probability)} win probability and ${prediction.away_team_name} has a ${percentage(prediction.away_win_probability)} win probability. Expected margin is ${expectedTeam} by ${expectedMargin.toFixed(1)}. Central 80 percent range: ${predictionRange(prediction, prediction.margin_interval_80)}.`));
   const details = node("details", "game-prediction-details");
   details.append(node("summary", "", "More predictive detail"));
-  const list = node("dl", "game-rating-details");
+  const list = node("dl", "game-facts");
   [["Home win probability", percentage(prediction.home_win_probability)], ["Away win probability", percentage(prediction.away_win_probability)], ["Expected margin", expectedTeam === prediction.home_team_name ? marginSide(expectedTeam, prediction.expected_home_margin) : marginSide(expectedTeam, -prediction.expected_home_margin)], ["Median margin", prediction.median_home_margin >= 0 ? marginSide(prediction.home_team_name, prediction.median_home_margin) : marginSide(prediction.away_team_name, -prediction.median_home_margin)], ["Central 50% range", predictionRange(prediction, prediction.margin_interval_50)], ["Central 80% range", predictionRange(prediction, prediction.margin_interval_80)], ["Central 95% range", predictionRange(prediction, prediction.margin_interval_95)], ["Prediction source", prediction.prediction_source === "predictive_history" ? "Predictive History" : "Predictive Context"]].forEach(([label, value]) => list.append(node("dt", "", label), node("dd", "", value)));
   details.append(list);
   panel.append(details);
@@ -308,9 +302,11 @@ function stateLabel(game) {
 
 function gameCard(game, artifact, entry, week) {
   const article = node("article", `weekly-game-card weekly-game-${game.state}`);
+  article.dataset.gameId = game.game_id;
   const header = node("header", "weekly-game-header");
   const date = node("div", "weekly-game-date");
-  date.append(node("strong", "", formatDate(game.date)), node("span", "", formatTime(game.date)));
+  date.append(node("strong", "", formatDate(game.date, false, game.date_display_mode)));
+  if (game.date_display_mode === "local_time") date.append(node("span", "", formatTime(game.date)));
   header.append(date, node("span", "weekly-game-state", stateLabel(game)));
   const matchup = node("div", "weekly-matchup");
   const homeScore = game.score ? game.score.home : null;
@@ -420,17 +416,17 @@ function renderSchedule(week, artifact, entry) {
   const groups = [];
   const games = state.view === "marquee" ? (week.games || []).filter((game) => game.marquee) : (week.games || []);
   for (const game of games) {
-    const key = game.date ? localDateKey(game.date) : "unknown";
+    const key = game.date ? localDateKey(game.date, game.date_display_mode) : "unknown";
     let group = groups.find((item) => item.key === key);
     if (!group) {
-      group = { key, date: game.date, games: [] };
+      group = { key, games: [] };
       groups.push(group);
     }
     group.games.push(game);
   }
   const sections = groups.map((group) => {
     const section = node("section", "weekly-date-group");
-    section.append(node("h3", "weekly-date-heading", group.key === "unknown" ? "Date unavailable" : formatDate(group.date, true)));
+    section.append(node("h3", "weekly-date-heading", group.key === "unknown" ? "Date unavailable" : formatDate(`${group.key}T00:00:00Z`, true, "utc_calendar")));
     const cards = node("div", "weekly-game-grid");
     cards.append(...group.games.map((game) => gameCard(game, artifact, entry, week.key)));
     section.append(cards);

@@ -38,7 +38,7 @@ async function loadTeam(page, snapshot, prior = null, team = { id: "194", name: 
   if (prior) params.set("prior", prior);
   await page.goto(`/team.html?${params}`);
   await expect(page.locator("#team-page-title")).toHaveText(team.name);
-  await expect(page.locator("#team-page-status")).toHaveText(/scheduled games/);
+  await expect(page.locator("#schedule-list .game-card").first()).toBeVisible();
 }
 
 test.describe("Preseason starting point browser checks", () => {
@@ -82,7 +82,7 @@ test.describe("Preseason starting point browser checks", () => {
   test("treats an explicit History snapshot as authoritative without prior", async ({ page }) => {
     await page.goto(`/team.html?team=194&season=2026&family=predictive&snapshot=${historySnapshot}`);
     await expect(page.locator("#team-page-title")).toHaveText("Ohio State");
-    await expect(page.locator("#team-page-status")).toHaveText(/scheduled games/);
+    await expect(page.locator("#schedule-list .game-card").first()).toBeVisible();
     await expect(page.locator("#team-page-meta")).toContainText("Predictive History");
     await expect(page.locator("#season-movement-context")).toContainText("History");
     await expect(page.locator("#season-story-content")).toContainText("Preseason → Sep 11 interim");
@@ -122,8 +122,9 @@ test.describe("Preseason starting point browser checks", () => {
     await expect(distribution).toBeHidden();
     await page.locator("#season-story-content .season-story-distribution .scalar-distribution-summary").click();
     await expect(distribution).toBeVisible();
-    await expect(page.locator("#schedule-list")).toContainText("Published belief movement");
-    await expect(page.locator("#schedule-list")).toContainText("not attribution to this game alone");
+    await expect(page.locator(".schedule-checkpoint").first()).toContainText("update");
+    await expect(page.locator(".schedule-checkpoint").first()).toContainText("Expected rank");
+    await expect(page.locator(".game-card").first()).not.toContainText("update");
     expect(await page.locator(".team-page").evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBeTruthy();
     if (page.viewportSize()?.width < 760) {
       const columnCount = await page.locator("#team-ranking-summary .team-summary-grid").evaluate(

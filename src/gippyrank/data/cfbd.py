@@ -45,8 +45,8 @@ def raw_stat_payload_paths(directory: Path) -> list[Path]:
 @dataclass(frozen=True)
 class CurrentSeasonAcquisition:
     season: int
-    # The earliest required-source retrieval time is the defensible combined
-    # evidence boundary. Individual source times remain available below.
+    # The combined corpus exists only after its last required response.
+    # Individual source times remain available below.
     retrieved_at: datetime
     source_retrieval_times: dict[str, datetime]
     schedules: dict[str, list[dict[str, Any]]]
@@ -123,7 +123,7 @@ def fetch_current_season(
             client.close()
     return CurrentSeasonAcquisition(
         season,
-        min(retrieval_times.values()),
+        max(retrieval_times.values()),
         retrieval_times,
         schedules,
         hashes,
