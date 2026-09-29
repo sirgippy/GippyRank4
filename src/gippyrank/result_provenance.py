@@ -7,6 +7,15 @@ from datetime import datetime
 from typing import Any
 
 
+def valid_sha256(value: object) -> bool:
+    """Recognize the lowercase SHA-256 spelling emitted by producers."""
+    return (
+        isinstance(value, str)
+        and len(value) == 64
+        and all(character in "0123456789abcdef" for character in value)
+    )
+
+
 def known_unmodeled_result(
     *,
     game_date: datetime | None,
@@ -23,11 +32,7 @@ def known_unmodeled_result(
     A current schedule must identify the same corpus used by the snapshot.
     """
     schedule_hash = schedule_source.get("sha256") if schedule_source else None
-    valid_hash = (
-        isinstance(schedule_hash, str)
-        and len(schedule_hash) == 64
-        and all(character in "0123456789abcdef" for character in schedule_hash)
-    )
+    valid_hash = valid_sha256(schedule_hash)
     current = (
         source_mode in {"current_cached_cfbd", "historical_frozen"}
         and schedule_source is not None

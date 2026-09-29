@@ -10,11 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from gippyrank.context_comparison import build_context_backfill
-from gippyrank.posterior.snapshots import (
-    historical_schedule_rows_from_site_artifact,
-    relative_path,
-    sha256,
-)
+from gippyrank.posterior.snapshots import relative_path
 from gippyrank.site_data import build_site_data
 from gippyrank.weekly_update import refresh_frozen_weekly_report
 
@@ -43,35 +39,9 @@ def _read_json(path: Path) -> dict[str, Any]:
     return value
 
 
-def _presentation_schedule(
-    *, root: Path, source: Path, source_metadata: dict[str, Any]
-) -> tuple[list[dict[str, str]], dict[str, str]]:
+def _presentation_schedule(*, root: Path, source_metadata: dict[str, Any]) -> Path:
     snapshot_id = str(source_metadata["snapshot_id"])
-    path = root / "site/data/week-games" / f"{snapshot_id}.json"
-    with (source / "included_games.csv").open(
-        newline="", encoding="utf-8"
-    ) as handle:
-        required_included_game_ids = [
-            row["id"]
-            for row in csv.DictReader(handle)
-            if row["homeClassification"].casefold() == "fbs"
-            or row["awayClassification"].casefold() == "fbs"
-        ]
-    rows = historical_schedule_rows_from_site_artifact(
-        path,
-        season=int(source_metadata["season"]),
-        expected_snapshot_id=snapshot_id,
-        expected_included_game_ids=[
-            str(game_id) for game_id in source_metadata["included_game_ids"]
-        ],
-        required_included_game_ids=required_included_game_ids,
-    )
-    return rows, {
-        "kind": "frozen_historical_schedule",
-        "path": relative_path(path, root),
-        "sha256": sha256(path),
-        "snapshot_id": snapshot_id,
-    }
+    return root / "site/data/week-games" / f"{snapshot_id}.json"
 
 
 def _rank_differences(source: Path, generated: Path) -> list[dict[str, Any]]:
@@ -184,17 +154,15 @@ def main() -> None:
     for checkpoint in CHECKPOINTS:
         source = root / checkpoint["source"]
         source_metadata = _read_json(source / "metadata.json")
-        presentation_rows, presentation_source = _presentation_schedule(
+        presentation_path = _presentation_schedule(
             root=root,
-            source=source,
             source_metadata=source_metadata,
         )
         generated_path, validation = build_context_backfill(
             source_context_1_2=source,
             root=root,
             generation_timestamp=generation_timestamp,
-            presentation_schedule_rows=presentation_rows,
-            presentation_schedule_source=presentation_source,
+            presentation_schedule_path=presentation_path,
         )
         generated_relative = relative_path(generated_path, root)
         source_relative = relative_path(source, root)
@@ -216,8 +184,8 @@ def main() -> None:
             "included_game_rows_sha256": validation["included_game_rows_sha256"],
             "source_evidence_hash": validation["included_game_rows_sha256"],
             "source_game_corpus_sha256": validation["game_corpus_sha256"],
-            "presentation_schedule_source": presentation_source,
-            "presentation_schedule_game_count": len(presentation_rows),
+            "presentation_schedule_source": generated_metadata["presentation_schedule_source"],
+            "presentation_schedule_game_count": generated_metadata["presentation_schedule_game_count"],
             "presentation_future_prediction_count": len(
                 generated_team_seasons["future_predictions"]
             ),

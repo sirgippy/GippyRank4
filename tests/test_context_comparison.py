@@ -25,7 +25,7 @@ def _write_pair_artifact(root: Path, *, prior_version: str, game_id: str) -> Non
         "source_kind": "cfbd_api_schedule",
         "source_retrieved_at": "2026-09-19T22:14:03.513809+00:00",
         "combined_source_available_at": "2026-09-19T22:14:04.436222+00:00",
-        "source_retrieved_at_contract": "combined_latest",
+        "source_retrieved_at_contract": "legacy_first_response",
         "source_retrieval_times": {
             "fbs": "2026-09-19T22:14:03.513809+00:00",
             "fcs": "2026-09-19T22:14:04.436222+00:00",
@@ -113,6 +113,18 @@ def test_week4_pair_requires_matching_posterior_configuration(tmp_path: Path) ->
 
     with pytest.raises(ContextComparisonError, match="not matched"):
         validate_week4_pair(context_1_2, context_1_3)
+
+
+def test_week4_pair_rejects_changed_game_row_with_same_id(tmp_path: Path) -> None:
+    first = tmp_path / "context-1.2"
+    second = tmp_path / "context-1.3"
+    _write_pair_artifact(first, prior_version="1.2", game_id="game-1")
+    _write_pair_artifact(second, prior_version="1.3", game_id="game-1")
+    (second / "included_games.csv").write_text(
+        "id,homePoints\ngame-1,17\n", encoding="utf-8"
+    )
+    with pytest.raises(ContextComparisonError, match="included_games.csv"):
+        validate_week4_pair(first, second)
 
 
 @pytest.mark.parametrize("field", [

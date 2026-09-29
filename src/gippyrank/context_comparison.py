@@ -191,8 +191,9 @@ def _declared_metadata_mismatches(
 
 def _validate_snapshot_internal_consistency(
     path: Path, metadata: dict[str, Any], label: str
-) -> tuple[list[str], set[str]]:
-    game_ids = _included_game_ids(path)
+) -> tuple[list[dict[str, str]], set[str]]:
+    rows = _canonical_included_rows(path)
+    game_ids = [row["id"] for row in rows]
     team_keys = _team_keys(path)
     mismatches: dict[str, Any] = {}
     if metadata.get("included_game_count") != len(game_ids):
@@ -213,7 +214,7 @@ def _validate_snapshot_internal_consistency(
             f"{label} metadata does not match its canonical artifacts: "
             + json.dumps(mismatches, sort_keys=True)
         )
-    return game_ids, team_keys
+    return rows, team_keys
 
 
 def validate_week4_pair(
@@ -233,10 +234,10 @@ def validate_week4_pair(
             + json.dumps(missing, sort_keys=True)
         )
 
-    first_games, first_teams = _validate_snapshot_internal_consistency(
+    first_rows, first_teams = _validate_snapshot_internal_consistency(
         context_1_2, first, "Context 1.2"
     )
-    second_games, second_teams = _validate_snapshot_internal_consistency(
+    second_rows, second_teams = _validate_snapshot_internal_consistency(
         context_1_3, second, "Context 1.3"
     )
     mismatches = {
@@ -244,8 +245,11 @@ def validate_week4_pair(
         for field in WEEK4_COMPARISON_FIELDS
         if first.get(field) != second.get(field)
     }
-    if first_games != second_games:
-        mismatches["included_games.csv"] = (first_games, second_games)
+    if first_rows != second_rows:
+        mismatches["included_games.csv"] = (
+            included_game_rows_sha256(first_rows),
+            included_game_rows_sha256(second_rows),
+        )
     if first_teams != second_teams:
         mismatches["fbs_team_keys"] = (sorted(first_teams), sorted(second_teams))
     if first.get("historical_likelihood_version") != EXPECTED_HISTORICAL_LIKELIHOOD_VERSION:
@@ -279,8 +283,8 @@ def validate_week4_pair(
         "fbs_team_count": first["fbs_team_count"],
         "fbs_team_keys_sha256": first["fbs_team_keys_sha256"],
         "team_keys_sha256": first["fbs_team_keys_sha256"],
-        "included_game_ids": first_games,
-        "included_game_count": len(first_games),
+        "included_game_ids": [row["id"] for row in first_rows],
+        "included_game_count": len(first_rows),
         "included_game_ids_sha256": first["included_game_ids_sha256"],
         "requested_cutoff": first["requested_cutoff"],
         "effective_cutoff": first["effective_cutoff"],
@@ -466,8 +470,7 @@ def build_context_backfill(
     root: Path,
     output_root: Path | None = None,
     generation_timestamp: datetime | None = None,
-    presentation_schedule_rows: list[dict[str, str]] | None = None,
-    presentation_schedule_source: dict[str, str] | None = None,
+    presentation_schedule_path: Path | None = None,
 ) -> tuple[Path, dict[str, Any]]:
     """Build and validate one retrospective Context 1.3 weekly replay."""
     source_metadata = _read_json(source_context_1_2 / "metadata.json")
@@ -493,8 +496,7 @@ def build_context_backfill(
         snapshot_type="weekly",
         generation_timestamp=generation_timestamp,
         evidence_snapshot=source_context_1_2,
-        presentation_schedule_rows=presentation_schedule_rows,
-        presentation_schedule_source=presentation_schedule_source,
+        presentation_schedule_path=presentation_schedule_path,
     )
     validation = validate_context_backfill(
         source_context_1_2, generated.directory

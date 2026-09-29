@@ -1628,6 +1628,19 @@ def test_team_season_source_mode_must_match_snapshot(tmp_path: Path) -> None:
         )
 
 
+def test_schedule_sha256_requires_producer_lowercase_hex(tmp_path: Path) -> None:
+    source = _copied_snapshot(tmp_path)
+    path = source / "team_seasons.json"
+    artifact = json.loads(path.read_text(encoding="utf-8"))
+    artifact["schedule_source"]["sha256"] = "A" * 64
+    path.write_text(json.dumps(artifact), encoding="utf-8")
+    with pytest.raises(SiteDataValidationError, match="schedule provenance"):
+        build_site_data(
+            root=tmp_path, config_path=_config_for(source, tmp_path),
+            output_directory=tmp_path / "data",
+        )
+
+
 def test_context_and_history_export_distinct_distribution_artifacts(
     production_site_data: tuple[Path, dict[str, object]],
 ) -> None:

@@ -357,6 +357,7 @@ def historical_schedule_rows_from_site_artifact(
     expected_snapshot_id: str,
     expected_included_game_ids: list[str],
     required_included_game_ids: list[str] | None = None,
+    _contents: bytes | None = None,
 ) -> list[dict[str, str]]:
     """Convert a frozen weekly site schedule into builder-compatible rows.
 
@@ -368,7 +369,7 @@ def historical_schedule_rows_from_site_artifact(
     """
     if not path.is_file():
         raise FileNotFoundError(path)
-    value = json.loads(path.read_text(encoding="utf-8"))
+    value = json.loads(path.read_bytes() if _contents is None else _contents)
     if not isinstance(value, dict) or value.get("artifact_kind") != "weekly_games":
         raise ValueError(f"{path}: expected a weekly_games artifact")
     if value.get("snapshot_id") != expected_snapshot_id:
@@ -982,8 +983,7 @@ def build_snapshot(
     season_simulation_config: SeasonSimulationConfig | None = None,
     generation_timestamp: datetime | None = None,
     evidence_snapshot: Path | None = None,
-    presentation_schedule_rows: list[dict[str, str]] | None = None,
-    presentation_schedule_source: dict[str, str] | None = None,
+    presentation_schedule_path: Path | None = None,
 ) -> Snapshot:
     """Build an atomic-on-success schema-v1 bundle without any publishing logic."""
     started = time.perf_counter()
@@ -1009,9 +1009,9 @@ def build_snapshot(
     replay_inference_configuration: dict[str, object] | None = None
     source_game_corpus_sha256: str | None = None
 
-    if presentation_schedule_rows is not None and evidence_snapshot is None:
+    if presentation_schedule_path is not None and evidence_snapshot is None:
         raise ValueError(
-            "presentation schedule rows are only supported for frozen evidence replay"
+            "presentation schedule is only supported for frozen evidence replay"
         )
 
     if evidence_snapshot is not None:
@@ -1067,7 +1067,7 @@ def build_snapshot(
                 f"{replay_source}: supplied season simulation configuration differs"
             )
         season_simulation_config = frozen_simulation_config
-        if presentation_schedule_rows is None:
+        if presentation_schedule_path is None:
             replay_schedule_rows = included
             replay_schedule_source = {
                 "kind": "frozen_included_games",
@@ -1075,20 +1075,38 @@ def build_snapshot(
                 "sha256": sha256(replay_source / "included_games.csv"),
             }
         else:
+            schedule_path = (
+                presentation_schedule_path
+                if presentation_schedule_path.is_absolute()
+                else root / presentation_schedule_path
+            ).resolve()
+            if not schedule_path.is_relative_to(root.resolve()):
+                raise ValueError("frozen presentation schedule must be inside the repository")
+            contents = schedule_path.read_bytes()
+            required_ids = [
+                row["id"]
+                for row in included
+                if row["homeClassification"].casefold() == "fbs"
+                or row["awayClassification"].casefold() == "fbs"
+            ]
+            replay_schedule_rows = historical_schedule_rows_from_site_artifact(
+                schedule_path,
+                season=season,
+                expected_snapshot_id=str(replay_metadata["snapshot_id"]),
+                expected_included_game_ids=[str(game_id) for game_id in replay_metadata["included_game_ids"]],
+                required_included_game_ids=required_ids,
+                _contents=contents,
+            )
             _validate_presentation_schedule(
-                presentation_schedule_rows,
+                replay_schedule_rows,
                 season=season,
             )
-            if (
-                not isinstance(presentation_schedule_source, dict)
-                or presentation_schedule_source.get("kind")
-                != "frozen_historical_schedule"
-            ):
-                raise ValueError(
-                    "presentation schedule source must be frozen_historical_schedule"
-                )
-            replay_schedule_rows = [dict(row) for row in presentation_schedule_rows]
-            replay_schedule_source = dict(presentation_schedule_source)
+            replay_schedule_source = {
+                "kind": "frozen_historical_schedule",
+                "path": schedule_path.relative_to(root.resolve()).as_posix(),
+                "sha256": hashlib.sha256(contents).hexdigest(),
+                "snapshot_id": str(replay_metadata["snapshot_id"]),
+            }
         source_game_corpus_value = replay_metadata.get("game_corpus_sha256")
         if not isinstance(source_game_corpus_value, str) or len(
             source_game_corpus_value

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import runpy
 import shutil
@@ -11,7 +12,10 @@ import numpy as np
 import pytest
 
 from gippyrank.api.store import PublicationStore
-from gippyrank.context_comparison import validate_context_backfill
+from gippyrank.context_comparison import (
+    build_context_backfill,
+    validate_context_backfill,
+)
 from gippyrank.posterior.engine import LikelihoodV1
 from gippyrank.posterior.snapshots import (
     _frozen_provenance,
@@ -516,15 +520,22 @@ def test_frozen_scored_unmodeled_result_survives_snapshot_publication_and_api(
         ROOT / "data/processed/posterior/historical_likelihood_v1.json",
         likelihood_path,
     )
+    next_prior = root / "data/processed/preseason/context_v1_3/annual/2026/predictions.csv"
+    next_prior.write_text(next_prior.read_text().replace("[0.7,0.3]", "[0.6,0.4]"))
     cutoff = datetime(2026, 8, 29, 23, 59, tzinfo=UTC)
     source = build_snapshot(
         season=2026, cutoff=cutoff, prior_family="context",
         prior_model_version="1.2", snapshot_type="weekly", root=root,
     )
+    source_metadata_path = source.directory / "metadata.json"
+    source_metadata = json.loads(source_metadata_path.read_text())
+    source_snapshot_id = source_metadata["snapshot_id"].removesuffix("-v1.2")
+    source_metadata["snapshot_id"] = source_snapshot_id
+    source_metadata_path.write_text(json.dumps(source_metadata))
     frozen_path = root / "frozen-weekly.json"
     frozen_path.write_text(json.dumps({
         "artifact_kind": "weekly_games",
-        "snapshot_id": source.metadata["snapshot_id"],
+        "snapshot_id": source_snapshot_id,
         "included_game_ids": ["early"],
         "weeks": [{"games": [
             {
@@ -542,32 +553,40 @@ def test_frozen_scored_unmodeled_result_survives_snapshot_publication_and_api(
     }), encoding="utf-8")
     rows = historical_schedule_rows_from_site_artifact(
         frozen_path, season=2026,
-        expected_snapshot_id=source.metadata["snapshot_id"],
+        expected_snapshot_id=source_snapshot_id,
         expected_included_game_ids=["early"],
     )
-    replay = build_snapshot(
-        season=2026, cutoff=cutoff, prior_family="context",
-        prior_model_version="1.3", snapshot_type="weekly", root=root,
-        evidence_snapshot=source.directory,
-        presentation_schedule_rows=rows,
-        presentation_schedule_source={
-            "kind": "frozen_historical_schedule",
-            "path": "frozen-weekly.json",
-            "sha256": __import__("hashlib").sha256(frozen_path.read_bytes()).hexdigest(),
-        },
+    assert next(row for row in rows if row["id"] == "lower")["completed"] == "True"
+    forged_path = root / "forged-weekly.json"
+    forged = json.loads(frozen_path.read_text(encoding="utf-8"))
+    forged["snapshot_id"] = "another-snapshot"
+    forged_path.write_text(json.dumps(forged), encoding="utf-8")
+    with pytest.raises(ValueError, match="snapshot ID does not match frozen evidence"):
+        build_snapshot(
+            season=2026, cutoff=cutoff, prior_family="context",
+            prior_model_version="1.3", snapshot_type="weekly", root=root,
+            evidence_snapshot=source.directory,
+            presentation_schedule_path=forged_path,
+        )
+    replay_path, parity = build_context_backfill(
+        source_context_1_2=source.directory,
+        root=root,
+        presentation_schedule_path=frozen_path,
     )
-    team_seasons = json.loads((replay.directory / "team_seasons.json").read_text())
+    assert parity["parity_validation"] == "passed"
+    team_seasons = json.loads((replay_path / "team_seasons.json").read_text())
     lower = next(game for game in team_seasons["teams"]["1"]["games"]
                  if game["game_id"] == "lower")
     assert lower["game_state"] == "out_of_scope"
     assert lower["score"] == {"team": 20, "opponent": 10}
     assert team_seasons["schedule_source"]["sha256"] != team_seasons["game_corpus_sha256"]
+    assert team_seasons["schedule_source"]["sha256"] == hashlib.sha256(frozen_path.read_bytes()).hexdigest()
 
     config = root / "publish.json"
     config.write_text(json.dumps({
         "schema_version": "1.0",
         "publication_slots": [{"id": "week-1", "status": "official"}],
-        "snapshots": [{"source": str(replay.directory.relative_to(root)),
+        "snapshots": [{"source": str(replay_path.relative_to(root)),
                        "display_label": "Week 1", "publication_slot": "week-1"}],
     }))
     manifest = build_site_data(root=root, config_path=config, output_directory=root / "site-data")

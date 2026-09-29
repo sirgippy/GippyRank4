@@ -89,6 +89,31 @@ def _acquisition(root: Path, timestamp: datetime, fcs_timestamp: datetime | None
     return CurrentSeasonAcquisition(2026, max(timestamp, fcs_timestamp), {"fbs": timestamp, "fcs": fcs_timestamp}, schedules, {"2026.json": "2026.json", "2026-fcs.json": "2026-fcs.json"})
 
 
+@pytest.mark.parametrize("field", [
+    "included_game_rows_sha256",
+    "combined_source_available_at",
+    "source_retrieved_at_contract",
+    "historical_likelihood_sha256",
+])
+def test_same_evidence_checks_rows_and_provenance(field: str, tmp_path: Path) -> None:
+    metadata = {
+        key: "same"
+        for key in (
+            "requested_cutoff", "effective_cutoff", "source_retrieved_at",
+            "source_retrieval_times", "source_response_hashes", "game_corpus_sha256",
+            "included_game_ids", "included_game_rows_sha256",
+            "combined_source_available_at", "source_retrieved_at_contract",
+            "historical_likelihood_sha256",
+        )
+    }
+    metadata["valid"] = True
+    changed = {**metadata, field: "different"}
+    context = Snapshot("context", tmp_path, metadata)
+    history = Snapshot("history", tmp_path, changed)
+    with pytest.raises(ValueError, match=field):
+        weekly_update._same_evidence(context, history)
+
+
 def test_weekly_update_pairs_h_c_preserves_preseason_and_is_idempotent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     root = _root(tmp_path)
     timestamp = datetime(2026, 9, 12, 15, tzinfo=UTC)

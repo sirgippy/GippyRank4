@@ -37,7 +37,7 @@ from gippyrank.redditcfb import (
     audit_team_handle_coverage,
     load_team_handle_mapping,
 )
-from gippyrank.result_provenance import known_unmodeled_result
+from gippyrank.result_provenance import known_unmodeled_result, valid_sha256
 from gippyrank.site_preseason_evidence import build_preseason_input_projection
 from gippyrank.team_logos import (
     TEAM_LOGO_URL_TEMPLATE,
@@ -2850,7 +2850,7 @@ def _validate_team_season_artifact(
     valid_schedule_path = (
         schedule_source.get("path") == "data/processed/cfbd/games.csv"
         if schedule_kind == "current_processed_schedule"
-        else isinstance(schedule_source.get("path"), str)
+        else isinstance(schedule_source.get("path"), str) and bool(schedule_source["path"])
         if schedule_kind in {"frozen_included_games", "frozen_historical_schedule"}
         and isinstance(schedule_source, dict)
         else False
@@ -2859,12 +2859,7 @@ def _validate_team_season_artifact(
         "current_processed_schedule",
         "frozen_included_games",
         "frozen_historical_schedule",
-    } or not valid_schedule_path or not isinstance(schedule_source.get("sha256"), str) or len(
-        schedule_source.get("sha256", "")
-    ) != 64 or not all(
-        character in "0123456789abcdefABCDEF"
-        for character in schedule_source.get("sha256", "")
-    ):
+    } or not valid_schedule_path or not valid_sha256(schedule_source.get("sha256")):
         raise SiteDataValidationError(f"{snapshot_id}: schedule provenance is missing or invalid")
     for field in (
         "season", "snapshot_type", "requested_cutoff", "effective_cutoff",
