@@ -1715,6 +1715,56 @@ def test_unnormalized_pmf_is_refused_without_renormalizing(tmp_path: Path) -> No
         build_site_data(root=tmp_path, config_path=_config_for(source, tmp_path), output_directory=tmp_path / "data")
 
 
+HASHED_WEEKLY_SOURCE = (
+    "data/processed/snapshots/2026/"
+    "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.3/predictive/context"
+)
+
+
+def test_declared_included_game_rows_hash_rejects_changed_evidence(tmp_path: Path) -> None:
+    source = _copied_snapshot(tmp_path, HASHED_WEEKLY_SOURCE)
+    path = source / "included_games.csv"
+    with path.open(newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle)
+        fields = list(reader.fieldnames or [])
+        rows = list(reader)
+    rows[0]["neutralSite"] = "false" if rows[0]["neutralSite"] == "true" else "true"
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
+    with pytest.raises(SiteDataValidationError, match="included_game_rows_sha256 disagrees"):
+        build_site_data(
+            root=tmp_path, config_path=_config_for(source, tmp_path),
+            output_directory=tmp_path / "data",
+        )
+
+
+def test_declared_posterior_hash_rejects_normalized_fcs_change(tmp_path: Path) -> None:
+    source = _copied_snapshot(tmp_path, HASHED_WEEKLY_SOURCE)
+    with (source / "rankings.csv").open(newline="", encoding="utf-8") as handle:
+        fcs_id = next(
+            row["team_id"] for row in csv.DictReader(handle)
+            if row["subdivision"].casefold() == "fcs"
+        )
+    path, fields, rows = _pmf_rows(source)
+    fcs_rows = [row for row in rows if row["team_id"] == fcs_id]
+    first, second = next(
+        (first, second)
+        for first in fcs_rows for second in fcs_rows
+        if first["probability"] != second["probability"]
+    )
+    first["probability"], second["probability"] = (
+        second["probability"], first["probability"]
+    )
+    _write_pmf_rows(path, fields, rows)
+    with pytest.raises(SiteDataValidationError, match="posterior_pmfs_sha256 disagrees"):
+        build_site_data(
+            root=tmp_path, config_path=_config_for(source, tmp_path),
+            output_directory=tmp_path / "data",
+        )
+
+
 def test_invalid_snapshot_is_refused(tmp_path: Path) -> None:
     source = _copied_snapshot(tmp_path)
     metadata = json.loads((source / "metadata.json").read_text())

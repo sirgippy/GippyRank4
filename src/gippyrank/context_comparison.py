@@ -83,10 +83,6 @@ def _team_keys(path: Path) -> set[str]:
     }
 
 
-def _included_game_ids(path: Path) -> list[str]:
-    return [row["id"] for row in _read_rows(path / "included_games.csv")]
-
-
 def _canonical_included_rows(path: Path) -> list[dict[str, str]]:
     rows = _read_rows(path / "included_games.csv")
     return [

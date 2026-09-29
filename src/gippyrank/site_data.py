@@ -18,6 +18,12 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
+from gippyrank.artifact_hashes import (
+    INCLUDED_GAME_FIELDS,
+    included_game_rows_sha256,
+    posterior_pmfs_sha256,
+    stable_values_sha256,
+)
 from gippyrank.methodology import (
     HISTORICAL_LIKELIHOOD_SHA256,
     HISTORICAL_LIKELIHOOD_VERSION,
@@ -884,6 +890,7 @@ def _distribution_artifact(
     ranking_by_team = {str(row["team_id"]): row for row in rankings}
     rank_count = len(rankings)
     pmfs: dict[str, dict[int, float]] = {}
+    complete_pmfs: dict[str, dict[int, float]] = {}
     with path.open(newline="", encoding="utf-8") as handle:
         reader = csv.DictReader(handle)
         required = {"team_id", "rank", "probability"}
@@ -892,16 +899,14 @@ def _distribution_artifact(
             raise SiteDataValidationError(f"{snapshot_id}: PMFs missing {sorted(missing)}")
         for row in reader:
             team_id = row["team_id"]
-            if team_id not in ranking_by_team:
-                # Source artifacts can also contain FCS PMFs.  Only published FBS
-                # rankings belong in this consumer artifact.
-                continue
             rank = _rank(row["rank"], "PMF rank", snapshot_id)
             probability = _probability(row["probability"], "PMF probability", snapshot_id)
-            team_pmf = pmfs.setdefault(team_id, {})
+            team_pmf = complete_pmfs.setdefault(team_id, {})
             if rank in team_pmf:
                 raise SiteDataValidationError(f"{snapshot_id}: duplicate PMF rank for team {team_id}")
             team_pmf[rank] = probability
+            if team_id in ranking_by_team:
+                pmfs[team_id] = team_pmf
 
     expected_ranks = set(range(1, rank_count + 1))
     teams: dict[str, Any] = {}
@@ -929,6 +934,25 @@ def _distribution_artifact(
             raise SiteDataValidationError(f"{snapshot_id}: PMF 80% interval disagrees for team {team_id}")
         teams[team_id] = {"pmf": pmf, "summary": summary}
 
+    declared_hash = metadata.get("posterior_pmfs_sha256")
+    if declared_hash is not None:
+        canonical_pmfs = {}
+        for team_id, ranks in complete_pmfs.items():
+            if set(ranks) != set(range(1, len(ranks) + 1)):
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: posterior PMF ranks for team {team_id} are incomplete"
+                )
+            values = [ranks[rank] for rank in range(1, len(ranks) + 1)]
+            if abs(math.fsum(values) - 1.0) > PMF_SUM_TOLERANCE:
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: posterior PMF for team {team_id} is not normalized"
+                )
+            canonical_pmfs[team_id] = values
+        if posterior_pmfs_sha256(canonical_pmfs) != declared_hash:
+            raise SiteDataValidationError(
+                f"{snapshot_id}: posterior_pmfs_sha256 disagrees with posterior_pmfs.csv"
+            )
+
     declared_rank_count = metadata.get("rank_count")
     if declared_rank_count is not None and int(declared_rank_count) != rank_count:
         raise SiteDataValidationError(
@@ -941,6 +965,34 @@ def _distribution_artifact(
         "rank_count": rank_count,
         "teams": teams,
     }
+
+
+def _validate_included_game_hashes(source: Path, metadata: dict[str, Any]) -> None:
+    """Enforce declared semantic game evidence before publication consumes it."""
+    rows_hash = metadata.get("included_game_rows_sha256")
+    ids_hash = metadata.get("included_game_ids_sha256")
+    if rows_hash is None and ids_hash is None:
+        return
+    snapshot_id = str(metadata["snapshot_id"])
+    with (source / "included_games.csv").open(newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle)
+        missing = set(INCLUDED_GAME_FIELDS) - set(reader.fieldnames or [])
+        if missing:
+            raise SiteDataValidationError(
+                f"{snapshot_id}: included_games.csv missing {sorted(missing)}"
+            )
+        rows = [
+            {field: str(row.get(field) or "") for field in INCLUDED_GAME_FIELDS}
+            for row in reader
+        ]
+    if rows_hash is not None and included_game_rows_sha256(rows) != rows_hash:
+        raise SiteDataValidationError(
+            f"{snapshot_id}: included_game_rows_sha256 disagrees with included_games.csv"
+        )
+    if ids_hash is not None and stable_values_sha256([row["id"] for row in rows]) != ids_hash:
+        raise SiteDataValidationError(
+            f"{snapshot_id}: included_game_ids_sha256 disagrees with included_games.csv"
+        )
 
 
 def _validate_metadata(metadata: dict[str, Any], source: Path) -> None:
@@ -3505,6 +3557,8 @@ def build_site_data(
         source = selected_snapshot.source
         metadata = metadata_by_source[source]
         _validate_metadata(metadata, source)
+        if metadata["ranking_family"] == "predictive":
+            _validate_included_game_hashes(source, metadata)
         if metadata["ranking_family"] == "performance":
             _validate_performance_source(metadata, root)
         snapshot_id = str(metadata["snapshot_id"])
