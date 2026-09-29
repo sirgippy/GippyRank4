@@ -223,9 +223,9 @@ def audit() -> tuple[list[dict[str, object]], dict[str, object]]:
         usage_value = source["transfer_in_prior_usage_sum"]
         if not is_current and not usage_value:
             codes.add("historical_aggregate_null")
-        # Portal coverage and known natural zeros are real evidence. "Unavailable"
-        # means neither numerical feature has a usable value for a team with
-        # incoming transfers; it never conflates an empty portal with zero.
+        # No incoming DB transfer is a covered natural zero, even when the
+        # historical offensive aggregate is null. The unavailable state
+        # requires unresolved DB input as well as a null offensive aggregate.
         if not codes:
             status = "complete"
         elif incoming and not usage_value and db_failed and db_resolved == 0:
@@ -384,7 +384,7 @@ def audit() -> tuple[list[dict[str, object]], dict[str, object]]:
         "definitions": {
             "complete": "All known incoming transfers are resolved or legitimately zero, including DB; no offensive applicability is unknown. A covered portal with no incoming transfers is complete.",
             "partial": "At least one known transfer input is unresolved or applicability is unproven, while some transfer evidence or a numeric model feature exists.",
-            "entirely_unavailable": "Incoming transfers exist, but the retrospective offensive aggregate is null and no DB impact can be resolved.",
+            "entirely_unavailable": "Incoming transfers exist, the retrospective offensive aggregate is null, at least one incoming DB transfer is unresolved, and no incoming DB impact resolves.",
             "checkpoint_status": "Independent of present-day completeness; no historical on-time source snapshot is proved by these research artifacts.",
         },
     }

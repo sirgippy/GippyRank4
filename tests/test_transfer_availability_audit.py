@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import csv
 import importlib
-import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -20,17 +20,23 @@ def _csv_rows(path):
         return list(csv.DictReader(handle))
 
 
-def test_committed_inventory_matches_frozen_source_audits():
-    rows, summary = audit()
-    committed = _csv_rows(DEFAULT_OUTPUT / "team_seasons.csv")
-    assert len(rows) == len(committed) == 793
-    assert [(str(row["season"]), row["team_id"]) for row in rows] == [
-        (row["season"], row["team_id"]) for row in committed
-    ]
-    assert [row["reason_codes"] for row in rows] == [
-        row["reason_codes"] for row in committed
-    ]
-    assert summary == json.loads((DEFAULT_OUTPUT / "summary.json").read_text())
+def test_committed_artifacts_match_fresh_cli_output(tmp_path):
+    script = Path(audit_module.__file__)
+    subprocess.run(
+        [sys.executable, str(script), "--output", str(tmp_path)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    for name in (
+        "team_seasons.csv",
+        "affected_2026.csv",
+        "summary.json",
+        "reason_taxonomy.json",
+    ):
+        assert (tmp_path / name).read_bytes() == (DEFAULT_OUTPUT / name).read_bytes(), (
+            name
+        )
 
 
 def test_every_2026_context_team_is_classified_and_failures_are_not_complete():
@@ -49,3 +55,27 @@ def test_every_2026_context_team_is_classified_and_failures_are_not_complete():
     )
     assert summary["current_2026"]["db_unresolved"] == 86
     assert summary["current_2026"]["all_snapshots_after_cutoff"]
+
+
+def test_unavailable_requires_unresolved_db_input():
+    rows, _ = audit()
+    unavailable = [
+        row for row in rows if row["availability_status"] == "entirely_unavailable"
+    ]
+    assert unavailable
+    assert all(
+        row["incoming_transfers"] > 0
+        and not row["offensive_feature_numeric"]
+        and row["db_unresolved"] > 0
+        and row["db_resolved"] == 0
+        for row in unavailable
+    )
+    ohio_state_2021 = next(
+        row
+        for row in rows
+        if row["season"] == 2021 and row["team_name"] == "Ohio State"
+    )
+    assert ohio_state_2021["incoming_transfers"] > 0
+    assert not ohio_state_2021["offensive_feature_numeric"]
+    assert ohio_state_2021["db_incoming"] == 0
+    assert ohio_state_2021["availability_status"] == "partial"
