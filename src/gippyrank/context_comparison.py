@@ -205,6 +205,11 @@ def _validate_snapshot_internal_consistency(
         mismatches["included_game_ids_metadata"] = True
     if metadata.get("included_game_ids_sha256") != stable_values_sha256(game_ids):
         mismatches["included_game_ids_sha256"] = True
+    if (
+        "included_game_rows_sha256" in metadata
+        and metadata["included_game_rows_sha256"] != included_game_rows_sha256(rows)
+    ):
+        mismatches["included_game_rows_sha256"] = True
     if metadata.get("fbs_team_count") != len(team_keys):
         mismatches["fbs_team_count"] = (metadata.get("fbs_team_count"), len(team_keys))
     if metadata.get("fbs_team_keys_sha256") != stable_values_sha256(sorted(team_keys)):

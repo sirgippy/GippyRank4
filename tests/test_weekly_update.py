@@ -90,6 +90,8 @@ def _acquisition(root: Path, timestamp: datetime, fcs_timestamp: datetime | None
 
 
 @pytest.mark.parametrize("field", [
+    "source_mode",
+    "source_kind",
     "included_game_rows_sha256",
     "combined_source_available_at",
     "source_retrieved_at_contract",
@@ -99,7 +101,8 @@ def test_same_evidence_checks_rows_and_provenance(field: str, tmp_path: Path) ->
     metadata = {
         key: "same"
         for key in (
-            "requested_cutoff", "effective_cutoff", "source_retrieved_at",
+            "requested_cutoff", "effective_cutoff", "source_mode", "source_kind",
+            "source_retrieved_at",
             "source_retrieval_times", "source_response_hashes", "game_corpus_sha256",
             "included_game_ids", "included_game_rows_sha256",
             "combined_source_available_at", "source_retrieved_at_contract",

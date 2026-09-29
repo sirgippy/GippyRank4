@@ -2861,6 +2861,34 @@ def _validate_team_season_artifact(
         "frozen_historical_schedule",
     } or not valid_schedule_path or not valid_sha256(schedule_source.get("sha256")):
         raise SiteDataValidationError(f"{snapshot_id}: schedule provenance is missing or invalid")
+    presentation_source = source_metadata.get("presentation_schedule_source")
+    if schedule_kind == "frozen_historical_schedule" or presentation_source is not None:
+        if (
+            not isinstance(presentation_source, dict)
+            or presentation_source.get("kind") not in {
+                "frozen_included_games", "frozen_historical_schedule"
+            }
+            or not isinstance(presentation_source.get("path"), str)
+            or not presentation_source["path"]
+            or not valid_sha256(presentation_source.get("sha256"))
+        ):
+            raise SiteDataValidationError(
+                f"{snapshot_id}: frozen presentation schedule provenance is invalid"
+            )
+        if presentation_source["kind"] == "frozen_historical_schedule":
+            evidence_snapshot_id = source_metadata.get("source_evidence_snapshot_id")
+            if (
+                not isinstance(evidence_snapshot_id, str)
+                or not evidence_snapshot_id
+                or presentation_source.get("snapshot_id") != evidence_snapshot_id
+            ):
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: frozen presentation schedule provenance is invalid"
+                )
+        if schedule_source != presentation_source:
+            raise SiteDataValidationError(
+                f"{snapshot_id}: frozen presentation schedule provenance mismatch"
+            )
     for field in (
         "season", "snapshot_type", "requested_cutoff", "effective_cutoff",
         "game_corpus_sha256", "source_mode", "source_retrieved_at", "source_retrieval_times",

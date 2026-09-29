@@ -25,7 +25,11 @@ from gippyrank.posterior.snapshots import (
     historical_schedule_rows_from_site_artifact,
     snapshot_id,
 )
-from gippyrank.site_data import _validate_metadata, build_site_data
+from gippyrank.site_data import (
+    SiteDataValidationError,
+    _validate_metadata,
+    build_site_data,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -599,6 +603,21 @@ def test_frozen_scored_unmodeled_result_survives_snapshot_publication_and_api(
     assert published_lower["score"] == {"team": 20, "opponent": 10}
     store = PublicationStore.load(root / "site-data")
     assert store.publications
+
+    team_seasons["schedule_source"] = {
+        **team_seasons["schedule_source"],
+        "sha256": "0" * 64,
+    }
+    (replay_path / "team_seasons.json").write_text(
+        json.dumps(team_seasons), encoding="utf-8"
+    )
+    with pytest.raises(
+        SiteDataValidationError,
+        match="frozen presentation schedule provenance mismatch",
+    ):
+        build_site_data(
+            root=root, config_path=config, output_directory=root / "forged-site-data"
+        )
 
 
 def test_forced_one_game_backfill_is_byte_identical(

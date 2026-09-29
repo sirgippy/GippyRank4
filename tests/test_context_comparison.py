@@ -127,6 +127,21 @@ def test_week4_pair_rejects_changed_game_row_with_same_id(tmp_path: Path) -> Non
         validate_week4_pair(first, second)
 
 
+def test_week4_pair_rejects_incorrect_declared_row_hash(tmp_path: Path) -> None:
+    first = tmp_path / "context-1.2"
+    second = tmp_path / "context-1.3"
+    _write_pair_artifact(first, prior_version="1.2", game_id="game-1")
+    _write_pair_artifact(second, prior_version="1.3", game_id="game-1")
+    for path in (first, second):
+        metadata_path = path / "metadata.json"
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        metadata["included_game_rows_sha256"] = "0" * 64
+        metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+    with pytest.raises(ContextComparisonError, match="included_game_rows_sha256"):
+        validate_week4_pair(first, second)
+
+
 @pytest.mark.parametrize("field", [
     "combined_source_available_at",
     "source_retrieved_at_contract",
