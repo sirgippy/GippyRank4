@@ -1,0 +1,124 @@
+{
+  "by_season": {
+    "2021": {
+      "affected": 110,
+      "statuses": {
+        "complete": 17,
+        "entirely_unavailable": 4,
+        "partial": 106
+      },
+      "team_seasons": 127
+    },
+    "2022": {
+      "affected": 111,
+      "statuses": {
+        "complete": 19,
+        "entirely_unavailable": 5,
+        "partial": 106
+      },
+      "team_seasons": 130
+    },
+    "2023": {
+      "affected": 116,
+      "statuses": {
+        "complete": 15,
+        "partial": 116
+      },
+      "team_seasons": 131
+    },
+    "2024": {
+      "affected": 122,
+      "statuses": {
+        "complete": 11,
+        "entirely_unavailable": 2,
+        "partial": 120
+      },
+      "team_seasons": 133
+    },
+    "2025": {
+      "affected": 129,
+      "statuses": {
+        "complete": 5,
+        "partial": 129
+      },
+      "team_seasons": 134
+    },
+    "2026": {
+      "affected": 134,
+      "statuses": {
+        "complete": 4,
+        "partial": 134
+      },
+      "team_seasons": 138
+    }
+  },
+  "current_2026": {
+    "affected": 134,
+    "all_snapshots_after_cutoff": true,
+    "db_unresolved": 86,
+    "db_unresolved_player_causes": {
+      "db_ambiguous_player_join": 1,
+      "db_player_join_unresolved": 40,
+      "db_position_conflict": 11,
+      "db_source_team_uncovered": 34
+    },
+    "excluded_destination_statuses": {
+      "exact_normalized_name": 12,
+      "missing_name": 982,
+      "not_in_fbs": 408
+    },
+    "excluded_portal_records": 1402,
+    "incoming_transfers": 3069,
+    "offensive_applicability_unknown": 1012,
+    "offensive_join_failed": 10,
+    "portal_records": 4471,
+    "retrieval_first": "2026-09-19T21:50:53.583794+00:00",
+    "retrieval_last": "2026-09-19T21:52:33.852803+00:00",
+    "snapshot_count": 37,
+    "snapshot_count_by_source": {
+      "games_players": 32,
+      "portal": 1,
+      "roster": 2,
+      "stats": 1,
+      "usage": 1
+    },
+    "team_seasons": 138,
+    "teams_with_db_unresolved": 58,
+    "teams_with_offensive_applicability_unknown": 134,
+    "teams_with_offensive_join_failed": 8,
+    "teams_with_repair_candidate": 36,
+    "teams_with_source_coverage_gap": 25
+  },
+  "definitions": {
+    "checkpoint_status": "Independent of present-day completeness; no historical on-time source snapshot is proved by these research artifacts.",
+    "complete": "All known incoming transfers are resolved or legitimately zero, including DB; no offensive applicability is unknown. A covered portal with no incoming transfers is complete.",
+    "entirely_unavailable": "Incoming transfers exist, but the retrospective offensive aggregate is null and no DB impact can be resolved.",
+    "partial": "At least one known transfer input is unresolved or applicability is unproven, while some transfer evidence or a numeric model feature exists."
+  },
+  "population": "Context FBS team-seasons, 2021-2026; historical research panel plus 2026 reconstruction",
+  "reason_team_seasons": {
+    "db_ambiguous_player_join": 9,
+    "db_player_join_unresolved": 214,
+    "db_position_conflict": 58,
+    "db_source_team_uncovered": 87,
+    "historical_aggregate_null": 73,
+    "offense_ambiguous_player_join": 25,
+    "offense_applicability_unproven": 689,
+    "offense_source_team_mismatch": 38,
+    "offense_usage_join_unresolved": 8,
+    "offense_usage_row_absent": 21
+  },
+  "repair_classes": {
+    "candidate_repair": 32,
+    "not_applicable": 71,
+    "unresolved": 690
+  },
+  "statuses": {
+    "complete": 71,
+    "entirely_unavailable": 11,
+    "partial": 711
+  },
+  "team_seasons": 793,
+  "team_seasons_with_repair_candidate": 321,
+  "team_seasons_with_source_coverage_gap": 87
+}
