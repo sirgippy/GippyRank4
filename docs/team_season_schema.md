@@ -292,7 +292,9 @@ omitted from that map and listed in the manifest audit; the browser keeps the
 text name when no logo is available.
 
 The artifact repeats the historical inference provenance (`effective_cutoff`,
-`game_corpus_sha256`, included game IDs, and source retrieval evidence). Because
+`game_corpus_sha256`, `source_mode`, included game IDs, and source retrieval evidence).
+Static publication requires `source_mode` to equal the source snapshot's value.
+Because
 backfilled historical artifacts may use a newer schedule corpus for display
 metadata, `schedule_source` separately records that corpus's kind, repository
 path, and SHA-256. Static export validates the provenance object's structure
@@ -301,9 +303,13 @@ schedule hash with a later mutable schedule corpus.
 
 `included_game_ids` identifies model evidence, not every safely known football
 result. A scored game outside model evidence can retain its result as
-`out_of_scope` when the selected schedule corpus is the snapshot's recorded
-corpus, the game date is no later than the cutoff, and either the frozen source
-or both source responses were available by the cutoff. For mutable CFBD data,
+`out_of_scope` when the game date is no later than the cutoff and schedule
+provenance establishes its result. A `current_processed_schedule` must hash to
+`game_corpus_sha256`. For a mutable source, both responses must have been
+available by the cutoff. A `frozen_historical_schedule` is itself the selected historical source;
+its SHA-256 identifies that schedule artifact and can differ from the model
+corpus hash. `source_mode` records the original acquisition mode, including on
+frozen replay. For mutable CFBD data,
 the later FBS/FCS response time is the availability boundary. In-progress
 games and results from later source responses remain redacted. Such games never
 receive a model rating or retrospective expectation.

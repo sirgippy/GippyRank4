@@ -665,16 +665,10 @@ def _known_unmodeled_score(
         game_date=game_date,
         cutoff=cutoff,
         snapshot_type=artifact.get("snapshot_type"),
+        source_mode=artifact.get("source_mode"),
         schedule_source=schedule_source,
         game_corpus_sha256=artifact.get("game_corpus_sha256"),
         source_available_at=_parse_datetime(available),
-        frozen_source=(
-            artifact.get("source_mode") == "historical_frozen"
-            or (
-                isinstance(schedule_source, dict)
-                and schedule_source.get("kind") == "frozen_historical_schedule"
-            )
-        ),
     )
 
 

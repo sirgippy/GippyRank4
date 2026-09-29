@@ -100,6 +100,26 @@ def test_static_publication_rejects_unverified_likelihood() -> None:
         )
 
 
+@pytest.mark.parametrize("provenance", ["supplied_parameters", "loaded_from_artifact"])
+def test_published_v1_requires_pinned_likelihood_for_every_provenance(
+    provenance: str,
+) -> None:
+    source = ROOT / "data/processed/snapshots/2026/2026-preseason-context/predictive/context"
+    artifact = json.loads((source / "team_seasons.json").read_text())
+    metadata = json.loads((source / "metadata.json").read_text())
+    metadata["historical_likelihood_provenance"] = provenance
+    if provenance == "loaded_from_artifact":
+        metadata["historical_likelihood_sha256"] = "0" * 64
+        artifact["retrospective_game_expectations"]["historical_likelihood_sha256"] = "0" * 64
+        message = "not pinned V1"
+    else:
+        message = "research-only"
+    with pytest.raises(SiteDataValidationError, match=message):
+        site_data._validate_retrospective_game_expectations(
+            artifact, metadata, set(), artifact["teams"]
+        )
+
+
 def test_backfill_rejects_untrusted_posterior_rows(tmp_path: Path) -> None:
     teams = [Team("a", "A", "fbs", np.array([0.5, 0.5]))]
     pmfs = {"a": np.array([0.4, 0.6])}

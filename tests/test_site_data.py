@@ -12,6 +12,7 @@ import pytest
 
 from gippyrank import site_data
 from gippyrank.methodology import (
+    HISTORICAL_LIKELIHOOD_SHA256,
     PRODUCTION_MODEL_VERSIONS,
     PRODUCTION_SCHEMA_VERSIONS,
     production_methodology_metadata,
@@ -220,6 +221,7 @@ def _write_synthetic_context_snapshot(
             "historical_likelihood": "V1",
         },
         "historical_likelihood_version": "V1",
+        "historical_likelihood_sha256": HISTORICAL_LIKELIHOOD_SHA256,
         "rank_count": 2,
         "requested_cutoff": cutoff,
         "effective_cutoff": cutoff,
@@ -228,6 +230,7 @@ def _write_synthetic_context_snapshot(
         "source_retrieval_times": {},
         "source_response_hashes": {},
         "game_corpus_sha256": "0" * 64,
+        "source_mode": "historical_frozen",
         "included_game_ids": [],
         "included_game_count": 0,
         "prior_artifact_sha256": "1" * 64,
@@ -250,6 +253,7 @@ def _write_synthetic_context_snapshot(
         "source_retrieval_times": {},
         "source_response_hashes": {},
         "game_corpus_sha256": "0" * 64,
+        "source_mode": "historical_frozen",
         "included_game_ids": [],
         "historical_likelihood_version": "V1",
         "rank_count": 2,
@@ -1609,6 +1613,19 @@ def test_preseason_and_in_season_distribution_exports_work(
     )
     assert distribution["rank_count"] == 138
     assert len(distribution["teams"]) == 138
+
+
+def test_team_season_source_mode_must_match_snapshot(tmp_path: Path) -> None:
+    source = _copied_snapshot(tmp_path)
+    path = source / "team_seasons.json"
+    artifact = json.loads(path.read_text(encoding="utf-8"))
+    artifact["source_mode"] = "historical_frozen"
+    path.write_text(json.dumps(artifact), encoding="utf-8")
+    with pytest.raises(SiteDataValidationError, match="provenance mismatch: source_mode"):
+        build_site_data(
+            root=tmp_path, config_path=_config_for(source, tmp_path),
+            output_directory=tmp_path / "data",
+        )
 
 
 def test_context_and_history_export_distinct_distribution_artifacts(

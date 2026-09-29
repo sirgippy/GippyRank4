@@ -4,6 +4,7 @@ import csv
 import json
 import os
 import runpy
+import shutil
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -62,8 +63,9 @@ def _root(tmp_path: Path) -> Path:
                 prior_rows,
             )
     (tmp_path / "data/processed/posterior").mkdir(parents=True)
-    (tmp_path / "data/processed/posterior/historical_likelihood_v1.json").write_text(
-        json.dumps({"beta": [0.0] * 34, "scale": 1.0, "degrees_of_freedom": 15.0})
+    shutil.copyfile(
+        ROOT / "data/processed/posterior/historical_likelihood_v1.json",
+        tmp_path / "data/processed/posterior/historical_likelihood_v1.json",
     )
     _write_csv(tmp_path / "data/processed/cfbd/games.csv", GAME_FIELDS, [])
     (tmp_path / "site").mkdir()

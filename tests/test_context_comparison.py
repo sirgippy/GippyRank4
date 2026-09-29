@@ -24,6 +24,8 @@ def _write_pair_artifact(root: Path, *, prior_version: str, game_id: str) -> Non
         "source_mode": "current_cached_cfbd",
         "source_kind": "cfbd_api_schedule",
         "source_retrieved_at": "2026-09-19T22:14:03.513809+00:00",
+        "combined_source_available_at": "2026-09-19T22:14:04.436222+00:00",
+        "source_retrieved_at_contract": "combined_latest",
         "source_retrieval_times": {
             "fbs": "2026-09-19T22:14:03.513809+00:00",
             "fcs": "2026-09-19T22:14:04.436222+00:00",
@@ -32,6 +34,7 @@ def _write_pair_artifact(root: Path, *, prior_version: str, game_id: str) -> Non
         "requested_cutoff": "2026-09-19T23:59:00+00:00",
         "effective_cutoff": "2026-09-19T23:59:00+00:00",
         "historical_likelihood_version": "V1",
+        "historical_likelihood_sha256": "likelihood-hash",
         "included_game_count": 1,
         "included_game_ids": [game_id],
         "included_game_ids_sha256": hashlib.sha256(
@@ -110,6 +113,26 @@ def test_week4_pair_requires_matching_posterior_configuration(tmp_path: Path) ->
 
     with pytest.raises(ContextComparisonError, match="not matched"):
         validate_week4_pair(context_1_2, context_1_3)
+
+
+@pytest.mark.parametrize("field", [
+    "combined_source_available_at",
+    "source_retrieved_at_contract",
+    "historical_likelihood_sha256",
+])
+def test_week4_pair_rejects_mismatched_source_and_likelihood_provenance(
+    tmp_path: Path, field: str
+) -> None:
+    first = tmp_path / "context-1.2"
+    second = tmp_path / "context-1.3"
+    _write_pair_artifact(first, prior_version="1.2", game_id="game-1")
+    _write_pair_artifact(second, prior_version="1.3", game_id="game-1")
+    metadata_path = second / "metadata.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata[field] = "different"
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+    with pytest.raises(ContextComparisonError, match=field):
+        validate_week4_pair(first, second)
 
 
 def test_committed_comparison_quartet_is_complete_and_frozen() -> None:

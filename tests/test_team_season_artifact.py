@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import shutil
 from datetime import UTC, date, datetime
 from pathlib import Path
 
@@ -31,6 +32,12 @@ def _write(path: Path, fields: list[str], rows: list[dict[str, object]]) -> None
 
 
 def _root(tmp_path: Path) -> Path:
+    likelihood_path = tmp_path / "data/processed/posterior/historical_likelihood_v1.json"
+    likelihood_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(
+        Path(__file__).resolve().parents[1] / "data/processed/posterior/historical_likelihood_v1.json",
+        likelihood_path,
+    )
     prior_fields = ["season", "subdivision", "team_id", "team_name", "conference", "pmf"]
     prior_rows = [
         {"season": 2026, "subdivision": "fbs", "team_id": "1", "team_name": "One", "conference": "A", "pmf": "[0.7,0.3]"},
@@ -93,7 +100,6 @@ def test_live_gameday_snapshot_consumes_known_same_day_score(tmp_path: Path) -> 
         prior_family="context",
         snapshot_type="live",
         root=_root(tmp_path),
-        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
     )
     assert snapshot.metadata["included_game_ids"] == ["early", "later"]
     artifact = json.loads((snapshot.directory / "team_seasons.json").read_text())
@@ -180,8 +186,7 @@ def test_producer_rejects_dates_that_publication_cannot_accept(
             prior_family="context",
             snapshot_type="weekly",
             root=root,
-            likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
-        )
+            )
 
 
 @pytest.mark.parametrize("week", ["Bowl", "-1"])
@@ -198,7 +203,6 @@ def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path:
         prior_family="context",
         snapshot_type="weekly",
         root=root,
-        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
     )
     artifact = json.loads((snapshot.directory / "team_seasons.json").read_text())
     games = artifact["teams"]["1"]["games"]
@@ -328,7 +332,6 @@ def test_unresolved_future_schedule_is_fail_closed_for_season_forecast(tmp_path:
         prior_family="context",
         snapshot_type="weekly",
         root=root,
-        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
     )
     artifact = json.loads((snapshot.directory / "team_seasons.json").read_text())
 
@@ -386,7 +389,6 @@ def test_schedule_accounting_keeps_unresolved_and_excluded_completed_games(
         prior_family="context",
         snapshot_type="weekly",
         root=root,
-        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
     )
     simulation = json.loads((snapshot.directory / "team_seasons.json").read_text())[
         "season_simulation"
@@ -412,7 +414,6 @@ def test_team_artifact_provenance_mismatch_fails_closed(tmp_path: Path) -> None:
         prior_family="context",
         snapshot_type="weekly",
         root=root,
-        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
     )
     artifact_path = snapshot.directory / "team_seasons.json"
     artifact = json.loads(artifact_path.read_text())
@@ -433,7 +434,6 @@ def test_declared_season_simulation_missing_fails_closed(tmp_path: Path) -> None
         prior_family="context",
         snapshot_type="weekly",
         root=root,
-        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
     )
     artifact_path = snapshot.directory / "team_seasons.json"
     artifact = json.loads(artifact_path.read_text())
@@ -468,7 +468,6 @@ def test_declared_team_artifact_missing_fails_closed(tmp_path: Path) -> None:
         prior_family="context",
         snapshot_type="weekly",
         root=root,
-        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
     )
     (snapshot.directory / "team_seasons.json").unlink()
     config = root / "site/publish_config.json"
@@ -580,7 +579,7 @@ def test_completed_lower_division_score_requires_available_source_but_not_model_
             "source_mode": source_mode,
             "source_retrieval_times": {},
             "source_response_hashes": {},
-            "game_corpus_sha256": "historical-evidence-corpus",
+            "game_corpus_sha256": hashlib.sha256(schedule_path.read_bytes()).hexdigest(),
             "included_game_ids": [],
         },
         teams=teams,
@@ -617,7 +616,6 @@ def test_known_unmodeled_result_exports_with_local_time(tmp_path: Path) -> None:
     snapshot = build_snapshot(
         season=2026, cutoff=date(2026, 9, 1), prior_family="context",
         snapshot_type="weekly", root=root,
-        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
     )
     config = root / "site/publish_config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
@@ -655,7 +653,6 @@ def test_validator_rejects_unincluded_completed_result(tmp_path: Path) -> None:
         prior_family="context",
         snapshot_type="weekly",
         root=root,
-        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
     )
 
     for row in rows:
@@ -689,7 +686,6 @@ def test_historical_artifact_survives_later_schedule_refresh(tmp_path: Path) -> 
         prior_family="context",
         snapshot_type="weekly",
         root=root,
-        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
     )
     artifact_path = snapshot.directory / "team_seasons.json"
     original_artifact = artifact_path.read_bytes()
@@ -725,16 +721,12 @@ def test_context_history_and_performance_use_declared_prediction_sources(
     history_rows[1]["pmf"] = "[0.9,0.1]"
     _write(history_prior, history_fields, history_rows)
 
-    beta = np.zeros(34)
-    beta[0] = 10.0
-    likelihood = LikelihoodV1(beta, 1.0, 15.0)
     context = build_snapshot(
         season=2026,
         cutoff=date(2026, 9, 1),
         prior_family="context",
         snapshot_type="weekly",
         root=root,
-        likelihood=likelihood,
     )
     history = build_snapshot(
         season=2026,
@@ -742,7 +734,6 @@ def test_context_history_and_performance_use_declared_prediction_sources(
         prior_family="history",
         snapshot_type="weekly",
         root=root,
-        likelihood=likelihood,
     )
     performance = build_performance_snapshot(
         context,
@@ -798,12 +789,10 @@ def test_legacy_replay_contract_publishes_static_site(tmp_path: Path) -> None:
     root = _root(tmp_path)
     prior = root / "data/processed/preseason/context_v1_3/annual/2026/predictions.csv"
     prior.write_text(prior.read_text().replace("[0.7,0.3]", "[0.6,0.4]"))
-    likelihood = LikelihoodV1(np.zeros(34), 1.0, 15.0)
     cutoff = date(2026, 9, 1)
     source = build_snapshot(
         season=2026, cutoff=cutoff, prior_family="context",
         prior_model_version="1.2", snapshot_type="weekly", root=root,
-        likelihood=likelihood,
     )
     source_path = source.directory / "metadata.json"
     metadata = json.loads(source_path.read_text())
@@ -821,7 +810,7 @@ def test_legacy_replay_contract_publishes_static_site(tmp_path: Path) -> None:
     replay = build_snapshot(
         season=2026, cutoff=cutoff, prior_family="context",
         prior_model_version="1.3", snapshot_type="weekly", root=root,
-        likelihood=likelihood, evidence_snapshot=source.directory,
+        evidence_snapshot=source.directory,
     )
     config = root / "site/publish_config.json"
     config.parent.mkdir(parents=True)

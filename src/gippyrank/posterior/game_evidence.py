@@ -47,6 +47,7 @@ from gippyrank.posterior.season_simulation import (
     SeasonSimulationConfig,
     simulate_season,
 )
+from gippyrank.result_provenance import known_unmodeled_result
 
 PERFORMANCE_DISPLAY_BINS = 40
 
@@ -201,7 +202,10 @@ def _future_at_snapshot(row: dict[str, str], metadata: dict[str, Any]) -> bool:
     return when.astimezone(UTC).date() >= cutoff.astimezone(UTC).date()
 
 
-def _schedule_state(row: dict[str, str], metadata: dict[str, Any]) -> str:
+def _schedule_state(
+    row: dict[str, str], metadata: dict[str, Any],
+    schedule_source: dict[str, str] | None = None,
+) -> str:
     """Classify a regular schedule row without consulting later results."""
     season_type = str(row.get("seasonType", "regular") or "regular").casefold()
     if season_type not in {"", "regular"}:
@@ -218,13 +222,16 @@ def _schedule_state(row: dict[str, str], metadata: dict[str, Any]) -> str:
     if when.astimezone(UTC).date() > cutoff.astimezone(UTC).date():
         return "future"
     if _bool(row.get("completed")):
-        return "completed" if _result_available(row, metadata) else "unresolved"
+        return "completed" if _result_available(row, metadata, schedule_source) else "unresolved"
     if _future_at_snapshot(row, metadata):
         return "future"
     return "unresolved"
 
 
-def _result_available(row: dict[str, str], metadata: dict[str, Any]) -> bool:
+def _result_available(
+    row: dict[str, str], metadata: dict[str, Any],
+    schedule_source: dict[str, str] | None = None,
+) -> bool:
     """Whether the score is fixed by the selected snapshot's source boundary."""
     if metadata.get("snapshot_type") == "preseason" or not _bool(row.get("completed")):
         return False
@@ -236,11 +243,16 @@ def _result_available(row: dict[str, str], metadata: dict[str, Any]) -> bool:
         return False
     if str(row.get("id", "")) in {str(value) for value in metadata.get("included_game_ids", [])}:
         return True
-    retrieved = _schedule_datetime(
-        metadata.get("combined_source_available_at", metadata.get("source_retrieved_at"))
-    )
-    return metadata.get("source_mode") == "historical_frozen" or (
-        retrieved is not None and retrieved <= cutoff
+    return known_unmodeled_result(
+        game_date=when,
+        cutoff=cutoff,
+        snapshot_type=metadata.get("snapshot_type"),
+        source_mode=metadata.get("source_mode"),
+        schedule_source=schedule_source,
+        game_corpus_sha256=metadata.get("game_corpus_sha256"),
+        source_available_at=_schedule_datetime(
+            metadata.get("combined_source_available_at", metadata.get("source_retrieved_at"))
+        ),
     )
 
 
@@ -453,7 +465,7 @@ def build_team_season_artifact(
     for row in schedule:
         if str(row.get("season", "")) != str(metadata["season"]):
             continue
-        state = _schedule_state(row, metadata)
+        state = _schedule_state(row, metadata, resolved_schedule_source)
         if state == "out_of_scope":
             continue
         game_id = str(row.get("id", ""))
@@ -520,7 +532,7 @@ def build_team_season_artifact(
             if str(row.get("season", "")) != str(metadata["season"]):
                 continue
             game_id = str(row.get("id", ""))
-            schedule_state = _schedule_state(row, metadata)
+            schedule_state = _schedule_state(row, metadata, resolved_schedule_source)
             home_id, away_id = row.get("homeId", ""), row.get("awayId", "")
             home_subdivision = row.get("homeClassification", "").casefold()
             away_subdivision = row.get("awayClassification", "").casefold()
@@ -581,7 +593,7 @@ def build_team_season_artifact(
             (away_id, home_id, "awayTeam", "homeTeam", "homeClassification", "homeConference"),
         ]
         game_id = str(row.get("id", ""))
-        schedule_state = _schedule_state(row, metadata)
+        schedule_state = _schedule_state(row, metadata, resolved_schedule_source)
         eligible_matchup = (
             row.get("homeClassification", "").casefold() in {"fbs", "fcs"}
             and row.get("awayClassification", "").casefold() in {"fbs", "fcs"}
@@ -593,7 +605,7 @@ def build_team_season_artifact(
         )
         # A completed score can be known at the cutoff without belonging to
         # the model evidence (for example, a lower-division opponent).
-        reveal_completed_result = schedule_state in {"completed", "out_of_scope"} and _result_available(row, metadata)
+        reveal_completed_result = schedule_state in {"completed", "out_of_scope"} and _result_available(row, metadata, resolved_schedule_source)
         if reveal_completed_result and not eligible_matchup:
             display_state = "out_of_scope"
         elif schedule_state == "completed" and not reveal_completed_result:

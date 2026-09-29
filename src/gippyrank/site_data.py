@@ -18,7 +18,6 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
-from gippyrank.likelihood_provenance import supplied_likelihood_sha256
 from gippyrank.methodology import (
     HISTORICAL_LIKELIHOOD_SHA256,
     HISTORICAL_LIKELIHOOD_VERSION,
@@ -998,6 +997,15 @@ def _validate_metadata(metadata: dict[str, Any], source: Path) -> None:
             raise SiteDataValidationError(f"{metadata['snapshot_id']}: unsupported prior family")
         if "model_versions" not in metadata:
             raise SiteDataValidationError(f"{metadata['snapshot_id']}: model_versions is required")
+        if metadata.get("historical_likelihood_version") == HISTORICAL_LIKELIHOOD_VERSION:
+            if metadata.get("historical_likelihood_provenance") == "supplied_parameters":
+                raise SiteDataValidationError(
+                    f"{metadata['snapshot_id']}: supplied likelihood is research-only and cannot publish as V1"
+                )
+            if metadata.get("historical_likelihood_sha256") != HISTORICAL_LIKELIHOOD_SHA256:
+                raise SiteDataValidationError(
+                    f"{metadata['snapshot_id']}: historical likelihood is not pinned V1"
+                )
     else:
         performance_required = {
             "model_version", "method", "anchor_family", "source_context_snapshot_id",
@@ -1581,15 +1589,10 @@ def _validate_retrospective_game_expectations(
         raise SiteDataValidationError(f"{snapshot_id}: retrospective likelihood hash mismatch")
     likelihood_hash = source_metadata.get("historical_likelihood_sha256")
     if source_metadata.get("historical_likelihood_provenance") == "supplied_parameters":
-        parameters = source_metadata.get("historical_likelihood_parameters")
-        if not isinstance(parameters, dict) or likelihood_hash != supplied_likelihood_sha256(parameters):
-            raise SiteDataValidationError(f"{snapshot_id}: supplied likelihood hash is invalid")
-    elif source_metadata.get("historical_likelihood_provenance") == "loaded_from_artifact":
-        if not isinstance(likelihood_hash, str) or len(likelihood_hash) != 64 or any(
-            character not in "0123456789abcdef" for character in likelihood_hash
-        ):
-            raise SiteDataValidationError(f"{snapshot_id}: loaded likelihood hash is invalid")
-    elif likelihood_hash != HISTORICAL_LIKELIHOOD_SHA256:
+        raise SiteDataValidationError(
+            f"{snapshot_id}: supplied likelihood is research-only and cannot publish as V1"
+        )
+    if likelihood_hash != HISTORICAL_LIKELIHOOD_SHA256:
         raise SiteDataValidationError(f"{snapshot_id}: retrospective likelihood is not pinned V1")
     if expectations.get("conditioning") != RETROSPECTIVE_CONDITIONING:
         raise SiteDataValidationError(
@@ -2865,10 +2868,10 @@ def _validate_team_season_artifact(
         raise SiteDataValidationError(f"{snapshot_id}: schedule provenance is missing or invalid")
     for field in (
         "season", "snapshot_type", "requested_cutoff", "effective_cutoff",
-        "game_corpus_sha256", "source_retrieved_at", "source_retrieval_times",
+        "game_corpus_sha256", "source_mode", "source_retrieved_at", "source_retrieval_times",
         "source_response_hashes",
     ):
-        if artifact.get(field) != source_metadata.get(field):
+        if (field == "source_mode" and field not in source_metadata) or artifact.get(field) != source_metadata.get(field):
             raise SiteDataValidationError(
                 f"{snapshot_id}: team-season provenance mismatch: {field}"
             )
@@ -3015,10 +3018,10 @@ def _validate_team_season_artifact(
                     game_date=game_date,
                     cutoff=_iso_datetime(source_metadata.get("effective_cutoff")),
                     snapshot_type=source_metadata.get("snapshot_type"),
+                    source_mode=source_metadata.get("source_mode"),
                     schedule_source=schedule_source,
                     game_corpus_sha256=source_metadata.get("game_corpus_sha256"),
                     source_available_at=_iso_datetime(source_available),
-                    frozen_source=source_metadata.get("source_mode") == "historical_frozen",
                 )
             )
             if not known_by_snapshot and (

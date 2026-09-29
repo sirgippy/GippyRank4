@@ -32,7 +32,12 @@ version and pinned SHA-256, a canonical `posterior_pmfs_sha256`, the machine-rea
 `conditioning: selected_snapshot_full_posterior_including_game`, inference
 implementation, and
 per-record provenance bind it to the
-selected publication. The source artifact contains every included modeled
+selected publication. Published V1 expectations require the exact pinned Historical Likelihood
+artifact hash. Explicitly supplied likelihood objects are research inputs and
+cannot be published as V1; a different 64-character artifact hash is also
+insufficient.
+
+The source artifact contains every included modeled
 game, including FCS/FCS evidence. Static publication validates this full source
 and exports only records with an FBS participant as
 `retrospective_game_expectations_site_projection`, with explicit
@@ -51,7 +56,7 @@ also refreshes paired Performance artifacts before static site export.
 The serialized hindsight artifact excludes wall-clock runtime so repeated
 forced backfills produce the same bytes. Runtime is printed by the backfill
 command. On a forced refresh, an existing game record keeps its serialized
-values when recomputation differs only by at most `1e-11` in floating-point
+values when recomputation differs only by at most four ULPs in floating-point
 fields; substantive changes replace the record. Retained snapshots preserve
 their original `source_retrieved_at`
 value. Where older FBS and FCS responses arrived at different times, the
