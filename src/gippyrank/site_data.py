@@ -19,8 +19,11 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from gippyrank.methodology import (
+    HISTORICAL_LIKELIHOOD_SHA256,
     HISTORICAL_LIKELIHOOD_VERSION,
     METHODOLOGY_SCHEMA_VERSION,
+    RETROSPECTIVE_CONDITIONING,
+    RETROSPECTIVE_GAME_EXPECTATIONS_VERSION,
     SITE_SCHEMA_VERSION,
     SUPPORTED_ARTIFACT_MODEL_VERSIONS,
     SUPPORTED_ARTIFACT_SCHEMA_VERSIONS,
@@ -48,7 +51,6 @@ FUTURE_MARGIN_DISPLAY_MIN = -40.0
 FUTURE_MARGIN_DISPLAY_MAX = 40.0
 FUTURE_MARGIN_DISPLAY_BINS = 40
 DISPLAY_PROBABILITY_SCALE = 1000
-RETROSPECTIVE_GAME_EXPECTATIONS_VERSION = "2.0"
 TEAM_TRAJECTORY_SCHEMA_VERSION = "1.1"
 SUPPORTED_SNAPSHOT_SCHEMA_VERSIONS = SUPPORTED_ARTIFACT_SCHEMA_VERSIONS["snapshot"]
 PMF_SUM_TOLERANCE = 1e-9
@@ -1537,8 +1539,16 @@ def _validate_retrospective_game_expectations(
         raise SiteDataValidationError(
             f"{snapshot_id}: retrospective margin orientation is invalid"
         )
+    if expectations.get("historical_likelihood_sha256") != HISTORICAL_LIKELIHOOD_SHA256:
+        raise SiteDataValidationError(
+            f"{snapshot_id}: retrospective likelihood hash is invalid"
+        )
+    if expectations.get("conditioning") != RETROSPECTIVE_CONDITIONING:
+        raise SiteDataValidationError(
+            f"{snapshot_id}: retrospective conditioning is invalid"
+        )
     interpretation = expectations.get("interpretation")
-    if not isinstance(interpretation, str) or "including this game" not in interpretation:
+    if not isinstance(interpretation, str) or not interpretation.strip():
         raise SiteDataValidationError(
             f"{snapshot_id}: retrospective interpretation is missing"
         )
@@ -3184,13 +3194,11 @@ def _team_season_artifact(
     rankings: list[dict[str, Any]],
     context_source: tuple[Path, dict[str, Any]] | None,
 ) -> dict[str, Any]:
-    """Load ratings and the family-specific future-prediction artifact.
+    """Load the Context schedule with the selected family's analytical state.
 
-    Completed-game ratings remain Context-anchored for compatibility with the
-    existing team-page contract.  A History artifact, when available, is
-    therefore merged onto the Context schedule only for its canonical future
-    prediction map and references.  Performance continues to consume the
-    same-slot Context artifact for both purposes.
+    Context supplies compatible schedule and completed-game performance ratings.
+    When selected, History supplies future predictions, full-posterior hindsight,
+    and season simulation. Performance consumes its paired Context artifact.
     """
 
     def candidate_for(path: Path, source_metadata: dict[str, Any]) -> Path:

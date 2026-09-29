@@ -6,7 +6,12 @@ from collections.abc import Mapping, Sequence
 from time import perf_counter
 from typing import Any
 
-from gippyrank.methodology import HISTORICAL_LIKELIHOOD_VERSION
+from gippyrank.methodology import (
+    HISTORICAL_LIKELIHOOD_SHA256,
+    HISTORICAL_LIKELIHOOD_VERSION,
+    RETROSPECTIVE_CONDITIONING,
+    RETROSPECTIVE_GAME_EXPECTATIONS_VERSION,
+)
 from gippyrank.posterior.engine import Game, LikelihoodV1, PosteriorResult, Team
 from gippyrank.posterior.predictive import (
     FUTURE_MARGIN_DISPLAY_BINS,
@@ -20,7 +25,6 @@ from gippyrank.posterior.predictive import (
     predictive_components,
 )
 
-RETROSPECTIVE_GAME_EXPECTATIONS_VERSION = "2.0"
 RETROSPECTIVE_INFERENCE_IMPLEMENTATION = "selected_snapshot_full_posterior_pmfs"
 RETROSPECTIVE_INTERPRETATION = (
     "This retrospective distribution compares the observed result with what "
@@ -49,8 +53,9 @@ def _expectation_record(
     )
     home = posterior_prediction_team(teams_by_id[game.home_id], posterior.pmfs)
     away = posterior_prediction_team(teams_by_id[game.away_id], posterior.pmfs)
-    summary = predict_game(scheduled, home, away, likelihood)
     locations, weights = predictive_components(scheduled, home, away, likelihood)
+    components = (locations, weights)
+    summary = predict_game(scheduled, home, away, likelihood, components=components)
     actual_home_margin = game.home_points - game.away_points
     lower_tail = min(
         max(
@@ -79,7 +84,7 @@ def _expectation_record(
         "lower_tail_probability": lower_tail,
         "upper_tail_probability": min(max(1.0 - lower_tail, 0.0), 1.0),
         "display_distribution": margin_display_distribution(
-            scheduled, home, away, likelihood
+            scheduled, home, away, likelihood, components=components
         ),
         **summary.as_dict(),
     }
@@ -132,6 +137,8 @@ def build_retrospective_game_expectations(
         "historical_likelihood_version": metadata.get(
             "historical_likelihood_version", HISTORICAL_LIKELIHOOD_VERSION
         ),
+        "historical_likelihood_sha256": HISTORICAL_LIKELIHOOD_SHA256,
+        "conditioning": RETROSPECTIVE_CONDITIONING,
         "margin_orientation": "home_minus_away",
         "interpretation": RETROSPECTIVE_INTERPRETATION,
         "inference": {

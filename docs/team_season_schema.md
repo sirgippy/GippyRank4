@@ -187,11 +187,17 @@ visible without a prediction.  Neutral games use the neutral V1 site row, and
 FBS/FCS games use the stable FBS-first V1 coordinate orientation before the
 stored home-oriented margin is restored.
 
-New snapshot inference conservatively excludes a completed row dated on the
-cutoff's UTC calendar day. Its score alone does not establish that the game
-had ended by an interim cutoff earlier that day. Retained snapshots keep their
-frozen included-game evidence; the browser uses that evidence to distinguish
-completed results from same-day future games.
+Completed scores enter a new snapshot's inference only when their scheduled
+start is no later than the exact effective cutoff and the complete mutable
+source corpus was retrieved by that cutoff. A scheduled start never proves
+when a game became final. If the source was retrieved later, every completed
+score from that mutable response remains unresolved at the historical cutoff,
+including games that started on a previous UTC day. Retained publications use
+their frozen included-game evidence instead. An unscored future schedule uses
+the UTC calendar day of its date anchor, so a game on the cutoff day can
+remain forecast-eligible without an exact kickoff time. The combined FBS/FCS
+corpus retrieval timestamp is the later of its two constituent retrievals;
+the individual timestamps remain in provenance.
 
 ## JSON shape
 
@@ -261,9 +267,10 @@ The prediction map contains compact summaries, not sampled distributions:
 }
 ```
 
-The values above are illustrative.  Static export validates the prediction
-source, provenance, complementarity, nested interval ordering, strict cutoff,
-and cross-team references before publishing.
+The values above are illustrative. Static export validates the prediction
+source, provenance, complementarity, nested interval ordering, the selected
+snapshot's frozen evidence boundary, calendar-day eligibility for unscored
+schedules, and cross-team references before publishing.
 
 The `future_margin_axis` is fixed at `-40` through `+40` points in 40 bins,
 with the home-oriented convention `margin = home points - away points`.

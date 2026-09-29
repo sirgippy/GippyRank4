@@ -1,8 +1,15 @@
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 
+from gippyrank.methodology import (
+    HISTORICAL_LIKELIHOOD_SHA256,
+    RETROSPECTIVE_CONDITIONING,
+)
+from gippyrank.posterior import predictive, retrospective
 from gippyrank.posterior.engine import Game, LikelihoodV1, Team, infer_posterior
 from gippyrank.posterior.predictive import (
     ScheduledGame,
@@ -80,6 +87,8 @@ def test_completed_game_uses_the_selected_full_posterior() -> None:
         == "selected_snapshot_full_posterior_pmfs"
     )
     assert artifact["inference"]["games_evaluated"] == 2
+    assert artifact["historical_likelihood_sha256"] == HISTORICAL_LIKELIHOOD_SHA256
+    assert artifact["conditioning"] == RETROSPECTIVE_CONDITIONING
     assert "excluded_evidence" not in artifact["inference"]
     for team_id, pmf in before.items():
         assert np.array_equal(posterior.pmfs[team_id], pmf)
@@ -139,3 +148,33 @@ def test_artifact_is_home_oriented_and_contains_exact_and_display_summaries() ->
         + display["upper_tail_probability"]
         == 1000
     )
+
+
+def test_full_posterior_mixture_is_built_once_per_game() -> None:
+    teams = [
+        Team("a", "A", "fbs", np.array([0.7, 0.3])),
+        Team("b", "B", "fbs", np.array([0.4, 0.6])),
+    ]
+    games = [Game("target", "a", "b", "fbs", "fbs", 31, 14)]
+    posterior = infer_posterior(teams, games, _likelihood(), tolerance=1e-12)
+    with (
+        patch.object(
+            retrospective,
+            "predictive_components",
+            wraps=retrospective.predictive_components,
+        ) as components,
+        patch.object(
+            predictive,
+            "predictive_components",
+            wraps=predictive.predictive_components,
+        ) as repeated_components,
+    ):
+        build_retrospective_game_expectations(
+            metadata=_metadata(["target"]),
+            teams=teams,
+            games=games,
+            posterior=posterior,
+            likelihood=_likelihood(),
+        )
+    assert components.call_count == 1
+    repeated_components.assert_not_called()

@@ -47,7 +47,7 @@ def test_current_acquisition_requests_only_fbs_and_fcs_games_with_provenance(
     assert [request.url.path for request in requests] == ["/games", "/games"]
     assert [request.url.params["classification"] for request in requests] == ["fbs", "fcs"]
     assert all(request.headers["Authorization"] == "Bearer test-secret" for request in requests)
-    assert acquisition.retrieved_at == fbs_time
+    assert acquisition.retrieved_at == fcs_time
     assert acquisition.source_retrieval_times == {"fbs": fbs_time, "fcs": fcs_time}
     for filename, classification, timestamp in (("2026.json", "fbs", fbs_time), ("2026-fcs.json", "fcs", fcs_time)):
         provenance = json.loads((tmp_path / f"data/raw/cfbd/games/{filename}.provenance.json").read_text())

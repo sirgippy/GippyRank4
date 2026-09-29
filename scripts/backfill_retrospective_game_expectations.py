@@ -14,13 +14,18 @@ from pathlib import Path
 
 import numpy as np
 
+from gippyrank.methodology import (
+    HISTORICAL_LIKELIHOOD_SHA256,
+    RETROSPECTIVE_CONDITIONING,
+    RETROSPECTIVE_GAME_EXPECTATIONS_VERSION,
+)
 from gippyrank.posterior.engine import PosteriorResult
 from gippyrank.posterior.retrospective import build_retrospective_game_expectations
 from gippyrank.posterior.snapshots import (
     _frozen_fcs_fallbacks,
     _game_from_included_row,
     included_game_rows_sha256,
-    load_likelihood,
+    load_pinned_likelihood,
     load_teams,
     sha256,
 )
@@ -107,7 +112,7 @@ def backfill(source: Path) -> None:
         teams=teams,
         games=games,
         posterior=_posterior(source),
-        likelihood=load_likelihood(
+        likelihood=load_pinned_likelihood(
             ROOT / "data/processed/posterior/historical_likelihood_v1.json"
         ),
     )
@@ -151,6 +156,9 @@ def main() -> None:
         "--force", action="store_true", help="Recompute existing records"
     )
     args = parser.parse_args()
+    load_pinned_likelihood(
+        ROOT / "data/processed/posterior/historical_likelihood_v1.json"
+    )
     sources = [ROOT / args.source] if args.source else _retained_sources()
     for source in sources:
         existing = _read_json(source / "team_seasons.json").get(
@@ -158,7 +166,11 @@ def main() -> None:
         )
         if (
             not args.force
-            and existing.get("retrospective_game_expectations_version") == "2.0"
+            and existing.get("retrospective_game_expectations_version")
+            == RETROSPECTIVE_GAME_EXPECTATIONS_VERSION
+            and existing.get("historical_likelihood_sha256")
+            == HISTORICAL_LIKELIHOOD_SHA256
+            and existing.get("conditioning") == RETROSPECTIVE_CONDITIONING
         ):
             continue
         backfill(source)

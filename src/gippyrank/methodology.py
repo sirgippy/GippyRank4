@@ -32,6 +32,12 @@ CONTEXT_PRIOR_VERSION: Final = "1.3"
 CONTEXT_PRIOR_CANDIDATE_VERSION: Final = CONTEXT_PRIOR_VERSION
 HISTORY_PRIOR_VERSION: Final = "1.1"
 HISTORICAL_LIKELIHOOD_VERSION: Final = "V1"
+# Immutable bytes of the V1 likelihood used by retained hindsight backfills.
+HISTORICAL_LIKELIHOOD_SHA256: Final = (
+    "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153"
+)
+RETROSPECTIVE_GAME_EXPECTATIONS_VERSION: Final = "2.0"
+RETROSPECTIVE_CONDITIONING: Final = "selected_snapshot_full_posterior_including_game"
 POSTERIOR_VERSION: Final = "V1"
 PERFORMANCE_VERSION: Final = "1.0"
 SEASON_SIMULATION_VERSION: Final = "hierarchical_latent_state_v1"

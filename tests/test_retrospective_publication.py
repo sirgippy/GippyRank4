@@ -9,9 +9,24 @@ from pathlib import Path
 import pytest
 
 from gippyrank import site_data
+from gippyrank.methodology import (
+    HISTORICAL_LIKELIHOOD_SHA256,
+    RETROSPECTIVE_CONDITIONING,
+)
+from gippyrank.posterior.snapshots import load_pinned_likelihood, sha256
 from gippyrank.site_data import SiteDataValidationError
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_retained_likelihood_bytes_are_pinned(tmp_path: Path) -> None:
+    source = ROOT / "data/processed/posterior/historical_likelihood_v1.json"
+    assert sha256(source) == HISTORICAL_LIKELIHOOD_SHA256
+    assert load_pinned_likelihood(source).scale > 0
+    changed = tmp_path / source.name
+    changed.write_bytes(source.read_bytes() + b"\n")
+    with pytest.raises(ValueError, match="likelihood bytes differ"):
+        load_pinned_likelihood(changed)
 
 
 def test_retained_predictive_snapshots_publish_completed_game_expectations() -> None:
@@ -29,6 +44,8 @@ def test_retained_predictive_snapshots_publish_completed_game_expectations() -> 
         )
         artifact = team_seasons["retrospective_game_expectations"]
         assert metadata["retrospective_game_expectations_version"] == "2.0"
+        assert artifact["historical_likelihood_sha256"] == HISTORICAL_LIKELIHOOD_SHA256
+        assert artifact["conditioning"] == RETROSPECTIVE_CONDITIONING
         assert artifact["source_snapshot_id"] == metadata["snapshot_id"]
         assert set(artifact["games"]) == set(metadata["included_game_ids"])
         assert len(artifact["games"]) == metadata["included_game_count"]
@@ -67,3 +84,17 @@ def test_retrospective_records_match_schedule_participants_site_and_score() -> N
         mutate(artifact)
         with pytest.raises(SiteDataValidationError, match=message):
             validate(artifact)
+
+    prose_edit = deepcopy(original)
+    prose_edit["retrospective_game_expectations"]["interpretation"] = (
+        "A full-posterior hindsight comparison."
+    )
+    validate(prose_edit)
+    for field, value, message in (
+        ("conditioning", "leave_one_out", "conditioning"),
+        ("historical_likelihood_sha256", "0" * 64, "likelihood hash"),
+    ):
+        changed = deepcopy(original)
+        changed["retrospective_game_expectations"][field] = value
+        with pytest.raises(SiteDataValidationError, match=message):
+            validate(changed)

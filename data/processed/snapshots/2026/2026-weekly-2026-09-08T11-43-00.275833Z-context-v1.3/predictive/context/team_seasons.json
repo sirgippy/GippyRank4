@@ -59431,6 +59431,7 @@
   "requested_cutoff": "2026-09-08T11:43:00.275833+00:00",
   "retrospective_game_expectations": {
     "artifact_kind": "retrospective_game_expectations",
+    "conditioning": "selected_snapshot_full_posterior_including_game",
     "effective_cutoff": "2026-09-08T11:43:00.275833+00:00",
     "games": {
       "401856634": {
@@ -72678,6 +72679,7 @@
         "upper_tail_probability": 0.39631734212610614
       }
     },
+    "historical_likelihood_sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
     "historical_likelihood_version": "V1",
     "included_game_ids": [
       "401856634",
@@ -72856,7 +72858,7 @@
     "inference": {
       "games_evaluated": 172,
       "implementation": "selected_snapshot_full_posterior_pmfs",
-      "runtime_seconds": 24.546472129994072
+      "runtime_seconds": 51.11221332900459
     },
     "interpretation": "This retrospective distribution compares the observed result with what GippyRank expects given everything known at the selected snapshot, including this game. It is not a prediction made before the game.",
     "margin_axis": {

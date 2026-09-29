@@ -9,7 +9,12 @@ import numpy as np
 import pytest
 
 from gippyrank.posterior.engine import LikelihoodV1
-from gippyrank.posterior.snapshots import build_snapshot, corpus_provenance, snapshot_id
+from gippyrank.posterior.snapshots import (
+    build_snapshot,
+    corpus_provenance,
+    filter_games,
+    snapshot_id,
+)
 
 
 def _write(path: Path, fields: list[str], rows: list[dict[str, str]]) -> None:
@@ -296,11 +301,11 @@ def test_live_snapshot_clamps_stale_cache_to_explicit_effective_cutoff(
 @pytest.mark.parametrize(
     ("fbs_time", "fcs_time", "expected"),
     [
-        (datetime(2026, 8, 30, 12, tzinfo=UTC), datetime(2026, 8, 30, 12, 8, tzinfo=UTC), datetime(2026, 8, 30, 12, tzinfo=UTC)),
-        (datetime(2026, 8, 30, 12, 8, tzinfo=UTC), datetime(2026, 8, 30, 12, tzinfo=UTC), datetime(2026, 8, 30, 12, tzinfo=UTC)),
+        (datetime(2026, 8, 30, 12, tzinfo=UTC), datetime(2026, 8, 30, 12, 8, tzinfo=UTC), datetime(2026, 8, 30, 12, 8, tzinfo=UTC)),
+        (datetime(2026, 8, 30, 12, 8, tzinfo=UTC), datetime(2026, 8, 30, 12, tzinfo=UTC), datetime(2026, 8, 30, 12, 8, tzinfo=UTC)),
     ],
 )
-def test_combined_current_source_boundary_is_earliest_required_response(
+def test_combined_current_source_boundary_is_latest_required_response(
     tmp_path: Path, fbs_time: datetime, fcs_time: datetime, expected: datetime
 ) -> None:
     root = _root(tmp_path)
@@ -317,9 +322,57 @@ def test_combined_current_source_boundary_is_earliest_required_response(
         likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
     )
     assert snapshot.metadata["effective_cutoff"] == expected.isoformat()
-    assert snapshot.metadata["effective_cutoff"] <= fbs_time.isoformat()
-    assert snapshot.metadata["effective_cutoff"] <= fcs_time.isoformat()
+    assert snapshot.metadata["effective_cutoff"] >= fbs_time.isoformat()
+    assert snapshot.metadata["effective_cutoff"] >= fcs_time.isoformat()
     assert snapshot.metadata["effective_cutoff"] < snapshot.metadata["requested_cutoff"]
+
+
+def test_cutoff_between_source_retrievals_cannot_use_later_response(
+    tmp_path: Path,
+) -> None:
+    root = _root(tmp_path)
+    fbs_time = datetime(2026, 8, 30, 12, tzinfo=UTC)
+    fcs_time = datetime(2026, 8, 30, 12, 8, tzinfo=UTC)
+    cutoff = datetime(2026, 8, 30, 12, 4, tzinfo=UTC)
+    _write_current_provenance(root, fbs_time, fcs_time)
+    provenance = corpus_provenance(root, 2026)
+    assert provenance.source_retrieved_at == fcs_time
+    corpus = root / "data/processed/cfbd/games.csv"
+    with corpus.open(newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle)
+        fields = list(reader.fieldnames or [])
+        original_rows = list(reader)
+    fcs_only = dict(original_rows[0])
+    fcs_only.update(
+        id="fcs-only", homeId="3", awayId="4",
+        homeClassification="fcs", awayClassification="fcs",
+    )
+    _write(corpus, fields, [*original_rows, fcs_only])
+    games, rows, _, _ = filter_games(
+        root, 2026, cutoff, "weekly",
+        source_retrieved_at=provenance.source_retrieved_at,
+    )
+    assert games == []
+    assert rows == []
+    _write(corpus, fields, original_rows)
+    snapshot = build_snapshot(
+        season=2026,
+        cutoff=cutoff,
+        prior_family="context",
+        snapshot_type="weekly",
+        root=root,
+        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
+    )
+    assert snapshot.metadata["effective_cutoff"] == cutoff.isoformat()
+    assert snapshot.metadata["included_game_ids"] == []
+
+
+def test_partial_current_source_provenance_cannot_look_frozen(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    _write_current_provenance(root, datetime(2026, 8, 30, 12, tzinfo=UTC))
+    (root / "data/raw/cfbd/games/2026-fcs.json.provenance.json").unlink()
+    with pytest.raises(ValueError, match="both retrieval manifests"):
+        corpus_provenance(root, 2026)
 
 
 def test_identical_eligible_inputs_produce_identical_ranking_rows(tmp_path: Path) -> None:

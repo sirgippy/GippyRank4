@@ -84,7 +84,7 @@ def _acquisition(root: Path, timestamp: datetime, fcs_timestamp: datetime | None
     for name, payload, retrieval_time in (("2026.json", schedules["fbs"], timestamp), ("2026-fcs.json", schedules["fcs"], fcs_timestamp)):
         (raw / name).write_text(json.dumps(payload))
         (raw / f"{name}.provenance.json").write_text(json.dumps({"content_sha256": name, "retrieved_at": retrieval_time.isoformat(), "endpoint": "/games", "parameters": {}, "source_kind": "cfbd_api_schedule"}))
-    return CurrentSeasonAcquisition(2026, min(timestamp, fcs_timestamp), {"fbs": timestamp, "fcs": fcs_timestamp}, schedules, {"2026.json": "2026.json", "2026-fcs.json": "2026-fcs.json"})
+    return CurrentSeasonAcquisition(2026, max(timestamp, fcs_timestamp), {"fbs": timestamp, "fcs": fcs_timestamp}, schedules, {"2026.json": "2026.json", "2026-fcs.json": "2026-fcs.json"})
 
 
 def test_weekly_update_pairs_h_c_preserves_preseason_and_is_idempotent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -139,13 +139,13 @@ def test_weekly_update_pairs_h_c_preserves_preseason_and_is_idempotent(tmp_path:
     }
 
 
-def test_weekly_h_c_effective_cutoff_uses_earliest_required_source(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_weekly_h_c_effective_cutoff_uses_latest_required_source(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     root = _root(tmp_path)
     fbs_time = datetime(2026, 9, 12, 15, tzinfo=UTC)
     fcs_time = datetime(2026, 9, 12, 15, 8, tzinfo=UTC)
     monkeypatch.setattr("gippyrank.weekly_update.fetch_current_season", lambda **_: _acquisition(root, fbs_time, fcs_time))
     update = prepare_weekly_update(season=2026, root=root)
-    assert update.requested_cutoff == update.effective_cutoff == fbs_time
+    assert update.requested_cutoff == update.effective_cutoff == fcs_time
     assert update.context.metadata["source_retrieval_times"] == {
         "fbs": fbs_time.isoformat(), "fcs": fcs_time.isoformat()
     }

@@ -225,11 +225,13 @@ def _schedule_state(row: dict[str, str], metadata: dict[str, Any]) -> str:
         away_points = _int_or_none(row.get("awayPoints"))
         if home_points is not None and away_points is not None:
             retrieved = _schedule_datetime(metadata.get("source_retrieved_at"))
+            # Frozen historical schedules can retain out-of-model results.
+            # A mutable schedule needs retrieval evidence by the cutoff.
             if included or (
                 when <= cutoff
                 and (
-                    when.astimezone(UTC).date() < cutoff.astimezone(UTC).date()
-                    or (retrieved is not None and retrieved <= cutoff)
+                    (retrieved is not None and retrieved <= cutoff)
+                    or metadata.get("source_mode") == "historical_frozen"
                 )
             ):
                 return "completed"

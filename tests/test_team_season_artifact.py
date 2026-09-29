@@ -115,8 +115,35 @@ def test_later_retrieval_cannot_prove_same_day_result_at_historical_cutoff(
         "live",
         source_retrieved_at=datetime(2026, 9, 11, 12, tzinfo=UTC),
     )
-    assert [game.game_id for game in games] == ["early"]
-    assert [row["id"] for row in rows] == ["early"]
+    assert games == []
+    assert rows == []
+
+
+def test_later_retrieval_cannot_prove_result_across_utc_midnight(
+    tmp_path: Path,
+) -> None:
+    root = _root(tmp_path)
+    path = root / "data/processed/cfbd/games.csv"
+    with path.open(newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle)
+        fields = list(reader.fieldnames or [])
+        rows = list(reader)
+    midnight_game = dict(rows[-1])
+    midnight_game.update(id="midnight", startDate="2026-09-09T23:30:00Z")
+    _write(path, fields, [*rows, midnight_game])
+    cutoff = datetime(2026, 9, 10, 0, 15, tzinfo=UTC)
+    games, included, _, _ = filter_games(
+        root, 2026, cutoff, "live",
+        source_retrieved_at=datetime(2026, 9, 11, 12, tzinfo=UTC),
+    )
+    assert games == []
+    assert included == []
+    assert _schedule_state(midnight_game, {
+        "snapshot_type": "live",
+        "effective_cutoff": cutoff.isoformat(),
+        "source_retrieved_at": "2026-09-11T12:00:00+00:00",
+        "included_game_ids": [],
+    }) == "unresolved"
 
 
 def test_date_cutoff_includes_its_calendar_day(tmp_path: Path) -> None:

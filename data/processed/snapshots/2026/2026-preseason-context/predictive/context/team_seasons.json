@@ -57135,14 +57135,16 @@
   "requested_cutoff": null,
   "retrospective_game_expectations": {
     "artifact_kind": "retrospective_game_expectations",
+    "conditioning": "selected_snapshot_full_posterior_including_game",
     "effective_cutoff": null,
     "games": {},
+    "historical_likelihood_sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
     "historical_likelihood_version": "V1",
     "included_game_ids": [],
     "inference": {
       "games_evaluated": 0,
       "implementation": "selected_snapshot_full_posterior_pmfs",
-      "runtime_seconds": 3.3999967854470015e-06
+      "runtime_seconds": 5.299982149153948e-06
     },
     "interpretation": "This retrospective distribution compares the observed result with what GippyRank expects given everything known at the selected snapshot, including this game. It is not a prediction made before the game.",
     "margin_axis": {

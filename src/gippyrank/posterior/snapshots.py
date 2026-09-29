@@ -15,6 +15,7 @@ import numpy as np
 
 from gippyrank.methodology import (
     CONTEXT_PRIOR_VERSION,
+    HISTORICAL_LIKELIHOOD_SHA256,
     HISTORICAL_LIKELIHOOD_VERSION,
     HISTORY_PRIOR_VERSION,
     SNAPSHOT_SCHEMA_VERSION,
@@ -225,7 +226,10 @@ def corpus_provenance(root: Path, season: int) -> CorpusProvenance:
         directory / f"{season}{suffix}.json.provenance.json"
         for suffix in ("", "-fcs")
     ]
-    if not all(path.exists() for path in manifests):
+    present = [path.exists() for path in manifests]
+    if any(present) and not all(present):
+        raise ValueError("current-season CFBD corpus needs both retrieval manifests")
+    if not any(present):
         return CorpusProvenance("historical_frozen", "frozen_game_corpus", None, {}, {})
     values = [json.loads(path.read_text(encoding="utf-8")) for path in manifests]
     retrieval_times = {
@@ -235,7 +239,7 @@ def corpus_provenance(root: Path, season: int) -> CorpusProvenance:
     return CorpusProvenance(
         "current_cached_cfbd",
         "cfbd_api_schedule",
-        min(retrieval_times.values()),
+        max(retrieval_times.values()),
         retrieval_times,
         {path.name: value["content_sha256"] for path, value in zip(manifests, values)},
     )
@@ -269,13 +273,13 @@ def filter_games(
                 cutoff_dt is not None and when > cutoff_dt
             ):
                 continue
-            # A later source retrieval cannot establish whether a score on
-            # the requested cutoff day was already final at that earlier time.
+            # A mutable response retrieved after the cutoff cannot establish
+            # when any of its completed scores became final. Scheduled start
+            # time is not completion evidence, even across a UTC date change.
             if (
                 cutoff_dt is not None
                 and source_retrieved_at is not None
                 and source_retrieved_at > cutoff_dt
-                and when.astimezone(UTC).date() == cutoff_dt.astimezone(UTC).date()
             ):
                 continue
             if cutoff_dt is None:
@@ -898,6 +902,13 @@ def load_likelihood(path: Path) -> LikelihoodV1:
         float(value["degrees_of_freedom"]),
         value.get("fit_kind", "weighted_pseudo"),
     )
+
+
+def load_pinned_likelihood(path: Path) -> LikelihoodV1:
+    """Load the exact V1 bytes used to regenerate retained hindsight."""
+    if sha256(path) != HISTORICAL_LIKELIHOOD_SHA256:
+        raise ValueError(f"{path}: historical likelihood bytes differ from retained V1")
+    return load_likelihood(path)
 
 
 def _write_csv(

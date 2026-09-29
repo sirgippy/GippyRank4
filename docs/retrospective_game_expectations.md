@@ -28,7 +28,10 @@ records off-axis mass separately. Exact scalar summaries always come from the
 mixture, never the display bins.
 
 The artifact's `source_snapshot_id`, `included_game_ids`, cutoff, likelihood
-version, inference implementation, and per-record provenance bind it to the
+version and pinned SHA-256, the machine-readable
+`conditioning: selected_snapshot_full_posterior_including_game`, inference
+implementation, and
+per-record provenance bind it to the
 selected publication. The source artifact contains every included modeled
 game, including FCS/FCS evidence. Static publication validates this full source
 and exports only records with an FBS participant as
@@ -39,6 +42,7 @@ uses the paired Context artifact and preserves its Context source provenance.
 
 Retained publications can be refreshed with
 `uv run python scripts/backfill_retrospective_game_expectations.py`. This reads
-frozen included-game rows, verifies the saved prior hash, and uses the stored
-posterior PMFs. It does not regenerate posterior beliefs or rankings. The script
+frozen included-game rows, verifies the saved prior hash and pinned Historical
+Likelihood V1 bytes, and uses the stored posterior PMFs. It does not regenerate
+posterior beliefs or rankings. The script
 also refreshes paired Performance artifacts before static site export.
