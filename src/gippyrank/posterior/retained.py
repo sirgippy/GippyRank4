@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import json
+import math
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -12,6 +13,48 @@ import numpy as np
 
 from gippyrank.posterior.engine import PosteriorResult, Team
 from gippyrank.posterior.snapshots import posterior_pmfs_sha256
+
+
+def _equivalent_values(left: Any, right: Any) -> bool:
+    """Compare published records allowing only last-bit floating-point drift."""
+    if type(left) is not type(right):
+        return False
+    if isinstance(left, float):
+        return math.isfinite(left) and math.isfinite(right) and math.isclose(
+            left, right, rel_tol=0.0, abs_tol=1e-11
+        )
+    if isinstance(left, dict):
+        return left.keys() == right.keys() and all(
+            _equivalent_values(left[key], right[key]) for key in left
+        )
+    if isinstance(left, list):
+        return len(left) == len(right) and all(
+            _equivalent_values(a, b) for a, b in zip(left, right)
+        )
+    return left == right
+
+
+def preserve_equivalent_retrospective_records(
+    existing: Any, refreshed: dict[str, Any]
+) -> None:
+    """Keep frozen numeric spellings when recomputation is semantically equal."""
+    if not isinstance(existing, dict):
+        return
+    for field in (
+        "retrospective_game_expectations_version",
+        "source_snapshot_id",
+        "conditioning",
+        "historical_likelihood_sha256",
+        "posterior_pmfs_sha256",
+    ):
+        if existing.get(field) != refreshed.get(field):
+            return
+    old_games = existing.get("games")
+    if not isinstance(old_games, dict) or old_games.keys() != refreshed["games"].keys():
+        return
+    for game_id, record in refreshed["games"].items():
+        if _equivalent_values(old_games[game_id], record):
+            refreshed["games"][game_id] = old_games[game_id]
 
 
 def load_retained_posterior(

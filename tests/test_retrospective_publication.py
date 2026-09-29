@@ -16,7 +16,10 @@ from gippyrank.methodology import (
     RETROSPECTIVE_CONDITIONING,
 )
 from gippyrank.posterior.engine import Team
-from gippyrank.posterior.retained import load_retained_posterior
+from gippyrank.posterior.retained import (
+    load_retained_posterior,
+    preserve_equivalent_retrospective_records,
+)
 from gippyrank.posterior.snapshots import (
     load_pinned_likelihood,
     posterior_pmfs_sha256,
@@ -107,6 +110,27 @@ def test_backfill_rejects_untrusted_posterior_rows(tmp_path: Path) -> None:
         write(rows)
         with pytest.raises(ValueError, match=message):
             load_retained_posterior(tmp_path, metadata, teams)
+
+
+def test_backfill_preserves_only_equivalent_frozen_records() -> None:
+    provenance = {
+        "retrospective_game_expectations_version": "2.0",
+        "source_snapshot_id": "snapshot",
+        "conditioning": RETROSPECTIVE_CONDITIONING,
+        "historical_likelihood_sha256": HISTORICAL_LIKELIHOOD_SHA256,
+        "posterior_pmfs_sha256": "pmf-hash",
+    }
+    existing = {**provenance, "games": {
+        "stable": {"expected_home_margin": 26.92384615053041, "actual_home_margin": 17},
+        "changed": {"expected_home_margin": 12.0, "actual_home_margin": 17},
+    }}
+    refreshed = {**provenance, "games": {
+        "stable": {"expected_home_margin": 26.923846150530405, "actual_home_margin": 17},
+        "changed": {"expected_home_margin": 13.0, "actual_home_margin": 17},
+    }}
+    preserve_equivalent_retrospective_records(existing, refreshed)
+    assert refreshed["games"]["stable"] is existing["games"]["stable"]
+    assert refreshed["games"]["changed"] is not existing["games"]["changed"]
 
 
 def test_retrospective_records_match_schedule_participants_site_and_score() -> None:

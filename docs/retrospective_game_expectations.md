@@ -50,7 +50,10 @@ also refreshes paired Performance artifacts before static site export.
 
 The serialized hindsight artifact excludes wall-clock runtime so repeated
 forced backfills produce the same bytes. Runtime is printed by the backfill
-command. Retained snapshots preserve their original `source_retrieved_at`
+command. On a forced refresh, an existing game record keeps its serialized
+values when recomputation differs only by at most `1e-11` in floating-point
+fields; substantive changes replace the record. Retained snapshots preserve
+their original `source_retrieved_at`
 value. Where older FBS and FCS responses arrived at different times, the
 metadata marks that field `legacy_first_response` and records the later
 availability as `combined_source_available_at`. Their historical effective

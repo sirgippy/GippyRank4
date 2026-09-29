@@ -18,7 +18,10 @@ from gippyrank.methodology import (
     RETROSPECTIVE_CONDITIONING,
     RETROSPECTIVE_GAME_EXPECTATIONS_VERSION,
 )
-from gippyrank.posterior.retained import load_retained_posterior
+from gippyrank.posterior.retained import (
+    load_retained_posterior,
+    preserve_equivalent_retrospective_records,
+)
 from gippyrank.posterior.retrospective import build_retrospective_game_expectations
 from gippyrank.posterior.snapshots import (
     _frozen_fcs_fallbacks,
@@ -98,6 +101,9 @@ def backfill(source: Path) -> None:
             ROOT / "data/processed/posterior/historical_likelihood_v1.json"
         ),
         likelihood_sha256=HISTORICAL_LIKELIHOOD_SHA256,
+    )
+    preserve_equivalent_retrospective_records(
+        artifact.get("retrospective_game_expectations"), expectation
     )
     artifact["retrospective_game_expectations"] = expectation
     for team in artifact["teams"].values():
