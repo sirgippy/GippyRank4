@@ -85,6 +85,17 @@ def stable_values_sha256(values: list[str]) -> str:
     return hashlib.sha256("\n".join(values).encode("utf-8")).hexdigest()
 
 
+def posterior_pmfs_sha256(pmfs: dict[str, np.ndarray]) -> str:
+    """Hash canonical team/rank probabilities independent of CSV formatting."""
+    canonical = [
+        [team_id, [float(value).hex() for value in pmfs[team_id]]]
+        for team_id in sorted(pmfs)
+    ]
+    return hashlib.sha256(
+        json.dumps(canonical, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+
+
 def included_game_rows_sha256(rows: list[dict[str, str]]) -> str:
     """Hash the ordered game evidence consumed by posterior inference.
 
@@ -911,6 +922,12 @@ def load_pinned_likelihood(path: Path) -> LikelihoodV1:
     return load_likelihood(path)
 
 
+def _load_snapshot_likelihood(path: Path) -> LikelihoodV1:
+    """Pin the repository's production artifact; allow isolated fixture roots."""
+    production = Path(__file__).resolve().parents[3] / "data/processed/posterior/historical_likelihood_v1.json"
+    return load_pinned_likelihood(path) if path.resolve() == production.resolve() else load_likelihood(path)
+
+
 def _write_csv(
     path: Path, rows: list[dict[str, object]], fields: list[str] | None = None
 ) -> None:
@@ -956,6 +973,7 @@ def build_snapshot(
     """Build an atomic-on-success schema-v1 bundle without any publishing logic."""
     started = time.perf_counter()
     root = _root() if root is None else root
+    supplied_likelihood = likelihood is not None
     supplied_season_simulation_config = season_simulation_config
     season_simulation_config = season_simulation_config or SeasonSimulationConfig()
     output_root = (
@@ -1115,9 +1133,9 @@ def build_snapshot(
         # future-game predictions.  Small fixture roots used for prior-only
         # tests may intentionally omit the artifact, so retain the historical
         # prior-only fallback when no game evidence or prediction is possible.
-        likelihood = load_likelihood(likelihood_path)
+        likelihood = _load_snapshot_likelihood(likelihood_path)
     if games:
-        likelihood = likelihood or load_likelihood(likelihood_path)
+        likelihood = likelihood or _load_snapshot_likelihood(likelihood_path)
         result = infer_posterior(
             teams,
             games,
@@ -1227,6 +1245,12 @@ def build_snapshot(
         "prior_artifact_path": relative_path(prior_path, root),
         "prior_artifact_sha256": sha256(prior_path),
         "historical_likelihood_version": HISTORICAL_LIKELIHOOD_VERSION,
+        "historical_likelihood_sha256": (
+            sha256(likelihood_path)
+            if likelihood is not None and not supplied_likelihood and likelihood_path.is_file()
+            else None
+        ),
+        "posterior_pmfs_sha256": posterior_pmfs_sha256(result.pmfs),
         "posterior_inference_configuration": posterior_inference_configuration,
         "season_simulation_schema_version": SEASON_SIMULATION_SCHEMA_VERSION,
         "season_simulation_version": season_simulation_config.simulation_version,
@@ -1240,6 +1264,11 @@ def build_snapshot(
             if provenance.source_retrieved_at
             else None
         ),
+        "combined_source_available_at": (
+            max(provenance.source_retrieval_times.values()).isoformat()
+            if provenance.source_retrieval_times else None
+        ),
+        "source_retrieved_at_contract": "combined_latest",
         "source_retrieval_times": {
             source: retrieved_at.isoformat()
             for source, retrieved_at in provenance.source_retrieval_times.items()
@@ -1314,6 +1343,7 @@ def build_snapshot(
             included_rows=included,
             posterior=result,
             likelihood=likelihood,
+            likelihood_sha256=metadata["historical_likelihood_sha256"],
             season_simulation_config=season_simulation_config,
             prediction_source=(
                 "predictive_history" if prior_family == "history" else "predictive_context"

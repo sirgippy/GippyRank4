@@ -19,7 +19,6 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from gippyrank.methodology import (
-    HISTORICAL_LIKELIHOOD_SHA256,
     HISTORICAL_LIKELIHOOD_VERSION,
     METHODOLOGY_SCHEMA_VERSION,
     RETROSPECTIVE_CONDITIONING,
@@ -960,6 +959,37 @@ def _validate_metadata(metadata: dict[str, Any], source: Path) -> None:
         raise SiteDataValidationError(f"{metadata['snapshot_id']}: unsupported snapshot type")
     if metadata["ranking_family"] not in RANKING_FAMILIES:
         raise SiteDataValidationError(f"{metadata['snapshot_id']}: unsupported ranking family")
+    if "combined_source_available_at" in metadata:
+        times = metadata.get("source_retrieval_times") or {}
+        if not isinstance(times, dict):
+            raise SiteDataValidationError(f"{metadata['snapshot_id']}: source retrieval times are invalid")
+        try:
+            latest = max((datetime.fromisoformat(value) for value in times.values()), default=None)
+            available = metadata["combined_source_available_at"]
+            actual = datetime.fromisoformat(available) if available is not None else None
+        except (TypeError, ValueError) as error:
+            raise SiteDataValidationError(f"{metadata['snapshot_id']}: source availability is invalid") from error
+        if actual != latest:
+            raise SiteDataValidationError(f"{metadata['snapshot_id']}: combined source availability mismatch")
+        contract = metadata.get("source_retrieved_at_contract")
+        if contract not in {"combined_latest", "legacy_first_response", "legacy_unverified_availability"}:
+            raise SiteDataValidationError(f"{metadata['snapshot_id']}: source retrieval contract is invalid")
+        if contract == "legacy_unverified_availability" and (
+            times or available is not None or not isinstance(metadata.get("source_retrieved_at"), str)
+        ):
+            raise SiteDataValidationError(f"{metadata['snapshot_id']}: unverified source availability contract is invalid")
+        if contract == "combined_latest" and metadata.get("source_retrieved_at") != available:
+            raise SiteDataValidationError(f"{metadata['snapshot_id']}: source retrieval timestamp differs from combined availability")
+        if contract == "legacy_first_response" and (available is None or metadata.get("source_retrieved_at") == available):
+            raise SiteDataValidationError(f"{metadata['snapshot_id']}: legacy source retrieval contract is invalid")
+        if contract == "legacy_first_response":
+            try:
+                first = min(datetime.fromisoformat(value) for value in times.values())
+                recorded = datetime.fromisoformat(metadata["source_retrieved_at"])
+            except (TypeError, ValueError) as error:
+                raise SiteDataValidationError(f"{metadata['snapshot_id']}: legacy source retrieval timestamp is invalid") from error
+            if recorded != first:
+                raise SiteDataValidationError(f"{metadata['snapshot_id']}: legacy source retrieval timestamp is not the first response")
     if metadata["ranking_family"] != "performance":
         if metadata.get("prior_family") not in {"context", "history"}:
             raise SiteDataValidationError(f"{metadata['snapshot_id']}: unsupported prior family")
@@ -1032,6 +1062,11 @@ def _validate_performance_source(metadata: dict[str, Any], root: Path) -> None:
         "prior_artifact_sha256", "prior_model_version",
     ):
         if metadata.get(field) != source_metadata.get(field):
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: Context/Performance evidence mismatch: {field}"
+            )
+    for field in ("combined_source_available_at", "source_retrieved_at_contract"):
+        if field in source_metadata and metadata.get(field) != source_metadata[field]:
             raise SiteDataValidationError(
                 f"{metadata['snapshot_id']}: Context/Performance evidence mismatch: {field}"
             )
@@ -1539,10 +1574,8 @@ def _validate_retrospective_game_expectations(
         raise SiteDataValidationError(
             f"{snapshot_id}: retrospective margin orientation is invalid"
         )
-    if expectations.get("historical_likelihood_sha256") != HISTORICAL_LIKELIHOOD_SHA256:
-        raise SiteDataValidationError(
-            f"{snapshot_id}: retrospective likelihood hash is invalid"
-        )
+    if expectations.get("historical_likelihood_sha256") != source_metadata.get("historical_likelihood_sha256"):
+        raise SiteDataValidationError(f"{snapshot_id}: retrospective likelihood hash mismatch")
     if expectations.get("conditioning") != RETROSPECTIVE_CONDITIONING:
         raise SiteDataValidationError(
             f"{snapshot_id}: retrospective conditioning is invalid"
@@ -1563,11 +1596,10 @@ def _validate_retrospective_game_expectations(
         raise SiteDataValidationError(
             f"{snapshot_id}: retrospective game count is invalid"
         )
-    _finite_number(
-        inference.get("runtime_seconds"),
-        "retrospective runtime",
-        snapshot_id,
-    )
+    if "runtime_seconds" in inference:
+        raise SiteDataValidationError(f"{snapshot_id}: retrospective runtime is nondeterministic")
+    if expectations.get("posterior_pmfs_sha256") != source_metadata.get("posterior_pmfs_sha256"):
+        raise SiteDataValidationError(f"{snapshot_id}: retrospective posterior PMF hash mismatch")
     axis = expectations.get("margin_axis")
     if not isinstance(axis, dict) or any(
         axis.get(field) != expected
@@ -2825,6 +2857,11 @@ def _validate_team_season_artifact(
             raise SiteDataValidationError(
                 f"{snapshot_id}: team-season provenance mismatch: {field}"
             )
+    for field in ("combined_source_available_at", "source_retrieved_at_contract"):
+        if field in source_metadata and artifact.get(field) != source_metadata[field]:
+            raise SiteDataValidationError(
+                f"{snapshot_id}: team-season provenance mismatch: {field}"
+            )
     if anchor_metadata is not None:
         for field in (
             "season", "snapshot_type", "requested_cutoff", "effective_cutoff",
@@ -2911,7 +2948,7 @@ def _validate_team_season_artifact(
                 raise SiteDataValidationError(f"{snapshot_id}: invalid site for game {game_id}")
             opponent_id = game.get("opponent_id")
             classification = game.get("opponent_classification")
-            if not isinstance(opponent_id, str) or not opponent_id or classification not in {"fbs", "fcs"} or (
+            if not isinstance(opponent_id, str) or not opponent_id or not isinstance(classification, str) or not classification or (
                 classification == "fbs"
             ) != (opponent_id in ranking_ids):
                 raise SiteDataValidationError(f"{snapshot_id}: invalid opponent classification for game {game_id}")
@@ -2955,9 +2992,23 @@ def _validate_team_season_artifact(
                 raise SiteDataValidationError(f"{snapshot_id}: completed game {game_id} lacks a result")
             if game_state in {"future", "unresolved", "cancelled"} and score is not None:
                 raise SiteDataValidationError(f"{snapshot_id}: {game_state} game {game_id} has a result")
+            source_available = source_metadata.get("combined_source_available_at", source_metadata.get("source_retrieved_at"))
+            cutoff = source_metadata.get("effective_cutoff")
+            known_unmodeled_score = (
+                score is not None
+                and game_state in {"completed", "out_of_scope"}
+                and source_metadata.get("snapshot_type") != "preseason"
+                and isinstance(cutoff, str)
+                and game_date <= datetime.fromisoformat(cutoff)
+                and schedule_source.get("sha256") == source_metadata.get("game_corpus_sha256")
+                and (
+                    source_metadata.get("source_mode") == "historical_frozen"
+                    or isinstance(source_available, str)
+                    and datetime.fromisoformat(source_available) <= datetime.fromisoformat(cutoff)
+                )
+            )
             if not known_by_snapshot and (
-                game.get("result") is not None
-                or game.get("score") is not None
+                (score is not None and not known_unmodeled_score)
                 or game.get("game_rating") is not None
                 or game.get("modeled")
             ):
@@ -3143,7 +3194,7 @@ def _validate_team_season_artifact(
         }
         for team_id, team in by_team.items()
     }
-    if retrospective_ids:
+    if isinstance(artifact.get("retrospective_game_expectations"), dict):
         adapted["retrospective_game_expectations"] = {
             **artifact["retrospective_game_expectations"],
             "artifact_kind": "retrospective_game_expectations_site_projection",

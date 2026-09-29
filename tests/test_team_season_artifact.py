@@ -530,8 +530,16 @@ def test_started_but_unincluded_game_stays_redacted(tmp_path: Path) -> None:
         assert not game["modeled"]
 
 
-def test_completed_lower_division_game_without_snapshot_evidence_stays_redacted(
-    tmp_path: Path,
+@pytest.mark.parametrize(
+    ("source_mode", "retrieved_at", "known"),
+    [
+        ("current_cached_cfbd", "2026-09-02T12:00:00+00:00", False),
+        ("current_cached_cfbd", "2026-08-31T12:00:00+00:00", True),
+        ("historical_frozen", None, True),
+    ],
+)
+def test_completed_lower_division_score_requires_available_source_but_not_model_membership(
+    tmp_path: Path, source_mode: str, retrieved_at: str | None, known: bool,
 ) -> None:
     root = _root(tmp_path)
     schedule_path = root / "data/processed/cfbd/games.csv"
@@ -567,7 +575,9 @@ def test_completed_lower_division_game_without_snapshot_evidence_stays_redacted(
             "snapshot_type": "weekly",
             "requested_cutoff": "2026-09-01T23:59:59+00:00",
             "effective_cutoff": "2026-09-01T23:59:59+00:00",
-            "source_retrieved_at": None,
+            "source_retrieved_at": retrieved_at,
+            "combined_source_available_at": retrieved_at,
+            "source_mode": source_mode,
             "source_retrieval_times": {},
             "source_response_hashes": {},
             "game_corpus_sha256": "historical-evidence-corpus",
@@ -583,11 +593,51 @@ def test_completed_lower_division_game_without_snapshot_evidence_stays_redacted(
     game = next(
         game for game in artifact["teams"]["1"]["games"] if game["game_id"] == "lower-division"
     )
-    assert game["game_state"] == "unresolved"
-    assert game["result"] is None
-    assert game["score"] is None
+    assert game["game_state"] == ("out_of_scope" if known else "unresolved")
+    assert game["result"] == ("W" if known else None)
+    assert game["score"] == ({"team": 31, "opponent": 7} if known else None)
     assert game["game_rating"] is None
+    assert game["retrospective_expectation_id"] is None
     assert not game["modeled"]
+
+
+def test_known_unmodeled_result_exports_with_local_time(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    schedule_path = root / "data/processed/cfbd/games.csv"
+    with schedule_path.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    lower = dict(rows[0])
+    lower.update({
+        "id": "known-lower-division", "homeId": "1", "homeTeam": "One",
+        "homeClassification": "fbs", "homePoints": "31",
+        "awayId": "99", "awayTeam": "Lower", "awayClassification": "ii",
+        "awayConference": "Division II", "awayPoints": "7",
+    })
+    _write(schedule_path, list(rows[0]), [*rows, lower])
+    snapshot = build_snapshot(
+        season=2026, cutoff=date(2026, 9, 1), prior_family="context",
+        snapshot_type="weekly", root=root,
+        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
+    )
+    config = root / "site/publish_config.json"
+    config.parent.mkdir(parents=True, exist_ok=True)
+    config.write_text(json.dumps({
+        "schema_version": "1.0",
+        "publication_slots": [{"id": "2026-09-01", "status": "official"}],
+        "snapshots": [{
+            "source": snapshot.directory.relative_to(root).as_posix(),
+            "display_label": "Test", "publication_slot": "2026-09-01",
+        }],
+    }))
+    build_site_data(root=root, config_path=config, output_directory=root / "site/data")
+    published = json.loads((root / "site/data/team-seasons" / f"{snapshot.snapshot_id}.json").read_text())
+    game = next(game for game in published["teams"]["1"]["games"] if game["game_id"] == "known-lower-division")
+    assert game["game_state"] == "out_of_scope"
+    assert game["result"] == "W"
+    assert game["score"] == {"team": 31, "opponent": 7}
+    assert game["modeled"] is False
+    assert game["retrospective_expectation_id"] is None
+    assert game["date_display_mode"] == "local_time"
 
 
 def test_validator_rejects_unincluded_completed_result(tmp_path: Path) -> None:

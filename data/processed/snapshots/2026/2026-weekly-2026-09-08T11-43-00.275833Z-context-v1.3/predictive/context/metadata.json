@@ -1,6 +1,7 @@
 {
   "backfill": true,
   "backfill_kind": "retrospective_prior_replay",
+  "combined_source_available_at": "2026-09-08T11:43:00.560832+00:00",
   "display_statistic": "expected_rank",
   "effective_cutoff": "2026-09-08T11:43:00.275833+00:00",
   "excluded_lower_division_games": 37,
@@ -130,6 +131,7 @@
   "fcs_population_source": "cfbd_full_season_schedule",
   "game_corpus_sha256": "4746d0ef804157c38136bafe67724261a3e113f8de47914c123ce93a263b32c3",
   "generation_timestamp": "2026-09-20T12:00:00+00:00",
+  "historical_likelihood_sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
   "historical_likelihood_version": "V1",
   "included_game_count": 172,
   "included_game_ids": [
@@ -444,6 +446,7 @@
     "max_iterations": 500,
     "tolerance": 1e-09
   },
+  "posterior_pmfs_sha256": "f9dd23f23d46914eff04872dfcb777f1241a5fbd050408265646cb565fc3b4ea",
   "posterior_rebuilt_from_prior": true,
   "presentation_schedule_game_count": 888,
   "presentation_schedule_source": {
@@ -495,6 +498,7 @@
     "fcs": "2026-09-08T11:43:00.560832+00:00"
   },
   "source_retrieved_at": "2026-09-08T11:43:00.275833+00:00",
+  "source_retrieved_at_contract": "legacy_first_response",
   "team_season_path": "team_seasons.json",
   "team_season_schema_version": "1.0",
   "valid": true

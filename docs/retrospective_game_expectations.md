@@ -28,7 +28,7 @@ records off-axis mass separately. Exact scalar summaries always come from the
 mixture, never the display bins.
 
 The artifact's `source_snapshot_id`, `included_game_ids`, cutoff, likelihood
-version and pinned SHA-256, the machine-readable
+version and pinned SHA-256, a canonical `posterior_pmfs_sha256`, the machine-readable
 `conditioning: selected_snapshot_full_posterior_including_game`, inference
 implementation, and
 per-record provenance bind it to the
@@ -42,7 +42,20 @@ uses the paired Context artifact and preserves its Context source provenance.
 
 Retained publications can be refreshed with
 `uv run python scripts/backfill_retrospective_game_expectations.py`. This reads
-frozen included-game rows, verifies the saved prior hash and pinned Historical
+frozen included-game rows, verifies the saved prior and posterior PMF hashes,
+validates team and rank coverage and PMF normalization, checks the pinned Historical
 Likelihood V1 bytes, and uses the stored posterior PMFs. It does not regenerate
 posterior beliefs or rankings. The script
 also refreshes paired Performance artifacts before static site export.
+
+The serialized hindsight artifact excludes wall-clock runtime so repeated
+forced backfills produce the same bytes. Runtime is printed by the backfill
+command. Retained snapshots preserve their original `source_retrieved_at`
+value. Where older FBS and FCS responses arrived at different times, the
+metadata marks that field `legacy_first_response` and records the later
+availability as `combined_source_available_at`. Their historical effective
+cutoff and included evidence remain frozen. New snapshots use the later
+response for both source availability and cutoff clamping. Two early live
+publications have no constituent retrieval times; they carry
+`legacy_unverified_availability` and leave combined availability unset.
+Their included games remain the only durable result evidence.

@@ -733,9 +733,16 @@ def _validate_team_season_artifact(
                 raise PublicationDataError(
                     f"{metadata.snapshot_id}: future prediction reference is invalid"
                 )
+            known_unmodeled_score = (
+                game.get("game_state") == "out_of_scope"
+                and game.get("score") is not None
+                and game.get("result") is not None
+                and cutoff is not None
+                and game_date is not None
+                and game_date <= cutoff
+            )
             if game_id not in included_ids and (
-                game.get("result") is not None
-                or game.get("score") is not None
+                ((game.get("result") is not None or game.get("score") is not None) and not known_unmodeled_score)
                 or game.get("game_rating") is not None
                 or game.get("modeled") is True
             ):
@@ -912,9 +919,15 @@ def _load_weekly_artifact(
                 raise PublicationDataError(
                     f"{snapshot_id}: weekly game exposes evidence after the cutoff"
                 )
+            known_unmodeled_score = (
+                game.state == "out_of_scope"
+                and game.score is not None
+                and game.date is not None
+                and metadata.effective_cutoff is not None
+                and game.date <= metadata.effective_cutoff
+            )
             if game_id not in included_game_ids and (
-                game.state == "completed"
-                or game.score is not None
+                ((game.state == "completed" or game.score is not None) and not known_unmodeled_score)
                 or game.home_performance is not None
                 or game.away_performance is not None
             ):

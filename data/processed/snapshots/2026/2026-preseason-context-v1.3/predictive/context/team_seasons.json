@@ -1,6 +1,7 @@
 {
   "anchor_family": "context",
   "artifact_kind": "team_season",
+  "combined_source_available_at": null,
   "effective_cutoff": null,
   "future_margin_axis": {
     "bins": 40,
@@ -66668,8 +66669,7 @@
     "included_game_ids": [],
     "inference": {
       "games_evaluated": 0,
-      "implementation": "selected_snapshot_full_posterior_pmfs",
-      "runtime_seconds": 3.0999945010989904e-06
+      "implementation": "selected_snapshot_full_posterior_pmfs"
     },
     "interpretation": "This retrospective distribution compares the observed result with what GippyRank expects given everything known at the selected snapshot, including this game. It is not a prediction made before the game.",
     "margin_axis": {
@@ -66687,6 +66687,7 @@
       "unit": "points"
     },
     "margin_orientation": "home_minus_away",
+    "posterior_pmfs_sha256": "0f7ae6d964979380c33ea3bc8bbe22e00363b3c3364a8758af5715ccd5b73550",
     "retrospective_game_expectations_version": "2.0",
     "season": 2026,
     "snapshot_type": "preseason",
@@ -122200,6 +122201,7 @@
   "source_response_hashes": {},
   "source_retrieval_times": {},
   "source_retrieved_at": null,
+  "source_retrieved_at_contract": "combined_latest",
   "teams": {
     "103": {
       "conference": "",

@@ -112,15 +112,18 @@ test("uses History expectations, predictions, and checkpoint sequence for the se
   await expect(page.locator(".schedule-checkpoint").last()).toContainText("Week 5 update");
 });
 
-test("keeps an unmodeled completed score when its expectation is unavailable", async ({ page }) => {
+test("shows a producer-generated unmodeled completed score without an expectation", async ({ page }) => {
   const artifactPath = `site/data/team-seasons/${current}.json`;
   const artifact = JSON.parse(fs.readFileSync(path.join(__dirname, "../..", artifactPath), "utf8"));
-  delete artifact.retrospective_game_expectations.games["401856700"];
+  const generatedGame = JSON.parse(fs.readFileSync(path.join(__dirname, "fixtures/known-unmodeled-completed-game.json"), "utf8"));
+  expect(generatedGame.date_display_mode).toBe("local_time");
+  artifact.teams["61"].games.push(generatedGame);
   await page.route(`**/data/team-seasons/${current}.json`, (route) => route.fulfill({ json: artifact }));
   await loadTeam(page, "61");
-  const game = page.locator('.game-card[data-game-id="401856700"]');
-  await expect(game).toContainText("W 41–13");
-  await expect(game).toContainText("No retrospective expectation available");
+  const game = page.locator('.game-card[data-game-id="known-lower-division"]');
+  await expect(game).toContainText("W 31–7");
+  await expect(game).toHaveClass(/game-card-out_of_scope/);
+  await expect(game.locator(".game-retrospective")).toHaveCount(0);
   await expect(page.locator('.game-card[data-game-id="401856686"] .game-retrospective')).toBeVisible();
 });
 

@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from time import perf_counter
 from typing import Any
 
 from gippyrank.methodology import (
-    HISTORICAL_LIKELIHOOD_SHA256,
     HISTORICAL_LIKELIHOOD_VERSION,
     RETROSPECTIVE_CONDITIONING,
     RETROSPECTIVE_GAME_EXPECTATIONS_VERSION,
@@ -18,10 +16,10 @@ from gippyrank.posterior.predictive import (
     FUTURE_MARGIN_DISPLAY_MAX,
     FUTURE_MARGIN_DISPLAY_MIN,
     ScheduledGame,
-    margin_display_distribution,
+    _margin_display_distribution_from_components,
+    _predict_game_from_components,
     mixture_cdf,
     posterior_prediction_team,
-    predict_game,
     predictive_components,
 )
 
@@ -55,7 +53,7 @@ def _expectation_record(
     away = posterior_prediction_team(teams_by_id[game.away_id], posterior.pmfs)
     locations, weights = predictive_components(scheduled, home, away, likelihood)
     components = (locations, weights)
-    summary = predict_game(scheduled, home, away, likelihood, components=components)
+    summary = _predict_game_from_components(likelihood, components)
     actual_home_margin = game.home_points - game.away_points
     lower_tail = min(
         max(
@@ -83,8 +81,8 @@ def _expectation_record(
         "observed_margin_percentile": lower_tail,
         "lower_tail_probability": lower_tail,
         "upper_tail_probability": min(max(1.0 - lower_tail, 0.0), 1.0),
-        "display_distribution": margin_display_distribution(
-            scheduled, home, away, likelihood, components=components
+        "display_distribution": _margin_display_distribution_from_components(
+            likelihood, components
         ),
         **summary.as_dict(),
     }
@@ -97,6 +95,7 @@ def build_retrospective_game_expectations(
     games: Sequence[Game],
     posterior: PosteriorResult,
     likelihood: LikelihoodV1,
+    likelihood_sha256: str | None = None,
 ) -> dict[str, Any]:
     """Summarize completed games using already-computed full posterior PMFs."""
     source_snapshot_id = str(metadata["snapshot_id"])
@@ -115,7 +114,6 @@ def build_retrospective_game_expectations(
         raise ValueError(
             "retrospective expectations require a converged production posterior"
         )
-    started = perf_counter()
     records = {
         game.game_id: _expectation_record(
             game,
@@ -137,14 +135,14 @@ def build_retrospective_game_expectations(
         "historical_likelihood_version": metadata.get(
             "historical_likelihood_version", HISTORICAL_LIKELIHOOD_VERSION
         ),
-        "historical_likelihood_sha256": HISTORICAL_LIKELIHOOD_SHA256,
+        "historical_likelihood_sha256": likelihood_sha256,
+        "posterior_pmfs_sha256": metadata.get("posterior_pmfs_sha256"),
         "conditioning": RETROSPECTIVE_CONDITIONING,
         "margin_orientation": "home_minus_away",
         "interpretation": RETROSPECTIVE_INTERPRETATION,
         "inference": {
             "implementation": RETROSPECTIVE_INFERENCE_IMPLEMENTATION,
             "games_evaluated": len(records),
-            "runtime_seconds": perf_counter() - started,
         },
         "margin_axis": {
             "min_margin": FUTURE_MARGIN_DISPLAY_MIN,

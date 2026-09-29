@@ -91,7 +91,7 @@ class PublicationMetadata(PublicModel):
 class TeamIdentity(PublicModel):
     team_id: str
     team_name: str
-    subdivision: Subdivision
+    subdivision: str = Field(min_length=1)
     conference: str
 
 

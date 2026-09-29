@@ -5,10 +5,7 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 
-from gippyrank.methodology import (
-    HISTORICAL_LIKELIHOOD_SHA256,
-    RETROSPECTIVE_CONDITIONING,
-)
+from gippyrank.methodology import RETROSPECTIVE_CONDITIONING
 from gippyrank.posterior import predictive, retrospective
 from gippyrank.posterior.engine import Game, LikelihoodV1, Team, infer_posterior
 from gippyrank.posterior.predictive import (
@@ -87,7 +84,9 @@ def test_completed_game_uses_the_selected_full_posterior() -> None:
         == "selected_snapshot_full_posterior_pmfs"
     )
     assert artifact["inference"]["games_evaluated"] == 2
-    assert artifact["historical_likelihood_sha256"] == HISTORICAL_LIKELIHOOD_SHA256
+    assert artifact["historical_likelihood_sha256"] is None
+    assert artifact["posterior_pmfs_sha256"] is None
+    assert "runtime_seconds" not in artifact["inference"]
     assert artifact["conditioning"] == RETROSPECTIVE_CONDITIONING
     assert "excluded_evidence" not in artifact["inference"]
     for team_id, pmf in before.items():

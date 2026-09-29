@@ -217,28 +217,31 @@ def _schedule_state(row: dict[str, str], metadata: dict[str, Any]) -> str:
         return "unresolved"
     if when.astimezone(UTC).date() > cutoff.astimezone(UTC).date():
         return "future"
-    included = str(row.get("id", "")) in {
-        str(game_id) for game_id in metadata.get("included_game_ids", [])
-    }
     if _bool(row.get("completed")):
-        home_points = _int_or_none(row.get("homePoints"))
-        away_points = _int_or_none(row.get("awayPoints"))
-        if home_points is not None and away_points is not None:
-            retrieved = _schedule_datetime(metadata.get("source_retrieved_at"))
-            # Frozen historical schedules can retain out-of-model results.
-            # A mutable schedule needs retrieval evidence by the cutoff.
-            if included or (
-                when <= cutoff
-                and (
-                    (retrieved is not None and retrieved <= cutoff)
-                    or metadata.get("source_mode") == "historical_frozen"
-                )
-            ):
-                return "completed"
-            return "unresolved"
+        return "completed" if _result_available(row, metadata) else "unresolved"
     if _future_at_snapshot(row, metadata):
         return "future"
     return "unresolved"
+
+
+def _result_available(row: dict[str, str], metadata: dict[str, Any]) -> bool:
+    """Whether the score is fixed by the selected snapshot's source boundary."""
+    if metadata.get("snapshot_type") == "preseason" or not _bool(row.get("completed")):
+        return False
+    if _int_or_none(row.get("homePoints")) is None or _int_or_none(row.get("awayPoints")) is None:
+        return False
+    when = _schedule_datetime(row.get("startDate"))
+    cutoff = _schedule_datetime(metadata.get("effective_cutoff"))
+    if when is None or cutoff is None or when > cutoff:
+        return False
+    if str(row.get("id", "")) in {str(value) for value in metadata.get("included_game_ids", [])}:
+        return True
+    retrieved = _schedule_datetime(
+        metadata.get("combined_source_available_at", metadata.get("source_retrieved_at"))
+    )
+    return metadata.get("source_mode") == "historical_frozen" or (
+        retrieved is not None and retrieved <= cutoff
+    )
 
 
 def _prediction_source(metadata: dict[str, Any]) -> str:
@@ -343,6 +346,7 @@ def build_team_season_artifact(
     included_rows: list[dict[str, str]],
     posterior: PosteriorResult,
     likelihood: LikelihoodV1 | None,
+    likelihood_sha256: str | None = None,
     prediction_source: str | None = None,
     season_simulation_config: SeasonSimulationConfig | None = None,
     schedule_rows: list[dict[str, str]] | None = None,
@@ -384,6 +388,7 @@ def build_team_season_artifact(
             games=games,
             posterior=posterior,
             likelihood=likelihood,
+            likelihood_sha256=likelihood_sha256,
         )
 
     performance_reference = [
@@ -586,17 +591,15 @@ def build_team_season_artifact(
             and eligible_matchup
             and game_id in game_by_id
         )
-        # The processed schedule is current-corpus data and may contain a
-        # final score that was unavailable at this snapshot cutoff.  Only an
-        # explicitly included game is durable snapshot evidence; fail closed
-        # for unsupported games rather than leaking a later lower-division
-        # result into an older artifact.
-        reveal_completed_result = schedule_state == "completed" and game_id in included_ids
-        display_state = (
-            schedule_state
-            if reveal_completed_result or schedule_state != "completed"
-            else "unresolved"
-        )
+        # A completed score can be known at the cutoff without belonging to
+        # the model evidence (for example, a lower-division opponent).
+        reveal_completed_result = schedule_state in {"completed", "out_of_scope"} and _result_available(row, metadata)
+        if reveal_completed_result and not eligible_matchup:
+            display_state = "out_of_scope"
+        elif schedule_state == "completed" and not reveal_completed_result:
+            display_state = "unresolved"
+        else:
+            display_state = schedule_state
         for focal_id, opponent_id, focal_name_field, opponent_name_field, opponent_class_field, opponent_conf_field in focal_sides:
             if focal_id not in fbs_teams:
                 continue
@@ -680,6 +683,8 @@ def build_team_season_artifact(
         "requested_cutoff": metadata.get("requested_cutoff"),
         "effective_cutoff": metadata.get("effective_cutoff"),
         "source_retrieved_at": metadata.get("source_retrieved_at"),
+        "combined_source_available_at": metadata.get("combined_source_available_at"),
+        "source_retrieved_at_contract": metadata.get("source_retrieved_at_contract"),
         "source_retrieval_times": metadata.get("source_retrieval_times"),
         "source_response_hashes": metadata.get("source_response_hashes", {}),
         "game_corpus_sha256": metadata.get("game_corpus_sha256"),
