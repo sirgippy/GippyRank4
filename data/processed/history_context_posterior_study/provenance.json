@@ -1,0 +1,38 @@
+{
+  "models": {
+    "context": "1.3 frozen research P3 fitted through 2021",
+    "history": "1.1",
+    "likelihood": "Historical Likelihood V1"
+  },
+  "inference": {
+    "max_iterations": 100,
+    "tolerance": 1e-06,
+    "damping": 0.35
+  },
+  "source_sha256": {
+    "data/processed/preseason/context_v1_3_candidate/predictions.csv": "93772f8a86a083de7c7394531a664842cedf3a61a758dff2f86438c40e16e2c2",
+    "data/processed/preseason/context_v1_3_candidate/context_coverage.csv": "79edb50fd77266256b6cfcd34991e722189d8f13c8c1472ae6b2db1b0b3479fc",
+    "data/processed/preseason/history/predictions.csv": "474f5587b8db44847bc375931e4f4937e7e8029077d5814af3f6b6e55056a706",
+    "data/processed/posterior/historical_likelihood_v1.json": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+    "data/processed/modeling/team_season_rank_distributions.csv": "03e4e372017aedb45392ff7d790cea25f461db9b6dc846514c762ff46e2cab00",
+    "reconstructed historical games.csv": "c4432e53e6f759ac5642bcf27ea84a02b70ede7f155c55877594a971213b8b11"
+  },
+  "raw_game_source_sha256": {
+    "2022.json": "3b4d9d353faa8ca9312534ded0747bdaa1cdcca21e89fcff1458980ab9f00747",
+    "2022-fcs.json": "a20030838476f73d1f3aea63bba57ed1ecfa03f99e95cee5c2a780deeee05816",
+    "2023.json": "417fb8191bec11e20fb2370e5510a2ff8a85cc67f07ec4371e873a935f9af35f",
+    "2023-fcs.json": "df5bb461fe8f3e302eb1d5f52896b509d7f5660364d3d43643c5c540e5476817",
+    "2024.json": "9aeccada4e63f4ddf22d676eb55dbded71fd9bdb3ac07202ee44ed8f47d93f93",
+    "2024-fcs.json": "3cb6327c61d807fd4b8dfe669f0905694afa67164770ab2e997773ea2aaa72c5",
+    "2025.json": "6312d8406be09dee0064069668fc40879dd0736ed3e49946c6c72192e6a0e4fc",
+    "2025-fcs.json": "38329f854c0df38d17b34d5f7841753d6638d7377592dcf743cb4e27cbd9d32f"
+  },
+  "historical_seasons": [
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "historical_cutoffs": "exact dates from retained rolling posterior backtest",
+  "current_2026": "retained matched published snapshots; descriptive only, no final-rank target"
+}
