@@ -285,6 +285,12 @@ def _historical_zero_repairs(
                 }
             )
             for player in player_rows:
+                if player["d5_resolution_category"] != D5_ZERO:
+                    continue
+                if _csv_float(player["d5_feature_value"]) != 0.0:
+                    raise ValueError(
+                        f"legitimate-zero player has nonzero D5 value for {key}"
+                    )
                 contributors.append(
                     {
                         "season": key[0],
@@ -801,7 +807,7 @@ def _render_report(
         "",
         "- The player identity key now normalizes Unicode compatibility forms and punctuation variants while retaining suffixes and diacritics; multiple candidates still fail closed.",
         "- Stable portal IDs are preferred. A conflicting stable ID blocks name fallback for both offensive and defensive joins.",
-        "- The Context 1.3 research materializer consumes `zero_contributors.csv` and checks each portal index against season, normalized player and team names, transfer date, and destination team ID before passing it to the aggregator. The resulting player identity prefers a portal stable ID; duplicate fallback keys and ambiguous usage matches fail closed. Explicit zero evidence cannot override positive usage, and unknown applicability is not inferred as zero.",
+        "- `zero_contributors.csv` contains only D5 legitimate-zero players; resolved positive usage contributions continue through the normal usage join. The Context 1.3 research materializer checks each evidence index against season, normalized player and team names, transfer date, and destination team ID before passing it to the aggregator. Stable portal IDs take precedence, duplicate fallback keys and ambiguous usage matches fail closed, and explicit zero evidence cannot override positive usage.",
         "- No Context 1.3 coefficients, feature-selection behavior, or published ranking files were regenerated.",
         "- #141 and #142 artifacts are read-only inputs; all new artifacts are under `data/processed/transfer_data_repair/`.",
         "",

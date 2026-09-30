@@ -91,7 +91,7 @@ def test_postrepair_audit_preserves_baselines_and_reconciles_coverage(
     assert written_summary["issue"] == 148
 
 
-def test_remaining_failure_counts_follow_the_retained_player_audits(
+def test_remaining_failure_counts_follow_the_retained_audit_inputs(
     tmp_path: Path, monkeypatch
 ) -> None:
     monkeypatch.setattr(
@@ -118,10 +118,6 @@ def test_remaining_failure_counts_follow_the_retained_player_audits(
     assert counts["offensive_applicability_unproven"] == 31
     assert teams == 4
 
-
-def test_current_offensive_failure_counts_follow_player_audit_rows(
-    tmp_path: Path, monkeypatch
-) -> None:
     audit_path = tmp_path / "offensive_player_audit.csv"
     with audit_path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(
