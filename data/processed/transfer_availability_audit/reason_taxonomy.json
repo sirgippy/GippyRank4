@@ -1,0 +1,53 @@
+{
+  "reason_codes": {
+    "db_ambiguous_player_join": {
+      "definition": "More than one prior roster or stats player matches the portal identity.",
+      "repair_class": "candidate_repair"
+    },
+    "db_impact_source_unavailable": {
+      "definition": "The player joined but a required prior team-game or impact source was unavailable.",
+      "repair_class": "unresolved"
+    },
+    "db_player_join_unresolved": {
+      "definition": "The prior source-team roster is covered, but this portal player did not join to it.",
+      "repair_class": "candidate_repair"
+    },
+    "db_position_conflict": {
+      "definition": "The matched prior roster position group differs from the portal DB group.",
+      "repair_class": "unresolved"
+    },
+    "db_source_team_uncovered": {
+      "definition": "The prior roster has no matching source-team row; source absence and team-name mismatch cannot be separated with committed payloads.",
+      "repair_class": "unresolved"
+    },
+    "historical_aggregate_null": {
+      "definition": "The retrospective research aggregate has no numeric offensive value despite a covered portal season.",
+      "repair_class": "candidate_repair"
+    },
+    "offense_ambiguous_player_join": {
+      "definition": "Historical player audit found multiple eligible prior usage matches.",
+      "repair_class": "candidate_repair"
+    },
+    "offense_applicability_unproven": {
+      "definition": "Prior offensive participation cannot be determined from the audited usage and stats evidence.",
+      "repair_class": "unresolved"
+    },
+    "offense_source_team_mismatch": {
+      "definition": "Historical player audit found a prior usage row under another source team.",
+      "repair_class": "candidate_repair"
+    },
+    "offense_usage_join_unresolved": {
+      "definition": "An applicable offensive transfer has no resolved prior usage; the 2026 team aggregate does not retain the player-level join cause.",
+      "repair_class": "unresolved"
+    },
+    "offense_usage_row_absent": {
+      "definition": "Historical player audit found applicable participation but no prior usage row.",
+      "repair_class": "unresolved"
+    }
+  },
+  "repair_class_definitions": {
+    "candidate_repair": "A pipeline or identity-control repair is plausible from the committed evidence, subject to source confirmation.",
+    "not_applicable": "No gap observed.",
+    "unresolved": "The committed derived artifacts cannot establish whether source data or a safe repair exists."
+  }
+}
