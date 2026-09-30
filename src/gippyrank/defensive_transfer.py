@@ -658,10 +658,12 @@ def audit_transfer_records(
             else "after_or_missing_date",
             "in_model_relevant_population": in_scope,
             "defensive_candidate": bool(in_scope and semantics == "defensive"),
+            "portal_player_id": record.player_id,
             "identity_join_method": "none",
             "identity_resolution_detail": None,
             "roster_candidate_count": 0,
             "player_season_candidate_count": 0,
+            "impact_join_method": "none",
             "identity_status": "not_in_scope",
             "experience_status": "not_in_scope",
             "impact_status": "not_in_scope",
@@ -790,16 +792,34 @@ def audit_transfer_records(
                 "prior_player_id": roster_match.player_id,
             }
         )
-        if identity_method == "stable_player_id_source_team" and record.player_id:
-            stats_matches = player_id_idx.get(
-                (prior_season, source_team, record.player_id), []
-            )
-        else:
+        # The roster row is the bridge between portal identity and the
+        # provider's player-season/game records. Prefer that stable ID even
+        # when the portal endpoint has no player ID or the portal ID did not
+        # resolve to a roster row. Fall back to the exact normalized name key
+        # only when the ID index has no record; never choose among multiple
+        # candidates.
+        stable_player_id = (
+            record.player_id
+            if identity_method == "stable_player_id_source_team" and record.player_id
+            else roster_match.player_id
+        )
+        stats_matches = player_id_idx.get(
+            (prior_season, source_team, stable_player_id), []
+        )
+        stats_join_method = "stable_player_id_source_team" if stats_matches else "none"
+        if not stats_matches:
             stats_matches = player_idx.get(
-                (prior_season, source_team, normalize_player_name(record.player_name)),
+                (
+                    prior_season,
+                    source_team,
+                    normalize_player_name(record.player_name),
+                ),
                 [],
             )
+            if stats_matches:
+                stats_join_method = "normalized_name_source_team"
         row["player_season_candidate_count"] = len(stats_matches)
+        row["impact_join_method"] = stats_join_method
         if prior_group != row["portal_position_group"]:
             if len(stats_matches) == 1:
                 player = stats_matches[0]

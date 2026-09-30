@@ -27,7 +27,7 @@ from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime
-from math import isfinite
+from math import fsum, isfinite
 from pathlib import Path
 from typing import Any
 
@@ -91,6 +91,15 @@ DB_POSITIONS = frozenset({"CB", "DB", "S", "FS", "SS", "NB"})
 DB_COMPONENTS = ("tackles", "passes_defended", "interceptions")
 DB_RESOLVED_STATUSES = frozenset(
     {"resolved", "zero_recorded_defensive_box_score_games"}
+)
+DB_COVERAGE_COLUMNS = (
+    "incoming_db_count",
+    "observed_db_impact_count",
+    "observed_db_impact_sum",
+    "missing_db_impact_count",
+    "db_impact_coverage_fraction",
+    "db_impact_coverage_status",
+    "db_impact_source_season",
 )
 
 MODEL_FEATURE_COLUMNS = (
@@ -1236,6 +1245,50 @@ def _safe_float(value: Any) -> float | None:
     return parsed if isfinite(parsed) else None
 
 
+def summarize_db_impact_coverage(
+    incoming: Iterable[Mapping[str, Any]], *, source_season: int
+) -> Row:
+    """Summarize observed DB impact without collapsing missing records to zero.
+
+    The returned observed sum contains only player records with a resolved
+    numeric impact. Model-facing Context 1.3 fields are assembled separately
+    and retain their existing all-or-unavailable contract.
+    """
+    records = list(incoming)
+    observed = [
+        row
+        for row in records
+        if row.get("impact_status") in DB_RESOLVED_STATUSES
+        and _safe_float(row.get("prior_defensive_impact")) is not None
+    ]
+    values = [_safe_float(row.get("prior_defensive_impact")) for row in observed]
+    observed_sum = float(fsum(value for value in values if value is not None))
+    incoming_count = len(records)
+    observed_count = len(observed)
+    missing_count = incoming_count - observed_count
+    if incoming_count == 0:
+        status = "no_incoming_db_transfers"
+        coverage_fraction = None
+    elif observed_count == incoming_count:
+        status = "complete"
+        coverage_fraction = 1.0
+    elif observed_count == 0:
+        status = "no_observed_db_impact"
+        coverage_fraction = 0.0
+    else:
+        status = "partial"
+        coverage_fraction = observed_count / incoming_count
+    return {
+        "incoming_db_count": incoming_count,
+        "observed_db_impact_count": observed_count,
+        "observed_db_impact_sum": observed_sum,
+        "missing_db_impact_count": missing_count,
+        "db_impact_coverage_fraction": coverage_fraction,
+        "db_impact_coverage_status": status,
+        "db_impact_source_season": source_season,
+    }
+
+
 def _offensive_feature_rows(
     *,
     target_season: int,
@@ -1458,6 +1511,9 @@ def _db_feature_rows(
             and row["prior_defensive_impact"] is not None
         ]
         unresolved = [row for row in incoming if row not in resolved]
+        coverage = summarize_db_impact_coverage(
+            incoming, source_season=target_season - 1
+        )
         if not incoming:
             impact = 0.0
             available = 1
@@ -1502,6 +1558,7 @@ def _db_feature_rows(
                 if available
                 else "unavailable_unresolved_db_transfer"
             ),
+            **coverage,
         }
         contributors = [
             {
@@ -1563,6 +1620,18 @@ def _db_feature_rows(
                 item for item in contributors if not item["included"]
             ],
         }
+        provenance[key_prefix + "|incoming_db_impact_coverage"] = {
+            "season": target_season,
+            "source_season": target_season - 1,
+            "destination_team_id": team_id,
+            "destination_team_name": team.get("team_name"),
+            "feature": "incoming_db_impact_coverage",
+            **coverage,
+            "source_snapshot_sha256": sorted(
+                (*source_hashes.get("portal", ()), *source_hashes.get("defense", ()))
+            ),
+            "contributors": contributors,
+        }
     quality = {
         "incoming_db_transfers": sum(
             row["audit_incoming_db_transfers"] for row in by_team.values()
@@ -1590,6 +1659,17 @@ def _db_feature_rows(
             for row in player_rows
             if row.get("in_model_relevant_population")
         ),
+        "db_coverage_status_counts": {
+            status: sum(
+                row["db_impact_coverage_status"] == status for row in by_team.values()
+            )
+            for status in (
+                "complete",
+                "partial",
+                "no_observed_db_impact",
+                "no_incoming_db_transfers",
+            )
+        },
     }
     return by_team, quality, provenance
 
@@ -1715,6 +1795,8 @@ def _load_target_inputs(
                 stats_snapshot.sha256,
             ],
             "defense": [item.sha256 for item in (*roster_snapshots, *game_snapshots)],
+            "roster": [item.sha256 for item in roster_snapshots],
+            "games_players": [item.sha256 for item in game_snapshots],
             "portal": [portal_snapshot.sha256],
         },
     }
@@ -1845,6 +1927,16 @@ def derive_preseason_transfer_features(
                     "raw_player_name": raw.player_name,
                     "raw_origin": raw.origin,
                     "raw_destination": raw.destination,
+                    "source_season": season - 1,
+                    "portal_snapshot_sha256": ";".join(
+                        inputs["source_hashes"].get("portal", ())
+                    ),
+                    "roster_snapshot_sha256": ";".join(
+                        inputs["source_hashes"].get("roster", ())
+                    ),
+                    "games_players_snapshot_sha256": ";".join(
+                        inputs["source_hashes"].get("games_players", ())
+                    ),
                 }
             )
             all_player_rows.append(enriched)
@@ -2054,6 +2146,7 @@ def source_inventory() -> list[Row]:
 __all__ = [
     "CANONICAL_FEATURE_COLUMNS",
     "DB_COMPONENTS",
+    "DB_COVERAGE_COLUMNS",
     "DB_POSITIONS",
     "MANIFEST_VERSION",
     "MODEL_FEATURE_COLUMNS",
@@ -2072,6 +2165,7 @@ __all__ = [
     "read_team_aliases",
     "required_snapshot_specs",
     "source_inventory",
+    "summarize_db_impact_coverage",
     "validate_research_parity",
     "write_immutable_snapshot",
     "write_raw_snapshot",

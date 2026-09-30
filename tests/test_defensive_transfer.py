@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import date
 
 import pytest
@@ -290,6 +291,88 @@ def test_audit_distinguishes_zero_identity_failure_and_non_defensive() -> None:
     assert beta["incoming_defensive_transfers"] == 3
     assert beta["feature_coverage_status"] == "partial"
     assert beta["transfer_in_prior_defensive_experience_sum"] is None
+
+
+def test_roster_player_id_resolves_stats_when_player_name_differs() -> None:
+    game_players = parse_games_players_payload(_game_payload(), season=2021)
+    players = add_defensive_impact(
+        aggregate_player_seasons(
+            game_players, _roster(), team_game_keys(_game_payload(), season=2021)
+        )
+    )
+    players = [
+        replace(row, player_name="Provider Stats Alias")
+        if row.player_id == "1"
+        else row
+        for row in players
+    ]
+    record = parse_transfer_payload(
+        [
+            {
+                "season": 2022,
+                "firstName": "A",
+                "lastName": "Defender",
+                "origin": "Alpha",
+                "destination": "Beta",
+                "position": "DE",
+                "transferDate": "2022-08-01",
+            }
+        ],
+        season=2022,
+    )[0]
+    result = audit_transfer_records(
+        [record],
+        _roster(),
+        players,
+        [{"season": "2022", "subdivision": "fbs", "team_id": "2", "team_name": "Beta"}],
+        portal_seasons={2022},
+        defensive_seasons={2021},
+        team_coverage={(2021, "alpha"), (2021, "beta")},
+        cutoff=date(2025, 8, 15),
+    )
+    row = result["player_rows"][0]
+    assert row["identity_status"] == "resolved"
+    assert row["impact_status"] == "resolved"
+    assert row["prior_player_id"] == "1"
+    assert row["impact_join_method"] == "stable_player_id_source_team"
+
+
+def test_ambiguous_stats_under_roster_id_fail_closed() -> None:
+    game_players = parse_games_players_payload(_game_payload(), season=2021)
+    players = add_defensive_impact(
+        aggregate_player_seasons(
+            game_players, _roster(), team_game_keys(_game_payload(), season=2021)
+        )
+    )
+    duplicate = next(row for row in players if row.player_id == "1")
+    players.append(duplicate)
+    record = parse_transfer_payload(
+        [
+            {
+                "season": 2022,
+                "firstName": "A",
+                "lastName": "Defender",
+                "origin": "Alpha",
+                "destination": "Beta",
+                "position": "DE",
+                "transferDate": "2022-08-01",
+            }
+        ],
+        season=2022,
+    )[0]
+    result = audit_transfer_records(
+        [record],
+        _roster(),
+        players,
+        [{"season": "2022", "subdivision": "fbs", "team_id": "2", "team_name": "Beta"}],
+        portal_seasons={2022},
+        defensive_seasons={2021},
+        team_coverage={(2021, "alpha"), (2021, "beta")},
+        cutoff=date(2025, 8, 15),
+    )
+    row = result["player_rows"][0]
+    assert row["identity_status"] == "ambiguous"
+    assert row["impact_status"] == "ambiguous"
 
 
 def test_distribution_statistics_report_missing_values() -> None:

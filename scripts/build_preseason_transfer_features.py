@@ -17,6 +17,7 @@ from typing import Any
 
 from gippyrank.preseason_transfer import (
     CANONICAL_FEATURE_COLUMNS,
+    DB_COVERAGE_COLUMNS,
     MANIFEST_VERSION,
     MODEL_FEATURE_COLUMNS,
     derive_preseason_transfer_features,
@@ -78,7 +79,7 @@ def _render_report(result: Mapping[str, Any]) -> str:
         "",
         "The DB numeric value is neutral-imputed to zero when a known incoming DB transfer is unresolved; `transfer_in_prior_defensive_impact_db_available` remains zero in that case. A season with no incoming DB transfers is a natural zero with availability one.",
         "",
-        "The diagnostic output also records `incoming_db_count`, `observed_db_impact_count`, and `observed_db_impact_sum`. These preserve the resolved player contributions and do not change the three model-facing fields.",
+        "The diagnostic output also records `incoming_db_count`, `observed_db_impact_count`, `observed_db_impact_sum`, missing-count, coverage-fraction, status, source-season, and per-player provenance fields. These describe observed evidence only; Context 1.3 continues to consume only the three model-facing fields listed above.",
         "",
         "## Data-quality summary",
         "",
@@ -141,7 +142,9 @@ def run(
         required_seasons=seasons,
     )
     feature_fields = list(CANONICAL_FEATURE_COLUMNS) + [
-        field for field in result["features"][0] if field.startswith("audit_")
+        field
+        for field in result["features"][0]
+        if field.startswith("audit_") or field in DB_COVERAGE_COLUMNS
     ]
     _write_csv(
         output / "preseason_transfer_features.csv",

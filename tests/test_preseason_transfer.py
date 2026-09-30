@@ -14,6 +14,7 @@ from gippyrank.preseason_transfer import (
     derive_preseason_transfer_features,
     load_snapshot_manifest,
     merge_preseason_transfer_features,
+    summarize_db_impact_coverage,
     validate_research_parity,
     write_immutable_snapshot,
     write_snapshot_manifest,
@@ -287,6 +288,19 @@ def test_derive_features_is_cutoff_safe_and_fail_closed(tmp_path: Path) -> None:
     assert beta["missing_db_impact_count"] == 1
     assert beta["db_impact_coverage_fraction"] == pytest.approx(0.5)
     assert beta["db_impact_coverage_status"] == "partial"
+    assert beta["db_impact_source_season"] == 2021
+    bob = next(
+        row for row in result["player_audit"] if row["player_name"] == "Bob Defender"
+    )
+    assert beta["observed_db_impact_sum"] == pytest.approx(
+        float(bob["prior_defensive_impact"])
+    )
+    assert bob["prior_player_id"] == "db-1"
+    assert bob["impact_join_method"] == "stable_player_id_source_team"
+    assert bob["source_season"] == 2021
+    assert bob["portal_snapshot_sha256"]
+    assert bob["roster_snapshot_sha256"]
+    assert bob["games_players_snapshot_sha256"]
     assert beta["observed_db_impact_sum"] == pytest.approx(
         result["provenance"]["2022|b|observed_db_impact_sum"]["value"]
     )
@@ -295,8 +309,8 @@ def test_derive_features_is_cutoff_safe_and_fail_closed(tmp_path: Path) -> None:
     assert alpha["incoming_db_count"] == 0
     assert alpha["observed_db_impact_count"] == 0
     assert alpha["observed_db_impact_sum"] == 0.0
-    assert alpha["db_impact_coverage_fraction"] == 1.0
     assert alpha["db_impact_coverage_status"] == "no_incoming_db_transfers"
+    assert alpha["db_impact_coverage_fraction"] is None
     provenance_key = "2022|b|transfer_in_prior_defensive_impact_db_sum"
     assert (
         result["provenance"][provenance_key]["contributors"][0]["player_name"]
@@ -332,6 +346,9 @@ def test_research_parity_and_attach_hook() -> None:
             "transfer_in_prior_usage_sum": 0.5,
             "transfer_in_prior_defensive_impact_db_sum": -0.25,
             "transfer_in_prior_defensive_impact_db_available": 1,
+            "incoming_db_count": 4,
+            "observed_db_impact_count": 3,
+            "observed_db_impact_sum": 2.0,
         }
     ]
     expected = [
@@ -352,6 +369,43 @@ def test_research_parity_and_attach_hook() -> None:
     )
     assert merged[0]["transfer_in_prior_usage_sum"] == 0.5
     assert "observed_db_impact_sum" not in merged[0]
+    assert "incoming_db_count" not in merged[0]
+
+
+def test_db_coverage_separates_partial_zero_unavailable_and_natural_zero() -> None:
+    partial = summarize_db_impact_coverage(
+        [
+            {
+                "impact_status": "resolved",
+                "prior_defensive_impact": 0.0,
+            },
+            {
+                "impact_status": "identity_resolution_failure",
+                "prior_defensive_impact": None,
+            },
+        ],
+        source_season=2025,
+    )
+    assert partial["incoming_db_count"] == 2
+    assert partial["observed_db_impact_count"] == 1
+    assert partial["observed_db_impact_sum"] == 0.0
+    assert partial["missing_db_impact_count"] == 1
+    assert partial["db_impact_coverage_fraction"] == 0.5
+    assert partial["db_impact_coverage_status"] == "partial"
+
+    none_observed = summarize_db_impact_coverage(
+        [{"impact_status": "ambiguous", "prior_defensive_impact": None}],
+        source_season=2025,
+    )
+    assert none_observed["observed_db_impact_sum"] == 0.0
+    assert none_observed["db_impact_coverage_status"] == "no_observed_db_impact"
+
+    natural_zero = summarize_db_impact_coverage([], source_season=2025)
+    assert natural_zero["incoming_db_count"] == 0
+    assert natural_zero["observed_db_impact_count"] == 0
+    assert natural_zero["observed_db_impact_sum"] == 0.0
+    assert natural_zero["db_impact_coverage_status"] == "no_incoming_db_transfers"
+    assert natural_zero["db_impact_coverage_fraction"] is None
 
 
 def test_production_derivation_matches_checked_in_research_fixture(
