@@ -1,0 +1,329 @@
+{
+  "baseline_issue_141": {
+    "by_season": {
+      "2021": {
+        "affected": 110,
+        "statuses": {
+          "complete": 17,
+          "entirely_unavailable": 2,
+          "partial": 108
+        },
+        "team_seasons": 127
+      },
+      "2022": {
+        "affected": 111,
+        "statuses": {
+          "complete": 19,
+          "partial": 111
+        },
+        "team_seasons": 130
+      },
+      "2023": {
+        "affected": 116,
+        "statuses": {
+          "complete": 15,
+          "partial": 116
+        },
+        "team_seasons": 131
+      },
+      "2024": {
+        "affected": 122,
+        "statuses": {
+          "complete": 11,
+          "partial": 122
+        },
+        "team_seasons": 133
+      },
+      "2025": {
+        "affected": 129,
+        "statuses": {
+          "complete": 5,
+          "partial": 129
+        },
+        "team_seasons": 134
+      },
+      "2026": {
+        "affected": 134,
+        "statuses": {
+          "complete": 4,
+          "partial": 134
+        },
+        "team_seasons": 138
+      }
+    },
+    "current_2026": {
+      "affected": 134,
+      "all_snapshots_after_cutoff": true,
+      "db_unresolved": 86,
+      "db_unresolved_player_causes": {
+        "db_ambiguous_player_join": 1,
+        "db_player_join_unresolved": 40,
+        "db_position_conflict": 11,
+        "db_source_team_uncovered": 34
+      },
+      "excluded_destination_statuses": {
+        "exact_normalized_name": 12,
+        "missing_name": 982,
+        "not_in_fbs": 408
+      },
+      "excluded_portal_records": 1402,
+      "incoming_transfers": 3069,
+      "offensive_applicability_unknown": 1012,
+      "offensive_join_failed": 10,
+      "portal_records": 4471,
+      "retrieval_first": "2026-09-19T21:50:53.583794+00:00",
+      "retrieval_last": "2026-09-19T21:52:33.852803+00:00",
+      "snapshot_count": 37,
+      "snapshot_count_by_source": {
+        "games_players": 32,
+        "portal": 1,
+        "roster": 2,
+        "stats": 1,
+        "usage": 1
+      },
+      "team_seasons": 138,
+      "teams_with_db_unresolved": 58,
+      "teams_with_offensive_applicability_unknown": 134,
+      "teams_with_offensive_join_failed": 8,
+      "teams_with_repair_candidate": 36,
+      "teams_with_source_coverage_gap": 25
+    },
+    "definitions": {
+      "checkpoint_status": "Independent of present-day completeness; no historical on-time source snapshot is proved by these research artifacts, so individual late arrivals cannot be separated from pre-cutoff data lost in processing.",
+      "complete": "All known incoming transfers are resolved or legitimately zero, including DB; no offensive applicability is unknown. A covered portal with no incoming transfers is complete.",
+      "entirely_unavailable": "Incoming transfers exist, no applicable offensive transfer resolves, no legitimate offensive zero is established, at least one incoming DB transfer is unresolved, and no incoming DB impact resolves.",
+      "partial": "A transfer input or retrospective aggregate has a gap, but a player-level offensive or DB contribution or covered natural-zero DB feature is known."
+    },
+    "population": "Context FBS team-seasons, 2021-2026; historical research panel plus 2026 reconstruction",
+    "reason_team_seasons": {
+      "db_ambiguous_player_join": 9,
+      "db_player_join_unresolved": 214,
+      "db_position_conflict": 58,
+      "db_source_team_uncovered": 87,
+      "historical_aggregate_null": 73,
+      "offense_ambiguous_player_join": 25,
+      "offense_applicability_unproven": 689,
+      "offense_source_team_mismatch": 38,
+      "offense_usage_join_unresolved": 8,
+      "offense_usage_row_absent": 21
+    },
+    "repair_classes": {
+      "candidate_repair": 32,
+      "not_applicable": 71,
+      "unresolved": 690
+    },
+    "statuses": {
+      "complete": 71,
+      "entirely_unavailable": 2,
+      "partial": 720
+    },
+    "team_seasons": 793,
+    "team_seasons_with_repair_candidate": 321,
+    "team_seasons_with_source_coverage_gap": 87
+  },
+  "coverage_2026": {
+    "exact_coverage_ratio_distribution": {
+      "0/0": 6,
+      "0/4": 1,
+      "1/1": 13,
+      "1/2": 5,
+      "10/10": 1,
+      "10/11": 3,
+      "10/12": 2,
+      "12/13": 1,
+      "2/2": 13,
+      "2/3": 7,
+      "2/4": 3,
+      "2/5": 3,
+      "3/3": 14,
+      "3/4": 3,
+      "3/5": 3,
+      "4/4": 19,
+      "4/5": 3,
+      "4/6": 3,
+      "4/8": 1,
+      "5/5": 3,
+      "5/6": 8,
+      "6/6": 4,
+      "6/7": 6,
+      "6/8": 1,
+      "6/9": 1,
+      "7/10": 1,
+      "7/7": 3,
+      "7/8": 2,
+      "8/8": 2,
+      "9/10": 1,
+      "9/9": 2
+    },
+    "incoming_db_count": 604,
+    "matches_issue_142_coverage_inventory": true,
+    "missing_db_impact_count": 86,
+    "observed_db_impact_count": 518,
+    "team_transitions": {
+      "unchanged": 138
+    },
+    "teams": 138,
+    "teams_present_in_issue_142_panel": 132,
+    "teams_with_complete_observed_coverage": 74,
+    "teams_with_no_incoming_db_transfers": 6,
+    "teams_with_no_observed_impacts": 1,
+    "teams_with_partial_observed_coverage": 57
+  },
+  "input_sha256": {
+    "data/processed/partial_db_transfer_impact_142/empirical_2026_coverage.csv": "77a819bb56e452df37620eb7a8d585d55b3d6c62c8530b08ee696e483d16ee5f",
+    "data/processed/preseason/context_v1_3_2026_reconstruction/source_manifest.json": "574e705ec9e3c51658ee83cb1bbb1c1792a326ab1a89333219e9b27e7a8b00c9",
+    "data/processed/preseason/context_v1_3_2026_reconstruction/transfer_player_audit.csv": "acd5693f4da0888a8b480bd275b66856065e80e2a504c9b2f33b2f15dfc91397",
+    "data/processed/preseason/context_v1_3_2026_reconstruction/transfer_team_audit.csv": "322a9fa8f062e1f63153a48c380b72205e1b27aae80be7bf3cbc2b89c0916dfb",
+    "data/processed/preseason/context_v1_3_candidate/historical_transfer_features.csv": "3b3680cf63806033cf6d67813a1359ada455e8e7528bf310a27b37d5cda7a726",
+    "data/processed/transfer_availability_audit/summary.json": "6df31f276c0a9480e8f83c56e1251467efda3c0df4a5decc1916cf13e7690438",
+    "data/processed/transfer_production_audit/player_join_records.csv": "7abb0b50f44e5a68befa28ca7ab9946658290196cc1090f709c6576d4c17b579",
+    "data/processed/transfer_production_audit/team_feature_coverage.csv": "b6fe961883dfa5c6a5990471ad2518514278f1a5ba2a98f474ca9312af147228"
+  },
+  "issue": 148,
+  "non_model_change_check": {
+    "context_1_3_model_db_sum_and_availability_retained_from_frozen_audit": true,
+    "context_1_3_model_feature_columns_unchanged": true,
+    "issue_141_and_142_artifacts_overwritten": false,
+    "published_ranking_artifacts_regenerated": false
+  },
+  "population": "Context FBS team-seasons, 2021-2026",
+  "post_repair": {
+    "by_season": {
+      "2021": {
+        "affected": 102,
+        "statuses": {
+          "complete": 25,
+          "entirely_unavailable": 2,
+          "partial": 100
+        },
+        "team_seasons": 127
+      },
+      "2022": {
+        "affected": 107,
+        "statuses": {
+          "complete": 23,
+          "partial": 107
+        },
+        "team_seasons": 130
+      },
+      "2023": {
+        "affected": 111,
+        "statuses": {
+          "complete": 20,
+          "partial": 111
+        },
+        "team_seasons": 131
+      },
+      "2024": {
+        "affected": 122,
+        "statuses": {
+          "complete": 11,
+          "partial": 122
+        },
+        "team_seasons": 133
+      },
+      "2025": {
+        "affected": 129,
+        "statuses": {
+          "complete": 5,
+          "partial": 129
+        },
+        "team_seasons": 134
+      },
+      "2026": {
+        "affected": 134,
+        "statuses": {
+          "complete": 4,
+          "partial": 134
+        },
+        "team_seasons": 138
+      }
+    },
+    "reason_team_seasons": {
+      "db_ambiguous_player_join": 9,
+      "db_player_join_unresolved": 214,
+      "db_position_conflict": 58,
+      "db_source_team_uncovered": 87,
+      "historical_aggregate_null": 52,
+      "offense_ambiguous_player_join": 25,
+      "offense_applicability_unproven": 689,
+      "offense_source_team_mismatch": 38,
+      "offense_usage_join_unresolved": 8,
+      "offense_usage_row_absent": 21
+    },
+    "statuses": {
+      "complete": 88,
+      "entirely_unavailable": 2,
+      "partial": 703
+    },
+    "team_seasons": 793,
+    "team_seasons_with_repair_candidate": 304,
+    "team_seasons_with_source_coverage_gap": 87
+  },
+  "remaining_failure_counts": {
+    "ambiguous_db_player_join": 1,
+    "applicable_offensive_usage_join": 10,
+    "covered_roster_db_player_join": 40,
+    "db_position_conflict": 11,
+    "historical_aggregate_null_team_seasons": 52,
+    "offensive_applicability_unproven": 1012,
+    "source_team_uncovered_db_player": 34
+  },
+  "repaired_historical_legitimate_zero_team_seasons": 21,
+  "repaired_player_records_by_failure_class": {
+    "ambiguous_db_player_join": 0,
+    "applicable_offensive_usage_join": 0,
+    "covered_roster_db_player_join": 0,
+    "db_position_conflict": 0,
+    "offensive_applicability_unproven": 0,
+    "source_team_uncovered_db_player": 0
+  },
+  "source_availability": {
+    "expected_snapshot_count": 37,
+    "missing_raw_snapshot_count": 37,
+    "raw_manifest_present": false,
+    "raw_payloads_missing": [
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-01-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-02-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-03-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-04-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-05-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-06-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-07-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-08-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-09-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-10-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-11-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-12-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-13-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-14-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-15-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-16-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-01-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-02-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-03-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-04-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-05-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-06-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-07-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-08-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-09-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-10-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-11-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-12-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-13-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-14-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-15-v1.json",
+      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-16-v1.json",
+      "data/raw/cfbd/preseason/transfers/portal/2026/2026-v1.json",
+      "data/raw/cfbd/preseason/transfers/roster/2026/2025-fbs-v1.json",
+      "data/raw/cfbd/preseason/transfers/roster/2026/2025-fcs-v1.json",
+      "data/raw/cfbd/preseason/transfers/stats/2026/2025-v1.json",
+      "data/raw/cfbd/preseason/transfers/usage/2026/2025-v1.json"
+    ],
+    "retained_raw_snapshot_count": 0,
+    "verified_player_alias_rows": 0,
+    "verified_team_alias_rows": 0
+  },
+  "team_seasons_whose_availability_status_improved": 17
+}

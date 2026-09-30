@@ -14,6 +14,7 @@ activity; zero is reserved for a covered season with no matching transfer.
 from __future__ import annotations
 
 import re
+import unicodedata
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
@@ -92,12 +93,45 @@ class UsageRecord:
     conference: str | None = None
 
 
+TransferIdentityKey = tuple[int, str, str, str, str | None]
+
+
+def transfer_identity_key(record: TransferRecord) -> TransferIdentityKey:
+    """Return a deterministic portal-row key for explicit audit evidence."""
+    return (
+        record.season,
+        normalize_team_name(record.origin),
+        normalize_player_name(record.player_name),
+        normalize_team_name(record.destination),
+        record.transfer_date.isoformat() if record.transfer_date else None,
+    )
+
+
 def normalize_player_name(value: str | None) -> str:
-    """Normalize a player name for a deterministic, auditable join."""
+    """Normalize typographic name variants without dropping identity tokens.
+
+    Compatibility Unicode normalization handles equivalent encoded forms;
+    apostrophe variants and punctuation separators are then made consistent.
+    Suffixes, initials, and diacritics remain part of the key. Callers must
+    still reject a key that resolves to more than one source record.
+    """
     if not value:
         return ""
-    value = value.casefold().replace("'", "").replace(".", "")
-    return " ".join(value.split())
+    value = unicodedata.normalize("NFKC", value).casefold()
+    normalized: list[str] = []
+    for character in value:
+        category = unicodedata.category(character)
+        if character == ".":
+            continue
+        if category in {"Pi", "Pf"} or character in {"'", "\u02bc"}:
+            # Straight and typographic apostrophes have historically varied
+            # between provider name fields (e.g. Ja'Bari / Ja’Bari).
+            continue
+        if category.startswith("P"):
+            normalized.append(" ")
+        else:
+            normalized.append(character)
+    return " ".join("".join(normalized).split())
 
 
 def normalize_team_name(value: str | None) -> str:
@@ -397,6 +431,7 @@ def aggregate_team_features(
     covered_seasons: set[int],
     cutoff: date,
     aliases: Mapping[str, str] | None = None,
+    verified_zero_usage_keys: set[TransferIdentityKey] | None = None,
 ) -> dict[tuple[int, str, str], dict[str, float | None]]:
     """Aggregate dated portal records into canonical team-season features.
 
@@ -408,6 +443,7 @@ def aggregate_team_features(
     rows = list(team_rows)
     index = _team_index(rows, aliases)
     usage_idx = _usage_index(usage)
+    explicit_zeros = verified_zero_usage_keys or set()
     output = {
         (int(row["season"]), str(row["subdivision"]), str(row["team_id"])): (
             _empty_features()
@@ -445,6 +481,13 @@ def aggregate_team_features(
             if record.origin
             else None
         )
+        if transfer_identity_key(record) in explicit_zeros:
+            if prior_usage not in (None, 0, 0.0):
+                raise ValueError(
+                    "verified legitimate-zero evidence conflicts with a positive "
+                    f"usage row for {transfer_identity_key(record)!r}"
+                )
+            prior_usage = 0.0
         if destination:
             destination_key = (record.season, "fbs", destination[0])
             if destination_key in output:

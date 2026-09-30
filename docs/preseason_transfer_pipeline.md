@@ -37,14 +37,24 @@ uv run python scripts/build_preseason_transfer_features.py \
   --manifest data/raw/cfbd/preseason/transfers/manifest.json
 ```
 
-It writes `preseason_transfer_features.csv`, audit CSVs, a data-quality JSON
-report, `feature_provenance.json`, and a report under
+It writes `preseason_transfer_features.csv`, offensive and defensive
+player-level audit CSVs, a data-quality JSON report, `feature_provenance.json`,
+and a report under
 `data/processed/preseason/transfer_features/`. The three model-facing columns
 are exactly:
 
 - `transfer_in_prior_usage_sum`;
 - `transfer_in_prior_defensive_impact_db_sum`;
 - `transfer_in_prior_defensive_impact_db_available`.
+
+The transfer-feature output also records the diagnostic DB coverage fields
+`incoming_db_count`, `observed_db_impact_count`, and
+`observed_db_impact_sum`, plus derived missing-count, coverage-fraction, and
+coverage-status fields. `observed_db_impact_sum` includes only players with
+resolved prior impact, even when coverage is partial. The model-facing DB sum
+retains its existing neutral-zero-plus-availability contract. The attach-only
+integration copies only the three model-facing fields, so these diagnostics do
+not change Context 1.3 inputs.
 
 The attach-only function
 `gippyrank.preseason_transfer.merge_preseason_transfer_features` is the
@@ -54,9 +64,12 @@ does not fetch CFBD or discover raw files.
 ## Identity and cutoff policy
 
 Player joins use a verified shared source ID when one exists. Otherwise the
-fallback is normalized player name plus normalized source team. Exact
-normalized matches and explicit aliases are allowed; ambiguous or conflicting
-matches are retained as unresolved. Fuzzy matching is never used.
+fallback is normalized player name plus normalized source team. Name
+normalization folds Unicode compatibility forms and punctuation variants while
+preserving suffixes and diacritics. If an available source ID conflicts with a
+name match, that record remains unresolved. Exact normalized matches and
+explicit aliases are allowed; ambiguous or conflicting matches are retained
+as unresolved. Fuzzy matching is never used.
 
 Team joins use the canonical season-specific team table and
 `data/reference/preseason_team_aliases.csv`. Destinations must resolve to the

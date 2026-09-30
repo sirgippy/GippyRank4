@@ -490,6 +490,29 @@ def _usage_match(
                 stable_candidates,
                 False,
             )
+        name_candidates: list[int] = []
+        for team_name, _method in _team_name_candidates(record, source_resolution):
+            name_candidates.extend(
+                indexes["by_key"].get(
+                    (
+                        record.season - 1,
+                        team_name,
+                        normalize_player_name(record.player_name),
+                    ),
+                    [],
+                )
+            )
+        name_candidates = _unique_ints(name_candidates)
+        if any(
+            usage[index].player_id and usage[index].player_id != record.player_id
+            for index in name_candidates
+        ):
+            return (
+                "stable_player_id_conflict",
+                "stable_player_id_and_source_team",
+                name_candidates,
+                False,
+            )
     normalized_player = normalize_player_name(record.player_name)
     raw_player = _raw_player_name(record.player_name)
     raw_candidates: list[int] = []
@@ -760,6 +783,7 @@ def audit_transfer_records(
             "portal_index": portal_index,
             "season": record.season,
             "player_name": record.player_name,
+            "portal_player_id": record.player_id,
             "normalized_player_name": normalize_player_name(record.player_name),
             "origin": record.origin,
             "origin_team_id": source.team_id,
@@ -795,6 +819,14 @@ def audit_transfer_records(
             "d5_unresolved": d5_category
             in {D5_CATEGORY_FAILURE, D5_CATEGORY_UNDETERMINED},
             "prior_usage_record_count": len(usage_indexes),
+            "usage_candidate_player_ids": sorted(
+                {
+                    usage[index].player_id
+                    for index in usage_indexes
+                    if usage[index].player_id
+                }
+            ),
+            "usage_candidate_count": len(usage_indexes),
             "portal_normalized_key_count": by_portal_key[
                 (
                     record.season,

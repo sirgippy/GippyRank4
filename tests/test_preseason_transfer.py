@@ -282,14 +282,29 @@ def test_derive_features_is_cutoff_safe_and_fail_closed(tmp_path: Path) -> None:
     assert beta["audit_unresolved_db_transfers"] == 1
     assert beta["transfer_in_prior_defensive_impact_db_sum"] == 0.0
     assert beta["transfer_in_prior_defensive_impact_db_available"] == 0
+    assert beta["incoming_db_count"] == 2
+    assert beta["observed_db_impact_count"] == 1
+    assert beta["missing_db_impact_count"] == 1
+    assert beta["db_impact_coverage_fraction"] == pytest.approx(0.5)
+    assert beta["db_impact_coverage_status"] == "partial"
+    assert beta["observed_db_impact_sum"] == pytest.approx(
+        result["provenance"]["2022|b|observed_db_impact_sum"]["value"]
+    )
     assert alpha["transfer_in_prior_defensive_impact_db_sum"] == 0.0
     assert alpha["transfer_in_prior_defensive_impact_db_available"] == 1
+    assert alpha["incoming_db_count"] == 0
+    assert alpha["observed_db_impact_count"] == 0
+    assert alpha["observed_db_impact_sum"] == 0.0
+    assert alpha["db_impact_coverage_fraction"] == 1.0
+    assert alpha["db_impact_coverage_status"] == "no_incoming_db_transfers"
     provenance_key = "2022|b|transfer_in_prior_defensive_impact_db_sum"
     assert (
         result["provenance"][provenance_key]["contributors"][0]["player_name"]
         == "Bob Defender"
     )
     assert result["quality_report"]["seasons"][0]["identity_alias_matches"] == 1
+    assert result["offensive_player_audit"]
+    assert "usage_candidate_player_ids" in result["offensive_player_audit"][0]
 
 
 def test_frozen_db_position_taxonomy_does_not_infer_unknowns() -> None:
@@ -336,6 +351,7 @@ def test_research_parity_and_attach_hook() -> None:
         rows,
     )
     assert merged[0]["transfer_in_prior_usage_sum"] == 0.5
+    assert "observed_db_impact_sum" not in merged[0]
 
 
 def test_production_derivation_matches_checked_in_research_fixture(

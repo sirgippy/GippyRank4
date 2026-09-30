@@ -5,10 +5,12 @@ import pytest
 from gippyrank.transfer_oracle import (
     aggregate_team_features,
     available_by_cutoff,
+    normalize_player_name,
     parse_transfer_date,
     parse_transfer_payload,
     parse_usage_payload,
     position_group,
+    transfer_identity_key,
 )
 
 
@@ -54,6 +56,18 @@ def test_portal_parser_keeps_fields_and_cutoff_semantics() -> None:
     assert available_by_cutoff(records[0], date(2022, 8, 15))
     assert not available_by_cutoff(records[0], date(2022, 7, 1))
     assert position_group("EDGE") == "dl"
+
+
+def test_player_name_normalization_handles_unicode_punctuation_safely() -> None:
+    assert normalize_player_name("Ja’Bari Odoemenem") == normalize_player_name(
+        "Ja'Bari Odoemenem"
+    )
+    assert normalize_player_name("Wells–Ross") == normalize_player_name("Wells Ross")
+    assert normalize_player_name("Ａ．Ｂ. Smith") == "ab smith"
+    assert normalize_player_name("José García") != normalize_player_name("Jose Garcia")
+    assert normalize_player_name("Sam Player Jr.") != normalize_player_name(
+        "Sam Player"
+    )
 
 
 def test_cutoff_is_relative_to_each_transfer_season() -> None:
@@ -161,6 +175,78 @@ def test_usage_join_is_name_normalized_and_missing_quality_is_not_zero() -> None
     assert beta["transfer_in_count"] == 1.0
     assert beta["transfer_in_rating_sum"] is None
     assert beta["transfer_in_prior_usage_sum"] is None
+
+
+def test_aggregation_uses_only_explicit_audit_evidence_for_legitimate_zero() -> None:
+    records = parse_transfer_payload(
+        [
+            {
+                "season": 2022,
+                "firstName": "A",
+                "lastName": "Player",
+                "origin": "Alpha",
+                "destination": "Beta",
+                "position": "QB",
+                "transferDate": "2022-07-01",
+            }
+        ],
+        season=2022,
+    )
+    missing = aggregate_team_features(
+        records,
+        [],
+        team_rows(),
+        covered_seasons={2022},
+        cutoff=date(2022, 8, 15),
+    )
+    repaired = aggregate_team_features(
+        records,
+        [],
+        team_rows(),
+        covered_seasons={2022},
+        cutoff=date(2022, 8, 15),
+        verified_zero_usage_keys={transfer_identity_key(records[0])},
+    )
+    assert missing[(2022, "fbs", "2")]["transfer_in_prior_usage_sum"] is None
+    assert repaired[(2022, "fbs", "2")]["transfer_in_prior_usage_sum"] == 0.0
+
+
+def test_verified_zero_evidence_cannot_override_positive_usage() -> None:
+    records = parse_transfer_payload(
+        [
+            {
+                "season": 2022,
+                "firstName": "A",
+                "lastName": "Player",
+                "origin": "Alpha",
+                "destination": "Beta",
+                "position": "QB",
+                "transferDate": "2022-07-01",
+            }
+        ],
+        season=2022,
+    )
+    usage = parse_usage_payload(
+        [
+            {
+                "season": 2021,
+                "name": "A Player",
+                "team": "Alpha",
+                "position": "QB",
+                "usage": {"overall": 0.25},
+            }
+        ],
+        season=2021,
+    )
+    with pytest.raises(ValueError, match="conflicts with a positive usage row"):
+        aggregate_team_features(
+            records,
+            usage,
+            team_rows(),
+            covered_seasons={2022},
+            cutoff=date(2022, 8, 15),
+            verified_zero_usage_keys={transfer_identity_key(records[0])},
+        )
 
 
 def test_transfer_date_parser_rejects_invalid_text() -> None:

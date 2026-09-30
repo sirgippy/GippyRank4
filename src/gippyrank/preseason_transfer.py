@@ -98,6 +98,14 @@ MODEL_FEATURE_COLUMNS = (
     "transfer_in_prior_defensive_impact_db_sum",
     "transfer_in_prior_defensive_impact_db_available",
 )
+DB_COVERAGE_COLUMNS = (
+    "incoming_db_count",
+    "observed_db_impact_count",
+    "observed_db_impact_sum",
+    "missing_db_impact_count",
+    "db_impact_coverage_fraction",
+    "db_impact_coverage_status",
+)
 CANONICAL_FEATURE_COLUMNS = (
     "season",
     "subdivision",
@@ -1469,6 +1477,24 @@ def _db_feature_rows(
             "audit_incoming_db_transfers": len(incoming),
             "audit_resolved_db_transfers": len(resolved),
             "audit_unresolved_db_transfers": len(unresolved),
+            "incoming_db_count": len(incoming),
+            "observed_db_impact_count": len(resolved),
+            "observed_db_impact_sum": float(
+                sum(float(row["prior_defensive_impact"]) for row in resolved)
+            ),
+            "missing_db_impact_count": len(unresolved),
+            "db_impact_coverage_fraction": (
+                1.0 if not incoming else len(resolved) / len(incoming)
+            ),
+            "db_impact_coverage_status": (
+                "no_incoming_db_transfers"
+                if not incoming
+                else "complete"
+                if not unresolved
+                else "partial"
+                if resolved
+                else "no_observed_impacts"
+            ),
             "audit_db_feature_status": (
                 "no_incoming_db_transfer"
                 if not incoming
@@ -1513,6 +1539,29 @@ def _db_feature_rows(
                 (*source_hashes.get("portal", ()), *source_hashes.get("defense", ()))
             ),
             "contributors": contributors,
+        }
+        provenance[key_prefix + "|observed_db_impact_sum"] = {
+            "season": target_season,
+            "destination_team_id": team_id,
+            "destination_team_name": team.get("team_name"),
+            "feature": "observed_db_impact_sum",
+            "value": by_team[(target_season, team_id)]["observed_db_impact_sum"],
+            "incoming_db_count": len(incoming),
+            "observed_db_impact_count": len(resolved),
+            "missing_db_impact_count": len(unresolved),
+            "coverage_fraction": (
+                1.0 if not incoming else len(resolved) / len(incoming)
+            ),
+            "coverage_status": by_team[(target_season, team_id)][
+                "db_impact_coverage_status"
+            ],
+            "source_snapshot_sha256": sorted(
+                (*source_hashes.get("portal", ()), *source_hashes.get("defense", ()))
+            ),
+            "contributors": [item for item in contributors if item["included"]],
+            "unresolved_records": [
+                item for item in contributors if not item["included"]
+            ],
         }
     quality = {
         "incoming_db_transfers": sum(
@@ -1713,6 +1762,7 @@ def derive_preseason_transfer_features(
     all_audit_rows: list[Row] = []
     all_mapping_rows: list[Row] = []
     all_player_rows: list[Row] = []
+    all_offensive_player_rows: list[Row] = []
     quality_by_season: list[Row] = []
     provenance: dict[str, Any] = {}
     for season in target_seasons:
@@ -1777,6 +1827,7 @@ def derive_preseason_transfer_features(
                     key: row[key]
                     for key in (
                         *CANONICAL_FEATURE_COLUMNS,
+                        *DB_COVERAGE_COLUMNS,
                         *[key for key in row if key.startswith("audit_")],
                     )
                 }
@@ -1797,6 +1848,23 @@ def derive_preseason_transfer_features(
                 }
             )
             all_player_rows.append(enriched)
+        mapping_by_index = {
+            int(row["portal_index"]): row for row in inputs["mapping_rows"]
+        }
+        for row in offensive["join_rows"]:
+            enriched = dict(row)
+            portal_index = int(row["portal_index"])
+            raw = inputs["records_raw"][portal_index]
+            mapping = mapping_by_index.get(portal_index, {})
+            enriched.update(
+                {
+                    "raw_player_name": raw.player_name,
+                    "raw_origin": raw.origin,
+                    "raw_destination": raw.destination,
+                    "player_alias_method": mapping.get("player_alias_method", "none"),
+                }
+            )
+            all_offensive_player_rows.append(enriched)
         provenance.update(offensive_meta["provenance"])
         provenance.update(db_provenance)
         season_quality = {
@@ -1842,6 +1910,7 @@ def derive_preseason_transfer_features(
         "features": all_feature_rows,
         "audit": all_audit_rows,
         "player_audit": all_player_rows,
+        "offensive_player_audit": all_offensive_player_rows,
         "identity_mapping": all_mapping_rows,
         "quality_report": {
             "manifest": str(manifest.path),

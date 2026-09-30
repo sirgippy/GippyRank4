@@ -297,3 +297,39 @@ def test_distribution_statistics_report_missing_values() -> None:
     assert stats["count"] == 3
     assert stats["missing_count"] == 1
     assert stats["fraction_zero"] == pytest.approx(1 / 3)
+
+
+def test_conflicting_portal_player_id_does_not_join_by_name() -> None:
+    records = parse_transfer_payload(
+        [
+            {
+                "season": 2022,
+                "id": "different-id",
+                "firstName": "A",
+                "lastName": "Defender",
+                "origin": "Alpha",
+                "destination": "Beta",
+                "position": "CB",
+                "transferDate": "2022-08-01",
+            }
+        ],
+        season=2022,
+    )
+    result = audit_transfer_records(
+        records,
+        _roster(),
+        [],
+        [{"season": "2022", "subdivision": "fbs", "team_id": "2", "team_name": "Beta"}],
+        portal_seasons={2022},
+        defensive_seasons={2021},
+        cutoff=date(2025, 8, 15),
+        roster_teams={(2021, "alpha")},
+    )
+    row = result["player_rows"][0]
+    assert row["identity_status"] == "identity_resolution_failure"
+    assert row["identity_join_method"] == "stable_player_id_conflict"
+    assert (
+        row["identity_resolution_detail"]
+        == "portal_player_id_conflicts_with_name_match"
+    )
+    assert row["roster_candidate_count"] == 1

@@ -336,3 +336,93 @@ def test_shared_stable_id_is_preferred_over_a_name_mismatch() -> None:
     assert row["usage_join_status"] == "joined"
     assert row["usage_join_method"] == "stable_player_id_and_source_team"
     assert row["d5_feature_value"] == pytest.approx(0.4)
+
+
+def test_conflicting_stable_id_does_not_fall_back_to_a_name_match() -> None:
+    records = parse_transfer_payload(
+        [
+            {
+                "season": 2022,
+                "id": "portal-1",
+                "firstName": "A",
+                "lastName": "Player",
+                "origin": "Alpha",
+                "destination": "Beta",
+                "position": "QB",
+                "transferDate": "2022-08-01",
+            }
+        ],
+        season=2022,
+    )
+    usage = parse_usage_payload(
+        [
+            {
+                "season": 2021,
+                "id": "usage-2",
+                "name": "A Player",
+                "team": "Alpha",
+                "position": "QB",
+                "usage": {"overall": 0.4},
+            }
+        ],
+        season=2021,
+    )
+    audit = audit_transfer_records(
+        records,
+        usage,
+        _team_rows(),
+        cutoff=date(2025, 8, 15),
+    )
+    row = audit["join_rows"][0]
+    assert row["usage_join_status"] == "stable_player_id_conflict"
+    assert row["portal_player_id"] == "portal-1"
+    assert row["usage_candidate_player_ids"] == ["usage-2"]
+    assert row["d5_feature_value"] is None
+
+
+def test_punctuation_normalization_keeps_multiple_candidates_ambiguous() -> None:
+    records = parse_transfer_payload(
+        [
+            {
+                "season": 2022,
+                "firstName": "A-B",
+                "lastName": "Player",
+                "origin": "Alpha",
+                "destination": "Beta",
+                "position": "QB",
+                "transferDate": "2022-08-01",
+            }
+        ],
+        season=2022,
+    )
+    usage = parse_usage_payload(
+        [
+            {
+                "season": 2021,
+                "id": "one",
+                "name": "A-B Player",
+                "team": "Alpha",
+                "position": "QB",
+                "usage": {"overall": 0.2},
+            },
+            {
+                "season": 2021,
+                "id": "two",
+                "name": "A B Player",
+                "team": "Alpha",
+                "position": "QB",
+                "usage": {"overall": 0.3},
+            },
+        ],
+        season=2021,
+    )
+    audit = audit_transfer_records(
+        records,
+        usage,
+        _team_rows(),
+        cutoff=date(2025, 8, 15),
+    )
+    row = audit["join_rows"][0]
+    assert row["usage_join_status"] == "ambiguous_usage_join"
+    assert row["usage_candidate_player_ids"] == ["one", "two"]
+    assert row["d5_feature_value"] is None
