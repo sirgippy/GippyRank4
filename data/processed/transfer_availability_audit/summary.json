@@ -4,8 +4,8 @@
       "affected": 110,
       "statuses": {
         "complete": 17,
-        "entirely_unavailable": 4,
-        "partial": 106
+        "entirely_unavailable": 2,
+        "partial": 108
       },
       "team_seasons": 127
     },
@@ -13,8 +13,7 @@
       "affected": 111,
       "statuses": {
         "complete": 19,
-        "entirely_unavailable": 5,
-        "partial": 106
+        "partial": 111
       },
       "team_seasons": 130
     },
@@ -30,8 +29,7 @@
       "affected": 122,
       "statuses": {
         "complete": 11,
-        "entirely_unavailable": 2,
-        "partial": 120
+        "partial": 122
       },
       "team_seasons": 133
     },
@@ -90,10 +88,10 @@
     "teams_with_source_coverage_gap": 25
   },
   "definitions": {
-    "checkpoint_status": "Independent of present-day completeness; no historical on-time source snapshot is proved by these research artifacts.",
+    "checkpoint_status": "Independent of present-day completeness; no historical on-time source snapshot is proved by these research artifacts, so individual late arrivals cannot be separated from pre-cutoff data lost in processing.",
     "complete": "All known incoming transfers are resolved or legitimately zero, including DB; no offensive applicability is unknown. A covered portal with no incoming transfers is complete.",
-    "entirely_unavailable": "Incoming transfers exist, the retrospective offensive aggregate is null, at least one incoming DB transfer is unresolved, and no incoming DB impact resolves.",
-    "partial": "At least one known transfer input is unresolved or applicability is unproven, while some transfer evidence or a numeric model feature exists."
+    "entirely_unavailable": "Incoming transfers exist, no applicable offensive transfer resolves, no legitimate offensive zero is established, at least one incoming DB transfer is unresolved, and no incoming DB impact resolves.",
+    "partial": "A transfer input or retrospective aggregate has a gap, but a player-level offensive or DB contribution or covered natural-zero DB feature is known."
   },
   "population": "Context FBS team-seasons, 2021-2026; historical research panel plus 2026 reconstruction",
   "reason_team_seasons": {
@@ -115,8 +113,8 @@
   },
   "statuses": {
     "complete": 71,
-    "entirely_unavailable": 11,
-    "partial": 711
+    "entirely_unavailable": 2,
+    "partial": 720
   },
   "team_seasons": 793,
   "team_seasons_with_repair_candidate": 321,

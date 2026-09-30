@@ -223,12 +223,18 @@ def audit() -> tuple[list[dict[str, object]], dict[str, object]]:
         usage_value = source["transfer_in_prior_usage_sum"]
         if not is_current and not usage_value:
             codes.add("historical_aggregate_null")
-        # No incoming DB transfer is a covered natural zero, even when the
-        # historical offensive aggregate is null. The unavailable state
-        # requires unresolved DB input as well as a null offensive aggregate.
+        # Historical aggregation can emit null despite resolved player-level
+        # offensive evidence. Classify input availability from the player
+        # audit, not from that serialized research feature.
         if not codes:
             status = "complete"
-        elif incoming and not usage_value and db_failed and db_resolved == 0:
+        elif (
+            incoming
+            and offensive_resolved == 0
+            and offensive_zero == 0
+            and db_failed > 0
+            and db_resolved == 0
+        ):
             status = "entirely_unavailable"
         else:
             status = "partial"
@@ -383,9 +389,9 @@ def audit() -> tuple[list[dict[str, object]], dict[str, object]]:
         },
         "definitions": {
             "complete": "All known incoming transfers are resolved or legitimately zero, including DB; no offensive applicability is unknown. A covered portal with no incoming transfers is complete.",
-            "partial": "At least one known transfer input is unresolved or applicability is unproven, while some transfer evidence or a numeric model feature exists.",
-            "entirely_unavailable": "Incoming transfers exist, the retrospective offensive aggregate is null, at least one incoming DB transfer is unresolved, and no incoming DB impact resolves.",
-            "checkpoint_status": "Independent of present-day completeness; no historical on-time source snapshot is proved by these research artifacts.",
+            "partial": "A transfer input or retrospective aggregate has a gap, but a player-level offensive or DB contribution or covered natural-zero DB feature is known.",
+            "entirely_unavailable": "Incoming transfers exist, no applicable offensive transfer resolves, no legitimate offensive zero is established, at least one incoming DB transfer is unresolved, and no incoming DB impact resolves.",
+            "checkpoint_status": "Independent of present-day completeness; no historical on-time source snapshot is proved by these research artifacts, so individual late arrivals cannot be separated from pre-cutoff data lost in processing.",
         },
     }
     return rows, summary

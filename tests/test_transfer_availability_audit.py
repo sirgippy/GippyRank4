@@ -65,7 +65,8 @@ def test_unavailable_requires_unresolved_db_input():
     assert unavailable
     assert all(
         row["incoming_transfers"] > 0
-        and not row["offensive_feature_numeric"]
+        and row["offensive_resolved"] == 0
+        and row["offensive_legitimate_zero"] == 0
         and row["db_unresolved"] > 0
         and row["db_resolved"] == 0
         for row in unavailable
@@ -79,3 +80,11 @@ def test_unavailable_requires_unresolved_db_input():
     assert not ohio_state_2021["offensive_feature_numeric"]
     assert ohio_state_2021["db_incoming"] == 0
     assert ohio_state_2021["availability_status"] == "partial"
+    for team in ("UTEP", "Old Dominion", "Georgia"):
+        row = next(
+            row for row in rows if row["season"] == 2022 and row["team_name"] == team
+        )
+        assert row["offensive_resolved"] == 0
+        assert row["offensive_legitimate_zero"] > 0
+        assert row["db_unresolved"] > 0
+        assert row["availability_status"] == "partial"
