@@ -1,0 +1,42 @@
+{
+  "complete_team_seasons": 281,
+  "downstream_model": "frozen 2026 Context 1.3 model and published PMFs; rank-CDF interpolation of location shifts; no refit",
+  "excluded": {
+    "incomplete_impact": 257,
+    "outside_context_panel": 5
+  },
+  "heldout_player_mean_by_season": {
+    "2021": 0.3500426445682797,
+    "2022": 0.34326406200879117,
+    "2023": 0.27893751737835026,
+    "2024": 0.3333176299409716,
+    "2025": 0.32681895858128507
+  },
+  "heldout_player_sd_by_season": {
+    "2021": 0.9353285059629183,
+    "2022": 0.9291701699902069,
+    "2023": 0.9068159902950598,
+    "2024": 0.9432444838482977,
+    "2025": 0.9116138306532883
+  },
+  "historical_seasons": [
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "input_sha256": {
+    "data/processed/defensive_transfer_audit/transfer_player_audit.csv": "cf7b25313093c9ae0f4d21ee5865336fbb81705062e8ea92c9dc5f535aa1135d",
+    "data/processed/preseason/context_v1_3/annual/2026/fitted_model.json": "39479165ec5f5ee5303cbbad9a4dfb76316237a4b01e81c692c416dd3a336e6a",
+    "data/processed/preseason/context_v1_3/annual/2026/predictions.csv": "2ef3cc2e5249271c5de2fca471b862b8762eee66b40aefc9a679abf2a45ef1f5",
+    "data/processed/preseason/context_v1_3_2026_reconstruction/transfer_features.csv": "db8fad38bb81e437059b8cf44c85be5760f3426466b53c5cf649ea5c0718fef0",
+    "data/processed/preseason/context_v1_3_2026_reconstruction/transfer_player_audit.csv": "acd5693f4da0888a8b480bd275b66856065e80e2a504c9b2f33b2f15dfc91397",
+    "data/processed/preseason/context_v1_3_candidate/historical_transfer_features.csv": "3b3680cf63806033cf6d67813a1359ada455e8e7528bf310a27b37d5cda7a726",
+    "data/processed/transfer_availability_audit/team_seasons.csv": "c380c55a27b57484e557c4346f5ce0166035b8261db9f8fa3a231747ebe20670"
+  },
+  "issue": 142,
+  "mask_cases": 3830,
+  "masked_team_seasons": 174,
+  "seed": 142
+}
