@@ -1,0 +1,654 @@
+{
+  "component_population": {
+    "2022": {
+      "all_fbs_target_teams": 131,
+      "cold_start_or_unmodeled_fallbacks": 1,
+      "fitted_team_ids_sha256": "90e7ab56c454862fea862af4fe1a700e2b8c51e0e67b561f3f3414496f1af84b",
+      "matched_fitted_components": 130
+    },
+    "2023": {
+      "all_fbs_target_teams": 133,
+      "cold_start_or_unmodeled_fallbacks": 2,
+      "fitted_team_ids_sha256": "99109ce9dc4d94a2f5f507da4de7174aa3f810ce5398f0bf28120124f8658ee4",
+      "matched_fitted_components": 131
+    },
+    "2024": {
+      "all_fbs_target_teams": 134,
+      "cold_start_or_unmodeled_fallbacks": 1,
+      "fitted_team_ids_sha256": "06061f528f30c26fad2808492bed458e1f8edd43a594a890b32ee12259bc2d29",
+      "matched_fitted_components": 133
+    },
+    "2025": {
+      "all_fbs_target_teams": 136,
+      "cold_start_or_unmodeled_fallbacks": 2,
+      "fitted_team_ids_sha256": "d613d775bfdab483ebb84525fffe16066d0fa2252a6c45ebc861442b33ce660d",
+      "matched_fitted_components": 134
+    }
+  },
+  "context_scale_model_check": {
+    "finding": "Fitted Context 1.3 metadata places all Context 1.3 features in location and keeps only History features in scale.",
+    "interpretation": "Any Context/History scale difference comes from jointly fitted coefficients; rich Context features do not directly enter Context scale."
+  },
+  "evidence_contract": {
+    "arms_fail_closed_on_evidence_or_population_mismatch": true,
+    "fcs_fallback": "same uniform full-FCS rank prior and scheduled-future opponent rule in every arm",
+    "result_availability_lag_hours": 48,
+    "source": "Issue #140 retained rolling cutoff panel and cutoff-safe replay helper"
+  },
+  "inference": {
+    "damping": 0.35,
+    "max_iterations": 500,
+    "tolerance": 1e-09
+  },
+  "interpretation": "diagnostic analysis of the already-observed 2022-2025 behavior; not an untouched validation set",
+  "likelihood": {
+    "path": "data/processed/posterior/historical_likelihood_v1.json",
+    "sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+    "version": "Historical Likelihood V1"
+  },
+  "models": {
+    "2022": {
+      "context_instance": {
+        "context_effective_cutoff": null,
+        "model_family": "context_prior",
+        "spec_version": "1.3",
+        "target_season": 2022,
+        "trained_through_season": 2021
+      },
+      "context_location_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean",
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite",
+        "returning_pct_ppa",
+        "transfer_in_prior_usage_sum",
+        "transfer_in_prior_defensive_impact_db_sum",
+        "transfer_in_prior_defensive_impact_db_available"
+      ],
+      "context_model_sha256": "33111520a58570800c8cc1a6d223b9dfac4b38639726a3b8faf62104daf297c5",
+      "context_optimizer": {
+        "function_evaluations": 327,
+        "iterations": 311,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "objective": 1.6452095988647688,
+        "status": 0,
+        "success": true
+      },
+      "context_scale_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean"
+      ],
+      "history_instance": {
+        "context_effective_cutoff": null,
+        "model_family": "history_prior",
+        "spec_version": "1.1",
+        "target_season": 2022,
+        "trained_through_season": 2021
+      },
+      "history_location_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean"
+      ],
+      "history_model_sha256": "e380094e8932ab87199d1ce4b1f210fb66be38d1eba7217b8585505880f13d0e",
+      "history_optimizer": {
+        "function_evaluations": 40,
+        "iterations": 38,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "objective": 1.689287965757965,
+        "status": 0,
+        "success": true
+      },
+      "history_scale_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean"
+      ],
+      "trained_through_season": 2021
+    },
+    "2023": {
+      "context_instance": {
+        "context_effective_cutoff": null,
+        "model_family": "context_prior",
+        "spec_version": "1.3",
+        "target_season": 2023,
+        "trained_through_season": 2022
+      },
+      "context_location_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean",
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite",
+        "returning_pct_ppa",
+        "transfer_in_prior_usage_sum",
+        "transfer_in_prior_defensive_impact_db_sum",
+        "transfer_in_prior_defensive_impact_db_available"
+      ],
+      "context_model_sha256": "a9346e63dc1dede5c6b1afbb25300459619e32831b3c4352402d1e062af9aa39",
+      "context_optimizer": {
+        "function_evaluations": 345,
+        "iterations": 329,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "objective": 1.6426023731985486,
+        "status": 0,
+        "success": true
+      },
+      "context_scale_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean"
+      ],
+      "history_instance": {
+        "context_effective_cutoff": null,
+        "model_family": "history_prior",
+        "spec_version": "1.1",
+        "target_season": 2023,
+        "trained_through_season": 2022
+      },
+      "history_location_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean"
+      ],
+      "history_model_sha256": "80d4c05df0138fe5ac8cad93a93d7e05ac166ff86efc5d5725ac49c90917b4b5",
+      "history_optimizer": {
+        "function_evaluations": 40,
+        "iterations": 37,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "objective": 1.6882536267549488,
+        "status": 0,
+        "success": true
+      },
+      "history_scale_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean"
+      ],
+      "trained_through_season": 2022
+    },
+    "2024": {
+      "context_instance": {
+        "context_effective_cutoff": null,
+        "model_family": "context_prior",
+        "spec_version": "1.3",
+        "target_season": 2024,
+        "trained_through_season": 2023
+      },
+      "context_location_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean",
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite",
+        "returning_pct_ppa",
+        "transfer_in_prior_usage_sum",
+        "transfer_in_prior_defensive_impact_db_sum",
+        "transfer_in_prior_defensive_impact_db_available"
+      ],
+      "context_model_sha256": "ccca621a54df5ad546f7d62cce38f87de129cec3602c9dcb87fb6a6cbc6377be",
+      "context_optimizer": {
+        "function_evaluations": 337,
+        "iterations": 320,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "objective": 1.6397528818745575,
+        "status": 0,
+        "success": true
+      },
+      "context_scale_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean"
+      ],
+      "history_instance": {
+        "context_effective_cutoff": null,
+        "model_family": "history_prior",
+        "spec_version": "1.1",
+        "target_season": 2024,
+        "trained_through_season": 2023
+      },
+      "history_location_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean"
+      ],
+      "history_model_sha256": "e382490d4d20203b72dd470322e1e4a34227efae749de7962e1b8c8f2629c630",
+      "history_optimizer": {
+        "function_evaluations": 42,
+        "iterations": 39,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "objective": 1.6845520696102751,
+        "status": 0,
+        "success": true
+      },
+      "history_scale_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean"
+      ],
+      "trained_through_season": 2023
+    },
+    "2025": {
+      "context_instance": {
+        "context_effective_cutoff": null,
+        "model_family": "context_prior",
+        "spec_version": "1.3",
+        "target_season": 2025,
+        "trained_through_season": 2024
+      },
+      "context_location_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean",
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite",
+        "returning_pct_ppa",
+        "transfer_in_prior_usage_sum",
+        "transfer_in_prior_defensive_impact_db_sum",
+        "transfer_in_prior_defensive_impact_db_available"
+      ],
+      "context_model_sha256": "2aa5fb910f5113eebc689e1440d0e6caf3ee5298c9de08def23281d025d1f113",
+      "context_optimizer": {
+        "function_evaluations": 347,
+        "iterations": 322,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "objective": 1.6414790841504134,
+        "status": 0,
+        "success": true
+      },
+      "context_scale_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean"
+      ],
+      "history_instance": {
+        "context_effective_cutoff": null,
+        "model_family": "history_prior",
+        "spec_version": "1.1",
+        "target_season": 2025,
+        "trained_through_season": 2024
+      },
+      "history_location_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean"
+      ],
+      "history_model_sha256": "60c8d850b01ff5bf24571e0cc88c62493a6478f24410bdf948589b0d64ce10da",
+      "history_optimizer": {
+        "function_evaluations": 41,
+        "iterations": 39,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "objective": 1.6860095764852914,
+        "status": 0,
+        "success": true
+      },
+      "history_scale_features": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean"
+      ],
+      "trained_through_season": 2024
+    }
+  },
+  "script_sha256": "c9675e1387c5a62c62e9cdd6f7bea045e977acc81fffb67ccea590b8caf2671b",
+  "secondary_uncertainty_decomposition": {
+    "by_season": {
+      "2023": {
+        "gain_share": 0.03158575691815063,
+        "mean_ordinary_gap": 0.044737505259436094,
+        "mean_uncertainty_gain": 0.0014130679662490337,
+        "qualifies": false,
+        "qualifying_post_crossover_checkpoints": 6
+      },
+      "2024": {
+        "gain_share": 0.027834930108876256,
+        "mean_ordinary_gap": 0.05264788408892566,
+        "mean_uncertainty_gain": 0.001465450173995464,
+        "qualifies": false,
+        "qualifying_post_crossover_checkpoints": 6
+      },
+      "2025": {
+        "gain_share": 0.01781837000861824,
+        "mean_ordinary_gap": 0.04563470991679049,
+        "mean_uncertainty_gain": 0.0008131361465333331,
+        "qualifies": false,
+        "qualifying_post_crossover_checkpoints": 6
+      }
+    },
+    "checkpoint_effects": [
+      {
+        "checkpoint": 2,
+        "gain_share": -0.35402088626452494,
+        "ordinary_gap": 0.011454163322382804,
+        "season": 2023,
+        "uncertainty_gain": -0.004055013050808576
+      },
+      {
+        "checkpoint": 3,
+        "gain_share": 0.002752368617495856,
+        "ordinary_gap": 0.03238289440435693,
+        "season": 2023,
+        "uncertainty_gain": 8.912966230223418e-05
+      },
+      {
+        "checkpoint": 4,
+        "gain_share": 0.09334561338656948,
+        "ordinary_gap": 0.025604388020541435,
+        "season": 2023,
+        "uncertainty_gain": 0.002390057305165172
+      },
+      {
+        "checkpoint": 5,
+        "gain_share": 0.10774102477573133,
+        "ordinary_gap": 0.051634121867199845,
+        "season": 2023,
+        "uncertainty_gain": 0.005563113203367109
+      },
+      {
+        "checkpoint": 6,
+        "gain_share": 0.037719555867800084,
+        "ordinary_gap": 0.06796076837384213,
+        "season": 2023,
+        "uncertainty_gain": 0.0025634499994957594
+      },
+      {
+        "checkpoint": 7,
+        "gain_share": 0.024281425260530225,
+        "ordinary_gap": 0.07938869556829342,
+        "season": 2023,
+        "uncertainty_gain": 0.001927670677972504
+      },
+      {
+        "checkpoint": 2,
+        "gain_share": 0.054422050171559266,
+        "ordinary_gap": 0.030160490817853436,
+        "season": 2024,
+        "uncertainty_gain": 0.0016413957444880722
+      },
+      {
+        "checkpoint": 3,
+        "gain_share": 0.09984831015995795,
+        "ordinary_gap": 0.026499373350401534,
+        "season": 2024,
+        "uncertainty_gain": 0.0026459176493354164
+      },
+      {
+        "checkpoint": 4,
+        "gain_share": 0.016712668307499665,
+        "ordinary_gap": 0.04688433006553083,
+        "season": 2024,
+        "uncertainty_gain": 0.0007835622572045509
+      },
+      {
+        "checkpoint": 5,
+        "gain_share": 0.0032225793530611824,
+        "ordinary_gap": 0.07140719869360446,
+        "season": 2024,
+        "uncertainty_gain": 0.00023011536416994716
+      },
+      {
+        "checkpoint": 6,
+        "gain_share": 0.01541349307206999,
+        "ordinary_gap": 0.07063523817510164,
+        "season": 2024,
+        "uncertainty_gain": 0.0010887357542559428
+      },
+      {
+        "checkpoint": 7,
+        "gain_share": 0.03418138343831441,
+        "ordinary_gap": 0.07030067343106206,
+        "season": 2024,
+        "uncertainty_gain": 0.0024029742745188543
+      },
+      {
+        "checkpoint": 2,
+        "gain_share": -0.11707294674174436,
+        "ordinary_gap": 0.018129527779788823,
+        "season": 2025,
+        "uncertainty_gain": -0.0021224772402161918
+      },
+      {
+        "checkpoint": 3,
+        "gain_share": -0.016017654514119004,
+        "ordinary_gap": 0.04223534114542371,
+        "season": 2025,
+        "uncertainty_gain": -0.0006765111027533521
+      },
+      {
+        "checkpoint": 4,
+        "gain_share": 0.06718669853475222,
+        "ordinary_gap": 0.041637613690116204,
+        "season": 2025,
+        "uncertainty_gain": 0.002797493798704309
+      },
+      {
+        "checkpoint": 5,
+        "gain_share": 0.0341004217171576,
+        "ordinary_gap": 0.04753193352210516,
+        "season": 2025,
+        "uncertainty_gain": 0.0016208589781356864
+      },
+      {
+        "checkpoint": 6,
+        "gain_share": 0.033506480695222704,
+        "ordinary_gap": 0.05690142647414298,
+        "season": 2025,
+        "uncertainty_gain": 0.0019065665476865057
+      },
+      {
+        "checkpoint": 7,
+        "gain_share": 0.020080708992059246,
+        "ordinary_gap": 0.06737241688916606,
+        "season": 2025,
+        "uncertainty_gain": 0.0013528858976430413
+      }
+    ],
+    "qualifying_seasons": [],
+    "rule": "Run component decomposition only if C-center/H-uncertainty gains at least 25% of the ordinary C/H posterior NLL gap on average across eligible post-September checkpoints in at least two of 2023-2025.",
+    "triggered": false
+  },
+  "software": {
+    "python_version_pin": "3.13",
+    "study_runner": "scripts/study_context_history_crossover.py"
+  },
+  "sources_sha256": {
+    "data/processed/history_context_posterior_study/historical_checkpoints.csv": "cb8398e6292483b0e61e1e77547ffe6b4e926fbf7672e0d0edac9590bc537c82",
+    "data/processed/history_context_posterior_study/historical_cutoff_audit.csv": "9f3f83c50902863a99467efb31fb8cd75f09e8856e6da3d71336a200cfd26511",
+    "data/processed/history_context_posterior_study/historical_evidence.csv": "038abdae5c52e41f1f9c66f63e002dd51d827c0363d9ea4511931d479292bb5d",
+    "data/processed/history_context_posterior_study/historical_teams.csv": "b85d72a1a386a10d5b123a18ae9cdc79e14dafc6c7d56b0a9877fd4389260daa",
+    "data/processed/posterior_backtest/2022_rolling.json": "c5682503bc02cda1188ab444d4b3674cabd40e8a5fd8f36ebf070eee9bdeb648",
+    "data/processed/posterior_backtest/2023_rolling.json": "c06a263a8336bf164b9a6be1e78865fca3f5bda86711ffca1cf96048615eead7",
+    "data/processed/posterior_backtest/2024_rolling.json": "d64e2da6f0316ba44da44151cda19aa4d06e800e959454d8823948b7a06794b8",
+    "data/processed/posterior_backtest/2025_rolling.json": "698a0620d869ebf54eeedaed370d04be5a07fbaf3130cfb9d81f909539af7fe4",
+    "data/processed/preseason/context_v1_3_candidate/context_coverage.csv": "79edb50fd77266256b6cfcd34991e722189d8f13c8c1472ae6b2db1b0b3479fc",
+    "data/processed/preseason/context_v1_3_candidate/fitted_model.json": "37844804bb21c965121c91acedf5699c67e9b177d8b51a433634dc6d8c06125c",
+    "data/processed/preseason/context_v1_3_candidate/historical_transfer_features.csv": "3b3680cf63806033cf6d67813a1359ada455e8e7528bf310a27b37d5cda7a726",
+    "data/processed/preseason/context_v1_3_candidate/model_spec.json": "a0da145904625a7ca323935062e7ada9068c009f85df7b8a200298c4a0b9795e",
+    "data/processed/preseason/context_v1_3_candidate/rolling_metrics.csv": "3bd3f6933b0116535da783259450772c29880319ebf0cf1e27bd79e57bde384b",
+    "data/processed/preseason/history/model_spec.json": "7e6ab6cff4f66484616dfccadb6fcf321bf058bae4331b402efab5dd7c711790",
+    "external_input/team_season_rank_distributions.csv": "03e4e372017aedb45392ff7d790cea25f461db9b6dc846514c762ff46e2cab00",
+    "raw_coach_tenures/air_force.json": "401bd757f32157c17c66e489eef68570d1bb1e66558ea601301a7edf9c81a9e6",
+    "raw_coach_tenures/akron.json": "43de5ed377a43f8c660122296b032c95adfd6a42f23e6a042ad19b0176f1ab3d",
+    "raw_coach_tenures/alabama.json": "c3ccb2819bf3d2f0aad4723d02d1e81f8a7d1ae9dee6d26c9f9ccac4188e7306",
+    "raw_coach_tenures/app_state.json": "dc918911a4c130ffd52d5c21e0bf774d75e47a28b69ec4e9a5e3fc4f082a6cf1",
+    "raw_coach_tenures/arizona.json": "7c7d7f04bec3becaa41b8983f20ffd5f561cba802cb16acb27cd5c128045a24d",
+    "raw_coach_tenures/arizona_state.json": "37e8bd13c44c96d2a3df4de0b8bbb0c37a59adb00b1e6539c51d423b467a31c9",
+    "raw_coach_tenures/arkansas.json": "d35d83cde958447bd2abcbf788eec1877fb3e66156b4cd4e19e2a4b3abfca8ff",
+    "raw_coach_tenures/arkansas_state.json": "5584d88cce85e5ae2190faef0e84adb531df541ff453002eec89d34e895d2e83",
+    "raw_coach_tenures/army.json": "2b4a7b0115788bfb425d1500dc003d691cb740eae13ab47ac1fb1e68289c6533",
+    "raw_coach_tenures/auburn.json": "0c38cbb272530b99f67a75c52c530c0f2928bbbc69b37ef4f96982b9d2cce9b3",
+    "raw_coach_tenures/ball_state.json": "5d0f06e552bb6bcf25bcb5e5d780f5db0400aa84d33a47215077f3d68e45f188",
+    "raw_coach_tenures/baylor.json": "151d1f8ac953476d27c12294935555d4b6b9f68537d1fefb17c9e91804fec9ba",
+    "raw_coach_tenures/boise_state.json": "e2bcbea472b4c158ebfed1b4035294e8f4566370ce99a265a8859aefe496be74",
+    "raw_coach_tenures/boston_college.json": "ac68a42dff87c67acb06cf2d29071e11aae5bdec7945df0a20202e2b7ca40ebd",
+    "raw_coach_tenures/bowling_green.json": "412bba69a3aa50fa8187f48472e9b7939fec71cbb1b0b9ceaa32281627f86df1",
+    "raw_coach_tenures/buffalo.json": "f9aaf3c61c5fd58a8dba7298efd90a6e2ae2a6085dfa022368af08805d0432da",
+    "raw_coach_tenures/byu.json": "a2b7ec84798fd8f93cf012bf985ff249064b512f71aaf10afb2fbc0dba908704",
+    "raw_coach_tenures/california.json": "6588de3a3a39ec75147dc878213781c76b1956ae282c9443d2c501440b94390a",
+    "raw_coach_tenures/central_michigan.json": "2dc05cb4a810ebcbf72accb6945790791213eeb693cbfb2464788a9ed2e18a61",
+    "raw_coach_tenures/charlotte.json": "58fb9a8d16ab243f87b39c22ff8a24a6bd229282576240ce8f260b3d52cc8d62",
+    "raw_coach_tenures/cincinnati.json": "342e82877dc39328049c23ecfe81399762b9eb9a626bb630aded6ba55a192445",
+    "raw_coach_tenures/clemson.json": "7e3f582486c81f4fccabaaca6a8a8fb8f9a6ccfc2ef5b82b452ff232c40e0edf",
+    "raw_coach_tenures/coastal_carolina.json": "9cd3637dd880d6247054d85a9cb38e10c5137b87027fc195f78b0cb3c6ab62e3",
+    "raw_coach_tenures/colorado.json": "63a9b5e66ea3d1afd9cdd967b4fa7a5f437f9c92e295f67edaaac7f925c87ae9",
+    "raw_coach_tenures/colorado_state.json": "784cd972dfa00aaef3242a55d9d40d2c55cbcd0b4be74ab6c99082165da667ef",
+    "raw_coach_tenures/delaware.json": "b3ca70f772aa9c45972545f8ab310ca31e74e9263778db0553188c269b693902",
+    "raw_coach_tenures/duke.json": "6d537bbaf719134a466634e6f2cde0b2f62c837fd33cb5284a107d7cc26ed757",
+    "raw_coach_tenures/east_carolina.json": "22574f22211dcb2ebc9df1451f50c4445ecf57b621f489fdc59691bae7edfee7",
+    "raw_coach_tenures/eastern_michigan.json": "25fa64f7c264b4c7d7c3fcf441df04f614eb4e4bc79d2dbc3915883dcc0a8c5c",
+    "raw_coach_tenures/florida.json": "1483888cfa97795d2034ff7e288e4a50091f65912589c6bb38ecd6030de3ef19",
+    "raw_coach_tenures/florida_a&m.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "raw_coach_tenures/florida_atlantic.json": "d8c8615fd2f91022616ed42f50b3ac6797e960d33d1a7b4d8de62b605e986c3a",
+    "raw_coach_tenures/florida_international.json": "e50cc98f8520991cef2357a1753aa2e10ffaab751dbbd60df64c5e400279de2f",
+    "raw_coach_tenures/florida_state.json": "c668ee728ba60ae65f1b9edbcd218b290bfc796cca40552be0af06e89f008e8c",
+    "raw_coach_tenures/fresno_state.json": "a159de49e61de9c5dc06f1513b6b92ed16c6a1dadcf77674b54542abb9364e93",
+    "raw_coach_tenures/georgia.json": "53abf36df8c776323a8e98d1483f188a80956b69225c4f9989bce69f9b4f8208",
+    "raw_coach_tenures/georgia_southern.json": "6da6c11ee4a9014b797f7665ac08660da4fb9e3a374048c791dc4af0d989b60f",
+    "raw_coach_tenures/georgia_state.json": "0c5e76c6d0e1ebeeadba99dd131f22a19e7d5700bb022375230c8c73ed72c175",
+    "raw_coach_tenures/georgia_tech.json": "b9c672c87f013842e0a9e8632f4802ff0ed95fb2dc82533809d77efc812535f3",
+    "raw_coach_tenures/hawai'i.json": "cc1fc52a25cd27c4a73813142103ab6fe10119fe1e84a50a8a2d4e8da4288201",
+    "raw_coach_tenures/houston.json": "4b86e5d8a7955630e2971870e8855b3b38a83159b3ab04468080ab5cab9cf856",
+    "raw_coach_tenures/idaho.json": "a11328cc516f7754a4d86e4b2e541d4ce0ca096cde8aaff4433e323192548ee0",
+    "raw_coach_tenures/illinois.json": "e572519223ab2ab4e52ef7f1cc5ee82b6da65486a45f8a6dabfe633cb6472f3b",
+    "raw_coach_tenures/indiana.json": "2865b3538550803e425cdffa1a5ebf6925d5486f5987183cc614b17ab84f8ffc",
+    "raw_coach_tenures/iowa.json": "23c3f46cf21787e3155c5b7a02b57f695fe4fd850cffbfd95930976da1e73011",
+    "raw_coach_tenures/iowa_state.json": "c1398bc18078c62b13d89b60eecf949f0d2e0249c155c7544f31fce21a63f7d5",
+    "raw_coach_tenures/jacksonville_state.json": "c8bf7c2bb74d356a78881f123f2dcd8d3630299d03cfa83eec4249a69bdd902b",
+    "raw_coach_tenures/james_madison.json": "dce793895036d431dd79f3e90c0f366507ae87c5a5dd91e18cad00cb4f841eb5",
+    "raw_coach_tenures/kansas.json": "efe4b451b99e576d214393dbae1813d7e407c62087e91e8ab52047563ca45903",
+    "raw_coach_tenures/kansas_state.json": "af83e9c626c4f0c1f4c25e76d22319708b134de0db5733d0b86ff0575258fb35",
+    "raw_coach_tenures/kennesaw_state.json": "2997ef7d760443732c4f6b783e9a4a8681edbcf64c0232e0aeeb04b28908b7bc",
+    "raw_coach_tenures/kent_state.json": "82482a8734e2a4adf73df26b862296e4d472d4e2ef8874d68228214a3bcb4174",
+    "raw_coach_tenures/kentucky.json": "3630d86784f4766d782e7af815b40d514ae71aaa28ae8183e3a803605874d381",
+    "raw_coach_tenures/liberty.json": "f726236dff4e05af32785b640b1baa2d5b3256ffce72c9972f213ee55574551f",
+    "raw_coach_tenures/louisiana.json": "aafd1cdd7b8e8830b70cd3f8c4c248ff5823b1a10e8eb27f51a9dc6382929fe6",
+    "raw_coach_tenures/louisiana_tech.json": "cc86246413209f9ec30b2343bbcffd6aab75956e074bc1790711220dba80aece",
+    "raw_coach_tenures/louisville.json": "9385e64461f07cde62927c1f47423d0ee161f35420ca3bee2c7f0d23749d1e41",
+    "raw_coach_tenures/lsu.json": "85a0b5f87e394559d4371228a370e869a0fdc20f8c3d392c93dd051df026c4f1",
+    "raw_coach_tenures/manifest.json": "1f44e644ed3cec4989cbd779cbb1de331d06ec03187a8bf730c1dd4213e2928c",
+    "raw_coach_tenures/marshall.json": "22ca9f7ae8eaa6687380bfc5eb84c846f0f4361c34265b15b5c67fa1340a1dd9",
+    "raw_coach_tenures/maryland.json": "cd895a489b8badfa4aad16b5a608fb173dabf0d48d4e4075bd15c050d73c19e2",
+    "raw_coach_tenures/massachusetts.json": "930aefef1c0a00ebd3a0fbef9a4de0c8e0bb811cb5a3152c54779e2ebc20e386",
+    "raw_coach_tenures/memphis.json": "40e8dfbe1b281b2e76a767ccc4560a366328b4dd51606fe4069e884a33a610d5",
+    "raw_coach_tenures/miami.json": "80ad76a9f19a345f78a91268986d40425b1a040903c41a018070ec6d54611959",
+    "raw_coach_tenures/miami_(oh).json": "838fd92d73bff9ac2845322cfddddbc5d883ca696bfc105ddfe29ddc06e5a29f",
+    "raw_coach_tenures/michigan.json": "ac9c004acf6dc1ed584148e66d97c076ea9f6fd4e3aa15b8b84e22ab3cb07797",
+    "raw_coach_tenures/michigan_state.json": "0749f2455f86f063d0a4cbb46c63755dc1e19c47620993e6acae8b4cc1098238",
+    "raw_coach_tenures/middle_tennessee.json": "0f7d8f620172486e38be73f11e89cbfa5b5e3d21da4ef226a18bf40341e99d57",
+    "raw_coach_tenures/minnesota.json": "f31b9e576807fff70d1a65b5bf928c586e12e489b4c22e9419fac0a0e842be52",
+    "raw_coach_tenures/mississippi_state.json": "073bfbb1dc823b8ea2207cec9e23cddc7dadcdd6d23063ebde828b7e73d95d11",
+    "raw_coach_tenures/missouri.json": "6d050f8c7c2c00de96a072b867d7f58c722d44ee9bc508da588a2ad73babded5",
+    "raw_coach_tenures/missouri_state.json": "96dc90915636e359a32133a579d3e8288d5a7292a6b9a52ef758e2eef2919978",
+    "raw_coach_tenures/navy.json": "166af25ba314370c95ab0aff9b3b4933417ffc7f8bc1bde7aaab07f70e498b48",
+    "raw_coach_tenures/nc_state.json": "84df2846bc3f226b3ea155506854579cb52cd1c55fe346105f422f3608f3bdb8",
+    "raw_coach_tenures/nebraska.json": "7103d2ae6eb258ce85a0edc1a2992cf4dc184a5767d6056f48efa525c435fc81",
+    "raw_coach_tenures/nevada.json": "2dbb103a53c7abb64a6287362ea6582307631ff02ce54479d7e55bc823da3295",
+    "raw_coach_tenures/new_mexico.json": "bd8196720d6849e671e08dfddb4f15baebc179a4c7c42af1f7e25dbafcfcc7f6",
+    "raw_coach_tenures/new_mexico_state.json": "720934d9bb73d2c79ce32f742c970c017497543940c2cd21e5169fc78b8c50ef",
+    "raw_coach_tenures/north_carolina.json": "1275595b80f4f080cd80838d64d59085d58a975a33c14db03c426a9df93395f7",
+    "raw_coach_tenures/north_dakota_state.json": "9aee50a1482d989236533fa265491ec3587dd7161339249f159bd4acc2b39eb4",
+    "raw_coach_tenures/north_texas.json": "ad5fb6d1a933900a54c033453fb6b1f57e4c9cdab31b791b2655bc839c1469d6",
+    "raw_coach_tenures/northern_illinois.json": "6dca3b8c53d5695883410031719db0f43213b60ad1b0cb4927ed7a1e661b3b45",
+    "raw_coach_tenures/northwestern.json": "b2df2c7b507216fcd0131116791e073a39d94c3092d373d01fea7f33fe532ae0",
+    "raw_coach_tenures/notre_dame.json": "11f2570a5f5b2903a3184fdd90e8316093485abad91d1da9b2d806a20d18bf10",
+    "raw_coach_tenures/ohio.json": "7b987ba69ed169f6135f331392a553eb79eb56d0cd92dd82cbd7078d4fe8afda",
+    "raw_coach_tenures/ohio_state.json": "53ebfa01d0fa28a9ac07ce77a6d3dfe1e1b62bdd37fbbe5f8adf026b1ef04a45",
+    "raw_coach_tenures/oklahoma.json": "426e694d9348e3019c3346f7fa36e3744fac9449a1ca34b73c1e0897a6c7a627",
+    "raw_coach_tenures/oklahoma_state.json": "0d57c5dfbc3fe57ac631032d46fca91b4cdbfc923ef9293e3e587caac0735b97",
+    "raw_coach_tenures/old_dominion.json": "d04d51f3f75e62bdb338c0fbabe792c8eb83f80b58fd66500170f4f628c875d3",
+    "raw_coach_tenures/ole_miss.json": "d4baffc58594d23c504b3e5ec798a1506ff7008998166f8230c48d4453860b0c",
+    "raw_coach_tenures/oregon.json": "ff8f46fc0f6027180f5c6f2598fb94e4b53d64da4ce479c120c15ba40d269094",
+    "raw_coach_tenures/oregon_state.json": "d3e15a8d30703b3fab0ceba4c7b3309edfbac29366d2d9cb813c5f5ea492c468",
+    "raw_coach_tenures/penn_state.json": "3718e170a71a5cee783070a1ca1845f153204b1961154f85e186a355ae989b50",
+    "raw_coach_tenures/pittsburgh.json": "361bfa70afd4a61b9722821edd73808b7da8d689251be32138916c03e93d9ac3",
+    "raw_coach_tenures/purdue.json": "66be698dc97520899871180cf45d0a28e4430ff50ca062eea2a933b5c0175c15",
+    "raw_coach_tenures/rice.json": "4129276812c2325be2b4e80e255d9c47b39b25738e25d83747594e55de1ed66a",
+    "raw_coach_tenures/rutgers.json": "6a3d681a6029fc5e9eb5196170acf18d6c63609620478492dc4321182bce1cd2",
+    "raw_coach_tenures/sacramento_state.json": "0f831ebe1bac1a3e7a022972fd95a615de8f75453ce126b7d106bb3432a103b6",
+    "raw_coach_tenures/sam_houston.json": "db3feb4a94eb8c3c52c2daad4677182a3c67aa56bea0a146ea6a0139745e5f42",
+    "raw_coach_tenures/san_diego_state.json": "755767b7c4fbdc67f0f2739c3863e7de00f0453d3884fea0c1183a9421d8822d",
+    "raw_coach_tenures/san_jos\u00e9_state.json": "34579acb5cd30df0217c92b0a9acebd432d6da6e8cbd5d04abd1fa4833e02df7",
+    "raw_coach_tenures/smu.json": "bfd4a88b76cef5555edd7c08241c18bc11ce81147d3b3513310ff2dda318f90f",
+    "raw_coach_tenures/south_alabama.json": "eab82ed2e8896b046c520388fda303af8c0b5cc89f1425470897a4656b83c116",
+    "raw_coach_tenures/south_carolina.json": "45ea567a12436c3031adb9a927659a3c80b02ab3bd9a4a33ad2c07987c9e96ba",
+    "raw_coach_tenures/south_florida.json": "2fed34600ed2f3ccc6e88ae140d719d03a7286f9467f9aa4f6a9472cc9c53c37",
+    "raw_coach_tenures/southern_miss.json": "2f772b11a143ed2a05d240db06b3936cf2c81c5236c4542dcef4311440151b56",
+    "raw_coach_tenures/stanford.json": "ba5f66359b3d4cbf9fde5490ddfa3d693b36aaf709800fec99ffa8bc1af78b1b",
+    "raw_coach_tenures/syracuse.json": "1f38c1a8b3e7a1a279fab44b851f2ef657ab62ff4ae3efdbe5a79665d05fc53d",
+    "raw_coach_tenures/tcu.json": "9fb35ca047a7274e9d7bc3a562c26d879255cf62cefc2e9dd00b478ea7b564e3",
+    "raw_coach_tenures/temple.json": "1834bb5bc5db1251e6a2523c9b32d40d5685d6a5b02f167d09e7b186d0dab458",
+    "raw_coach_tenures/tennessee.json": "de6f0eb1f6996f2b9d107ee2579992f087dabb5ddc6127bc3b61d6818f1ec0c9",
+    "raw_coach_tenures/texas.json": "e43d7cd90f3a9c50739e0ed4c292d537b34feccb663d9322530f1207456631ac",
+    "raw_coach_tenures/texas_a&m.json": "71305c105d6d96677fab1543a1823ebb185c1b08bb3a10e83e8e2f30e0d51945",
+    "raw_coach_tenures/texas_state.json": "f513b19787c386665008d9cb8ca31057f4ec6565779ae1d20191a2501b2ef4da",
+    "raw_coach_tenures/texas_tech.json": "eb5c0a42f5c55467ff07ffe033d88c9b35a467085534d72196b991db4f6f26d3",
+    "raw_coach_tenures/toledo.json": "ddba99df359f0fb28c3e78c768d4cece89ac48b01e6467a1432f0ad5d8306bb8",
+    "raw_coach_tenures/troy.json": "0ae811873a9b03da9b497589ae3f5d6d97543274c4a0ae2f485d5a7f7943b606",
+    "raw_coach_tenures/tulane.json": "715064244aa99b42300a5a0e9f1f38e7ae93f81d1e462d09d625f348b7f21b7b",
+    "raw_coach_tenures/tulsa.json": "3c63d23b6963b009a666414708b047dd0f056583ae40f3d42b7027f4193c5880",
+    "raw_coach_tenures/uab.json": "ccbcd0d0da5108a891a94b6afc1d960027c9f389e5bdc9073a713716aeaf556c",
+    "raw_coach_tenures/ucf.json": "25ec65a4fa9e80897ce8ed368014bc136bd5671d677fd2effada4036b0c8c1e0",
+    "raw_coach_tenures/ucla.json": "e2cfd6ca1dd42b8606b413a858eaa42523fe8003fa855ee6911aa61f2f2184ae",
+    "raw_coach_tenures/uconn.json": "7f999d4518cfd358a1e0cd763a9f178ca429f0f8ea39e461905200cca122b468",
+    "raw_coach_tenures/ul_monroe.json": "cfa538772744e07506d0d77ef48be4c075c27727dd14b981e8090acc37f1192b",
+    "raw_coach_tenures/unlv.json": "3cea0b194bc1eaacafaae8d0bfd43c72dce72dab09d2b73378aec13a42adf782",
+    "raw_coach_tenures/usc.json": "6d1c56be8e72e747e363bba5fba78d001304a22b699517761af84b41575cd043",
+    "raw_coach_tenures/utah.json": "882ce057c01441d2a2488aacaa4e26e2d8adcf633696a6502efdc5d4ba888509",
+    "raw_coach_tenures/utah_state.json": "ae3e7bf1bc1dbf568bdf954a4c4872ffb36f86092fbfebdf9b7d0c52d54f03a9",
+    "raw_coach_tenures/utep.json": "b6b2ce5b551136b3fc75d8666f6e82837e33011689a649d3f73c9291c6539b39",
+    "raw_coach_tenures/utsa.json": "92bda72e92f350dce7c34b105a10c190186b9adb55b5d1f3b2c2dfe2da700426",
+    "raw_coach_tenures/vanderbilt.json": "8b5f2d6c8da2939beff0c93762c4400ccd5da435234f04a219caf81c5217fb26",
+    "raw_coach_tenures/virginia.json": "a4e473f5181e6942931d03f1fd6cbcb2961dd72209bfff005ff0fccaf8c36542",
+    "raw_coach_tenures/virginia_tech.json": "763e947a23299e1b5474c1a62f3573a9893c5945ef57e7f7f041e2aeb3ad7ce3",
+    "raw_coach_tenures/wake_forest.json": "8b1c23e8486581eec6a2e17c44e79be5f0ca0238443c9ab3a2a5c36ea8e3aade",
+    "raw_coach_tenures/washington.json": "46387b29f745695b1200a8ae0eeef6740c10d5b03f3034931219c36f11233da9",
+    "raw_coach_tenures/washington_state.json": "a982c37b2b9722f2f7d9bf9298681ed2e1e2f79b8f85c7eb5074f6769ac874e2",
+    "raw_coach_tenures/west_virginia.json": "6ff8094e0a91cb5a157df84bca3e4aa74871a72fb04a81275d8def68d43d8d4f",
+    "raw_coach_tenures/western_kentucky.json": "d281544272370aa861fc27f04315bef56ce11b339a9d29ec56de04d0bcebccff",
+    "raw_coach_tenures/western_michigan.json": "c6e09409cc8910a7a4c1519c2b2cb145506c86faa60592187c5966c002a5e725",
+    "raw_coach_tenures/wisconsin.json": "9ea04ce59f033e2e451732dc0a653c253e4d55ca83ddc699f90aae1ec0e94388",
+    "raw_coach_tenures/wyoming.json": "f5695da5eb84cd662a5bcaca1382253fe9cd0f78660dac5309c15b50eba649bf",
+    "raw_games/2022-fcs.json": "a20030838476f73d1f3aea63bba57ed1ecfa03f99e95cee5c2a780deeee05816",
+    "raw_games/2022.json": "3b4d9d353faa8ca9312534ded0747bdaa1cdcca21e89fcff1458980ab9f00747",
+    "raw_games/2023-fcs.json": "df5bb461fe8f3e302eb1d5f52896b509d7f5660364d3d43643c5c540e5476817",
+    "raw_games/2023.json": "417fb8191bec11e20fb2370e5510a2ff8a85cc67f07ec4371e873a935f9af35f",
+    "raw_games/2024-fcs.json": "3cb6327c61d807fd4b8dfe669f0905694afa67164770ab2e997773ea2aaa72c5",
+    "raw_games/2024.json": "9aeccada4e63f4ddf22d676eb55dbded71fd9bdb3ac07202ee44ed8f47d93f93",
+    "raw_games/2025-fcs.json": "38329f854c0df38d17b34d5f7841753d6638d7377592dcf743cb4e27cbd9d32f",
+    "raw_games/2025.json": "6312d8406be09dee0064069668fc40879dd0736ed3e49946c6c72192e6a0e4fc"
+  },
+  "study": "issue-146 Context 1.3 / History 1.1 crossover diagnostic",
+  "study_version": "1",
+  "target_seasons": [
+    2022,
+    2023,
+    2024,
+    2025
+  ]
+}
