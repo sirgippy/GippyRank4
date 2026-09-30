@@ -14,14 +14,14 @@ import sys
 import tempfile
 from collections import defaultdict
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from inspect import signature
 from pathlib import Path
 
 import numpy as np
 from scipy.stats import spearmanr
 
-from gippyrank.posterior.engine import Team, infer_posterior
+from gippyrank.posterior.engine import Game, Team, infer_posterior
 from gippyrank.posterior.snapshots import (
     _scheduled_future_fcs_rows,
     add_fcs_fallbacks,
@@ -65,7 +65,10 @@ GAME_FIELDS = (
     "awayPoints",
 )
 BACKTEST = ROOT / "data/processed/posterior_backtest"
-CONTEXT_ARMS = ("frozen_2021", "rolling_origin")
+PANELS = ("frozen_2021", "rolling_origin", "rolling_context_frozen_history")
+# Final cached schedules do not record when a score became final. Games with
+# kickoffs this close to a cutoff are indeterminate and are never evidence.
+RESULT_AVAILABILITY_LAG = timedelta(hours=48)
 SNAPSHOT_PARAMETERS = signature(build_snapshot).parameters
 INFERENCE = {
     key: SNAPSHOT_PARAMETERS[f"inference_{key}"].default
@@ -101,9 +104,10 @@ def load_context(season: int) -> tuple[list[Team], dict[str, dict[str, str]]]:
     return teams, rows
 
 
-def load_rolling_context() -> dict[int, tuple[list[Team], dict[str, dict[str, str]]]]:
+def load_rolling_context(
+    rows: list, cold: list
+) -> dict[int, tuple[list[Team], dict[str, dict[str, str]]]]:
     """Recreate the validated P3 rolling fits, checking their retained prior scores."""
-    rows, cold, _ = c13.load_candidate_rows()
     retained = {
         int(row["target_season"]): row
         for row in read_csv(c13.OUTPUT / "rolling_metrics.csv")
@@ -133,6 +137,76 @@ def load_rolling_context() -> dict[int, tuple[list[Team], dict[str, dict[str, st
         meta = {item.team_id: {"team_name": item.team_name} for item in current}
         result[season] = teams, meta
     return result
+
+
+def load_rolling_history(
+    rows: list, cold: list
+) -> dict[int, tuple[list[Team], dict[str, dict[str, str]]]]:
+    """Use the annual production History fitting and cold-start path."""
+    index = c13.c12.feature_index()
+    tenures = c13.c12.cached_tenures()
+    result = {}
+    for season in SEASONS:
+        through = season - 1
+        model, instance = c13.c12.build_history_prior(
+            rows, target_season=season, trained_through_season=through
+        )
+        if instance.trained_through_season != through:
+            raise ValueError(f"{season}: History fit has wrong training origin")
+        future = c13.c12.inference_rows(season, through, index, tenures)
+        promotion, generic = c13.c12.annual_cold_start_models(
+            cold, trained_through_season=through
+        )
+        predictions, _ = c13.c12.future_predictions(
+            future,
+            model,
+            None,
+            trained_through_season=through,
+            promotion_model=promotion,
+            generic_prior=generic,
+        )
+        teams = [
+            Team(
+                row["team_id"],
+                row["team_name"],
+                "fbs",
+                np.asarray(json.loads(row["pmf"])),
+            )
+            for row in predictions
+        ]
+        result[season] = teams, {row["team_id"]: row for row in predictions}
+    return result
+
+
+def cutoff_safe_games(
+    games: list[Game],
+    included: list[dict[str, str]],
+    cutoff: datetime,
+) -> tuple[list[Game], list[dict[str, str]], list[dict[str, object]]]:
+    """Exclude scores whose availability is unverified near the cutoff."""
+    safe_ids = set()
+    audit = []
+    for row in included:
+        kickoff = datetime.fromisoformat(row["startDate"]).astimezone(UTC)
+        age = cutoff.astimezone(UTC) - kickoff
+        if age >= RESULT_AVAILABILITY_LAG:
+            safe_ids.add(row["id"])
+        else:
+            audit.append(
+                {
+                    "game_id": row["id"],
+                    "kickoff": kickoff.isoformat(),
+                    "home_team": row["homeTeam"],
+                    "away_team": row["awayTeam"],
+                    "hours_since_kickoff": age.total_seconds() / 3600,
+                    "reason": "final score availability indeterminate under 48-hour safety rule",
+                }
+            )
+    return (
+        [game for game in games if game.game_id in safe_ids],
+        [row for row in included if row["id"] in safe_ids],
+        audit,
+    )
 
 
 def load_targets(season: int, target_path: Path) -> dict[str, np.ndarray]:
@@ -194,7 +268,7 @@ def summarize(
     season: int,
     checkpoint: int,
     group: str,
-    context_arm: str,
+    panel: str,
 ) -> dict[str, object]:
     selected = (
         [row for row in rows if row["transfer_group"] == group]
@@ -204,7 +278,7 @@ def summarize(
     result: dict[str, object] = {
         "season": season,
         "checkpoint": checkpoint,
-        "context_arm": context_arm,
+        "panel": panel,
         "transfer_group": group,
         "teams": len(selected),
     }
@@ -279,21 +353,34 @@ def historical_game_root(raw_games: Path):
 
 def historical(
     target_path: Path, game_root: Path
-) -> tuple[list[dict[str, object]], list[dict[str, object]], list[dict[str, object]]]:
+) -> tuple[
+    list[dict[str, object]],
+    list[dict[str, object]],
+    list[dict[str, object]],
+    list[dict[str, object]],
+]:
     likelihood = load_pinned_likelihood(LIKELIHOOD)
     team_rows: list[dict[str, object]] = []
     summary_rows: list[dict[str, object]] = []
     evidence_rows: list[dict[str, object]] = []
-    rolling_context = load_rolling_context()
+    audit_rows: list[dict[str, object]] = []
+    fit_rows, cold, _ = c13.load_candidate_rows()
+    rolling_context = load_rolling_context(fit_rows, cold)
+    rolling_history = load_rolling_history(fit_rows, cold)
     for season in SEASONS:
         frozen_context, frozen_meta = load_context(season)
         contexts = {
             "frozen_2021": (frozen_context, frozen_meta),
             "rolling_origin": rolling_context[season],
         }
-        history, history_meta, _ = load_teams(ROOT, season, "history")
+        frozen_history, frozen_history_meta, _ = load_teams(ROOT, season, "history")
+        histories = {
+            "frozen_2021": (frozen_history, frozen_history_meta),
+            "rolling_origin": rolling_history[season],
+            "rolling_context_frozen_history": (frozen_history, frozen_history_meta),
+        }
         c_keys = {team.team_id for team in frozen_context}
-        h_keys = {team.team_id for team in history if team.subdivision == "fbs"}
+        h_keys = {team.team_id for team in frozen_history if team.subdivision == "fbs"}
         targets = load_targets(season, target_path)
         season_fcs_population = fcs_population(season, target_path)
         if (
@@ -302,6 +389,7 @@ def historical(
             or any(
                 {team.team_id for team in arm[0]} != c_keys for arm in contexts.values()
             )
+            or {team.team_id for team in rolling_history[season][0]} != c_keys
         ):
             raise ValueError(f"{season}: unmatched Context/History/target FBS keys")
         groups = transfer_groups(season, c_keys)
@@ -311,13 +399,23 @@ def historical(
             games, included, excluded, _ = filter_games(
                 game_root, season, cutoff, "weekly"
             )
+            games, included, audit = cutoff_safe_games(games, included, cutoff)
+            audit_rows.extend(
+                {
+                    "season": season,
+                    "checkpoint": checkpoint,
+                    "cutoff": old["cutoff"],
+                    **row,
+                }
+                for row in audit
+            )
             future_fcs = _scheduled_future_fcs_rows(game_root, season, cutoff, "weekly")
             outputs = {}
-            history_replay_nll_delta = 0.0
             for family, original, meta in (
-                ("frozen_2021", *contexts["frozen_2021"]),
-                ("rolling_origin", *contexts["rolling_origin"]),
-                ("history", history, history_meta),
+                ("frozen_context", *contexts["frozen_2021"]),
+                ("rolling_context", *contexts["rolling_origin"]),
+                ("frozen_history", frozen_history, frozen_history_meta),
+                ("rolling_history", *rolling_history[season]),
             ):
                 with_fcs, fallback = add_fcs_fallbacks(
                     list(original),
@@ -337,18 +435,6 @@ def historical(
                         f"nonconverged {season} checkpoint {checkpoint} {family}"
                     )
                 outputs[family] = result.pmfs
-                if family == "history":
-                    old_nll = old["history"]["posterior"]["nll"]
-                    actual_nll = float(
-                        np.mean(
-                            [score(result.pmfs[k], targets[k])["nll"] for k in c_keys]
-                        )
-                    )
-                    history_replay_nll_delta = actual_nll - old_nll
-                    if abs(history_replay_nll_delta) > 0.01:
-                        raise ValueError(
-                            f"{season}/{checkpoint}: History replay materially differs from retained panel"
-                        )
                 evidence_rows.append(
                     {
                         "season": season,
@@ -356,17 +442,25 @@ def historical(
                         "cutoff": old["cutoff"],
                         "family": family,
                         "included_games": len(included),
+                        "indeterminate_games_excluded": len(audit),
                         "excluded_lower_division_games": excluded,
                         "fcs_fallbacks": len(fallback),
                         "iterations": result.iterations,
                         "converged": result.converged,
-                        "history_nll_delta_vs_retained_panel": (
-                            history_replay_nll_delta if family == "history" else ""
-                        ),
                     }
                 )
-            for context_arm in CONTEXT_ARMS:
+            for panel in PANELS:
+                context_arm = (
+                    "frozen_2021" if panel == "frozen_2021" else "rolling_origin"
+                )
                 context, context_meta = contexts[context_arm]
+                history, _ = histories[panel]
+                context_output = (
+                    "frozen_context" if panel == "frozen_2021" else "rolling_context"
+                )
+                history_output = (
+                    "rolling_history" if panel == "rolling_origin" else "frozen_history"
+                )
                 prior = {
                     "context": {team.team_id: team.prior for team in context},
                     "history": {
@@ -380,7 +474,7 @@ def historical(
                     row: dict[str, object] = {
                         "season": season,
                         "checkpoint": checkpoint,
-                        "context_arm": context_arm,
+                        "panel": panel,
                         "cutoff": old["cutoff"],
                         "team_id": key,
                         "team_name": context_meta[key]["team_name"],
@@ -392,7 +486,9 @@ def historical(
                             (
                                 "posterior",
                                 outputs[
-                                    context_arm if family == "context" else "history"
+                                    context_output
+                                    if family == "context"
+                                    else history_output
                                 ][key],
                             ),
                         ):
@@ -417,12 +513,15 @@ def historical(
                         row["transfer_group"] == group for row in at_checkpoint
                     ):
                         summary_rows.append(
-                            summarize(
-                                at_checkpoint, season, checkpoint, group, context_arm
-                            )
+                            {
+                                **summarize(
+                                    at_checkpoint, season, checkpoint, group, panel
+                                ),
+                                "cutoff": old["cutoff"],
+                            }
                         )
             print(f"completed {season} checkpoint {checkpoint}", flush=True)
-    return team_rows, summary_rows, evidence_rows
+    return team_rows, summary_rows, evidence_rows, audit_rows
 
 
 def snapshot_pmfs(directory: Path) -> dict[str, np.ndarray]:
@@ -543,7 +642,13 @@ def write_provenance(
                         str(season): f"1.3 research P3 fitted through {season - 1}"
                         for season in SEASONS
                     },
-                    "history": "1.1",
+                    "history_frozen_2021": "1.1 retained historical PMFs",
+                    "history_rolling_origin": {
+                        str(
+                            season
+                        ): f"1.1 annual production builder fitted through {season - 1}"
+                        for season in SEASONS
+                    },
                     "likelihood": "Historical Likelihood V1",
                 },
                 "inference": INFERENCE,
@@ -557,6 +662,7 @@ def write_provenance(
                 },
                 "historical_seasons": SEASONS,
                 "historical_cutoffs": "exact dates from retained rolling posterior backtest",
+                "result_availability": "Completed scores from final cached schedules are eligible only 48 hours after scheduled kickoff; closer games are indeterminate and excluded, not asserted completed at cutoff",
                 "current_2026": "retained matched published snapshots; descriptive only, no final-rank target",
             },
             indent=2,
@@ -582,11 +688,12 @@ def main() -> None:
         _,
         source_hashes,
     ):
-        team, summary, evidence = historical(target_path, game_root)
+        team, summary, evidence, audit = historical(target_path, game_root)
         game_hash = sha256(game_path)
     write_csv(OUT / "historical_teams.csv", team)
     write_csv(OUT / "historical_checkpoints.csv", summary)
     write_csv(OUT / "historical_evidence.csv", evidence)
+    write_csv(OUT / "historical_cutoff_audit.csv", audit)
     current = current_season()
     write_csv(OUT / "current_2026_descriptive.csv", current)
     write_provenance(target_path, game_hash, source_hashes)
