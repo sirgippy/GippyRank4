@@ -49,6 +49,7 @@ REQUIRED_SOURCE_SEASONS = {
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
+from gippyrank.transfer_audit import audit_transfer_records, parse_participation_payload
 from gippyrank.transfer_oracle import (
     TransferRecord,
     UsageRecord,
@@ -58,6 +59,7 @@ from gippyrank.transfer_oracle import (
     _team_index,
     _usage_index,
     available_by_cutoff,
+    deduplicate_usage_records,
     normalize_player_name,
     normalize_team_name,
     parse_transfer_payload,
@@ -147,8 +149,7 @@ def verify_historical_sources(
                 "record_count": record_count,
             }
         )
-        if kind in {"portal", "usage"}:
-            present[key] = payload
+        present[key] = payload
 
     missing_keys = {
         (kind, season)
@@ -192,12 +193,21 @@ def verify_historical_sources(
 def load_verified_transfer_data(
     manifest_summary: dict[str, Any],
     payloads: dict[tuple[str, int], bytes],
-) -> tuple[list[TransferRecord], list[UsageRecord], set[int], set[int]]:
-    """Parse only the portal and usage bytes returned by hash verification."""
+) -> tuple[
+    list[TransferRecord],
+    list[UsageRecord],
+    list[Any],
+    set[int],
+    set[int],
+    set[int],
+]:
+    """Parse the portal, usage, and stats bytes after manifest verification."""
     records: list[TransferRecord] = []
     usage: list[UsageRecord] = []
+    participation = []
     portal_seasons: set[int] = set()
     usage_seasons: set[int] = set()
+    stats_seasons: set[int] = set()
     source_items = {
         (str(item["kind"]), int(item["season"])): item
         for item in manifest_summary["sources"]
@@ -218,9 +228,19 @@ def load_verified_transfer_data(
         elif kind == "usage":
             usage.extend(parse_usage_payload(decoded, season=season))
             usage_seasons.add(season)
+        elif kind == "stats":
+            participation.extend(parse_participation_payload(decoded, season=season))
+            stats_seasons.add(season)
         else:
             raise ValueError(f"unexpected parsed historical source kind: {kind}")
-    return records, usage, portal_seasons, usage_seasons
+    return (
+        records,
+        usage,
+        participation,
+        portal_seasons,
+        usage_seasons,
+        stats_seasons,
+    )
 
 
 def _legacy_normalize_player_name(value: str | None) -> str:
@@ -400,23 +420,40 @@ def replay_historical_materializer(
     historical_panel: Path = HISTORICAL_PANEL,
     historical_player_audit: Path = HISTORICAL_PLAYER_AUDIT,
     source_manifest_path: Path = SOURCE_MANIFEST,
-) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+) -> tuple[
+    list[dict[str, Any]],
+    dict[str, Any],
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+]:
     """Compare pinned legacy output with a materializer run on verified bytes."""
     source_summary, payloads = verify_historical_sources(
         raw_root, manifest_path=source_manifest_path
     )
-    records, usage, portal_seasons, usage_seasons = load_verified_transfer_data(
-        source_summary, payloads
-    )
+    (
+        records,
+        usage,
+        participation,
+        portal_seasons,
+        usage_seasons,
+        stats_seasons,
+    ) = load_verified_transfer_data(source_summary, payloads)
     portal_audit_row_count = _verify_historical_portal_audit_bridge(
         records, historical_player_audit
     )
     expected_portal = REQUIRED_SOURCE_SEASONS["portal"]
     expected_usage = REQUIRED_SOURCE_SEASONS["usage"]
-    if portal_seasons != expected_portal or usage_seasons != expected_usage:
+    expected_stats = REQUIRED_SOURCE_SEASONS["stats"]
+    if (
+        portal_seasons != expected_portal
+        or usage_seasons != expected_usage
+        or stats_seasons != expected_stats
+    ):
         raise ValueError(
             "verified historical payload seasons do not match the required panel "
-            f"coverage: portal={sorted(portal_seasons)}, usage={sorted(usage_seasons)}"
+            "coverage: "
+            f"portal={sorted(portal_seasons)}, usage={sorted(usage_seasons)}, "
+            f"stats={sorted(stats_seasons)}"
         )
 
     if not zero_contributors:
@@ -444,6 +481,27 @@ def replay_historical_materializer(
             verified_transfer_data=(records, usage, portal_seasons, usage_seasons),
         )
 
+    historical_team_rows = [
+        {
+            "season": int(row["season"]),
+            "subdivision": str(row["subdivision"]),
+            "team_id": str(row["team_id"]),
+            "team_name": str(row["team_name"]),
+            "returning_pct_ppa": None,
+        }
+        for row in new_rows
+        if int(row["season"]) in portal_seasons
+    ]
+    current_player_audit = audit_transfer_records(
+        records,
+        usage,
+        historical_team_rows,
+        cutoff=date(2025, 8, 15),
+        participation=participation,
+    )["join_rows"]
+    if len(current_player_audit) != len(records):
+        raise ValueError("corrected historical player audit omitted portal records")
+
     old_rows = _read_csv(historical_panel)
     old_panel = _panel_index(old_rows, label="frozen")
     new_panel = _panel_index(new_rows, label="new materializer")
@@ -459,6 +517,9 @@ def replay_historical_materializer(
     # frozen panel must match before any before/after inventory is accepted.
     legacy_selected, legacy_candidates = _legacy_usage_index(usage)
     current_usage_index = _usage_index(usage)
+    current_player_audit_by_index = {
+        int(row["portal_index"]): row for row in current_player_audit
+    }
     teams = [
         {
             "season": int(row["season"]),
@@ -530,12 +591,13 @@ def replay_historical_materializer(
             normalize_team_name(record.origin),
             normalize_player_name(record.player_name),
         )
-        name_candidates = (
+        name_candidate_rows = (
             list(current_usage_index["by_name"].get(name_key, []))
             if record.origin
             else []
         )
-        id_candidates = (
+        name_candidates = deduplicate_usage_records(name_candidate_rows)
+        id_candidate_rows = (
             list(
                 current_usage_index["by_id"].get(
                     (
@@ -549,8 +611,22 @@ def replay_historical_materializer(
             if record.origin and record.player_id
             else []
         )
+        id_candidates = deduplicate_usage_records(id_candidate_rows)
         matched_candidates = _matching_usage_candidates(record, current_usage_index)
+        current_player = current_player_audit_by_index[portal_index]
         new_value = _prior_usage_for_transfer(record, current_usage_index)
+        if current_player["usage_join_status"] == "joined":
+            audited_usage = current_player["prior_usage"]
+            if audited_usage is None or not _values_equal(new_value, audited_usage):
+                raise ValueError(
+                    "materializer and identity audit resolved different usage for "
+                    f"portal record {portal_index}: {new_value!r} != {audited_usage!r}"
+                )
+        elif new_value is not None:
+            raise ValueError(
+                "materializer resolved usage when the identity audit did not for "
+                f"portal record {portal_index}: {new_value!r}"
+            )
         is_explicit_zero = transfer_identity_key(record) in zero_identity_keys
         if is_explicit_zero:
             if any(
@@ -597,8 +673,16 @@ def replay_historical_materializer(
                     _usage_candidate_detail(legacy_item) if legacy_item else None
                 ),
                 "current_name_candidate_count": len(name_candidates),
+                "current_name_provider_row_count": len(name_candidate_rows),
                 "current_resolved_candidate_count": len(matched_candidates),
                 "current_id_candidate_count": len(id_candidates),
+                "current_id_provider_row_count": len(id_candidate_rows),
+                "current_usage_candidate_resolution": current_player[
+                    "usage_candidate_resolution"
+                ],
+                "current_usage_duplicate_equivalent_row_count": current_player[
+                    "usage_duplicate_equivalent_row_count"
+                ],
                 "current_usage_candidates": [
                     _usage_candidate_detail(candidate)
                     for candidate in matched_candidates
@@ -655,25 +739,58 @@ def replay_historical_materializer(
                 f"for {key}: replay={new_value!r}, materializer={materialized_value!r}"
             )
 
-    audit_ambiguous = {
+    retained_audit_rows = _read_csv(historical_player_audit)
+    retained_ambiguous = {
         (int(row["season"]), int(row["portal_index"]))
-        for row in _read_csv(historical_player_audit)
+        for row in retained_audit_rows
         if row.get("in_model_relevant_population") == "True"
         and row.get("usage_join_status") == "ambiguous_usage_join"
         and int(row["season"]) in portal_seasons
     }
+    current_ambiguous = {
+        (int(row["season"]), int(row["portal_index"]))
+        for row in current_player_audit
+        if row.get("in_model_relevant_population") is True
+        and row.get("usage_join_status") == "ambiguous_usage_join"
+    }
+    duplicate_resolved = {
+        key
+        for key in retained_ambiguous
+        if current_player_audit_by_index[key[1]]["usage_join_status"] == "joined"
+        and current_player_audit_by_index[key[1]]["usage_candidate_resolution"]
+        == "duplicate_equivalent_rows_collapsed"
+    }
+    if retained_ambiguous - duplicate_resolved - current_ambiguous:
+        raise ValueError(
+            "retained ambiguous joins neither collapsed as duplicate-equivalent "
+            "rows nor remain ambiguous: "
+            f"{sorted(retained_ambiguous - duplicate_resolved - current_ambiguous)}"
+        )
     replay_ambiguous = {
         (int(key[0]), int(player["portal_index"]))
         for key, players in changed_players.items()
         for player in players
         if player["change_class"] == "ambiguous_usage_join_removed"
     }
-    if replay_ambiguous != audit_ambiguous:
+    current_ambiguous_with_old_value: set[tuple[int, int]] = set()
+    for season, portal_index in current_ambiguous:
+        record = records[portal_index]
+        legacy_key = (
+            record.season - 1,
+            normalize_team_name(record.origin),
+            _legacy_normalize_player_name(record.player_name),
+        )
+        legacy_item = legacy_selected.get(legacy_key) if record.origin else None
+        if legacy_item and legacy_item.overall_usage is not None:
+            current_ambiguous_with_old_value.add((season, portal_index))
+    if replay_ambiguous != current_ambiguous_with_old_value:
         raise ValueError(
-            "ambiguous historical usage changes do not reconcile to the retained "
+            "ambiguous historical usage changes with prior values do not reconcile "
+            "to the current "
             "player audit: "
-            f"replay_only={sorted(replay_ambiguous - audit_ambiguous)}, "
-            f"audit_only={sorted(audit_ambiguous - replay_ambiguous)}"
+            f"replay_only={sorted(replay_ambiguous - current_ambiguous_with_old_value)}, "
+            "audit_only="
+            f"{sorted(current_ambiguous_with_old_value - replay_ambiguous)}"
         )
 
     changes: list[dict[str, Any]] = []
@@ -810,10 +927,10 @@ def replay_historical_materializer(
             f"inventory_only={sorted(zero_teams - expected_zero_repair_team_seasons)}, "
             f"repair_only={sorted(expected_zero_repair_team_seasons - zero_teams)}"
         )
-    if len(ambiguous_teams) != len(audit_ambiguous):
+    if len(ambiguous_teams) != len(replay_ambiguous):
         raise ValueError(
             "ambiguous usage records do not affect distinct changed team-seasons: "
-            f"records={len(audit_ambiguous)}, team_seasons={len(ambiguous_teams)}"
+            f"records={len(replay_ambiguous)}, team_seasons={len(ambiguous_teams)}"
         )
 
     team_seasons_by_reason: defaultdict[str, set[tuple[int, str]]] = defaultdict(set)
@@ -859,7 +976,10 @@ def replay_historical_materializer(
             reason: len(team_seasons)
             for reason, team_seasons in sorted(team_seasons_by_reason.items())
         },
-        "ambiguous_player_audit_record_count": len(audit_ambiguous),
+        "ambiguous_player_audit_record_count": len(current_ambiguous),
+        "legacy_ambiguous_player_audit_record_count": len(retained_ambiguous),
+        "duplicate_equivalent_ambiguous_joins_resolved": len(duplicate_resolved),
+        "remaining_ambiguous_usage_joins": len(current_ambiguous),
         "ambiguous_changed_transfer_count": len(replay_ambiguous),
         "portal_records_with_stable_ids": sum(
             bool(record.player_id) for record in records
@@ -871,4 +991,4 @@ def replay_historical_materializer(
         "change_inventory_exactly_matches_materializer_diff": True,
         "unexplained_changed_feature_values": 0,
     }
-    return changes, summary
+    return changes, summary, new_rows, current_player_audit

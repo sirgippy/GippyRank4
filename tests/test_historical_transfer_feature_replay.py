@@ -131,7 +131,9 @@ def test_historical_replay_is_deterministic_and_inventories_ambiguous_and_zero_c
     source_summary, payloads = replay.verify_historical_sources(
         raw_root, manifest_path=manifest_path
     )
-    records, _, _, _ = replay.load_verified_transfer_data(source_summary, payloads)
+    records, _, _, _, _, _ = replay.load_verified_transfer_data(
+        source_summary, payloads
+    )
 
     player_rows = [
         {
@@ -295,11 +297,16 @@ def test_historical_replay_is_deterministic_and_inventories_ambiguous_and_zero_c
         "historical_player_audit": audit_path,
         "source_manifest_path": manifest_path,
     }
-    first_changes, first_summary = replay.replay_historical_materializer(**kwargs)
-    second_changes, second_summary = replay.replay_historical_materializer(**kwargs)
+    first_changes, first_summary, _, first_player_audit = (
+        replay.replay_historical_materializer(**kwargs)
+    )
+    second_changes, second_summary, _, second_player_audit = (
+        replay.replay_historical_materializer(**kwargs)
+    )
 
     assert first_changes == second_changes
     assert first_summary == second_summary
+    assert first_player_audit == second_player_audit
     assert first_summary["changed_team_seasons"] == 2
     assert first_summary["changed_feature_values"] == 2
     assert first_summary["changed_feature_values_by_class"] == {
@@ -318,6 +325,7 @@ def test_historical_replay_is_deterministic_and_inventories_ambiguous_and_zero_c
     assert responsible[0]["legacy_candidate_count"] == 2
     assert responsible[0]["current_resolved_candidate_count"] == 2
     assert responsible[0]["portal_position"] == "WR"
+    assert first_player_audit[0]["usage_join_status"] == "ambiguous_usage_join"
     beta = next(row for row in first_changes if row["team_name"] == "Beta")
     beta_responsible = json.loads(beta["players_responsible"])
     assert (

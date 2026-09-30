@@ -33,6 +33,7 @@ from gippyrank.transfer_oracle import (
     normalize_player_name,
     normalize_team_name,
     position_group,
+    usage_record_deduplication_key,
 )
 
 Row = dict[str, Any]
@@ -435,6 +436,51 @@ def _unique_ints(values: Iterable[int]) -> list[int]:
     return sorted(set(values))
 
 
+def _usage_candidate_groups(
+    usage: Sequence[UsageRecord], indexes: Iterable[int]
+) -> list[list[int]]:
+    groups: dict[tuple[Any, ...], list[int]] = {}
+    for index in _unique_ints(indexes):
+        key = usage_record_deduplication_key(usage[index])
+        groups.setdefault(key, []).append(index)
+    return list(groups.values())
+
+
+def _usage_candidate_resolution(
+    usage: Sequence[UsageRecord], groups: Sequence[Sequence[int]]
+) -> str:
+    if not groups:
+        return "no_logical_candidate"
+    if len(groups) == 1:
+        return (
+            "duplicate_equivalent_rows_collapsed"
+            if len(groups[0]) > 1
+            else "single_logical_candidate"
+        )
+
+    candidates = [usage[index] for group in groups for index in group]
+    stable_ids = {item.player_id for item in candidates}
+    identities = {
+        (
+            item.season,
+            normalize_team_name(item.team),
+            normalize_player_name(item.player_name),
+        )
+        for item in candidates
+    }
+    numeric_values = {
+        item.overall_usage for item in candidates if item.overall_usage is not None
+    }
+    if (
+        len(stable_ids) == 1
+        and None not in stable_ids
+        and len(identities) == 1
+        and len(numeric_values) > 1
+    ):
+        return "conflicting_usage_values"
+    return "multiple_logical_candidates"
+
+
 def _team_name_candidates(
     record: TransferRecord,
     resolution: TeamResolution,
@@ -456,10 +502,10 @@ def _usage_match(
     source_resolution: TeamResolution,
     usage: Sequence[UsageRecord],
     indexes: Mapping[str, Any],
-) -> tuple[str, str, list[int], bool]:
-    """Return status, method, candidate usage rows, and normalization rescue flag."""
+) -> tuple[str, str, list[int], bool, int, str]:
+    """Return status, method, raw candidate rows, rescue, logical count, detail."""
     if not record.origin:
-        return "missing_origin", "none", [], False
+        return "missing_origin", "none", [], False, 0, "no_source_team"
     if record.player_id:
         stable_candidates: list[int] = []
         for team_name, _method in _team_name_candidates(record, source_resolution):
@@ -468,27 +514,37 @@ def _usage_match(
                     (record.season - 1, team_name, record.player_id), []
                 )
             )
-        if len(stable_candidates) > 1:
+        stable_candidates = _unique_ints(stable_candidates)
+        stable_groups = _usage_candidate_groups(usage, stable_candidates)
+        stable_resolution = _usage_candidate_resolution(usage, stable_groups)
+        stable_rows = [index for group in stable_groups for index in group]
+        if len(stable_groups) > 1:
             return (
                 "ambiguous_usage_join",
                 "stable_player_id_and_source_team",
-                sorted(set(stable_candidates)),
+                stable_rows,
                 False,
+                len(stable_groups),
+                stable_resolution,
             )
-        if len(stable_candidates) == 1:
-            item = usage[stable_candidates[0]]
+        if len(stable_groups) == 1:
+            item = usage[stable_groups[0][0]]
             if item.overall_usage is None:
                 return (
                     "usage_record_without_overall_value",
                     "stable_player_id_and_source_team",
-                    stable_candidates,
+                    stable_rows,
                     False,
+                    1,
+                    "candidate_without_numeric_value",
                 )
             return (
                 "joined",
                 "stable_player_id_and_source_team",
-                stable_candidates,
+                stable_rows,
                 False,
+                1,
+                stable_resolution,
             )
         name_candidates: list[int] = []
         for team_name, _method in _team_name_candidates(record, source_resolution):
@@ -512,6 +568,8 @@ def _usage_match(
                 "stable_player_id_and_source_team",
                 name_candidates,
                 False,
+                len(_usage_candidate_groups(usage, name_candidates)),
+                "conflicting_portal_and_usage_ids",
             )
     normalized_player = normalize_player_name(record.player_name)
     raw_player = _raw_player_name(record.player_name)
@@ -539,27 +597,55 @@ def _usage_match(
                 )
             )
         normalization_rescue = not raw_name_candidates
-    if len(candidates) > 1:
+    groups = _usage_candidate_groups(usage, candidates)
+    resolution = _usage_candidate_resolution(usage, groups)
+    candidate_rows = [index for group in groups for index in group]
+    if len(groups) > 1:
         return (
             "ambiguous_usage_join",
             method,
-            _unique_ints(candidates),
+            candidate_rows,
             normalization_rescue,
+            len(groups),
+            resolution,
         )
-    if len(candidates) == 1:
-        item = usage[candidates[0]]
+    if len(groups) == 1:
+        item = usage[groups[0][0]]
         if item.overall_usage is None:
             return (
                 "usage_record_without_overall_value",
                 method,
-                candidates,
+                candidate_rows,
                 normalization_rescue,
+                1,
+                "candidate_without_numeric_value",
             )
-        return "joined", method, candidates, normalization_rescue
+        return (
+            "joined",
+            method,
+            candidate_rows,
+            normalization_rescue,
+            1,
+            resolution,
+        )
     same_name = indexes["by_name"].get((record.season - 1, normalized_player), [])
     if same_name:
-        return "source_team_mismatch", "none", [], normalization_rescue
-    return "no_usage_record", "none", [], normalization_rescue
+        return (
+            "source_team_mismatch",
+            "none",
+            [],
+            normalization_rescue,
+            0,
+            "source_team_mismatch",
+        )
+    return (
+        "no_usage_record",
+        "none",
+        [],
+        normalization_rescue,
+        0,
+        "no_logical_candidate",
+    )
 
 
 def _position_applicability(position: str | None) -> tuple[str, str]:
@@ -610,7 +696,7 @@ def _classify_d5(
     usage_kind, usage_reason = _usage_position_applicability(usage, usage_indexes)
     prior_usage = (
         usage[usage_indexes[0]].overall_usage
-        if usage_join_status == "joined" and len(usage_indexes) == 1
+        if usage_join_status == "joined" and usage_indexes
         else None
     )
 
@@ -739,15 +825,29 @@ def audit_transfer_records(
         )
         in_scope = cutoff_state == "on_or_before_cutoff" and destination.matched
         if in_scope:
-            status, join_method, usage_indexes, normalization_rescue = _usage_match(
-                record, source, usage_list, indexes
-            )
+            (
+                status,
+                join_method,
+                usage_indexes,
+                normalization_rescue,
+                usage_candidate_count,
+                usage_candidate_resolution,
+            ) = _usage_match(record, source, usage_list, indexes)
         else:
-            status, join_method, usage_indexes, normalization_rescue = (
+            (
+                status,
+                join_method,
+                usage_indexes,
+                normalization_rescue,
+                usage_candidate_count,
+                usage_candidate_resolution,
+            ) = (
                 "not_in_model_relevant_population",
                 "none",
                 [],
                 False,
+                0,
+                "not_in_model_relevant_population",
             )
         (
             participation_status,
@@ -763,7 +863,7 @@ def audit_transfer_records(
         )
         prior_usage = (
             usage_list[usage_indexes[0]].overall_usage
-            if status == "joined" and len(usage_indexes) == 1
+            if status == "joined" and usage_indexes
             else None
         )
         (
@@ -805,6 +905,7 @@ def audit_transfer_records(
             "is_qb": position_group(record.position) == "qb",
             "usage_join_status": status,
             "usage_join_method": join_method,
+            "usage_candidate_resolution": usage_candidate_resolution,
             "normalization_changed_match": normalization_rescue,
             "prior_participation_status": participation_status,
             "prior_participation_reason": participation_reason,
@@ -819,6 +920,9 @@ def audit_transfer_records(
             "d5_unresolved": d5_category
             in {D5_CATEGORY_FAILURE, D5_CATEGORY_UNDETERMINED},
             "prior_usage_record_count": len(usage_indexes),
+            "usage_duplicate_equivalent_row_count": max(
+                0, len(usage_indexes) - usage_candidate_count
+            ),
             "usage_candidate_player_ids": sorted(
                 {
                     usage[index].player_id
@@ -826,7 +930,7 @@ def audit_transfer_records(
                     if usage[index].player_id
                 }
             ),
-            "usage_candidate_count": len(usage_indexes),
+            "usage_candidate_count": usage_candidate_count,
             "portal_normalized_key_count": by_portal_key[
                 (
                     record.season,

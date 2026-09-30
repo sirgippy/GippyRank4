@@ -121,6 +121,10 @@
     "team_seasons_with_repair_candidate": 321,
     "team_seasons_with_source_coverage_gap": 87
   },
+  "corrected_historical_player_audit": {
+    "record_count": 14422,
+    "sha256": "62971a132adf5e89b6f9bec6c9867c288f7b1b05d1f4e87efd6cfbd65c430303"
+  },
   "coverage_2026": {
     "exact_coverage_ratio_distribution": {
       "0/0": 6,
@@ -176,24 +180,26 @@
     "db_source_team_uncovered": 0
   },
   "historical_feature_reconciliation": {
-    "ambiguous_changed_transfer_count": 25,
-    "ambiguous_player_audit_record_count": 25,
-    "ambiguous_usage_join_removals": 25,
+    "ambiguous_changed_transfer_count": 1,
+    "ambiguous_player_audit_record_count": 1,
+    "ambiguous_usage_join_removals": 1,
     "before_panel_path": "data/processed/preseason/context_v1_3_candidate/historical_transfer_features.csv",
     "before_panel_sha256": "3b3680cf63806033cf6d67813a1359ada455e8e7528bf310a27b37d5cda7a726",
     "change_inventory_exactly_matches_materializer_diff": true,
-    "changed_feature_values": 48,
+    "changed_feature_values": 24,
     "changed_feature_values_by_class": {
-      "ambiguous_usage_join_removed": 25,
+      "ambiguous_usage_join_removed": 1,
       "legitimate_zero_restoration": 21,
       "name_normalization_join_added": 2
     },
-    "changed_team_seasons": 48,
+    "changed_team_seasons": 24,
     "changed_team_seasons_by_reason": {
-      "ambiguous_usage_join_removed": 25,
+      "ambiguous_usage_join_removed": 1,
       "legitimate_zero_restoration": 21,
       "name_normalization_join_added": 2
     },
+    "duplicate_equivalent_ambiguous_joins_resolved": 24,
+    "legacy_ambiguous_player_audit_record_count": 25,
     "legacy_oracle_commit": "fc8c3924164c19fbb8b28334f613c5937c744673",
     "legacy_oracle_source_sha256": "e2d66036102f7ac8bd11fbf95d913b688a0b283224b218db513a43b47d819c49",
     "legacy_replay_matches_frozen_panel": true,
@@ -206,13 +212,14 @@
       "name_normalization_join_added": 2
     },
     "player_contribution_changes_by_class": {
-      "ambiguous_usage_join_removed": 25,
+      "ambiguous_usage_join_removed": 1,
       "legitimate_zero_restoration": 46,
       "name_normalization_join_added": 2
     },
     "portal_audit_rows_bound_to_verified_payloads": 14422,
     "portal_position_checked_against_verified_payloads": true,
     "portal_records_with_stable_ids": 0,
+    "remaining_ambiguous_usage_joins": 1,
     "source_manifest_path": "data/processed/transfer_production_audit/source_manifest.json",
     "source_manifest_sha256": "b1c30ed98c8b38b8f4eb5ea57e8090858471f2c11d2879388d96bd7ace60c517",
     "unexplained_changed_feature_values": 0,
@@ -326,7 +333,17 @@
     ],
     "zero_evidence_sha256": "93faf9d62811d7dc83bdfd5568cf972f7fa0b1e7ee7db90cb16655e89eb96d29"
   },
+  "historical_usage_resolution": {
+    "conflicting_usage_value_joins": 0,
+    "duplicate_equivalent_usage_joins": 24,
+    "in_model_relevant_player_records": 8239,
+    "legitimate_zero_evidence_players": 3989,
+    "normalization_recovered_usage_joins": 32,
+    "remaining_ambiguous_usage_joins": 1,
+    "resolved_usage_joins": 1842
+  },
   "input_sha256": {
+    "data/processed/defensive_transfer_audit/transfer_player_audit.csv": "cf7b25313093c9ae0f4d21ee5865336fbb81705062e8ea92c9dc5f535aa1135d",
     "data/processed/partial_db_transfer_impact_142/empirical_2026_coverage.csv": "77a819bb56e452df37620eb7a8d585d55b3d6c62c8530b08ee696e483d16ee5f",
     "data/processed/preseason/context_v1_3_2026_reconstruction/source_manifest.json": "574e705ec9e3c51658ee83cb1bbb1c1792a326ab1a89333219e9b27e7a8b00c9",
     "data/processed/preseason/context_v1_3_2026_reconstruction/transfer_player_audit.csv": "acd5693f4da0888a8b480bd275b66856065e80e2a504c9b2f33b2f15dfc91397",
@@ -356,10 +373,10 @@
         "team_seasons": 127
       },
       "2022": {
-        "affected": 107,
+        "affected": 108,
         "statuses": {
-          "complete": 23,
-          "partial": 107
+          "complete": 22,
+          "partial": 108
         },
         "team_seasons": 130
       },
@@ -401,20 +418,25 @@
       "db_player_join_unresolved": 214,
       "db_position_conflict": 58,
       "db_source_team_uncovered": 87,
-      "historical_aggregate_null": 52,
-      "offense_ambiguous_player_join": 25,
-      "offense_applicability_unproven": 689,
+      "historical_aggregate_null": 51,
+      "offense_ambiguous_player_join": 1,
+      "offense_applicability_unproven": 690,
       "offense_source_team_mismatch": 38,
       "offense_usage_join_unresolved": 8,
       "offense_usage_row_absent": 21
     },
+    "repair_classes": {
+      "candidate_repair": 15,
+      "not_applicable": 87,
+      "unresolved": 691
+    },
     "statuses": {
-      "complete": 88,
+      "complete": 87,
       "entirely_unavailable": 2,
-      "partial": 703
+      "partial": 704
     },
     "team_seasons": 793,
-    "team_seasons_with_repair_candidate": 304,
+    "team_seasons_with_repair_candidate": 288,
     "team_seasons_with_source_coverage_gap": 87
   },
   "remaining_failure_counts": {
@@ -423,7 +445,7 @@
     "applicable_offensive_usage_join": 10,
     "covered_roster_db_player_join": 40,
     "db_position_conflict": 11,
-    "historical_aggregate_null_team_seasons": 52,
+    "historical_aggregate_null_team_seasons": 51,
     "offensive_applicability_unproven": 1012,
     "source_team_uncovered_db_player": 34
   },

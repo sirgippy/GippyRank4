@@ -114,6 +114,53 @@ def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
         writer.writerows(rows)
 
 
+def classify_availability(
+    codes: set[str],
+    *,
+    incoming: int,
+    offensive_resolved: int,
+    offensive_zero: int,
+    db_failed: int,
+    db_resolved: int,
+) -> dict[str, object]:
+    """Apply the shared team-season availability classification rules."""
+    unknown_codes = codes - REPAIR_CLASS.keys()
+    if unknown_codes:
+        raise ValueError(f"unknown availability reason codes: {sorted(unknown_codes)}")
+    if not codes:
+        status = "complete"
+    elif (
+        incoming
+        and offensive_resolved == 0
+        and offensive_zero == 0
+        and db_failed > 0
+        and db_resolved == 0
+    ):
+        status = "entirely_unavailable"
+    else:
+        status = "partial"
+    categories = {REPAIR_CLASS[code] for code in codes}
+    if not codes:
+        repair = "not_applicable"
+    elif categories == {"candidate_repair"}:
+        repair = "candidate_repair"
+    else:
+        repair = "unresolved"
+    ordered = sorted(codes)
+    primary = next((code for code in PRIMARY_PRIORITY if code in codes), "complete")
+    repair_candidates = [
+        code for code in ordered if REPAIR_CLASS[code] == "candidate_repair"
+    ]
+    return {
+        "availability_status": status,
+        "primary_reason": primary,
+        "reason_codes": ";".join(ordered),
+        "repair_class": repair,
+        "repair_candidate_reasons": ";".join(repair_candidates),
+        "source_coverage_gap": "db_source_team_uncovered" in codes,
+    }
+
+
 def audit() -> tuple[list[dict[str, object]], dict[str, object]]:
     historical = {
         key: value
@@ -223,45 +270,21 @@ def audit() -> tuple[list[dict[str, object]], dict[str, object]]:
         usage_value = source["transfer_in_prior_usage_sum"]
         if not is_current and not usage_value:
             codes.add("historical_aggregate_null")
-        # Historical aggregation can emit null despite resolved player-level
-        # offensive evidence. Classify input availability from the player
-        # audit, not from that serialized research feature.
-        if not codes:
-            status = "complete"
-        elif (
-            incoming
-            and offensive_resolved == 0
-            and offensive_zero == 0
-            and db_failed > 0
-            and db_resolved == 0
-        ):
-            status = "entirely_unavailable"
-        else:
-            status = "partial"
-        categories = {REPAIR_CLASS[code] for code in codes}
-        if not codes:
-            repair = "not_applicable"
-        elif categories == {"candidate_repair"}:
-            repair = "candidate_repair"
-        else:
-            repair = "unresolved"
-        ordered = sorted(codes)
-        primary = next((code for code in PRIMARY_PRIORITY if code in codes), "complete")
-        repair_candidates = [
-            code for code in ordered if REPAIR_CLASS[code] == "candidate_repair"
-        ]
+        classification = classify_availability(
+            codes,
+            incoming=incoming,
+            offensive_resolved=offensive_resolved,
+            offensive_zero=offensive_zero,
+            db_failed=db_failed,
+            db_resolved=db_resolved,
+        )
         rows.append(
             {
                 "season": season,
                 "subdivision": "fbs",
                 "team_id": team_id,
                 "team_name": source["team_name"],
-                "availability_status": status,
-                "primary_reason": primary,
-                "reason_codes": ";".join(ordered),
-                "repair_class": repair,
-                "repair_candidate_reasons": ";".join(repair_candidates),
-                "source_coverage_gap": "db_source_team_uncovered" in codes,
+                **classification,
                 "checkpoint_status": "no_archived_on_time_snapshot"
                 if is_current
                 else "historical_timing_unverified",

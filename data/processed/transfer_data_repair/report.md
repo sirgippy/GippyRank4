@@ -12,32 +12,36 @@ This is a new audit location built from frozen #141/#142 artifacts and retained 
 - Applicable offensive usage failures remaining: **10** across 8 teams. The committed 2026 aggregate does not retain those player identities or join causes.
 - Offensive applicability remains unproven for **1012** incoming transfers; no absent evidence was converted to zero.
 
-A historical full aggregate is restored only where each incoming player is classified as resolved or legitimate-zero and no usage failure or unknown applicability remains. This fixes the retained null rows with complete player-level evidence. The separate `post_repair_observed_usage_sum` audit field still preserves known resolved contributions where failures or unknown applicability remain; those rows are not promoted to complete aggregates.
+Historical availability is rebuilt from the corrected player-level D5 audit, the retained defensive player audit, and the corrected materializer panel. Each historical team's reason codes and status are reclassified with the same rules as the #141 audit; no individual reason is removed from a frozen row. The `post_repair_observed_usage_sum` field records known resolved contributions even where failures or unknown applicability remain.
 
 ## Historical materializer feature reconciliation
 
 The exact retained source bytes passed SHA-256 verification against `data/processed/transfer_production_audit/source_manifest.json` (15 inputs; manifest SHA-256 `b1c30ed98c8b38b8f4eb5ea57e8090858471f2c11d2879388d96bd7ace60c517`). The pinned previous oracle is commit `fc8c3924164c19fbb8b28334f613c5937c744673` with `transfer_oracle.py` SHA-256 `e2d66036102f7ac8bd11fbf95d913b688a0b283224b218db513a43b47d819c49`. Replaying that resolver exactly reproduces the frozen panel before applying the current materializer.
 
-Comparing 8232 transfer feature cells across 2744 historical panel rows found **48 changed team-seasons** and **48 changed feature values**. The generated inventory reconciles exactly to the full before/after panel diff; no changes are unexplained.
+Comparing 8232 transfer feature cells across 2744 historical panel rows found **24 changed team-seasons** and **24 changed feature values**. The generated inventory reconciles exactly to the full before/after panel diff; no changes are unexplained.
 
 | Change class | Team-seasons | Changed feature values |
 | --- | ---: | ---: |
-| `ambiguous_usage_join_removed` | 25 | 25 |
+| `ambiguous_usage_join_removed` | 1 | 1 |
 | `legitimate_zero_restoration` | 21 | 21 |
 | `name_normalization_join_added` | 2 | 2 |
 
-The 21 legitimate-zero restorations are the existing repair subset, backed by 46 D5_ZERO contributors. The 25 ambiguous usage joins now fail closed. Other measured changes are listed explicitly in the class table.
+The 21 legitimate-zero restorations are backed by 46 D5_ZERO contributors. The materializer rejected 1 genuine ambiguous join contribution. Other measured changes are listed explicitly in the class table.
 
-One measured ambiguous-join example is Massachusetts 2021: its aggregate changes from `0.154` to `0.122` after Rico Arnold's previously selected contribution is rejected because multiple usage candidates remain. When ambiguity leaves no uniquely resolved contribution, the materializer keeps the aggregate unknown rather than replacing it with numeric zero. `historical_feature_changes.csv` records the old and new feature values, responsible portal records, candidate details, and source hashes for every changed cell.
+The replay resolved 24 formerly multi-row joins as duplicate-equivalent provider observations. Rows collapse only when stable player ID, season, normalized player/source identity, and numeric overall usage agree; without stable IDs, only exact parsed observations are deduplicated. Different IDs and conflicting usage values remain distinct candidates. 1 genuinely ambiguous historical usage join remains; 0 have conflicting values under the same stable ID.
+
+One genuine ambiguous-join example is North Texas 2023: its aggregate changes from `0.7639999999999999` to `0.07400000000000001` after Chandler Rogers's previously selected contribution is rejected because distinct logical usage candidates conflict. When conflicting candidates leave no unique contribution, the materializer keeps the aggregate unknown rather than replacing it with numeric zero. `historical_feature_changes.csv` records old and new feature values, responsible portal records, candidate details, and source hashes for every changed cell.
+
+The corrected replay changes 2021 Troy's usage aggregate from `missing` to `0.163`; its rebuilt availability row uses this numeric value and does not retain `historical_aggregate_null`.
 
 ## Baseline versus post-repair availability
 
 | Inventory | Team-seasons | Complete | Partial | Entirely unavailable |
 | --- | ---: | ---: | ---: | ---: |
 | #141 baseline | 793 | 71 | 720 | 2 |
-| #148 post-repair | 793 | 88 | 703 | 2 |
+| #148 post-repair | 793 | 87 | 704 | 2 |
 
-Historical `historical_aggregate_null` reasons fall from 73 to 52. The original #141 artifact remains intact.
+Historical `historical_aggregate_null` reasons fall from 73 to 51. The original #141 artifact remains intact.
 
 ## 2026 DB observed coverage
 
@@ -70,4 +74,4 @@ Current source responses were captured after the 2026 August 15 cutoff. They dia
 - No Context 1.3 coefficients, feature-selection behavior, or published ranking files were regenerated.
 - #141 and #142 artifacts are read-only inputs; all new artifacts are under `data/processed/transfer_data_repair/`.
 
-Input hashes and machine-readable before/after records are in `summary.json`, `changes.csv`, and `historical_feature_changes.csv` (48 historical feature changes).
+Input hashes and machine-readable before/after records are in `summary.json`, `changes.csv`, and `historical_feature_changes.csv` (24 historical feature changes).

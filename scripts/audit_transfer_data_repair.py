@@ -35,6 +35,9 @@ HISTORICAL = (
 HISTORICAL_AUDIT = ROOT / "data/processed/transfer_production_audit"
 HISTORICAL_PLAYERS = HISTORICAL_AUDIT / "player_join_records.csv"
 HISTORICAL_TEAMS = HISTORICAL_AUDIT / "team_feature_coverage.csv"
+HISTORICAL_DEFENSIVE_PLAYERS = (
+    ROOT / "data/processed/defensive_transfer_audit/transfer_player_audit.csv"
+)
 CURRENT_PLAYERS = CURRENT / "transfer_player_audit.csv"
 CURRENT_TEAMS = CURRENT / "transfer_team_audit.csv"
 CURRENT_MANIFEST = CURRENT / "source_manifest.json"
@@ -55,26 +58,6 @@ DB_REASON = {
     "source_data_unavailable": "db_source_team_uncovered",
     "position_mismatch": "db_position_conflict",
     "ambiguous": "db_ambiguous_player_join",
-}
-DB_REASON_PRIORITY = (
-    "db_source_team_uncovered",
-    "db_player_join_unresolved",
-    "db_ambiguous_player_join",
-    "db_position_conflict",
-    "db_impact_source_unavailable",
-    "offense_source_team_mismatch",
-    "offense_ambiguous_player_join",
-    "offense_usage_row_absent",
-    "offense_usage_join_unresolved",
-    "offense_applicability_unproven",
-    "historical_aggregate_null",
-)
-CANDIDATE_REASONS = {
-    "offense_source_team_mismatch",
-    "offense_ambiguous_player_join",
-    "db_player_join_unresolved",
-    "db_ambiguous_player_join",
-    "historical_aggregate_null",
 }
 ZERO_CONTRIBUTOR_FIELDS = [
     "season",
@@ -158,18 +141,26 @@ def _is_missing(value: Any) -> bool:
     return value in (None, "", "None", "null")
 
 
-def _load_baseline_audit() -> tuple[list[dict[str, Any]], dict[str, Any]]:
+def _load_availability_module():
     scripts = str(ROOT / "scripts")
     if scripts not in sys.path:
         sys.path.insert(0, scripts)
+    existing = sys.modules.get("audit_transfer_availability")
+    if existing is not None:
+        return existing
     spec = importlib.util.spec_from_file_location(
         "audit_transfer_availability", ROOT / "scripts/audit_transfer_availability.py"
     )
     if spec is None or spec.loader is None:
         raise RuntimeError("could not load the frozen #141 audit implementation")
     module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
     spec.loader.exec_module(module)
-    return module.audit()
+    return module
+
+
+def _load_baseline_audit() -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    return _load_availability_module().audit()
 
 
 def _postrepair_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
@@ -193,6 +184,9 @@ def _postrepair_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "team_seasons": len(rows),
         "statuses": dict(sorted(statuses.items())),
         "reason_team_seasons": dict(sorted(reasons.items())),
+        "repair_classes": dict(
+            sorted(Counter(str(row["repair_class"]) for row in rows).items())
+        ),
         "team_seasons_with_repair_candidate": sum(
             bool(row["repair_candidate_reasons"]) for row in rows
         ),
@@ -203,23 +197,258 @@ def _postrepair_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def _set_repaired_status(row: dict[str, Any]) -> None:
-    reasons = [code for code in str(row["reason_codes"]).split(";") if code]
-    if not reasons:
-        row["availability_status"] = "complete"
-        row["repair_class"] = "not_applicable"
-        row["repair_candidate_reasons"] = ""
-        row["primary_reason"] = "complete"
-        return
-    row["availability_status"] = "partial"
-    candidate_reasons = [code for code in reasons if code in CANDIDATE_REASONS]
-    row["repair_class"] = (
-        "candidate_repair" if len(candidate_reasons) == len(reasons) else "unresolved"
+def _rebuild_postrepair_availability(
+    baseline_rows: list[dict[str, Any]],
+    materialized_rows: list[dict[str, Any]],
+    current_player_audit: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Reclassify historical teams from the corrected player audit and panel."""
+    availability = _load_availability_module()
+    historical_panel = _index(
+        [row for row in materialized_rows if 2021 <= int(row["season"]) <= 2025],
+        label="repaired historical materializer",
     )
-    row["repair_candidate_reasons"] = ";".join(candidate_reasons)
-    row["primary_reason"] = next(
-        (code for code in DB_REASON_PRIORITY if code in reasons), reasons[0]
+    expected_historical_keys = {
+        (int(row["season"]), str(row["team_id"]))
+        for row in baseline_rows
+        if 2021 <= int(row["season"]) <= 2025
+    }
+    if set(historical_panel) != expected_historical_keys:
+        raise ValueError(
+            "repaired historical materializer team-season population differs from "
+            "the frozen availability baseline: "
+            f"missing={sorted(expected_historical_keys - set(historical_panel))[:10]}, "
+            f"extra={sorted(set(historical_panel) - expected_historical_keys)[:10]}"
+        )
+    frozen_historical_panel = _index(
+        [row for row in _read_csv(HISTORICAL) if 2021 <= int(row["season"]) <= 2025],
+        label="frozen historical feature",
     )
+    current_panel = _index(_read_csv(CURRENT_TEAMS), label="current team audit")
+    current_materialized_panel = _index(
+        [row for row in materialized_rows if int(row["season"]) == 2026],
+        label="current materializer",
+    )
+
+    offense_by_team: defaultdict[tuple[int, str], list[dict[str, Any]]] = defaultdict(
+        list
+    )
+    seen_portal_records: set[tuple[int, int]] = set()
+    for player in current_player_audit:
+        if player.get("in_model_relevant_population") is not True:
+            continue
+        key = (int(player["season"]), str(player["destination_team_id"]))
+        if not 2021 <= key[0] <= 2025:
+            continue
+        record_key = (key[0], int(player["portal_index"]))
+        if record_key in seen_portal_records:
+            raise ValueError(
+                f"duplicate corrected historical player audit row: {record_key}"
+            )
+        seen_portal_records.add(record_key)
+        offense_by_team[key].append(player)
+
+    db_by_team: defaultdict[tuple[int, str], list[dict[str, str]]] = defaultdict(list)
+    for player in _read_csv(HISTORICAL_DEFENSIVE_PLAYERS):
+        if (
+            player.get("in_model_relevant_population") == "True"
+            and player.get("portal_position_group") == "db"
+        ):
+            key = (int(player["season"]), str(player["destination_team_id"]))
+            if 2021 <= key[0] <= 2025:
+                db_by_team[key].append(player)
+
+    historical_baseline_by_key = {
+        (int(row["season"]), str(row["team_id"])): row
+        for row in baseline_rows
+        if 2021 <= int(row["season"]) <= 2025
+    }
+    output: list[dict[str, Any]] = []
+    for source_row in baseline_rows:
+        row = dict(source_row)
+        key = (int(row["season"]), str(row["team_id"]))
+        if not 2021 <= key[0] <= 2025:
+            if key[0] == 2026:
+                panel_row = current_materialized_panel.get(key, current_panel.get(key))
+                if panel_row is None:
+                    raise ValueError(
+                        f"current materializer is missing team-season {key}"
+                    )
+                current_usage = panel_row.get("transfer_in_prior_usage_sum")
+                row.update(
+                    {
+                        "pre_repair_usage_value": current_usage,
+                        "post_repair_materialized_usage_value": current_usage,
+                        "post_repair_observed_usage_sum": current_usage,
+                        "historical_aggregate_repaired": False,
+                    }
+                )
+            row.update(
+                {
+                    "resolved_usage_joins": "",
+                    "normalization_recovered_usage_joins": "",
+                    "duplicate_equivalent_usage_joins": "",
+                    "ambiguous_usage_joins": "",
+                    "legitimate_zero_evidence_count": "",
+                }
+            )
+            output.append(row)
+            continue
+
+        panel_row = historical_panel[key]
+        if str(panel_row["team_name"]) != str(row["team_name"]):
+            raise ValueError(f"historical team name changed for {key}")
+        offense_players = offense_by_team.get(key, [])
+        categories = Counter(
+            str(player["d5_resolution_category"]) for player in offense_players
+        )
+        invalid_categories = set(categories) - {D5_RESOLVED, D5_ZERO, *D5_INCOMPLETE}
+        if invalid_categories:
+            raise ValueError(
+                f"unknown corrected D5 resolution categories for {key}: "
+                f"{sorted(invalid_categories)}"
+            )
+        incoming = len(offense_players)
+        resolved = categories[D5_RESOLVED]
+        legitimate_zero = categories[D5_ZERO]
+        failures = sum(
+            1
+            for player in offense_players
+            if player["d5_resolution_category"]
+            == "should_have_recoverable_offensive_usage_but_resolution_failed"
+        )
+        unknown = sum(
+            1
+            for player in offense_players
+            if player["d5_resolution_category"] == "cannot_determine_applicability"
+        )
+        if incoming != resolved + legitimate_zero + failures + unknown:
+            raise ValueError(
+                f"corrected offensive classifications do not reconcile: {key}"
+            )
+        if incoming != int(row["incoming_transfers"]):
+            raise ValueError(
+                f"corrected incoming portal population changed for {key}: "
+                f"{incoming} != {row['incoming_transfers']}"
+            )
+
+        db_players = db_by_team.get(key, [])
+        db_resolved = sum(player["impact_status"] in GOOD_DB for player in db_players)
+        db_failed = len(db_players) - db_resolved
+        if (
+            len(db_players) != int(row["db_incoming"])
+            or db_resolved != int(row["db_resolved"])
+            or db_failed != int(row["db_unresolved"])
+        ):
+            raise ValueError(f"recomputed DB availability changed for {key}")
+
+        reason_codes: set[str] = set()
+        if unknown:
+            reason_codes.add("offense_applicability_unproven")
+        for player in offense_players:
+            if (
+                player["d5_resolution_category"]
+                == "should_have_recoverable_offensive_usage_but_resolution_failed"
+            ):
+                reason_codes.add(
+                    availability.OFFENSE_FAILURE.get(
+                        str(player.get("usage_join_status", "")),
+                        "offense_usage_join_unresolved",
+                    )
+                )
+        for player in db_players:
+            if player["impact_status"] in GOOD_DB:
+                continue
+            reason_codes.add(
+                availability.DB_STATUS.get(
+                    player["impact_status"], "db_impact_source_unavailable"
+                )
+            )
+
+        before_value = frozen_historical_panel[key].get("transfer_in_prior_usage_sum")
+        current_value = panel_row.get("transfer_in_prior_usage_sum")
+        feature_numeric = not _is_missing(current_value)
+        if not feature_numeric:
+            reason_codes.add("historical_aggregate_null")
+        if feature_numeric and "historical_aggregate_null" in reason_codes:
+            raise ValueError(
+                f"numeric repaired feature retained historical null reason: {key}"
+            )
+
+        observed_values = [
+            _csv_float(player.get("d5_feature_value"))
+            for player in offense_players
+            if player["d5_resolution_category"] in {D5_RESOLVED, D5_ZERO}
+        ]
+        if any(value is None for value in observed_values):
+            raise ValueError(
+                f"classified offensive evidence has no numeric value: {key}"
+            )
+        observed_sum = float(sum(value or 0.0 for value in observed_values))
+        successful_usage_joins = sum(
+            player.get("usage_join_status") == "joined" for player in offense_players
+        )
+        normalization_joins = sum(
+            player.get("usage_join_status") == "joined"
+            and bool(player.get("normalization_changed_match"))
+            for player in offense_players
+        )
+        duplicate_joins = sum(
+            player.get("usage_join_status") == "joined"
+            and player.get("usage_candidate_resolution")
+            == "duplicate_equivalent_rows_collapsed"
+            for player in offense_players
+        )
+        ambiguous_joins = sum(
+            player.get("usage_join_status") == "ambiguous_usage_join"
+            for player in offense_players
+        )
+        classification = availability.classify_availability(
+            reason_codes,
+            incoming=incoming,
+            offensive_resolved=resolved,
+            offensive_zero=legitimate_zero,
+            db_failed=db_failed,
+            db_resolved=db_resolved,
+        )
+        row.update(
+            {
+                **classification,
+                "incoming_transfers": incoming,
+                "offensive_resolved": resolved,
+                "offensive_legitimate_zero": legitimate_zero,
+                "offensive_join_failed": failures,
+                "offensive_applicability_unknown": unknown,
+                "db_incoming": len(db_players),
+                "db_resolved": db_resolved,
+                "db_unresolved": db_failed,
+                "offensive_feature_numeric": feature_numeric,
+                "db_feature_available": db_failed == 0,
+                "pre_repair_usage_value": before_value,
+                "post_repair_materialized_usage_value": current_value,
+                "post_repair_observed_usage_sum": observed_sum,
+                "historical_aggregate_repaired": (
+                    _is_missing(before_value) and feature_numeric
+                ),
+                "resolved_usage_joins": successful_usage_joins,
+                "normalization_recovered_usage_joins": normalization_joins,
+                "duplicate_equivalent_usage_joins": duplicate_joins,
+                "ambiguous_usage_joins": ambiguous_joins,
+                "legitimate_zero_evidence_count": legitimate_zero,
+            }
+        )
+        if feature_numeric and _csv_float(current_value) != observed_sum:
+            raise ValueError(
+                f"repaired feature disagrees with resolved player evidence for {key}: "
+                f"{current_value!r} != {observed_sum!r}"
+            )
+        output.append(row)
+
+    if set(historical_baseline_by_key) != set(historical_panel):
+        raise ValueError(
+            "historical post-repair audit failed team-season reconciliation"
+        )
+    return output
 
 
 def _historical_zero_repairs(
@@ -294,20 +523,13 @@ def _historical_zero_repairs(
 
         if eligible_zero:
             old_reasons = str(row["reason_codes"])
-            reason_codes = [code for code in old_reasons.split(";") if code]
-            if "historical_aggregate_null" not in reason_codes:
-                raise ValueError(f"expected #141 null-aggregate reason for {key}")
-            reason_codes.remove("historical_aggregate_null")
             row.update(
                 {
-                    "reason_codes": ";".join(sorted(reason_codes)),
-                    "offensive_feature_numeric": True,
                     "pre_repair_usage_value": before["transfer_in_prior_usage_sum"],
                     "post_repair_observed_usage_sum": repaired_value,
                     "historical_aggregate_repaired": True,
                 }
             )
-            _set_repaired_status(row)
             changes.append(
                 {
                     "season": key[0],
@@ -317,8 +539,8 @@ def _historical_zero_repairs(
                     "source_team": "",
                     "old_status": source_row["availability_status"],
                     "old_reason": old_reasons,
-                    "new_status": row["availability_status"],
-                    "new_reason": row["reason_codes"],
+                    "new_status": "",
+                    "new_reason": "",
                     "old_usage_value": before["transfer_in_prior_usage_sum"],
                     "new_usage_value": repaired_value,
                     "repair_rule": "aggregate_zero_only_when_every_incoming_player_is_classified_and_no_failure_or_unknown_remains",
@@ -554,6 +776,7 @@ def _input_hashes() -> dict[str, str]:
         HISTORICAL,
         HISTORICAL_PLAYERS,
         HISTORICAL_TEAMS,
+        HISTORICAL_DEFENSIVE_PLAYERS,
         CURRENT_PLAYERS,
         CURRENT_TEAMS,
         CURRENT_MANIFEST,
@@ -640,12 +863,18 @@ def build(
     historical_raw_root: Path = DEFAULT_HISTORICAL_RAW_ROOT,
     materializer_source_root: Path = ROOT,
 ) -> dict[str, Any]:
-    baseline_rows, baseline_summary = _load_baseline_audit()
-    post_rows, changes, zero_contributors = _historical_zero_repairs(baseline_rows)
+    availability = _load_availability_module()
+    baseline_rows, baseline_summary = availability.audit()
+    _, changes, zero_contributors = _historical_zero_repairs(baseline_rows)
     zero_evidence_sha256 = _csv_content_sha256(
         zero_contributors, ZERO_CONTRIBUTOR_FIELDS
     )
-    feature_changes, feature_reconciliation = replay_historical_materializer(
+    (
+        feature_changes,
+        feature_reconciliation,
+        materialized_rows,
+        corrected_player_audit,
+    ) = replay_historical_materializer(
         model_source_root=materializer_source_root,
         raw_root=historical_raw_root,
         zero_contributors=zero_contributors,
@@ -654,6 +883,101 @@ def build(
         expected_zero_repair_team_seasons={
             (int(row["season"]), str(row["destination_team_id"])) for row in changes
         },
+    )
+    post_rows = _rebuild_postrepair_availability(
+        baseline_rows, materialized_rows, corrected_player_audit
+    )
+    after_status = {(int(row["season"]), str(row["team_id"])): row for row in post_rows}
+    for change in changes:
+        key = (int(change["season"]), str(change["destination_team_id"]))
+        repaired = after_status[key]
+        change["new_status"] = repaired["availability_status"]
+        change["new_reason"] = repaired["reason_codes"]
+
+    historical_relevant_players = [
+        row
+        for row in corrected_player_audit
+        if row.get("in_model_relevant_population") is True
+        and 2021 <= int(row["season"]) <= 2025
+    ]
+    historical_usage_resolution = {
+        "in_model_relevant_player_records": len(historical_relevant_players),
+        "resolved_usage_joins": sum(
+            row.get("usage_join_status") == "joined"
+            for row in historical_relevant_players
+        ),
+        "normalization_recovered_usage_joins": sum(
+            row.get("usage_join_status") == "joined"
+            and bool(row.get("normalization_changed_match"))
+            for row in historical_relevant_players
+        ),
+        "duplicate_equivalent_usage_joins": sum(
+            row.get("usage_join_status") == "joined"
+            and row.get("usage_candidate_resolution")
+            == "duplicate_equivalent_rows_collapsed"
+            for row in historical_relevant_players
+        ),
+        "remaining_ambiguous_usage_joins": sum(
+            row.get("usage_join_status") == "ambiguous_usage_join"
+            for row in historical_relevant_players
+        ),
+        "conflicting_usage_value_joins": sum(
+            row.get("usage_candidate_resolution") == "conflicting_usage_values"
+            for row in historical_relevant_players
+        ),
+        "legitimate_zero_evidence_players": sum(
+            row.get("d5_resolution_category") == D5_ZERO
+            for row in historical_relevant_players
+        ),
+    }
+    team_reconciliations = {
+        field: sum(
+            int(row[field]) for row in post_rows if row.get(field) not in ("", None)
+        )
+        for field in (
+            "resolved_usage_joins",
+            "normalization_recovered_usage_joins",
+            "duplicate_equivalent_usage_joins",
+            "ambiguous_usage_joins",
+            "legitimate_zero_evidence_count",
+        )
+    }
+    expected_reconciliations = {
+        "resolved_usage_joins": historical_usage_resolution["resolved_usage_joins"],
+        "normalization_recovered_usage_joins": historical_usage_resolution[
+            "normalization_recovered_usage_joins"
+        ],
+        "duplicate_equivalent_usage_joins": historical_usage_resolution[
+            "duplicate_equivalent_usage_joins"
+        ],
+        "ambiguous_usage_joins": historical_usage_resolution[
+            "remaining_ambiguous_usage_joins"
+        ],
+        "legitimate_zero_evidence_count": historical_usage_resolution[
+            "legitimate_zero_evidence_players"
+        ],
+    }
+    if team_reconciliations != expected_reconciliations:
+        raise ValueError(
+            "historical team-season availability does not reconcile to corrected "
+            f"player audit: {team_reconciliations} != {expected_reconciliations}"
+        )
+    if any(
+        row["offensive_feature_numeric"]
+        and "historical_aggregate_null" in str(row["reason_codes"]).split(";")
+        for row in post_rows
+        if 2021 <= int(row["season"]) <= 2025
+    ):
+        raise ValueError(
+            "numeric historical aggregates retain null availability reasons"
+        )
+    player_audit_columns = (
+        list(corrected_player_audit[0]) if corrected_player_audit else []
+    )
+    if not player_audit_columns:
+        raise ValueError("corrected historical player audit is empty")
+    corrected_player_audit_sha256 = _csv_content_sha256(
+        corrected_player_audit, player_audit_columns
     )
     coverage_rows, coverage_summary, unresolved_db_players = _current_db_coverage()
     availability_summary = json.loads(AVAILABILITY_SUMMARY.read_text(encoding="utf-8"))
@@ -687,6 +1011,11 @@ def build(
         "post_repair": after_summary,
         "repaired_historical_legitimate_zero_team_seasons": len(changes),
         "historical_feature_reconciliation": feature_reconciliation,
+        "historical_usage_resolution": historical_usage_resolution,
+        "corrected_historical_player_audit": {
+            "record_count": len(corrected_player_audit),
+            "sha256": corrected_player_audit_sha256,
+        },
         "team_seasons_whose_availability_status_improved": improved,
         "db_player_repairs_by_failure_class": db_repairs_by_failure_class,
         "remaining_failure_counts": {
@@ -707,14 +1036,21 @@ def build(
         "input_sha256": _input_hashes(),
     }
     report = _render_report(summary, changes, feature_changes, unresolved_db_players)
+    player_audit_path = output / "historical_player_repair_audit.csv"
     _write_csv(
         output / "team_seasons.csv",
         post_rows,
         [
             *baseline_rows[0].keys(),
             "pre_repair_usage_value",
+            "post_repair_materialized_usage_value",
             "post_repair_observed_usage_sum",
             "historical_aggregate_repaired",
+            "resolved_usage_joins",
+            "normalization_recovered_usage_joins",
+            "duplicate_equivalent_usage_joins",
+            "ambiguous_usage_joins",
+            "legitimate_zero_evidence_count",
         ],
     )
     _write_csv(
@@ -751,6 +1087,11 @@ def build(
         feature_changes,
         FEATURE_CHANGE_FIELDS,
     )
+    _write_csv(player_audit_path, corrected_player_audit, player_audit_columns)
+    if hashlib.sha256(player_audit_path.read_bytes()).hexdigest() != (
+        corrected_player_audit_sha256
+    ):
+        raise ValueError("written historical player audit differs from replay evidence")
     _write_csv(
         output / "coverage_2026.csv",
         coverage_rows,
@@ -810,6 +1151,19 @@ def _render_report(
     coverage = summary["coverage_2026"]
     sources = summary["source_availability"]
     replay = summary["historical_feature_reconciliation"]
+    usage_resolution = summary["historical_usage_resolution"]
+    remaining_usage_ambiguities = usage_resolution["remaining_ambiguous_usage_joins"]
+    ambiguity_word = (
+        "join remains" if remaining_usage_ambiguities == 1 else "joins remain"
+    )
+    ambiguous_contribution_count = replay["ambiguous_usage_join_removals"]
+    ambiguous_contribution_text = (
+        f"The materializer rejected {ambiguous_contribution_count} genuine ambiguous "
+        "join contribution."
+        if ambiguous_contribution_count == 1
+        else f"The materializer rejected {ambiguous_contribution_count} genuine "
+        "ambiguous join contributions."
+    )
     remaining = summary["remaining_failure_counts"]
     source_team_gap_destinations = len(
         {
@@ -848,17 +1202,35 @@ def _render_report(
         old_example = ambiguous_example["old_value"] or "missing"
         new_example = ambiguous_example["new_value"] or "missing"
         ambiguous_example_text = (
-            f"One measured ambiguous-join example is {ambiguous_example['team_name']} "
+            f"One genuine ambiguous-join example is {ambiguous_example['team_name']} "
             f"{ambiguous_example['season']}: its aggregate changes from `{old_example}` "
             f"to `{new_example}` after {example_player['player']}'s previously "
-            "selected contribution is rejected because multiple usage candidates "
-            "remain."
+            "selected contribution is rejected because distinct logical usage "
+            "candidates conflict."
         )
     else:
         ambiguous_example_text = (
             "The retained replay found no ambiguous-join example in the changed "
             "feature inventory."
         )
+    troy_change = next(
+        (
+            row
+            for row in feature_changes
+            if int(row["season"]) == 2021 and row["team_name"] == "Troy"
+        ),
+        None,
+    )
+    if troy_change:
+        troy_text = (
+            f"The corrected replay changes 2021 Troy's usage aggregate from "
+            f"`{troy_change['old_value'] or 'missing'}` to "
+            f"`{troy_change['new_value'] or 'missing'}`; its rebuilt availability "
+            "row uses this numeric value and does not retain "
+            "`historical_aggregate_null`."
+        )
+    else:
+        troy_text = "The replay inventory contains no 2021 Troy aggregate change."
     class_rows = [
         "| Change class | Team-seasons | Changed feature values |",
         "| --- | ---: | ---: |",
@@ -883,7 +1255,7 @@ def _render_report(
         f"- Applicable offensive usage failures remaining: **{summary['remaining_failure_counts']['applicable_offensive_usage_join']}** across {summary['remaining_failure_counts']['applicable_offensive_usage_failure_teams']} teams. The committed 2026 aggregate does not retain those player identities or join causes.",
         f"- Offensive applicability remains unproven for **{summary['remaining_failure_counts']['offensive_applicability_unproven']}** incoming transfers; no absent evidence was converted to zero.",
         "",
-        "A historical full aggregate is restored only where each incoming player is classified as resolved or legitimate-zero and no usage failure or unknown applicability remains. This fixes the retained null rows with complete player-level evidence. The separate `post_repair_observed_usage_sum` audit field still preserves known resolved contributions where failures or unknown applicability remain; those rows are not promoted to complete aggregates.",
+        "Historical availability is rebuilt from the corrected player-level D5 audit, the retained defensive player audit, and the corrected materializer panel. Each historical team's reason codes and status are reclassified with the same rules as the #141 audit; no individual reason is removed from a frozen row. The `post_repair_observed_usage_sum` field records known resolved contributions even where failures or unknown applicability remain.",
         "",
         "## Historical materializer feature reconciliation",
         "",
@@ -893,9 +1265,13 @@ def _render_report(
         "",
         *class_rows,
         "",
-        f"The {replay['legitimate_zero_restorations']} legitimate-zero restorations are the existing repair subset, backed by {replay['legitimate_zero_contributor_players']} D5_ZERO contributors. The {replay['ambiguous_usage_join_removals']} ambiguous usage joins now fail closed. Other measured changes are listed explicitly in the class table.",
+        f"The {replay['legitimate_zero_restorations']} legitimate-zero restorations are backed by {replay['legitimate_zero_contributor_players']} D5_ZERO contributors. {ambiguous_contribution_text} Other measured changes are listed explicitly in the class table.",
         "",
-        f"{ambiguous_example_text} When ambiguity leaves no uniquely resolved contribution, the materializer keeps the aggregate unknown rather than replacing it with numeric zero. `historical_feature_changes.csv` records the old and new feature values, responsible portal records, candidate details, and source hashes for every changed cell.",
+        f"The replay resolved {replay['duplicate_equivalent_ambiguous_joins_resolved']} formerly multi-row joins as duplicate-equivalent provider observations. Rows collapse only when stable player ID, season, normalized player/source identity, and numeric overall usage agree; without stable IDs, only exact parsed observations are deduplicated. Different IDs and conflicting usage values remain distinct candidates. {remaining_usage_ambiguities} genuinely ambiguous historical usage {ambiguity_word}; {usage_resolution['conflicting_usage_value_joins']} have conflicting values under the same stable ID.",
+        "",
+        f"{ambiguous_example_text} When conflicting candidates leave no unique contribution, the materializer keeps the aggregate unknown rather than replacing it with numeric zero. `historical_feature_changes.csv` records old and new feature values, responsible portal records, candidate details, and source hashes for every changed cell.",
+        "",
+        troy_text,
         "",
         "## Baseline versus post-repair availability",
         "",

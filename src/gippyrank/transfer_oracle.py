@@ -377,6 +377,40 @@ def _usage_index(usage: Iterable[UsageRecord]) -> dict[str, Any]:
     return {"by_name": by_name, "by_id": by_id}
 
 
+def usage_record_deduplication_key(item: UsageRecord) -> tuple[Any, ...]:
+    """Return a conservative logical-observation key for usage candidates.
+
+    Stable-ID rows collapse only when season, normalized player and team, ID,
+    and numeric usage all agree. Without a numeric value, or without a stable
+    ID, only fully identical parsed observations collapse.
+    """
+    if item.player_id and item.overall_usage is not None:
+        return (
+            "stable_id_value",
+            item.season,
+            normalize_team_name(item.team),
+            normalize_player_name(item.player_name),
+            item.player_id,
+            item.overall_usage,
+        )
+    return ("exact_observation", item)
+
+
+def deduplicate_usage_records(
+    candidates: Iterable[UsageRecord],
+) -> list[UsageRecord]:
+    """Collapse only logically equivalent provider rows, preserving order."""
+    seen: set[tuple[Any, ...]] = set()
+    result: list[UsageRecord] = []
+    for item in candidates:
+        key = usage_record_deduplication_key(item)
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(item)
+    return result
+
+
 def _matching_usage_candidates(
     record: TransferRecord, usage_index: Mapping[str, Any]
 ) -> list[UsageRecord]:
@@ -387,17 +421,14 @@ def _matching_usage_candidates(
     name_key = (season, team, normalize_player_name(record.player_name))
     candidates = usage_index["by_name"].get(name_key, [])
     if record.player_id:
-        id_candidates = usage_index["by_id"].get(
-            (season, team, record.player_id), []
-        )
+        id_candidates = usage_index["by_id"].get((season, team, record.player_id), [])
         if id_candidates:
-            return id_candidates
+            return deduplicate_usage_records(id_candidates)
         if any(
-            item.player_id and item.player_id != record.player_id
-            for item in candidates
+            item.player_id and item.player_id != record.player_id for item in candidates
         ):
             return []
-    return candidates
+    return deduplicate_usage_records(candidates)
 
 
 def _prior_usage_for_transfer(
@@ -539,8 +570,7 @@ def aggregate_team_features(
         if transfer_identity_key(record) in explicit_zeros:
             usage_candidates = _matching_usage_candidates(record, usage_idx)
             if any(
-                candidate.overall_usage is not None
-                and candidate.overall_usage > 0
+                candidate.overall_usage is not None and candidate.overall_usage > 0
                 for candidate in usage_candidates
             ):
                 raise ValueError(

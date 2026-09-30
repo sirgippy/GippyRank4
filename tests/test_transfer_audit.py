@@ -10,7 +10,11 @@ from gippyrank.transfer_audit import (
     audit_transfer_records,
     parse_participation_payload,
 )
-from gippyrank.transfer_oracle import parse_transfer_payload, parse_usage_payload
+from gippyrank.transfer_oracle import (
+    aggregate_team_features,
+    parse_transfer_payload,
+    parse_usage_payload,
+)
 
 
 def _team_rows() -> list[dict[str, str]]:
@@ -426,3 +430,121 @@ def test_punctuation_normalization_keeps_multiple_candidates_ambiguous() -> None
     assert row["usage_join_status"] == "ambiguous_usage_join"
     assert row["usage_candidate_player_ids"] == ["one", "two"]
     assert row["d5_feature_value"] is None
+
+
+@pytest.mark.parametrize(
+    (
+        "usage_rows",
+        "expected_status",
+        "expected_resolution",
+        "expected_logical_candidates",
+        "expected_value",
+    ),
+    [
+        (
+            [
+                {"id": "same", "name": "A-B Player", "usage": {"overall": 0.519}},
+                {"id": "same", "name": "A-B Player", "usage": {"overall": 0.519}},
+            ],
+            "joined",
+            "duplicate_equivalent_rows_collapsed",
+            1,
+            0.519,
+        ),
+        (
+            [
+                {"id": "same", "name": "A-B Player", "usage": {"overall": 0.519}},
+                {"id": "same", "name": "A-B Player", "usage": {"overall": 0.25}},
+            ],
+            "ambiguous_usage_join",
+            "conflicting_usage_values",
+            2,
+            None,
+        ),
+        (
+            [
+                {"id": "one", "name": "A-B Player", "usage": {"overall": 0.519}},
+                {"id": "two", "name": "A B Player", "usage": {"overall": 0.519}},
+            ],
+            "ambiguous_usage_join",
+            "multiple_logical_candidates",
+            2,
+            None,
+        ),
+        (
+            [
+                {"name": "A-B Player", "usage": {"overall": 0.519}},
+                {"name": "A-B Player", "usage": {"overall": 0.519}},
+            ],
+            "joined",
+            "duplicate_equivalent_rows_collapsed",
+            1,
+            0.519,
+        ),
+        (
+            [
+                {"name": "A-B Player", "usage": {"overall": 0.519}},
+                {"name": "A B Player", "usage": {"overall": 0.519}},
+            ],
+            "ambiguous_usage_join",
+            "multiple_logical_candidates",
+            2,
+            None,
+        ),
+        (
+            [{"id": "one", "name": "A-B Player", "usage": {"overall": 0.519}}],
+            "joined",
+            "single_logical_candidate",
+            1,
+            0.519,
+        ),
+    ],
+)
+def test_usage_logical_candidate_semantics_match_audit_and_aggregation(
+    usage_rows: list[dict[str, object]],
+    expected_status: str,
+    expected_resolution: str,
+    expected_logical_candidates: int,
+    expected_value: float | None,
+) -> None:
+    portal = parse_transfer_payload(
+        [
+            {
+                "season": 2022,
+                "firstName": "A-B",
+                "lastName": "Player",
+                "origin": "Alpha",
+                "destination": "Beta",
+                "position": "QB",
+                "transferDate": "2022-08-01",
+            }
+        ],
+        season=2022,
+    )
+    usage = parse_usage_payload(
+        [
+            {"season": 2021, "team": "Alpha", "position": "QB", **row}
+            for row in usage_rows
+        ],
+        season=2021,
+    )
+
+    audit_row = audit_transfer_records(
+        portal, usage, _team_rows(), cutoff=date(2025, 8, 15)
+    )["join_rows"][0]
+    aggregate = aggregate_team_features(
+        portal,
+        usage,
+        _team_rows(),
+        covered_seasons={2022},
+        cutoff=date(2022, 8, 15),
+    )[(2022, "fbs", "2")]["transfer_in_prior_usage_sum"]
+
+    assert audit_row["usage_join_status"] == expected_status
+    assert audit_row["usage_candidate_resolution"] == expected_resolution
+    assert audit_row["usage_candidate_count"] == expected_logical_candidates
+    assert aggregate == expected_value
+    if expected_resolution == "duplicate_equivalent_rows_collapsed":
+        assert audit_row["prior_usage_record_count"] == 2
+        assert audit_row["usage_duplicate_equivalent_row_count"] == 1
+        assert audit_row["prior_usage"] == expected_value
