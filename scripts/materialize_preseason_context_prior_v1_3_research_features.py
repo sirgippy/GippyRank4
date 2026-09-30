@@ -34,6 +34,7 @@ from gippyrank.context_prior_v1_3 import CONTEXT_1_3_FEATURES
 from gippyrank.transfer_oracle import (
     TransferIdentityKey,
     TransferRecord,
+    UsageRecord,
     normalize_player_name,
     normalize_team_name,
     transfer_identity_key,
@@ -85,7 +86,11 @@ def _verified_zero_usage_keys(
                     f"invalid explicit-zero evidence row in {evidence_path}"
                 )
             portal_index = int(evidence["portal_index"])
-            if portal_index in seen_indexes or portal_index >= len(records):
+            if (
+                portal_index in seen_indexes
+                or portal_index < 0
+                or portal_index >= len(records)
+            ):
                 raise ValueError(
                     f"duplicate or out-of-range portal_index {portal_index} in "
                     f"{evidence_path}"
@@ -135,7 +140,9 @@ def _write_csv(path: Path, rows: list[dict[str, object]]) -> None:
         raise ValueError("refusing to write an empty Context 1.3 research panel")
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(OUTPUT_FIELDS), lineterminator="\n")
+        writer = csv.DictWriter(
+            handle, fieldnames=list(OUTPUT_FIELDS), lineterminator="\n"
+        )
         writer.writeheader()
         writer.writerows(rows)
 
@@ -146,8 +153,17 @@ def run(
     transfer_root: Path,
     output: Path,
     zero_evidence: Path | None = None,
+    verified_transfer_data: tuple[
+        list[TransferRecord], list[UsageRecord], set[int], set[int]
+    ]
+    | None = None,
 ) -> list[dict[str, object]]:
-    """Write the frozen retrospective research representation."""
+    """Write the retrospective panel, optionally from pre-verified source bytes.
+
+    ``verified_transfer_data`` is for deterministic provenance audits that
+    hash retained raw payload bytes before parsing them. Normal materializer
+    use continues to load directly from ``transfer_root``.
+    """
     source_root = source_root.resolve()
     transfer_root = transfer_root.resolve()
     output = output.resolve()
@@ -163,12 +179,13 @@ def run(
     transfer_research.configure_source_root(source_root)
     rows, _, _ = v1.load_rows(max_season=max(TARGET_SEASONS))
     fbs = [row for row in rows if row.subdivision == "fbs"]
-    contextual, _ = c12.attach_context(
-        fbs, c12.feature_index(), c12.cached_tenures()
-    )
-    records, usage, portal_seasons, usage_seasons = (
-        transfer_research.load_raw_transfer_data(transfer_root)
-    )
+    contextual, _ = c12.attach_context(fbs, c12.feature_index(), c12.cached_tenures())
+    if verified_transfer_data is None:
+        records, usage, portal_seasons, usage_seasons = (
+            transfer_research.load_raw_transfer_data(transfer_root)
+        )
+    else:
+        records, usage, portal_seasons, usage_seasons = verified_transfer_data
     required_portal = set(RESEARCH_TRANSFER_SEASONS)
     required_usage = set(range(2020, 2025))
     if not required_portal <= portal_seasons:
@@ -182,9 +199,7 @@ def run(
             f"found {sorted(usage_seasons)}"
         )
     feature_rows = transfer_research.fbs_feature_rows(contextual)
-    verified_zero_keys = _verified_zero_usage_keys(
-        records, evidence_path, feature_rows
-    )
+    verified_zero_keys = _verified_zero_usage_keys(records, evidence_path, feature_rows)
     transfer_features = transfer_research.aggregate_team_features(
         records,
         usage,
@@ -194,8 +209,10 @@ def run(
         verified_zero_usage_keys=verified_zero_keys,
     )
     defensive = position_groups.load_position_features(
-        source_root / "data/processed/defensive_transfer_audit/transfer_player_audit.csv",
-        source_root / "data/processed/defensive_transfer_audit/coverage_by_position.csv",
+        source_root
+        / "data/processed/defensive_transfer_audit/transfer_player_audit.csv",
+        source_root
+        / "data/processed/defensive_transfer_audit/coverage_by_position.csv",
     )
     rows_out: list[dict[str, object]] = []
     for row in contextual:

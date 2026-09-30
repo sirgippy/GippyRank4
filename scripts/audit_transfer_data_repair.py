@@ -12,6 +12,7 @@ import argparse
 import csv
 import hashlib
 import importlib.util
+import io
 import json
 import sys
 from collections import Counter, defaultdict
@@ -19,7 +20,13 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS = ROOT / "scripts"
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+from replay_historical_transfer_features import replay_historical_materializer
+
 DEFAULT_OUTPUT = ROOT / "data/processed/transfer_data_repair"
+DEFAULT_HISTORICAL_RAW_ROOT = ROOT / "data/raw"
 CURRENT = ROOT / "data/processed/preseason/context_v1_3_2026_reconstruction"
 HISTORICAL = (
     ROOT
@@ -34,9 +41,7 @@ CURRENT_MANIFEST = CURRENT / "source_manifest.json"
 DB_COVERAGE_142 = (
     ROOT / "data/processed/partial_db_transfer_impact_142/empirical_2026_coverage.csv"
 )
-AVAILABILITY_SUMMARY = (
-    ROOT / "data/processed/transfer_availability_audit/summary.json"
-)
+AVAILABILITY_SUMMARY = ROOT / "data/processed/transfer_availability_audit/summary.json"
 CURRENT_OFFENSIVE_PLAYERS = CURRENT / "offensive_player_audit.csv"
 GOOD_DB = {"resolved", "zero_recorded_defensive_box_score_games"}
 D5_ZERO = "legitimate_zero_or_non_applicable_prior_offensive_usage"
@@ -71,6 +76,32 @@ CANDIDATE_REASONS = {
     "db_ambiguous_player_join",
     "historical_aggregate_null",
 }
+ZERO_CONTRIBUTOR_FIELDS = [
+    "season",
+    "destination_team_id",
+    "destination_team",
+    "portal_index",
+    "player",
+    "source_team",
+    "destination",
+    "transfer_date",
+    "portal_player_id",
+    "d5_resolution_category",
+    "d5_feature_value",
+    "usage_join_status",
+    "source_provenance",
+]
+FEATURE_CHANGE_FIELDS = [
+    "season",
+    "team_id",
+    "team_name",
+    "feature_name",
+    "old_value",
+    "new_value",
+    "change_class",
+    "players_responsible",
+    "source_provenance",
+]
 
 
 def _read_csv(path: Path) -> list[dict[str, str]]:
@@ -93,6 +124,16 @@ def _write_json(path: Path, value: object) -> None:
     path.write_text(
         json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
+
+
+def _csv_content_sha256(rows: list[dict[str, Any]], columns: list[str]) -> str:
+    buffer = io.StringIO(newline="")
+    writer = csv.DictWriter(
+        buffer, fieldnames=columns, extrasaction="ignore", lineterminator="\n"
+    )
+    writer.writeheader()
+    writer.writerows(rows)
+    return hashlib.sha256(buffer.getvalue().encode("utf-8")).hexdigest()
 
 
 def _index(
@@ -593,18 +634,34 @@ def _db_player_failure_counts_before() -> Counter[str]:
     return counts
 
 
-def build(output: Path = DEFAULT_OUTPUT) -> dict[str, Any]:
+def build(
+    output: Path = DEFAULT_OUTPUT,
+    *,
+    historical_raw_root: Path = DEFAULT_HISTORICAL_RAW_ROOT,
+    materializer_source_root: Path = ROOT,
+) -> dict[str, Any]:
     baseline_rows, baseline_summary = _load_baseline_audit()
     post_rows, changes, zero_contributors = _historical_zero_repairs(baseline_rows)
+    zero_evidence_sha256 = _csv_content_sha256(
+        zero_contributors, ZERO_CONTRIBUTOR_FIELDS
+    )
+    feature_changes, feature_reconciliation = replay_historical_materializer(
+        model_source_root=materializer_source_root,
+        raw_root=historical_raw_root,
+        zero_contributors=zero_contributors,
+        zero_evidence_sha256=zero_evidence_sha256,
+        zero_evidence_columns=ZERO_CONTRIBUTOR_FIELDS,
+        expected_zero_repair_team_seasons={
+            (int(row["season"]), str(row["destination_team_id"])) for row in changes
+        },
+    )
     coverage_rows, coverage_summary, unresolved_db_players = _current_db_coverage()
     availability_summary = json.loads(AVAILABILITY_SUMMARY.read_text(encoding="utf-8"))
     failure_counts, offensive_failure_team_count = _remaining_failure_counts(
         unresolved_db_players, availability_summary["current_2026"]
     )
     db_failures_before = _db_player_failure_counts_before()
-    db_failures_after = Counter(
-        str(row["old_reason"]) for row in unresolved_db_players
-    )
+    db_failures_after = Counter(str(row["old_reason"]) for row in unresolved_db_players)
     db_repairs_by_failure_class = {
         reason: db_failures_before[reason] - db_failures_after[reason]
         for reason in sorted(set(db_failures_before) | set(db_failures_after))
@@ -629,6 +686,7 @@ def build(output: Path = DEFAULT_OUTPUT) -> dict[str, Any]:
         "baseline_issue_141": baseline_summary,
         "post_repair": after_summary,
         "repaired_historical_legitimate_zero_team_seasons": len(changes),
+        "historical_feature_reconciliation": feature_reconciliation,
         "team_seasons_whose_availability_status_improved": improved,
         "db_player_repairs_by_failure_class": db_repairs_by_failure_class,
         "remaining_failure_counts": {
@@ -648,7 +706,7 @@ def build(output: Path = DEFAULT_OUTPUT) -> dict[str, Any]:
         },
         "input_sha256": _input_hashes(),
     }
-    report = _render_report(summary, changes, unresolved_db_players)
+    report = _render_report(summary, changes, feature_changes, unresolved_db_players)
     _write_csv(
         output / "team_seasons.csv",
         post_rows,
@@ -681,21 +739,17 @@ def build(output: Path = DEFAULT_OUTPUT) -> dict[str, Any]:
     _write_csv(
         output / "zero_contributors.csv",
         zero_contributors,
-        [
-            "season",
-            "destination_team_id",
-            "destination_team",
-            "portal_index",
-            "player",
-            "source_team",
-            "destination",
-            "transfer_date",
-            "portal_player_id",
-            "d5_resolution_category",
-            "d5_feature_value",
-            "usage_join_status",
-            "source_provenance",
-        ],
+        ZERO_CONTRIBUTOR_FIELDS,
+    )
+    if (
+        hashlib.sha256((output / "zero_contributors.csv").read_bytes()).hexdigest()
+        != (feature_reconciliation["zero_evidence_sha256"])
+    ):
+        raise ValueError("written zero evidence differs from the replay input")
+    _write_csv(
+        output / "historical_feature_changes.csv",
+        feature_changes,
+        FEATURE_CHANGE_FIELDS,
     )
     _write_csv(
         output / "coverage_2026.csv",
@@ -748,12 +802,72 @@ def build(output: Path = DEFAULT_OUTPUT) -> dict[str, Any]:
 def _render_report(
     summary: dict[str, Any],
     changes: list[dict[str, Any]],
+    feature_changes: list[dict[str, Any]],
     unresolved_db_players: list[dict[str, Any]],
 ) -> str:
     before = summary["baseline_issue_141"]
     after = summary["post_repair"]
     coverage = summary["coverage_2026"]
     sources = summary["source_availability"]
+    replay = summary["historical_feature_reconciliation"]
+    remaining = summary["remaining_failure_counts"]
+    source_team_gap_destinations = len(
+        {
+            str(row["destination_team_id"])
+            for row in unresolved_db_players
+            if row.get("old_reason") == "db_source_team_uncovered"
+            and row.get("destination_team_id")
+        }
+    )
+    ambiguous_db_count = remaining["ambiguous_db_player_join"]
+    ambiguous_db_sentence = (
+        "The remaining ambiguous DB player identity lacks retained stable IDs or "
+        "candidate records and remains ambiguous."
+        if ambiguous_db_count == 1
+        else f"The {ambiguous_db_count} remaining ambiguous DB player identities "
+        "lack retained stable IDs or candidate records and remain ambiguous."
+    )
+    ambiguous_example = next(
+        (
+            row
+            for row in feature_changes
+            if "ambiguous_usage_join_removed" in str(row["change_class"])
+        ),
+        None,
+    )
+    if ambiguous_example:
+        responsible = json.loads(ambiguous_example["players_responsible"])
+        example_player = next(
+            (
+                row
+                for row in responsible
+                if row["change_class"] == "ambiguous_usage_join_removed"
+            ),
+            responsible[0],
+        )
+        old_example = ambiguous_example["old_value"] or "missing"
+        new_example = ambiguous_example["new_value"] or "missing"
+        ambiguous_example_text = (
+            f"One measured ambiguous-join example is {ambiguous_example['team_name']} "
+            f"{ambiguous_example['season']}: its aggregate changes from `{old_example}` "
+            f"to `{new_example}` after {example_player['player']}'s previously "
+            "selected contribution is rejected because multiple usage candidates "
+            "remain."
+        )
+    else:
+        ambiguous_example_text = (
+            "The retained replay found no ambiguous-join example in the changed "
+            "feature inventory."
+        )
+    class_rows = [
+        "| Change class | Team-seasons | Changed feature values |",
+        "| --- | ---: | ---: |",
+    ]
+    for reason, team_season_count in replay["changed_team_seasons_by_reason"].items():
+        class_rows.append(
+            f"| `{reason}` | {team_season_count} | "
+            f"{replay['changed_feature_values_by_class'].get(reason, 0)} |"
+        )
     lines = [
         "# Transfer data repair audit (#148)",
         "",
@@ -769,7 +883,19 @@ def _render_report(
         f"- Applicable offensive usage failures remaining: **{summary['remaining_failure_counts']['applicable_offensive_usage_join']}** across {summary['remaining_failure_counts']['applicable_offensive_usage_failure_teams']} teams. The committed 2026 aggregate does not retain those player identities or join causes.",
         f"- Offensive applicability remains unproven for **{summary['remaining_failure_counts']['offensive_applicability_unproven']}** incoming transfers; no absent evidence was converted to zero.",
         "",
-        "A historical full aggregate is restored only where each incoming player is classified as resolved or legitimate-zero and no usage failure or unknown applicability remains. This fixes the 21 retained null rows with complete player-level evidence. The separate `post_repair_observed_usage_sum` audit field still preserves known resolved contributions where failures or unknown applicability remain; those rows are not promoted to complete aggregates.",
+        "A historical full aggregate is restored only where each incoming player is classified as resolved or legitimate-zero and no usage failure or unknown applicability remains. This fixes the retained null rows with complete player-level evidence. The separate `post_repair_observed_usage_sum` audit field still preserves known resolved contributions where failures or unknown applicability remain; those rows are not promoted to complete aggregates.",
+        "",
+        "## Historical materializer feature reconciliation",
+        "",
+        f"The exact retained source bytes passed SHA-256 verification against `{replay['source_manifest_path']}` ({replay['verified_source_count']} inputs; manifest SHA-256 `{replay['source_manifest_sha256']}`). The pinned previous oracle is commit `{replay['legacy_oracle_commit']}` with `transfer_oracle.py` SHA-256 `{replay['legacy_oracle_source_sha256']}`. Replaying that resolver exactly reproduces the frozen panel before applying the current materializer.",
+        "",
+        f"Comparing {replay['materializer_feature_values_compared']} transfer feature cells across {replay['materializer_panel_row_count']} historical panel rows found **{replay['changed_team_seasons']} changed team-seasons** and **{replay['changed_feature_values']} changed feature values**. The generated inventory reconciles exactly to the full before/after panel diff; no changes are unexplained.",
+        "",
+        *class_rows,
+        "",
+        f"The {replay['legitimate_zero_restorations']} legitimate-zero restorations are the existing repair subset, backed by {replay['legitimate_zero_contributor_players']} D5_ZERO contributors. The {replay['ambiguous_usage_join_removals']} ambiguous usage joins now fail closed. Other measured changes are listed explicitly in the class table.",
+        "",
+        f"{ambiguous_example_text} When ambiguity leaves no uniquely resolved contribution, the materializer keeps the aggregate unknown rather than replacing it with numeric zero. `historical_feature_changes.csv` records the old and new feature values, responsible portal records, candidate details, and source hashes for every changed cell.",
         "",
         "## Baseline versus post-repair availability",
         "",
@@ -793,11 +919,11 @@ def _render_report(
         "",
         f"The checked-in verified alias tables contain {sources['verified_team_alias_rows']} team aliases and {sources['verified_player_alias_rows']} player aliases, so they provide no pre-verified repair for these rows.",
         "",
-        "The processed DB audit preserves player names, source/destination teams, positions, impact statuses, and resolved prior player IDs. It does not preserve the unmatched roster candidates, portal stable IDs for unresolved records, or raw provider spellings. Therefore it cannot establish that a particular punctuation variant, team alias, or player ID repairs an unresolved row. No player-specific aliases or source-team mappings were added. The 34 source-team gaps affect 25 destination teams and remain unresolved in `unresolved_db_players_2026.csv`.",
+        f"The processed DB audit preserves player names, source/destination teams, positions, impact statuses, and resolved prior player IDs. It does not preserve the unmatched roster candidates, portal stable IDs for unresolved records, or raw provider spellings. Therefore it cannot establish that a particular punctuation variant, team alias, or player ID repairs an unresolved row. No player-specific aliases or source-team mappings were added. The {remaining['source_team_uncovered_db_player']} source-team gaps affect {source_team_gap_destinations} destination teams and remain unresolved in `unresolved_db_players_2026.csv`.",
         "",
-        "The 11 DB position conflicts have a uniquely joined player and retained portal/prior positions, but the audit does not establish whether the discrepancy is a chronology change or provider taxonomy change. No general compatibility rule is supported by the retained evidence, so all remain unresolved. The single ambiguous identity lacks retained stable IDs or candidate records and remains ambiguous.",
+        f"The {remaining['db_position_conflict']} DB position conflicts have a uniquely joined player and retained portal/prior positions, but the audit does not establish whether the discrepancy is a chronology change or provider taxonomy change. No general compatibility rule is supported by the retained evidence, so all remain unresolved. {ambiguous_db_sentence}",
         "",
-        "The 10 applicable 2026 offensive usage failures and their player-level cause are not present in the committed #141 current-team artifacts. The updated derivation now emits an `offensive_player_audit.csv` with portal/usage IDs, candidate counts, join statuses, and D5 reasons when the immutable snapshots are available. This checkout lacks those source payloads, so the 2026 failures cannot be re-derived here. Existing historical player audits show source-team mismatches, ambiguous usage matches, and absent usage rows; those unsupported rows remain unresolved.",
+        f"The {remaining['applicable_offensive_usage_join']} applicable 2026 offensive usage failures and their player-level cause are not present in the committed #141 current-team artifacts. The updated derivation now emits an `offensive_player_audit.csv` with portal/usage IDs, candidate counts, join statuses, and D5 reasons when the immutable snapshots are available. This checkout lacks those source payloads, so the 2026 failures cannot be re-derived here. Existing historical player audits show source-team mismatches, ambiguous usage matches, and absent usage rows; those unsupported rows remain unresolved.",
         "",
         "The remaining applicability-unknown cases need additional trustworthy player participation evidence where the retained box-score and usage records are inconclusive, especially for offensive-line and non-FBS-origin players. If CFBD does not cover those populations, a new provider must be evaluated in a separate follow-up; this repair does not infer participation from position or acquire a new source.",
         "",
@@ -811,7 +937,7 @@ def _render_report(
         "- No Context 1.3 coefficients, feature-selection behavior, or published ranking files were regenerated.",
         "- #141 and #142 artifacts are read-only inputs; all new artifacts are under `data/processed/transfer_data_repair/`.",
         "",
-        "Input hashes and machine-readable before/after records are in `summary.json` and `changes.csv`.",
+        f"Input hashes and machine-readable before/after records are in `summary.json`, `changes.csv`, and `historical_feature_changes.csv` ({len(feature_changes)} historical feature changes).",
         "",
     ]
     return "\n".join(lines)
@@ -820,8 +946,24 @@ def _render_report(
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument(
+        "--historical-raw-root",
+        type=Path,
+        default=DEFAULT_HISTORICAL_RAW_ROOT,
+        help="root containing the manifest-relative historical raw input paths",
+    )
+    parser.add_argument(
+        "--materializer-source-root",
+        type=Path,
+        default=ROOT,
+        help="checkout containing the frozen Context team-season materializer inputs",
+    )
     args = parser.parse_args()
-    summary = build(args.output)
+    summary = build(
+        args.output,
+        historical_raw_root=args.historical_raw_root,
+        materializer_source_root=args.materializer_source_root,
+    )
     print(json.dumps(summary, indent=2, sort_keys=True))
 
 

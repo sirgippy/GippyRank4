@@ -12,7 +12,23 @@ This is a new audit location built from frozen #141/#142 artifacts and retained 
 - Applicable offensive usage failures remaining: **10** across 8 teams. The committed 2026 aggregate does not retain those player identities or join causes.
 - Offensive applicability remains unproven for **1012** incoming transfers; no absent evidence was converted to zero.
 
-A historical full aggregate is restored only where each incoming player is classified as resolved or legitimate-zero and no usage failure or unknown applicability remains. This fixes the 21 retained null rows with complete player-level evidence. The separate `post_repair_observed_usage_sum` audit field still preserves known resolved contributions where failures or unknown applicability remain; those rows are not promoted to complete aggregates.
+A historical full aggregate is restored only where each incoming player is classified as resolved or legitimate-zero and no usage failure or unknown applicability remains. This fixes the retained null rows with complete player-level evidence. The separate `post_repair_observed_usage_sum` audit field still preserves known resolved contributions where failures or unknown applicability remain; those rows are not promoted to complete aggregates.
+
+## Historical materializer feature reconciliation
+
+The exact retained source bytes passed SHA-256 verification against `data/processed/transfer_production_audit/source_manifest.json` (15 inputs; manifest SHA-256 `b1c30ed98c8b38b8f4eb5ea57e8090858471f2c11d2879388d96bd7ace60c517`). The pinned previous oracle is commit `fc8c3924164c19fbb8b28334f613c5937c744673` with `transfer_oracle.py` SHA-256 `e2d66036102f7ac8bd11fbf95d913b688a0b283224b218db513a43b47d819c49`. Replaying that resolver exactly reproduces the frozen panel before applying the current materializer.
+
+Comparing 8232 transfer feature cells across 2744 historical panel rows found **48 changed team-seasons** and **48 changed feature values**. The generated inventory reconciles exactly to the full before/after panel diff; no changes are unexplained.
+
+| Change class | Team-seasons | Changed feature values |
+| --- | ---: | ---: |
+| `ambiguous_usage_join_removed` | 25 | 25 |
+| `legitimate_zero_restoration` | 21 | 21 |
+| `name_normalization_join_added` | 2 | 2 |
+
+The 21 legitimate-zero restorations are the existing repair subset, backed by 46 D5_ZERO contributors. The 25 ambiguous usage joins now fail closed. Other measured changes are listed explicitly in the class table.
+
+One measured ambiguous-join example is Massachusetts 2021: its aggregate changes from `0.154` to `0.122` after Rico Arnold's previously selected contribution is rejected because multiple usage candidates remain. When ambiguity leaves no uniquely resolved contribution, the materializer keeps the aggregate unknown rather than replacing it with numeric zero. `historical_feature_changes.csv` records the old and new feature values, responsible portal records, candidate details, and source hashes for every changed cell.
 
 ## Baseline versus post-repair availability
 
@@ -38,7 +54,7 @@ The checked-in verified alias tables contain 0 team aliases and 0 player aliases
 
 The processed DB audit preserves player names, source/destination teams, positions, impact statuses, and resolved prior player IDs. It does not preserve the unmatched roster candidates, portal stable IDs for unresolved records, or raw provider spellings. Therefore it cannot establish that a particular punctuation variant, team alias, or player ID repairs an unresolved row. No player-specific aliases or source-team mappings were added. The 34 source-team gaps affect 25 destination teams and remain unresolved in `unresolved_db_players_2026.csv`.
 
-The 11 DB position conflicts have a uniquely joined player and retained portal/prior positions, but the audit does not establish whether the discrepancy is a chronology change or provider taxonomy change. No general compatibility rule is supported by the retained evidence, so all remain unresolved. The single ambiguous identity lacks retained stable IDs or candidate records and remains ambiguous.
+The 11 DB position conflicts have a uniquely joined player and retained portal/prior positions, but the audit does not establish whether the discrepancy is a chronology change or provider taxonomy change. No general compatibility rule is supported by the retained evidence, so all remain unresolved. The remaining ambiguous DB player identity lacks retained stable IDs or candidate records and remains ambiguous.
 
 The 10 applicable 2026 offensive usage failures and their player-level cause are not present in the committed #141 current-team artifacts. The updated derivation now emits an `offensive_player_audit.csv` with portal/usage IDs, candidate counts, join statuses, and D5 reasons when the immutable snapshots are available. This checkout lacks those source payloads, so the 2026 failures cannot be re-derived here. Existing historical player audits show source-team mismatches, ambiguous usage matches, and absent usage rows; those unsupported rows remain unresolved.
 
@@ -54,4 +70,4 @@ Current source responses were captured after the 2026 August 15 cutoff. They dia
 - No Context 1.3 coefficients, feature-selection behavior, or published ranking files were regenerated.
 - #141 and #142 artifacts are read-only inputs; all new artifacts are under `data/processed/transfer_data_repair/`.
 
-Input hashes and machine-readable before/after records are in `summary.json` and `changes.csv`.
+Input hashes and machine-readable before/after records are in `summary.json`, `changes.csv`, and `historical_feature_changes.csv` (48 historical feature changes).

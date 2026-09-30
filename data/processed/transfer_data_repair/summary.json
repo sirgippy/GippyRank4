@@ -175,6 +175,157 @@
     "db_position_conflict": 0,
     "db_source_team_uncovered": 0
   },
+  "historical_feature_reconciliation": {
+    "ambiguous_changed_transfer_count": 25,
+    "ambiguous_player_audit_record_count": 25,
+    "ambiguous_usage_join_removals": 25,
+    "before_panel_path": "data/processed/preseason/context_v1_3_candidate/historical_transfer_features.csv",
+    "before_panel_sha256": "3b3680cf63806033cf6d67813a1359ada455e8e7528bf310a27b37d5cda7a726",
+    "change_inventory_exactly_matches_materializer_diff": true,
+    "changed_feature_values": 48,
+    "changed_feature_values_by_class": {
+      "ambiguous_usage_join_removed": 25,
+      "legitimate_zero_restoration": 21,
+      "name_normalization_join_added": 2
+    },
+    "changed_team_seasons": 48,
+    "changed_team_seasons_by_reason": {
+      "ambiguous_usage_join_removed": 25,
+      "legitimate_zero_restoration": 21,
+      "name_normalization_join_added": 2
+    },
+    "legacy_oracle_commit": "fc8c3924164c19fbb8b28334f613c5937c744673",
+    "legacy_oracle_source_sha256": "e2d66036102f7ac8bd11fbf95d913b688a0b283224b218db513a43b47d819c49",
+    "legacy_replay_matches_frozen_panel": true,
+    "legitimate_zero_contributor_players": 46,
+    "legitimate_zero_restorations": 21,
+    "materializer_feature_values_compared": 8232,
+    "materializer_panel_row_count": 2744,
+    "new_replay_matches_materializer": true,
+    "other_change_classes": {
+      "name_normalization_join_added": 2
+    },
+    "player_contribution_changes_by_class": {
+      "ambiguous_usage_join_removed": 25,
+      "legitimate_zero_restoration": 46,
+      "name_normalization_join_added": 2
+    },
+    "portal_audit_rows_bound_to_verified_payloads": 14422,
+    "portal_position_checked_against_verified_payloads": true,
+    "portal_records_with_stable_ids": 0,
+    "source_manifest_path": "data/processed/transfer_production_audit/source_manifest.json",
+    "source_manifest_sha256": "b1c30ed98c8b38b8f4eb5ea57e8090858471f2c11d2879388d96bd7ace60c517",
+    "unexplained_changed_feature_values": 0,
+    "verified_source_count": 15,
+    "verified_sources": [
+      {
+        "kind": "portal",
+        "path": "data/raw/cfbd/preseason/transfers/portal/2021.json",
+        "record_count": 1770,
+        "season": 2021,
+        "sha256": "18d0d528f2b9c2dcc83814185a619a13dd829f642a023c80129805db33114087"
+      },
+      {
+        "kind": "portal",
+        "path": "data/raw/cfbd/preseason/transfers/portal/2022.json",
+        "record_count": 2273,
+        "season": 2022,
+        "sha256": "6a3efbb4a12baaa13d9376bfb5a5e83a98dd258178fc8735dcf0e9336000297e"
+      },
+      {
+        "kind": "portal",
+        "path": "data/raw/cfbd/preseason/transfers/portal/2023.json",
+        "record_count": 2502,
+        "season": 2023,
+        "sha256": "73229d36aee995b0b80629d46870dba85c9ba032b0162a4705dd4a82801655df"
+      },
+      {
+        "kind": "portal",
+        "path": "data/raw/cfbd/preseason/transfers/portal/2024.json",
+        "record_count": 3378,
+        "season": 2024,
+        "sha256": "ce7e540c2e153cb9fdab6e9834eddbbbf9be27fab71ac726026d244236865029"
+      },
+      {
+        "kind": "portal",
+        "path": "data/raw/cfbd/preseason/transfers/portal/2025.json",
+        "record_count": 4499,
+        "season": 2025,
+        "sha256": "a566904246c2ee1c4c0c7c631714b44b0fc47b2bd0191763eead37aee130ce51"
+      },
+      {
+        "kind": "stats",
+        "path": "data/raw/cfbd/preseason/transfers/stats/2020.json",
+        "record_count": 73490,
+        "season": 2020,
+        "sha256": "8febf955733f6bd9387ebb0aa45b9cb8111c48f020c7d11fd99ed7ecd2f787eb"
+      },
+      {
+        "kind": "stats",
+        "path": "data/raw/cfbd/preseason/transfers/stats/2021.json",
+        "record_count": 109056,
+        "season": 2021,
+        "sha256": "53d281422eb41c6e49355244ee933b66682c0e5361cc0ce02922f699dbeebdec"
+      },
+      {
+        "kind": "stats",
+        "path": "data/raw/cfbd/preseason/transfers/stats/2022.json",
+        "record_count": 138632,
+        "season": 2022,
+        "sha256": "5bd40f21e0da41a69b620d68aa4a1a2a6feeb5f134c3bab176a211fa83d2a5db"
+      },
+      {
+        "kind": "stats",
+        "path": "data/raw/cfbd/preseason/transfers/stats/2023.json",
+        "record_count": 132228,
+        "season": 2023,
+        "sha256": "094ee38888c37999dbc9ae9534675bdd58b63a8735b421e556ff1a8843a216ab"
+      },
+      {
+        "kind": "stats",
+        "path": "data/raw/cfbd/preseason/transfers/stats/2024.json",
+        "record_count": 135294,
+        "season": 2024,
+        "sha256": "e1bce8c79927ca57464a691b5f8498fa237d7ecee34c9f6d444ddb3e52d3fae1"
+      },
+      {
+        "kind": "usage",
+        "path": "data/raw/cfbd/preseason/transfers/usage/2020.json",
+        "record_count": 2400,
+        "season": 2020,
+        "sha256": "7d0a49eaa06ff9a730f6e96c5f2272e7030e9c86f616f26d9930dd6c08e7f567"
+      },
+      {
+        "kind": "usage",
+        "path": "data/raw/cfbd/preseason/transfers/usage/2021.json",
+        "record_count": 3314,
+        "season": 2021,
+        "sha256": "9c738768bcb914bc6fe781e5716a877dd93227f6186b9650f1fcc4917e3fb984"
+      },
+      {
+        "kind": "usage",
+        "path": "data/raw/cfbd/preseason/transfers/usage/2022.json",
+        "record_count": 4992,
+        "season": 2022,
+        "sha256": "3f4429e25852b011ea749e1ad548b630f990a72da4976c3f6d71d4ab4704aec6"
+      },
+      {
+        "kind": "usage",
+        "path": "data/raw/cfbd/preseason/transfers/usage/2023.json",
+        "record_count": 4586,
+        "season": 2023,
+        "sha256": "75595ed1c97c4da9579a6c6e5bd88248283a6389a915348612478e698e07651b"
+      },
+      {
+        "kind": "usage",
+        "path": "data/raw/cfbd/preseason/transfers/usage/2024.json",
+        "record_count": 4131,
+        "season": 2024,
+        "sha256": "ff286be911442c317fc00ae485598a8a314978276df27c9d972407edd4d8a08b"
+      }
+    ],
+    "zero_evidence_sha256": "93faf9d62811d7dc83bdfd5568cf972f7fa0b1e7ee7db90cb16655e89eb96d29"
+  },
   "input_sha256": {
     "data/processed/partial_db_transfer_impact_142/empirical_2026_coverage.csv": "77a819bb56e452df37620eb7a8d585d55b3d6c62c8530b08ee696e483d16ee5f",
     "data/processed/preseason/context_v1_3_2026_reconstruction/source_manifest.json": "574e705ec9e3c51658ee83cb1bbb1c1792a326ab1a89333219e9b27e7a8b00c9",
