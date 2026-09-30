@@ -118,6 +118,87 @@ def summarize(rows: list[dict[str, object]], group: str) -> list[dict[str, objec
     return result
 
 
+def summarize_team_weighted(
+    rows: list[dict[str, object]], group: str
+) -> list[dict[str, object]]:
+    """Give every historical (team-season, exact coverage) cell one vote."""
+    cells: dict[tuple[str, str, int, str, str], list[dict[str, object]]] = defaultdict(
+        list
+    )
+    for row in rows:
+        key = (
+            str(row[group]),
+            str(row["policy"]),
+            int(row["season"]),
+            str(row["team_id"]),
+            str(row["coverage"]),
+        )
+        cells[key].append(row)
+    grouped: dict[tuple[str, str], list[tuple[tuple, list[dict[str, object]]]]] = (
+        defaultdict(list)
+    )
+    for key, items in cells.items():
+        grouped[key[:2]].append((key, items))
+    result = []
+    for (stratum, policy), members in sorted(grouped.items()):
+        errors = [
+            np.array([float(r["estimate"]) - float(r["full_impact"]) for r in items])
+            for _, items in members
+        ]
+        truth = [float(items[0]["full_impact"]) for _, items in members]
+        all_truth = np.array(
+            [float(r["full_impact"]) for _, items in members for r in items]
+        )
+        all_estimate = np.array(
+            [float(r["estimate"]) for _, items in members for r in items]
+        )
+        weights = np.array([1.0 / len(items) for _, items in members for _ in items])
+        weights /= weights.sum()
+        truth_mean = float(np.dot(weights, all_truth))
+        estimate_mean = float(np.dot(weights, all_estimate))
+        truth_variance = float(np.dot(weights, (all_truth - truth_mean) ** 2))
+        estimate_variance = float(np.dot(weights, (all_estimate - estimate_mean) ** 2))
+        correlation = (
+            float(
+                np.dot(
+                    weights,
+                    (all_truth - truth_mean) * (all_estimate - estimate_mean),
+                )
+                / np.sqrt(truth_variance * estimate_variance)
+            )
+            if truth_variance > 0 and estimate_variance > 0
+            else None
+        )
+        result.append(
+            {
+                "stratum_type": group,
+                "stratum": stratum,
+                "policy": policy,
+                "masks": sum(len(items) for _, items in members),
+                "team_seasons": len({(key[2], key[3]) for key, _ in members}),
+                "team_coverage_cells": len(members),
+                "bias": float(np.mean([np.mean(error) for error in errors])),
+                "mae": float(np.mean([np.mean(np.abs(error)) for error in errors])),
+                "rmse": float(
+                    np.sqrt(np.mean([np.mean(error**2) for error in errors]))
+                ),
+                "correlation": correlation,
+                "large_error_gt_1": float(
+                    np.mean([np.mean(np.abs(error) > 1.0) for error in errors])
+                ),
+                "wins_vs_zero_fraction": float(
+                    np.mean(
+                        [
+                            np.mean(np.abs(error) < abs(full))
+                            for error, full in zip(errors, truth, strict=True)
+                        ]
+                    )
+                ),
+            }
+        )
+    return result
+
+
 def shift_pmf(pmf: np.ndarray, delta: float) -> np.ndarray:
     """Interpolate a stored rank CDF after a frozen location-coordinate shift."""
     edges = rank_bin_edges(len(pmf))
@@ -352,6 +433,12 @@ def run(output: Path, *, with_downstream: bool = True) -> dict[str, object]:
         + summarize(metrics, "missing_direction")
     )
     write_csv(output / "policy_summary.csv", summary_rows)
+    team_weighted = (
+        summarize_team_weighted(metrics, "overall")
+        + summarize_team_weighted(metrics, "coverage")
+        + summarize_team_weighted(metrics, "coverage_band")
+    )
+    write_csv(output / "team_weighted_summary.csv", team_weighted)
     empirical = []
     for row in read_csv(AVAILABILITY_PATH):
         if row["season"] != "2026" or int(row["db_incoming"]) == 0:
@@ -377,6 +464,31 @@ def run(output: Path, *, with_downstream: bool = True) -> dict[str, object]:
         n = int(item["total_count"])
         k = int(str(item["coverage"]).split("/")[0])
         by_coverage[(n, k, str(item["policy"]))].append(item)
+    production_coverage = Counter(
+        (int(item["total_count"]), int(item["observed_count"]))
+        for item in empirical
+        if item["partial"] and item["observed_count"]
+    )
+    empirical_support = []
+    for (n, k), production_teams in sorted(production_coverage.items()):
+        comparable = by_coverage[(n, k, "observed")]
+        historical_teams = len({(r["season"], r["team_id"]) for r in comparable})
+        empirical_support.append(
+            {
+                "coverage": f"{k}/{n}",
+                "production_teams": production_teams,
+                "historical_team_seasons": historical_teams,
+                "historical_masks": len(comparable),
+                "support_status": "unmatched"
+                if historical_teams == 0
+                else "sparse_one_team"
+                if historical_teams == 1
+                else "sparse_two_teams"
+                if historical_teams == 2
+                else "multi_team",
+            }
+        )
+    write_csv(output / "empirical_replay_support.csv", empirical_support)
     empirical_replay = []
     for item in empirical:
         if not item["partial"] or not item["observed_count"]:
@@ -387,17 +499,28 @@ def run(output: Path, *, with_downstream: bool = True) -> dict[str, object]:
             ]
             if not comparable:
                 continue
-            errors = [
-                float(r["estimate"]) - float(r["full_impact"]) for r in comparable
-            ]
+            team_errors: dict[tuple[int, str], list[float]] = defaultdict(list)
+            for row in comparable:
+                team_errors[(int(row["season"]), str(row["team_id"]))].append(
+                    float(row["estimate"]) - float(row["full_impact"])
+                )
             empirical_replay.append(
                 {
                     "team_id": item["team_id"],
                     "coverage": f"{item['observed_count']}/{item['total_count']}",
                     "policy": policy,
                     "historical_masks": len(comparable),
-                    "historical_mae": float(np.mean(np.abs(errors))),
-                    "historical_bias": float(np.mean(errors)),
+                    "historical_team_seasons": len(team_errors),
+                    "sparse_single_team": len(team_errors) == 1,
+                    "sparse_at_most_two_teams": len(team_errors) <= 2,
+                    "historical_mae": float(
+                        np.mean(
+                            [np.mean(np.abs(errors)) for errors in team_errors.values()]
+                        )
+                    ),
+                    "historical_bias": float(
+                        np.mean([np.mean(errors) for errors in team_errors.values()])
+                    ),
                 }
             )
     write_csv(output / "empirical_replay.csv", empirical_replay)
@@ -410,13 +533,18 @@ def run(output: Path, *, with_downstream: bool = True) -> dict[str, object]:
         write_csv(output / "current_complete_one_missing.csv", current_cases)
     if down:
         write_csv(output / "downstream_one_missing.csv", down)
+    else:
+        for stale in ("current_complete_one_missing.csv", "downstream_one_missing.csv"):
+            (output / stale).unlink(missing_ok=True)
     report = make_report(
         complete,
         excluded,
         cases,
         metrics,
+        team_weighted,
         empirical,
         empirical_replay,
+        empirical_support,
         current_cases,
         down,
         heldout_mean,
@@ -445,7 +573,9 @@ def run(output: Path, *, with_downstream: bool = True) -> dict[str, object]:
         "excluded": dict(excluded),
         "heldout_player_mean_by_season": heldout_mean,
         "heldout_player_sd_by_season": heldout_sd,
-        "downstream_model": "frozen 2026 Context 1.3 model and published PMFs; rank-CDF interpolation of location shifts; no refit",
+        "downstream_model": "frozen 2026 Context 1.3 model and published PMFs; rank-CDF interpolation of location shifts; no refit"
+        if with_downstream
+        else "disabled",
     }
     (output / "summary.json").write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -458,8 +588,10 @@ def make_report(
     excluded,
     cases,
     metrics,
+    team_weighted,
     empirical,
     empirical_replay,
+    empirical_support,
     current_cases,
     down,
     means,
@@ -481,7 +613,7 @@ def make_report(
         "",
         f"Ground truth is {len(complete)} complete incoming-DB team-seasons in the 2021–2025 frozen retrospective Context panel; {sum(len(v) >= 2 for v in complete.values())} have at least two players and can retain a nonempty observed subset after masking. {len(cases)} team-level masks were evaluated. The full player sum is checked against the committed Context feature before inclusion. Exclusions: {dict(excluded)}. Only DB impacts are in scope; offensive usage is a separate feature.",
         "",
-        "For each complete roster, masks keep the roster fixed and hide one or more player impacts. Small combinations are exhaustive; strata with more than 80 masks retain the first and last plus a deterministic seeded sample. Policies: current all-or-nothing zero with availability 0; observed sum; observed sum multiplied by total/observed count; observed sum plus missing count times the other seasons' complete-player mean. The last policy never replaces known contributions. Equal weight is given to each mask within reported strata, so larger rosters can contribute more masks. This estimates feature recovery under controlled masking, not real missingness bias or predictive accuracy.",
+        "For each complete roster, masks keep the roster fixed and hide one or more player impacts. Small combinations are exhaustive; strata with more than 80 masks retain the first and last plus a deterministic seeded sample. Policies: current all-or-nothing zero with availability 0; observed sum; observed sum multiplied by total/observed count; observed sum plus missing count times the other seasons' complete-player mean. The last policy never replaces known contributions. The primary table weights masks equally; a sensitivity analysis first averages within each historical (team-season, exact n/k coverage) cell and then gives those cells equal weight. These are feature-recovery diagnostics under controlled masking, not real missingness bias or predictive accuracy.",
         "",
         "## Feature recovery",
         "",
@@ -496,6 +628,24 @@ def make_report(
             mae, bias, large = row(policy, subset)
             lines.append(
                 f"| {coverage} | {len(subset) // 4} | {policy} | {mae:.3f} | {bias:+.3f} | {large:.1%} |"
+            )
+    weighted_lookup = {
+        (r["stratum_type"], r["stratum"], r["policy"]): r for r in team_weighted
+    }
+    lines += [
+        "",
+        "### Equal historical team-season/coverage weight",
+        "",
+        "Each exact n/k mask set for one historical team-season contributes one average error before broad coverage aggregation. This limits the influence of rosters with many mask combinations. A team with several distinct coverage levels can contribute once to each level.",
+        "",
+        "| Coverage | Team-season/coverage cells | Policy | MAE | P(|error| > 1) | Beats zero |",
+        "| --- | ---: | --- | ---: | ---: | ---: |",
+    ]
+    for band in ("high_80_plus", "moderate_50_to_80", "low_under_50"):
+        for policy in POLICIES:
+            item = weighted_lookup[("coverage_band", band, policy)]
+            lines.append(
+                f"| {band} | {item['team_coverage_cells']} | {policy} | {item['mae']:.3f} | {item['large_error_gt_1']:.1%} | {item['wins_vs_zero_fraction']:.1%} |"
             )
     lines += [
         "",
@@ -590,8 +740,24 @@ def make_report(
         "## Downstream Context response",
         "",
     ]
+    support_lines = [
+        "Exact historical support for each 2026 n/k cell with at least one observed player is shown below. Cells backed by only one or two historical team-seasons are flagged even if they contain many masks or are reused for several current teams.",
+        "",
+        "| Coverage | 2026 teams | Historical team-seasons | Historical masks | Support |",
+        "| --- | ---: | ---: | ---: | --- |",
+    ]
+    for cell in empirical_support:
+        support_lines.append(
+            f"| {cell['coverage']} | {cell['production_teams']} | {cell['historical_team_seasons']} | {cell['historical_masks']} | {cell['support_status']} |"
+        )
+    support_lines.append("")
+    lines[-2:-2] = support_lines
     matched = len({r["team_id"] for r in empirical_replay})
     if empirical_replay:
+        well_supported = [
+            r for r in empirical_replay if r["historical_team_seasons"] >= 2
+        ]
+        well_supported_teams = len({r["team_id"] for r in well_supported})
         lines.insert(
             -2,
             f"The exact n/k empirical replay matches {matched} of {len(partial)} partially covered 2026 teams with observed values. Equal weighting by those teams gives "
@@ -599,9 +765,20 @@ def make_report(
                 f"{policy} MAE {np.mean([r['historical_mae'] for r in empirical_replay if r['policy'] == policy]):.3f}"
                 for policy in POLICIES
             )
-            + ". This transports historical masking errors to today's coverage frequencies; it cannot correct selection bias in which players are missing.",
+            + ". Each historical cell MAE is averaged across its distinct team-seasons before current teams are weighted. This transports historical masking errors to today's coverage frequencies; it cannot correct selection bias in which players are missing.",
         )
         lines.insert(-2, "")
+        if well_supported:
+            lines.insert(
+                -2,
+                f"Excluding single-team historical cells leaves {well_supported_teams} current teams; their equal-team replay gives "
+                + ", ".join(
+                    f"{policy} MAE {np.mean([r['historical_mae'] for r in well_supported if r['policy'] == policy]):.3f}"
+                    for policy in POLICIES
+                )
+                + ". The excluded cells are diagnostic only and should not set a coverage threshold.",
+            )
+            lines.insert(-2, "")
     ten = [r for r in current_cases if r["coverage"] == "9/10"]
     if ten:
         lines.insert(
@@ -632,7 +809,7 @@ def make_report(
         "",
         "## Recommendation",
         "",
-        "Retain the observed incoming-DB impact sum whenever at least one relevant player's impact resolves, including at low coverage; zero remains a valid observed contribution. Do not scale by count or fill the entire team feature. The unobserved portion should remain unknown; the present study does not justify a point estimate or calibrated variance adjustment. For no observed players, keep impact unavailable and numeric neutral zero. For no incoming DB transfers, retain the current natural zero with complete coverage. There is no supported minimum fractional threshold: the observed sum improves average MAE in every broad coverage band, but individual strata such as the single 11/12 roster favor zero, so a universal break point is not identified. Uncertainty about the missing portion grows as coverage falls. A future model should learn how to use coverage and uncertainty rather than suppress the known sum.",
+        f"Preserve the observed incoming-DB impact sum whenever at least one relevant player's impact resolves, including at low coverage; zero remains a valid observed contribution. This is a representation recommendation, not a claim that Context should trust a 1/n partial value as strongly as a complete sum. In the low-coverage mask-weighted band, observed-sum MAE falls from 2.342 to 1.985, but P(|error| > 1) rises from 55.6% to 65.0% and observed beats zero on only 54.8% of masks. Under equal historical team-season/coverage weight, the same tail frequency falls from {weighted_lookup[('coverage_band', 'low_under_50', 'all_or_nothing')]['large_error_gt_1']:.1%} to {weighted_lookup[('coverage_band', 'low_under_50', 'observed')]['large_error_gt_1']:.1%}; the tail comparison depends on weighting. The missing-part 90% proxy covers only about 80% there. The model should account for coverage and learn or calibrate reduced confidence before a production change; the study does not establish that simply swapping numeric values into frozen Context improves low-coverage posteriors. Do not scale by count or fill the entire team feature. Keep the unobserved portion unknown pending a separately validated uncertainty model. For no observed players, keep impact unavailable and numeric neutral zero. For no incoming DB transfers, retain the current natural zero with complete coverage. The results do not justify a hard fractional cutoff: average recovery and tail risk move differently, and sparse exact n/k cells cannot locate a stable break point.",
         "",
         "Persist `incoming_db_count`, `observed_db_impact_count`, and `observed_db_impact_sum` with source/season provenance. Derive missing count and fraction from the first two counts. These fields distinguish complete, partial, and absent coverage; zero incoming is a complete natural zero. Keep player-level contributor/status audit links for traceability. The existing binary availability flag cannot express partial coverage, and changing the numeric feature while retaining frozen coefficients changes the model's input semantics. Treat adoption as a new Context model version with a trained and validated coverage-aware contract, not a silent Context 1.3 clarification. No production behavior or published rankings changed in this issue.",
         "",
