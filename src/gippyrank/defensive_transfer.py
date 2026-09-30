@@ -560,6 +560,24 @@ def _player_index(
     return dict(result)
 
 
+def _player_name_without_generational_suffix(value: str | None) -> str:
+    """Return a conservative secondary name key without a terminal suffix."""
+    tokens = normalize_player_name(value).split()
+    if tokens and tokens[-1] in {
+        "jr",
+        "sr",
+        "ii",
+        "iii",
+        "iv",
+        "2nd",
+        "3rd",
+        "4th",
+        "ll",
+    }:
+        return " ".join(tokens[:-1])
+    return " ".join(tokens)
+
+
 def _player_id_index(
     roster: Sequence[RosterPlayer],
 ) -> dict[tuple[int, str, str], list[RosterPlayer]]:
@@ -605,6 +623,7 @@ def audit_transfer_records(
     aliases: Mapping[str | tuple[int, str], str] | None = None,
     team_coverage: set[tuple[int, str]] | None = None,
     roster_teams: set[tuple[int, str]] | None = None,
+    identity_bridge_players: Iterable[DefensiveGamePlayer] | None = None,
 ) -> dict[str, Any]:
     """Join incoming transfers and return player/team coverage artifacts."""
     record_list = list(records)
@@ -614,8 +633,25 @@ def audit_transfer_records(
     resolver = TeamResolver(team_input, aliases)
     roster_idx = _player_index(roster_list)
     roster_id_idx = _player_id_index(roster_list)
+    roster_suffix_idx: defaultdict[tuple[int, str, str], list[RosterPlayer]] = (
+        defaultdict(list)
+    )
+    for item in roster_list:
+        roster_suffix_idx[
+            (
+                item.season,
+                item.normalized_team,
+                _player_name_without_generational_suffix(item.player_name),
+            )
+        ].append(item)
     player_idx = _defensive_player_index(player_list)
     player_id_idx = _defensive_player_id_index(player_list)
+    identity_bridge_idx: defaultdict[tuple[int, str, str], set[str]] = defaultdict(set)
+    for item in identity_bridge_players or ():
+        if item.player_id:
+            identity_bridge_idx[
+                (item.season, item.normalized_team, item.normalized_player_name)
+            ].add(item.player_id)
     zero_impact_by_group = {
         (player.season, player.position_group): player.defensive_impact
         for player in player_list
@@ -751,8 +787,37 @@ def audit_transfer_records(
                 (prior_season, source_team, normalize_player_name(record.player_name)),
                 [],
             )
+        if not matches:
+            suffix_matches = roster_suffix_idx.get(
+                (
+                    prior_season,
+                    source_team,
+                    _player_name_without_generational_suffix(record.player_name),
+                ),
+                [],
+            )
+            if suffix_matches:
+                matches = suffix_matches
+                identity_method = "normalized_name_source_team_generational_suffix"
         row["roster_candidate_count"] = len(matches)
-        if len(matches) > 1:
+        bridge_identity_ambiguous = False
+        if len(matches) != 1:
+            bridge_ids = identity_bridge_idx.get(
+                (prior_season, source_team, normalize_player_name(record.player_name)),
+                set(),
+            )
+            if len(bridge_ids) == 1:
+                bridged_matches = roster_id_idx.get(
+                    (prior_season, source_team, next(iter(bridge_ids))), []
+                )
+                if len(bridged_matches) == 1:
+                    matches = bridged_matches
+                    identity_method = "stable_game_player_id_source_team"
+            elif len(bridge_ids) > 1 and not matches:
+                bridge_identity_ambiguous = True
+                row["identity_resolution_detail"] = "ambiguous_game_player_id_bridge"
+        row["roster_candidate_count"] = len(matches)
+        if len(matches) > 1 or bridge_identity_ambiguous:
             row.update(
                 {
                     "identity_status": "ambiguous",

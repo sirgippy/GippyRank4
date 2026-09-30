@@ -68,10 +68,26 @@ def _write_json(path: Path, value: object) -> None:
 
 
 def _render_report(result: Mapping[str, Any]) -> str:
+    research_only = bool(result.get("allow_late_snapshots"))
+    heading = (
+        "# Reacquired preseason transfer research features"
+        if research_only
+        else "# Production-safe preseason transfer features"
+    )
+    provenance_text = (
+        "This beta research artifact was derived offline from current/reacquired provider responses. These payloads are not the lost original snapshots and do not establish what was available at the historical cutoff."
+        if research_only
+        else "This artifact was derived offline from the validated immutable snapshot manifest."
+    )
+    cutoff_text = (
+        "The source responses were retrieved after the target-season August 15 cutoff. Retrieval timestamps and request hashes are retained for provenance, but these current values are research evidence only and do not prove earlier availability."
+        if research_only
+        else "Every canonical raw snapshot is required to be captured on or before the target-season August 15 cutoff. Hashes, request parameters, raw filenames, contributing player records, and unresolved reasons are retained in the machine-readable manifest and provenance artifacts."
+    )
     lines = [
-        "# Production-safe preseason transfer features",
+        heading,
         "",
-        "This artifact was derived offline from the validated immutable snapshot manifest.",
+        provenance_text,
         "",
         "## Model-facing fields",
         "",
@@ -99,11 +115,15 @@ def _render_report(result: Mapping[str, Any]) -> str:
             "",
             "## Cutoff and provenance",
             "",
-            "Every canonical raw snapshot is required to be captured on or before the target-season August 15 cutoff. Hashes, request parameters, raw filenames, contributing player records, and unresolved reasons are retained in the machine-readable manifest and provenance artifacts.",
+            cutoff_text,
             "",
             "> Historical research results use retrospective oracle data and are not evidence that historical feature values were available as-of those preseason cutoffs.",
             "",
-            "> Production safety begins only for seasons captured by the immutable preseason snapshot process.",
+            (
+                "> This reacquired evidence is not eligible for production use."
+                if research_only
+                else "> Production safety begins only for seasons captured by the immutable preseason snapshot process."
+            ),
             "",
             "## Source inventory",
             "",
@@ -126,6 +146,7 @@ def run(
     player_aliases: Path | None = DEFAULT_PLAYER_ALIASES,
     output: Path = DEFAULT_OUTPUT,
     seasons: Iterable[int] | None = None,
+    allow_late_snapshots: bool = False,
 ) -> dict[str, Any]:
     team_rows = _read_csv(team_file)
     aliases = read_team_aliases(
@@ -140,7 +161,9 @@ def run(
         team_aliases=aliases,
         player_aliases=player_resolver,
         required_seasons=seasons,
+        allow_late_snapshots=allow_late_snapshots,
     )
+    result["allow_late_snapshots"] = allow_late_snapshots
     feature_fields = list(CANONICAL_FEATURE_COLUMNS) + [
         field
         for field in result["features"][0]
@@ -153,7 +176,10 @@ def run(
     )
     _write_csv(output / "transfer_team_audit.csv", result["audit"])
     _write_csv(output / "transfer_player_audit.csv", result["player_audit"])
-    _write_csv(output / "offensive_player_audit.csv", result["offensive_player_audit"])
+    _write_csv(
+        output / "offensive_player_join_records.csv",
+        result["offensive_player_audit"],
+    )
     _write_csv(output / "identity_mapping.csv", result["identity_mapping"])
     _write_json(output / "data_quality_report.json", result["quality_report"])
     _write_json(output / "feature_provenance.json", result["provenance"])
@@ -161,6 +187,14 @@ def run(
         output / "source_manifest.json",
         {
             "manifest": str(manifest),
+            "evidence_class": (
+                "reacquired_current_provider_response_beta_research"
+                if allow_late_snapshots
+                else "immutable_snapshot_manifest"
+            ),
+            "claims_original_snapshot_equivalence": False
+            if allow_late_snapshots
+            else None,
             "manifest_version": MANIFEST_VERSION,
             "snapshots": [
                 snapshot.as_dict() for snapshot in result["manifest"].snapshots
@@ -187,6 +221,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--player-aliases", type=Path, default=DEFAULT_PLAYER_ALIASES)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--season", dest="seasons", action="append", type=int)
+    parser.add_argument(
+        "--allow-late-snapshots",
+        action="store_true",
+        help="permit after-cutoff snapshots for explicitly labeled 2026 beta research only",
+    )
     return parser.parse_args()
 
 
@@ -199,6 +238,7 @@ def main() -> None:
         player_aliases=args.player_aliases,
         output=args.output,
         seasons=args.seasons,
+        allow_late_snapshots=args.allow_late_snapshots,
     )
     print(
         json.dumps(

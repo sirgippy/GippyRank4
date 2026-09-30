@@ -10,6 +10,8 @@ from gippyrank.preseason_transfer import (
     ManifestValidationError,
     PlayerAliasResolver,
     SnapshotSpec,
+    _raw_alias_target,
+    _snapshot_filename,
     classify_db_position,
     derive_preseason_transfer_features,
     load_snapshot_manifest,
@@ -19,6 +21,7 @@ from gippyrank.preseason_transfer import (
     write_immutable_snapshot,
     write_snapshot_manifest,
 )
+from gippyrank.transfer_audit import read_team_aliases
 
 
 def _payload_bytes(value: object) -> bytes:
@@ -251,6 +254,30 @@ def test_snapshot_hash_validation_and_overwrite_protection(tmp_path: Path) -> No
         load_snapshot_manifest(manifest_path, verify_hashes=True)
 
 
+def test_team_filtered_snapshot_filenames_are_unique_without_week_numbers() -> None:
+    hyphenated = SnapshotSpec(
+        2026,
+        "games_players",
+        2025,
+        "/games/players",
+        {"year": 2025, "team": "Nebraska-Kearney", "seasonType": "both"},
+    )
+    spaced = SnapshotSpec(
+        2026,
+        "games_players",
+        2025,
+        "/games/players",
+        {"year": 2025, "team": "Nebraska Kearney", "seasonType": "both"},
+    )
+
+    hyphenated_name = _snapshot_filename(hyphenated, version="teams")
+    spaced_name = _snapshot_filename(spaced, version="teams")
+
+    assert hyphenated_name != spaced_name
+    assert "team-nebraska-kearney-" in hyphenated_name
+    assert "week-00" not in hyphenated_name
+
+
 def test_manifest_rejects_a_missing_required_source(tmp_path: Path) -> None:
     manifest = _fixture_manifest(tmp_path)
     payload = json.loads(manifest.read_text(encoding="utf-8"))
@@ -269,7 +296,7 @@ def test_derive_features_is_cutoff_safe_and_fail_closed(tmp_path: Path) -> None:
     result = derive_preseason_transfer_features(
         manifest,
         _team_rows(),
-        team_aliases={"A State": "Alpha"},
+        team_aliases={(2022, "A State"): "Alpha"},
         player_aliases=PlayerAliasResolver({"Alex Player": "A Player"}),
     )
     by_team = {row["team_id"]: row for row in result["features"]}
@@ -319,6 +346,33 @@ def test_derive_features_is_cutoff_safe_and_fail_closed(tmp_path: Path) -> None:
     assert result["quality_report"]["seasons"][0]["identity_alias_matches"] == 1
     assert result["offensive_player_audit"]
     assert "usage_candidate_player_ids" in result["offensive_player_audit"][0]
+
+    wrong_season = derive_preseason_transfer_features(
+        manifest,
+        _team_rows(),
+        team_aliases={(2021, "A State"): "Alpha"},
+        player_aliases=PlayerAliasResolver({"Alex Player": "A Player"}),
+    )
+    assert wrong_season["identity_mapping"][0]["origin_team_name"] != "Alpha"
+
+
+def test_2026_team_aliases_are_evidence_scoped_and_do_not_merge_similar_schools() -> (
+    None
+):
+    aliases = read_team_aliases(
+        Path(__file__).resolve().parents[1]
+        / "data/reference/preseason_team_aliases.csv"
+    )
+
+    assert aliases[(2026, "Albany")] == "UAlbany"
+    assert aliases[(2026, "LIU Post")] == "Long Island University"
+    assert aliases[(2026, "Southeastern Louisiana")] == "SE Louisiana"
+    assert aliases[(2026, "Saint Francis (PA)")] == "Saint Francis"
+    assert (2026, "Albany State") not in aliases
+    assert (2026, "Saint Francis (IN)") not in aliases
+    assert (2025, "Albany") not in aliases
+    assert _raw_alias_target(aliases, 2026, "Saint Francis (PA)") == "Saint Francis"
+    assert _raw_alias_target(aliases, 2025, "Saint Francis (PA)") is None
 
 
 def test_frozen_db_position_taxonomy_does_not_infer_unknowns() -> None:

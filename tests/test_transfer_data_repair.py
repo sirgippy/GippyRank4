@@ -162,6 +162,18 @@ def test_db_inventory_preserves_partial_observations_and_natural_zero():
     assert beta["coverage_fraction"] is None
 
 
+def test_raw_payload_counter_excludes_provenance_sidecars(tmp_path: Path):
+    source_dir = tmp_path / "portal" / "2025"
+    source_dir.mkdir(parents=True)
+    (source_dir / "2025.json").write_text("[]\n", encoding="utf-8")
+    (source_dir / "2025.json.provenance.json").write_text("{}\n", encoding="utf-8")
+    (source_dir / "2024.json.provenance.json").write_text("{}\n", encoding="utf-8")
+
+    assert repair_audit._raw_payload_files(tmp_path, "portal") == [
+        source_dir / "2025.json"
+    ]
+
+
 def test_repair_audit_artifacts_reproduce_in_a_separate_output_dir(tmp_path: Path):
     committed = repair_audit.OUTPUT
     repair_audit.run(tmp_path)
@@ -170,6 +182,10 @@ def test_repair_audit_artifacts_reproduce_in_a_separate_output_dir(tmp_path: Pat
         "team_seasons.csv",
         "before_after_repairs.csv",
         "db_coverage_2026.csv",
+        "player_before_after_2026.csv",
+        "team_before_after_2026.csv",
+        "before_source_manifest.json",
+        "after_source_manifest.json",
         "summary.json",
         "report.md",
     ):

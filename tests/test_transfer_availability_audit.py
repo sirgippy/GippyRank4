@@ -53,8 +53,10 @@ def test_every_2026_context_team_is_classified_and_failures_are_not_complete():
         or row["offensive_applicability_unknown"]
         or row["db_unresolved"]
     )
-    assert summary["current_2026"]["db_unresolved"] == 86
+    assert summary["current_2026"]["db_unresolved"] == 54
     assert summary["current_2026"]["all_snapshots_after_cutoff"]
+    assert summary["current_2026"]["snapshot_count"] == 134
+    assert summary["current_2026"]["noncanonical_diagnostic_snapshot_count"] == 2
 
 
 def test_unavailable_requires_unresolved_db_input():

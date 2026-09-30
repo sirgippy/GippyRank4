@@ -337,6 +337,176 @@ def test_roster_player_id_resolves_stats_when_player_name_differs() -> None:
     assert row["impact_join_method"] == "stable_player_id_source_team"
 
 
+def test_unique_game_player_id_bridges_roster_name_mismatch() -> None:
+    game_players = parse_games_players_payload(_game_payload(), season=2021)
+    roster = [
+        replace(item, player_name="Provider Roster Spelling")
+        if item.player_id == "1"
+        else item
+        for item in _roster()
+    ]
+    players = add_defensive_impact(
+        aggregate_player_seasons(
+            game_players, roster, team_game_keys(_game_payload(), season=2021)
+        )
+    )
+    record = parse_transfer_payload(
+        [
+            {
+                "season": 2022,
+                "firstName": "A",
+                "lastName": "Defender",
+                "origin": "Alpha",
+                "destination": "Beta",
+                "position": "DE",
+                "transferDate": "2022-08-01",
+            }
+        ],
+        season=2022,
+    )[0]
+    teams = [
+        {"season": "2022", "subdivision": "fbs", "team_id": "2", "team_name": "Beta"}
+    ]
+
+    result = audit_transfer_records(
+        [record],
+        roster,
+        players,
+        teams,
+        portal_seasons={2022},
+        defensive_seasons={2021},
+        team_coverage={(2021, "alpha"), (2021, "beta")},
+        cutoff=date(2025, 8, 15),
+        identity_bridge_players=game_players,
+    )
+
+    row = result["player_rows"][0]
+    assert row["identity_status"] == "resolved"
+    assert row["impact_status"] == "resolved"
+    assert row["identity_join_method"] == "stable_game_player_id_source_team"
+    assert row["prior_player_id"] == "1"
+
+
+def test_generational_suffix_match_uses_unique_same_team_roster_row() -> None:
+    roster = _roster()
+    game_players = parse_games_players_payload(_game_payload(), season=2021)
+    players = add_defensive_impact(
+        aggregate_player_seasons(
+            game_players, roster, team_game_keys(_game_payload(), season=2021)
+        )
+    )
+    record = parse_transfer_payload(
+        [
+            {
+                "season": 2022,
+                "firstName": "A",
+                "lastName": "Defender Jr.",
+                "origin": "Alpha",
+                "destination": "Beta",
+                "position": "DE",
+                "transferDate": "2022-08-01",
+            }
+        ],
+        season=2022,
+    )[0]
+    result = audit_transfer_records(
+        [record],
+        roster,
+        players,
+        [{"season": "2022", "subdivision": "fbs", "team_id": "2", "team_name": "Beta"}],
+        portal_seasons={2022},
+        defensive_seasons={2021},
+        team_coverage={(2021, "alpha"), (2021, "beta")},
+        roster_teams={(2021, "alpha")},
+        cutoff=date(2025, 8, 15),
+    )
+
+    row = result["player_rows"][0]
+    assert row["identity_status"] == "resolved"
+    assert (
+        row["identity_join_method"] == "normalized_name_source_team_generational_suffix"
+    )
+    assert row["prior_player_id"] == "1"
+
+
+def test_generational_suffix_match_fails_closed_for_multiple_roster_candidates() -> (
+    None
+):
+    roster = [
+        *_roster(),
+        replace(_roster()[0], player_name="A Defender II", player_id="6"),
+    ]
+    record = parse_transfer_payload(
+        [
+            {
+                "season": 2022,
+                "firstName": "A",
+                "lastName": "Defender Jr.",
+                "origin": "Alpha",
+                "destination": "Beta",
+                "position": "DE",
+                "transferDate": "2022-08-01",
+            }
+        ],
+        season=2022,
+    )[0]
+    result = audit_transfer_records(
+        [record],
+        roster,
+        [],
+        [{"season": "2022", "subdivision": "fbs", "team_id": "2", "team_name": "Beta"}],
+        portal_seasons={2022},
+        defensive_seasons={2021},
+        roster_teams={(2021, "alpha")},
+        cutoff=date(2025, 8, 15),
+    )
+
+    row = result["player_rows"][0]
+    assert row["identity_status"] == "ambiguous"
+    assert row["impact_status"] == "ambiguous"
+
+
+def test_game_player_identity_bridge_fails_closed_when_provider_ids_conflict() -> None:
+    game_players = parse_games_players_payload(_game_payload(), season=2021)
+    roster = [
+        replace(item, player_name="Provider Roster Spelling")
+        if item.player_id == "1"
+        else item
+        for item in _roster()
+    ]
+    conflicting_game_player = replace(
+        next(item for item in game_players if item.player_id == "1"), player_id="6"
+    )
+    record = parse_transfer_payload(
+        [
+            {
+                "season": 2022,
+                "firstName": "A",
+                "lastName": "Defender",
+                "origin": "Alpha",
+                "destination": "Beta",
+                "position": "DE",
+                "transferDate": "2022-08-01",
+            }
+        ],
+        season=2022,
+    )[0]
+
+    result = audit_transfer_records(
+        [record],
+        roster,
+        [],
+        [{"season": "2022", "subdivision": "fbs", "team_id": "2", "team_name": "Beta"}],
+        portal_seasons={2022},
+        defensive_seasons={2021},
+        team_coverage={(2021, "alpha"), (2021, "beta")},
+        cutoff=date(2025, 8, 15),
+        identity_bridge_players=[*game_players, conflicting_game_player],
+    )
+
+    assert result["player_rows"][0]["identity_status"] == "ambiguous"
+
+
 def test_ambiguous_stats_under_roster_id_fail_closed() -> None:
     game_players = parse_games_players_payload(_game_payload(), season=2021)
     players = add_defensive_impact(

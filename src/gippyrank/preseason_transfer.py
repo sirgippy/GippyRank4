@@ -754,16 +754,26 @@ def _snapshot_filename(
     version: str,
 ) -> str:
     params = dict(spec.query_parameters)
+    team = str(params.get("team", "")).strip()
+    team_suffix = ""
+    if team:
+        team_slug = re.sub(r"[^a-z0-9]+", "-", team.casefold()).strip("-") or "team"
+        team_hash = hashlib.sha256(team.encode("utf-8")).hexdigest()[:8]
+        team_suffix = f"-team-{team_slug}-{team_hash}"
     if spec.source == "games_players":
-        classification = str(params.get("classification", "all"))
-        week = int(params.get("week", 0))
-        stem = f"{spec.source_season}-{classification}-week-{week:02d}"
+        if team:
+            stem = f"{spec.source_season}{team_suffix}"
+        else:
+            classification = str(params.get("classification", "all")).replace("/", "-")
+            week = int(params.get("week", 0))
+            stem = f"{spec.source_season}-{classification}-week-{week:02d}"
     elif spec.source == "portal":
         stem = f"{spec.target_season}"
     else:
         stem = f"{spec.source_season}"
         if "classification" in params:
-            stem += f"-{params['classification']}"
+            stem += f"-{str(params['classification']).replace('/', '-')}"
+        stem += team_suffix
     return f"{stem}-{version}.json"
 
 
@@ -1070,7 +1080,17 @@ def _raw_alias_target(
     aliases: Mapping[str | tuple[int, str], str], season: int, name: str | None
 ) -> str | None:
     normalized = normalize_team_name(name)
-    return aliases.get((season, normalized), aliases.get(normalized))
+    for key, target in aliases.items():
+        if isinstance(key, tuple):
+            alias_season, alias_name = key
+            if (
+                int(alias_season) == season
+                and normalize_team_name(alias_name) == normalized
+            ):
+                return target
+        elif normalize_team_name(key) == normalized:
+            return target
+    return None
 
 
 def _canonical_team_text(
@@ -1874,6 +1894,22 @@ def derive_preseason_transfer_features(
             aliases={},
             participation=inputs["participation"],
         )
+        all_offensive_player_rows.extend(
+            {
+                **dict(row),
+                "source_season": season - 1,
+                "portal_snapshot_sha256": ";".join(
+                    inputs["source_hashes"].get("portal", ())
+                ),
+                "usage_snapshot_sha256": ";".join(
+                    inputs["source_hashes"].get("offense", ())[1:2]
+                ),
+                "stats_snapshot_sha256": ";".join(
+                    inputs["source_hashes"].get("offense", ())[2:3]
+                ),
+            }
+            for row in offensive["join_rows"]
+        )
         offensive_rows, offensive_meta = _offensive_feature_rows(
             target_season=season,
             team_rows=target_teams,
@@ -1893,6 +1929,7 @@ def derive_preseason_transfer_features(
             aliases={},
             team_coverage=inputs["source_team_coverage"],
             roster_teams=inputs["roster_teams"],
+            identity_bridge_players=inputs["game_players"],
         )
         db_by_team, db_quality, db_provenance = _db_feature_rows(
             target_season=season,

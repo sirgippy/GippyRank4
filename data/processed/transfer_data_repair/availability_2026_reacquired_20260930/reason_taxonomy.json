@@ -1,0 +1,53 @@
+{
+  "reason_codes": {
+    "db_ambiguous_player_join": {
+      "definition": "More than one prior roster identity remains after stable IDs, exact team/name matches, and unique suffix normalization.",
+      "repair_class": "candidate_repair"
+    },
+    "db_impact_source_unavailable": {
+      "definition": "The player identity joined, but a required prior-season game-player or impact source was unavailable.",
+      "repair_class": "unresolved"
+    },
+    "db_player_join_unresolved": {
+      "definition": "The current prior-season source-team roster is covered, but this portal player did not join to exactly one roster identity.",
+      "repair_class": "candidate_repair"
+    },
+    "db_position_conflict": {
+      "definition": "The matched prior-season roster position group differs from the portal DB group; position chronology is not inferred.",
+      "repair_class": "unresolved"
+    },
+    "db_source_team_uncovered": {
+      "definition": "The current prior-season roster payload does not cover this source team after supported exact aliases are applied.",
+      "repair_class": "unresolved"
+    },
+    "historical_aggregate_null": {
+      "definition": "The retrospective research aggregate has no numeric offensive value despite a covered portal season.",
+      "repair_class": "candidate_repair"
+    },
+    "offense_ambiguous_player_join": {
+      "definition": "More than one eligible current usage identity/value remains after exact duplicate rows with the same stable ID are coalesced.",
+      "repair_class": "candidate_repair"
+    },
+    "offense_applicability_unproven": {
+      "definition": "Prior offensive participation cannot be determined from the audited usage and stats evidence.",
+      "repair_class": "unresolved"
+    },
+    "offense_source_team_mismatch": {
+      "definition": "Current usage evidence has a same-name record under another source team but no supported match under this transfer's source team.",
+      "repair_class": "candidate_repair"
+    },
+    "offense_usage_join_unresolved": {
+      "definition": "The applicable offensive transfer aggregate has no resolved usage and the selected player-level join audit has no row for it.",
+      "repair_class": "unresolved"
+    },
+    "offense_usage_row_absent": {
+      "definition": "Current participation evidence establishes applicability, but no prior usage record is available for the source-team player identity.",
+      "repair_class": "unresolved"
+    }
+  },
+  "repair_class_definitions": {
+    "candidate_repair": "A pipeline or identity-control repair is plausible from the committed evidence, subject to source confirmation.",
+    "not_applicable": "No gap observed.",
+    "unresolved": "The committed derived artifacts cannot establish whether source data or a safe repair exists."
+  }
+}

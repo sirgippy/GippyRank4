@@ -548,3 +548,50 @@ def test_usage_logical_candidate_semantics_match_audit_and_aggregation(
         assert audit_row["prior_usage_record_count"] == 2
         assert audit_row["usage_duplicate_equivalent_row_count"] == 1
         assert audit_row["prior_usage"] == expected_value
+        assert audit_row["usage_candidate_count"] == 1
+
+
+def test_exact_duplicate_usage_rows_coalesce_only_for_one_stable_identity() -> None:
+    records = parse_transfer_payload(
+        [
+            {
+                "season": 2022,
+                "firstName": "D",
+                "lastName": "Duplicate",
+                "origin": "Alpha",
+                "destination": "Beta",
+                "position": "QB",
+                "transferDate": "2022-08-01",
+            }
+        ],
+        season=2022,
+    )
+    payload = {
+        "season": 2021,
+        "id": "stable-1",
+        "name": "D Duplicate",
+        "team": "Alpha",
+        "position": "QB",
+        "usage": {"overall": 0.4},
+    }
+    identical = parse_usage_payload(
+        [payload, {**payload, "conference": "Different metadata label"}],
+        season=2021,
+    )
+    resolved = audit_transfer_records(
+        records, identical, _team_rows(), cutoff=date(2025, 8, 15)
+    )["join_rows"][0]
+    assert resolved["usage_join_status"] == "joined"
+    assert resolved["prior_usage_record_count"] == 2
+    assert resolved["usage_candidate_count"] == 1
+    assert resolved["usage_duplicate_equivalent_row_count"] == 1
+    assert resolved["prior_usage"] == pytest.approx(0.4)
+    assert resolved["prior_usage_player_ids"] == "stable-1"
+
+    ambiguous = parse_usage_payload(
+        [payload, {**payload, "id": "stable-2"}], season=2021
+    )
+    unresolved = audit_transfer_records(
+        records, ambiguous, _team_rows(), cutoff=date(2025, 8, 15)
+    )["join_rows"][0]
+    assert unresolved["usage_join_status"] == "ambiguous_usage_join"

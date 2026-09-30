@@ -45,7 +45,7 @@ DB_COVERAGE_142 = (
     ROOT / "data/processed/partial_db_transfer_impact_142/empirical_2026_coverage.csv"
 )
 AVAILABILITY_SUMMARY = ROOT / "data/processed/transfer_availability_audit/summary.json"
-CURRENT_OFFENSIVE_PLAYERS = CURRENT / "offensive_player_audit.csv"
+CURRENT_OFFENSIVE_PLAYERS = CURRENT / "offensive_player_join_records.csv"
 GOOD_DB = {"resolved", "zero_recorded_defensive_box_score_games"}
 D5_ZERO = "legitimate_zero_or_non_applicable_prior_offensive_usage"
 D5_RESOLVED = "applicable_prior_offensive_usage_successfully_resolved"
@@ -1299,7 +1299,7 @@ def _render_report(
         "",
         f"The {remaining['db_position_conflict']} DB position conflicts have a uniquely joined player and retained portal/prior positions, but the audit does not establish whether the discrepancy is a chronology change or provider taxonomy change. No general compatibility rule is supported by the retained evidence, so all remain unresolved. {ambiguous_db_sentence}",
         "",
-        f"The {remaining['applicable_offensive_usage_join']} applicable 2026 offensive usage failures and their player-level cause are not present in the committed #141 current-team artifacts. The updated derivation now emits an `offensive_player_audit.csv` with portal/usage IDs, candidate counts, join statuses, and D5 reasons when the immutable snapshots are available. This checkout lacks those source payloads, so the 2026 failures cannot be re-derived here. Existing historical player audits show source-team mismatches, ambiguous usage matches, and absent usage rows; those unsupported rows remain unresolved.",
+        f"The {remaining['applicable_offensive_usage_join']} applicable 2026 offensive usage failures and their player-level cause are not present in the committed #141 current-team artifacts. The updated derivation emits `offensive_player_join_records.csv` with portal/usage IDs, candidate counts, join statuses, and D5 reasons when source snapshots are available. Existing historical player audits show source-team mismatches, ambiguous usage matches, and absent usage rows; those unsupported rows remain unresolved.",
         "",
         "The remaining applicability-unknown cases need additional trustworthy player participation evidence where the retained box-score and usage records are inconclusive, especially for offensive-line and non-FBS-origin players. If CFBD does not cover those populations, a new provider must be evaluated in a separate follow-up; this repair does not infer participation from position or acquire a new source.",
         "",
