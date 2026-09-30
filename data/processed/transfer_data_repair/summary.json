@@ -169,6 +169,12 @@
     "teams_with_no_observed_impacts": 1,
     "teams_with_partial_observed_coverage": 57
   },
+  "db_player_repairs_by_failure_class": {
+    "db_ambiguous_player_join": 0,
+    "db_player_join_unresolved": 0,
+    "db_position_conflict": 0,
+    "db_source_team_uncovered": 0
+  },
   "input_sha256": {
     "data/processed/partial_db_transfer_impact_142/empirical_2026_coverage.csv": "77a819bb56e452df37620eb7a8d585d55b3d6c62c8530b08ee696e483d16ee5f",
     "data/processed/preseason/context_v1_3_2026_reconstruction/source_manifest.json": "574e705ec9e3c51658ee83cb1bbb1c1792a326ab1a89333219e9b27e7a8b00c9",
@@ -262,6 +268,7 @@
   },
   "remaining_failure_counts": {
     "ambiguous_db_player_join": 1,
+    "applicable_offensive_usage_failure_teams": 8,
     "applicable_offensive_usage_join": 10,
     "covered_roster_db_player_join": 40,
     "db_position_conflict": 11,
@@ -270,14 +277,6 @@
     "source_team_uncovered_db_player": 34
   },
   "repaired_historical_legitimate_zero_team_seasons": 21,
-  "repaired_player_records_by_failure_class": {
-    "ambiguous_db_player_join": 0,
-    "applicable_offensive_usage_join": 0,
-    "covered_roster_db_player_join": 0,
-    "db_position_conflict": 0,
-    "offensive_applicability_unproven": 0,
-    "source_team_uncovered_db_player": 0
-  },
   "source_availability": {
     "expected_snapshot_count": 37,
     "missing_raw_snapshot_count": 37,

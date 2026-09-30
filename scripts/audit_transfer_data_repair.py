@@ -34,6 +34,10 @@ CURRENT_MANIFEST = CURRENT / "source_manifest.json"
 DB_COVERAGE_142 = (
     ROOT / "data/processed/partial_db_transfer_impact_142/empirical_2026_coverage.csv"
 )
+AVAILABILITY_SUMMARY = (
+    ROOT / "data/processed/transfer_availability_audit/summary.json"
+)
+CURRENT_OFFENSIVE_PLAYERS = CURRENT / "offensive_player_audit.csv"
 GOOD_DB = {"resolved", "zero_recorded_defensive_box_score_games"}
 D5_ZERO = "legitimate_zero_or_non_applicable_prior_offensive_usage"
 D5_RESOLVED = "applicable_prior_offensive_usage_successfully_resolved"
@@ -289,6 +293,9 @@ def _historical_zero_repairs(
                         "portal_index": player["portal_index"],
                         "player": player["player_name"],
                         "source_team": player["origin"],
+                        "destination": player["destination"],
+                        "transfer_date": player["transfer_date"],
+                        "portal_player_id": player.get("portal_player_id", ""),
                         "d5_resolution_category": player["d5_resolution_category"],
                         "d5_feature_value": player["d5_feature_value"],
                         "usage_join_status": player["usage_join_status"],
@@ -506,16 +513,98 @@ def _input_hashes() -> dict[str, str]:
         DB_COVERAGE_142,
         ROOT / "data/processed/transfer_availability_audit/summary.json",
     )
+    if CURRENT_OFFENSIVE_PLAYERS.is_file():
+        paths = (*paths, CURRENT_OFFENSIVE_PLAYERS)
     return {
         str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
         for path in paths
     }
 
 
+def _remaining_failure_counts(
+    unresolved_db_players: list[dict[str, Any]], current_2026: dict[str, Any]
+) -> tuple[dict[str, int], int]:
+    """Count remaining failures from retained player audits and audit summary."""
+    db_reasons = Counter(str(row["old_reason"]) for row in unresolved_db_players)
+    counts = {
+        "covered_roster_db_player_join": db_reasons["db_player_join_unresolved"],
+        "source_team_uncovered_db_player": db_reasons["db_source_team_uncovered"],
+        "db_position_conflict": db_reasons["db_position_conflict"],
+        "ambiguous_db_player_join": db_reasons["db_ambiguous_player_join"],
+    }
+    if CURRENT_OFFENSIVE_PLAYERS.is_file():
+        offensive_rows = [
+            row
+            for row in _read_csv(CURRENT_OFFENSIVE_PLAYERS)
+            if row.get("in_model_relevant_population") == "True"
+            and row.get("season", "2026") == "2026"
+        ]
+        failed = [
+            row
+            for row in offensive_rows
+            if row.get("d5_resolution_category")
+            == "should_have_recoverable_offensive_usage_but_resolution_failed"
+        ]
+        unknown = [
+            row
+            for row in offensive_rows
+            if row.get("d5_resolution_category") == "cannot_determine_applicability"
+        ]
+        failure_teams = {
+            str(row["destination_team_id"])
+            for row in failed
+            if row.get("destination_team_id")
+        }
+        counts["applicable_offensive_usage_join"] = len(failed)
+        counts["offensive_applicability_unproven"] = len(unknown)
+        failure_team_count = len(failure_teams)
+    else:
+        # The frozen #141 summary is the only retained player-level aggregate
+        # for current offensive failures when source snapshots are absent.
+        counts["applicable_offensive_usage_join"] = int(
+            current_2026["offensive_join_failed"]
+        )
+        counts["offensive_applicability_unproven"] = int(
+            current_2026["offensive_applicability_unknown"]
+        )
+        failure_team_count = int(current_2026["teams_with_offensive_join_failed"])
+    return counts, failure_team_count
+
+
+def _db_player_failure_counts_before() -> Counter[str]:
+    counts: Counter[str] = Counter()
+    for player in _read_csv(CURRENT_PLAYERS):
+        if (
+            player.get("in_model_relevant_population") != "True"
+            or player.get("portal_position_group") != "db"
+            or player.get("impact_status") in GOOD_DB
+        ):
+            continue
+        reason = DB_REASON.get(
+            player.get("impact_status", ""), "db_impact_source_unavailable"
+        )
+        counts[reason] += 1
+    return counts
+
+
 def build(output: Path = DEFAULT_OUTPUT) -> dict[str, Any]:
     baseline_rows, baseline_summary = _load_baseline_audit()
     post_rows, changes, zero_contributors = _historical_zero_repairs(baseline_rows)
     coverage_rows, coverage_summary, unresolved_db_players = _current_db_coverage()
+    availability_summary = json.loads(AVAILABILITY_SUMMARY.read_text(encoding="utf-8"))
+    failure_counts, offensive_failure_team_count = _remaining_failure_counts(
+        unresolved_db_players, availability_summary["current_2026"]
+    )
+    db_failures_before = _db_player_failure_counts_before()
+    db_failures_after = Counter(
+        str(row["old_reason"]) for row in unresolved_db_players
+    )
+    db_repairs_by_failure_class = {
+        reason: db_failures_before[reason] - db_failures_after[reason]
+        for reason in sorted(set(db_failures_before) | set(db_failures_after))
+    }
+    if any(count < 0 for count in db_repairs_by_failure_class.values()):
+        raise ValueError("post-repair DB player failures exceed the source audit")
     before_status = {
         (int(row["season"]), str(row["team_id"])): row for row in baseline_rows
     }
@@ -528,28 +617,17 @@ def build(output: Path = DEFAULT_OUTPUT) -> dict[str, Any]:
     )
     after_summary = _postrepair_summary(post_rows)
     source_availability = _source_availability()
-    failure_classes = {
-        "covered_roster_db_player_join": 40,
-        "source_team_uncovered_db_player": 34,
-        "db_position_conflict": 11,
-        "ambiguous_db_player_join": 1,
-        "applicable_offensive_usage_join": 10,
-        "offensive_applicability_unproven": 1012,
-    }
     summary = {
         "issue": 148,
         "population": "Context FBS team-seasons, 2021-2026",
         "baseline_issue_141": baseline_summary,
         "post_repair": after_summary,
-        "repaired_player_records_by_failure_class": {
-            key: 0
-            for key in failure_classes
-            if key != "historical_legitimate_zero_aggregate"
-        },
         "repaired_historical_legitimate_zero_team_seasons": len(changes),
         "team_seasons_whose_availability_status_improved": improved,
+        "db_player_repairs_by_failure_class": db_repairs_by_failure_class,
         "remaining_failure_counts": {
-            **failure_classes,
+            **failure_counts,
+            "applicable_offensive_usage_failure_teams": offensive_failure_team_count,
             "historical_aggregate_null_team_seasons": after_summary[
                 "reason_team_seasons"
             ].get("historical_aggregate_null", 0),
@@ -604,6 +682,9 @@ def build(output: Path = DEFAULT_OUTPUT) -> dict[str, Any]:
             "portal_index",
             "player",
             "source_team",
+            "destination",
+            "transfer_date",
+            "portal_player_id",
             "d5_resolution_category",
             "d5_feature_value",
             "usage_join_status",
@@ -676,10 +757,10 @@ def _render_report(
         "",
         f"- Historical legitimate-zero aggregates repaired: **{len(changes)}** team-seasons.",
         f"- Team-seasons whose availability status improved: **{summary['team_seasons_whose_availability_status_improved']}**.",
-        f"- 2026 covered-roster DB identity repairs: **0**; unresolved cases retained: **{sum(row['old_reason'] == 'db_player_join_unresolved' for row in unresolved_db_players)}**.",
-        f"- 2026 source-team DB mappings added: **0**; uncovered source-team cases retained: **{sum(row['old_reason'] == 'db_source_team_uncovered' for row in unresolved_db_players)}**.",
-        "- 2026 position conflicts changed: **0**; ambiguous DB joins changed: **0**.",
-        f"- Applicable offensive usage failures remaining: **{summary['remaining_failure_counts']['applicable_offensive_usage_join']}** across 8 teams. The committed 2026 aggregate does not retain those player identities or join causes.",
+        f"- 2026 covered-roster DB identity repairs: **{summary['db_player_repairs_by_failure_class'].get('db_player_join_unresolved', 0)}**; unresolved cases retained: **{summary['remaining_failure_counts']['covered_roster_db_player_join']}**.",
+        f"- 2026 source-team DB mappings added: **{summary['db_player_repairs_by_failure_class'].get('db_source_team_uncovered', 0)}**; uncovered source-team cases retained: **{summary['remaining_failure_counts']['source_team_uncovered_db_player']}**.",
+        f"- 2026 position conflicts changed: **{summary['db_player_repairs_by_failure_class'].get('db_position_conflict', 0)}**; ambiguous DB joins changed: **{summary['db_player_repairs_by_failure_class'].get('db_ambiguous_player_join', 0)}**.",
+        f"- Applicable offensive usage failures remaining: **{summary['remaining_failure_counts']['applicable_offensive_usage_join']}** across {summary['remaining_failure_counts']['applicable_offensive_usage_failure_teams']} teams. The committed 2026 aggregate does not retain those player identities or join causes.",
         f"- Offensive applicability remains unproven for **{summary['remaining_failure_counts']['offensive_applicability_unproven']}** incoming transfers; no absent evidence was converted to zero.",
         "",
         "A historical full aggregate is restored only where each incoming player is classified as resolved or legitimate-zero and no usage failure or unknown applicability remains. This fixes the 21 retained null rows with complete player-level evidence. The separate `post_repair_observed_usage_sum` audit field still preserves known resolved contributions where failures or unknown applicability remain; those rows are not promoted to complete aggregates.",
@@ -720,7 +801,7 @@ def _render_report(
         "",
         "- The player identity key now normalizes Unicode compatibility forms and punctuation variants while retaining suffixes and diacritics; multiple candidates still fail closed.",
         "- Stable portal IDs are preferred. A conflicting stable ID blocks name fallback for both offensive and defensive joins.",
-        "- Verified zero evidence can be supplied explicitly to the research aggregator; it cannot override a positive usage row. Unknown applicability is not inferred as zero.",
+        "- The Context 1.3 research materializer consumes `zero_contributors.csv` and checks each portal index against season, normalized player and team names, transfer date, and destination team ID before passing it to the aggregator. The resulting player identity prefers a portal stable ID; duplicate fallback keys and ambiguous usage matches fail closed. Explicit zero evidence cannot override positive usage, and unknown applicability is not inferred as zero.",
         "- No Context 1.3 coefficients, feature-selection behavior, or published ranking files were regenerated.",
         "- #141 and #142 artifacts are read-only inputs; all new artifacts are under `data/processed/transfer_data_repair/`.",
         "",

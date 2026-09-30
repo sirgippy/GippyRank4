@@ -50,7 +50,7 @@ Current source responses were captured after the 2026 August 15 cutoff. They dia
 
 - The player identity key now normalizes Unicode compatibility forms and punctuation variants while retaining suffixes and diacritics; multiple candidates still fail closed.
 - Stable portal IDs are preferred. A conflicting stable ID blocks name fallback for both offensive and defensive joins.
-- Verified zero evidence can be supplied explicitly to the research aggregator; it cannot override a positive usage row. Unknown applicability is not inferred as zero.
+- The Context 1.3 research materializer consumes `zero_contributors.csv` and checks each portal index against season, normalized player and team names, transfer date, and destination team ID before passing it to the aggregator. The resulting player identity prefers a portal stable ID; duplicate fallback keys and ambiguous usage matches fail closed. Explicit zero evidence cannot override positive usage, and unknown applicability is not inferred as zero.
 - No Context 1.3 coefficients, feature-selection behavior, or published ranking files were regenerated.
 - #141 and #142 artifacts are read-only inputs; all new artifacts are under `data/processed/transfer_data_repair/`.
 

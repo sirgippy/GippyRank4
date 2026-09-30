@@ -249,6 +249,170 @@ def test_verified_zero_evidence_cannot_override_positive_usage() -> None:
         )
 
 
+def test_ambiguous_normalized_usage_names_fail_closed() -> None:
+    records = parse_transfer_payload(
+        [
+            {
+                "season": 2022,
+                "firstName": "A-B",
+                "lastName": "Player",
+                "origin": "Alpha",
+                "destination": "Beta",
+                "position": "WR",
+                "transferDate": "2022-07-01",
+            }
+        ],
+        season=2022,
+    )
+    usage = parse_usage_payload(
+        [
+            {
+                "season": 2021,
+                "name": "A-B Player",
+                "team": "Alpha",
+                "usage": {"overall": 0.2},
+            },
+            {
+                "season": 2021,
+                "name": "A B Player",
+                "team": "Alpha",
+                "usage": {"overall": 0.8},
+            },
+        ],
+        season=2021,
+    )
+    result = aggregate_team_features(
+        records,
+        usage,
+        team_rows(),
+        covered_seasons={2022},
+        cutoff=date(2022, 8, 15),
+    )
+    assert result[(2022, "fbs", "2")]["transfer_in_prior_usage_sum"] is None
+
+
+def test_explicit_zero_cannot_hide_positive_value_in_ambiguous_usage_rows() -> None:
+    records = parse_transfer_payload(
+        [
+            {
+                "season": 2022,
+                "firstName": "A-B",
+                "lastName": "Player",
+                "origin": "Alpha",
+                "destination": "Beta",
+                "transferDate": "2022-07-01",
+            }
+        ],
+        season=2022,
+    )
+    usage = parse_usage_payload(
+        [
+            {
+                "season": 2021,
+                "name": "A-B Player",
+                "team": "Alpha",
+                "usage": {"overall": 0.2},
+            },
+            {
+                "season": 2021,
+                "name": "A B Player",
+                "team": "Alpha",
+                "usage": {"overall": 0.0},
+            },
+        ],
+        season=2021,
+    )
+
+    with pytest.raises(ValueError, match="conflicts with a positive usage row"):
+        aggregate_team_features(
+            records,
+            usage,
+            team_rows(),
+            covered_seasons={2022},
+            cutoff=date(2022, 8, 15),
+            verified_zero_usage_keys={transfer_identity_key(records[0])},
+        )
+
+
+def test_portal_player_id_is_preferred_by_zero_evidence_identity() -> None:
+    records = parse_transfer_payload(
+        [
+            {
+                "season": 2022,
+                "id": "player-1",
+                "firstName": "A",
+                "lastName": "Player",
+                "origin": "Alpha",
+                "destination": "Beta",
+                "transferDate": "2022-07-01",
+            },
+            {
+                "season": 2022,
+                "id": "player-2",
+                "firstName": "A",
+                "lastName": "Player",
+                "origin": "Alpha",
+                "destination": "Gamma",
+                "transferDate": "2022-07-01",
+            },
+        ],
+        season=2022,
+    )
+    assert transfer_identity_key(records[0]) != transfer_identity_key(records[1])
+    rows = [
+        *team_rows(),
+        {
+            "season": "2022",
+            "subdivision": "fbs",
+            "team_id": "3",
+            "team_name": "Gamma",
+        },
+    ]
+    result = aggregate_team_features(
+        records,
+        [],
+        rows,
+        covered_seasons={2022},
+        cutoff=date(2022, 8, 15),
+        verified_zero_usage_keys={transfer_identity_key(records[0])},
+    )
+    assert result[(2022, "fbs", "2")]["transfer_in_prior_usage_sum"] == 0.0
+    assert result[(2022, "fbs", "3")]["transfer_in_prior_usage_sum"] is None
+
+
+def test_duplicate_fallback_identity_fails_closed() -> None:
+    records = parse_transfer_payload(
+        [
+            {
+                "season": 2022,
+                "firstName": "A",
+                "lastName": "Player",
+                "origin": "Alpha",
+                "destination": "Beta",
+                "transferDate": "2022-07-01",
+            },
+            {
+                "season": 2022,
+                "firstName": "A",
+                "lastName": "Player",
+                "origin": "Alpha",
+                "destination": "Beta",
+                "transferDate": "2022-07-01",
+            },
+        ],
+        season=2022,
+    )
+    with pytest.raises(ValueError, match="duplicate transfer identity key"):
+        aggregate_team_features(
+            records,
+            [],
+            team_rows(),
+            covered_seasons={2022},
+            cutoff=date(2022, 8, 15),
+            verified_zero_usage_keys={transfer_identity_key(records[0])},
+        )
+
+
 def test_transfer_date_parser_rejects_invalid_text() -> None:
     with pytest.raises(ValueError):
         parse_transfer_date("not-a-date")

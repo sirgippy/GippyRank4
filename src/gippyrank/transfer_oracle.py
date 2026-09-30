@@ -93,13 +93,20 @@ class UsageRecord:
     conference: str | None = None
 
 
-TransferIdentityKey = tuple[int, str, str, str, str | None]
+TransferIdentityKey = tuple[int, str, str, str, str, str | None]
 
 
 def transfer_identity_key(record: TransferRecord) -> TransferIdentityKey:
-    """Return a deterministic portal-row key for explicit audit evidence."""
+    """Return a player-safe key for explicit audit evidence.
+
+    Provider IDs take precedence. The fallback is intentionally composite and
+    callers must reject duplicate fallback keys before applying evidence.
+    """
+    if record.player_id:
+        return (record.season, "player_id", record.player_id, "", "", None)
     return (
         record.season,
+        "fallback",
         normalize_team_name(record.origin),
         normalize_player_name(record.player_name),
         normalize_team_name(record.destination),
@@ -353,21 +360,67 @@ def _matched_team(
     return index.get((season, normalize_team_name(team)))
 
 
-def _usage_index(
-    usage: Iterable[UsageRecord],
-) -> dict[tuple[int, str, str], float | None]:
-    result: dict[tuple[int, str, str], float | None] = {}
+def _usage_index(usage: Iterable[UsageRecord]) -> dict[str, Any]:
+    by_name: defaultdict[tuple[int, str, str], list[UsageRecord]] = defaultdict(list)
+    by_id: defaultdict[tuple[int, str, str], list[UsageRecord]] = defaultdict(list)
     for item in usage:
         if not item.player_name or not item.team:
             continue
-        key = (
+        name_key = (
             item.season,
             normalize_team_name(item.team),
             normalize_player_name(item.player_name),
         )
-        if key not in result or result[key] is None and item.overall_usage is not None:
-            result[key] = item.overall_usage
-    return result
+        by_name[name_key].append(item)
+        if item.player_id:
+            by_id[(item.season, name_key[1], item.player_id)].append(item)
+    return {"by_name": by_name, "by_id": by_id}
+
+
+def _matching_usage_candidates(
+    record: TransferRecord, usage_index: Mapping[str, Any]
+) -> list[UsageRecord]:
+    if not record.origin:
+        return []
+    season = record.season - 1
+    team = normalize_team_name(record.origin)
+    name_key = (season, team, normalize_player_name(record.player_name))
+    candidates = usage_index["by_name"].get(name_key, [])
+    if record.player_id:
+        id_candidates = usage_index["by_id"].get(
+            (season, team, record.player_id), []
+        )
+        if id_candidates:
+            return id_candidates
+        if any(
+            item.player_id and item.player_id != record.player_id
+            for item in candidates
+        ):
+            return []
+    return candidates
+
+
+def _prior_usage_for_transfer(
+    record: TransferRecord, usage_index: Mapping[str, Any]
+) -> float | None:
+    candidates = _matching_usage_candidates(record, usage_index)
+    if len(candidates) != 1:
+        return None
+    return candidates[0].overall_usage
+
+
+def _reject_ambiguous_evidence_identities(
+    records: Iterable[TransferRecord], evidence_keys: set[TransferIdentityKey]
+) -> None:
+    seen: dict[TransferIdentityKey, int] = {}
+    for index, record in enumerate(records):
+        key = transfer_identity_key(record)
+        if key in seen and key in evidence_keys:
+            raise ValueError(
+                "duplicate transfer identity key; refusing to apply player-level "
+                f"evidence to ambiguous portal rows {seen[key]} and {index}: {key!r}"
+            )
+        seen[key] = index
 
 
 def _empty_features() -> dict[str, float | None]:
@@ -440,10 +493,24 @@ def aggregate_team_features(
     transfer season.  Unmatched names are intentionally excluded and counted
     by the caller's coverage audit rather than fuzzy-matched.
     """
+    records = list(records)
     rows = list(team_rows)
     index = _team_index(rows, aliases)
     usage_idx = _usage_index(usage)
     explicit_zeros = verified_zero_usage_keys or set()
+    eligible_records = [
+        record
+        for record in records
+        if record.season in covered_seasons and available_by_cutoff(record, cutoff)
+    ]
+    eligible_keys = {transfer_identity_key(record) for record in eligible_records}
+    _reject_ambiguous_evidence_identities(eligible_records, explicit_zeros)
+    stale_evidence = explicit_zeros - eligible_keys
+    if stale_evidence:
+        raise ValueError(
+            "verified-zero evidence does not identify an eligible, unique portal "
+            f"record: {sorted(map(repr, stale_evidence))!r}"
+        )
     output = {
         (int(row["season"]), str(row["subdivision"]), str(row["team_id"])): (
             _empty_features()
@@ -465,24 +532,17 @@ def aggregate_team_features(
     outgoing: defaultdict[
         tuple[int, str, str], list[tuple[TransferRecord, float | None]]
     ] = defaultdict(list)
-    for record in records:
-        if record.season not in covered_seasons or not available_by_cutoff(
-            record, cutoff
-        ):
-            continue
+    for record in eligible_records:
         source = _matched_team(index, record.season, record.origin)
         destination = _matched_team(index, record.season, record.destination)
-        prior_season = record.season - 1
-        player_key = normalize_player_name(record.player_name)
-        prior_usage = (
-            usage_idx.get(
-                (prior_season, normalize_team_name(record.origin), player_key)
-            )
-            if record.origin
-            else None
-        )
+        prior_usage = _prior_usage_for_transfer(record, usage_idx)
         if transfer_identity_key(record) in explicit_zeros:
-            if prior_usage not in (None, 0, 0.0):
+            usage_candidates = _matching_usage_candidates(record, usage_idx)
+            if any(
+                candidate.overall_usage is not None
+                and candidate.overall_usage > 0
+                for candidate in usage_candidates
+            ):
                 raise ValueError(
                     "verified legitimate-zero evidence conflicts with a positive "
                     f"usage row for {transfer_identity_key(record)!r}"

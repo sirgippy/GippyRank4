@@ -36,11 +36,19 @@ def test_postrepair_audit_preserves_baselines_and_reconciles_coverage(
 
     summary = audit_module.build(tmp_path)
     changes = _rows(tmp_path / "changes.csv")
+    zero_contributors = _rows(tmp_path / "zero_contributors.csv")
     team_seasons = _rows(tmp_path / "team_seasons.csv")
     coverage = _rows(tmp_path / "coverage_2026.csv")
     unresolved = _rows(tmp_path / "unresolved_db_players_2026.csv")
 
     assert len(changes) == 21
+    assert len(zero_contributors) == 46
+    assert all(
+        row["d5_resolution_category"]
+        == "legitimate_zero_or_non_applicable_prior_offensive_usage"
+        and row["transfer_date"]
+        for row in zero_contributors
+    )
     assert all(
         row["repair_rule"].startswith("aggregate_zero_only_when_every_incoming_player")
         for row in changes
@@ -81,3 +89,86 @@ def test_postrepair_audit_preserves_baselines_and_reconciles_coverage(
     assert second_output_hashes == first_output_hashes
     written_summary = json.loads((tmp_path / "summary.json").read_text())
     assert written_summary["issue"] == 148
+
+
+def test_remaining_failure_counts_follow_the_retained_player_audits(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        audit_module,
+        "CURRENT_OFFENSIVE_PLAYERS",
+        tmp_path / "offensive_player_audit.csv",
+    )
+    counts, teams = audit_module._remaining_failure_counts(
+        [
+            {"old_reason": "db_player_join_unresolved"},
+            {"old_reason": "db_source_team_uncovered"},
+            {"old_reason": "db_source_team_uncovered"},
+        ],
+        {
+            "offensive_join_failed": 7,
+            "offensive_applicability_unknown": 31,
+            "teams_with_offensive_join_failed": 4,
+        },
+    )
+
+    assert counts["covered_roster_db_player_join"] == 1
+    assert counts["source_team_uncovered_db_player"] == 2
+    assert counts["applicable_offensive_usage_join"] == 7
+    assert counts["offensive_applicability_unproven"] == 31
+    assert teams == 4
+
+
+def test_current_offensive_failure_counts_follow_player_audit_rows(
+    tmp_path: Path, monkeypatch
+) -> None:
+    audit_path = tmp_path / "offensive_player_audit.csv"
+    with audit_path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=[
+                "in_model_relevant_population",
+                "d5_resolution_category",
+                "destination_team_id",
+            ],
+            lineterminator="\n",
+        )
+        writer.writeheader()
+        writer.writerows(
+            [
+                {
+                    "in_model_relevant_population": "True",
+                    "d5_resolution_category": "should_have_recoverable_offensive_usage_but_resolution_failed",
+                    "destination_team_id": "10",
+                },
+                {
+                    "in_model_relevant_population": "True",
+                    "d5_resolution_category": "should_have_recoverable_offensive_usage_but_resolution_failed",
+                    "destination_team_id": "10",
+                },
+                {
+                    "in_model_relevant_population": "True",
+                    "d5_resolution_category": "cannot_determine_applicability",
+                    "destination_team_id": "11",
+                },
+                {
+                    "in_model_relevant_population": "False",
+                    "d5_resolution_category": "should_have_recoverable_offensive_usage_but_resolution_failed",
+                    "destination_team_id": "12",
+                },
+            ]
+        )
+    monkeypatch.setattr(audit_module, "CURRENT_OFFENSIVE_PLAYERS", audit_path)
+
+    counts, teams = audit_module._remaining_failure_counts(
+        [],
+        {
+            "offensive_join_failed": 99,
+            "offensive_applicability_unknown": 101,
+            "teams_with_offensive_join_failed": 55,
+        },
+    )
+
+    assert counts["applicable_offensive_usage_join"] == 2
+    assert counts["offensive_applicability_unproven"] == 1
+    assert teams == 1
