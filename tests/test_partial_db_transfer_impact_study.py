@@ -76,6 +76,9 @@ def test_skip_downstream_removes_stale_artifacts(tmp_path: Path) -> None:
     assert not (tmp_path / "current_complete_one_missing.csv").exists()
     assert not (tmp_path / "downstream_one_missing.csv").exists()
     assert (tmp_path / "report.md").exists()
+    assert "matches 50 of 57 partially covered 2026 teams with observed values" in (
+        tmp_path / "report.md"
+    ).read_text(encoding="utf-8")
 
 
 def test_downstream_translation_preserves_probability() -> None:

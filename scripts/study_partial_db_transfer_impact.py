@@ -730,6 +730,7 @@ def make_report(
             f"| {band} | {len(selected)} | {np.mean([r['missing_90_interval_covers'] for r in selected]):.1%} | {np.mean([1.645 * r['missing_sd_proxy'] for r in selected]):.3f} |"
         )
     partial = [r for r in empirical if r["partial"]]
+    replay_eligible = [r for r in partial if r["observed_count"] > 0]
     exact = sum(r["maskable_exact_n"] for r in partial)
     lines += [
         "",
@@ -760,7 +761,7 @@ def make_report(
         well_supported_teams = len({r["team_id"] for r in well_supported})
         lines.insert(
             -2,
-            f"The exact n/k empirical replay matches {matched} of {len(partial)} partially covered 2026 teams with observed values. Equal weighting by those teams gives "
+            f"The exact n/k empirical replay matches {matched} of {len(replay_eligible)} partially covered 2026 teams with observed values. Equal weighting by those teams gives "
             + ", ".join(
                 f"{policy} MAE {np.mean([r['historical_mae'] for r in empirical_replay if r['policy'] == policy]):.3f}"
                 for policy in POLICIES

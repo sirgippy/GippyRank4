@@ -109,7 +109,7 @@ Exact historical support for each 2026 n/k cell with at least one observed playe
 | 10/12 | 2 | 1 | 66 | sparse_one_team |
 | 12/13 | 1 | 0 | 0 | unmatched |
 
-The exact n/k empirical replay matches 50 of 58 partially covered 2026 teams with observed values. Equal weighting by those teams gives all_or_nothing MAE 2.329, observed MAE 0.976, coverage_scaled MAE 0.980, missing_mean MAE 0.947. Each historical cell MAE is averaged across its distinct team-seasons before current teams are weighted. This transports historical masking errors to today's coverage frequencies; it cannot correct selection bias in which players are missing.
+The exact n/k empirical replay matches 50 of 57 partially covered 2026 teams with observed values. Equal weighting by those teams gives all_or_nothing MAE 2.329, observed MAE 0.976, coverage_scaled MAE 0.980, missing_mean MAE 0.947. Each historical cell MAE is averaged across its distinct team-seasons before current teams are weighted. This transports historical masking errors to today's coverage frequencies; it cannot correct selection bias in which players are missing.
 
 Excluding single-team historical cells leaves 48 current teams; their equal-team replay gives all_or_nothing MAE 2.425, observed MAE 0.973, coverage_scaled MAE 0.968, missing_mean MAE 0.935. The excluded cells are diagnostic only and should not set a coverage threshold.
 
