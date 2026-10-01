@@ -641,6 +641,7 @@ def audit_transfer_records(
             "season": record.season,
             "player_name": record.player_name,
             "normalized_player_name": normalize_player_name(record.player_name),
+            "portal_player_id": record.player_id,
             "origin": record.origin,
             "destination": record.destination,
             "destination_team_id": destination.team_id,
@@ -658,6 +659,9 @@ def audit_transfer_records(
             "in_model_relevant_population": in_scope,
             "defensive_candidate": bool(in_scope and semantics == "defensive"),
             "identity_join_method": "none",
+            "identity_resolution_detail": None,
+            "roster_candidate_count": 0,
+            "player_season_candidate_count": 0,
             "identity_status": "not_in_scope",
             "experience_status": "not_in_scope",
             "impact_status": "not_in_scope",
@@ -722,11 +726,30 @@ def audit_transfer_records(
                     ),
                     [],
                 )
+                conflicting_ids = [
+                    item
+                    for item in matches
+                    if item.player_id and item.player_id != record.player_id
+                ]
+                if conflicting_ids:
+                    row.update(
+                        {
+                            "identity_join_method": "stable_player_id_conflict",
+                            "identity_resolution_detail": "portal_player_id_conflicts_with_name_match",
+                            "roster_candidate_count": len(matches),
+                            "identity_status": "identity_resolution_failure",
+                            "experience_status": "identity_resolution_failure",
+                            "impact_status": "identity_resolution_failure",
+                        }
+                    )
+                    audit_rows.append(row)
+                    continue
         else:
             matches = roster_idx.get(
                 (prior_season, source_team, normalize_player_name(record.player_name)),
                 [],
             )
+        row["roster_candidate_count"] = len(matches)
         if len(matches) > 1:
             row.update(
                 {
@@ -776,6 +799,7 @@ def audit_transfer_records(
                 (prior_season, source_team, normalize_player_name(record.player_name)),
                 [],
             )
+        row["player_season_candidate_count"] = len(stats_matches)
         if prior_group != row["portal_position_group"]:
             if len(stats_matches) == 1:
                 player = stats_matches[0]

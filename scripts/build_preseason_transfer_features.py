@@ -78,6 +78,8 @@ def _render_report(result: Mapping[str, Any]) -> str:
         "",
         "The DB numeric value is neutral-imputed to zero when a known incoming DB transfer is unresolved; `transfer_in_prior_defensive_impact_db_available` remains zero in that case. A season with no incoming DB transfers is a natural zero with availability one.",
         "",
+        "The diagnostic output also records `incoming_db_count`, `observed_db_impact_count`, and `observed_db_impact_sum`. These preserve the resolved player contributions and do not change the three model-facing fields.",
+        "",
         "## Data-quality summary",
         "",
         "| Season | Incoming FBS | Applicable offense | Resolved offense | Unresolved offense | Undetermined | Incoming DB | Resolved DB | Unresolved DB | DB unavailable |",
@@ -148,6 +150,7 @@ def run(
     )
     _write_csv(output / "transfer_team_audit.csv", result["audit"])
     _write_csv(output / "transfer_player_audit.csv", result["player_audit"])
+    _write_csv(output / "offensive_player_audit.csv", result["offensive_player_audit"])
     _write_csv(output / "identity_mapping.csv", result["identity_mapping"])
     _write_json(output / "data_quality_report.json", result["quality_report"])
     _write_json(output / "feature_provenance.json", result["provenance"])
