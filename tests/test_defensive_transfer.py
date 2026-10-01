@@ -548,19 +548,24 @@ def test_generational_suffix_match_uses_unique_same_team_roster_row() -> None:
     assert row["prior_player_id"] == "1"
 
 
-def test_generational_suffix_match_fails_closed_for_multiple_roster_candidates() -> (
-    None
-):
+def _generational_suffix_identity_row(
+    portal_last_name: str,
+    roster_last_names: list[str],
+) -> dict:
     roster = [
-        *_roster(),
-        replace(_roster()[0], player_name="A Defender II", player_id="6"),
+        replace(
+            _roster()[0],
+            player_id=str(index + 1),
+            player_name=f"A {last_name}",
+        )
+        for index, last_name in enumerate(roster_last_names)
     ]
     record = parse_transfer_payload(
         [
             {
                 "season": 2022,
                 "firstName": "A",
-                "lastName": "Defender Jr.",
+                "lastName": portal_last_name,
                 "origin": "Alpha",
                 "destination": "Beta",
                 "position": "DE",
@@ -579,8 +584,42 @@ def test_generational_suffix_match_fails_closed_for_multiple_roster_candidates()
         roster_teams={(2021, "alpha")},
         cutoff=date(2025, 8, 15),
     )
+    return result["player_rows"][0]
 
-    row = result["player_rows"][0]
+
+def test_generational_suffix_match_allows_suffix_only_on_roster_side() -> None:
+    row = _generational_suffix_identity_row("Defender", ["Defender Jr."])
+
+    assert (
+        row["identity_join_method"] == "normalized_name_source_team_generational_suffix"
+    )
+    assert row["prior_player_id"] == "1"
+
+
+def test_generational_suffix_match_keeps_equal_explicit_suffix_as_normal_match() -> (
+    None
+):
+    row = _generational_suffix_identity_row("Defender Jr.", ["Defender Jr."])
+
+    assert row["identity_join_method"] == "normalized_name_source_team"
+    assert row["prior_player_id"] == "1"
+
+
+def test_generational_suffix_match_rejects_conflicting_explicit_suffixes() -> None:
+    row = _generational_suffix_identity_row("Defender Jr.", ["Defender III"])
+
+    assert row["identity_status"] == "identity_resolution_failure"
+    assert row["identity_join_method"] == "none"
+    assert row["prior_player_id"] is None
+
+
+def test_generational_suffix_match_fails_closed_for_multiple_roster_candidates() -> (
+    None
+):
+    row = _generational_suffix_identity_row(
+        "Defender", ["Defender Jr.", "Defender III"]
+    )
+
     assert row["identity_status"] == "ambiguous"
     assert row["impact_status"] == "ambiguous"
 

@@ -578,10 +578,12 @@ def _player_index(
     return dict(result)
 
 
-def _player_name_without_generational_suffix(value: str | None) -> str:
-    """Return a conservative secondary name key without a terminal suffix."""
+def _player_name_and_generational_suffix(
+    value: str | None,
+) -> tuple[str, str | None]:
+    """Return a secondary name key and any explicit terminal suffix."""
     tokens = normalize_player_name(value).split()
-    if tokens and tokens[-1] in {
+    suffixes = {
         "jr",
         "sr",
         "ii",
@@ -591,9 +593,23 @@ def _player_name_without_generational_suffix(value: str | None) -> str:
         "3rd",
         "4th",
         "ll",
-    }:
-        return " ".join(tokens[:-1])
-    return " ".join(tokens)
+    }
+    suffix = tokens[-1] if tokens and tokens[-1] in suffixes else None
+    if suffix is not None:
+        tokens = tokens[:-1]
+    return " ".join(tokens), suffix
+
+
+def _generational_suffixes_compatible(
+    first_name: str | None,
+    second_name: str | None,
+) -> bool:
+    """Allow a suffix rescue unless both explicit suffixes disagree."""
+    first_suffix = _player_name_and_generational_suffix(first_name)[1]
+    second_suffix = _player_name_and_generational_suffix(second_name)[1]
+    return (
+        first_suffix is None or second_suffix is None or first_suffix == second_suffix
+    )
 
 
 def _player_id_index(
@@ -655,11 +671,12 @@ def audit_transfer_records(
         defaultdict(list)
     )
     for item in roster_list:
+        name_without_suffix, _ = _player_name_and_generational_suffix(item.player_name)
         roster_suffix_idx[
             (
                 item.season,
                 item.normalized_team,
-                _player_name_without_generational_suffix(item.player_name),
+                name_without_suffix,
             )
         ].append(item)
     player_idx = _defensive_player_index(player_list)
@@ -806,16 +823,26 @@ def audit_transfer_records(
                 [],
             )
         if not matches:
+            portal_name_without_suffix = _player_name_and_generational_suffix(
+                record.player_name
+            )[0]
             suffix_matches = roster_suffix_idx.get(
                 (
                     prior_season,
                     source_team,
-                    _player_name_without_generational_suffix(record.player_name),
+                    portal_name_without_suffix,
                 ),
                 [],
             )
-            if suffix_matches:
-                matches = suffix_matches
+            compatible_suffix_matches = [
+                candidate
+                for candidate in suffix_matches
+                if _generational_suffixes_compatible(
+                    record.player_name, candidate.player_name
+                )
+            ]
+            if compatible_suffix_matches:
+                matches = compatible_suffix_matches
                 identity_method = "normalized_name_source_team_generational_suffix"
         row["roster_candidate_count"] = len(matches)
         bridge_identity_ambiguous = False
