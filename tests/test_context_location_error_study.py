@@ -1,0 +1,218 @@
+"""Issue 154 study invariants against the frozen issue 153 diagnostic artifact."""
+
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+import pandas as pd
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+
+import study_context_location_errors as study
+
+
+@pytest.fixture(scope="module")
+def source() -> tuple[pd.DataFrame, list[str]]:
+    frame = pd.read_csv(
+        study.SOURCE / "team_seasons.csv", keep_default_na=False, na_values=[""]
+    )
+    features = pd.read_csv(study.SOURCE / "feature_inventory.csv").feature_name.tolist()
+    return frame, features
+
+
+def test_exact_input_population_and_orientation(
+    source: tuple[pd.DataFrame, list[str]],
+) -> None:
+    frame, _ = source
+    study.validate_input(frame)
+    assert frame.groupby("season").size().to_dict() == {
+        2022: 131,
+        2023: 133,
+        2024: 134,
+        2025: 136,
+    }
+    assert frame.component_status.value_counts().to_dict() == {
+        "fitted": 528,
+        "cold_start_fallback": 6,
+    }
+    changed = frame.copy()
+    changed.loc[0, "context_minus_history_final_nll"] *= -1
+    with pytest.raises(ValueError, match="orientation/parity"):
+        study.validate_input(changed)
+
+
+def test_within_season_quantiles_and_disagreement_groups(
+    source: tuple[pd.DataFrame, list[str]],
+) -> None:
+    tiny = pd.DataFrame(
+        {
+            "season": [2022] * 4 + [2023] * 4,
+            "team_id": [4, 2, 3, 1] * 2,
+            "value": [10, 10, 10, 10, 100, 200, 300, 400],
+        }
+    )
+    assert study.quartiles(tiny, "value").tolist() == [4, 2, 3, 1, 1, 2, 3, 4]
+    frame = study.assign_groups(source[0])
+    for _, part in frame.groupby("season"):
+        assert set(part.disagreement_quartile) == {1, 2, 3, 4}
+        assert (
+            part.disagreement_quartile.value_counts().max()
+            - part.disagreement_quartile.value_counts().min()
+            <= 1
+        )
+        assert (part.loc[part.expensive_miss, "error_quartile"] == 4).all()
+        assert (part.loc[part.expensive_miss, "nll_gap_quartile"] == 4).all()
+        assert (
+            part.loc[part.helpful_disagreement, "context_minus_history_abs_rank_error"]
+            < 0
+        ).all()
+        assert (
+            part.loc[part.harmful_disagreement, "context_minus_history_abs_rank_error"]
+            > 0
+        ).all()
+
+
+def test_contributions_and_fallback_exclusion(
+    source: tuple[pd.DataFrame, list[str]],
+) -> None:
+    frame, features = source
+    grouped = study.assign_groups(frame)
+    contributions = study.contribution_diagnostics(grouped, features)
+    assert len(contributions) == 528
+    assert set(zip(contributions.season, contributions.team_id, strict=True)) == set(
+        zip(
+            frame.loc[frame.component_status == "fitted", "season"],
+            frame.loc[frame.component_status == "fitted", "team_id"],
+            strict=True,
+        )
+    )
+    source_fitted = frame.loc[frame.component_status == "fitted"].set_index(
+        ["season", "team_id"]
+    )
+    for row in contributions.itertuples():
+        original = source_fitted.loc[(row.season, row.team_id)]
+        expected = sum(
+            original[f"feature_{feature}_contribution"]
+            + original[f"feature_{feature}_missing_contribution"]
+            for feature in features
+        )
+        assert (
+            row.history_derived_subtotal + row.context_only_subtotal
+            == pytest.approx(expected + original.lag1_contribution)
+        )
+        assert (
+            row.context_only_positive_sum + row.context_only_negative_sum
+            == pytest.approx(row.context_only_subtotal)
+        )
+        assert row.largest_absolute_share <= 1
+        assert row.positive_contribution_sum >= 0
+        assert row.negative_contribution_sum <= 0
+        values = [
+            original[f"feature_{feature}_contribution"]
+            + original[f"feature_{feature}_missing_contribution"]
+            for feature in features
+        ]
+        dominant = max(values, key=abs)
+        assert row.opposing_substantial_count == sum(
+            value * dominant < 0 and abs(value) >= 0.25 * abs(dominant)
+            for value in values
+        )
+
+
+def test_gap_reconciliation_and_population_separation(
+    source: tuple[pd.DataFrame, list[str]],
+) -> None:
+    frame = study.assign_groups(source[0])
+    result = study.concentration(frame)
+    for period, part in study.periods(frame):
+        reported = next(
+            row for row in result if row["period"] == period and row["fraction"] == 1
+        )
+        assert reported["total_gap_sum"] / len(part) == pytest.approx(
+            part.context_final_nll.mean() - part.history_final_nll.mean()
+        )
+        assert (
+            part.season.eq(2022).all()
+            if period == "2022"
+            else part.season.ne(2022).all()
+        )
+    assert (
+        next(
+            row
+            for row in result
+            if row["period"] == "2023-2025" and row["fraction"] == 0.1
+        )["share_of_net_gap"]
+        > 0.7
+    )
+    assert frame.loc[
+        frame.season.isin(study.PRIMARY), "primary_mean_gap_contribution"
+    ].sum() == pytest.approx(
+        frame.loc[frame.season.isin(study.PRIMARY), "context_final_nll"].mean()
+        - frame.loc[frame.season.isin(study.PRIMARY), "history_final_nll"].mean()
+    )
+
+
+def test_support_and_transfer_grouping(source: tuple[pd.DataFrame, list[str]]) -> None:
+    frame, features = source
+    grouped = study.assign_groups(frame)
+    assert grouped.loc[
+        grouped.component_status == "fitted", "historical_repair_state"
+    ].value_counts().to_dict() == {
+        "none": 513,
+        "legitimate_zero_restoration": 13,
+        "ambiguous_usage_join_removed": 1,
+        "name_normalization_join_added": 1,
+    }
+    contribution = study.contribution_diagnostics(grouped, features)
+    diagnostics = study.grouped_diagnostics(grouped, contribution)
+    for period, expected in (
+        ("2022", 130),
+        ("2023", 131),
+        ("2024", 133),
+        ("2025", 134),
+        ("2023-2025", 398),
+    ):
+        part = diagnostics.loc[
+            (diagnostics.period == period)
+            & (diagnostics.family == "nearest_support_quartile")
+        ]
+        assert int(part.n.sum()) == expected
+        assert set(part.bin) == {"1", "2", "3", "4"}
+        transfer = diagnostics.loc[
+            (diagnostics.period == period) & (diagnostics.family == "db_coverage")
+        ]
+        assert int(transfer.n.sum()) == expected
+    assert (
+        diagnostics.loc[
+            (diagnostics.period == "2022")
+            & (diagnostics.family == "historical_transfer_input_difference")
+            & (diagnostics.bin == "legitimate_zero_restoration"),
+            "n",
+        ].iloc[0]
+        == 8
+    )
+
+
+def test_machine_outputs_are_byte_identical_on_two_runs(
+    source: tuple[pd.DataFrame, list[str]],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    del source
+    signatures = []
+    for index in (1, 2):
+        destination = tmp_path / str(index)
+        monkeypatch.setattr(study, "OUT", destination)
+        study.main()
+        signatures.append(
+            {path.name: path.read_bytes() for path in destination.iterdir()}
+        )
+        provenance = json.loads((destination / "provenance.json").read_text())
+        assert provenance["source_hashes"][
+            str((study.SOURCE / "team_seasons.csv").relative_to(ROOT))
+        ] == study.sha256(study.SOURCE / "team_seasons.csv")
+    assert signatures[0] == signatures[1]
