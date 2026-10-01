@@ -1,0 +1,47 @@
+{
+  "baseline_max_absolute_error": 8.738396672924864e-10,
+  "baseline_reproduction_checks": 700,
+  "context_location_features": 15,
+  "db_coverage_states": {
+    "complete": 238,
+    "no incoming DB players": 80,
+    "partial": 182,
+    "unavailable": 34
+  },
+  "fallback_team_seasons": 6,
+  "feature_range_violation_counts": {
+    "0": 500,
+    "1": 24,
+    "2": 2,
+    "3": 1,
+    "4": 1
+  },
+  "final_checkpoint_by_season": {
+    "2022": 7,
+    "2023": 7,
+    "2024": 7,
+    "2025": 7
+  },
+  "fitted_decompositions": 528,
+  "historical_repair_difference_classes": {
+    "ambiguous_usage_join_removed": 1,
+    "legitimate_zero_restoration": 13,
+    "name_normalization_join_added": 1
+  },
+  "historical_repair_reconciled_changes": 15,
+  "max_abs_reconstruction_residual": 8.881784197001252e-16,
+  "mean_abs_reconstruction_residual": 1.3054944068120533e-16,
+  "missing_diagnostic_fields": {
+    "fitted_context_location_center": 6,
+    "incoming_offensive_observed_usage_sum": 6,
+    "observed_db_impact_sum": 34
+  },
+  "nearest_neighbor_distance": {
+    "max": 18.674838286075136,
+    "median": 2.456458970585671,
+    "min": 0.8713213049261718
+  },
+  "team_seasons_excluded": 0,
+  "team_seasons_expected": 534,
+  "team_seasons_included": 534
+}
