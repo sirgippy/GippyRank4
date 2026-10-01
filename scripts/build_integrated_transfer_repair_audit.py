@@ -90,6 +90,144 @@ def _status_counts(rows: list[dict[str, str]]) -> dict[str, int]:
     }
 
 
+def _team_season_index(
+    rows: list[dict[str, str]], label: str
+) -> dict[tuple[int, str], dict[str, str]]:
+    indexed: dict[tuple[int, str], dict[str, str]] = {}
+    for row in rows:
+        key = (int(row["season"]), str(row["team_id"]))
+        if key in indexed:
+            raise ValueError(f"duplicate {label} team-season row: {key}")
+        indexed[key] = row
+    return indexed
+
+
+def _reason_codes(row: dict[str, str]) -> set[str]:
+    return {code for code in row.get("reason_codes", "").split(";") if code}
+
+
+def _player_evidence_for_team_season(
+    season: int,
+    team_id: str,
+    player_rows: list[dict[str, str]],
+) -> list[dict[str, Any]]:
+    evidence = []
+    for row in player_rows:
+        if (
+            int(row["season"]) != season
+            or str(row.get("destination_team_id", "")) != team_id
+            or row.get("in_model_relevant_population") != "True"
+            or row.get("d5_resolution_category") != "cannot_determine_applicability"
+        ):
+            continue
+        evidence.append(
+            {
+                "portal_index": row.get("portal_index", ""),
+                "player": row.get("player_name", ""),
+                "position": row.get("position", ""),
+                "usage_join_status": row.get("usage_join_status", ""),
+                "usage_candidate_count": int(
+                    row.get("usage_candidate_count", "0") or 0
+                ),
+                "applicability": row.get("d5_resolution_category", ""),
+                "applicability_reason": row.get("d5_applicability_reason", ""),
+            }
+        )
+    return sorted(evidence, key=lambda row: (row["player"], row["portal_index"]))
+
+
+def _historical_status_reconciliation(
+    pre_materializer_rows: list[dict[str, str]],
+    final_rows: list[dict[str, str]],
+    player_rows: list[dict[str, str]],
+) -> list[dict[str, Any]]:
+    pre_index = _team_season_index(pre_materializer_rows, "pre-materializer")
+    final_index = _team_season_index(final_rows, "final")
+    if pre_index.keys() != final_index.keys():
+        missing_final = sorted(pre_index.keys() - final_index.keys())
+        missing_pre = sorted(final_index.keys() - pre_index.keys())
+        raise ValueError(
+            "historical team-season populations differ during reconciliation: "
+            f"missing_final={missing_final}, missing_pre={missing_pre}"
+        )
+
+    changes = []
+    for key in sorted(pre_index):
+        before = pre_index[key]
+        after = final_index[key]
+        old_status = before["availability_status"]
+        new_status = after["availability_status"]
+        if old_status == new_status:
+            continue
+        season, team_id = key
+        changes.append(
+            {
+                "season": season,
+                "team_id": team_id,
+                "team": after.get("team_name") or before.get("team_name", team_id),
+                "pre_materializer_status": old_status,
+                "final_status": new_status,
+                "pre_materializer_primary_reason": before.get("primary_reason", ""),
+                "final_primary_reason": after.get("primary_reason", ""),
+                "pre_materializer_reason_codes": before.get("reason_codes", ""),
+                "final_reason_codes": after.get("reason_codes", ""),
+                "player_evidence": _player_evidence_for_team_season(
+                    season, team_id, player_rows
+                ),
+            }
+        )
+    return changes
+
+
+def _historical_aggregate_null_reconciliation(
+    pre_materializer_rows: list[dict[str, str]],
+    final_rows: list[dict[str, str]],
+) -> dict[str, Any]:
+    pre_index = _team_season_index(pre_materializer_rows, "pre-materializer")
+    final_index = _team_season_index(final_rows, "final")
+    if pre_index.keys() != final_index.keys():
+        missing_final = sorted(pre_index.keys() - final_index.keys())
+        missing_pre = sorted(final_index.keys() - pre_index.keys())
+        raise ValueError(
+            "historical team-season populations differ during aggregate-null "
+            f"reconciliation: missing_final={missing_final}, missing_pre={missing_pre}"
+        )
+
+    removed: list[dict[str, Any]] = []
+    added: list[dict[str, Any]] = []
+    pre_count = 0
+    final_count = 0
+    for key in sorted(pre_index):
+        before = pre_index[key]
+        after = final_index[key]
+        had_reason = "historical_aggregate_null" in _reason_codes(before)
+        has_reason = "historical_aggregate_null" in _reason_codes(after)
+        pre_count += had_reason
+        final_count += has_reason
+        if had_reason == has_reason:
+            continue
+        record = {
+            "season": key[0],
+            "team_id": key[1],
+            "team": after.get("team_name") or before.get("team_name", key[1]),
+            "pre_materializer_reason_codes": before.get("reason_codes", ""),
+            "final_reason_codes": after.get("reason_codes", ""),
+            "pre_materializer_usage_value": before.get(
+                "post_repair_materialized_usage_value", ""
+            ),
+            "final_usage_value": after.get("post_repair_materialized_usage_value", ""),
+        }
+        (removed if had_reason else added).append(record)
+
+    return {
+        "pre_materializer_count": pre_count,
+        "final_count": final_count,
+        "removed_cases": removed,
+        "added_cases": added,
+        "net_reduction": pre_count - final_count,
+    }
+
+
 def _current_unresolved_db_players(current_root: Path) -> list[dict[str, Any]]:
     rows = _read_csv(current_root / "transfer_player_audit.csv")
     unresolved: list[dict[str, Any]] = []
@@ -140,8 +278,10 @@ def _current_unresolved_db_players(current_root: Path) -> list[dict[str, Any]]:
 def _historical_summary(
     source: dict[str, Any],
     preintegrated_source: dict[str, Any],
+    preintegrated_rows: list[dict[str, str]],
     current_rows: list[dict[str, str]],
     historical_rows: list[dict[str, str]],
+    historical_player_rows: list[dict[str, str]],
     output: Path,
 ) -> dict[str, Any]:
     years = [int(row["season"]) for row in historical_rows]
@@ -156,20 +296,44 @@ def _historical_summary(
         "historical_aggregate_null" in row.get("reason_codes", "").split(";")
         for row in historical_rows
     )
-    troy = next(
-        row
-        for row in historical_rows
-        if row["season"] == "2021" and row["team_name"] == "Troy"
-    )
     integrated_total = [*historical_rows, *current_rows]
     preintegrated_post = preintegrated_source["post_repair"]
-    preintegrated_status_counts = {
+    preintegrated_historical_rows = [
+        row for row in preintegrated_rows if int(row["season"]) < 2026
+    ]
+    preintegrated_status_counts = _status_counts(preintegrated_rows)
+    summarized_pre_status_counts = {
         status: preintegrated_post["statuses"].get(status, 0)
         for status in ("complete", "partial", "entirely_unavailable")
     }
+    if (
+        len(preintegrated_rows) != preintegrated_post["team_seasons"]
+        or preintegrated_status_counts != summarized_pre_status_counts
+    ):
+        raise ValueError(
+            "pre-materializer team-season rows disagree with their summary: "
+            f"rows={len(preintegrated_rows)}, summary={preintegrated_post['team_seasons']}, "
+            f"row_statuses={preintegrated_status_counts}, "
+            f"summary_statuses={summarized_pre_status_counts}"
+        )
+    status_changes = _historical_status_reconciliation(
+        preintegrated_historical_rows, historical_rows, historical_player_rows
+    )
+    aggregate_null_reconciliation = _historical_aggregate_null_reconciliation(
+        preintegrated_historical_rows, historical_rows
+    )
+    summarized_pre_nulls = preintegrated_post["reason_team_seasons"].get(
+        "historical_aggregate_null", 0
+    )
+    if aggregate_null_reconciliation["pre_materializer_count"] != summarized_pre_nulls:
+        raise ValueError(
+            "pre-materializer aggregate-null rows disagree with their summary: "
+            f"rows={aggregate_null_reconciliation['pre_materializer_count']}, "
+            f"summary={summarized_pre_nulls}"
+        )
     historical_feature_path = output / "historical_transfer_features.csv"
     return {
-        "seasons": [2021, 2025],
+        "seasons": list(range(min(years), max(years) + 1)),
         "team_seasons": len(historical_rows),
         "availability_status_counts": _status_counts(historical_rows),
         "all_years_combined_checkpoint": {
@@ -181,32 +345,18 @@ def _historical_summary(
             "after": repaired_nulls,
         },
         "reconciliation_with_151_pre_materializer_snapshot": {
-            "pre_materializer_team_seasons": preintegrated_post["team_seasons"],
+            "pre_materializer_team_seasons": len(preintegrated_rows),
             "pre_materializer_availability_status_counts": preintegrated_status_counts,
-            "pre_materializer_historical_aggregate_null_reasons": preintegrated_post[
-                "reason_team_seasons"
-            ].get("historical_aggregate_null", 0),
+            "pre_materializer_historical_aggregate_null_reasons": aggregate_null_reconciliation[
+                "pre_materializer_count"
+            ],
             "final_status_delta": {
                 status: _status_counts(integrated_total).get(status, 0)
                 - preintegrated_status_counts.get(status, 0)
                 for status in ("complete", "partial", "entirely_unavailable")
             },
-            "team_season_reclassified": {
-                "season": 2022,
-                "team": "Texas",
-                "pre_materializer_status": "complete",
-                "final_status": "partial",
-                "reason": (
-                    "Diamonte Tucker-Dorsey (LB) has no usage candidate and the "
-                    "#150 player audit classifies applicability as unknown; the "
-                    "pre-materializer #151 audit had treated this absence as zero"
-                ),
-            },
-            "aggregate_null_reason_reduction_case": {
-                "season": 2021,
-                "team": "Troy",
-                "final_usage_value": troy["post_repair_materialized_usage_value"],
-            },
+            "team_seasons_reclassified": status_changes,
+            "historical_aggregate_null_reconciliation": aggregate_null_reconciliation,
         },
         "materializer_replay": {
             "legacy_replay_matches_frozen_panel": replay[
@@ -243,14 +393,6 @@ def _historical_summary(
             "conflicting_usage_value_joins": usage["conflicting_usage_value_joins"],
         },
         "corrected_player_audit": source["corrected_historical_player_audit"],
-        "corrected_2021_troy_usage": {
-            "post_repair_materialized_usage_value": troy[
-                "post_repair_materialized_usage_value"
-            ],
-            "historical_aggregate_null_retained": (
-                "historical_aggregate_null" in troy["reason_codes"].split(";")
-            ),
-        },
         "canonical_feature_panel": {
             "path": "data/processed/transfer_data_repair/historical_transfer_features.csv",
             "sha256": _sha256(historical_feature_path),
@@ -339,13 +481,75 @@ def _render_report(summary: dict[str, Any]) -> str:
     total_statuses = historical["all_years_combined_checkpoint"][
         "availability_status_counts"
     ]
-    integrated_nulls = historical["historical_aggregate_null_reasons"]["after"]
     repair = historical["materializer_replay"]
     reconciliation = historical["reconciliation_with_151_pre_materializer_snapshot"]
+    status_changes = reconciliation["team_seasons_reclassified"]
+    aggregate_nulls = reconciliation["historical_aggregate_null_reconciliation"]
     impact = current["changed_db_player_impact_values"]
     coverage = current["team_coverage_status_counts"]
     reference = current["defensive_impact_reference"]
     source = current["source_lineage"]["source_limitations"]
+
+    def row_reason_text(primary: str, codes: str) -> str:
+        return (
+            f"primary reason {f'`{primary}`' if primary else '`not recorded`'}, "
+            f"reason codes {f'`{codes}`' if codes else '`none`'}"
+        )
+
+    status_change_text = []
+    for change in status_changes:
+        evidence = "; ".join(
+            f"{item['player']} ({item['position']}): usage join "
+            f"`{item['usage_join_status']}`, {item['usage_candidate_count']} usage "
+            f"candidate(s), applicability `{item['applicability']}` "
+            f"({item['applicability_reason']})"
+            for item in change["player_evidence"]
+        )
+        detail = (
+            f"{change['season']} {change['team']} changed from "
+            f"`{change['pre_materializer_status']}` to `{change['final_status']}`; "
+            f"row evidence changed from "
+            f"{row_reason_text(change['pre_materializer_primary_reason'], change['pre_materializer_reason_codes'])} to "
+            f"{row_reason_text(change['final_primary_reason'], change['final_reason_codes'])}"
+        )
+        if evidence:
+            detail += f". Player-audit evidence: {evidence}"
+        status_change_text.append(detail)
+    if status_change_text:
+        change_label = "change" if len(status_changes) == 1 else "changes"
+        status_reconciliation_text = (
+            f"Comparing the pre-materializer and final historical rows found "
+            f"{len(status_changes)} status {change_label}: "
+            + "; ".join(status_change_text)
+            + "."
+        )
+    else:
+        status_reconciliation_text = (
+            "Comparing the pre-materializer and final historical rows found no "
+            "availability status changes."
+        )
+
+    def null_case_text(case: dict[str, Any]) -> str:
+        return (
+            f"{case['season']} {case['team']} "
+            f"(final usage `{case['final_usage_value']}`)"
+        )
+
+    removed_null_cases = (
+        ", ".join(null_case_text(case) for case in aggregate_nulls["removed_cases"])
+        or "none"
+    )
+    added_null_cases = (
+        ", ".join(null_case_text(case) for case in aggregate_nulls["added_cases"])
+        or "none"
+    )
+    aggregate_null_reconciliation_text = (
+        "Comparing row-level historical aggregate-null reasons found "
+        f"{aggregate_nulls['pre_materializer_count']} before and "
+        f"{aggregate_nulls['final_count']} after; removed cases: "
+        f"{removed_null_cases}; newly added cases: {added_null_cases}."
+    )
+
     return "\n".join(
         [
             "# Integrated transfer repair audit (#150 + #151)",
@@ -368,9 +572,10 @@ def _render_report(summary: dict[str, Any]) -> str:
                 )
             ],
             "",
-            f"The corrected 2021 Troy usage aggregate is `{historical['corrected_2021_troy_usage']['post_repair_materialized_usage_value']}`; its historical-null reason is cleared. The player audit contains {historical['corrected_player_audit']['record_count']} records. It retains {repair['remaining_ambiguous_usage_joins']} genuinely ambiguous usage join; duplicate-equivalent usage rows collapse only under #150's identity/value rules.",
+            f"The player audit contains {historical['corrected_player_audit']['record_count']} records. It retains {repair['remaining_ambiguous_usage_joins']} genuinely ambiguous usage join; {repair['duplicate_equivalent_joins_resolved']} duplicate-equivalent usage joins collapse under #150's identity/value rules. Changed players and source evidence are listed in the historical repair artifacts.",
             "",
-            f"Integration reconciliation: #151's pre-materializer availability snapshot had {reconciliation['pre_materializer_availability_status_counts']['complete']} complete, {reconciliation['pre_materializer_availability_status_counts']['partial']} partial, and {reconciliation['pre_materializer_availability_status_counts']['entirely_unavailable']} unavailable team-seasons, with {reconciliation['pre_materializer_historical_aggregate_null_reasons']} aggregate-null reasons. The final #150 replay yields {total_statuses['complete']} / {total_statuses['partial']} / {total_statuses['entirely_unavailable']} overall and {integrated_nulls} null reasons. The one status change is 2022 Texas: the #150 audit leaves Diamonte Tucker-Dorsey's prior usage applicability unknown because no usage candidate is present, so the team is partial rather than complete. The null-reason reduction is the verified 2021 Troy aggregate. The replay also resolves 24 duplicate-equivalent usage joins and removes Chandler Rogers's unsupported North Texas 2023 contribution; that genuinely ambiguous join remains unresolved.",
+            f"Integration status reconciliation: the #151 pre-materializer snapshot had {reconciliation['pre_materializer_availability_status_counts']['complete']} complete, {reconciliation['pre_materializer_availability_status_counts']['partial']} partial, and {reconciliation['pre_materializer_availability_status_counts']['entirely_unavailable']} unavailable team-seasons; the final combined rows have {total_statuses['complete']} / {total_statuses['partial']} / {total_statuses['entirely_unavailable']}. {status_reconciliation_text}",
+            aggregate_null_reconciliation_text,
             "",
             "## 2026 reacquired evidence",
             "",
@@ -432,11 +637,11 @@ def build(
             for row in _read_csv(historical_dir / "team_seasons.csv")
             if int(row["season"]) < 2026
         ]
-        current_rows = [
-            row
-            for row in _read_csv(current_dir / "team_seasons.csv")
-            if int(row["season"]) == 2026
-        ]
+        preintegrated_rows = _read_csv(current_dir / "team_seasons.csv")
+        current_rows = [row for row in preintegrated_rows if int(row["season"]) == 2026]
+        historical_player_rows = _read_csv(
+            historical_dir / "historical_player_repair_audit.csv"
+        )
         if len(historical_rows) != 655 or len(current_rows) != 138:
             raise ValueError(
                 "integrated team-season population changed: "
@@ -484,8 +689,10 @@ def build(
         historical_section = _historical_summary(
             historical_summary,
             current_summary,
+            preintegrated_rows,
             current_rows,
             historical_rows,
+            historical_player_rows,
             output,
         )
         current_section = _current_summary(current_summary)

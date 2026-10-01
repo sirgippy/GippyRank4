@@ -986,10 +986,6 @@
       "row_count": 2744,
       "sha256": "d17d174b8b49e22cc118618afb9046c399e5889cb56f43141c2e5cbfcc6e028c"
     },
-    "corrected_2021_troy_usage": {
-      "historical_aggregate_null_retained": false,
-      "post_repair_materialized_usage_value": "0.163"
-    },
     "corrected_player_audit": {
       "record_count": 14422,
       "sha256": "7200f384da742658669164800edf9245ee215d17704b249b193d2afd17deee1e"
@@ -1021,15 +1017,27 @@
       "resolved_usage_joins": 1842
     },
     "reconciliation_with_151_pre_materializer_snapshot": {
-      "aggregate_null_reason_reduction_case": {
-        "final_usage_value": "0.163",
-        "season": 2021,
-        "team": "Troy"
-      },
       "final_status_delta": {
         "complete": -1,
         "entirely_unavailable": 0,
         "partial": 1
+      },
+      "historical_aggregate_null_reconciliation": {
+        "added_cases": [],
+        "final_count": 51,
+        "net_reduction": 1,
+        "pre_materializer_count": 52,
+        "removed_cases": [
+          {
+            "final_reason_codes": "db_player_join_unresolved;db_position_conflict;offense_applicability_unproven",
+            "final_usage_value": "0.163",
+            "pre_materializer_reason_codes": "db_player_join_unresolved;db_position_conflict;historical_aggregate_null;offense_applicability_unproven",
+            "pre_materializer_usage_value": "",
+            "season": 2021,
+            "team": "Troy",
+            "team_id": "2653"
+          }
+        ]
       },
       "pre_materializer_availability_status_counts": {
         "complete": 88,
@@ -1038,16 +1046,36 @@
       },
       "pre_materializer_historical_aggregate_null_reasons": 52,
       "pre_materializer_team_seasons": 793,
-      "team_season_reclassified": {
-        "final_status": "partial",
-        "pre_materializer_status": "complete",
-        "reason": "Diamonte Tucker-Dorsey (LB) has no usage candidate and the #150 player audit classifies applicability as unknown; the pre-materializer #151 audit had treated this absence as zero",
-        "season": 2022,
-        "team": "Texas"
-      }
+      "team_seasons_reclassified": [
+        {
+          "final_primary_reason": "offense_applicability_unproven",
+          "final_reason_codes": "offense_applicability_unproven",
+          "final_status": "partial",
+          "player_evidence": [
+            {
+              "applicability": "cannot_determine_applicability",
+              "applicability_reason": "defensive_or_special_portal_position; source_team_outside_verified_stats_coverage",
+              "player": "Diamonte Tucker-Dorsey",
+              "portal_index": "2572",
+              "position": "LB",
+              "usage_candidate_count": 0,
+              "usage_join_status": "no_usage_record"
+            }
+          ],
+          "pre_materializer_primary_reason": "complete",
+          "pre_materializer_reason_codes": "",
+          "pre_materializer_status": "complete",
+          "season": 2022,
+          "team": "Texas",
+          "team_id": "251"
+        }
+      ]
     },
     "seasons": [
       2021,
+      2022,
+      2023,
+      2024,
       2025
     ],
     "source_manifest_sha256": "b1c30ed98c8b38b8f4eb5ea57e8090858471f2c11d2879388d96bd7ace60c517",

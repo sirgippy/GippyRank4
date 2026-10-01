@@ -15,9 +15,10 @@ The legacy replay reproduces the frozen panel: **True**. The current replay matc
 | `legitimate_zero_restoration` | 21 |
 | `name_normalization_join_added` | 2 |
 
-The corrected 2021 Troy usage aggregate is `0.163`; its historical-null reason is cleared. The player audit contains 14422 records. It retains 1 genuinely ambiguous usage join; duplicate-equivalent usage rows collapse only under #150's identity/value rules.
+The player audit contains 14422 records. It retains 1 genuinely ambiguous usage join; 24 duplicate-equivalent usage joins collapse under #150's identity/value rules. Changed players and source evidence are listed in the historical repair artifacts.
 
-Integration reconciliation: #151's pre-materializer availability snapshot had 88 complete, 703 partial, and 2 unavailable team-seasons, with 52 aggregate-null reasons. The final #150 replay yields 87 / 704 / 2 overall and 51 null reasons. The one status change is 2022 Texas: the #150 audit leaves Diamonte Tucker-Dorsey's prior usage applicability unknown because no usage candidate is present, so the team is partial rather than complete. The null-reason reduction is the verified 2021 Troy aggregate. The replay also resolves 24 duplicate-equivalent usage joins and removes Chandler Rogers's unsupported North Texas 2023 contribution; that genuinely ambiguous join remains unresolved.
+Integration status reconciliation: the #151 pre-materializer snapshot had 88 complete, 703 partial, and 2 unavailable team-seasons; the final combined rows have 87 / 704 / 2. Comparing the pre-materializer and final historical rows found 1 status change: 2022 Texas changed from `complete` to `partial`; row evidence changed from primary reason `complete`, reason codes `none` to primary reason `offense_applicability_unproven`, reason codes `offense_applicability_unproven`. Player-audit evidence: Diamonte Tucker-Dorsey (LB): usage join `no_usage_record`, 0 usage candidate(s), applicability `cannot_determine_applicability` (defensive_or_special_portal_position; source_team_outside_verified_stats_coverage).
+Comparing row-level historical aggregate-null reasons found 52 before and 51 after; removed cases: 2021 Troy (final usage `0.163`); newly added cases: none.
 
 ## 2026 reacquired evidence
 

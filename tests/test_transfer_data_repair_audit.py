@@ -58,12 +58,59 @@ def test_integrated_audit_reconciles_historical_and_2026_checkpoints() -> None:
         historical["materializer_replay"]["legacy_replay_matches_frozen_panel"] is True
     )
     assert historical["materializer_replay"]["new_replay_matches_materializer"] is True
+    reconciliation = historical["reconciliation_with_151_pre_materializer_snapshot"]
+    assert historical["seasons"] == [2021, 2022, 2023, 2024, 2025]
+    assert reconciliation["team_seasons_reclassified"] == [
+        {
+            "season": 2022,
+            "team_id": "251",
+            "team": "Texas",
+            "pre_materializer_status": "complete",
+            "final_status": "partial",
+            "pre_materializer_primary_reason": "complete",
+            "final_primary_reason": "offense_applicability_unproven",
+            "pre_materializer_reason_codes": "",
+            "final_reason_codes": "offense_applicability_unproven",
+            "player_evidence": [
+                {
+                    "portal_index": "2572",
+                    "player": "Diamonte Tucker-Dorsey",
+                    "position": "LB",
+                    "usage_join_status": "no_usage_record",
+                    "usage_candidate_count": 0,
+                    "applicability": "cannot_determine_applicability",
+                    "applicability_reason": (
+                        "defensive_or_special_portal_position; "
+                        "source_team_outside_verified_stats_coverage"
+                    ),
+                }
+            ],
+        }
+    ]
+    null_reconciliation = reconciliation["historical_aggregate_null_reconciliation"]
     assert (
-        historical["reconciliation_with_151_pre_materializer_snapshot"][
-            "team_season_reclassified"
-        ]["team"]
-        == "Texas"
-    )
+        null_reconciliation["pre_materializer_count"],
+        null_reconciliation["final_count"],
+        null_reconciliation["net_reduction"],
+    ) == (52, 51, 1)
+    assert null_reconciliation["added_cases"] == []
+    assert null_reconciliation["removed_cases"] == [
+        {
+            "season": 2021,
+            "team_id": "2653",
+            "team": "Troy",
+            "pre_materializer_reason_codes": (
+                "db_player_join_unresolved;db_position_conflict;"
+                "historical_aggregate_null;offense_applicability_unproven"
+            ),
+            "final_reason_codes": (
+                "db_player_join_unresolved;db_position_conflict;"
+                "offense_applicability_unproven"
+            ),
+            "pre_materializer_usage_value": "",
+            "final_usage_value": "0.163",
+        }
+    ]
 
     assert (current["incoming_db_transfers"], current["observed_db_impacts"]) == (
         604,
@@ -81,6 +128,132 @@ def test_integrated_audit_reconciles_historical_and_2026_checkpoints() -> None:
     assert current["defensive_impact_reference"]["changed_sha256_count"] == 0
     assert current["context_1_3_invariance"]["model_facing_inputs_changed"] is False
     assert len(_rows(artifact_root / "team_seasons.csv")) == 793
+
+
+def test_historical_reconciliation_is_derived_from_compared_rows() -> None:
+    pre_materializer = [
+        {
+            "season": "2022",
+            "team_id": "251",
+            "team_name": "Texas",
+            "availability_status": "complete",
+            "primary_reason": "complete",
+            "reason_codes": "",
+        }
+    ]
+    final = [
+        {
+            "season": "2022",
+            "team_id": "251",
+            "team_name": "Texas",
+            "availability_status": "partial",
+            "primary_reason": "offense_applicability_unproven",
+            "reason_codes": "offense_applicability_unproven",
+        }
+    ]
+    player_audit = [
+        {
+            "season": "2022",
+            "destination_team_id": "251",
+            "in_model_relevant_population": "True",
+            "d5_resolution_category": "cannot_determine_applicability",
+            "portal_index": "2572",
+            "player_name": "Diamonte Tucker-Dorsey",
+            "position": "LB",
+            "usage_join_status": "no_usage_record",
+            "usage_candidate_count": "0",
+            "d5_applicability_reason": "source_team_outside_verified_stats_coverage",
+        }
+    ]
+
+    changes = integrated_module._historical_status_reconciliation(
+        pre_materializer, final, player_audit
+    )
+
+    assert len(changes) == 1
+    assert changes[0]["season"] == 2022
+    assert changes[0]["team"] == "Texas"
+    assert changes[0]["pre_materializer_status"] == "complete"
+    assert changes[0]["final_status"] == "partial"
+    assert changes[0]["player_evidence"][0]["player"] == "Diamonte Tucker-Dorsey"
+    assert changes[0]["player_evidence"][0]["usage_candidate_count"] == 0
+
+
+def test_historical_null_reconciliation_is_derived_from_reason_code_changes() -> None:
+    pre_materializer = [
+        {
+            "season": "2021",
+            "team_id": "2653",
+            "team_name": "Troy",
+            "reason_codes": "historical_aggregate_null;other_reason",
+        }
+    ]
+    final = [
+        {
+            "season": "2021",
+            "team_id": "2653",
+            "team_name": "Troy",
+            "reason_codes": "other_reason",
+            "post_repair_materialized_usage_value": "0.163",
+        }
+    ]
+
+    reconciliation = integrated_module._historical_aggregate_null_reconciliation(
+        pre_materializer, final
+    )
+
+    assert reconciliation["pre_materializer_count"] == 1
+    assert reconciliation["final_count"] == 0
+    assert reconciliation["removed_cases"][0]["team"] == "Troy"
+    assert reconciliation["removed_cases"][0]["final_usage_value"] == "0.163"
+    assert reconciliation["added_cases"] == []
+
+
+def test_integrated_report_uses_derived_reconciliation_without_stale_narration() -> (
+    None
+):
+    artifact_root = ROOT / "data/processed/transfer_data_repair"
+    summary = json.loads((artifact_root / "summary.json").read_text(encoding="utf-8"))
+    reconciliation = summary["historical"][
+        "reconciliation_with_151_pre_materializer_snapshot"
+    ]
+    pre_materializer = [
+        {
+            "season": "2024",
+            "team_id": "77",
+            "team_name": "Beta",
+            "availability_status": "complete",
+            "primary_reason": "complete",
+            "reason_codes": "historical_aggregate_null",
+        }
+    ]
+    final = [
+        {
+            "season": "2024",
+            "team_id": "77",
+            "team_name": "Beta",
+            "availability_status": "partial",
+            "primary_reason": "audit_evidence_missing",
+            "reason_codes": "audit_evidence_missing",
+            "post_repair_materialized_usage_value": "0.25",
+        }
+    ]
+    reconciliation["team_seasons_reclassified"] = (
+        integrated_module._historical_status_reconciliation(pre_materializer, final, [])
+    )
+    reconciliation["historical_aggregate_null_reconciliation"] = (
+        integrated_module._historical_aggregate_null_reconciliation(
+            pre_materializer, final
+        )
+    )
+
+    report = integrated_module._render_report(summary)
+
+    assert "2024 Beta changed from `complete` to `partial`" in report
+    assert "2024 Beta (final usage `0.25`)" in report
+    assert "2022 Texas" not in report
+    assert "2021 Troy" not in report
+    assert "Diamonte Tucker-Dorsey" not in report
 
 
 def test_postrepair_audit_preserves_baselines_and_reconciles_coverage(
