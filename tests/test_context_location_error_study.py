@@ -224,13 +224,43 @@ def test_net_context_only_subtotal_finding_is_pinned(
     assert bottom.final_nll_gap_mean == pytest.approx(0.0503487045285, abs=1e-10)
     assert top.final_nll_gap_mean > bottom.final_nll_gap_mean
     assert control_top.final_nll_gap_mean == pytest.approx(-0.0406806208577, abs=1e-10)
-    for period, bin_name in (("2023-2025", "1"), ("2023-2025", "4"), ("2022", "4")):
+    by_season = {
+        "2023": ((33, 1, 0.0132115786879), (32, 6, 0.231670312939)),
+        "2024": ((34, 3, 0.115845049941), (33, 8, 0.106267873964)),
+        "2025": ((34, 1, 0.0208972165496), (33, 5, 0.169001413138)),
+    }
+    for period, (expected_q1, expected_q4) in by_season.items():
+        q1, q4 = quartile(committed, period, "1"), quartile(committed, period, "4")
+        for observed, (n, misses, gap) in ((q1, expected_q1), (q4, expected_q4)):
+            assert (observed.n, observed.expensive_miss_n) == (n, misses)
+            assert observed.expensive_miss_rate == pytest.approx(misses / n, abs=1e-10)
+            assert observed.final_nll_gap_mean == pytest.approx(gap, abs=1e-10)
+        assert q4.expensive_miss_rate > q1.expensive_miss_rate
+        assert (q4.final_nll_gap_mean > q1.final_nll_gap_mean) == (period != "2024")
+
+    period_bins = [("2023-2025", "1"), ("2023-2025", "4"), ("2022", "4")]
+    period_bins.extend(
+        (period, bin_name) for period in by_season for bin_name in ("1", "4")
+    )
+    for period, bin_name in period_bins:
         actual = quartile(reproduced, period, bin_name)
         saved = quartile(committed, period, bin_name)
         assert (actual.n, actual.expensive_miss_n) == (saved.n, saved.expensive_miss_n)
         assert actual.final_nll_gap_mean == pytest.approx(
             saved.final_nll_gap_mean, abs=1e-10
         )
+
+    committed_contributions = pd.read_csv(study.OUT / "contribution_diagnostics.csv")
+    expected_correlations = {
+        2023: 0.323814530719,
+        2024: -0.014333952588,
+        2025: 0.278771619449,
+    }
+    for season, expected_correlation in expected_correlations.items():
+        period = committed_contributions.loc[committed_contributions.season == season]
+        assert period.context_only_subtotal.corr(
+            period.context_minus_history_final_nll
+        ) == pytest.approx(expected_correlation, abs=1e-6)
 
     summary = json.loads((study.OUT / "summary.json").read_text())
     assert (
