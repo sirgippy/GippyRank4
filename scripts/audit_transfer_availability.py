@@ -13,7 +13,9 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_OUTPUT = ROOT / "data/processed/transfer_availability_audit"
+DEFAULT_OUTPUT = (
+    ROOT / "data/processed/transfer_data_repair/availability_2026_reacquired_20260930"
+)
 HISTORICAL = (
     ROOT
     / "data/processed/preseason/context_v1_3_candidate/historical_transfer_features.csv"
@@ -22,21 +24,21 @@ HISTORICAL_OFFENSE = ROOT / "data/processed/transfer_production_audit"
 HISTORICAL_DEFENSE = (
     ROOT / "data/processed/defensive_transfer_audit/transfer_player_audit.csv"
 )
-CURRENT = ROOT / "data/processed/preseason/context_v1_3_2026_reconstruction"
+CURRENT = ROOT / "data/processed/preseason/context_v1_3_2026_reacquired_20260930"
 
 # Each reason describes evidence observed in the committed audit, not an
 # assertion that the upstream provider never had the player or transfer.
 REASONS = {
     "offense_applicability_unproven": "Prior offensive participation cannot be determined from the audited usage and stats evidence.",
-    "offense_usage_join_unresolved": "An applicable offensive transfer has no resolved prior usage; the 2026 team aggregate does not retain the player-level join cause.",
-    "offense_source_team_mismatch": "Historical player audit found a prior usage row under another source team.",
-    "offense_ambiguous_player_join": "Historical player audit found multiple eligible prior usage matches.",
-    "offense_usage_row_absent": "Historical player audit found applicable participation but no prior usage row.",
-    "db_source_team_uncovered": "The prior roster has no matching source-team row; source absence and team-name mismatch cannot be separated with committed payloads.",
-    "db_player_join_unresolved": "The prior source-team roster is covered, but this portal player did not join to it.",
-    "db_position_conflict": "The matched prior roster position group differs from the portal DB group.",
-    "db_ambiguous_player_join": "More than one prior roster or stats player matches the portal identity.",
-    "db_impact_source_unavailable": "The player joined but a required prior team-game or impact source was unavailable.",
+    "offense_usage_join_unresolved": "The applicable offensive transfer aggregate has no resolved usage and the selected player-level join audit has no row for it.",
+    "offense_source_team_mismatch": "Current usage evidence has a same-name record under another source team but no supported match under this transfer's source team.",
+    "offense_ambiguous_player_join": "More than one eligible current usage identity/value remains after exact duplicate rows with the same stable ID are coalesced.",
+    "offense_usage_row_absent": "Current participation evidence establishes applicability, but no prior usage record is available for the source-team player identity.",
+    "db_source_team_uncovered": "The current prior-season roster payload does not cover this source team after supported exact aliases are applied.",
+    "db_player_join_unresolved": "The current prior-season source-team roster is covered, but this portal player did not join to exactly one roster identity.",
+    "db_position_conflict": "The matched prior-season roster position group differs from the portal DB group; position chronology is not inferred.",
+    "db_ambiguous_player_join": "More than one prior roster identity remains after stable IDs, exact team/name matches, and unique suffix normalization.",
+    "db_impact_source_unavailable": "The player identity joined, but a required prior-season game-player or impact source was unavailable.",
     "historical_aggregate_null": "The retrospective research aggregate has no numeric offensive value despite a covered portal season.",
 }
 REPAIR_CLASS = {
@@ -161,33 +163,55 @@ def classify_availability(
     }
 
 
-def audit() -> tuple[list[dict[str, object]], dict[str, object]]:
+def audit(
+    current_root: Path = CURRENT,
+    *,
+    historical_features_path: Path = HISTORICAL,
+    historical_offense_root: Path = HISTORICAL_OFFENSE,
+    historical_defense_path: Path = HISTORICAL_DEFENSE,
+    expected_current_team_count: int | None = 138,
+) -> tuple[list[dict[str, object]], dict[str, object]]:
+    """Build availability rows from explicitly selected audit inputs.
+
+    The defaults support the local research command. Tests and other callers
+    can inject a tracked fixture root and historical source paths without
+    relying on ignored generated data.
+    """
     historical = {
         key: value
-        for key, value in index_rows(HISTORICAL).items()
+        for key, value in index_rows(historical_features_path).items()
         if 2021 <= key[0] <= 2025
     }
-    current = index_rows(CURRENT / "transfer_team_audit.csv")
-    if len(current) != 138 or {season for season, _ in current} != {2026}:
+    current = index_rows(current_root / "transfer_team_audit.csv")
+    if (
+        expected_current_team_count is not None
+        and len(current) != expected_current_team_count
+    ) or {season for season, _ in current} != {2026}:
         raise ValueError("2026 Context transfer population changed; inspect inputs")
-    historical_offense = index_rows(HISTORICAL_OFFENSE / "team_feature_coverage.csv")
+    historical_offense = index_rows(
+        historical_offense_root / "team_feature_coverage.csv"
+    )
     historical_offense_players = player_index(
-        HISTORICAL_OFFENSE / "player_join_records.csv"
+        historical_offense_root / "player_join_records.csv"
     )
-    historical_db_players = player_index(HISTORICAL_DEFENSE, db_only=True)
+    historical_db_players = player_index(historical_defense_path, db_only=True)
     current_db_players = player_index(
-        CURRENT / "transfer_player_audit.csv", db_only=True
+        current_root / "transfer_player_audit.csv", db_only=True
     )
-    current_portal_rows = read_csv(CURRENT / "transfer_player_audit.csv")
+    current_portal_rows = read_csv(current_root / "transfer_player_audit.csv")
+    current_offense_players = player_index(
+        current_root / "offensive_player_join_records.csv"
+    )
     excluded_portal_rows = [
         row
         for row in current_portal_rows
         if row["in_model_relevant_population"] != "True"
     ]
     snapshot = json.loads(
-        (CURRENT / "source_manifest.json").read_text(encoding="utf-8")
+        (current_root / "source_manifest.json").read_text(encoding="utf-8")
     )
-    snapshot_rows = snapshot["snapshots"]
+    snapshot_records = snapshot["snapshots"]
+    snapshot_rows = [item for item in snapshot_records if item.get("canonical", True)]
     if any(item["captured_on_or_before_cutoff"] for item in snapshot_rows):
         raise ValueError("2026 snapshot timing changed; inspect inputs")
     retrievals = [item["retrieval_timestamp"] for item in snapshot_rows]
@@ -197,7 +221,11 @@ def audit() -> tuple[list[dict[str, object]], dict[str, object]]:
         is_current = season == 2026
         offense = source if is_current else historical_offense[key]
         db_players = (current_db_players if is_current else historical_db_players)[key]
-        offense_players = [] if is_current else historical_offense_players[key]
+        offense_players = (
+            current_offense_players[key]
+            if is_current
+            else historical_offense_players[key]
+        )
         incoming = int(
             offense[
                 "audit_incoming_fbs_transfers"
@@ -249,7 +277,7 @@ def audit() -> tuple[list[dict[str, object]], dict[str, object]]:
         codes: set[str] = set()
         if offensive_unknown:
             codes.add("offense_applicability_unproven")
-        if is_current and offensive_failed:
+        if is_current and offensive_failed and not offense_players:
             codes.add("offense_usage_join_unresolved")
         for player in offense_players:
             if (
@@ -288,7 +316,7 @@ def audit() -> tuple[list[dict[str, object]], dict[str, object]]:
                 "checkpoint_status": "no_archived_on_time_snapshot"
                 if is_current
                 else "historical_timing_unverified",
-                "provenance_class": "retrospective_2026_reconstruction"
+                "provenance_class": "reacquired_current_provider_research"
                 if is_current
                 else "retrospective_research_reconstruction",
                 "incoming_transfers": incoming,
@@ -314,7 +342,7 @@ def audit() -> tuple[list[dict[str, object]], dict[str, object]]:
             "affected": sum(row["availability_status"] != "complete" for row in subset),
         }
     summary = {
-        "population": "Context FBS team-seasons, 2021-2026; historical research panel plus 2026 reconstruction",
+        "population": "Context FBS team-seasons, 2021-2026; historical research panel plus 2026 reacquired beta evidence",
         "team_seasons": len(rows),
         "statuses": dict(
             sorted(Counter(row["availability_status"] for row in rows).items())
@@ -403,12 +431,18 @@ def audit() -> tuple[list[dict[str, object]], dict[str, object]]:
                 )
             ),
             "snapshot_count": len(snapshot_rows),
+            "snapshot_record_count_including_noncanonical_diagnostics": len(
+                snapshot_records
+            ),
+            "noncanonical_diagnostic_snapshot_count": len(snapshot_records)
+            - len(snapshot_rows),
             "snapshot_count_by_source": dict(
                 sorted(Counter(item["source"] for item in snapshot_rows).items())
             ),
             "retrieval_first": min(retrievals),
             "retrieval_last": max(retrievals),
             "all_snapshots_after_cutoff": True,
+            "evidence_class": snapshot.get("evidence_class", "retained_reconstruction"),
         },
         "definitions": {
             "complete": "All known incoming transfers are resolved or legitimately zero, including DB; no offensive applicability is unknown. A covered portal with no incoming transfers is complete.",
@@ -420,25 +454,26 @@ def audit() -> tuple[list[dict[str, object]], dict[str, object]]:
     return rows, summary
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
-    args = parser.parse_args()
-    rows, summary = audit()
-    args.output.mkdir(parents=True, exist_ok=True)
-    write_csv(args.output / "team_seasons.csv", rows)
+def write_artifacts(
+    output: Path,
+    rows: list[dict[str, object]],
+    summary: dict[str, object],
+) -> None:
+    """Write the deterministic availability artifact set."""
+    output.mkdir(parents=True, exist_ok=True)
+    write_csv(output / "team_seasons.csv", rows)
     write_csv(
-        args.output / "affected_2026.csv",
+        output / "affected_2026.csv",
         [
             row
             for row in rows
             if row["season"] == 2026 and row["availability_status"] != "complete"
         ],
     )
-    (args.output / "summary.json").write_text(
+    (output / "summary.json").write_text(
         json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
-    (args.output / "reason_taxonomy.json").write_text(
+    (output / "reason_taxonomy.json").write_text(
         json.dumps(
             {
                 "reason_codes": {
@@ -457,6 +492,15 @@ def main() -> None:
         + "\n",
         encoding="utf-8",
     )
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--current-root", type=Path, default=CURRENT)
+    args = parser.parse_args()
+    rows, summary = audit(args.current_root)
+    write_artifacts(args.output, rows, summary)
     print(
         json.dumps(
             {

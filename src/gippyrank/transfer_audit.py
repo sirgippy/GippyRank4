@@ -913,6 +913,15 @@ def audit_transfer_records(
             "prior_participation_record_count": participation_record_count,
             "prior_usage": prior_usage,
             "incoming_prior_offensive_usage": prior_usage,
+            "prior_usage_player_ids": ";".join(
+                sorted(
+                    {
+                        usage_list[index].player_id
+                        for index in usage_indexes
+                        if usage_list[index].player_id
+                    }
+                )
+            ),
             "d5_applicability": d5_applicability,
             "d5_applicability_reason": d5_applicability_reason,
             "d5_resolution_category": d5_category,

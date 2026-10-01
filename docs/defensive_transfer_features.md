@@ -19,7 +19,7 @@ The fetchers preserve raw CFBD response bytes under `data/raw/` with provenance 
 
 CFBD `/roster` supplies prior-season athlete IDs and positions. CFBD `/games/players` supplies weekly defensive box-score rows. A player's conservative experience proxy is the number of distinct prior-season team games with a recorded defensive box-score row divided by the number of frozen FBS/FCS team games observed. It is not a games-played, snap-share, or observed-participation measure.
 
-Impact uses `log1p` of each nonnegative component, standardizes each component within prior season × defensive position group, and takes a simple equal-weight mean:
+Impact uses `log1p` of each nonnegative component, standardizes each component within prior season × defensive position group, and takes a simple equal-weight mean. The component centers and spreads are fit only from the full FBS/FCS roster and game-player reference corpus. Supplemental DII/III and team-filtered acquisitions can add candidate player records and source coverage, but they are scored against the FBS/FCS parameters and are not added to the fit unless they independently belong to that reference corpus:
 
 | Group | Components |
 | --- | --- |

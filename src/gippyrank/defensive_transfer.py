@@ -355,7 +355,10 @@ def aggregate_player_seasons(
             continue
         unique_game_rows[key] = item
     game_rows = list(unique_game_rows.values())
-    roster_rows = list(roster)
+    # Reacquiring the same non-reference team can repeat a byte-identical
+    # roster identity. Collapse only exact duplicates; conflicting roster
+    # records remain visible and therefore fail closed during the join.
+    roster_rows = list(dict.fromkeys(roster))
     by_id, by_name = _roster_indexes(roster_rows)
     team_games: defaultdict[tuple[int, str], set[str]] = defaultdict(set)
     for season, team, game_id in team_game_keys_by_season:
@@ -455,11 +458,20 @@ def aggregate_player_seasons(
 
 def add_defensive_impact(
     players: Iterable[DefensivePlayerSeason],
+    *,
+    reference_players: Iterable[DefensivePlayerSeason] | None = None,
 ) -> list[DefensivePlayerSeason]:
-    """Attach the frozen log1p, season×group normalized impact composite."""
+    """Attach log1p, season×group normalized defensive impact.
+
+    When ``reference_players`` is supplied, only that stable corpus fits the
+    component centers and spreads; every row in ``players`` is still scored
+    against those parameters. This lets supplemental players receive impacts
+    without changing the scale as acquisition coverage grows.
+    """
     rows = list(players)
+    reference_rows = rows if reference_players is None else list(reference_players)
     transformed: dict[tuple[int, str, str], list[float]] = defaultdict(list)
-    for row in rows:
+    for row in reference_rows:
         group = row.position_group
         if group not in IMPACT_COMPONENTS:
             continue
@@ -480,7 +492,13 @@ def add_defensive_impact(
             value = row.stats.get(field)
             if value is None or value < 0:
                 continue
-            center, spread = parameters[(row.season, group, field)]
+            parameter_key = (row.season, group, field)
+            if parameter_key not in parameters:
+                raise ValueError(
+                    "no defensive-impact reference parameters for "
+                    f"season={row.season}, group={group}, component={field}"
+                )
+            center, spread = parameters[parameter_key]
             scores.append((log1p(value) - center) / spread if spread > 0 else 0.0)
         result.append(replace(row, defensive_impact=mean(scores) if scores else None))
     return result
@@ -560,6 +578,40 @@ def _player_index(
     return dict(result)
 
 
+def _player_name_and_generational_suffix(
+    value: str | None,
+) -> tuple[str, str | None]:
+    """Return a secondary name key and any explicit terminal suffix."""
+    tokens = normalize_player_name(value).split()
+    suffixes = {
+        "jr",
+        "sr",
+        "ii",
+        "iii",
+        "iv",
+        "2nd",
+        "3rd",
+        "4th",
+        "ll",
+    }
+    suffix = tokens[-1] if tokens and tokens[-1] in suffixes else None
+    if suffix is not None:
+        tokens = tokens[:-1]
+    return " ".join(tokens), suffix
+
+
+def _generational_suffixes_compatible(
+    first_name: str | None,
+    second_name: str | None,
+) -> bool:
+    """Allow a suffix rescue unless both explicit suffixes disagree."""
+    first_suffix = _player_name_and_generational_suffix(first_name)[1]
+    second_suffix = _player_name_and_generational_suffix(second_name)[1]
+    return (
+        first_suffix is None or second_suffix is None or first_suffix == second_suffix
+    )
+
+
 def _player_id_index(
     roster: Sequence[RosterPlayer],
 ) -> dict[tuple[int, str, str], list[RosterPlayer]]:
@@ -605,6 +657,7 @@ def audit_transfer_records(
     aliases: Mapping[str | tuple[int, str], str] | None = None,
     team_coverage: set[tuple[int, str]] | None = None,
     roster_teams: set[tuple[int, str]] | None = None,
+    identity_bridge_players: Iterable[DefensiveGamePlayer] | None = None,
 ) -> dict[str, Any]:
     """Join incoming transfers and return player/team coverage artifacts."""
     record_list = list(records)
@@ -614,8 +667,26 @@ def audit_transfer_records(
     resolver = TeamResolver(team_input, aliases)
     roster_idx = _player_index(roster_list)
     roster_id_idx = _player_id_index(roster_list)
+    roster_suffix_idx: defaultdict[tuple[int, str, str], list[RosterPlayer]] = (
+        defaultdict(list)
+    )
+    for item in roster_list:
+        name_without_suffix, _ = _player_name_and_generational_suffix(item.player_name)
+        roster_suffix_idx[
+            (
+                item.season,
+                item.normalized_team,
+                name_without_suffix,
+            )
+        ].append(item)
     player_idx = _defensive_player_index(player_list)
     player_id_idx = _defensive_player_id_index(player_list)
+    identity_bridge_idx: defaultdict[tuple[int, str, str], set[str]] = defaultdict(set)
+    for item in identity_bridge_players or ():
+        if item.player_id:
+            identity_bridge_idx[
+                (item.season, item.normalized_team, item.normalized_player_name)
+            ].add(item.player_id)
     zero_impact_by_group = {
         (player.season, player.position_group): player.defensive_impact
         for player in player_list
@@ -662,6 +733,7 @@ def audit_transfer_records(
             "identity_resolution_detail": None,
             "roster_candidate_count": 0,
             "player_season_candidate_count": 0,
+            "impact_join_method": "none",
             "identity_status": "not_in_scope",
             "experience_status": "not_in_scope",
             "impact_status": "not_in_scope",
@@ -749,8 +821,47 @@ def audit_transfer_records(
                 (prior_season, source_team, normalize_player_name(record.player_name)),
                 [],
             )
+        if not matches:
+            portal_name_without_suffix = _player_name_and_generational_suffix(
+                record.player_name
+            )[0]
+            suffix_matches = roster_suffix_idx.get(
+                (
+                    prior_season,
+                    source_team,
+                    portal_name_without_suffix,
+                ),
+                [],
+            )
+            compatible_suffix_matches = [
+                candidate
+                for candidate in suffix_matches
+                if _generational_suffixes_compatible(
+                    record.player_name, candidate.player_name
+                )
+            ]
+            if compatible_suffix_matches:
+                matches = compatible_suffix_matches
+                identity_method = "normalized_name_source_team_generational_suffix"
         row["roster_candidate_count"] = len(matches)
-        if len(matches) > 1:
+        bridge_identity_ambiguous = False
+        if len(matches) != 1:
+            bridge_ids = identity_bridge_idx.get(
+                (prior_season, source_team, normalize_player_name(record.player_name)),
+                set(),
+            )
+            if len(bridge_ids) == 1:
+                bridged_matches = roster_id_idx.get(
+                    (prior_season, source_team, next(iter(bridge_ids))), []
+                )
+                if len(bridged_matches) == 1:
+                    matches = bridged_matches
+                    identity_method = "stable_game_player_id_source_team"
+            elif len(bridge_ids) > 1 and not matches:
+                bridge_identity_ambiguous = True
+                row["identity_resolution_detail"] = "ambiguous_game_player_id_bridge"
+        row["roster_candidate_count"] = len(matches)
+        if len(matches) > 1 or bridge_identity_ambiguous:
             row.update(
                 {
                     "identity_status": "ambiguous",
@@ -790,16 +901,34 @@ def audit_transfer_records(
                 "prior_player_id": roster_match.player_id,
             }
         )
-        if identity_method == "stable_player_id_source_team" and record.player_id:
-            stats_matches = player_id_idx.get(
-                (prior_season, source_team, record.player_id), []
-            )
-        else:
+        # The roster row is the bridge between portal identity and the
+        # provider's player-season/game records. Prefer that stable ID even
+        # when the portal endpoint has no player ID or the portal ID did not
+        # resolve to a roster row. Fall back to the exact normalized name key
+        # only when the ID index has no record; never choose among multiple
+        # candidates.
+        stable_player_id = (
+            record.player_id
+            if identity_method == "stable_player_id_source_team" and record.player_id
+            else roster_match.player_id
+        )
+        stats_matches = player_id_idx.get(
+            (prior_season, source_team, stable_player_id), []
+        )
+        stats_join_method = "stable_player_id_source_team" if stats_matches else "none"
+        if not stats_matches:
             stats_matches = player_idx.get(
-                (prior_season, source_team, normalize_player_name(record.player_name)),
+                (
+                    prior_season,
+                    source_team,
+                    normalize_player_name(record.player_name),
+                ),
                 [],
             )
+            if stats_matches:
+                stats_join_method = "normalized_name_source_team"
         row["player_season_candidate_count"] = len(stats_matches)
+        row["impact_join_method"] = stats_join_method
         if prior_group != row["portal_position_group"]:
             if len(stats_matches) == 1:
                 player = stats_matches[0]

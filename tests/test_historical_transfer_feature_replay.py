@@ -14,6 +14,7 @@ from gippyrank.transfer_oracle import aggregate_team_features
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts/replay_historical_transfer_features.py"
+MODEL_SOURCE_ROOT = ROOT / "tests/fixtures/historical_materializer"
 spec = importlib.util.spec_from_file_location("historical_transfer_replay", SCRIPT)
 assert spec is not None and spec.loader is not None
 replay = importlib.util.module_from_spec(spec)
@@ -256,6 +257,11 @@ def test_historical_replay_is_deterministic_and_inventories_ambiguous_and_zero_c
     materializer_spec.loader.exec_module(materializer)
 
     def fake_run(**kwargs):
+        assert kwargs["source_root"] == MODEL_SOURCE_ROOT.resolve()
+        assert (
+            MODEL_SOURCE_ROOT
+            / "data/processed/modeling/team_season_rank_distributions.csv"
+        ).is_file()
         parsed_records, usage, portal_seasons, _ = kwargs["verified_transfer_data"]
         verified_zero_keys = materializer._verified_zero_usage_keys(
             parsed_records, kwargs["zero_evidence"], team_rows
@@ -287,7 +293,7 @@ def test_historical_replay_is_deterministic_and_inventories_ambiguous_and_zero_c
     monkeypatch.setattr(replay, "_load_materializer", lambda: materializer)
 
     kwargs = {
-        "model_source_root": tmp_path,
+        "model_source_root": MODEL_SOURCE_ROOT,
         "raw_root": raw_root,
         "zero_contributors": zero_rows,
         "zero_evidence_sha256": evidence_hash,

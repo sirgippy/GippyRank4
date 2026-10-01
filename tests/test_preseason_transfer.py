@@ -10,14 +10,18 @@ from gippyrank.preseason_transfer import (
     ManifestValidationError,
     PlayerAliasResolver,
     SnapshotSpec,
+    _raw_alias_target,
+    _snapshot_filename,
     classify_db_position,
     derive_preseason_transfer_features,
     load_snapshot_manifest,
     merge_preseason_transfer_features,
+    summarize_db_impact_coverage,
     validate_research_parity,
     write_immutable_snapshot,
     write_snapshot_manifest,
 )
+from gippyrank.transfer_audit import read_team_aliases
 
 
 def _payload_bytes(value: object) -> bytes:
@@ -33,7 +37,7 @@ def _team_rows() -> list[dict[str, str]]:
     ]
 
 
-def _fixture_manifest(tmp_path: Path) -> Path:
+def _fixture_manifest(tmp_path: Path, *, bob_roster_first_name: str = "Bob") -> Path:
     raw_root = tmp_path / "raw"
     manifest_path = raw_root / "manifest.json"
     specs = [
@@ -49,6 +53,16 @@ def _fixture_manifest(tmp_path: Path) -> Path:
             2021,
             "/games/players",
             {"year": 2021, "week": 1, "classification": "fbs", "seasonType": "both"},
+        ),
+        SnapshotSpec(
+            2022, "roster", 2021, "/roster", {"year": 2021, "classification": "fcs"}
+        ),
+        SnapshotSpec(
+            2022,
+            "games_players",
+            2021,
+            "/games/players",
+            {"year": 2021, "week": 1, "classification": "fcs", "seasonType": "both"},
         ),
     ]
     payloads = [
@@ -125,7 +139,7 @@ def _fixture_manifest(tmp_path: Path) -> Path:
         [
             {
                 "id": "db-1",
-                "firstName": "Bob",
+                "firstName": bob_roster_first_name,
                 "lastName": "Defender",
                 "team": "Alpha",
                 "position": "CB",
@@ -205,6 +219,8 @@ def _fixture_manifest(tmp_path: Path) -> Path:
                 ],
             }
         ],
+        [],
+        [],
     ]
     records = [
         write_immutable_snapshot(
@@ -222,6 +238,115 @@ def _fixture_manifest(tmp_path: Path) -> Path:
         required_specs=specs,
     )
     return manifest_path
+
+
+def _add_supplemental_dii_player(manifest_path: Path) -> None:
+    raw_root = manifest_path.parent
+    specs = [
+        SnapshotSpec(
+            2022, "roster", 2021, "/roster", {"year": 2021, "classification": "ii"}
+        ),
+        SnapshotSpec(
+            2022,
+            "games_players",
+            2021,
+            "/games/players",
+            {"year": 2021, "week": 2, "classification": "ii", "seasonType": "both"},
+        ),
+    ]
+    payloads = [
+        [
+            {
+                "id": "dii-db-1",
+                "firstName": "Supplemental",
+                "lastName": "Defender",
+                "team": "Delta",
+                "position": "CB",
+            }
+        ],
+        [
+            {
+                "id": 2,
+                "teams": [
+                    {
+                        "team": "Delta",
+                        "categories": [
+                            {
+                                "name": "defensive",
+                                "types": [
+                                    {
+                                        "name": "TOT",
+                                        "athletes": [
+                                            {
+                                                "id": "dii-db-1",
+                                                "name": "Supplemental Defender",
+                                                "stat": "1000",
+                                            }
+                                        ],
+                                    },
+                                    {
+                                        "name": "PD",
+                                        "athletes": [
+                                            {
+                                                "id": "dii-db-1",
+                                                "name": "Supplemental Defender",
+                                                "stat": "100",
+                                            }
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                "name": "interceptions",
+                                "types": [
+                                    {
+                                        "name": "INT",
+                                        "athletes": [
+                                            {
+                                                "id": "dii-db-1",
+                                                "name": "Supplemental Defender",
+                                                "stat": "20",
+                                            }
+                                        ],
+                                    }
+                                ],
+                            },
+                        ],
+                    }
+                ],
+            }
+        ],
+    ]
+    specs.extend(
+        (
+            SnapshotSpec(
+                2022, "roster", 2021, "/roster", {"year": 2021, "team": "Delta"}
+            ),
+            SnapshotSpec(
+                2022,
+                "games_players",
+                2021,
+                "/games/players",
+                {"year": 2021, "team": "Delta", "seasonType": "both"},
+            ),
+        )
+    )
+    payloads.extend((payloads[0], payloads[1]))
+    added = [
+        write_immutable_snapshot(
+            raw_root=raw_root,
+            spec=spec,
+            content=_payload_bytes(payload),
+            retrieval_timestamp="2022-08-02T12:00:00+00:00",
+        )
+        for spec, payload in zip(specs, payloads, strict=True)
+    ]
+    existing = load_snapshot_manifest(manifest_path, verify_hashes=True)
+    write_snapshot_manifest(
+        manifest_path,
+        [*existing.snapshots, *added],
+        raw_root=raw_root,
+    )
 
 
 def test_snapshot_hash_validation_and_overwrite_protection(tmp_path: Path) -> None:
@@ -250,6 +375,94 @@ def test_snapshot_hash_validation_and_overwrite_protection(tmp_path: Path) -> No
         load_snapshot_manifest(manifest_path, verify_hashes=True)
 
 
+def test_supplemental_acquisition_preserves_repaired_fbs_fcs_transfer_join(
+    tmp_path: Path,
+) -> None:
+    baseline_manifest = _fixture_manifest(
+        tmp_path / "baseline", bob_roster_first_name="Robert"
+    )
+    supplemental_manifest = _fixture_manifest(
+        tmp_path / "supplemental", bob_roster_first_name="Robert"
+    )
+    _add_supplemental_dii_player(supplemental_manifest)
+
+    baseline = derive_preseason_transfer_features(
+        baseline_manifest,
+        _team_rows(),
+        team_aliases={(2022, "A State"): "Alpha"},
+    )
+    expanded = derive_preseason_transfer_features(
+        supplemental_manifest,
+        _team_rows(),
+        team_aliases={(2022, "A State"): "Alpha"},
+    )
+    baseline_bob = next(
+        row for row in baseline["player_audit"] if row["player_name"] == "Bob Defender"
+    )
+    expanded_bob = next(
+        row for row in expanded["player_audit"] if row["player_name"] == "Bob Defender"
+    )
+    reference = expanded["quality_report"]["seasons"][0]["defensive_impact_reference"]
+
+    assert expanded_bob["identity_status"] == "resolved"
+    assert expanded_bob["identity_join_method"] == "stable_game_player_id_source_team"
+    assert expanded_bob["impact_status"] == "resolved"
+    assert expanded_bob["impact_join_method"] == "stable_player_id_source_team"
+    assert expanded_bob["prior_defensive_impact"] == pytest.approx(
+        baseline_bob["prior_defensive_impact"]
+    )
+    assert reference["classifications"] == ["fbs", "fcs"]
+    assert reference["roster_snapshot_count"] == 2
+    assert reference["games_players_snapshot_count"] == 2
+
+
+def test_derivation_fails_if_the_fbs_fcs_reference_corpus_is_incomplete(
+    tmp_path: Path,
+) -> None:
+    manifest = _fixture_manifest(tmp_path)
+    payload = json.loads(manifest.read_text(encoding="utf-8"))
+    payload["snapshots"] = [
+        snapshot
+        for snapshot in payload["snapshots"]
+        if snapshot.get("query_parameters", {}).get("classification") != "fcs"
+    ]
+    payload["required_requests"] = [
+        request
+        for request in payload["required_requests"]
+        if request.get("query_parameters", {}).get("classification") != "fcs"
+    ]
+    manifest.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(
+        ManifestValidationError, match="missing full-division roster snapshots for fcs"
+    ):
+        derive_preseason_transfer_features(manifest, _team_rows())
+
+
+def test_team_filtered_snapshot_filenames_are_unique_without_week_numbers() -> None:
+    hyphenated = SnapshotSpec(
+        2026,
+        "games_players",
+        2025,
+        "/games/players",
+        {"year": 2025, "team": "Nebraska-Kearney", "seasonType": "both"},
+    )
+    spaced = SnapshotSpec(
+        2026,
+        "games_players",
+        2025,
+        "/games/players",
+        {"year": 2025, "team": "Nebraska Kearney", "seasonType": "both"},
+    )
+
+    hyphenated_name = _snapshot_filename(hyphenated, version="teams")
+    spaced_name = _snapshot_filename(spaced, version="teams")
+
+    assert hyphenated_name != spaced_name
+    assert "team-nebraska-kearney-" in hyphenated_name
+    assert "week-00" not in hyphenated_name
+
+
 def test_manifest_rejects_a_missing_required_source(tmp_path: Path) -> None:
     manifest = _fixture_manifest(tmp_path)
     payload = json.loads(manifest.read_text(encoding="utf-8"))
@@ -268,7 +481,7 @@ def test_derive_features_is_cutoff_safe_and_fail_closed(tmp_path: Path) -> None:
     result = derive_preseason_transfer_features(
         manifest,
         _team_rows(),
-        team_aliases={"A State": "Alpha"},
+        team_aliases={(2022, "A State"): "Alpha"},
         player_aliases=PlayerAliasResolver({"Alex Player": "A Player"}),
     )
     by_team = {row["team_id"]: row for row in result["features"]}
@@ -287,6 +500,19 @@ def test_derive_features_is_cutoff_safe_and_fail_closed(tmp_path: Path) -> None:
     assert beta["missing_db_impact_count"] == 1
     assert beta["db_impact_coverage_fraction"] == pytest.approx(0.5)
     assert beta["db_impact_coverage_status"] == "partial"
+    assert beta["db_impact_source_season"] == 2021
+    bob = next(
+        row for row in result["player_audit"] if row["player_name"] == "Bob Defender"
+    )
+    assert beta["observed_db_impact_sum"] == pytest.approx(
+        float(bob["prior_defensive_impact"])
+    )
+    assert bob["prior_player_id"] == "db-1"
+    assert bob["impact_join_method"] == "stable_player_id_source_team"
+    assert bob["source_season"] == 2021
+    assert bob["portal_snapshot_sha256"]
+    assert bob["roster_snapshot_sha256"]
+    assert bob["games_players_snapshot_sha256"]
     assert beta["observed_db_impact_sum"] == pytest.approx(
         result["provenance"]["2022|b|observed_db_impact_sum"]["value"]
     )
@@ -295,8 +521,8 @@ def test_derive_features_is_cutoff_safe_and_fail_closed(tmp_path: Path) -> None:
     assert alpha["incoming_db_count"] == 0
     assert alpha["observed_db_impact_count"] == 0
     assert alpha["observed_db_impact_sum"] == 0.0
-    assert alpha["db_impact_coverage_fraction"] == 1.0
     assert alpha["db_impact_coverage_status"] == "no_incoming_db_transfers"
+    assert alpha["db_impact_coverage_fraction"] is None
     provenance_key = "2022|b|transfer_in_prior_defensive_impact_db_sum"
     assert (
         result["provenance"][provenance_key]["contributors"][0]["player_name"]
@@ -305,6 +531,33 @@ def test_derive_features_is_cutoff_safe_and_fail_closed(tmp_path: Path) -> None:
     assert result["quality_report"]["seasons"][0]["identity_alias_matches"] == 1
     assert result["offensive_player_audit"]
     assert "usage_candidate_player_ids" in result["offensive_player_audit"][0]
+
+    wrong_season = derive_preseason_transfer_features(
+        manifest,
+        _team_rows(),
+        team_aliases={(2021, "A State"): "Alpha"},
+        player_aliases=PlayerAliasResolver({"Alex Player": "A Player"}),
+    )
+    assert wrong_season["identity_mapping"][0]["origin_team_name"] != "Alpha"
+
+
+def test_2026_team_aliases_are_evidence_scoped_and_do_not_merge_similar_schools() -> (
+    None
+):
+    aliases = read_team_aliases(
+        Path(__file__).resolve().parents[1]
+        / "data/reference/preseason_team_aliases.csv"
+    )
+
+    assert aliases[(2026, "Albany")] == "UAlbany"
+    assert aliases[(2026, "LIU Post")] == "Long Island University"
+    assert aliases[(2026, "Southeastern Louisiana")] == "SE Louisiana"
+    assert aliases[(2026, "Saint Francis (PA)")] == "Saint Francis"
+    assert (2026, "Albany State") not in aliases
+    assert (2026, "Saint Francis (IN)") not in aliases
+    assert (2025, "Albany") not in aliases
+    assert _raw_alias_target(aliases, 2026, "Saint Francis (PA)") == "Saint Francis"
+    assert _raw_alias_target(aliases, 2025, "Saint Francis (PA)") is None
 
 
 def test_frozen_db_position_taxonomy_does_not_infer_unknowns() -> None:
@@ -332,6 +585,9 @@ def test_research_parity_and_attach_hook() -> None:
             "transfer_in_prior_usage_sum": 0.5,
             "transfer_in_prior_defensive_impact_db_sum": -0.25,
             "transfer_in_prior_defensive_impact_db_available": 1,
+            "incoming_db_count": 4,
+            "observed_db_impact_count": 3,
+            "observed_db_impact_sum": 2.0,
         }
     ]
     expected = [
@@ -352,6 +608,43 @@ def test_research_parity_and_attach_hook() -> None:
     )
     assert merged[0]["transfer_in_prior_usage_sum"] == 0.5
     assert "observed_db_impact_sum" not in merged[0]
+    assert "incoming_db_count" not in merged[0]
+
+
+def test_db_coverage_separates_partial_zero_unavailable_and_natural_zero() -> None:
+    partial = summarize_db_impact_coverage(
+        [
+            {
+                "impact_status": "resolved",
+                "prior_defensive_impact": 0.0,
+            },
+            {
+                "impact_status": "identity_resolution_failure",
+                "prior_defensive_impact": None,
+            },
+        ],
+        source_season=2025,
+    )
+    assert partial["incoming_db_count"] == 2
+    assert partial["observed_db_impact_count"] == 1
+    assert partial["observed_db_impact_sum"] == 0.0
+    assert partial["missing_db_impact_count"] == 1
+    assert partial["db_impact_coverage_fraction"] == 0.5
+    assert partial["db_impact_coverage_status"] == "partial"
+
+    none_observed = summarize_db_impact_coverage(
+        [{"impact_status": "ambiguous", "prior_defensive_impact": None}],
+        source_season=2025,
+    )
+    assert none_observed["observed_db_impact_sum"] == 0.0
+    assert none_observed["db_impact_coverage_status"] == "no_observed_db_impact"
+
+    natural_zero = summarize_db_impact_coverage([], source_season=2025)
+    assert natural_zero["incoming_db_count"] == 0
+    assert natural_zero["observed_db_impact_count"] == 0
+    assert natural_zero["observed_db_impact_sum"] == 0.0
+    assert natural_zero["db_impact_coverage_status"] == "no_incoming_db_transfers"
+    assert natural_zero["db_impact_coverage_fraction"] is None
 
 
 def test_production_derivation_matches_checked_in_research_fixture(

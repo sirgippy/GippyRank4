@@ -30,6 +30,8 @@ import httpx
 
 from gippyrank.preseason_transfer import (
     CFBD_API,
+    GAMES_PLAYERS_ENDPOINT,
+    ROSTER_ENDPOINT,
     SnapshotRecord,
     SnapshotSpec,
     load_snapshot_manifest,
@@ -40,6 +42,39 @@ from gippyrank.preseason_transfer import (
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RAW_ROOT = ROOT / "data/raw/cfbd/preseason/transfers"
+
+
+def team_snapshot_specs(target_season: int, teams: list[str]) -> list[SnapshotSpec]:
+    """Build current roster and player-game requests for explicit source schools."""
+    source_season = target_season - 1
+    specs: list[SnapshotSpec] = []
+    for team in teams:
+        normalized_team = team.strip()
+        if not normalized_team:
+            raise ValueError("--team values must not be empty")
+        specs.extend(
+            (
+                SnapshotSpec(
+                    target_season,
+                    "roster",
+                    source_season,
+                    ROSTER_ENDPOINT,
+                    {"year": source_season, "team": normalized_team},
+                ),
+                SnapshotSpec(
+                    target_season,
+                    "games_players",
+                    source_season,
+                    GAMES_PLAYERS_ENDPOINT,
+                    {
+                        "year": source_season,
+                        "team": normalized_team,
+                        "seasonType": "both",
+                    },
+                ),
+            )
+        )
+    return specs
 
 
 def request_json(
@@ -151,8 +186,8 @@ def parse_args() -> argparse.Namespace:
         "--classification",
         dest="classifications",
         action="append",
-        choices=("fbs", "fcs"),
-        help="repeat for each defensive classification; default: fbs and fcs",
+        choices=("fbs", "fcs", "ii", "ii/iii", "iii"),
+        help="repeat for each roster/game population; default: fbs and fcs",
     )
     parser.add_argument(
         "--refresh",
@@ -162,7 +197,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--retrospective-reconstruction",
         action="store_true",
-        help="allow late canonical inputs only for the explicit 2026 reconstruction",
+        help="allow late/current inputs only for explicitly labeled 2026 beta research",
+    )
+    parser.add_argument(
+        "--team-only",
+        action="store_true",
+        help="fetch roster and player-game snapshots for each explicit --team filter",
+    )
+    parser.add_argument(
+        "--team",
+        dest="teams",
+        action="append",
+        help="exact provider team filter for --team-only (repeatable)",
     )
     parser.add_argument(
         "--version",
@@ -181,6 +227,14 @@ def main() -> None:
         )
     if args.first_week > args.last_week:
         raise ValueError("first week must not exceed last week")
+    if args.team_only and (seasons != [2026] or not args.retrospective_reconstruction):
+        raise ValueError(
+            "--team-only requires target season 2026 and --retrospective-reconstruction"
+        )
+    if args.team_only and not args.teams:
+        raise ValueError("--team-only requires at least one --team")
+    if args.teams and not args.team_only:
+        raise ValueError("--team requires --team-only")
     api_key = os.environ.get("CFBD_API_KEY")
     if not api_key:
         raise RuntimeError("CFBD_API_KEY is not configured")
@@ -192,16 +246,20 @@ def main() -> None:
         version = "v" + datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     if not version:
         version = "v1"
-    specs = [
-        spec
-        for season in seasons
-        for spec in required_snapshot_specs(
-            season,
-            first_week=args.first_week,
-            last_week=args.last_week,
-            classifications=classifications,
-        )
-    ]
+    specs = (
+        team_snapshot_specs(seasons[0], args.teams)
+        if args.team_only
+        else [
+            spec
+            for season in seasons
+            for spec in required_snapshot_specs(
+                season,
+                first_week=args.first_week,
+                last_week=args.last_week,
+                classifications=classifications,
+            )
+        ]
+    )
     records: list[SnapshotRecord] = []
     failures: list[dict[str, Any]] = []
     with httpx.Client(headers={"Authorization": f"Bearer {api_key}"}) as client:
@@ -228,16 +286,14 @@ def main() -> None:
                         "error": str(error),
                     }
                 )
-    if failures:
-        raise RuntimeError(
-            "preseason snapshot acquisition failed: "
-            + json.dumps(failures, sort_keys=True)
-        )
+    completed_request_keys = {record.request_key for record in records}
     write_snapshot_manifest(
         manifest_path,
         records,
         raw_root=raw_root,
-        required_specs=specs,
+        required_specs=[
+            spec for spec in specs if spec.request_key in completed_request_keys
+        ],
         allow_late_canonical=args.retrospective_reconstruction,
     )
     manifest = load_snapshot_manifest(
@@ -256,8 +312,14 @@ def main() -> None:
         ),
         "late_snapshots": late,
         "raw_root": str(raw_root),
+        "failures": failures,
     }
     print(json.dumps(result, indent=2, sort_keys=True))
+    if failures:
+        raise RuntimeError(
+            "preseason snapshot acquisition failed; successful responses and their "
+            "provenance were retained: " + json.dumps(failures, sort_keys=True)
+        )
     if late and not args.retrospective_reconstruction:
         raise RuntimeError(
             "snapshots were retrieved after their preseason cutoff; "
