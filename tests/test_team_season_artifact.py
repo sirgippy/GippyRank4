@@ -527,13 +527,13 @@ def test_started_but_unincluded_game_stays_redacted(tmp_path: Path) -> None:
     _write(
         root / "data/processed/cfbd/games.csv",
         [
-            "id", "season", "week", "seasonType", "startDate", "completed", "neutralSite",
+            "id", "season", "week", "seasonType", "startDate", "startTimeTBD", "completed", "neutralSite",
             "conferenceGame", "homeId", "homeTeam", "homeClassification", "homeConference",
             "homePoints", "awayId", "awayTeam", "awayClassification", "awayConference", "awayPoints",
         ],
         [{
             "id": "started", "season": 2026, "week": 1, "seasonType": "regular",
-            "startDate": "2026-09-01T12:00:00Z", "completed": "True", "neutralSite": "False",
+            "startDate": "2026-09-01T12:00:00Z", "startTimeTBD": "False", "completed": "True", "neutralSite": "False",
             "conferenceGame": "True", "homeId": "1", "homeTeam": "One", "homeClassification": "fbs",
             "homeConference": "A", "homePoints": 15, "awayId": "2", "awayTeam": "Two",
             "awayClassification": "fbs", "awayConference": "A", "awayPoints": 34,
@@ -572,6 +572,47 @@ def test_started_but_unincluded_game_stays_redacted(tmp_path: Path) -> None:
         assert game["score"] is None
         assert game["game_rating"] is None
         assert not game["modeled"]
+
+
+def test_current_processed_schedule_requires_valid_kickoff_certainty(
+    tmp_path: Path,
+) -> None:
+    root = _root(tmp_path)
+    schedule_path = root / "data/processed/cfbd/games.csv"
+    with schedule_path.open(newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle)
+        fields = list(reader.fieldnames or [])
+        rows = list(reader)
+    rows[0]["startTimeTBD"] = ""
+    _write(schedule_path, fields, rows)
+    teams = [
+        Team("1", "One", "fbs", np.array([0.7, 0.3])),
+        Team("2", "Two", "fbs", np.array([0.3, 0.7])),
+    ]
+    posterior = infer_posterior(teams, [], LikelihoodV1(np.zeros(34), 1.0, 15.0))
+
+    with pytest.raises(ValueError, match="current CFBD schedule game early.*startTimeTBD"):
+        build_team_season_artifact(
+            root=root,
+            metadata={
+                "snapshot_id": "2026-weekly-current-source-context",
+                "season": 2026,
+                "snapshot_type": "weekly",
+                "requested_cutoff": "2026-09-01T00:00:00+00:00",
+                "effective_cutoff": "2026-09-01T00:00:00+00:00",
+                "source_retrieved_at": None,
+                "source_retrieval_times": {},
+                "source_response_hashes": {},
+                "game_corpus_sha256": "current-source-corpus",
+                "included_game_ids": [],
+            },
+            teams=teams,
+            team_rows={"1": {"conference": "A"}, "2": {"conference": "A"}},
+            games=[],
+            included_rows=[],
+            posterior=posterior,
+            likelihood=None,
+        )
 
 
 @pytest.mark.parametrize(

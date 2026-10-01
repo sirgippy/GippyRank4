@@ -742,6 +742,115 @@ def test_weekly_artifact_deduplicates_games_and_reuses_canonical_sources(
         site_data._validate_weekly_game_artifact(invalid, team_seasons, entry, rankings)
 
 
+def test_week_5_kickoff_certainty_uses_only_its_exact_cfbd_responses(
+    production_site_data: tuple[Path, dict[str, object]],
+) -> None:
+    output, manifest = production_site_data
+    cases = {
+        "401871049": ("2026-10-02T00:00:00.000Z", True, "local_time"),
+        "401856707": ("2026-10-03T16:00:00.000Z", True, "local_time"),
+        "401858260": ("2026-10-10T04:00:00.000Z", False, "utc_calendar"),
+    }
+    entries = {
+        entry["prior_family"]: entry
+        for entry in manifest["snapshots"]
+        if entry.get("publication_slot") == "2026-09-27"
+        and entry.get("ranking_family") == "predictive"
+    }
+    assert set(entries) >= {"context", "history"}
+    for family, entry in entries.items():
+        snapshot = json.loads(
+            (output / entry["team_seasons_path"].removeprefix("data/")).read_text()
+        )
+        schedule_games = [
+            game
+            for team in snapshot["teams"].values()
+            for game in team["games"]
+            if game["game_id"] in cases
+        ]
+        assert snapshot["kickoff_time_certainty_version"] == "1"
+        assert len(schedule_games) == 6
+        for game in schedule_games:
+            date, kickoff_known, display_mode = cases[game["game_id"]]
+            assert game["date"] == date
+            assert game["kickoff_time_known"] is kickoff_known
+            assert game["date_display_mode"] == display_mode
+
+        weekly = json.loads(
+            (output / entry["week_games_path"].removeprefix("data/")).read_text()
+        )
+        weekly_games = [
+            game
+            for week in weekly["weeks"]
+            for game in week["games"]
+            if game["game_id"] in cases
+        ]
+        assert {game["game_id"] for game in weekly_games} == set(cases)
+        for game in weekly_games:
+            date, _, display_mode = cases[game["game_id"]]
+            assert game["date"] == date
+            assert game["date_display_mode"] == display_mode
+
+        schedule_family = "context" if family == "context" else "history"
+        source_path = (
+            ROOT
+            / "data/processed/snapshots/2026"
+            / entry["snapshot_id"]
+            / "predictive"
+            / schedule_family
+        )
+        source_metadata = json.loads((source_path / "metadata.json").read_text())
+        for source, filename in (("fbs", "2026.json"), ("fcs", "2026-fcs.json")):
+            raw_path = ROOT / "data/raw/cfbd/games" / filename
+            raw_hash = hashlib.sha256(raw_path.read_bytes()).hexdigest()
+            provenance = json.loads(
+                raw_path.with_name(f"{filename}.provenance.json").read_text()
+            )
+            assert source_metadata["source_response_hashes"][
+                f"{filename}.provenance.json"
+            ] == raw_hash == provenance["content_sha256"]
+            assert source_metadata["source_retrieval_times"][source] == provenance[
+                "retrieved_at"
+            ]
+
+    changed_hashes = dict(source_metadata)
+    changed_hashes["source_response_hashes"] = {
+        **source_metadata["source_response_hashes"],
+        "2026.json.provenance.json": "0" * 64,
+    }
+    assert site_data._verified_cfbd_kickoff_time_map(changed_hashes, ROOT) is None
+    changed_times = dict(source_metadata)
+    changed_times["source_retrieval_times"] = {
+        **source_metadata["source_retrieval_times"],
+        "fbs": "2026-09-27T12:27:36.000000+00:00",
+    }
+    with pytest.raises(SiteDataValidationError, match="CFBD response provenance mismatch"):
+        site_data._verified_cfbd_kickoff_time_map(changed_times, ROOT)
+
+
+def test_retained_pre_certainty_snapshot_keeps_legacy_score_display(
+    production_site_data: tuple[Path, dict[str, object]],
+) -> None:
+    output, manifest = production_site_data
+    entry = next(
+        item
+        for item in manifest["snapshots"]
+        if item.get("publication_slot") == "2026-09-26"
+        and item.get("ranking_family") == "predictive"
+        and item.get("prior_family") == "context"
+    )
+    snapshot = json.loads(
+        (output / entry["team_seasons_path"].removeprefix("data/")).read_text()
+    )
+    games = {game["game_id"]: game for game in snapshot["teams"]["61"]["games"]}
+    assert "kickoff_time_known" not in games["401856686"]
+    assert games["401856686"]["score"] is not None
+    assert games["401856686"]["date_display_mode"] == "local_time"
+    assert "kickoff_time_known" not in games["401856700"]
+    assert games["401856700"]["score"] is None
+    assert games["401856700"]["date_display_mode"] == "utc_calendar"
+
+
 def test_weekly_rank_lookup_matches_every_selected_ranking_view(
     production_site_data: tuple[Path, dict[str, object]],
 ) -> None:
@@ -841,18 +950,37 @@ def test_weekly_builder_orders_week_zero_and_named_weeks_once() -> None:
 
 
 @pytest.mark.parametrize(
-    ("game", "expected"),
+    ("game", "expected", "legacy"),
     [
-        ({"kickoff_time_known": True, "score": None}, "local_time"),
-        ({"kickoff_time_known": False, "score": None}, "utc_calendar"),
-        ({"score": {"team": 21, "opponent": 14}}, "local_time"),
-        ({"score": None}, "utc_calendar"),
+        ({"kickoff_time_known": True, "score": None}, "local_time", False),
+        ({"kickoff_time_known": False, "score": None}, "utc_calendar", False),
+        ({"score": {"team": 21, "opponent": 14}}, "local_time", True),
+        ({"score": None}, "utc_calendar", True),
     ],
 )
 def test_date_display_mode_uses_certainty_with_legacy_fallback(
-    game: dict[str, object], expected: str
+    game: dict[str, object], expected: str, legacy: bool
 ) -> None:
-    assert site_data._schedule_date_display_mode(game) == expected
+    assert site_data._schedule_date_display_mode(
+        game, allow_legacy_fallback=legacy
+    ) == expected
+
+
+def test_date_display_mode_fails_closed_without_current_source_certainty() -> None:
+    with pytest.raises(SiteDataValidationError, match="missing kickoff-time certainty"):
+        site_data._schedule_date_display_mode(
+            {"game_id": "current-game", "score": {"team": 21, "opponent": 14}}
+        )
+
+
+def test_legacy_fallback_requires_pre_certainty_schedule_provenance() -> None:
+    old_metadata = {"generation_timestamp": "2026-09-27T12:27:35+00:00"}
+    current_metadata = {"generation_timestamp": "2026-10-01T12:00:00+00:00"}
+    current_schedule = {"kind": "current_processed_schedule"}
+    frozen_schedule = {"kind": "frozen_included_games"}
+    assert site_data._legacy_kickoff_fallback_allowed(old_metadata, current_schedule)
+    assert site_data._legacy_kickoff_fallback_allowed(current_metadata, frozen_schedule)
+    assert not site_data._legacy_kickoff_fallback_allowed(current_metadata, current_schedule)
 
 
 def test_context_history_schedule_equivalence_includes_kickoff_certainty() -> None:

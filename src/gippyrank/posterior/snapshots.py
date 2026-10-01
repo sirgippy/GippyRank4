@@ -1296,6 +1296,8 @@ def build_snapshot(
         ),
         "lower_division_handling": lower_division_handling,
     }
+    if replay_source is None:
+        metadata["kickoff_time_certainty_version"] = "1"
     if replay_source is not None and replay_metadata is not None:
         evidence_hash = included_game_rows_sha256(included)
         metadata.update(

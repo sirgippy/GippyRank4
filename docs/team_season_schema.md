@@ -215,20 +215,27 @@ A modeled completed game has a compact `game_rating` summary containing:
   presentation-only `performance_grade`.
 
 The browser-facing team and weekly schedules publish `date_display_mode` for
-each game. New schedule rows also retain `kickoff_time_known` when CFBD's
-`startTimeTBD` flag is available: `true` means the kickoff is known, while
-`false` means it is TBD. A known kickoff uses `local_time`; a TBD kickoff uses
-`utc_calendar`, even if the game has already been played. `local_time` makes
-consumers display the timestamp in the viewer's local time zone. `utc_calendar`
-preserves the source timestamp's lexical UTC calendar day and omits a kickoff
-time.
+each game. New CFBD schedule rows require a boolean `startTimeTBD` value and
+retain its inverse as `kickoff_time_known`: `true` means the kickoff is known,
+while `false` means it is TBD. A known kickoff uses `local_time`; a TBD kickoff
+uses `utc_calendar`, even if the game has already been played. `local_time`
+makes consumers display the timestamp in the viewer's local time zone.
+`utc_calendar` preserves the source timestamp's lexical UTC calendar day and
+omits a kickoff time.
 
-Frozen schedule artifacts created before kickoff certainty was retained omit
-`kickoff_time_known`. For those legacy artifacts only, publication keeps the
-previous display policy (scored games use local time and unscored games remain
-date-only) to preserve their historical rendering. This compatibility fallback
-does not determine kickoff certainty for new source rows. All dates must carry
-a timezone; unscored calendar anchors must have a UTC offset.
+When a retained snapshot omits kickoff certainty but its FBS and FCS response
+hashes and retrieval timestamps exactly match the retained raw CFBD responses,
+the site exporter derives the schedule presentation fields from those verified
+bytes. It does not rewrite the snapshot or its analytical evidence. A response
+with matching content but mismatched provenance is rejected.
+
+Retained pre-certainty snapshots and frozen schedule artifacts may omit
+`kickoff_time_known`. Only those legacy provenance forms keep the previous
+display policy (scored games use local time and unscored games remain date-only)
+to preserve historical rendering. New current-source artifacts require the
+certainty version marker and a valid boolean for every game; missing or invalid
+values fail publication. All dates must carry a timezone; unscored calendar
+anchors must have a UTC offset.
 
 No full per-game PMF is serialized. Games outside the selected evidence retain
 schedule metadata but have null result, score, and rating fields. An eligible

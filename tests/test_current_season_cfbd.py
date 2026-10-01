@@ -70,6 +70,38 @@ def test_current_acquisition_requests_only_fbs_and_fcs_games_with_provenance(
         }
 
 
+@pytest.mark.parametrize("tbd_value", [None, "", "maybe", 1, "missing"])
+def test_current_acquisition_rejects_missing_or_invalid_kickoff_certainty(
+    tmp_path: Path, tbd_value: object
+) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        game = _game(100)
+        if tbd_value == "missing":
+            game.pop("startTimeTBD")
+        else:
+            game["startTimeTBD"] = tbd_value
+        return httpx.Response(200, json=[game])
+
+    with (
+        httpx.Client(transport=httpx.MockTransport(handler)) as client,
+        pytest.raises(ValueError, match="game 100 has missing or invalid startTimeTBD"),
+    ):
+        fetch_current_season(season=2026, root=tmp_path, client=client)
+    assert not (tmp_path / "data/raw/cfbd/games/2026.json").exists()
+
+
+def test_processed_current_schedule_rejects_invalid_kickoff_certainty(tmp_path: Path) -> None:
+    invalid = _game(100)
+    invalid["startTimeTBD"] = "unknown"
+    with pytest.raises(ValueError, match="game 100 has missing or invalid startTimeTBD"):
+        update_processed_game_corpus(
+            root=tmp_path,
+            season=2026,
+            schedules={"fbs": [invalid], "fcs": []},
+        )
+    assert not (tmp_path / "data/processed/cfbd/games.csv").exists()
+
+
 def test_overlap_deduplicates_conflicts_fail_and_historical_rows_are_retained(tmp_path: Path) -> None:
     processed = tmp_path / "data/processed/cfbd/games.csv"
     processed.parent.mkdir(parents=True)
