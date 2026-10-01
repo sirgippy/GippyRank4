@@ -115,6 +115,7 @@ DB_COVERAGE_COLUMNS = (
     "db_impact_coverage_fraction",
     "db_impact_coverage_status",
 )
+DEFENSIVE_IMPACT_REFERENCE_CLASSIFICATIONS = frozenset({"fbs", "fcs"})
 CANONICAL_FEATURE_COLUMNS = (
     "season",
     "subdivision",
@@ -1076,6 +1077,18 @@ def _source_snapshots(
     )
 
 
+def _is_defensive_impact_reference_snapshot(snapshot: SnapshotRecord) -> bool:
+    """Identify the stable full-division corpus used to fit defensive impact."""
+    if snapshot.source not in {"roster", "games_players"}:
+        return False
+    parameters = snapshot.query_parameters
+    classification = str(parameters.get("classification") or "").casefold()
+    return (
+        classification in DEFENSIVE_IMPACT_REFERENCE_CLASSIFICATIONS
+        and not str(parameters.get("team") or "").strip()
+    )
+
+
 def _raw_alias_target(
     aliases: Mapping[str | tuple[int, str], str], season: int, name: str | None
 ) -> str | None:
@@ -1717,6 +1730,32 @@ def _load_target_inputs(
     stats_snapshot = _single_snapshot(manifest, target_season, "stats")
     roster_snapshots = _source_snapshots(manifest, target_season, "roster")
     game_snapshots = _source_snapshots(manifest, target_season, "games_players")
+    reference_roster_snapshots = tuple(
+        item
+        for item in roster_snapshots
+        if _is_defensive_impact_reference_snapshot(item)
+    )
+    reference_game_snapshots = tuple(
+        item for item in game_snapshots if _is_defensive_impact_reference_snapshot(item)
+    )
+    for source, snapshots in (
+        ("roster", reference_roster_snapshots),
+        ("games/players", reference_game_snapshots),
+    ):
+        available_classifications = {
+            str(item.query_parameters.get("classification") or "").casefold()
+            for item in snapshots
+        }
+        missing_classifications = (
+            DEFENSIVE_IMPACT_REFERENCE_CLASSIFICATIONS - available_classifications
+        )
+        if missing_classifications:
+            raise ManifestValidationError(
+                f"defensive-impact normalization is missing full-division {source} "
+                f"snapshots for {', '.join(sorted(missing_classifications))}"
+            )
+    reference_roster_paths = {item.path for item in reference_roster_snapshots}
+    reference_game_paths = {item.path for item in reference_game_snapshots}
     resolver = CanonicalTeamResolver(team_rows, team_aliases)
     portal_payload = _payload(manifest, portal_snapshot)
     usage_payload = _payload(manifest, usage_snapshot)
@@ -1746,20 +1785,26 @@ def _load_target_inputs(
         stats_payload, season=target_season - 1
     )
     rosters_raw: list[RosterPlayer] = []
+    reference_rosters_raw: list[RosterPlayer] = []
     game_players_raw: list[DefensiveGamePlayer] = []
     game_payloads: list[Sequence[Mapping[str, Any]]] = []
+    reference_game_players_raw: list[DefensiveGamePlayer] = []
+    reference_game_payloads: list[Sequence[Mapping[str, Any]]] = []
     for snapshot in roster_snapshots:
-        rosters_raw.extend(
-            parse_roster_payload(
-                _payload(manifest, snapshot), season=snapshot.source_season
-            )
+        parsed = parse_roster_payload(
+            _payload(manifest, snapshot), season=snapshot.source_season
         )
+        rosters_raw.extend(parsed)
+        if snapshot.path in reference_roster_paths:
+            reference_rosters_raw.extend(parsed)
     for snapshot in game_snapshots:
         payload = _payload(manifest, snapshot)
         game_payloads.append(payload)
-        game_players_raw.extend(
-            parse_games_players_payload(payload, season=snapshot.source_season)
-        )
+        parsed = parse_games_players_payload(payload, season=snapshot.source_season)
+        game_players_raw.extend(parsed)
+        if snapshot.path in reference_game_paths:
+            reference_game_payloads.append(payload)
+            reference_game_players_raw.extend(parsed)
     records, mapping_rows = _canonical_transfer_records(
         records_raw,
         target_season=target_season,
@@ -1778,8 +1823,22 @@ def _load_target_inputs(
         team_aliases=team_aliases,
         player_aliases=player_aliases,
     )
+    reference_rosters = _canonical_roster_records(
+        reference_rosters_raw,
+        target_season=target_season,
+        resolver=resolver,
+        team_aliases=team_aliases,
+        player_aliases=player_aliases,
+    )
     game_players = _canonical_game_records(
         game_players_raw,
+        target_season=target_season,
+        resolver=resolver,
+        team_aliases=team_aliases,
+        player_aliases=player_aliases,
+    )
+    reference_game_players = _canonical_game_records(
+        reference_game_players_raw,
         target_season=target_season,
         resolver=resolver,
         team_aliases=team_aliases,
@@ -1791,8 +1850,22 @@ def _load_target_inputs(
         resolver=resolver,
         team_aliases=team_aliases,
     )
+    reference_game_keys = _canonical_game_keys(
+        reference_game_payloads,
+        source_season=target_season - 1,
+        resolver=resolver,
+        team_aliases=team_aliases,
+    )
+    reference_player_seasons = aggregate_player_seasons(
+        reference_game_players, reference_rosters, reference_game_keys
+    )
+    if not reference_player_seasons:
+        raise ManifestValidationError(
+            "FBS/FCS defensive-impact reference snapshots produced no player seasons"
+        )
     player_seasons = add_defensive_impact(
-        aggregate_player_seasons(game_players, rosters, game_keys)
+        aggregate_player_seasons(game_players, rosters, game_keys),
+        reference_players=reference_player_seasons,
     )
     return {
         "records_raw": records_raw,
@@ -1817,7 +1890,26 @@ def _load_target_inputs(
             "defense": [item.sha256 for item in (*roster_snapshots, *game_snapshots)],
             "roster": [item.sha256 for item in roster_snapshots],
             "games_players": [item.sha256 for item in game_snapshots],
+            "defensive_impact_reference": [
+                item.sha256
+                for item in (*reference_roster_snapshots, *reference_game_snapshots)
+            ],
             "portal": [portal_snapshot.sha256],
+        },
+        "defensive_impact_reference": {
+            "definition": (
+                "canonical roster and games/players snapshots requested for full "
+                "FBS or FCS classifications; team-filtered and other-division "
+                "snapshots are excluded from parameter fitting"
+            ),
+            "classifications": sorted(DEFENSIVE_IMPACT_REFERENCE_CLASSIFICATIONS),
+            "roster_snapshot_count": len(reference_roster_snapshots),
+            "games_players_snapshot_count": len(reference_game_snapshots),
+            "player_season_count": len(reference_player_seasons),
+            "snapshot_sha256": sorted(
+                item.sha256
+                for item in (*reference_roster_snapshots, *reference_game_snapshots)
+            ),
         },
     }
 
@@ -2000,6 +2092,7 @@ def derive_preseason_transfer_features(
             "season": season,
             **offensive_meta["quality"],
             **db_quality,
+            "defensive_impact_reference": inputs["defensive_impact_reference"],
             "identity_alias_matches": sum(
                 row.get("player_alias_method") != "none"
                 for row in inputs["mapping_rows"]

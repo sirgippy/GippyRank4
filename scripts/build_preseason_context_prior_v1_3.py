@@ -444,7 +444,7 @@ def feature_provenance() -> dict[str, object]:
             "production_status": "production-safe-after-immutable-snapshot-validation",
             "source": "production preseason transfer-feature artifact derived from frozen portal, prior roster, and defensive game-player snapshots",
             "feature": "transfer_in_prior_defensive_impact_db_sum",
-            "definition": "sum of prior DB defensive impact for incoming DB transfers; each player impact is the frozen equal-weight mean of within-season x DB-group standardized log1p tackles, passes defended, and interceptions",
+            "definition": "sum of prior DB defensive impact for incoming DB transfers; each player impact is the equal-weight mean of within-season x DB-group standardized log1p tackles, passes defended, and interceptions, using centers and spreads fit only from the full FBS/FCS roster and game-player reference corpus. Supplemental DII/III and team-filtered players are scored against those frozen parameters and do not enter the fit.",
             "historical_evaluation_caveat": "retrospective research reconstruction for seasons before the production snapshot process existed",
         },
         "db_availability": {

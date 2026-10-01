@@ -37,7 +37,7 @@ def _team_rows() -> list[dict[str, str]]:
     ]
 
 
-def _fixture_manifest(tmp_path: Path) -> Path:
+def _fixture_manifest(tmp_path: Path, *, bob_roster_first_name: str = "Bob") -> Path:
     raw_root = tmp_path / "raw"
     manifest_path = raw_root / "manifest.json"
     specs = [
@@ -53,6 +53,16 @@ def _fixture_manifest(tmp_path: Path) -> Path:
             2021,
             "/games/players",
             {"year": 2021, "week": 1, "classification": "fbs", "seasonType": "both"},
+        ),
+        SnapshotSpec(
+            2022, "roster", 2021, "/roster", {"year": 2021, "classification": "fcs"}
+        ),
+        SnapshotSpec(
+            2022,
+            "games_players",
+            2021,
+            "/games/players",
+            {"year": 2021, "week": 1, "classification": "fcs", "seasonType": "both"},
         ),
     ]
     payloads = [
@@ -129,7 +139,7 @@ def _fixture_manifest(tmp_path: Path) -> Path:
         [
             {
                 "id": "db-1",
-                "firstName": "Bob",
+                "firstName": bob_roster_first_name,
                 "lastName": "Defender",
                 "team": "Alpha",
                 "position": "CB",
@@ -209,6 +219,8 @@ def _fixture_manifest(tmp_path: Path) -> Path:
                 ],
             }
         ],
+        [],
+        [],
     ]
     records = [
         write_immutable_snapshot(
@@ -226,6 +238,115 @@ def _fixture_manifest(tmp_path: Path) -> Path:
         required_specs=specs,
     )
     return manifest_path
+
+
+def _add_supplemental_dii_player(manifest_path: Path) -> None:
+    raw_root = manifest_path.parent
+    specs = [
+        SnapshotSpec(
+            2022, "roster", 2021, "/roster", {"year": 2021, "classification": "ii"}
+        ),
+        SnapshotSpec(
+            2022,
+            "games_players",
+            2021,
+            "/games/players",
+            {"year": 2021, "week": 2, "classification": "ii", "seasonType": "both"},
+        ),
+    ]
+    payloads = [
+        [
+            {
+                "id": "dii-db-1",
+                "firstName": "Supplemental",
+                "lastName": "Defender",
+                "team": "Delta",
+                "position": "CB",
+            }
+        ],
+        [
+            {
+                "id": 2,
+                "teams": [
+                    {
+                        "team": "Delta",
+                        "categories": [
+                            {
+                                "name": "defensive",
+                                "types": [
+                                    {
+                                        "name": "TOT",
+                                        "athletes": [
+                                            {
+                                                "id": "dii-db-1",
+                                                "name": "Supplemental Defender",
+                                                "stat": "1000",
+                                            }
+                                        ],
+                                    },
+                                    {
+                                        "name": "PD",
+                                        "athletes": [
+                                            {
+                                                "id": "dii-db-1",
+                                                "name": "Supplemental Defender",
+                                                "stat": "100",
+                                            }
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                "name": "interceptions",
+                                "types": [
+                                    {
+                                        "name": "INT",
+                                        "athletes": [
+                                            {
+                                                "id": "dii-db-1",
+                                                "name": "Supplemental Defender",
+                                                "stat": "20",
+                                            }
+                                        ],
+                                    }
+                                ],
+                            },
+                        ],
+                    }
+                ],
+            }
+        ],
+    ]
+    specs.extend(
+        (
+            SnapshotSpec(
+                2022, "roster", 2021, "/roster", {"year": 2021, "team": "Delta"}
+            ),
+            SnapshotSpec(
+                2022,
+                "games_players",
+                2021,
+                "/games/players",
+                {"year": 2021, "team": "Delta", "seasonType": "both"},
+            ),
+        )
+    )
+    payloads.extend((payloads[0], payloads[1]))
+    added = [
+        write_immutable_snapshot(
+            raw_root=raw_root,
+            spec=spec,
+            content=_payload_bytes(payload),
+            retrieval_timestamp="2022-08-02T12:00:00+00:00",
+        )
+        for spec, payload in zip(specs, payloads, strict=True)
+    ]
+    existing = load_snapshot_manifest(manifest_path, verify_hashes=True)
+    write_snapshot_manifest(
+        manifest_path,
+        [*existing.snapshots, *added],
+        raw_root=raw_root,
+    )
 
 
 def test_snapshot_hash_validation_and_overwrite_protection(tmp_path: Path) -> None:
@@ -252,6 +373,70 @@ def test_snapshot_hash_validation_and_overwrite_protection(tmp_path: Path) -> No
     raw_path.write_bytes(_payload_bytes([{"season": 2022, "changed": True}]))
     with pytest.raises(ManifestValidationError, match="hash mismatch"):
         load_snapshot_manifest(manifest_path, verify_hashes=True)
+
+
+def test_supplemental_acquisition_preserves_repaired_fbs_fcs_transfer_join(
+    tmp_path: Path,
+) -> None:
+    baseline_manifest = _fixture_manifest(
+        tmp_path / "baseline", bob_roster_first_name="Robert"
+    )
+    supplemental_manifest = _fixture_manifest(
+        tmp_path / "supplemental", bob_roster_first_name="Robert"
+    )
+    _add_supplemental_dii_player(supplemental_manifest)
+
+    baseline = derive_preseason_transfer_features(
+        baseline_manifest,
+        _team_rows(),
+        team_aliases={(2022, "A State"): "Alpha"},
+    )
+    expanded = derive_preseason_transfer_features(
+        supplemental_manifest,
+        _team_rows(),
+        team_aliases={(2022, "A State"): "Alpha"},
+    )
+    baseline_bob = next(
+        row for row in baseline["player_audit"] if row["player_name"] == "Bob Defender"
+    )
+    expanded_bob = next(
+        row for row in expanded["player_audit"] if row["player_name"] == "Bob Defender"
+    )
+    reference = expanded["quality_report"]["seasons"][0]["defensive_impact_reference"]
+
+    assert expanded_bob["identity_status"] == "resolved"
+    assert expanded_bob["identity_join_method"] == "stable_game_player_id_source_team"
+    assert expanded_bob["impact_status"] == "resolved"
+    assert expanded_bob["impact_join_method"] == "stable_player_id_source_team"
+    assert expanded_bob["prior_defensive_impact"] == pytest.approx(
+        baseline_bob["prior_defensive_impact"]
+    )
+    assert reference["classifications"] == ["fbs", "fcs"]
+    assert reference["roster_snapshot_count"] == 2
+    assert reference["games_players_snapshot_count"] == 2
+
+
+def test_derivation_fails_if_the_fbs_fcs_reference_corpus_is_incomplete(
+    tmp_path: Path,
+) -> None:
+    manifest = _fixture_manifest(tmp_path)
+    payload = json.loads(manifest.read_text(encoding="utf-8"))
+    payload["snapshots"] = [
+        snapshot
+        for snapshot in payload["snapshots"]
+        if snapshot.get("query_parameters", {}).get("classification") != "fcs"
+    ]
+    payload["required_requests"] = [
+        request
+        for request in payload["required_requests"]
+        if request.get("query_parameters", {}).get("classification") != "fcs"
+    ]
+    manifest.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(
+        ManifestValidationError, match="missing full-division roster snapshots for fcs"
+    ):
+        derive_preseason_transfer_features(manifest, _team_rows())
 
 
 def test_team_filtered_snapshot_filenames_are_unique_without_week_numbers() -> None:

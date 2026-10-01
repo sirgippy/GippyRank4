@@ -8,11 +8,13 @@ committed historical transfer panel.
 from __future__ import annotations
 
 import argparse
+import ast
 import csv
 import hashlib
 import json
 import subprocess
 from collections import Counter
+from math import isclose
 from pathlib import Path
 from typing import Any
 
@@ -171,6 +173,52 @@ def _offensive_evidence_case(row: dict[str, str]) -> dict[str, str]:
     return {field: row.get(field, "") for field in fields}
 
 
+def _prior_stats(row: dict[str, str]) -> dict[str, Any]:
+    value = row.get("prior_stats", "")
+    if not value:
+        return {}
+    try:
+        parsed = json.loads(value)
+    except json.JSONDecodeError:
+        parsed = ast.literal_eval(value)
+    return dict(parsed) if isinstance(parsed, dict) else {}
+
+
+def _impact_values_equal(before: Any, after: Any) -> bool:
+    if before in (None, "") or after in (None, ""):
+        return before in (None, "") and after in (None, "")
+    try:
+        return isclose(float(before), float(after), rel_tol=0.0, abs_tol=1e-12)
+    except (TypeError, ValueError):
+        return str(before) == str(after)
+
+
+def _reference_snapshot_hashes(manifest: dict[str, Any]) -> dict[str, str]:
+    result: dict[str, str] = {}
+    for item in manifest.get("snapshots", []):
+        if not item.get("canonical", True) or item.get("source") not in {
+            "roster",
+            "games_players",
+        }:
+            continue
+        parameters = item.get("query_parameters", item.get("parameters", {}))
+        classification = str(parameters.get("classification") or "").casefold()
+        if (
+            classification not in {"fbs", "fcs"}
+            or str(parameters.get("team") or "").strip()
+        ):
+            continue
+        key = "|".join(
+            (
+                str(item.get("source")),
+                str(item.get("source_season", item.get("season", ""))),
+                json.dumps(parameters, sort_keys=True, separators=(",", ":")),
+            )
+        )
+        result[key] = str(item.get("sha256", ""))
+    return result
+
+
 def _current_reaudit_deltas(
     before_root: Path, current_root: Path, output: Path
 ) -> dict[str, Any]:
@@ -208,6 +256,27 @@ def _current_reaudit_deltas(
         raise ValueError(
             "portal snapshots differ; portal_index is not a safe comparison key"
         )
+    before_reference_hashes = _reference_snapshot_hashes(before_manifest)
+    current_reference_hashes = _reference_snapshot_hashes(current_manifest)
+    reference_keys = before_reference_hashes.keys() | current_reference_hashes.keys()
+    reference_comparison = {
+        "before_snapshot_count": len(before_reference_hashes),
+        "after_snapshot_count": len(current_reference_hashes),
+        "matching_request_count": len(
+            before_reference_hashes.keys() & current_reference_hashes.keys()
+        ),
+        "changed_sha256_count": sum(
+            before_reference_hashes.get(key) != current_reference_hashes.get(key)
+            for key in reference_keys
+            if key in before_reference_hashes and key in current_reference_hashes
+        ),
+        "added_request_count": len(
+            current_reference_hashes.keys() - before_reference_hashes.keys()
+        ),
+        "removed_request_count": len(
+            before_reference_hashes.keys() - current_reference_hashes.keys()
+        ),
+    }
 
     columns = [
         "audit_type",
@@ -222,8 +291,14 @@ def _current_reaudit_deltas(
         "after_method",
         "before_position",
         "after_position",
+        "before_position_group",
+        "after_position_group",
         "before_provider_player_id",
         "after_provider_player_id",
+        "before_raw_stats",
+        "after_raw_stats",
+        "raw_stat_fields_changed",
+        "impact_change_class",
         "before_value",
         "after_value",
         "repair_rule",
@@ -238,16 +313,48 @@ def _current_reaudit_deltas(
     repaired_db_rows = 0
     db_status_changed_rows = 0
     db_impact_value_changed_rows = 0
+    db_raw_stat_changed_rows = 0
+    raw_stat_changed_fields: Counter[str] = Counter()
+    db_impact_change_classes: Counter[str] = Counter()
+    db_impact_status_transitions: Counter[str] = Counter()
     for key, after in current_db.items():
         before = before_db[key]
         before_status = str(before["impact_status"])
         after_status = str(after["impact_status"])
+        before_stats = _prior_stats(before)
+        after_stats = _prior_stats(after)
+        stat_fields_changed = sorted(
+            field
+            for field in before_stats.keys() | after_stats.keys()
+            if not _impact_values_equal(before_stats.get(field), after_stats.get(field))
+        )
+        if stat_fields_changed:
+            db_raw_stat_changed_rows += 1
+            raw_stat_changed_fields.update(stat_fields_changed)
+        impact_changed = not _impact_values_equal(
+            before.get("prior_defensive_impact"),
+            after.get("prior_defensive_impact"),
+        )
+        impact_change_class = "impact_value_unchanged"
+        if impact_changed:
+            db_impact_value_changed_rows += 1
+            db_impact_status_transitions[f"{before_status} → {after_status}"] += 1
+            if before_status not in GOOD_DB and after_status in GOOD_DB:
+                impact_change_class = "newly_resolved_identity_or_source_coverage"
+            elif before.get("prior_position") != after.get("prior_position"):
+                impact_change_class = "roster_position_evidence_changed"
+            elif stat_fields_changed:
+                impact_change_class = "underlying_player_defensive_statistics_changed"
+            elif before_status in GOOD_DB and after_status not in GOOD_DB:
+                impact_change_class = "impact_evidence_became_unavailable"
+            elif before_status in GOOD_DB and after_status in GOOD_DB:
+                impact_change_class = "normalization_reference_parameters_changed"
+            else:
+                impact_change_class = "other_join_or_evidence_status_change"
+            db_impact_change_classes[impact_change_class] += 1
         before_db_statuses[before_status] += 1
         after_db_statuses[after_status] += 1
         db_status_changed_rows += before_status != after_status
-        db_impact_value_changed_rows += before.get(
-            "prior_defensive_impact"
-        ) != after.get("prior_defensive_impact")
         before_signature = tuple(
             str(before.get(field, ""))
             for field in (
@@ -259,6 +366,7 @@ def _current_reaudit_deltas(
                 "prior_position_group",
                 "prior_player_id",
                 "prior_defensive_impact",
+                "prior_stats",
             )
         )
         after_signature = tuple(
@@ -272,6 +380,7 @@ def _current_reaudit_deltas(
                 "prior_position_group",
                 "prior_player_id",
                 "prior_defensive_impact",
+                "prior_stats",
             )
         )
         if before_signature == after_signature:
@@ -287,13 +396,17 @@ def _current_reaudit_deltas(
             )
         elif str(before.get("origin", "")) != str(after.get("origin", "")):
             repair_rule = "verified 2026 season-scoped source-team alias"
-        elif (
-            before_status in GOOD_DB
-            and after_status in GOOD_DB
-            and before.get("prior_defensive_impact")
-            != after.get("prior_defensive_impact")
-        ):
-            repair_rule = "expanded division player population changed season-position impact normalization"
+        elif before_status not in GOOD_DB and after_status in GOOD_DB:
+            repair_rule = (
+                "supplemental roster/game-player evidence established a unique "
+                "same-team identity and impact"
+            )
+        elif impact_change_class == "normalization_reference_parameters_changed":
+            repair_rule = "defensive-impact reference normalization parameters changed"
+        elif stat_fields_changed:
+            repair_rule = "underlying defensive player statistics changed: " + ";".join(
+                stat_fields_changed
+            )
         elif (
             before_status == "source_data_unavailable" and after_status != before_status
         ):
@@ -314,8 +427,14 @@ def _current_reaudit_deltas(
                 "after_method": after.get("identity_join_method", ""),
                 "before_position": before.get("prior_position", ""),
                 "after_position": after.get("prior_position", ""),
+                "before_position_group": before.get("prior_position_group", ""),
+                "after_position_group": after.get("prior_position_group", ""),
                 "before_provider_player_id": before.get("prior_player_id", ""),
                 "after_provider_player_id": after.get("prior_player_id", ""),
+                "before_raw_stats": json.dumps(before_stats, sort_keys=True),
+                "after_raw_stats": json.dumps(after_stats, sort_keys=True),
+                "raw_stat_fields_changed": ";".join(stat_fields_changed),
+                "impact_change_class": impact_change_class,
                 "before_value": before.get("prior_defensive_impact", ""),
                 "after_value": after.get("prior_defensive_impact", ""),
                 "repair_rule": repair_rule,
@@ -526,6 +645,43 @@ def _current_reaudit_deltas(
         "db_players_repaired_to_resolved_or_zero": repaired_db_rows,
         "db_player_status_changed_rows": db_status_changed_rows,
         "db_player_impact_value_changed_rows": db_impact_value_changed_rows,
+        "db_player_impact_change_classes": dict(
+            sorted(db_impact_change_classes.items())
+        ),
+        "db_player_impact_status_transitions": dict(
+            sorted(db_impact_status_transitions.items())
+        ),
+        "db_player_impact_value_changed_cases": [
+            {
+                field: row.get(field, "")
+                for field in (
+                    "player_name",
+                    "source_team_before",
+                    "source_team_after",
+                    "before_status",
+                    "after_status",
+                    "before_position",
+                    "after_position",
+                    "before_raw_stats",
+                    "after_raw_stats",
+                    "raw_stat_fields_changed",
+                    "impact_change_class",
+                    "before_value",
+                    "after_value",
+                    "repair_rule",
+                )
+            }
+            for row in deltas
+            if row.get("audit_type") == "defensive_db_player"
+            and not _impact_values_equal(
+                row.get("before_value"), row.get("after_value")
+            )
+        ],
+        "db_player_raw_stat_changed_rows": db_raw_stat_changed_rows,
+        "db_player_raw_stat_changed_fields": dict(
+            sorted(raw_stat_changed_fields.items())
+        ),
+        "defensive_impact_reference_comparison": reference_comparison,
         "offensive_applicable_failures_before": before_offense_count,
         "offensive_applicable_failures_after": after_offense_count,
         "changed_offensive_player_rows": changed_offense_rows,
@@ -1220,6 +1376,15 @@ def _render_report(summary: dict[str, Any]) -> str:
         )
         or "none"
     )
+    reference_comparison = current_reaudit["defensive_impact_reference_comparison"]
+    position_change_names = (
+        ", ".join(
+            str(case["player_name"])
+            for case in current_reaudit["db_player_impact_value_changed_cases"]
+            if case["impact_change_class"] == "roster_position_evidence_changed"
+        )
+        or "none"
+    )
     return "\n".join(
         [
             "# Transfer data repair audit (#149)",
@@ -1272,7 +1437,8 @@ def _render_report(summary: dict[str, Any]) -> str:
             "",
             f"The 2026 derivation used {limits['expected_2026_snapshot_count']} canonical current/reacquired snapshots ({limits['2026_snapshot_record_count_including_noncanonical_diagnostics']} raw manifest records including {limits['noncanonical_2026_diagnostic_snapshot_count']} noncanonical endpoint-control records); {limits['missing_2026_raw_snapshot_count']} canonical raw payloads are unavailable under the selected raw root. The original 37-request manifest was paired to current responses: {snapshot_lineage['paired_requests_byte_identical']} current payloads have identical SHA-256 hashes and {snapshot_lineage['paired_requests_hash_different']} differ. The {original_search['original_manifest_snapshot_count']} expected original versioned paths were checked across all {original_search['registered_git_worktree_count']} registered Git worktrees and {original_search['temporary_artifact_root_count_outside_registered_worktrees']} `/tmp/GippyRank4-*`/`gippyrank*` roots; {original_search['expected_original_versioned_paths_found']} expected paths were present, with {original_search['expected_original_versioned_paths_hash_valid']} SHA-256-valid originals. The {len(original_search['existing_cfbd_raw_subtrees_checked'])} existing CFBD raw subtrees checked were {searched_raw_paths}. Exact source hashes were found for {original_search['original_source_hashes_found_anywhere_under_local_cfbd_raw_subtrees']} requests at {matched_raw_root_text}; {original_search['original_source_hashes_not_found_under_local_cfbd_raw_subtrees']} original hashes had no local raw-file match. Hash identity does not change the later retrieval timestamp. The {snapshot_lineage['additional_current_requests']} additional canonical requests are stored in the separate reacquired lineage. {limits['historical_raw_transfer_payload_count']} historical transfer payloads are available locally (portal {limits['historical_raw_payloads_by_source']['portal']}, usage {limits['historical_raw_payloads_by_source']['usage']}, stats {limits['historical_raw_payloads_by_source']['stats']}); these were located at {historical_locations}; provenance sidecars are excluded. Related #141/#142 processed inputs and the offensive player-level audits were located at the paths recorded in `original_snapshot_search` in `summary.json`; the current 2026 offensive player join audit is {'available' if limits['2026_offensive_player_join_audit_available_locally'] else 'not available'} under the selected processed root. All canonical current responses were retrieved after 2026-08-15 and do not establish historical availability.",
             "",
-            f"The expanded roster reference pool changed the normalized DB impact on {current_reaudit['db_player_impact_value_changed_rows']} of 604 incoming DB players, and {current_reaudit['team_seasons_with_changed_db_audit']} team-season DB audits changed. A Context successor should freeze or stratify its normalization reference population and carry coverage explicitly; the current partial DII/III response pool is not complete enough to define that population implicitly. The added upstream coverage fields do not change `MODEL_FEATURE_COLUMNS`, the attach-only Context 1.3 integration, coefficients, or published rankings. Historical rows remain labelled `historical_timing_unverified`; later data was not used to revise what was available at a historical cutoff.",
+            f"Defensive-impact normalization is fit only from the {reference_comparison['after_snapshot_count']} full-classification FBS/FCS roster and games/players snapshots. DII/III and team-filtered snapshots remain candidate evidence and do not enter the reference fit. Compared with the pre-repair derivation, {reference_comparison['matching_request_count']} reference requests match and {reference_comparison['changed_sha256_count']} reference SHA-256 hashes changed ({reference_comparison['added_request_count']} added, {reference_comparison['removed_request_count']} removed). This corrects the earlier expanded-pool result of 562 changed impact values: now {current_reaudit['db_player_impact_value_changed_rows']} of 604 differ from the pre-repair audit, with {current_reaudit['db_player_impact_change_classes'].get('normalization_reference_parameters_changed', 0)} attributable solely to changed reference parameters.",
+            f"Of those changes, {current_reaudit['db_player_impact_change_classes'].get('newly_resolved_identity_or_source_coverage', 0)} are newly resolved ({current_reaudit['db_player_impact_status_transitions'].get('identity_resolution_failure → resolved', 0)} identity failures to resolved, {current_reaudit['db_player_impact_status_transitions'].get('identity_resolution_failure → zero_recorded_defensive_box_score_games', 0)} identity failures to supported zero, {current_reaudit['db_player_impact_status_transitions'].get('source_data_unavailable → resolved', 0)} source-coverage gaps to resolved, and {current_reaudit['db_player_impact_status_transitions'].get('ambiguous → resolved', 0)} ambiguous joins to resolved). Those joins used {summary['repairs']['stable_game_player_id_identity_bridge_rows']} unique game-player ID bridges, {summary['repairs']['generational_suffix_join_rows']} same-team suffix matches, and {summary['repairs']['verified_team_alias_player_records']} verified aliases. {current_reaudit['db_player_impact_change_classes'].get('roster_position_evidence_changed', 0)} additional cases ({position_change_names}) now have roster records showing LB against a DB portal position; they remain fail-closed and are not counted as observed impacts. The player before/after artifact records raw defensive stats, positions, statuses, and repair rules for each changed DB row. {current_reaudit['team_seasons_with_changed_db_audit']} team-season DB audits changed. The new coverage evidence does not change `MODEL_FEATURE_COLUMNS`, the attach-only Context 1.3 integration, coefficients, or published rankings. Historical rows remain labelled `historical_timing_unverified`; later data was not used to revise what was available at a historical cutoff.",
             "",
             "## Reproducibility",
             "",

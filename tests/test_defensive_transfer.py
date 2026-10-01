@@ -4,6 +4,7 @@ from datetime import date
 import pytest
 
 from gippyrank.defensive_transfer import (
+    DefensivePlayerSeason,
     add_defensive_impact,
     aggregate_player_seasons,
     audit_transfer_records,
@@ -159,6 +160,54 @@ def _game_payload() -> list[dict]:
     ]
 
 
+def _impact_player(
+    player_id: str,
+    player_name: str,
+    team: str,
+    *,
+    tackles: float,
+    passes_defended: float,
+    interceptions: float,
+) -> DefensivePlayerSeason:
+    return DefensivePlayerSeason(
+        season=2025,
+        team=team,
+        player_id=player_id,
+        player_name=player_name,
+        position="CB",
+        position_group="db",
+        team_games=12,
+        recorded_defensive_box_score_games=10,
+        stats={
+            "tackles": tackles,
+            "passes_defended": passes_defended,
+            "interceptions": interceptions,
+        },
+        defensive_box_score_game_rate=10 / 12,
+    )
+
+
+def _db_reference_players() -> list[DefensivePlayerSeason]:
+    return [
+        _impact_player(
+            "fbs-1",
+            "Reference One",
+            "Reference FBS",
+            tackles=10,
+            passes_defended=2,
+            interceptions=1,
+        ),
+        _impact_player(
+            "fcs-1",
+            "Reference Two",
+            "Reference FCS",
+            tackles=30,
+            passes_defended=6,
+            interceptions=3,
+        ),
+    ]
+
+
 def test_position_taxonomy_is_explicit_and_unknowns_fail_closed() -> None:
     mapping = position_mapping()
     assert mapping["groups"]["dl_edge"]["source_positions"] == [
@@ -213,6 +262,76 @@ def test_aggregation_deduplicates_same_game_from_overlapping_division_queries() 
     defender = next(item for item in players if item.player_id == "1")
     assert defender.recorded_defensive_box_score_games == 2
     assert defender.stats["tackles"] == 12
+
+
+def test_aggregation_deduplicates_repeated_identical_roster_acquisitions() -> None:
+    game_players = parse_games_players_payload(_game_payload(), season=2021)
+    keys = team_game_keys(_game_payload(), season=2021)
+    roster = _roster()
+
+    baseline = aggregate_player_seasons(game_players, roster, keys)
+    repeated = aggregate_player_seasons(game_players, [*roster, *roster], keys)
+
+    assert repeated == baseline
+
+
+def test_supplemental_players_use_frozen_fbs_fcs_impact_parameters() -> None:
+    reference = _db_reference_players()
+    reference_impacts = {
+        player.player_id: player.defensive_impact
+        for player in add_defensive_impact(reference)
+    }
+    supplemental = _impact_player(
+        "dii-1",
+        "Supplemental Defender",
+        "Division II School",
+        tackles=1000,
+        passes_defended=100,
+        interceptions=20,
+    )
+
+    scored = add_defensive_impact(
+        [*reference, supplemental], reference_players=reference
+    )
+    by_id = {player.player_id: player for player in scored}
+
+    for player_id, impact in reference_impacts.items():
+        assert by_id[player_id].defensive_impact == pytest.approx(impact)
+    assert by_id["dii-1"].defensive_impact is not None
+    assert by_id["dii-1"].defensive_impact > 0
+
+
+def test_repeated_nonreference_acquisitions_cannot_shift_reference_impacts() -> None:
+    reference = _db_reference_players()
+    baseline = {
+        player.player_id: player.defensive_impact
+        for player in add_defensive_impact(reference)
+    }
+    acquired: list[DefensivePlayerSeason] = []
+    additional_teams = (
+        ("dii-1", "DII One", 1000, 100, 20),
+        ("diii-1", "DIII One", 0, 0, 0),
+        ("target-1", "Targeted Team", 400, 40, 8),
+        ("dii-2", "DII Two", 800, 80, 16),
+    )
+    for player_id, team, tackles, passes_defended, interceptions in additional_teams:
+        acquired.append(
+            _impact_player(
+                player_id,
+                f"{team} Defender",
+                team,
+                tackles=tackles,
+                passes_defended=passes_defended,
+                interceptions=interceptions,
+            )
+        )
+        scored = add_defensive_impact(
+            [*reference, *acquired], reference_players=reference
+        )
+        by_id = {player.player_id: player for player in scored}
+        assert {
+            player_id: by_id[player_id].defensive_impact for player_id in baseline
+        } == pytest.approx(baseline)
 
 
 def test_audit_distinguishes_zero_identity_failure_and_non_defensive() -> None:

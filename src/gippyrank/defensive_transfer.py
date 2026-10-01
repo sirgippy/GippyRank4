@@ -355,7 +355,10 @@ def aggregate_player_seasons(
             continue
         unique_game_rows[key] = item
     game_rows = list(unique_game_rows.values())
-    roster_rows = list(roster)
+    # Reacquiring the same non-reference team can repeat a byte-identical
+    # roster identity. Collapse only exact duplicates; conflicting roster
+    # records remain visible and therefore fail closed during the join.
+    roster_rows = list(dict.fromkeys(roster))
     by_id, by_name = _roster_indexes(roster_rows)
     team_games: defaultdict[tuple[int, str], set[str]] = defaultdict(set)
     for season, team, game_id in team_game_keys_by_season:
@@ -455,11 +458,20 @@ def aggregate_player_seasons(
 
 def add_defensive_impact(
     players: Iterable[DefensivePlayerSeason],
+    *,
+    reference_players: Iterable[DefensivePlayerSeason] | None = None,
 ) -> list[DefensivePlayerSeason]:
-    """Attach the frozen log1p, season×group normalized impact composite."""
+    """Attach log1p, season×group normalized defensive impact.
+
+    When ``reference_players`` is supplied, only that stable corpus fits the
+    component centers and spreads; every row in ``players`` is still scored
+    against those parameters. This lets supplemental players receive impacts
+    without changing the scale as acquisition coverage grows.
+    """
     rows = list(players)
+    reference_rows = rows if reference_players is None else list(reference_players)
     transformed: dict[tuple[int, str, str], list[float]] = defaultdict(list)
-    for row in rows:
+    for row in reference_rows:
         group = row.position_group
         if group not in IMPACT_COMPONENTS:
             continue
@@ -480,7 +492,13 @@ def add_defensive_impact(
             value = row.stats.get(field)
             if value is None or value < 0:
                 continue
-            center, spread = parameters[(row.season, group, field)]
+            parameter_key = (row.season, group, field)
+            if parameter_key not in parameters:
+                raise ValueError(
+                    "no defensive-impact reference parameters for "
+                    f"season={row.season}, group={group}, component={field}"
+                )
+            center, spread = parameters[parameter_key]
             scores.append((log1p(value) - center) / spread if spread > 0 else 0.0)
         result.append(replace(row, defensive_impact=mean(scores) if scores else None))
     return result
