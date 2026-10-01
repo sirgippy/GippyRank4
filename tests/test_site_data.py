@@ -4,7 +4,7 @@ import csv
 import hashlib
 import json
 import shutil
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -800,9 +800,26 @@ def test_week_5_kickoff_certainty_uses_only_its_exact_cfbd_responses(
             / schedule_family
         )
         source_metadata = json.loads((source_path / "metadata.json").read_text())
+        source_artifact = json.loads((source_path / "team_seasons.json").read_text())
+        assert source_artifact["kickoff_time_certainty_version"] == "1"
+        assert source_artifact["kickoff_time_certainty_provenance"] == {
+            "schema_version": "1.0",
+            "source_kind": "cfbd_api_schedule_responses",
+            "snapshot_id": entry["snapshot_id"],
+            "source_response_hashes": {
+                "2026.json.provenance.json": "8bc73e07cb96af9105f38330e4e3b7ed465a961edd091c8d1f3fb1e6fbc001c9",
+                "2026-fcs.json.provenance.json": "62dbcb0d1f702c387fb858ce3efc2ecf8d028c3f00790b7a11ef2acefac8a2c8",
+            },
+            "source_retrieval_times": {
+                "fbs": "2026-09-27T12:27:35.698895+00:00",
+                "fcs": "2026-09-27T12:27:36.196164+00:00",
+            },
+        }
         for source, filename in (("fbs", "2026.json"), ("fcs", "2026-fcs.json")):
             raw_path = ROOT / "data/raw/cfbd/games" / filename
             raw_hash = hashlib.sha256(raw_path.read_bytes()).hexdigest()
+            rows = json.loads(raw_path.read_text())
+            assert all(type(row.get("startTimeTBD")) is bool for row in rows)
             provenance = json.loads(
                 raw_path.with_name(f"{filename}.provenance.json").read_text()
             )
@@ -813,19 +830,217 @@ def test_week_5_kickoff_certainty_uses_only_its_exact_cfbd_responses(
                 "retrieved_at"
             ]
 
-    changed_hashes = dict(source_metadata)
-    changed_hashes["source_response_hashes"] = {
-        **source_metadata["source_response_hashes"],
-        "2026.json.provenance.json": "0" * 64,
+
+def test_persisted_week_5_kickoff_provenance_is_bound_to_snapshot() -> None:
+    source = (
+        ROOT
+        / "data/processed/snapshots/2026"
+        / "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3"
+        / "predictive/context"
+    )
+    metadata = json.loads((source / "metadata.json").read_text())
+    artifact = json.loads((source / "team_seasons.json").read_text())
+    site_data._validate_kickoff_time_certainty_provenance(
+        artifact, metadata, str(metadata["snapshot_id"])
+    )
+
+    changed_hash = json.loads(json.dumps(artifact))
+    changed_hash["kickoff_time_certainty_provenance"]["source_response_hashes"][
+        "2026.json.provenance.json"
+    ] = "0" * 64
+    with pytest.raises(SiteDataValidationError, match="response hashes do not match"):
+        site_data._validate_kickoff_time_certainty_provenance(
+            changed_hash, metadata, str(metadata["snapshot_id"])
+        )
+
+    changed_retrieval = json.loads(json.dumps(artifact))
+    changed_retrieval["kickoff_time_certainty_provenance"]["source_retrieval_times"][
+        "fbs"
+    ] = "2026-09-27T12:27:36.000000+00:00"
+    with pytest.raises(SiteDataValidationError, match="retrieval times do not match"):
+        site_data._validate_kickoff_time_certainty_provenance(
+            changed_retrieval, metadata, str(metadata["snapshot_id"])
+        )
+
+
+def _isolated_publication_root(tmp_path: Path) -> Path:
+    """Build under a repository-shaped root with replaceable canonical raw paths."""
+    root = tmp_path / "repo"
+    (root / "data/processed").parent.mkdir(parents=True)
+    (root / "data/processed").symlink_to(ROOT / "data/processed", target_is_directory=True)
+    reference = root / "data/reference"
+    reference.mkdir(parents=True)
+    shutil.copyfile(
+        ROOT / "data/reference/redditcfb_team_handles.csv",
+        reference / "redditcfb_team_handles.csv",
+    )
+    raw_directory = root / "data/raw/cfbd/games"
+    raw_directory.mkdir(parents=True)
+    for filename in (
+        "2026.json",
+        "2026.json.provenance.json",
+        "2026-fcs.json",
+        "2026-fcs.json.provenance.json",
+    ):
+        shutil.copyfile(ROOT / "data/raw/cfbd/games" / filename, raw_directory / filename)
+    site = root / "site"
+    site.mkdir()
+    shutil.copyfile(CONFIG, site / "publish_config.json")
+    return root
+
+
+def _week_5_schedule_views(
+    root: Path,
+) -> tuple[dict[str, dict[str, object]], dict[str, dict[str, object]]]:
+    output = root / "site/data"
+    manifest = build_site_data(
+        root=root,
+        config_path=root / "site/publish_config.json",
+        output_directory=output,
+    )
+    cases = {
+        "401871049": {"home": "166", "away": "98", "known": True},
+        "401856707": {"home": "344", "away": "333", "known": True},
+        "401858260": {"home": None, "away": None, "known": False},
     }
-    assert site_data._verified_cfbd_kickoff_time_map(changed_hashes, ROOT) is None
-    changed_times = dict(source_metadata)
-    changed_times["source_retrieval_times"] = {
-        **source_metadata["source_retrieval_times"],
-        "fbs": "2026-09-27T12:27:36.000000+00:00",
-    }
-    with pytest.raises(SiteDataValidationError, match="CFBD response provenance mismatch"):
-        site_data._verified_cfbd_kickoff_time_map(changed_times, ROOT)
+    team_views: dict[str, dict[str, object]] = {}
+    weekly_views: dict[str, dict[str, object]] = {}
+    entries = [
+        entry
+        for entry in manifest["snapshots"]
+        if entry.get("publication_slot") == "2026-09-27"
+        and entry.get("ranking_family") == "predictive"
+        and entry.get("prior_family") in {"context", "history"}
+    ]
+    assert {entry["prior_family"] for entry in entries} == {"context", "history"}
+    for entry in entries:
+        family = str(entry["prior_family"])
+        snapshot = json.loads(
+            (output / entry["team_seasons_path"].removeprefix("data/")).read_text()
+        )
+        weekly = json.loads(
+            (output / entry["week_games_path"].removeprefix("data/")).read_text()
+        )
+        source_games = {
+            str(game["game_id"]): (str(team_id), game)
+            for team_id, team in snapshot["teams"].items()
+            for game in team["games"]
+            if game["game_id"] in cases
+        }
+        assert set(source_games) == set(cases)
+        for game_id, expected in cases.items():
+            team_id, game = source_games[game_id]
+            assert type(game.get("kickoff_time_known")) is bool
+            assert game["kickoff_time_known"] is expected["known"]
+            if expected["home"] is not None:
+                assert game["site"] == ("away" if team_id == expected["away"] else "home")
+                assert game["opponent_id"] == (
+                    expected["home"] if team_id == expected["away"] else expected["away"]
+                )
+            team_views[f"{family}:{game_id}"] = game
+        weekly_games = {
+            str(game["game_id"]): game
+            for week in weekly["weeks"]
+            for game in week["games"]
+            if game["game_id"] in cases
+        }
+        assert set(weekly_games) == set(cases)
+        for game_id, game in weekly_games.items():
+            if cases[game_id]["home"] is not None:
+                assert game["home_team_id"] == cases[game_id]["home"]
+                assert game["away_team_id"] == cases[game_id]["away"]
+            weekly_views[f"{family}:{game_id}"] = game
+    return team_views, weekly_views
+
+
+def _replace_canonical_raw_with_later_acquisition(root: Path) -> None:
+    for filename in ("2026.json", "2026-fcs.json"):
+        raw_path = root / "data/raw/cfbd/games" / filename
+        provenance_path = raw_path.with_name(f"{filename}.provenance.json")
+        rows = json.loads(raw_path.read_text())
+        assert isinstance(rows, list) and rows
+        assert all(type(row.get("startTimeTBD")) is bool for row in rows)
+        rows[0]["notes"] = f"Later valid acquisition of {filename}"
+        encoded = (json.dumps(rows, indent=2) + "\n").encode()
+        new_hash = hashlib.sha256(encoded).hexdigest()
+        old_provenance = json.loads(provenance_path.read_text())
+        old_retrieved_at = datetime.fromisoformat(old_provenance["retrieved_at"])
+        new_provenance = {
+            **old_provenance,
+            "content_sha256": new_hash,
+            "retrieved_at": (old_retrieved_at + timedelta(days=7)).isoformat(),
+        }
+        raw_path.write_bytes(encoded)
+        provenance_path.write_text(json.dumps(new_provenance, indent=2) + "\n")
+        assert hashlib.sha256(raw_path.read_bytes()).hexdigest() == new_hash
+        assert new_hash != old_provenance["content_sha256"]
+        assert datetime.fromisoformat(new_provenance["retrieved_at"]) > old_retrieved_at
+
+
+def test_week_5_kickoff_certainty_survives_replacing_mutable_cfbd_cache(
+    tmp_path: Path,
+) -> None:
+    root = _isolated_publication_root(tmp_path)
+    source_metadata_path = (
+        root
+        / "data/processed/snapshots/2026"
+        / "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3"
+        / "predictive/context/metadata.json"
+    )
+    source_metadata = json.loads(source_metadata_path.read_text())
+    for classification, filename in (("fbs", "2026.json"), ("fcs", "2026-fcs.json")):
+        raw_path = root / "data/raw/cfbd/games" / filename
+        raw_hash = hashlib.sha256(raw_path.read_bytes()).hexdigest()
+        provenance = json.loads(raw_path.with_name(f"{filename}.provenance.json").read_text())
+        assert raw_hash == source_metadata["source_response_hashes"][
+            f"{filename}.provenance.json"
+        ]
+        assert provenance["content_sha256"] == raw_hash
+        assert source_metadata["source_retrieval_times"][classification] == provenance[
+            "retrieved_at"
+        ]
+
+    initial_team_views, initial_weekly_views = _week_5_schedule_views(root)
+    assert _local_time(initial_team_views["context:401871049"]["date"]) == (
+        2026, 10, 1, 19, 0
+    )
+    assert _local_time(initial_team_views["context:401856707"]["date"]) == (
+        2026, 10, 3, 11, 0
+    )
+    for family in ("context", "history"):
+        assert initial_team_views[f"{family}:401871049"]["date"] == (
+            "2026-10-02T00:00:00.000Z"
+        )
+        assert initial_team_views[f"{family}:401871049"]["date_display_mode"] == "local_time"
+        assert initial_weekly_views[f"{family}:401871049"]["date"] == (
+            "2026-10-02T00:00:00.000Z"
+        )
+        assert initial_weekly_views[f"{family}:401871049"]["date_display_mode"] == "local_time"
+        assert initial_team_views[f"{family}:401856707"]["date"] == (
+            "2026-10-03T16:00:00.000Z"
+        )
+        assert initial_team_views[f"{family}:401856707"]["date_display_mode"] == "local_time"
+        assert initial_weekly_views[f"{family}:401856707"]["date_display_mode"] == "local_time"
+        assert initial_team_views[f"{family}:401858260"]["date"] == (
+            "2026-10-10T04:00:00.000Z"
+        )
+        assert initial_weekly_views[f"{family}:401858260"]["date"] == (
+            "2026-10-10T04:00:00.000Z"
+        )
+    assert initial_team_views["context:401858260"]["date_display_mode"] == "utc_calendar"
+    assert initial_team_views["context:401858260"]["kickoff_time_known"] is False
+    assert initial_weekly_views["context:401858260"]["date_display_mode"] == "utc_calendar"
+
+    _replace_canonical_raw_with_later_acquisition(root)
+    later_team_views, later_weekly_views = _week_5_schedule_views(root)
+    assert later_team_views == initial_team_views
+    assert later_weekly_views == initial_weekly_views
+
+
+def _local_time(value: object) -> tuple[int, int, int, int, int]:
+    parsed = datetime.fromisoformat(str(value))
+    local = parsed.astimezone(ZoneInfo("America/Chicago"))
+    return local.year, local.month, local.day, local.hour, local.minute
 
 
 def test_retained_pre_certainty_snapshot_keeps_legacy_score_display(

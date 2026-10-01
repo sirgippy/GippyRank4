@@ -224,10 +224,13 @@ makes consumers display the timestamp in the viewer's local time zone.
 omits a kickoff time.
 
 When a retained snapshot omits kickoff certainty but its FBS and FCS response
-hashes and retrieval timestamps exactly match the retained raw CFBD responses,
-the site exporter derives the schedule presentation fields from those verified
-bytes. It does not rewrite the snapshot or its analytical evidence. A response
-with matching content but mismatched provenance is rejected.
+hashes and retrieval timestamps identify the verified CFBD responses, the
+retained team-season schedule stores `kickoff_time_known` alongside each game.
+Its `kickoff_time_certainty_provenance` records those response hashes and
+retrieval timestamps. Site-data regeneration reads this snapshot-local record;
+it does not depend on mutable current-season raw-cache files. The repair is
+presentation-only and leaves included-game evidence and analytical outputs
+unchanged.
 
 Retained pre-certainty snapshots and frozen schedule artifacts may omit
 `kickoff_time_known`. Only those legacy provenance forms keep the previous

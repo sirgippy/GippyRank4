@@ -1095,80 +1095,73 @@ def _file_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _verified_cfbd_kickoff_time_map(
-    metadata: dict[str, Any], root: Path
-) -> dict[str, tuple[bool, str]] | None:
-    """Read certainty only from the exact schedule responses named by provenance."""
+def _validate_kickoff_time_certainty_provenance(
+    artifact: dict[str, Any], metadata: dict[str, Any], snapshot_id: str
+) -> None:
+    """Validate the provenance frozen beside repaired schedule certainty."""
+    provenance = artifact.get("kickoff_time_certainty_provenance")
+    if provenance is None:
+        return
+    if (
+        not isinstance(provenance, dict)
+        or provenance.get("schema_version") != "1.0"
+        or provenance.get("source_kind") != "cfbd_api_schedule_responses"
+        or provenance.get("snapshot_id") != snapshot_id
+        or artifact.get("snapshot_id") != snapshot_id
+    ):
+        raise SiteDataValidationError(
+            f"{snapshot_id}: kickoff-time certainty provenance is invalid"
+        )
+
     season = metadata.get("season")
-    response_hashes = metadata.get("source_response_hashes")
-    retrieval_times = metadata.get("source_retrieval_times")
-    if type(season) is not int or not isinstance(response_hashes, dict) or not isinstance(retrieval_times, dict):
-        return None
-
-    sources = (
-        ("fbs", f"{season}.json"),
-        ("fcs", f"{season}-fcs.json"),
+    metadata_hashes = metadata.get("source_response_hashes")
+    if type(season) is not int or not isinstance(metadata_hashes, dict):
+        raise SiteDataValidationError(
+            f"{snapshot_id}: kickoff-time certainty source hashes are missing"
+        )
+    response_keys = (
+        f"{season}.json.provenance.json",
+        f"{season}-fcs.json.provenance.json",
     )
-    raw_directory = root / "data/raw/cfbd/games"
-    matches: list[tuple[str, str, Path, Path]] = []
-    for classification, filename in sources:
-        source_key = f"{filename}.provenance.json"
-        raw_path = raw_directory / filename
-        expected_hash = response_hashes.get(source_key)
-        if not isinstance(expected_hash, str) or not raw_path.is_file():
-            continue
-        if _file_sha256(raw_path) == expected_hash:
-            matches.append((classification, filename, raw_path, raw_path.with_name(f"{filename}.provenance.json")))
-    if len(matches) != len(sources):
-        return None
+    expected_hashes = {key: metadata_hashes.get(key) for key in response_keys}
+    artifact_hashes = artifact.get("source_response_hashes")
+    provenance_hashes = provenance.get("source_response_hashes")
+    if (
+        not isinstance(artifact_hashes, dict)
+        or not isinstance(provenance_hashes, dict)
+        or any(not valid_sha256(value) for value in expected_hashes.values())
+        or provenance_hashes != expected_hashes
+        or any(artifact_hashes.get(key) != value for key, value in expected_hashes.items())
+    ):
+        raise SiteDataValidationError(
+            f"{snapshot_id}: kickoff-time certainty response hashes do not match the snapshot"
+        )
 
-    games: dict[str, tuple[bool, str]] = {}
-    for classification, filename, raw_path, provenance_path in matches:
-        if not provenance_path.is_file():
-            raise SiteDataValidationError(
-                f"{metadata['snapshot_id']}: matching CFBD response lacks provenance for {filename}"
-            )
-        provenance = _read_json(provenance_path)
-        expected_parameters = {"year": season, "classification": classification}
-        expected_retrieved_at = retrieval_times.get(classification)
-        if (
-            provenance.get("content_sha256") != response_hashes.get(f"{filename}.provenance.json")
-            or provenance.get("endpoint") != "/games"
-            or provenance.get("parameters") != expected_parameters
-            or provenance.get("source_kind") != "cfbd_api_schedule"
-            or not isinstance(expected_retrieved_at, str)
-            or provenance.get("retrieved_at") != expected_retrieved_at
-        ):
-            raise SiteDataValidationError(
-                f"{metadata['snapshot_id']}: CFBD response provenance mismatch for {filename}"
-            )
-        try:
-            payload = json.loads(raw_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as error:
-            raise SiteDataValidationError(
-                f"{metadata['snapshot_id']}: cannot read matching CFBD response {filename}: {error}"
-            ) from error
-        if not isinstance(payload, list):
-            raise SiteDataValidationError(
-                f"{metadata['snapshot_id']}: matching CFBD response {filename} is not a JSON list"
-            )
-        for row in payload:
-            game_id = str(row.get("id", "")) if isinstance(row, dict) else ""
-            value = row.get("startTimeTBD") if isinstance(row, dict) else None
-            start_date = row.get("startDate") if isinstance(row, dict) else None
-            if not game_id or type(value) is not bool or not isinstance(start_date, str):
-                raise SiteDataValidationError(
-                    f"{metadata['snapshot_id']}: CFBD game {game_id or '<unknown>'} in "
-                    f"{filename} has missing or invalid kickoff certainty"
-                )
-            certainty = (not value, start_date)
-            previous = games.get(game_id)
-            if previous is not None and previous != certainty:
-                raise SiteDataValidationError(
-                    f"{metadata['snapshot_id']}: conflicting CFBD kickoff certainty for game {game_id}"
-                )
-            games[game_id] = certainty
-    return games
+    retrieval_keys = ("fbs", "fcs")
+    metadata_retrieval_times = metadata.get("source_retrieval_times")
+    if not isinstance(metadata_retrieval_times, dict):
+        raise SiteDataValidationError(
+            f"{snapshot_id}: kickoff-time certainty retrieval times are missing"
+        )
+    expected_retrieval_times = {
+        key: metadata_retrieval_times.get(key) for key in retrieval_keys
+    }
+    artifact_retrieval_times = artifact.get("source_retrieval_times")
+    provenance_retrieval_times = provenance.get("source_retrieval_times")
+    if (
+        not isinstance(artifact_retrieval_times, dict)
+        or not isinstance(provenance_retrieval_times, dict)
+        or provenance_retrieval_times != expected_retrieval_times
+        or any(
+            artifact_retrieval_times.get(key) != value
+            or not isinstance(value, str)
+            or _iso_datetime(value) is None
+            for key, value in expected_retrieval_times.items()
+        )
+    ):
+        raise SiteDataValidationError(
+            f"{snapshot_id}: kickoff-time certainty retrieval times do not match the snapshot"
+        )
 
 
 def _legacy_kickoff_fallback_allowed(
@@ -2997,7 +2990,6 @@ def _validate_team_season_artifact(
     if not isinstance(schedule_source, dict):
         raise SiteDataValidationError(f"{snapshot_id}: schedule provenance is missing or invalid")
     kickoff_metadata = source_metadata
-    kickoff_map = _verified_cfbd_kickoff_time_map(kickoff_metadata, root)
     artifact_certainty_version = artifact.get("kickoff_time_certainty_version")
     metadata_certainty_version = kickoff_metadata.get("kickoff_time_certainty_version")
     if metadata_certainty_version is not None and (
@@ -3011,39 +3003,25 @@ def _validate_team_season_artifact(
         raise SiteDataValidationError(
             f"{snapshot_id}: unsupported team-season kickoff-time certainty version"
         )
-    if kickoff_map is not None:
-        for team in artifact.get("teams", {}).values():
-            if not isinstance(team, dict) or not isinstance(team.get("games"), list):
-                continue
-            for game in team["games"]:
-                if not isinstance(game, dict):
-                    continue
-                game_id = str(game.get("game_id", ""))
-                source_certainty = kickoff_map.get(game_id)
-                if source_certainty is None:
-                    raise SiteDataValidationError(
-                        f"{snapshot_id}: matching CFBD responses do not contain schedule game {game_id}"
-                    )
-                kickoff_time_known, source_start_date = source_certainty
-                published_date = _iso_datetime(game.get("date"))
-                verified_date = _iso_datetime(source_start_date)
-                if (
-                    published_date is None
-                    or verified_date is None
-                    or published_date.astimezone(UTC) != verified_date.astimezone(UTC)
-                ):
-                    raise SiteDataValidationError(
-                        f"{snapshot_id}: game {game_id} date differs from its exact CFBD source"
-                    )
-                existing = game.get("kickoff_time_known")
-                if existing is not None and existing is not kickoff_time_known:
-                    raise SiteDataValidationError(
-                        f"{snapshot_id}: game {game_id} kickoff certainty differs from its exact CFBD source"
-                    )
-                game["kickoff_time_known"] = kickoff_time_known
+    if artifact_certainty_version == KICKOFF_TIME_CERTAINTY_VERSION:
+        if metadata_certainty_version is None and not artifact.get(
+            "kickoff_time_certainty_provenance"
+        ):
+            raise SiteDataValidationError(
+                f"{snapshot_id}: snapshot-local kickoff-time certainty provenance is missing"
+            )
+        _validate_kickoff_time_certainty_provenance(
+            artifact,
+            kickoff_metadata,
+            str(kickoff_metadata.get("snapshot_id", snapshot_id)),
+        )
+    elif artifact.get("kickoff_time_certainty_provenance") is not None:
+        raise SiteDataValidationError(
+            f"{snapshot_id}: kickoff-time certainty provenance lacks its version marker"
+        )
     allow_legacy_kickoff_fallback = _legacy_kickoff_fallback_allowed(
         kickoff_metadata, schedule_source
-    )
+    ) and artifact_certainty_version is None
     schedule_kind = schedule_source.get("kind") if isinstance(schedule_source, dict) else None
     valid_schedule_path = (
         schedule_source.get("path") == "data/processed/cfbd/games.csv"
@@ -3453,8 +3431,12 @@ def _validate_team_season_artifact(
     adapted["snapshot_id"] = snapshot_id
     adapted["season"] = metadata["season"]
     adapted["snapshot_type"] = metadata["snapshot_type"]
-    if metadata_certainty_version is not None or kickoff_map is not None:
+    if artifact_certainty_version is not None or metadata_certainty_version is not None:
         adapted["kickoff_time_certainty_version"] = KICKOFF_TIME_CERTAINTY_VERSION
+        if artifact.get("kickoff_time_certainty_provenance") is not None:
+            adapted["kickoff_time_certainty_provenance"] = artifact[
+                "kickoff_time_certainty_provenance"
+            ]
     return adapted
 
 
@@ -3590,6 +3572,10 @@ def _team_season_artifact(
             "retrospective_game_expectations"
         )
         merged["season_simulation"] = history_artifact.get("season_simulation")
+        if "kickoff_time_certainty_provenance" in history_artifact:
+            merged["kickoff_time_certainty_provenance"] = history_artifact[
+                "kickoff_time_certainty_provenance"
+            ]
         merged_teams: dict[str, Any] = {}
         for team_id, context_team in context_artifact.get("teams", {}).items():
             history_games = {
