@@ -107,14 +107,6 @@ MODEL_FEATURE_COLUMNS = (
     "transfer_in_prior_defensive_impact_db_sum",
     "transfer_in_prior_defensive_impact_db_available",
 )
-DB_COVERAGE_COLUMNS = (
-    "incoming_db_count",
-    "observed_db_impact_count",
-    "observed_db_impact_sum",
-    "missing_db_impact_count",
-    "db_impact_coverage_fraction",
-    "db_impact_coverage_status",
-)
 DEFENSIVE_IMPACT_REFERENCE_CLASSIFICATIONS = frozenset({"fbs", "fcs"})
 CANONICAL_FEATURE_COLUMNS = (
     "season",

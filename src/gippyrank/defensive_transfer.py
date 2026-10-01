@@ -729,7 +729,6 @@ def audit_transfer_records(
             else "after_or_missing_date",
             "in_model_relevant_population": in_scope,
             "defensive_candidate": bool(in_scope and semantics == "defensive"),
-            "portal_player_id": record.player_id,
             "identity_join_method": "none",
             "identity_resolution_detail": None,
             "roster_candidate_count": 0,

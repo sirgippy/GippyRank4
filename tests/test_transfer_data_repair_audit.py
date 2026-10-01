@@ -14,6 +14,13 @@ spec = importlib.util.spec_from_file_location("transfer_data_repair_audit", SCRI
 assert spec is not None and spec.loader is not None
 audit_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(audit_module)
+INTEGRATED_SCRIPT = ROOT / "scripts/build_integrated_transfer_repair_audit.py"
+integrated_spec = importlib.util.spec_from_file_location(
+    "integrated_transfer_data_repair_audit", INTEGRATED_SCRIPT
+)
+assert integrated_spec is not None and integrated_spec.loader is not None
+integrated_module = importlib.util.module_from_spec(integrated_spec)
+integrated_spec.loader.exec_module(integrated_module)
 
 
 def _sha256(path: Path) -> str:
@@ -23,6 +30,57 @@ def _sha256(path: Path) -> str:
 def _rows(path: Path) -> list[dict[str, str]]:
     with path.open(newline="", encoding="utf-8") as handle:
         return list(csv.DictReader(handle))
+
+
+def test_integrated_audit_reconciles_historical_and_2026_checkpoints() -> None:
+    artifact_root = ROOT / "data/processed/transfer_data_repair"
+    summary = json.loads((artifact_root / "summary.json").read_text(encoding="utf-8"))
+    historical = summary["historical"]
+    current = summary["2026"]
+
+    assert historical["availability_status_counts"] == {
+        "complete": 83,
+        "partial": 570,
+        "entirely_unavailable": 2,
+    }
+    assert historical["all_years_combined_checkpoint"][
+        "availability_status_counts"
+    ] == {
+        "complete": 87,
+        "partial": 704,
+        "entirely_unavailable": 2,
+    }
+    assert historical["historical_aggregate_null_reasons"] == {
+        "before": 73,
+        "after": 51,
+    }
+    assert (
+        historical["materializer_replay"]["legacy_replay_matches_frozen_panel"] is True
+    )
+    assert historical["materializer_replay"]["new_replay_matches_materializer"] is True
+    assert (
+        historical["reconciliation_with_151_pre_materializer_snapshot"][
+            "team_season_reclassified"
+        ]["team"]
+        == "Texas"
+    )
+
+    assert (current["incoming_db_transfers"], current["observed_db_impacts"]) == (
+        604,
+        550,
+    )
+    assert current["unresolved_db_impacts"] == 54
+    assert current["unresolved_db_impacts_by_reason"] == {
+        "identity_resolution_failure": 17,
+        "source_data_unavailable": 23,
+        "position_mismatch": 14,
+        "ambiguous": 0,
+    }
+    assert current["changed_db_player_impact_values"]["total"] == 35
+    assert current["changed_db_player_impact_values"]["normalization_drift_only"] == 0
+    assert current["defensive_impact_reference"]["changed_sha256_count"] == 0
+    assert current["context_1_3_invariance"]["model_facing_inputs_changed"] is False
+    assert len(_rows(artifact_root / "team_seasons.csv")) == 793
 
 
 def test_postrepair_audit_preserves_baselines_and_reconciles_coverage(
@@ -36,8 +94,11 @@ def test_postrepair_audit_preserves_baselines_and_reconciles_coverage(
     )
     before_hashes = {path: _sha256(path) for path in immutable_inputs}
 
-    artifact_root = ROOT / "data/processed/transfer_data_repair"
-    summary = json.loads((artifact_root / "summary.json").read_text(encoding="utf-8"))
+    artifact_root = tmp_path / "historical_audit"
+    summary = audit_module.build(
+        artifact_root,
+        materializer_source_root=integrated_module._materializer_source_root(None),
+    )
     changes = _rows(artifact_root / "changes.csv")
     zero_contributors = _rows(artifact_root / "zero_contributors.csv")
     team_seasons = _rows(artifact_root / "team_seasons.csv")
@@ -70,6 +131,7 @@ def test_postrepair_audit_preserves_baselines_and_reconciles_coverage(
     assert all(row["transition"] == "unchanged" for row in coverage)
     assert len(unresolved) == 86
     assert len(feature_changes) == 24
+    assert len(_rows(artifact_root / "historical_transfer_features.csv")) == 2744
     replay = summary["historical_feature_reconciliation"]
     assert replay["verified_source_count"] == 15
     assert replay["verified_source_count"] == len(replay["verified_sources"])

@@ -1038,6 +1038,11 @@ def build(
     report = _render_report(summary, changes, feature_changes, unresolved_db_players)
     player_audit_path = output / "historical_player_repair_audit.csv"
     _write_csv(
+        output / "historical_transfer_features.csv",
+        materialized_rows,
+        list(materialized_rows[0]) if materialized_rows else [],
+    )
+    _write_csv(
         output / "team_seasons.csv",
         post_rows,
         [

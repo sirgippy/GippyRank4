@@ -1,501 +1,1063 @@
 {
-  "baseline_issue_141": {
-    "by_season": {
-      "2021": {
-        "affected": 110,
-        "statuses": {
-          "complete": 17,
-          "entirely_unavailable": 2,
-          "partial": 108
-        },
-        "team_seasons": 127
+  "2026": {
+    "applicable_offensive_usage_failure_cases": [
+      {
+        "d5_applicability": "applicable_prior_offensive_usage",
+        "d5_resolution_category": "should_have_recoverable_offensive_usage_but_resolution_failed",
+        "destination": "Eastern Michigan",
+        "origin": "Syracuse",
+        "player_name": "Malachi James",
+        "portal_index": "2595",
+        "position": "RB",
+        "prior_usage_player_ids": "",
+        "usage_join_method": "none",
+        "usage_join_status": "no_usage_record"
       },
-      "2022": {
-        "affected": 111,
-        "statuses": {
-          "complete": 19,
-          "partial": 111
-        },
-        "team_seasons": 130
+      {
+        "d5_applicability": "applicable_prior_offensive_usage",
+        "d5_resolution_category": "should_have_recoverable_offensive_usage_but_resolution_failed",
+        "destination": "Penn State",
+        "origin": "Iowa State",
+        "player_name": "Zay Robinson",
+        "portal_index": "4210",
+        "position": "WR",
+        "prior_usage_player_ids": "",
+        "usage_join_method": "none",
+        "usage_join_status": "no_usage_record"
+      }
+    ],
+    "applicable_offensive_usage_failures_remaining": 2,
+    "changed_db_player_impact_values": {
+      "change_classes": {
+        "newly_resolved_identity_or_source_coverage": 32,
+        "roster_position_evidence_changed": 3
       },
-      "2023": {
-        "affected": 116,
-        "statuses": {
-          "complete": 15,
-          "partial": 116
+      "changed_teams": 31,
+      "new_position_conflicts": 3,
+      "newly_resolved": 32,
+      "normalization_drift_only": 0,
+      "total": 35
+    },
+    "context_1_3_invariance": {
+      "model_facing_inputs_changed": false,
+      "model_feature_columns_unchanged": true,
+      "published_rankings_regenerated": false
+    },
+    "defensive_impact_reference": {
+      "added_request_count": 0,
+      "after_snapshot_count": 34,
+      "before_snapshot_count": 34,
+      "changed_sha256_count": 0,
+      "matching_request_count": 34,
+      "removed_request_count": 0
+    },
+    "identity_repair_counts": {
+      "generational_suffix_join_rows": 19,
+      "offensive_duplicate_usage_rows_coalesced": 8,
+      "stable_game_player_id_identity_bridge_rows": 9,
+      "verified_team_alias_definitions": 4,
+      "verified_team_alias_player_records": 4
+    },
+    "incoming_db_transfers": 604,
+    "observed_db_impacts": 550,
+    "remaining_player_cases": {
+      "db_ambiguous_player_join": [],
+      "db_player_join_unresolved": [
+        {
+          "identity_join_method": "none",
+          "identity_status": "identity_resolution_failure",
+          "impact_join_method": "none",
+          "impact_status": "identity_resolution_failure",
+          "origin": "Florida International",
+          "player_name": "Brian Blades ll",
+          "portal_index": "494",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Florida International"
         },
-        "team_seasons": 131
+        {
+          "identity_join_method": "none",
+          "identity_status": "identity_resolution_failure",
+          "impact_join_method": "none",
+          "impact_status": "identity_resolution_failure",
+          "origin": "Bowie State",
+          "player_name": "Elijah McKenzie",
+          "portal_index": "762",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Bowie State"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "identity_resolution_failure",
+          "impact_join_method": "none",
+          "impact_status": "identity_resolution_failure",
+          "origin": "Oklahoma State",
+          "player_name": "Jotavion Pierce",
+          "portal_index": "863",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Oklahoma State"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "identity_resolution_failure",
+          "impact_join_method": "none",
+          "impact_status": "identity_resolution_failure",
+          "origin": "Vanderbilt",
+          "player_name": "Chris Tangelo",
+          "portal_index": "995",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Vanderbilt"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "identity_resolution_failure",
+          "impact_join_method": "none",
+          "impact_status": "identity_resolution_failure",
+          "origin": "Kent State",
+          "player_name": "Jaire Rawlinson",
+          "portal_index": "1347",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Kent State"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "identity_resolution_failure",
+          "impact_join_method": "none",
+          "impact_status": "identity_resolution_failure",
+          "origin": "Ohio State",
+          "player_name": "Diante Griffin",
+          "portal_index": "1348",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Ohio State"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "identity_resolution_failure",
+          "impact_join_method": "none",
+          "impact_status": "identity_resolution_failure",
+          "origin": "Morehouse",
+          "player_name": "Tyrese Stanley",
+          "portal_index": "1660",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Morehouse"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "identity_resolution_failure",
+          "impact_join_method": "none",
+          "impact_status": "identity_resolution_failure",
+          "origin": "Utah State",
+          "player_name": "Courage Ugochukwu",
+          "portal_index": "1984",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Utah State"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "identity_resolution_failure",
+          "impact_join_method": "none",
+          "impact_status": "identity_resolution_failure",
+          "origin": "Vanderbilt",
+          "player_name": "Steven Sannieniola",
+          "portal_index": "2144",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Vanderbilt"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "identity_resolution_failure",
+          "impact_join_method": "none",
+          "impact_status": "identity_resolution_failure",
+          "origin": "Utah",
+          "player_name": "Salesi Moa",
+          "portal_index": "2269",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Utah"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "identity_resolution_failure",
+          "impact_join_method": "none",
+          "impact_status": "identity_resolution_failure",
+          "origin": "Albany State",
+          "player_name": "Tyrell Gainey",
+          "portal_index": "2677",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Albany State"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "identity_resolution_failure",
+          "impact_join_method": "none",
+          "impact_status": "identity_resolution_failure",
+          "origin": "American International",
+          "player_name": "Willie Wilson",
+          "portal_index": "3068",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "American International"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "identity_resolution_failure",
+          "impact_join_method": "none",
+          "impact_status": "identity_resolution_failure",
+          "origin": "Idaho State",
+          "player_name": "Jonathan Watts",
+          "portal_index": "3127",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Idaho State"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "identity_resolution_failure",
+          "impact_join_method": "none",
+          "impact_status": "identity_resolution_failure",
+          "origin": "Tulane",
+          "player_name": "Jahiem Johnson",
+          "portal_index": "3274",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Tulane"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "identity_resolution_failure",
+          "impact_join_method": "none",
+          "impact_status": "identity_resolution_failure",
+          "origin": "Michigan State",
+          "player_name": "Armoni Rue",
+          "portal_index": "3447",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Michigan State"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "identity_resolution_failure",
+          "impact_join_method": "none",
+          "impact_status": "identity_resolution_failure",
+          "origin": "Colorado",
+          "player_name": "TJ Branch",
+          "portal_index": "3783",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Colorado"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "identity_resolution_failure",
+          "impact_join_method": "none",
+          "impact_status": "identity_resolution_failure",
+          "origin": "Duke",
+          "player_name": "Vontae Floyd",
+          "portal_index": "4215",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Duke"
+        }
+      ],
+      "db_position_conflict": [
+        {
+          "identity_join_method": "normalized_name_source_team",
+          "identity_status": "position_mismatch",
+          "impact_join_method": "stable_player_id_source_team",
+          "impact_status": "position_mismatch",
+          "origin": "Nebraska",
+          "player_name": "Caden VerMaas",
+          "portal_index": "152",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "5142706",
+          "prior_position": "DE",
+          "prior_position_group": "dl_edge",
+          "raw_origin": "Nebraska"
+        },
+        {
+          "identity_join_method": "normalized_name_source_team",
+          "identity_status": "position_mismatch",
+          "impact_join_method": "stable_player_id_source_team",
+          "impact_status": "position_mismatch",
+          "origin": "UAlbany",
+          "player_name": "Cam Stodghill",
+          "portal_index": "707",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "5156962",
+          "prior_position": "LB",
+          "prior_position_group": "lb",
+          "raw_origin": "Albany"
+        },
+        {
+          "identity_join_method": "normalized_name_source_team_generational_suffix",
+          "identity_status": "position_mismatch",
+          "impact_join_method": "stable_player_id_source_team",
+          "impact_status": "position_mismatch",
+          "origin": "USC",
+          "player_name": "Anthony Beavers Jr.",
+          "portal_index": "731",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "4432660",
+          "prior_position": "LB",
+          "prior_position_group": "lb",
+          "raw_origin": "USC"
+        },
+        {
+          "identity_join_method": "normalized_name_source_team",
+          "identity_status": "position_mismatch",
+          "impact_join_method": "stable_player_id_source_team",
+          "impact_status": "position_mismatch",
+          "origin": "UAB",
+          "player_name": "AJ Brown",
+          "portal_index": "1173",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "5082374",
+          "prior_position": "DE",
+          "prior_position_group": "dl_edge",
+          "raw_origin": "UAB"
+        },
+        {
+          "identity_join_method": "normalized_name_source_team",
+          "identity_status": "position_mismatch",
+          "impact_join_method": "stable_player_id_source_team",
+          "impact_status": "position_mismatch",
+          "origin": "Long Island University",
+          "player_name": "Jalen Bell",
+          "portal_index": "1175",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "5230034",
+          "prior_position": "LB",
+          "prior_position_group": "lb",
+          "raw_origin": "LIU Post"
+        },
+        {
+          "identity_join_method": "normalized_name_source_team",
+          "identity_status": "position_mismatch",
+          "impact_join_method": "stable_player_id_source_team",
+          "impact_status": "position_mismatch",
+          "origin": "Southern Miss",
+          "player_name": "Zach Ruffin",
+          "portal_index": "2610",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "5209942",
+          "prior_position": "LB",
+          "prior_position_group": "lb",
+          "raw_origin": "Southern Miss"
+        },
+        {
+          "identity_join_method": "normalized_name_source_team",
+          "identity_status": "position_mismatch",
+          "impact_join_method": "none",
+          "impact_status": "position_mismatch",
+          "origin": "Michigan State",
+          "player_name": "Elisha West",
+          "portal_index": "3163",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "5306014",
+          "prior_position": "?",
+          "prior_position_group": "",
+          "raw_origin": "Michigan State"
+        },
+        {
+          "identity_join_method": "normalized_name_source_team",
+          "identity_status": "position_mismatch",
+          "impact_join_method": "stable_player_id_source_team",
+          "impact_status": "position_mismatch",
+          "origin": "Dayton",
+          "player_name": "Vincent Firenze",
+          "portal_index": "3415",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "5156757",
+          "prior_position": "LB",
+          "prior_position_group": "lb",
+          "raw_origin": "Dayton"
+        },
+        {
+          "identity_join_method": "normalized_name_source_team",
+          "identity_status": "position_mismatch",
+          "impact_join_method": "stable_player_id_source_team",
+          "impact_status": "position_mismatch",
+          "origin": "Jacksonville State",
+          "player_name": "Malcolm Jones",
+          "portal_index": "3537",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "4838544",
+          "prior_position": "LB",
+          "prior_position_group": "lb",
+          "raw_origin": "Jacksonville State"
+        },
+        {
+          "identity_join_method": "normalized_name_source_team",
+          "identity_status": "position_mismatch",
+          "impact_join_method": "stable_player_id_source_team",
+          "impact_status": "position_mismatch",
+          "origin": "Delaware",
+          "player_name": "Anthony Crenshaw Jr.",
+          "portal_index": "3928",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "5153853",
+          "prior_position": "LB",
+          "prior_position_group": "lb",
+          "raw_origin": "Delaware"
+        },
+        {
+          "identity_join_method": "normalized_name_source_team",
+          "identity_status": "position_mismatch",
+          "impact_join_method": "stable_player_id_source_team",
+          "impact_status": "position_mismatch",
+          "origin": "West Virginia",
+          "player_name": "Chris Fileppo",
+          "portal_index": "3998",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "5209266",
+          "prior_position": "LB",
+          "prior_position_group": "lb",
+          "raw_origin": "West Virginia"
+        },
+        {
+          "identity_join_method": "normalized_name_source_team",
+          "identity_status": "position_mismatch",
+          "impact_join_method": "stable_player_id_source_team",
+          "impact_status": "position_mismatch",
+          "origin": "Mississippi State",
+          "player_name": "Stonka Burnside",
+          "portal_index": "4277",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "5079354",
+          "prior_position": "WR",
+          "prior_position_group": "",
+          "raw_origin": "Mississippi State"
+        },
+        {
+          "identity_join_method": "normalized_name_source_team",
+          "identity_status": "position_mismatch",
+          "impact_join_method": "stable_player_id_source_team",
+          "impact_status": "position_mismatch",
+          "origin": "Mississippi State",
+          "player_name": "Tony Mitchell",
+          "portal_index": "4421",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "4870856",
+          "prior_position": "LB",
+          "prior_position_group": "lb",
+          "raw_origin": "Mississippi State"
+        },
+        {
+          "identity_join_method": "normalized_name_source_team",
+          "identity_status": "position_mismatch",
+          "impact_join_method": "stable_player_id_source_team",
+          "impact_status": "position_mismatch",
+          "origin": "Lafayette",
+          "player_name": "Darson Jeanty",
+          "portal_index": "4453",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "5152672",
+          "prior_position": "LB",
+          "prior_position_group": "lb",
+          "raw_origin": "Lafayette"
+        }
+      ],
+      "db_source_team_uncovered": [
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Lake Erie",
+          "player_name": "Chris Payne",
+          "portal_index": "83",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Lake Erie"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Fort Hays",
+          "player_name": "Keiyon Turner",
+          "portal_index": "114",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Fort Hays"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Cal Lutheran",
+          "player_name": "Agenhart Ellis IV",
+          "portal_index": "171",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Cal Lutheran"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Benedict College",
+          "player_name": "Geo Jallah",
+          "portal_index": "278",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Benedict College"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Texas A&M-Kingsville",
+          "player_name": "D'Cambren Verrett",
+          "portal_index": "293",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Texas A&M-Kingsville"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Benedict",
+          "player_name": "Andre Jocelyn",
+          "portal_index": "308",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Benedict"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Nebraska-Kearney",
+          "player_name": "Qualyn McQueen",
+          "portal_index": "564",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Nebraska-Kearney"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Gannon",
+          "player_name": "Donovan Faria",
+          "portal_index": "989",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Gannon"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Texas A&M-Kingsville",
+          "player_name": "De'Marcus Peters",
+          "portal_index": "1267",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Texas A&M-Kingsville"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Wayne State College",
+          "player_name": "Kahmel Johnson",
+          "portal_index": "1554",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Wayne State College"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Grand Valley State",
+          "player_name": "Jason Hardy",
+          "portal_index": "1576",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Grand Valley State"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Angelo State",
+          "player_name": "Xavier Walton",
+          "portal_index": "1600",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Angelo State"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Missouri Southern State",
+          "player_name": "Da'Marion Brownlee",
+          "portal_index": "1655",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Missouri Southern State"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Concordia St. Paul",
+          "player_name": "Dilan Williamson",
+          "portal_index": "1712",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Concordia St. Paul"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Pittsburg State",
+          "player_name": "Jordan Rogers",
+          "portal_index": "1716",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Pittsburg State"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Findlay",
+          "player_name": "Jayon Harvey",
+          "portal_index": "1800",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Findlay"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Emporia State",
+          "player_name": "Peyton Taylor",
+          "portal_index": "2616",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Emporia State"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Ohio Dominican",
+          "player_name": "Mo Conteh",
+          "portal_index": "2697",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Ohio Dominican"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Shepherd",
+          "player_name": "Damier Minkah",
+          "portal_index": "2768",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Shepherd"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Southwest Minnesota State",
+          "player_name": "Parker Knutson",
+          "portal_index": "2999",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Southwest Minnesota State"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Washburn",
+          "player_name": "Braylon Alexander",
+          "portal_index": "3229",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Washburn"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Faulkner University",
+          "player_name": "Caleb Williams",
+          "portal_index": "3297",
+          "portal_player_id": "",
+          "position": "S",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Faulkner University"
+        },
+        {
+          "identity_join_method": "none",
+          "identity_status": "source_data_unavailable",
+          "impact_join_method": "none",
+          "impact_status": "source_data_unavailable",
+          "origin": "Slippery Rock",
+          "player_name": "Kanye Thompson",
+          "portal_index": "3444",
+          "portal_player_id": "",
+          "position": "CB",
+          "prior_player_id": "",
+          "prior_position": "",
+          "prior_position_group": "",
+          "raw_origin": "Slippery Rock"
+        }
+      ]
+    },
+    "source_lineage": {
+      "after_manifest_sha256": "ebdff94bbc2869c6c43d9659d0f47a91adf3e26f013b5f60fed04408a3b85930",
+      "before_manifest_sha256": "b74ec11840f9bdc55520f06c23303f5442c1b6d5e2f86cb22b30c27733e0b8a0",
+      "snapshot_comparison": {
+        "additional_current_requests": 97,
+        "comparison_key": "source + source season + exact query parameters",
+        "current_reacquired_snapshots": 134,
+        "interpretation": "A matching SHA-256 proves byte identity for that response only; later retrieval does not prove historical availability. Different hashes remain current/reacquired evidence and are not substituted for the original snapshot.",
+        "original_manifest_snapshots": 37,
+        "paired_original_requests": 37,
+        "paired_requests_byte_identical": 17,
+        "paired_requests_hash_different": 20
       },
-      "2024": {
-        "affected": 122,
-        "statuses": {
-          "complete": 11,
-          "partial": 122
+      "source_limitations": {
+        "2026_offensive_player_join_audit_available_locally": true,
+        "2026_snapshot_record_count_including_noncanonical_diagnostics": 136,
+        "all_snapshots_after_cutoff": true,
+        "expected_2026_snapshot_count": 134,
+        "historical_raw_payloads_by_source": {
+          "portal": 0,
+          "stats": 0,
+          "usage": 0
         },
-        "team_seasons": 133
-      },
-      "2025": {
-        "affected": 129,
-        "statuses": {
-          "complete": 5,
-          "partial": 129
+        "historical_raw_transfer_payload_count": 0,
+        "historical_raw_transfer_payloads_available_locally": false,
+        "historical_timing": "historical_timing_unverified",
+        "missing_2026_raw_snapshot_count": 0,
+        "missing_2026_raw_snapshot_paths": [],
+        "noncanonical_2026_diagnostic_snapshot_count": 2,
+        "snapshot_count_by_source": {
+          "games_players": 103,
+          "portal": 1,
+          "roster": 28,
+          "stats": 1,
+          "usage": 1
         },
-        "team_seasons": 134
-      },
-      "2026": {
-        "affected": 134,
-        "statuses": {
-          "complete": 4,
-          "partial": 134
-        },
-        "team_seasons": 138
+        "snapshot_retrieval_first": "2026-09-30T20:03:01.276298+00:00",
+        "snapshot_retrieval_last": "2026-09-30T21:25:59.196842+00:00"
       }
     },
+    "team_coverage_status_counts": {
+      "complete": 94,
+      "no_incoming_db_transfers": 6,
+      "partial": 38
+    },
+    "unknown_offensive_applicability_count": 1012,
+    "unresolved_db_impacts": 54,
+    "unresolved_db_impacts_by_reason": {
+      "ambiguous": 0,
+      "identity_resolution_failure": 17,
+      "position_mismatch": 14,
+      "source_data_unavailable": 23
+    }
+  },
+  "context_1_3_invariance": {
+    "model_facing_inputs_changed": false,
+    "model_feature_columns_unchanged": true,
+    "published_rankings_regenerated": false
+  },
+  "generator_input_sha256": {
     "current_2026": {
-      "affected": 134,
-      "all_snapshots_after_cutoff": true,
-      "db_unresolved": 86,
-      "db_unresolved_player_causes": {
-        "db_ambiguous_player_join": 1,
-        "db_player_join_unresolved": 40,
-        "db_position_conflict": 11,
-        "db_source_team_uncovered": 34
+      "data/processed/partial_db_transfer_impact_142/empirical_2026_coverage.csv": "77a819bb56e452df37620eb7a8d585d55b3d6c62c8530b08ee696e483d16ee5f",
+      "data/processed/preseason/context_v1_3_2026_reacquired_20260930/feature_provenance.json": "ab7589a58281e519b46aa99d66790edace314d8d4f6c9900418ba4944c4776ab",
+      "data/processed/preseason/context_v1_3_2026_reacquired_20260930/source_manifest.json": "ebdff94bbc2869c6c43d9659d0f47a91adf3e26f013b5f60fed04408a3b85930",
+      "data/processed/preseason/context_v1_3_2026_reacquired_20260930/transfer_player_audit.csv": "f0a3a66c683bfb1110131e95a913ef1743f6266a63175b4b6aba8fe185c82373",
+      "data/processed/preseason/context_v1_3_2026_reacquired_20260930/transfer_team_audit.csv": "553ab4c1a11d9e807ab31520928c46a750e6f98978b92646b58cbe2d0cc22f7e",
+      "data/processed/preseason/context_v1_3_2026_reconstruction/source_manifest.json": "574e705ec9e3c51658ee83cb1bbb1c1792a326ab1a89333219e9b27e7a8b00c9",
+      "data/processed/preseason/context_v1_3_candidate/historical_transfer_features.csv": "3b3680cf63806033cf6d67813a1359ada455e8e7528bf310a27b37d5cda7a726",
+      "data/processed/transfer_availability_audit/summary.json": "6df31f276c0a9480e8f83c56e1251467efda3c0df4a5decc1916cf13e7690438",
+      "data/processed/transfer_availability_audit/team_seasons.csv": "c380c55a27b57484e557c4346f5ce0166035b8261db9f8fa3a231747ebe20670",
+      "data/processed/transfer_data_repair/availability_2026_reacquired_20260930/summary.json": "805f9a471dcfd0de3abf5ac0731734c765ab4054f923ff4743e520ca30caadc9",
+      "data/processed/transfer_data_repair/availability_2026_reacquired_20260930/team_seasons.csv": "a66b2ec2fded977841adf3da2c6795f18d18b229e73dc2d837440cb65ba46ca2",
+      "data/processed/transfer_production_audit/player_join_records.csv": "7abb0b50f44e5a68befa28ca7ab9946658290196cc1090f709c6576d4c17b579",
+      "data/processed/transfer_production_audit/team_feature_coverage.csv": "b6fe961883dfa5c6a5990471ad2518514278f1a5ba2a98f474ca9312af147228"
+    },
+    "historical": {
+      "data/processed/defensive_transfer_audit/transfer_player_audit.csv": "cf7b25313093c9ae0f4d21ee5865336fbb81705062e8ea92c9dc5f535aa1135d",
+      "data/processed/partial_db_transfer_impact_142/empirical_2026_coverage.csv": "77a819bb56e452df37620eb7a8d585d55b3d6c62c8530b08ee696e483d16ee5f",
+      "data/processed/preseason/context_v1_3_2026_reconstruction/source_manifest.json": "574e705ec9e3c51658ee83cb1bbb1c1792a326ab1a89333219e9b27e7a8b00c9",
+      "data/processed/preseason/context_v1_3_2026_reconstruction/transfer_player_audit.csv": "acd5693f4da0888a8b480bd275b66856065e80e2a504c9b2f33b2f15dfc91397",
+      "data/processed/preseason/context_v1_3_2026_reconstruction/transfer_team_audit.csv": "322a9fa8f062e1f63153a48c380b72205e1b27aae80be7bf3cbc2b89c0916dfb",
+      "data/processed/preseason/context_v1_3_candidate/historical_transfer_features.csv": "3b3680cf63806033cf6d67813a1359ada455e8e7528bf310a27b37d5cda7a726",
+      "data/processed/transfer_availability_audit/summary.json": "6df31f276c0a9480e8f83c56e1251467efda3c0df4a5decc1916cf13e7690438",
+      "data/processed/transfer_production_audit/player_join_records.csv": "7abb0b50f44e5a68befa28ca7ab9946658290196cc1090f709c6576d4c17b579",
+      "data/processed/transfer_production_audit/team_feature_coverage.csv": "b6fe961883dfa5c6a5990471ad2518514278f1a5ba2a98f474ca9312af147228"
+    }
+  },
+  "historical": {
+    "all_years_combined_checkpoint": {
+      "availability_status_counts": {
+        "complete": 87,
+        "entirely_unavailable": 2,
+        "partial": 704
       },
-      "excluded_destination_statuses": {
-        "exact_normalized_name": 12,
-        "missing_name": 982,
-        "not_in_fbs": 408
-      },
-      "excluded_portal_records": 1402,
-      "incoming_transfers": 3069,
-      "offensive_applicability_unknown": 1012,
-      "offensive_join_failed": 10,
-      "portal_records": 4471,
-      "retrieval_first": "2026-09-19T21:50:53.583794+00:00",
-      "retrieval_last": "2026-09-19T21:52:33.852803+00:00",
-      "snapshot_count": 37,
-      "snapshot_count_by_source": {
-        "games_players": 32,
-        "portal": 1,
-        "roster": 2,
-        "stats": 1,
-        "usage": 1
-      },
-      "team_seasons": 138,
-      "teams_with_db_unresolved": 58,
-      "teams_with_offensive_applicability_unknown": 134,
-      "teams_with_offensive_join_failed": 8,
-      "teams_with_repair_candidate": 36,
-      "teams_with_source_coverage_gap": 25
+      "team_seasons": 793
     },
-    "definitions": {
-      "checkpoint_status": "Independent of present-day completeness; no historical on-time source snapshot is proved by these research artifacts, so individual late arrivals cannot be separated from pre-cutoff data lost in processing.",
-      "complete": "All known incoming transfers are resolved or legitimately zero, including DB; no offensive applicability is unknown. A covered portal with no incoming transfers is complete.",
-      "entirely_unavailable": "Incoming transfers exist, no applicable offensive transfer resolves, no legitimate offensive zero is established, at least one incoming DB transfer is unresolved, and no incoming DB impact resolves.",
-      "partial": "A transfer input or retrospective aggregate has a gap, but a player-level offensive or DB contribution or covered natural-zero DB feature is known."
-    },
-    "population": "Context FBS team-seasons, 2021-2026; historical research panel plus 2026 reconstruction",
-    "reason_team_seasons": {
-      "db_ambiguous_player_join": 9,
-      "db_player_join_unresolved": 214,
-      "db_position_conflict": 58,
-      "db_source_team_uncovered": 87,
-      "historical_aggregate_null": 73,
-      "offense_ambiguous_player_join": 25,
-      "offense_applicability_unproven": 689,
-      "offense_source_team_mismatch": 38,
-      "offense_usage_join_unresolved": 8,
-      "offense_usage_row_absent": 21
-    },
-    "repair_classes": {
-      "candidate_repair": 32,
-      "not_applicable": 71,
-      "unresolved": 690
-    },
-    "statuses": {
-      "complete": 71,
+    "availability_status_counts": {
+      "complete": 83,
       "entirely_unavailable": 2,
-      "partial": 720
+      "partial": 570
     },
-    "team_seasons": 793,
-    "team_seasons_with_repair_candidate": 321,
-    "team_seasons_with_source_coverage_gap": 87
-  },
-  "corrected_historical_player_audit": {
-    "record_count": 14422,
-    "sha256": "62971a132adf5e89b6f9bec6c9867c288f7b1b05d1f4e87efd6cfbd65c430303"
-  },
-  "coverage_2026": {
-    "exact_coverage_ratio_distribution": {
-      "0/0": 6,
-      "0/4": 1,
-      "1/1": 13,
-      "1/2": 5,
-      "10/10": 1,
-      "10/11": 3,
-      "10/12": 2,
-      "12/13": 1,
-      "2/2": 13,
-      "2/3": 7,
-      "2/4": 3,
-      "2/5": 3,
-      "3/3": 14,
-      "3/4": 3,
-      "3/5": 3,
-      "4/4": 19,
-      "4/5": 3,
-      "4/6": 3,
-      "4/8": 1,
-      "5/5": 3,
-      "5/6": 8,
-      "6/6": 4,
-      "6/7": 6,
-      "6/8": 1,
-      "6/9": 1,
-      "7/10": 1,
-      "7/7": 3,
-      "7/8": 2,
-      "8/8": 2,
-      "9/10": 1,
-      "9/9": 2
+    "canonical_feature_panel": {
+      "authority": "#150 replay/materializer parity result",
+      "path": "data/processed/transfer_data_repair/historical_transfer_features.csv",
+      "row_count": 2744,
+      "sha256": "d17d174b8b49e22cc118618afb9046c399e5889cb56f43141c2e5cbfcc6e028c"
     },
-    "incoming_db_count": 604,
-    "matches_issue_142_coverage_inventory": true,
-    "missing_db_impact_count": 86,
-    "observed_db_impact_count": 518,
-    "team_transitions": {
-      "unchanged": 138
+    "corrected_2021_troy_usage": {
+      "historical_aggregate_null_retained": false,
+      "post_repair_materialized_usage_value": "0.163"
     },
-    "teams": 138,
-    "teams_present_in_issue_142_panel": 132,
-    "teams_with_complete_observed_coverage": 74,
-    "teams_with_no_incoming_db_transfers": 6,
-    "teams_with_no_observed_impacts": 1,
-    "teams_with_partial_observed_coverage": 57
-  },
-  "db_player_repairs_by_failure_class": {
-    "db_ambiguous_player_join": 0,
-    "db_player_join_unresolved": 0,
-    "db_position_conflict": 0,
-    "db_source_team_uncovered": 0
-  },
-  "historical_feature_reconciliation": {
-    "ambiguous_changed_transfer_count": 1,
-    "ambiguous_player_audit_record_count": 1,
-    "ambiguous_usage_join_removals": 1,
-    "before_panel_path": "data/processed/preseason/context_v1_3_candidate/historical_transfer_features.csv",
-    "before_panel_sha256": "3b3680cf63806033cf6d67813a1359ada455e8e7528bf310a27b37d5cda7a726",
-    "change_inventory_exactly_matches_materializer_diff": true,
-    "changed_feature_values": 24,
-    "changed_feature_values_by_class": {
-      "ambiguous_usage_join_removed": 1,
-      "legitimate_zero_restoration": 21,
-      "name_normalization_join_added": 2
+    "corrected_player_audit": {
+      "record_count": 14422,
+      "sha256": "7200f384da742658669164800edf9245ee215d17704b249b193d2afd17deee1e"
     },
-    "changed_team_seasons": 24,
-    "changed_team_seasons_by_reason": {
-      "ambiguous_usage_join_removed": 1,
-      "legitimate_zero_restoration": 21,
-      "name_normalization_join_added": 2
+    "historical_aggregate_null_reasons": {
+      "after": 51,
+      "before": 73
     },
-    "duplicate_equivalent_ambiguous_joins_resolved": 24,
-    "legacy_ambiguous_player_audit_record_count": 25,
-    "legacy_oracle_commit": "fc8c3924164c19fbb8b28334f613c5937c744673",
-    "legacy_oracle_source_sha256": "e2d66036102f7ac8bd11fbf95d913b688a0b283224b218db513a43b47d819c49",
-    "legacy_replay_matches_frozen_panel": true,
-    "legitimate_zero_contributor_players": 46,
-    "legitimate_zero_restorations": 21,
-    "materializer_feature_values_compared": 8232,
-    "materializer_panel_row_count": 2744,
-    "new_replay_matches_materializer": true,
-    "other_change_classes": {
-      "name_normalization_join_added": 2
+    "materializer_replay": {
+      "change_inventory_exactly_matches_materializer_diff": true,
+      "changed_feature_values": 24,
+      "changed_team_seasons": 24,
+      "duplicate_equivalent_joins_resolved": 24,
+      "feature_changes_by_class": {
+        "ambiguous_usage_join_removed": 1,
+        "legitimate_zero_restoration": 21,
+        "name_normalization_join_added": 2
+      },
+      "legacy_replay_matches_frozen_panel": true,
+      "new_replay_matches_materializer": true,
+      "remaining_ambiguous_usage_joins": 1,
+      "unexplained_changed_feature_values": 0
     },
-    "player_contribution_changes_by_class": {
-      "ambiguous_usage_join_removed": 1,
-      "legitimate_zero_restoration": 46,
-      "name_normalization_join_added": 2
+    "player_usage_repairs": {
+      "conflicting_usage_value_joins": 0,
+      "duplicate_equivalent_usage_joins": 24,
+      "legitimate_zero_evidence_players": 3989,
+      "normalization_recovered_usage_joins": 32,
+      "resolved_usage_joins": 1842
     },
-    "portal_audit_rows_bound_to_verified_payloads": 14422,
-    "portal_position_checked_against_verified_payloads": true,
-    "portal_records_with_stable_ids": 0,
-    "remaining_ambiguous_usage_joins": 1,
-    "source_manifest_path": "data/processed/transfer_production_audit/source_manifest.json",
+    "reconciliation_with_151_pre_materializer_snapshot": {
+      "aggregate_null_reason_reduction_case": {
+        "final_usage_value": "0.163",
+        "season": 2021,
+        "team": "Troy"
+      },
+      "final_status_delta": {
+        "complete": -1,
+        "entirely_unavailable": 0,
+        "partial": 1
+      },
+      "pre_materializer_availability_status_counts": {
+        "complete": 88,
+        "entirely_unavailable": 2,
+        "partial": 703
+      },
+      "pre_materializer_historical_aggregate_null_reasons": 52,
+      "pre_materializer_team_seasons": 793,
+      "team_season_reclassified": {
+        "final_status": "partial",
+        "pre_materializer_status": "complete",
+        "reason": "Diamonte Tucker-Dorsey (LB) has no usage candidate and the #150 player audit classifies applicability as unknown; the pre-materializer #151 audit had treated this absence as zero",
+        "season": 2022,
+        "team": "Texas"
+      }
+    },
+    "seasons": [
+      2021,
+      2025
+    ],
     "source_manifest_sha256": "b1c30ed98c8b38b8f4eb5ea57e8090858471f2c11d2879388d96bd7ace60c517",
-    "unexplained_changed_feature_values": 0,
-    "verified_source_count": 15,
-    "verified_sources": [
-      {
-        "kind": "portal",
-        "path": "data/raw/cfbd/preseason/transfers/portal/2021.json",
-        "record_count": 1770,
-        "season": 2021,
-        "sha256": "18d0d528f2b9c2dcc83814185a619a13dd829f642a023c80129805db33114087"
-      },
-      {
-        "kind": "portal",
-        "path": "data/raw/cfbd/preseason/transfers/portal/2022.json",
-        "record_count": 2273,
-        "season": 2022,
-        "sha256": "6a3efbb4a12baaa13d9376bfb5a5e83a98dd258178fc8735dcf0e9336000297e"
-      },
-      {
-        "kind": "portal",
-        "path": "data/raw/cfbd/preseason/transfers/portal/2023.json",
-        "record_count": 2502,
-        "season": 2023,
-        "sha256": "73229d36aee995b0b80629d46870dba85c9ba032b0162a4705dd4a82801655df"
-      },
-      {
-        "kind": "portal",
-        "path": "data/raw/cfbd/preseason/transfers/portal/2024.json",
-        "record_count": 3378,
-        "season": 2024,
-        "sha256": "ce7e540c2e153cb9fdab6e9834eddbbbf9be27fab71ac726026d244236865029"
-      },
-      {
-        "kind": "portal",
-        "path": "data/raw/cfbd/preseason/transfers/portal/2025.json",
-        "record_count": 4499,
-        "season": 2025,
-        "sha256": "a566904246c2ee1c4c0c7c631714b44b0fc47b2bd0191763eead37aee130ce51"
-      },
-      {
-        "kind": "stats",
-        "path": "data/raw/cfbd/preseason/transfers/stats/2020.json",
-        "record_count": 73490,
-        "season": 2020,
-        "sha256": "8febf955733f6bd9387ebb0aa45b9cb8111c48f020c7d11fd99ed7ecd2f787eb"
-      },
-      {
-        "kind": "stats",
-        "path": "data/raw/cfbd/preseason/transfers/stats/2021.json",
-        "record_count": 109056,
-        "season": 2021,
-        "sha256": "53d281422eb41c6e49355244ee933b66682c0e5361cc0ce02922f699dbeebdec"
-      },
-      {
-        "kind": "stats",
-        "path": "data/raw/cfbd/preseason/transfers/stats/2022.json",
-        "record_count": 138632,
-        "season": 2022,
-        "sha256": "5bd40f21e0da41a69b620d68aa4a1a2a6feeb5f134c3bab176a211fa83d2a5db"
-      },
-      {
-        "kind": "stats",
-        "path": "data/raw/cfbd/preseason/transfers/stats/2023.json",
-        "record_count": 132228,
-        "season": 2023,
-        "sha256": "094ee38888c37999dbc9ae9534675bdd58b63a8735b421e556ff1a8843a216ab"
-      },
-      {
-        "kind": "stats",
-        "path": "data/raw/cfbd/preseason/transfers/stats/2024.json",
-        "record_count": 135294,
-        "season": 2024,
-        "sha256": "e1bce8c79927ca57464a691b5f8498fa237d7ecee34c9f6d444ddb3e52d3fae1"
-      },
-      {
-        "kind": "usage",
-        "path": "data/raw/cfbd/preseason/transfers/usage/2020.json",
-        "record_count": 2400,
-        "season": 2020,
-        "sha256": "7d0a49eaa06ff9a730f6e96c5f2272e7030e9c86f616f26d9930dd6c08e7f567"
-      },
-      {
-        "kind": "usage",
-        "path": "data/raw/cfbd/preseason/transfers/usage/2021.json",
-        "record_count": 3314,
-        "season": 2021,
-        "sha256": "9c738768bcb914bc6fe781e5716a877dd93227f6186b9650f1fcc4917e3fb984"
-      },
-      {
-        "kind": "usage",
-        "path": "data/raw/cfbd/preseason/transfers/usage/2022.json",
-        "record_count": 4992,
-        "season": 2022,
-        "sha256": "3f4429e25852b011ea749e1ad548b630f990a72da4976c3f6d71d4ab4704aec6"
-      },
-      {
-        "kind": "usage",
-        "path": "data/raw/cfbd/preseason/transfers/usage/2023.json",
-        "record_count": 4586,
-        "season": 2023,
-        "sha256": "75595ed1c97c4da9579a6c6e5bd88248283a6389a915348612478e698e07651b"
-      },
-      {
-        "kind": "usage",
-        "path": "data/raw/cfbd/preseason/transfers/usage/2024.json",
-        "record_count": 4131,
-        "season": 2024,
-        "sha256": "ff286be911442c317fc00ae485598a8a314978276df27c9d972407edd4d8a08b"
-      }
-    ],
-    "zero_evidence_sha256": "93faf9d62811d7dc83bdfd5568cf972f7fa0b1e7ee7db90cb16655e89eb96d29"
+    "team_seasons": 655
   },
-  "historical_usage_resolution": {
-    "conflicting_usage_value_joins": 0,
-    "duplicate_equivalent_usage_joins": 24,
-    "in_model_relevant_player_records": 8239,
-    "legitimate_zero_evidence_players": 3989,
-    "normalization_recovered_usage_joins": 32,
-    "remaining_ambiguous_usage_joins": 1,
-    "resolved_usage_joins": 1842
+  "integration": {
+    "2026_authority": "PR #151 reacquired source evidence, deterministic joins, coverage, and frozen impact reference",
+    "historical_authority": "PR #150 corrected replay/materializer parity and availability reconstruction",
+    "historical_panel_artifact": "historical_transfer_features.csv",
+    "team_season_artifact": "team_seasons.csv"
   },
-  "input_sha256": {
-    "data/processed/defensive_transfer_audit/transfer_player_audit.csv": "cf7b25313093c9ae0f4d21ee5865336fbb81705062e8ea92c9dc5f535aa1135d",
-    "data/processed/partial_db_transfer_impact_142/empirical_2026_coverage.csv": "77a819bb56e452df37620eb7a8d585d55b3d6c62c8530b08ee696e483d16ee5f",
-    "data/processed/preseason/context_v1_3_2026_reconstruction/source_manifest.json": "574e705ec9e3c51658ee83cb1bbb1c1792a326ab1a89333219e9b27e7a8b00c9",
-    "data/processed/preseason/context_v1_3_2026_reconstruction/transfer_player_audit.csv": "acd5693f4da0888a8b480bd275b66856065e80e2a504c9b2f33b2f15dfc91397",
-    "data/processed/preseason/context_v1_3_2026_reconstruction/transfer_team_audit.csv": "322a9fa8f062e1f63153a48c380b72205e1b27aae80be7bf3cbc2b89c0916dfb",
-    "data/processed/preseason/context_v1_3_candidate/historical_transfer_features.csv": "3b3680cf63806033cf6d67813a1359ada455e8e7528bf310a27b37d5cda7a726",
-    "data/processed/transfer_availability_audit/summary.json": "6df31f276c0a9480e8f83c56e1251467efda3c0df4a5decc1916cf13e7690438",
-    "data/processed/transfer_production_audit/player_join_records.csv": "7abb0b50f44e5a68befa28ca7ab9946658290196cc1090f709c6576d4c17b579",
-    "data/processed/transfer_production_audit/team_feature_coverage.csv": "b6fe961883dfa5c6a5990471ad2518514278f1a5ba2a98f474ca9312af147228"
-  },
-  "issue": 148,
-  "non_model_change_check": {
-    "context_1_3_model_db_sum_and_availability_retained_from_frozen_audit": true,
-    "context_1_3_model_feature_columns_unchanged": true,
-    "issue_141_and_142_artifacts_overwritten": false,
-    "published_ranking_artifacts_regenerated": false
-  },
-  "population": "Context FBS team-seasons, 2021-2026",
-  "post_repair": {
-    "by_season": {
-      "2021": {
-        "affected": 102,
-        "statuses": {
-          "complete": 25,
-          "entirely_unavailable": 2,
-          "partial": 100
-        },
-        "team_seasons": 127
-      },
-      "2022": {
-        "affected": 108,
-        "statuses": {
-          "complete": 22,
-          "partial": 108
-        },
-        "team_seasons": 130
-      },
-      "2023": {
-        "affected": 111,
-        "statuses": {
-          "complete": 20,
-          "partial": 111
-        },
-        "team_seasons": 131
-      },
-      "2024": {
-        "affected": 122,
-        "statuses": {
-          "complete": 11,
-          "partial": 122
-        },
-        "team_seasons": 133
-      },
-      "2025": {
-        "affected": 129,
-        "statuses": {
-          "complete": 5,
-          "partial": 129
-        },
-        "team_seasons": 134
-      },
-      "2026": {
-        "affected": 134,
-        "statuses": {
-          "complete": 4,
-          "partial": 134
-        },
-        "team_seasons": 138
-      }
-    },
-    "reason_team_seasons": {
-      "db_ambiguous_player_join": 9,
-      "db_player_join_unresolved": 214,
-      "db_position_conflict": 58,
-      "db_source_team_uncovered": 87,
-      "historical_aggregate_null": 51,
-      "offense_ambiguous_player_join": 1,
-      "offense_applicability_unproven": 690,
-      "offense_source_team_mismatch": 38,
-      "offense_usage_join_unresolved": 8,
-      "offense_usage_row_absent": 21
-    },
-    "repair_classes": {
-      "candidate_repair": 15,
-      "not_applicable": 87,
-      "unresolved": 691
-    },
-    "statuses": {
-      "complete": 87,
-      "entirely_unavailable": 2,
-      "partial": 704
-    },
-    "team_seasons": 793,
-    "team_seasons_with_repair_candidate": 288,
-    "team_seasons_with_source_coverage_gap": 87
-  },
-  "remaining_failure_counts": {
-    "ambiguous_db_player_join": 1,
-    "applicable_offensive_usage_failure_teams": 8,
-    "applicable_offensive_usage_join": 10,
-    "covered_roster_db_player_join": 40,
-    "db_position_conflict": 11,
-    "historical_aggregate_null_team_seasons": 51,
-    "offensive_applicability_unproven": 1012,
-    "source_team_uncovered_db_player": 34
-  },
-  "repaired_historical_legitimate_zero_team_seasons": 21,
-  "source_availability": {
-    "expected_snapshot_count": 37,
-    "missing_raw_snapshot_count": 37,
-    "raw_manifest_present": false,
-    "raw_payloads_missing": [
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-01-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-02-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-03-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-04-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-05-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-06-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-07-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-08-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-09-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-10-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-11-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-12-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-13-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-14-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-15-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fbs-week-16-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-01-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-02-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-03-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-04-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-05-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-06-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-07-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-08-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-09-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-10-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-11-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-12-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-13-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-14-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-15-v1.json",
-      "data/raw/cfbd/preseason/transfers/games_players/2026/2025-fcs-week-16-v1.json",
-      "data/raw/cfbd/preseason/transfers/portal/2026/2026-v1.json",
-      "data/raw/cfbd/preseason/transfers/roster/2026/2025-fbs-v1.json",
-      "data/raw/cfbd/preseason/transfers/roster/2026/2025-fcs-v1.json",
-      "data/raw/cfbd/preseason/transfers/stats/2026/2025-v1.json",
-      "data/raw/cfbd/preseason/transfers/usage/2026/2025-v1.json"
-    ],
-    "retained_raw_snapshot_count": 0,
-    "verified_player_alias_rows": 0,
-    "verified_team_alias_rows": 0
-  },
-  "team_seasons_whose_availability_status_improved": 17
+  "issue": 149
 }

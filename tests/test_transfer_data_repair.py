@@ -175,8 +175,10 @@ def test_raw_payload_counter_excludes_provenance_sidecars(tmp_path: Path):
 
 
 def test_repair_audit_artifacts_reproduce_in_a_separate_output_dir(tmp_path: Path):
-    committed = repair_audit.OUTPUT
-    repair_audit.run(tmp_path)
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+    repair_audit.run(first)
+    repair_audit.run(second)
     for name in (
         "historical_transfer_features.csv",
         "team_seasons.csv",
@@ -189,11 +191,11 @@ def test_repair_audit_artifacts_reproduce_in_a_separate_output_dir(tmp_path: Pat
         "summary.json",
         "report.md",
     ):
-        assert (tmp_path / name).read_bytes() == (committed / name).read_bytes()
+        assert (first / name).read_bytes() == (second / name).read_bytes()
 
 
 def test_repair_inventory_is_machine_readable_and_tracks_provenance():
-    path = repair_audit.OUTPUT / "before_after_repairs.csv"
+    path = repair_audit.OUTPUT / "historical_zero_candidate_details.csv"
     with path.open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
     assert len(rows) == 21
