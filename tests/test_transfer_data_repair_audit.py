@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import csv
-import hashlib
 import importlib.util
 import json
+from collections import Counter
 from pathlib import Path
 
 import pytest
@@ -21,10 +21,6 @@ integrated_spec = importlib.util.spec_from_file_location(
 assert integrated_spec is not None and integrated_spec.loader is not None
 integrated_module = importlib.util.module_from_spec(integrated_spec)
 integrated_spec.loader.exec_module(integrated_module)
-
-
-def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _rows(path: Path) -> list[dict[str, str]]:
@@ -256,163 +252,58 @@ def test_integrated_report_uses_derived_reconciliation_without_stale_narration()
     assert "Diamonte Tucker-Dorsey" not in report
 
 
-def test_postrepair_audit_preserves_baselines_and_reconciles_coverage(
-    tmp_path: Path,
-) -> None:
-    immutable_inputs = (
-        ROOT / "data/processed/transfer_availability_audit/team_seasons.csv",
-        ROOT / "data/processed/transfer_availability_audit/summary.json",
-        ROOT
-        / "data/processed/partial_db_transfer_impact_142/empirical_2026_coverage.csv",
-    )
-    before_hashes = {path: _sha256(path) for path in immutable_inputs}
-
-    artifact_root = tmp_path / "historical_audit"
-    summary = audit_module.build(
-        artifact_root,
-        materializer_source_root=integrated_module._materializer_source_root(None),
-    )
-    changes = _rows(artifact_root / "changes.csv")
-    zero_contributors = _rows(artifact_root / "zero_contributors.csv")
+def test_committed_integrated_artifacts_match_their_reconciliation_summary() -> None:
+    artifact_root = ROOT / "data/processed/transfer_data_repair"
+    summary = json.loads((artifact_root / "summary.json").read_text(encoding="utf-8"))
     team_seasons = _rows(artifact_root / "team_seasons.csv")
-    coverage = _rows(artifact_root / "coverage_2026.csv")
-    unresolved = _rows(artifact_root / "unresolved_db_players_2026.csv")
-    feature_changes = _rows(artifact_root / "historical_feature_changes.csv")
-    corrected_player_audit = _rows(artifact_root / "historical_player_repair_audit.csv")
+    coverage = _rows(artifact_root / "db_coverage_2026.csv")
+    historical = [row for row in team_seasons if 2021 <= int(row["season"]) <= 2025]
 
-    assert len(changes) == 21
-    assert len(zero_contributors) == 46
-    assert all(
-        row["d5_resolution_category"]
-        == "legitimate_zero_or_non_applicable_prior_offensive_usage"
-        and row["transfer_date"]
-        for row in zero_contributors
+    assert len(team_seasons) == 793
+    assert len(historical) == 655
+    assert dict(
+        sorted(Counter(row["availability_status"] for row in historical).items())
+    ) == {"complete": 83, "entirely_unavailable": 2, "partial": 570}
+    assert (
+        dict(
+            sorted(Counter(row["availability_status"] for row in team_seasons).items())
+        )
+        == summary["historical"]["all_years_combined_checkpoint"][
+            "availability_status_counts"
+        ]
     )
-    assert all(
-        row["repair_rule"].startswith("aggregate_zero_only_when_every_incoming_player")
-        for row in changes
+    assert (
+        sum(int(row["total_count"]) for row in coverage)
+        == summary["2026"]["incoming_db_transfers"]
+        == 604
     )
-    assert len(coverage) == 138
-    current_team_seasons = [row for row in team_seasons if row["season"] == "2026"]
-    assert len(current_team_seasons) == 138
-    assert all(
-        row["post_repair_observed_usage_sum"] != "" for row in current_team_seasons
+    assert (
+        sum(int(row["observed_count"]) for row in coverage)
+        == summary["2026"]["observed_db_impacts"]
+        == 550
     )
-    assert sum(int(row["incoming_db_count"]) for row in coverage) == 604
-    assert sum(int(row["observed_db_impact_count"]) for row in coverage) == 518
-    assert sum(int(row["missing_db_impact_count"]) for row in coverage) == 86
-    assert all(row["transition"] == "unchanged" for row in coverage)
-    assert len(unresolved) == 86
-    assert len(feature_changes) == 24
-    assert len(_rows(artifact_root / "historical_transfer_features.csv")) == 2744
-    replay = summary["historical_feature_reconciliation"]
-    assert replay["verified_source_count"] == 15
-    assert replay["verified_source_count"] == len(replay["verified_sources"])
-    assert replay["legacy_replay_matches_frozen_panel"] is True
-    assert replay["new_replay_matches_materializer"] is True
-    assert replay["change_inventory_exactly_matches_materializer_diff"] is True
-    assert replay["unexplained_changed_feature_values"] == 0
-    assert replay["changed_team_seasons"] == 24
-    assert replay["changed_feature_values"] == len(feature_changes)
-    assert len({(row["season"], row["team_id"]) for row in feature_changes}) == 24
-    assert replay["changed_feature_values_by_class"] == {
-        "ambiguous_usage_join_removed": 1,
-        "legitimate_zero_restoration": 21,
-        "name_normalization_join_added": 2,
-    }
-    assert replay["legitimate_zero_contributor_players"] == 46
-    assert replay["ambiguous_player_audit_record_count"] == 1
-    assert replay["ambiguous_changed_transfer_count"] == 1
-    assert replay["duplicate_equivalent_ambiguous_joins_resolved"] == 24
-    assert replay["remaining_ambiguous_usage_joins"] == 1
-    assert all(
-        row["feature_name"] == "transfer_in_prior_usage_sum" for row in feature_changes
-    )
-    assert len(
-        {
-            (row["season"], row["team_id"], row["feature_name"])
-            for row in feature_changes
-        }
-    ) == len(feature_changes)
+    assert sum(int(row["missing_count"]) for row in coverage) == 54
 
-    by_team = {(row["season"], row["team_name"]): row for row in feature_changes}
-    assert ("2022", "Eastern Michigan") not in by_team
-    taylor = next(
-        row
-        for row in corrected_player_audit
-        if row["season"] == "2022" and row["player_name"] == "Taylor Powell"
+    before_manifest = json.loads(
+        (artifact_root / "before_source_manifest.json").read_text(encoding="utf-8")
     )
-    assert taylor["usage_join_status"] == "joined"
-    assert taylor["usage_candidate_resolution"] == "duplicate_equivalent_rows_collapsed"
-    east_michigan = next(
-        row
-        for row in team_seasons
-        if row["season"] == "2022" and row["team_name"] == "Eastern Michigan"
+    after_manifest = json.loads(
+        (artifact_root / "after_source_manifest.json").read_text(encoding="utf-8")
     )
-    assert int(east_michigan["duplicate_equivalent_usage_joins"]) >= 1
-    assert int(east_michigan["resolved_usage_joins"]) >= 1
-    expected_examples = {
-        ("2023", "North Texas"): (0.7639999999999999, 0.07400000000000001),
-    }
-    for key, expected in expected_examples.items():
-        row = by_team[key]
-        assert (float(row["old_value"]), float(row["new_value"])) == expected
-    assert summary["post_repair"]["statuses"] == {
-        "complete": 87,
-        "entirely_unavailable": 2,
-        "partial": 704,
-    }
-    assert summary["team_seasons_whose_availability_status_improved"] == 17
-    assert summary["coverage_2026"]["teams_with_no_incoming_db_transfers"] == 6
-    assert summary["coverage_2026"]["teams_with_no_observed_impacts"] == 1
-    assert summary["source_availability"]["missing_raw_snapshot_count"] == 37
+    for manifest in (before_manifest, after_manifest):
+        canonical = [
+            item for item in manifest["snapshots"] if item.get("canonical", True)
+        ]
+        assert canonical
+        assert all(item.get("sha256") for item in canonical)
+
+    assert summary["integration"]["historical_authority"].startswith("PR #150")
+    assert summary["integration"]["2026_authority"].startswith("PR #151")
+    assert summary["context_1_3_invariance"]["model_facing_inputs_changed"] is False
     assert (
-        summary["remaining_failure_counts"]["historical_aggregate_null_team_seasons"]
-        == 51
+        summary["2026"]["context_1_3_invariance"]["published_rankings_regenerated"]
+        is False
     )
-    troy = next(
-        row
-        for row in team_seasons
-        if row["season"] == "2021" and row["team_name"] == "Troy"
-    )
-    assert troy["offensive_feature_numeric"] == "True"
-    assert troy["post_repair_materialized_usage_value"] == "0.163"
-    assert troy["post_repair_observed_usage_sum"] == "0.163"
-    assert troy["historical_aggregate_repaired"] == "True"
-    assert "historical_aggregate_null" not in troy["reason_codes"].split(";")
-    assert int(troy["normalization_recovered_usage_joins"]) == 1
-    assert all(
-        not (
-            row["offensive_feature_numeric"] == "True"
-            and "historical_aggregate_null" in row["reason_codes"].split(";")
-        )
-        for row in team_seasons
-        if "2021" <= row["season"] <= "2025"
-    )
-    assert (
-        summary["historical_usage_resolution"]["remaining_ambiguous_usage_joins"] == 1
-    )
-    assert (
-        summary["historical_usage_resolution"]["duplicate_equivalent_usage_joins"] == 24
-    )
-    assert summary["historical_usage_resolution"]["conflicting_usage_value_joins"] == 0
-    for field, summary_key in (
-        ("resolved_usage_joins", "resolved_usage_joins"),
-        ("normalization_recovered_usage_joins", "normalization_recovered_usage_joins"),
-        ("duplicate_equivalent_usage_joins", "duplicate_equivalent_usage_joins"),
-    ):
-        assert (
-            sum(int(row[field]) for row in team_seasons if row["season"] != "2026")
-            == summary["historical_usage_resolution"][summary_key]
-        )
-    assert summary["corrected_historical_player_audit"]["record_count"] == len(
-        corrected_player_audit
-    )
-    report = (artifact_root / "report.md").read_text(encoding="utf-8")
-    assert "duplicate-equivalent provider observations" in report
-    assert "genuinely ambiguous historical usage join remains" in report
-    assert "2021 Troy's usage aggregate" in report
-    assert before_hashes == {path: _sha256(path) for path in immutable_inputs}
 
 
 def test_rebuilt_historical_availability_artifact_is_deterministic(
@@ -505,27 +396,31 @@ def test_rebuilt_historical_availability_artifact_is_deterministic(
     assert first[0]["availability_status"] == "complete"
 
 
-def test_audit_fails_closed_before_writing_when_historical_sources_are_missing(
+def test_historical_full_replay_fails_closed_without_local_raw_sources(
     tmp_path: Path,
 ) -> None:
-    immutable_inputs = (
-        ROOT / "data/processed/transfer_availability_audit/team_seasons.csv",
-        ROOT / "data/processed/transfer_availability_audit/summary.json",
-        ROOT
-        / "data/processed/partial_db_transfer_impact_142/empirical_2026_coverage.csv",
+    replay_module = importlib.import_module("replay_historical_transfer_features")
+    manifest_path = (
+        ROOT / "data/processed/transfer_production_audit/source_manifest.json"
     )
-    before_hashes = {path: _sha256(path) for path in immutable_inputs}
-    output = tmp_path / "audit"
+
     with pytest.raises(
         ValueError, match="historical source verification failed closed"
     ):
-        audit_module.build(
-            output,
-            historical_raw_root=tmp_path / "missing_raw",
-            materializer_source_root=tmp_path / "missing_model_inputs",
+        replay_module.verify_historical_sources(
+            tmp_path / "empty_raw_root", manifest_path=manifest_path
         )
-    assert not output.exists()
-    assert before_hashes == {path: _sha256(path) for path in immutable_inputs}
+
+
+def test_materializer_source_root_uses_explicit_tracked_fixture() -> None:
+    fixture_root = ROOT / "tests/fixtures/historical_materializer"
+    assert (
+        integrated_module._materializer_source_root(fixture_root)
+        == fixture_root.resolve()
+    )
+
+    with pytest.raises(FileNotFoundError, match="team_season_rank_distributions.csv"):
+        integrated_module._materializer_source_root(ROOT / "tests/fixtures")
 
 
 def test_remaining_failure_counts_follow_the_retained_audit_inputs(

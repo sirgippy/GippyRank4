@@ -61,7 +61,14 @@ def _sha256(path: Path) -> str:
 
 def _materializer_source_root(requested: Path | None) -> Path:
     required = Path("data/processed/modeling/team_season_rank_distributions.csv")
-    candidates = [requested] if requested is not None else []
+    if requested is not None:
+        if (requested / required).is_file():
+            return requested.resolve()
+        raise FileNotFoundError(
+            f"the historical materializer requires {required} under {requested}"
+        )
+
+    candidates = []
     result = subprocess.run(
         ["git", "worktree", "list", "--porcelain"],
         cwd=ROOT,

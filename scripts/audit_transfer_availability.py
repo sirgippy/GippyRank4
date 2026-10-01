@@ -165,20 +165,36 @@ def classify_availability(
 
 def audit(
     current_root: Path = CURRENT,
+    *,
+    historical_features_path: Path = HISTORICAL,
+    historical_offense_root: Path = HISTORICAL_OFFENSE,
+    historical_defense_path: Path = HISTORICAL_DEFENSE,
+    expected_current_team_count: int | None = 138,
 ) -> tuple[list[dict[str, object]], dict[str, object]]:
+    """Build availability rows from explicitly selected audit inputs.
+
+    The defaults support the local research command. Tests and other callers
+    can inject a tracked fixture root and historical source paths without
+    relying on ignored generated data.
+    """
     historical = {
         key: value
-        for key, value in index_rows(HISTORICAL).items()
+        for key, value in index_rows(historical_features_path).items()
         if 2021 <= key[0] <= 2025
     }
     current = index_rows(current_root / "transfer_team_audit.csv")
-    if len(current) != 138 or {season for season, _ in current} != {2026}:
+    if (
+        expected_current_team_count is not None
+        and len(current) != expected_current_team_count
+    ) or {season for season, _ in current} != {2026}:
         raise ValueError("2026 Context transfer population changed; inspect inputs")
-    historical_offense = index_rows(HISTORICAL_OFFENSE / "team_feature_coverage.csv")
-    historical_offense_players = player_index(
-        HISTORICAL_OFFENSE / "player_join_records.csv"
+    historical_offense = index_rows(
+        historical_offense_root / "team_feature_coverage.csv"
     )
-    historical_db_players = player_index(HISTORICAL_DEFENSE, db_only=True)
+    historical_offense_players = player_index(
+        historical_offense_root / "player_join_records.csv"
+    )
+    historical_db_players = player_index(historical_defense_path, db_only=True)
     current_db_players = player_index(
         current_root / "transfer_player_audit.csv", db_only=True
     )
@@ -438,26 +454,26 @@ def audit(
     return rows, summary
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
-    parser.add_argument("--current-root", type=Path, default=CURRENT)
-    args = parser.parse_args()
-    rows, summary = audit(args.current_root)
-    args.output.mkdir(parents=True, exist_ok=True)
-    write_csv(args.output / "team_seasons.csv", rows)
+def write_artifacts(
+    output: Path,
+    rows: list[dict[str, object]],
+    summary: dict[str, object],
+) -> None:
+    """Write the deterministic availability artifact set."""
+    output.mkdir(parents=True, exist_ok=True)
+    write_csv(output / "team_seasons.csv", rows)
     write_csv(
-        args.output / "affected_2026.csv",
+        output / "affected_2026.csv",
         [
             row
             for row in rows
             if row["season"] == 2026 and row["availability_status"] != "complete"
         ],
     )
-    (args.output / "summary.json").write_text(
+    (output / "summary.json").write_text(
         json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
-    (args.output / "reason_taxonomy.json").write_text(
+    (output / "reason_taxonomy.json").write_text(
         json.dumps(
             {
                 "reason_codes": {
@@ -476,6 +492,15 @@ def main() -> None:
         + "\n",
         encoding="utf-8",
     )
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--current-root", type=Path, default=CURRENT)
+    args = parser.parse_args()
+    rows, summary = audit(args.current_root)
+    write_artifacts(args.output, rows, summary)
     print(
         json.dumps(
             {

@@ -906,12 +906,17 @@ def _post_repair_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def _compare_db_coverage(
-    post_rows: list[dict[str, Any]], baseline_rows: list[dict[str, str]]
+    post_rows: list[dict[str, Any]],
+    baseline_rows: list[dict[str, str]],
+    *,
+    expected_team_count: int = 138,
 ) -> tuple[list[dict[str, Any]], dict[str, int]]:
     baseline = {str(row["team_id"]): row for row in baseline_rows}
     post = {str(row["team_id"]): row for row in post_rows}
-    if len(post) != 138:
-        raise ValueError(f"expected 138 2026 Context teams, found {len(post)}")
+    if len(post) != expected_team_count:
+        raise ValueError(
+            f"expected {expected_team_count} 2026 Context teams, found {len(post)}"
+        )
     comparisons: Counter[str] = Counter()
     for team_id, row in post.items():
         old = baseline.get(team_id)
@@ -935,6 +940,83 @@ def _compare_db_coverage(
     return post_rows, dict(sorted(comparisons.items()))
 
 
+def build_core_artifacts(
+    output: Path,
+    *,
+    historical_features: list[dict[str, str]],
+    historical_coverage: list[dict[str, str]],
+    historical_players: list[dict[str, str]],
+    current_teams: list[dict[str, str]],
+    current_players: list[dict[str, str]],
+    baseline_db_coverage: list[dict[str, str]],
+    defensive_source_hashes: list[str],
+    expected_team_count: int = 138,
+) -> dict[str, Any]:
+    """Build the deterministic historical-repair and DB-coverage core.
+
+    The integrated research run supplies verified local inputs. Retained tests
+    inject tracked fixture rows and exercise this same artifact-building path.
+    """
+    core_artifacts = _derive_core_artifacts(
+        historical_features=historical_features,
+        historical_coverage=historical_coverage,
+        historical_players=historical_players,
+        current_teams=current_teams,
+        current_players=current_players,
+        baseline_db_coverage=baseline_db_coverage,
+        defensive_source_hashes=defensive_source_hashes,
+        expected_team_count=expected_team_count,
+    )
+    _write_core_artifacts(output, core_artifacts)
+    return core_artifacts
+
+
+def _derive_core_artifacts(
+    *,
+    historical_features: list[dict[str, str]],
+    historical_coverage: list[dict[str, str]],
+    historical_players: list[dict[str, str]],
+    current_teams: list[dict[str, str]],
+    current_players: list[dict[str, str]],
+    baseline_db_coverage: list[dict[str, str]],
+    defensive_source_hashes: list[str],
+    expected_team_count: int = 138,
+) -> dict[str, Any]:
+    updated_features, repairs = repair_verified_historical_zero_aggregates(
+        historical_features, historical_coverage, historical_players
+    )
+    db_coverage = build_db_coverage_inventory(
+        current_teams,
+        current_players,
+        source_season=2025,
+        provenance={"source_snapshot_sha256": defensive_source_hashes},
+    )
+    db_coverage, coverage_change_counts = _compare_db_coverage(
+        db_coverage,
+        baseline_db_coverage,
+        expected_team_count=expected_team_count,
+    )
+
+    return {
+        "historical_features": updated_features,
+        "historical_repairs": repairs,
+        "db_coverage": db_coverage,
+        "coverage_change_counts": coverage_change_counts,
+    }
+
+
+def _write_core_artifacts(output: Path, core_artifacts: dict[str, Any]) -> None:
+    output.mkdir(parents=True, exist_ok=True)
+    _write_csv(
+        output / "historical_transfer_features.csv",
+        core_artifacts["historical_features"],
+    )
+    _write_csv(
+        output / "before_after_repairs.csv", core_artifacts["historical_repairs"]
+    )
+    _write_csv(output / "db_coverage_2026.csv", core_artifacts["db_coverage"])
+
+
 def run(
     output: Path = OUTPUT,
     *,
@@ -946,9 +1028,32 @@ def run(
     historical_features = _read_csv(HISTORICAL_FEATURES)
     historical_coverage = _read_csv(HISTORICAL_TEAM_COVERAGE)
     historical_players = _read_csv(HISTORICAL_PLAYER_AUDIT)
-    updated_features, repairs = repair_verified_historical_zero_aggregates(
-        historical_features, historical_coverage, historical_players
+    current_team_audit = current_root / "transfer_team_audit.csv"
+    current_player_audit = current_root / "transfer_player_audit.csv"
+    current_provenance = current_root / "feature_provenance.json"
+    current_manifest_path = current_root / "source_manifest.json"
+    current_offense_player_audit = current_root / "offensive_player_join_records.csv"
+    current_players = _read_csv(current_player_audit)
+    current_teams = _read_csv(current_team_audit)
+    snapshot_manifest = json.loads(current_manifest_path.read_text(encoding="utf-8"))
+    defensive_source_hashes = sorted(
+        str(item["sha256"])
+        for item in snapshot_manifest.get("snapshots", [])
+        if item.get("canonical", True)
+        if item.get("source") in {"portal", "roster", "games_players"}
     )
+    core_artifacts = _derive_core_artifacts(
+        historical_features=historical_features,
+        historical_coverage=historical_coverage,
+        historical_players=historical_players,
+        current_teams=current_teams,
+        current_players=current_players,
+        baseline_db_coverage=_read_csv(PARTIAL_DB_COVERAGE),
+        defensive_source_hashes=defensive_source_hashes,
+    )
+    repairs = core_artifacts["historical_repairs"]
+    db_coverage = core_artifacts["db_coverage"]
+    coverage_change_counts = core_artifacts["coverage_change_counts"]
 
     team_seasons = _read_csv(BASELINE_AUDIT / "team_seasons.csv")
     # Keep a copy of baseline statuses so the after panel can be audited.
@@ -977,14 +1082,6 @@ def run(
         row["historical_aggregate_repaired"] = False
     team_seasons.extend(current_rows)
 
-    current_team_audit = current_root / "transfer_team_audit.csv"
-    current_player_audit = current_root / "transfer_player_audit.csv"
-    current_provenance = current_root / "feature_provenance.json"
-    current_manifest_path = current_root / "source_manifest.json"
-    current_offense_player_audit = current_root / "offensive_player_join_records.csv"
-    current_players = _read_csv(current_player_audit)
-    current_teams = _read_csv(current_team_audit)
-    snapshot_manifest = json.loads(current_manifest_path.read_text(encoding="utf-8"))
     snapshot_lineage = _compare_snapshot_lineage(
         ORIGINAL_CURRENT_MANIFEST, snapshot_manifest
     )
@@ -1001,22 +1098,6 @@ def run(
         ),
     )
     _write_json(output / "after_source_manifest.json", snapshot_manifest)
-    defensive_source_hashes = sorted(
-        str(item["sha256"])
-        for item in snapshot_manifest.get("snapshots", [])
-        if item.get("canonical", True)
-        if item.get("source") in {"portal", "roster", "games_players"}
-    )
-    db_coverage = build_db_coverage_inventory(
-        current_teams,
-        current_players,
-        source_season=2025,
-        provenance={"source_snapshot_sha256": defensive_source_hashes},
-    )
-    db_coverage, coverage_change_counts = _compare_db_coverage(
-        db_coverage, _read_csv(PARTIAL_DB_COVERAGE)
-    )
-
     # Append the resulting availability classification to each changed
     # team-season repair record without mutating the original audit.
     after_status = {
@@ -1296,12 +1377,10 @@ def run(
     }
 
     output.mkdir(parents=True, exist_ok=True)
-    _write_csv(output / "historical_transfer_features.csv", updated_features)
     _write_csv(output / "team_seasons.csv", team_seasons)
-    _write_csv(output / "before_after_repairs.csv", repairs)
-    _write_csv(output / "db_coverage_2026.csv", db_coverage)
     _write_json(output / "summary.json", summary)
     (output / "report.md").write_text(_render_report(summary), encoding="utf-8")
+    _write_core_artifacts(output, core_artifacts)
     return summary
 
 

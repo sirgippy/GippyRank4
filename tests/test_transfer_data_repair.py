@@ -13,6 +13,15 @@ from gippyrank.transfer_repair import (
 )
 
 repair_audit = importlib.import_module("build_transfer_data_repair_audit")
+FIXTURE_ROOT = Path(__file__).resolve().parent / "fixtures/transfer_availability"
+CORE_FIXTURE_ROOT = (
+    Path(__file__).resolve().parent / "fixtures/transfer_data_repair_core"
+)
+
+
+def _csv_rows(path: Path) -> list[dict[str, str]]:
+    with path.open(newline="", encoding="utf-8") as handle:
+        return list(csv.DictReader(handle))
 
 
 def test_historical_aggregate_repair_requires_complete_known_player_evidence():
@@ -177,21 +186,41 @@ def test_raw_payload_counter_excludes_provenance_sidecars(tmp_path: Path):
 def test_repair_audit_artifacts_reproduce_in_a_separate_output_dir(tmp_path: Path):
     first = tmp_path / "first"
     second = tmp_path / "second"
-    repair_audit.run(first)
-    repair_audit.run(second)
+    inputs = {
+        "historical_features": _csv_rows(CORE_FIXTURE_ROOT / "historical_features.csv"),
+        "historical_coverage": _csv_rows(
+            CORE_FIXTURE_ROOT / "historical_team_coverage.csv"
+        ),
+        "historical_players": _csv_rows(
+            CORE_FIXTURE_ROOT / "historical_player_audit.csv"
+        ),
+        "current_teams": _csv_rows(FIXTURE_ROOT / "current/transfer_team_audit.csv"),
+        "current_players": _csv_rows(
+            FIXTURE_ROOT / "current/transfer_player_audit.csv"
+        ),
+        "baseline_db_coverage": _csv_rows(
+            CORE_FIXTURE_ROOT / "baseline_db_coverage.csv"
+        ),
+        "defensive_source_hashes": ["tracked-fixture-source-hash"],
+        "expected_team_count": 5,
+    }
+    repair_audit.build_core_artifacts(first, **inputs)
+    repair_audit.build_core_artifacts(second, **inputs)
     for name in (
         "historical_transfer_features.csv",
-        "team_seasons.csv",
         "before_after_repairs.csv",
         "db_coverage_2026.csv",
-        "player_before_after_2026.csv",
-        "team_before_after_2026.csv",
-        "before_source_manifest.json",
-        "after_source_manifest.json",
-        "summary.json",
-        "report.md",
     ):
         assert (first / name).read_bytes() == (second / name).read_bytes()
+
+    repaired = _csv_rows(first / "historical_transfer_features.csv")
+    by_team = {row["team_id"]: row for row in repaired}
+    assert by_team["201"]["transfer_in_prior_usage_sum"] == "0"
+    assert by_team["202"]["transfer_in_prior_usage_sum"] == ""
+    assert by_team["203"]["transfer_in_prior_usage_sum"] == "0"
+    coverage = _csv_rows(first / "db_coverage_2026.csv")
+    assert sum(int(row["total_count"]) for row in coverage) == 3
+    assert sum(int(row["observed_count"]) for row in coverage) == 1
 
 
 def test_repair_inventory_is_machine_readable_and_tracks_provenance():
