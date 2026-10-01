@@ -1,0 +1,36 @@
+{
+  "baseline": "issue-147 committed rolling-origin comparison",
+  "context_model_hashes": {
+    "2022": "33111520a58570800c8cc1a6d223b9dfac4b38639726a3b8faf62104daf297c5",
+    "2023": "a9346e63dc1dede5c6b1afbb25300459619e32831b3c4352402d1e062af9aa39",
+    "2024": "ccca621a54df5ad546f7d62cce38f87de129cec3602c9dcb87fb6a6cbc6377be",
+    "2025": "2aa5fb910f5113eebc689e1440d0e6caf3ee5298c9de08def23281d025d1f113"
+  },
+  "corrected_transfer_evidence": "diagnostic only; historical timing unverified and never used to refit",
+  "preseason_input_timing": "historical retrospective reconstruction; archived August 15 availability unverified",
+  "source_hashes": {
+    "data/processed/context_history_crossover/baseline_reproduction_checks.csv": "e4e13b7f18ed30099bdd617c57573191236e0475cb9471b66ce4665dddb7c6ab",
+    "data/processed/context_history_crossover/hybrid_posterior_team_results.csv": "68fe710febb2e7507b9a21393135efc74070ee737d178fc123a83f117444fb49",
+    "data/processed/context_history_crossover/provenance.json": "a43aca30cb08687f826fd8e2e2aca114f274156107091c5ad1996ba78d449569",
+    "data/processed/context_history_crossover/team_season_prior_decomposition.csv": "0f9dc7c2516a2d2d155b5d943c86991290b3e018272bb5ae8d37af6d53085864",
+    "data/processed/defensive_transfer_audit/transfer_player_audit.csv": "cf7b25313093c9ae0f4d21ee5865336fbb81705062e8ea92c9dc5f535aa1135d",
+    "data/processed/preseason/context_v1_3_candidate/context_coverage.csv": "79edb50fd77266256b6cfcd34991e722189d8f13c8c1472ae6b2db1b0b3479fc",
+    "data/processed/preseason/context_v1_3_candidate/historical_transfer_features.csv": "3b3680cf63806033cf6d67813a1359ada455e8e7528bf310a27b37d5cda7a726",
+    "data/processed/transfer_data_repair/historical_transfer_features.csv": "d17d174b8b49e22cc118618afb9046c399e5889cb56f43141c2e5cbfcc6e028c",
+    "data/processed/transfer_data_repair/team_seasons.csv": "7b96e7be87f484712f2d88c1beffeb5508688a4aa6e996e309852c44fa174a34",
+    "external_input/team_season_rank_distributions.csv": "03e4e372017aedb45392ff7d790cea25f461db9b6dc846514c762ff46e2cab00"
+  },
+  "study": "issue-152 Context location-error diagnostic dataset",
+  "support_metric": {
+    "columns": "fitted standardized numeric features and missingness indicators",
+    "distance": "Euclidean",
+    "k": 5,
+    "training": "all Context fit rows with season before target"
+  },
+  "target_seasons": [
+    2022,
+    2023,
+    2024,
+    2025
+  ]
+}
