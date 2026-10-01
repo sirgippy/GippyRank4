@@ -40,6 +40,10 @@ TRANSFER_METADATA = (
     "observed_db_impact_sum",
     "db_coverage_fraction",
 )
+RECOMMENDED_INTERVENTION_METRIC = "context_only_subtotal"
+NON_ZERO_RESTORATION_REPAIR_STATES = frozenset(
+    ("ambiguous_usage_join_removed", "name_normalization_join_added")
+)
 
 
 def sha256(path: Path) -> str:
@@ -536,18 +540,8 @@ def case_studies(
         (
             "transfer_repair",
             fitted.loc[
-                fitted.transfer_repair_class.isin(
-                    ("ambiguous_usage_join_removed", "name_normalization_join_added")
-                )
+                fitted.historical_repair_state.isin(NON_ZERO_RESTORATION_REPAIR_STATES)
             ],
-        ),
-        (
-            "transfer_repair",
-            fitted.loc[(fitted.team == "North Texas") & (fitted.season == 2023)],
-        ),
-        (
-            "transfer_repair",
-            fitted.loc[(fitted.team == "Coastal Carolina") & (fitted.season == 2023)],
         ),
     ]
     selected = {}
@@ -679,6 +673,12 @@ def main() -> None:
             "helpful_harmful": "material disagreement with negative/positive preseason absolute-error difference",
             "exclusive_precedence": "expensive miss, large miss recovered, helpful disagreement, harmful disagreement, ordinary",
             "quartiles": "balanced within season; ascending value with team ID breaking exact ties",
+        },
+        "contribution_diagnostic_definitions": {
+            "context_only_positive_sum": "sum of positive fitted numeric-plus-missing contributions among the 12 Context-only location features; ignores negative opposing contributions",
+            "context_only_subtotal": "signed sum of all fitted numeric-plus-missing contributions among the 12 Context-only location features; equals context_only_positive_sum plus context_only_negative_sum",
+            "recommended_intervention_metric": RECOMMENDED_INTERVENTION_METRIC,
+            "recommended_intervention_region": "positive values of the net context_only_subtotal, relative to Context's own history-derived location components and intercept; not the full Context-minus-History center difference",
         },
         "historical_repair_states": frame.loc[
             frame.component_status == "fitted", "historical_repair_state"

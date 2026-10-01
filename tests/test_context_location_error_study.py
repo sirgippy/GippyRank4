@@ -197,6 +197,86 @@ def test_support_and_transfer_grouping(source: tuple[pd.DataFrame, list[str]]) -
     )
 
 
+def test_net_context_only_subtotal_finding_is_pinned(
+    source: tuple[pd.DataFrame, list[str]],
+) -> None:
+    frame, features = source
+    frame = study.assign_groups(frame)
+    contributions = study.contribution_diagnostics(frame, features)
+    committed = pd.read_csv(study.OUT / "grouped_diagnostics.csv", dtype={"bin": str})
+    reproduced = study.grouped_diagnostics(frame, contributions)
+
+    def quartile(table: pd.DataFrame, period: str, bin_name: str) -> pd.Series:
+        match = table.loc[
+            (table.family == "context_only_subtotal_quartile")
+            & (table.period == period)
+            & (table.bin == bin_name)
+        ]
+        assert len(match) == 1
+        return match.iloc[0]
+
+    top = quartile(committed, "2023-2025", "4")
+    bottom = quartile(committed, "2023-2025", "1")
+    control_top = quartile(committed, "2022", "4")
+    assert (top.n, top.expensive_miss_n) == (98, 19)
+    assert (bottom.n, bottom.expensive_miss_n) == (101, 5)
+    assert top.final_nll_gap_mean == pytest.approx(0.168340168249, abs=1e-10)
+    assert bottom.final_nll_gap_mean == pytest.approx(0.0503487045285, abs=1e-10)
+    assert top.final_nll_gap_mean > bottom.final_nll_gap_mean
+    assert control_top.final_nll_gap_mean == pytest.approx(-0.0406806208577, abs=1e-10)
+    for period, bin_name in (("2023-2025", "1"), ("2023-2025", "4"), ("2022", "4")):
+        actual = quartile(reproduced, period, bin_name)
+        saved = quartile(committed, period, bin_name)
+        assert (actual.n, actual.expensive_miss_n) == (saved.n, saved.expensive_miss_n)
+        assert actual.final_nll_gap_mean == pytest.approx(
+            saved.final_nll_gap_mean, abs=1e-10
+        )
+
+    summary = json.loads((study.OUT / "summary.json").read_text())
+    assert (
+        summary["contribution_diagnostic_definitions"][
+            "recommended_intervention_metric"
+        ]
+        == "context_only_subtotal"
+    )
+    primary = contributions.loc[contributions.season.isin(study.PRIMARY)].copy()
+    primary["net_q"] = study.quartiles(primary, "context_only_subtotal")
+    primary["positive_sum_q"] = study.quartiles(primary, "context_only_positive_sum")
+    assert ((primary.net_q == 4) & (primary.positive_sum_q == 4)).sum() == 74
+
+
+def test_non_zero_restoration_cases_use_generic_repair_state(
+    source: tuple[pd.DataFrame, list[str]],
+) -> None:
+    frame, features = source
+    frame = study.assign_groups(frame)
+    expected = frame.loc[
+        (frame.component_status == "fitted")
+        & frame.historical_repair_state.isin(study.NON_ZERO_RESTORATION_REPAIR_STATES)
+    ]
+    assert {(row.season, row.team) for row in expected.itertuples()} == {
+        (2023, "North Texas"),
+        (2023, "Coastal Carolina"),
+    }
+    renamed = frame.copy()
+    renamed.loc[expected.index, "team"] = ["Renamed repair A", "Renamed repair B"]
+    contributions = study.contribution_diagnostics(frame, features)
+    cases = study.case_studies(renamed, contributions, features)
+    selected = cases.loc[
+        cases.selection_reason.str.split(";").apply(
+            lambda reasons: "transfer_repair" in reasons
+        )
+    ]
+    assert set(zip(selected.season, selected.team_id, strict=True)) == set(
+        zip(expected.season, expected.team_id, strict=True)
+    )
+    assert set(selected.team) == {"Renamed repair A", "Renamed repair B"}
+    assert (
+        set(selected.historical_repair_state)
+        == study.NON_ZERO_RESTORATION_REPAIR_STATES
+    )
+
+
 def test_machine_outputs_are_byte_identical_on_two_runs(
     source: tuple[pd.DataFrame, list[str]],
     tmp_path: Path,

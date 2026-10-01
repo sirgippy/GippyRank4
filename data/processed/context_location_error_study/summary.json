@@ -201,6 +201,12 @@
       "total_gap_sum": 29.326059979861608
     }
   ],
+  "contribution_diagnostic_definitions": {
+    "context_only_positive_sum": "sum of positive fitted numeric-plus-missing contributions among the 12 Context-only location features; ignores negative opposing contributions",
+    "context_only_subtotal": "signed sum of all fitted numeric-plus-missing contributions among the 12 Context-only location features; equals context_only_positive_sum plus context_only_negative_sum",
+    "recommended_intervention_metric": "context_only_subtotal",
+    "recommended_intervention_region": "positive values of the net context_only_subtotal, relative to Context's own history-derived location components and intercept; not the full Context-minus-History center difference"
+  },
   "group_definitions": {
     "exclusive_precedence": "expensive miss, large miss recovered, helpful disagreement, harmful disagreement, ordinary",
     "expensive_miss": "within-season top quartile Context absolute error AND top quartile final NLL disadvantage",
