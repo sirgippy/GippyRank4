@@ -215,14 +215,20 @@ A modeled completed game has a compact `game_rating` summary containing:
   presentation-only `performance_grade`.
 
 The browser-facing team and weekly schedules publish `date_display_mode` for
-each game. This is a display policy because the source has no reliable flag
-for a confirmed kickoff time. `local_time` applies to scored games, including
-scored `out_of_scope` games; consumers show their timezone-aware timestamp in
-the viewer's local time zone. `utc_calendar` applies to unscored games;
-consumers preserve the source timestamp's lexical UTC calendar day and omit a
-kickoff time. A score establishes that the game happened, not the precision or original
-meaning of its timestamp. All dates must carry a timezone; unscored calendar
-anchors must have a UTC offset.
+each game. New schedule rows also retain `kickoff_time_known` when CFBD's
+`startTimeTBD` flag is available: `true` means the kickoff is known, while
+`false` means it is TBD. A known kickoff uses `local_time`; a TBD kickoff uses
+`utc_calendar`, even if the game has already been played. `local_time` makes
+consumers display the timestamp in the viewer's local time zone. `utc_calendar`
+preserves the source timestamp's lexical UTC calendar day and omits a kickoff
+time.
+
+Frozen schedule artifacts created before kickoff certainty was retained omit
+`kickoff_time_known`. For those legacy artifacts only, publication keeps the
+previous display policy (scored games use local time and unscored games remain
+date-only) to preserve their historical rendering. This compatibility fallback
+does not determine kickoff certainty for new source rows. All dates must carry
+a timezone; unscored calendar anchors must have a UTC offset.
 
 No full per-game PMF is serialized. Games outside the selected evidence retain
 schedule metadata but have null result, score, and rating fields. An eligible

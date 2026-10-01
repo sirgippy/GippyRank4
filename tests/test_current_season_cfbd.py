@@ -16,10 +16,17 @@ from gippyrank.data.cfbd import (
 )
 
 
-def _game(game_id: int, *, completed: bool = True, away_class: str = "fcs") -> dict:
+def _game(
+    game_id: int,
+    *,
+    completed: bool = True,
+    away_class: str = "fcs",
+    start_time_tbd: bool = False,
+) -> dict:
     return {
         "id": game_id, "season": 2026, "week": 1, "seasonType": "regular",
-        "startDate": "2026-08-29T00:00:00Z", "completed": completed,
+        "startDate": "2026-08-29T00:00:00Z", "startTimeTBD": start_time_tbd,
+        "completed": completed,
         "neutralSite": False, "conferenceGame": False, "homeId": 1,
         "homeTeam": "One", "homeClassification": "fbs", "homeConference": "A",
         "homePoints": 20 if completed else None, "awayId": 3, "awayTeam": "Three",
@@ -47,6 +54,11 @@ def test_current_acquisition_requests_only_fbs_and_fcs_games_with_provenance(
     assert [request.url.path for request in requests] == ["/games", "/games"]
     assert [request.url.params["classification"] for request in requests] == ["fbs", "fcs"]
     assert all(request.headers["Authorization"] == "Bearer test-secret" for request in requests)
+    assert all(
+        game["startTimeTBD"] is False
+        for games in acquisition.schedules.values()
+        for game in games
+    )
     assert acquisition.retrieved_at == fcs_time
     assert acquisition.source_retrieval_times == {"fbs": fbs_time, "fcs": fcs_time}
     for filename, classification, timestamp in (("2026.json", "fbs", fbs_time), ("2026-fcs.json", "fcs", fcs_time)):
@@ -67,13 +79,18 @@ def test_overlap_deduplicates_conflicts_fail_and_historical_rows_are_retained(tm
         writer = csv.DictWriter(handle, fieldnames=list(historical))
         writer.writeheader()
         writer.writerow(historical)
-    schedules = {"fbs": [_game(100), _game(101, completed=False)], "fcs": [_game(100)]}
+    schedules = {
+        "fbs": [_game(100), _game(101, completed=False, start_time_tbd=True)],
+        "fcs": [_game(100)],
+    }
     report = update_processed_game_corpus(root=tmp_path, season=2026, schedules=schedules)
     with processed.open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
     assert report == {"overlap_count": 1, "current_game_count": 2}
     assert rows[0] == {key: str(value) if value is not None else "" for key, value in historical.items()}
     assert rows[-1]["completed"] == "False"  # raw corpus retains future games
+    assert rows[-2]["startTimeTBD"] == "False"
+    assert rows[-1]["startTimeTBD"] == "True"
     conflict = dict(_game(100))
     conflict["homePoints"] = 99
     with pytest.raises(ValueError, match="Conflicting"):

@@ -1359,26 +1359,10 @@ def build_snapshot(
     _write_csv(directory / "posterior_pmfs.csv", pmf_rows)
     _write_csv(
         directory / "included_games.csv",
-        included,
         [
-            "id",
-            "season",
-            "week",
-            "seasonType",
-            "startDate",
-            "completed",
-            "neutralSite",
-            "conferenceGame",
-            "homeId",
-            "homeTeam",
-            "homeClassification",
-            "homeConference",
-            "homePoints",
-            "awayId",
-            "awayTeam",
-            "awayClassification",
-            "awayConference",
-            "awayPoints",
+            {field: row.get(field, "") for field in INCLUDED_GAME_FIELDS}
+            for row in included
         ],
+        list(INCLUDED_GAME_FIELDS),
     )
     return Snapshot(sid, directory, metadata)

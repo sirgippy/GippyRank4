@@ -3030,6 +3030,10 @@ def _validate_team_season_artifact(
                 raise SiteDataValidationError(
                     f"{snapshot_id}: unscored game {game_id} needs a UTC calendar anchor"
                 )
+            if "kickoff_time_known" in game and type(game["kickoff_time_known"]) is not bool:
+                raise SiteDataValidationError(
+                    f"{snapshot_id}: game {game_id} has invalid kickoff-time certainty"
+                )
             week = game.get("week")
             if week is not None:
                 if type(week) is not int or week < 0 or (
@@ -3197,7 +3201,8 @@ def _validate_team_season_artifact(
                 continue
             other_team_id, other = counterpart
             shared_fields = (
-                "date", "week", "game_state", "season_type", "conference_game", "modeled"
+                "date", "week", "game_state", "season_type", "conference_game",
+                "kickoff_time_known", "modeled"
             )
             if (
                 str(game.get("opponent_id")) != other_team_id
@@ -3274,12 +3279,7 @@ def _validate_team_season_artifact(
                         if game["opponent_id"] in ranking_ids
                         else game.get("opponent_conference", "")
                     ),
-                    # The source has no reliable kickoff-known flag. This is
-                    # a display policy based on whether a score is present.
-                    "date_display_mode": (
-                        "local_time" if game.get("score") is not None
-                        else "utc_calendar"
-                    ),
+                    "date_display_mode": _schedule_date_display_mode(game),
                 }
                 for game in team.get("games", [])
             ],
@@ -3304,6 +3304,17 @@ def _validate_team_season_artifact(
     return adapted
 
 
+def _schedule_date_display_mode(game: dict[str, Any]) -> str:
+    """Use source certainty, preserving the established policy for old artifacts."""
+    kickoff_time_known = game.get("kickoff_time_known")
+    if kickoff_time_known is True:
+        return "local_time"
+    if kickoff_time_known is False:
+        return "utc_calendar"
+    # Frozen snapshots predating this metadata keep their prior rendering.
+    return "local_time" if game.get("score") is not None else "utc_calendar"
+
+
 def _validate_matching_team_schedules(
     context_artifact: dict[str, Any], history_artifact: dict[str, Any], snapshot_id: str
 ) -> None:
@@ -3312,7 +3323,7 @@ def _validate_matching_team_schedules(
         "game_id", "opponent_id", "date", "week", "site", "game_state",
         "result", "score", "modeled", "retrospective_expectation_id",
         "opponent_name", "opponent_classification", "opponent_conference",
-        "conference_game", "season_type", "date_display_mode",
+        "conference_game", "season_type", "kickoff_time_known", "date_display_mode",
     )
     context_teams = context_artifact.get("teams", {})
     history_teams = history_artifact.get("teams", {})

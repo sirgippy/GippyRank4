@@ -799,6 +799,8 @@ def test_weekly_builder_orders_week_zero_and_named_weeks_once() -> None:
                         "game_id": "week-1",
                         "week": 1,
                         "date": "2026-08-29T12:00:00Z",
+                        "date_display_mode": "local_time",
+                        "kickoff_time_known": True,
                         "opponent_id": "2",
                         "opponent_name": "Two",
                         "opponent_classification": "fbs",
@@ -810,6 +812,8 @@ def test_weekly_builder_orders_week_zero_and_named_weeks_once() -> None:
                         "game_id": "week-0",
                         "week": 0,
                         "date": "2026-08-22T12:00:00Z",
+                        "date_display_mode": "utc_calendar",
+                        "kickoff_time_known": False,
                         "opponent_id": "3",
                         "opponent_name": "Three",
                         "opponent_classification": "fcs",
@@ -829,6 +833,34 @@ def test_weekly_builder_orders_week_zero_and_named_weeks_once() -> None:
     ]
     assert weekly["weeks"][0]["games"][0]["home_team_id"] == "3"
     assert weekly["weeks"][0]["games"][0]["away_team_id"] == "1"
+    assert [
+        (game["game_id"], game["date_display_mode"])
+        for week in weekly["weeks"]
+        for game in week["games"]
+    ] == [("week-0", "utc_calendar"), ("week-1", "local_time")]
+
+
+@pytest.mark.parametrize(
+    ("game", "expected"),
+    [
+        ({"kickoff_time_known": True, "score": None}, "local_time"),
+        ({"kickoff_time_known": False, "score": None}, "utc_calendar"),
+        ({"score": {"team": 21, "opponent": 14}}, "local_time"),
+        ({"score": None}, "utc_calendar"),
+    ],
+)
+def test_date_display_mode_uses_certainty_with_legacy_fallback(
+    game: dict[str, object], expected: str
+) -> None:
+    assert site_data._schedule_date_display_mode(game) == expected
+
+
+def test_context_history_schedule_equivalence_includes_kickoff_certainty() -> None:
+    context = {"teams": {"1": {"games": [{"game_id": "game", "kickoff_time_known": True}]}}}
+    history = {"teams": {"1": {"games": [{"game_id": "game", "kickoff_time_known": False}]}}}
+
+    with pytest.raises(SiteDataValidationError, match="Context/History schedule differs"):
+        site_data._validate_matching_team_schedules(context, history, "snapshot")
 
 
 def test_weekly_builder_freezes_rank_and_marquee_v1_semantics() -> None:

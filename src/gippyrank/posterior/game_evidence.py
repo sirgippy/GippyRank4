@@ -154,6 +154,18 @@ def _bool(value: object) -> bool:
     return str(value).strip().casefold() in {"true", "1", "yes"}
 
 
+def _kickoff_time_known(value: object) -> bool | None:
+    """Translate CFBD's TBD flag into known kickoff certainty when present."""
+    if isinstance(value, bool):
+        return not value
+    normalized = str(value).strip().casefold() if value is not None else ""
+    if normalized in {"false", "0", "no"}:
+        return True
+    if normalized in {"true", "1", "yes"}:
+        return False
+    return None
+
+
 def _int_or_none(value: object) -> int | None:
     if value is None or str(value).strip() in {"", "None", "null"}:
         return None
@@ -649,6 +661,9 @@ def build_team_season_artifact(
                 "season_type": row.get("seasonType", ""),
                 "conference_game": _bool(row.get("conferenceGame")),
             }
+            kickoff_time_known = _kickoff_time_known(row.get("startTimeTBD"))
+            if kickoff_time_known is not None:
+                entry["kickoff_time_known"] = kickoff_time_known
             team_games[focal_id].append(entry)
 
     for entries in team_games.values():

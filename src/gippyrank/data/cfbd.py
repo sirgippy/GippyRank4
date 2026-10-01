@@ -26,7 +26,7 @@ _RAW_STAT_PAYLOAD_NAME = re.compile(
     r"\d{4}-(?:fbs|fcs)-week\d+-[A-Za-z0-9_-]+\.json"
 )
 GAME_FIELDS = (
-    "id", "season", "week", "seasonType", "startDate", "completed", "neutralSite",
+    "id", "season", "week", "seasonType", "startDate", "startTimeTBD", "completed", "neutralSite",
     "conferenceGame", "homeId", "homeTeam", "homeClassification", "homeConference",
     "homePoints", "awayId", "awayTeam", "awayClassification", "awayConference",
     "awayPoints",

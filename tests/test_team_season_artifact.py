@@ -55,7 +55,7 @@ def _root(tmp_path: Path) -> Path:
                 prior_rows,
             )
     fields = [
-        "id", "season", "week", "seasonType", "startDate", "completed", "neutralSite",
+        "id", "season", "week", "seasonType", "startDate", "startTimeTBD", "completed", "neutralSite",
         "conferenceGame", "homeId", "homeTeam", "homeClassification", "homeConference",
         "homePoints", "awayId", "awayTeam", "awayClassification", "awayConference", "awayPoints",
     ]
@@ -63,8 +63,8 @@ def _root(tmp_path: Path) -> Path:
         tmp_path / "data/processed/cfbd/games.csv",
         fields,
         [
-            {"id": "early", "season": 2026, "week": 1, "seasonType": "regular", "startDate": "2026-08-29T00:00:00Z", "completed": "True", "neutralSite": "False", "conferenceGame": "True", "homeId": "1", "homeTeam": "One", "homeClassification": "fbs", "homeConference": "A", "homePoints": 20, "awayId": "2", "awayTeam": "Two", "awayClassification": "fbs", "awayConference": "A", "awayPoints": 10},
-            {"id": "later", "season": 2026, "week": 2, "seasonType": "regular", "startDate": "2026-09-10T00:00:00Z", "completed": "True", "neutralSite": "False", "conferenceGame": "True", "homeId": "1", "homeTeam": "One", "homeClassification": "fbs", "homeConference": "A", "homePoints": 7, "awayId": "2", "awayTeam": "Two", "awayClassification": "fbs", "awayConference": "A", "awayPoints": 24},
+            {"id": "early", "season": 2026, "week": 1, "seasonType": "regular", "startDate": "2026-08-29T00:00:00Z", "startTimeTBD": "False", "completed": "True", "neutralSite": "False", "conferenceGame": "True", "homeId": "1", "homeTeam": "One", "homeClassification": "fbs", "homeConference": "A", "homePoints": 20, "awayId": "2", "awayTeam": "Two", "awayClassification": "fbs", "awayConference": "A", "awayPoints": 10},
+            {"id": "later", "season": 2026, "week": 2, "seasonType": "regular", "startDate": "2026-09-10T00:00:00Z", "startTimeTBD": "False", "completed": "True", "neutralSite": "False", "conferenceGame": "True", "homeId": "1", "homeTeam": "One", "homeClassification": "fbs", "homeConference": "A", "homePoints": 7, "awayId": "2", "awayTeam": "Two", "awayClassification": "fbs", "awayConference": "A", "awayPoints": 24},
         ],
     )
     return tmp_path
@@ -109,6 +109,51 @@ def test_live_gameday_snapshot_consumes_known_same_day_score(tmp_path: Path) -> 
     assert game["game_state"] == "completed"
     assert game["score"] == {"team": 7, "opponent": 24}
     assert game["future_prediction_id"] is None
+
+
+def test_team_season_schedule_preserves_kickoff_certainty(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    path = root / "data/processed/cfbd/games.csv"
+    with path.open(newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle)
+        fields = list(reader.fieldnames or [])
+        rows = list(reader)
+    known_time = dict(rows[0])
+    known_time.update(
+        id="known-time",
+        week="3",
+        startDate="2026-10-02T00:00:00Z",
+        startTimeTBD="False",
+        completed="False",
+        homePoints="",
+        awayPoints="",
+    )
+    tbd_time = dict(known_time)
+    tbd_time.update(
+        id="tbd-time",
+        week="4",
+        startDate="2026-10-03T16:00:00Z",
+        startTimeTBD="True",
+    )
+    _write(path, fields, [*rows, known_time, tbd_time])
+
+    snapshot = build_snapshot(
+        season=2026,
+        cutoff=date(2026, 9, 30),
+        prior_family="context",
+        snapshot_type="weekly",
+        root=root,
+    )
+    artifact = json.loads((snapshot.directory / "team_seasons.json").read_text())
+    games = {game["game_id"]: game for game in artifact["teams"]["1"]["games"]}
+    with (snapshot.directory / "included_games.csv").open(
+        newline="", encoding="utf-8"
+    ) as handle:
+        included_fields = csv.DictReader(handle).fieldnames or []
+
+    assert games["known-time"]["kickoff_time_known"] is True
+    assert games["tbd-time"]["kickoff_time_known"] is False
+    assert "startTimeTBD" not in included_fields
 
 
 def test_later_retrieval_cannot_prove_same_day_result_at_historical_cutoff(
