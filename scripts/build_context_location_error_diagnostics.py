@@ -30,11 +30,24 @@ from gippyrank.preseason import QUADRATURE_POINTS, product_quadrature
 
 BASE = ROOT / "data/processed/context_history_crossover"
 REPAIR = ROOT / "data/processed/transfer_data_repair"
+HISTORICAL_CHANGES = REPAIR / "historical_feature_changes.csv"
 DB_AUDIT = ROOT / "data/processed/defensive_transfer_audit/transfer_player_audit.csv"
 OUT = ROOT / "data/processed/context_location_error_diagnostics"
 REPORT = ROOT / "docs/context_location_error_diagnostic_dataset.md"
 K = 5
 TOL = 1e-8
+TRANSFER_FEATURES = (
+    "transfer_in_prior_usage_sum",
+    "transfer_in_prior_defensive_impact_db_sum",
+    "transfer_in_prior_defensive_impact_db_available",
+)
+HISTORICAL_CHANGE_CLASSES = frozenset(
+    {
+        "legitimate_zero_restoration",
+        "ambiguous_usage_join_removed",
+        "name_normalization_join_added",
+    }
+)
 
 # These are descriptions, never the source of feature membership or ordering.
 DESCRIPTIONS = {
@@ -140,6 +153,72 @@ def key(row: dict[str, str]) -> tuple[int, str]:
 
 def optional_float(value: str | None) -> float | None:
     return None if value in (None, "") else float(value)
+
+
+def same_optional_float(left: float | None, right: float | None) -> bool:
+    return (left is None and right is None) or (
+        left is not None
+        and right is not None
+        and bool(np.isclose(left, right, rtol=0, atol=1e-12))
+    )
+
+
+def index_historical_feature_changes(
+    records: list[dict[str, str]],
+) -> dict[tuple[int, str, str], dict[str, str]]:
+    """Index the #151 inventory, rejecting ambiguous or invalid source rows."""
+    indexed: dict[tuple[int, str, str], dict[str, str]] = {}
+    for record in records:
+        change_key = (
+            int(record["season"]),
+            record["team_id"],
+            record["feature_name"],
+        )
+        if change_key in indexed:
+            raise ValueError(
+                f"duplicate historical feature-change record: {change_key}"
+            )
+        if record["feature_name"] not in TRANSFER_FEATURES:
+            raise ValueError(f"unknown historical transfer feature: {change_key}")
+        if record["change_class"] not in HISTORICAL_CHANGE_CLASSES:
+            raise ValueError(f"unknown historical change class: {change_key}")
+        old_value = optional_float(record["old_value"])
+        new_value = optional_float(record["new_value"])
+        if any(
+            value is not None and not np.isfinite(value)
+            for value in (old_value, new_value)
+        ):
+            raise ValueError(f"nonfinite historical feature-change value: {change_key}")
+        if same_optional_float(old_value, new_value):
+            raise ValueError(f"contradictory historical no-change record: {change_key}")
+        indexed[change_key] = record
+    return indexed
+
+
+def reconciled_change_class(
+    change_key: tuple[int, str, str],
+    frozen: float | None,
+    corrected: float | None,
+    changes: dict[tuple[int, str, str], dict[str, str]],
+) -> str:
+    """Every fitted value difference must have exactly one matching #151 record."""
+    record = changes.get(change_key)
+    changed = not same_optional_float(frozen, corrected)
+    if record is None:
+        if changed:
+            raise ValueError(f"missing historical feature-change record: {change_key}")
+        return ""
+    if not changed:
+        raise ValueError(
+            f"historical change record contradicts equal values: {change_key}"
+        )
+    if not same_optional_float(
+        frozen, optional_float(record["old_value"])
+    ) or not same_optional_float(corrected, optional_float(record["new_value"])):
+        raise ValueError(
+            f"historical feature-change values contradict inputs: {change_key}"
+        )
+    return record["change_class"]
 
 
 def inventory() -> list[dict[str, object]]:
@@ -385,6 +464,7 @@ def transfer_diagnostics(
     corrected: dict[tuple[int, str], dict[str, str]],
     coverage: dict[tuple[int, str], dict[str, str]],
     db_impacts: dict[tuple[int, str], tuple[int, float]],
+    changes: dict[tuple[int, str, str], dict[str, str]],
 ) -> dict[str, object]:
     k = season, team_id
     evidence = repaired.get(k)
@@ -404,8 +484,12 @@ def transfer_diagnostics(
         "returning_production": model_features.get("returning_pct_ppa", ""),
     }
     if evidence is None:
+        if model_features:
+            raise ValueError(f"{k}: missing repaired transfer coverage for fitted row")
         result["db_coverage_status"] = "unavailable"
         return result
+    if model_features and fixed is None:
+        raise ValueError(f"{k}: missing corrected transfer features for fitted row")
     incoming = int(evidence["incoming_transfers"])
     db_incoming = int(evidence["db_incoming"])
     db_observed = int(evidence["db_resolved"])
@@ -451,29 +535,23 @@ def transfer_diagnostics(
             raise ValueError(
                 f"{k}: DB player sum differs from corrected complete feature"
             )
-    for name in (
-        "transfer_in_prior_usage_sum",
-        "transfer_in_prior_defensive_impact_db_sum",
-        "transfer_in_prior_defensive_impact_db_available",
-    ):
+    for name in TRANSFER_FEATURES:
         frozen = model_features.get(name)
         repair_value = optional_float(fixed[name]) if fixed is not None else None
         result[f"{name}_model_input_value"] = "" if frozen is None else frozen
         result[f"{name}_corrected_diagnostic_value"] = (
             "" if repair_value is None else repair_value
         )
-        same = (frozen is None and repair_value is None) or (
-            frozen is not None
-            and repair_value is not None
-            and np.isclose(float(frozen), repair_value, rtol=0, atol=1e-12)
-        )
-        result[f"{name}_difference_reason"] = (
-            "cold-start fallback; no fitted Context feature input"
-            if not model_features
-            else "historical repair; timing unverified"
-            if not same
-            else ""
-        )
+        if not model_features:
+            reason = "cold-start fallback; no fitted Context feature input"
+            timing_status = ""
+        else:
+            reason = reconciled_change_class(
+                (season, team_id, name), frozen, repair_value, changes
+            )
+            timing_status = evidence["checkpoint_status"] if reason else ""
+        result[f"{name}_difference_reason"] = reason
+        result[f"{name}_difference_timing_status"] = timing_status
     result["frozen_transfer_usage_available"] = (
         "" if prior is None else prior["transfer_in_prior_usage_sum_available"]
     )
@@ -513,6 +591,7 @@ def build(
         key(r): r for r in read_csv(crossover.hcp.COVERAGE) if r["subdivision"] == "fbs"
     }
     db_impacts = observed_db_impacts()
+    changes = index_historical_feature_changes(read_csv(HISTORICAL_CHANGES))
     models = {}
     model_hashes = {}
     training = {}
@@ -648,11 +727,29 @@ def build(
                 corrected,
                 coverage,
                 db_impacts,
+                changes,
             )
         )
         result.append(row)
     if len(result) != 534:
         raise ValueError("population drift")
+    fitted_keys = {
+        (int(row["season"]), str(row["team_id"]))
+        for row in result
+        if row["component_status"] == "fitted"
+    }
+    reconciled_keys = {
+        (int(row["season"]), str(row["team_id"]), name)
+        for row in result
+        if row["component_status"] == "fitted"
+        for name in TRANSFER_FEATURES
+        if row[f"{name}_difference_reason"]
+    }
+    expected_change_keys = {
+        change_key for change_key in changes if change_key[:2] in fitted_keys
+    }
+    if reconciled_keys != expected_change_keys:
+        raise ValueError("eligible historical feature changes were not reconciled")
     result.sort(key=lambda r: (int(r["season"]), str(r["team_id"])))
     inventory_rows = inventory()
     output.mkdir(parents=True, exist_ok=True)
@@ -669,7 +766,11 @@ def build(
     ]
     paths += [
         REPAIR / name
-        for name in ("team_seasons.csv", "historical_transfer_features.csv")
+        for name in (
+            "team_seasons.csv",
+            "historical_transfer_features.csv",
+            "historical_feature_changes.csv",
+        )
     ]
     paths.append(DB_AUDIT)
     paths += [
@@ -710,6 +811,17 @@ def build(
         "fitted_decompositions": len(fitted),
         "fallback_team_seasons": len(result) - len(fitted),
         "context_location_features": len(inventory_rows),
+        "historical_repair_reconciled_changes": len(reconciled_keys),
+        "historical_repair_difference_classes": dict(
+            sorted(
+                Counter(
+                    str(row[f"{name}_difference_reason"])
+                    for row in fitted
+                    for name in TRANSFER_FEATURES
+                    if row[f"{name}_difference_reason"]
+                ).items()
+            )
+        ),
         "missing_diagnostic_fields": {
             "fitted_context_location_center": len(result) - len(fitted),
             "observed_db_impact_sum": sum(
@@ -759,7 +871,7 @@ def build(
         f"## Population\n\nExpected: 534 team-seasons. Included: {len(result)}. Excluded: 0. Of these, {len(fitted)} have fitted location decompositions and {len(result) - len(fitted)} retain native cold-start fallback priors with blank feature/contribution fields.\n\n"
         f"## #147 reproduction\n\nAll 700 retained #147 baseline checks passed (maximum absolute error {summary['baseline_max_absolute_error']:.3g}); this builder also checks all 534 Context and History prior NLL, CRPS, and expected-rank values against the final checkpoint rows, checks the team population, and requires SHA-256 parity for each rolling Context fit's metadata. Final posterior values are copied from #147's CC and HH rows at the final shared checkpoint.\n\n"
         f"## Feature coverage and contributions\n\n{len(inventory_rows)} location features come from the production fitting specification; all {len(inventory_rows)} are decomposed for each fitted team. The six fallback cases have no fitted Context location center. Missing diagnostic field counts: {summary['missing_diagnostic_fields']}. The fitted center includes the intercept, 15 standardized feature contributions, 15 missing-indicator contributions, and the mean t-1 rank-distribution quadrature contribution. Maximum / mean absolute reconstruction residual: {summary['max_abs_reconstruction_residual']:.3g} / {summary['mean_abs_reconstruction_residual']:.3g}.\n\n"
-        f"## Transfer coverage\n\nDB states: {summary['db_coverage_states']}. Repaired #151 historical evidence is descriptive and has unverified August 15 availability. The frozen #147 model-facing values remain in separate columns. Observed DB sums are reconstructed from retained player audit rows marked on or before the cutoff, with count parity against #151 and sum parity against complete corrected aggregates. Unavailable DB sums remain blank; neutral model zeros are never presented as observed partial sums. Unknown offensive applicability remains a separate count.\n\n"
+        f"## Transfer coverage\n\nDB states: {summary['db_coverage_states']}. The {summary['historical_repair_reconciled_changes']} fitted-row frozen/corrected differences reconcile one-to-one with #151's historical feature-change inventory: {summary['historical_repair_difference_classes']}. Each `*_difference_reason` is the authoritative `change_class`; historical timing remains in the separate `*_difference_timing_status` and `transfer_checkpoint_status` fields. Repaired #151 historical evidence is descriptive and has unverified August 15 availability. The frozen #147 model-facing values remain in separate columns. Observed DB sums are reconstructed from retained player audit rows marked on or before the cutoff, with count parity against #151 and sum parity against complete corrected aggregates. Unavailable DB sums remain blank; neutral model zeros are never presented as observed partial sums. Unknown offensive applicability remains a separate count.\n\n"
         f"## Training support\n\nNearest-neighbor Euclidean distance uses the 15 training-standardized numeric features plus their 15 missing indicators and fixed k={K}. Minimum / median / maximum nearest distance: {summary['nearest_neighbor_distance']}. Feature range-violation counts: {summary['feature_range_violation_counts']}. Percentiles use midranks against the target season's rolling training rows only.\n\n"
         "## Conventions and provenance\n\nSigned expected-rank error is forecast minus target; positive means a worse (numerically larger) predicted rank. Positive Context-minus-History absolute-rank error means Context was farther from the target. Positive Context-minus-History final NLL means History assigned the target more probability. Preseason NLL, CRPS, absolute error, interval target mass, and final posterior scores are outcome-derived evaluation columns; they are never used as preseason inputs. Source paths and SHA-256 hashes are in `data/processed/context_location_error_diagnostics/provenance.json`; the #147 provenance records likelihood, evidence, and inference settings. Historical transfer inputs are retrospective reconstructions, not certified archived preseason snapshots.\n",
         encoding="utf-8",

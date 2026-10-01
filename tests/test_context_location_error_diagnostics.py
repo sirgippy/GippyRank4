@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import sys
+from collections import Counter
 from pathlib import Path
 
 import numpy as np
@@ -15,13 +17,16 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from build_context_location_error_diagnostics import (
     BASE,
+    HISTORICAL_CHANGES,
     OUT,
     baseline_rows,
     db_coverage_status,
     feature_diagnostics,
+    index_historical_feature_changes,
     inventory,
     nearest_support,
     percentile_and_range,
+    reconciled_change_class,
     transfer_diagnostics,
     write_csv,
     write_json,
@@ -179,20 +184,72 @@ def test_transfer_coverage_and_zero_are_distinct_from_missing() -> None:
             "transfer_in_prior_defensive_impact_db_available",
         )
     }
+    features = {name: 0.0 for name in fixed}
+    features["transfer_in_prior_usage_sum"] = None
+    change = {
+        "season": "2022",
+        "team_id": "1",
+        "feature_name": "transfer_in_prior_usage_sum",
+        "old_value": "",
+        "new_value": "0.0",
+        "change_class": "legitimate_zero_restoration",
+    }
     output = transfer_diagnostics(
         2022,
         "1",
-        {"transfer_in_prior_usage_sum": None},
+        features,
         {(2022, "1"): evidence},
         {(2022, "1"): fixed},
         {},
         {},
+        index_historical_feature_changes([change]),
     )
     assert output["incoming_offensive_observed_usage_sum"] == ""
     assert output["incoming_offensive_applicability_unknown_count"] == 1
     assert output["db_coverage_status"] == "no incoming DB players"
     assert output["transfer_in_prior_usage_sum_model_input_value"] == ""
     assert output["transfer_in_prior_usage_sum_corrected_diagnostic_value"] == 0.0
+    assert output["transfer_in_prior_usage_sum_difference_reason"] == (
+        "legitimate_zero_restoration"
+    )
+    assert output["transfer_in_prior_usage_sum_difference_timing_status"] == (
+        "historical_timing_unverified"
+    )
+
+
+@pytest.mark.parametrize(
+    ("season", "team_id", "old", "new", "change_class"),
+    [
+        (2022, "204", None, 0.0, "legitimate_zero_restoration"),
+        (2023, "249", 0.764, 0.074, "ambiguous_usage_join_removed"),
+        (2023, "324", 0.124, 0.142, "name_normalization_join_added"),
+    ],
+)
+def test_authoritative_historical_change_classes(
+    season: int, team_id: str, old: float | None, new: float, change_class: str
+) -> None:
+    changes = index_historical_feature_changes(rows(HISTORICAL_CHANGES))
+    change_key = season, team_id, "transfer_in_prior_usage_sum"
+    assert reconciled_change_class(change_key, old, new, changes) == change_class
+
+
+def test_historical_change_reconciliation_fails_closed() -> None:
+    change_key = 2023, "249", "transfer_in_prior_usage_sum"
+    record = next(
+        row
+        for row in rows(HISTORICAL_CHANGES)
+        if (int(row["season"]), row["team_id"], row["feature_name"]) == change_key
+    )
+    with pytest.raises(ValueError, match="duplicate"):
+        index_historical_feature_changes([record, record])
+    with pytest.raises(ValueError, match="missing"):
+        reconciled_change_class(change_key, 0.764, 0.074, {})
+    with pytest.raises(ValueError, match="contradict"):
+        reconciled_change_class(change_key, 0.764, 0.764, {change_key: record})
+    with pytest.raises(ValueError, match="contradict"):
+        reconciled_change_class(change_key, 0.764, 0.075, {change_key: record})
+    with pytest.raises(ValueError, match="unknown historical change class"):
+        index_historical_feature_changes([{**record, "change_class": "unexplained"}])
 
 
 def test_retained_db_observations_preserve_coverage_states() -> None:
@@ -208,6 +265,36 @@ def test_retained_db_observations_preserve_coverage_states() -> None:
             assert observed_sum != ""
 
 
+def test_committed_repair_reasons_match_151_change_classes() -> None:
+    diagnostic = rows(OUT / "team_seasons.csv")
+    fitted = [row for row in diagnostic if row["component_status"] == "fitted"]
+    changes = [
+        (row, row["transfer_in_prior_usage_sum_difference_reason"])
+        for row in fitted
+        if row["transfer_in_prior_usage_sum_difference_reason"]
+    ]
+    assert Counter(reason for _, reason in changes) == {
+        "legitimate_zero_restoration": 13,
+        "ambiguous_usage_join_removed": 1,
+        "name_normalization_join_added": 1,
+    }
+    assert all(
+        row["transfer_in_prior_usage_sum_difference_timing_status"]
+        == "historical_timing_unverified"
+        for row, _ in changes
+    )
+    indexed = {(int(row["season"]), row["team_id"]): row for row in diagnostic}
+    assert indexed[(2023, "249")]["transfer_in_prior_usage_sum_difference_reason"] == (
+        "ambiguous_usage_join_removed"
+    )
+    assert indexed[(2023, "324")]["transfer_in_prior_usage_sum_difference_reason"] == (
+        "name_normalization_join_added"
+    )
+    assert "historical repair; timing unverified" not in {
+        row["transfer_in_prior_usage_sum_difference_reason"] for row in diagnostic
+    }
+
+
 def test_artifact_summary_and_provenance_are_deterministic() -> None:
     summary = json.loads((OUT / "summary.json").read_text(encoding="utf-8"))
     provenance = json.loads((OUT / "provenance.json").read_text(encoding="utf-8"))
@@ -217,6 +304,12 @@ def test_artifact_summary_and_provenance_are_deterministic() -> None:
     assert summary["missing_diagnostic_fields"]["fitted_context_location_center"] == 6
     assert "timestamp" not in provenance
     assert all(len(value) == 64 for value in provenance["source_hashes"].values())
+    change_path = "data/processed/transfer_data_repair/historical_feature_changes.csv"
+    assert (
+        provenance["source_hashes"][change_path]
+        == hashlib.sha256(HISTORICAL_CHANGES.read_bytes()).hexdigest()
+    )
+    assert summary["historical_repair_reconciled_changes"] == 15
     assert (BASE / "provenance.json").is_file()
 
 

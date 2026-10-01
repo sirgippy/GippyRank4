@@ -16,7 +16,7 @@ All 700 retained #147 baseline checks passed (maximum absolute error 8.74e-10); 
 
 ## Transfer coverage
 
-DB states: {'complete': 238, 'no incoming DB players': 80, 'partial': 182, 'unavailable': 34}. Repaired #151 historical evidence is descriptive and has unverified August 15 availability. The frozen #147 model-facing values remain in separate columns. Observed DB sums are reconstructed from retained player audit rows marked on or before the cutoff, with count parity against #151 and sum parity against complete corrected aggregates. Unavailable DB sums remain blank; neutral model zeros are never presented as observed partial sums. Unknown offensive applicability remains a separate count.
+DB states: {'complete': 238, 'no incoming DB players': 80, 'partial': 182, 'unavailable': 34}. The 15 fitted-row frozen/corrected differences reconcile one-to-one with #151's historical feature-change inventory: {'ambiguous_usage_join_removed': 1, 'legitimate_zero_restoration': 13, 'name_normalization_join_added': 1}. Each `*_difference_reason` is the authoritative `change_class`; historical timing remains in the separate `*_difference_timing_status` and `transfer_checkpoint_status` fields. Repaired #151 historical evidence is descriptive and has unverified August 15 availability. The frozen #147 model-facing values remain in separate columns. Observed DB sums are reconstructed from retained player audit rows marked on or before the cutoff, with count parity against #151 and sum parity against complete corrected aggregates. Unavailable DB sums remain blank; neutral model zeros are never presented as observed partial sums. Unknown offensive applicability remains a separate count.
 
 ## Training support
 
