@@ -27,6 +27,98 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
+test.describe("kickoff certainty and browser-local date grouping", () => {
+  test.use({ timezoneId: "America/Chicago" });
+
+  test("renders known kickoffs locally and keeps TBD games date-only", async ({ page }) => {
+    const fixture = structuredClone(scheduleLayoutFixture);
+    const home = {
+      team_id: "fixture-alabama",
+      team_name: "Alabama",
+      subdivision: "fbs",
+      conference: "Fixture Conference",
+    };
+    const away = {
+      team_id: "fixture-miami",
+      team_name: "Miami",
+      subdivision: "fbs",
+      conference: "Fixture Conference",
+    };
+    const scheduledGame = (gameId, date, dateDisplayMode) => ({
+      game_id: gameId,
+      week: 5,
+      date,
+      date_display_mode: dateDisplayMode,
+      state: "future",
+      neutral_site: false,
+      conference_game: false,
+      marquee: false,
+      home_team: home,
+      away_team: away,
+      home_team_id: home.team_id,
+      away_team_id: away.team_id,
+      score: null,
+      winner_team_id: null,
+      home_performance: null,
+      away_performance: null,
+      home_performance_ref: null,
+      away_performance_ref: null,
+      future_prediction_id: null,
+    });
+    fixture.artifact.weeks[0].games = [
+      scheduledGame("utc-boundary", "2026-10-02T00:00:00.000Z", "local_time"),
+      scheduledGame("ordinary-kickoff", "2026-10-03T16:00:00.000Z", "local_time"),
+      scheduledGame("tbd-kickoff", "2026-10-04T00:00:00.000Z", "utc_calendar"),
+    ];
+    await page.route("**/data/manifest.json", (route) => route.fulfill({ json: fixture.manifest }));
+    await page.route("**/data/week-games/browser-layout-fixture.json", (route) => route.fulfill({ json: fixture.artifact }));
+
+    await loadSchedule(page, "/schedule.html?season=2026&snapshot=browser-layout-fixture&week=fixture-week");
+
+    const boundaryGame = page.locator('.weekly-game-card[data-game-id="utc-boundary"]');
+    await expect(boundaryGame.locator(".weekly-game-date strong")).toHaveText("Oct 1");
+    await expect(boundaryGame.locator(".weekly-game-date span")).toContainText("7:00 PM");
+    await expect(boundaryGame.locator("xpath=ancestor::section[contains(@class,'weekly-date-group')]").locator(".weekly-date-heading"))
+      .toHaveText("Oct 1, 2026");
+
+    const ordinaryGame = page.locator('.weekly-game-card[data-game-id="ordinary-kickoff"]');
+    await expect(ordinaryGame.locator(".weekly-game-date strong")).toHaveText("Oct 3");
+    await expect(ordinaryGame.locator(".weekly-game-date span")).toContainText("11:00 AM");
+    await expect(ordinaryGame.locator("xpath=ancestor::section[contains(@class,'weekly-date-group')]").locator(".weekly-date-heading"))
+      .toHaveText("Oct 3, 2026");
+
+    const tbdGame = page.locator('.weekly-game-card[data-game-id="tbd-kickoff"]');
+    await expect(tbdGame.locator(".weekly-game-date strong")).toHaveText("Oct 4");
+    await expect(tbdGame.locator(".weekly-game-date span")).toHaveCount(0);
+    await expect(tbdGame.locator("xpath=ancestor::section[contains(@class,'weekly-date-group')]").locator(".weekly-date-heading"))
+      .toHaveText("Oct 4, 2026");
+  });
+
+  test("renders the source-backed Week 5 kickoffs in Chicago local time", async ({ page }) => {
+    const snapshot = "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3";
+    await loadSchedule(page, `/schedule.html?season=2026&family=predictive&prior=context&snapshot=${snapshot}&week=5`);
+
+    const wkuAtNewMexicoState = page.locator('.weekly-game-card[data-game-id="401871049"]');
+    await expect(wkuAtNewMexicoState.locator(".weekly-game-date strong")).toHaveText("Oct 1");
+    await expect(wkuAtNewMexicoState.locator(".weekly-game-date span")).toContainText("7:00 PM");
+    await expect(wkuAtNewMexicoState.locator("xpath=ancestor::section[contains(@class,'weekly-date-group')]").locator(".weekly-date-heading"))
+      .toHaveText("Oct 1, 2026");
+
+    const alabamaAtMississippiState = page.locator('.weekly-game-card[data-game-id="401856707"]');
+    await expect(alabamaAtMississippiState.locator(".weekly-game-date strong")).toHaveText("Oct 3");
+    await expect(alabamaAtMississippiState.locator(".weekly-game-date span")).toContainText("11:00 AM");
+    await expect(alabamaAtMississippiState.locator("xpath=ancestor::section[contains(@class,'weekly-date-group')]").locator(".weekly-date-heading"))
+      .toHaveText("Oct 3, 2026");
+
+    await loadSchedule(page, `/schedule.html?season=2026&family=predictive&prior=context&snapshot=${snapshot}&week=6`);
+    const tbdGame = page.locator('.weekly-game-card[data-game-id="401858260"]');
+    await expect(tbdGame.locator(".weekly-game-date strong")).toHaveText("Oct 10");
+    await expect(tbdGame.locator(".weekly-game-date span")).toHaveCount(0);
+    await expect(tbdGame.locator("xpath=ancestor::section[contains(@class,'weekly-date-group')]").locator(".weekly-date-heading"))
+      .toHaveText("Oct 10, 2026");
+  });
+});
+
 test.describe("cross-surface date display", () => {
   test.use({ timezoneId: "America/Los_Angeles" });
 

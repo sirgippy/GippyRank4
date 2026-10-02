@@ -16,6 +16,7 @@ from gippyrank.site_data import (
 
 ROOT = Path(__file__).resolve().parents[1]
 SLOT = "2026-weekly-2026-09-27T12-27-35.698895Z"
+NO_RAW_CFBD_ROOT = ROOT / "tests/fixtures/no-raw-cfbd"
 
 
 def _source(prior: str) -> tuple[dict, dict]:
@@ -30,7 +31,7 @@ def _source(prior: str) -> tuple[dict, dict]:
 def _validate(artifact: dict, metadata: dict) -> None:
     snapshot = ROOT / "site/data/snapshots" / f"{metadata['snapshot_id']}.json"
     rankings = json.loads(snapshot.read_text())["rankings"]
-    _validate_team_season_artifact(artifact, metadata, rankings)
+    _validate_team_season_artifact(artifact, metadata, rankings, root=NO_RAW_CFBD_ROOT)
 
 
 def test_each_fbs_participant_must_reference_its_retrospective() -> None:
@@ -218,7 +219,9 @@ def test_browser_artifact_excludes_fcs_only_retrospectives() -> None:
     assert any(game["home_subdivision"] == game["away_subdivision"] == "fcs" for game in source_games.values())
     snapshot = ROOT / "site/data/snapshots" / f"{metadata['snapshot_id']}.json"
     rankings = json.loads(snapshot.read_text())["rankings"]
-    adapted = _validate_team_season_artifact(artifact, metadata, rankings)
+    adapted = _validate_team_season_artifact(
+        artifact, metadata, rankings, root=NO_RAW_CFBD_ROOT
+    )
     projection = adapted["retrospective_game_expectations"]
     browser_games = projection["games"]
     assert projection["artifact_kind"] == "retrospective_game_expectations_site_projection"
@@ -340,7 +343,9 @@ def test_fbs_conference_is_rooted_in_rankings(target: str) -> None:
 def test_weekly_fold_rejects_conflicting_reciprocal_descriptors() -> None:
     artifact, metadata = _source("context-v1.3")
     rankings = json.loads((ROOT / "site/data/snapshots" / f"{metadata['snapshot_id']}.json").read_text())["rankings"]
-    adapted = _validate_team_season_artifact(artifact, metadata, rankings)
+    adapted = _validate_team_season_artifact(
+        artifact, metadata, rankings, root=NO_RAW_CFBD_ROOT
+    )
     assert adapted["teams"]["61"]["conference"] == "SEC"
     game = next(game for game in adapted["teams"]["61"]["games"] if game["game_id"] == "401856700")
     assert game["opponent_conference"] == "SEC"
@@ -421,7 +426,9 @@ def test_scored_out_of_scope_date_uses_local_display_policy() -> None:
     game["game_state"] = "out_of_scope"
     snapshot = ROOT / "site/data/snapshots" / f"{metadata['snapshot_id']}.json"
     rankings = json.loads(snapshot.read_text())["rankings"]
-    adapted = _validate_team_season_artifact(artifact, metadata, rankings)
+    adapted = _validate_team_season_artifact(
+        artifact, metadata, rankings, root=NO_RAW_CFBD_ROOT
+    )
     selected = next(
         game
         for game in adapted["teams"]["61"]["games"]
