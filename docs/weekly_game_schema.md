@@ -28,6 +28,12 @@ team IDs, so a rebuild is deterministic.  Within a selected week the browser
 groups cards by browser-local calendar date and preserves that order.  Kickoff
 date/time labels and grouping use the same browser-local timezone; snapshot
 cutoff timestamps remain explicitly UTC.
+
+Kickoff certainty comes from CFBD's `startTimeTBD` flag. A confirmed kickoff
+(`false`) is displayed and grouped using the browser-local timestamp, while a
+TBD kickoff (`true`) remains date-only on its source UTC calendar day. Legacy
+frozen schedules without the flag keep their established display policy for
+reproducible historical artifacts.
 The manifest's `default_week` selects the earliest available week for preseason
 snapshots, the publication-labeled week when one is present, and otherwise the
 latest week represented by the snapshot cutoff.  An explicit browser `week`

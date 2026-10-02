@@ -26,7 +26,7 @@ _RAW_STAT_PAYLOAD_NAME = re.compile(
     r"\d{4}-(?:fbs|fcs)-week\d+-[A-Za-z0-9_-]+\.json"
 )
 GAME_FIELDS = (
-    "id", "season", "week", "seasonType", "startDate", "completed", "neutralSite",
+    "id", "season", "week", "seasonType", "startDate", "startTimeTBD", "completed", "neutralSite",
     "conferenceGame", "homeId", "homeTeam", "homeClassification", "homeConference",
     "homePoints", "awayId", "awayTeam", "awayClassification", "awayConference",
     "awayPoints",
@@ -69,6 +69,21 @@ def _request(client: httpx.Client, params: dict[str, object]) -> httpx.Response:
     return response
 
 
+def _validate_current_schedule_kickoff_certainty(
+    schedules: dict[str, list[dict[str, Any]]],
+) -> None:
+    """Require CFBD's explicit TBD flag on every newly acquired game."""
+    for classification in CLASSIFICATIONS:
+        for game in schedules.get(classification, []):
+            value = game.get("startTimeTBD")
+            if type(value) is not bool:
+                game_id = game.get("id", "<unknown>")
+                raise ValueError(
+                    f"CFBD {classification} game {game_id} has missing or invalid "
+                    "startTimeTBD; expected a JSON boolean"
+                )
+
+
 def _name(season: int, classification: str) -> str:
     return f"{season}.json" if classification == "fbs" else f"{season}-fcs.json"
 
@@ -98,6 +113,7 @@ def fetch_current_season(
             payload = response.json()
             if not isinstance(payload, list):
                 raise TypeError("CFBD /games response must be a JSON list")
+            _validate_current_schedule_kickoff_certainty({classification: payload})
             content = response.content
             response_retrieved_at = _utc(retrieved_at)
             filename = _name(season, classification)
@@ -161,6 +177,7 @@ def update_processed_game_corpus(
     Historical raw data and team-game-stat/YPP artifacts are never read or
     rewritten here.  Existing rows for every other season are retained.
     """
+    _validate_current_schedule_kickoff_certainty(schedules)
     current, overlaps = deduplicate_schedule_queries(schedules)
     path = root / "data/processed/cfbd/games.csv"
     previous: list[dict[str, str]] = []

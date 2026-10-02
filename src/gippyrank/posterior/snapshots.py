@@ -1296,6 +1296,8 @@ def build_snapshot(
         ),
         "lower_division_handling": lower_division_handling,
     }
+    if replay_source is None:
+        metadata["kickoff_time_certainty_version"] = "1"
     if replay_source is not None and replay_metadata is not None:
         evidence_hash = included_game_rows_sha256(included)
         metadata.update(
@@ -1359,26 +1361,10 @@ def build_snapshot(
     _write_csv(directory / "posterior_pmfs.csv", pmf_rows)
     _write_csv(
         directory / "included_games.csv",
-        included,
         [
-            "id",
-            "season",
-            "week",
-            "seasonType",
-            "startDate",
-            "completed",
-            "neutralSite",
-            "conferenceGame",
-            "homeId",
-            "homeTeam",
-            "homeClassification",
-            "homeConference",
-            "homePoints",
-            "awayId",
-            "awayTeam",
-            "awayClassification",
-            "awayConference",
-            "awayPoints",
+            {field: row.get(field, "") for field in INCLUDED_GAME_FIELDS}
+            for row in included
         ],
+        list(INCLUDED_GAME_FIELDS),
     )
     return Snapshot(sid, directory, metadata)

@@ -37,7 +37,8 @@ def _write_csv(path: Path, fields: tuple[str, ...] | list[str], rows: list[dict]
 def _game(game_id: str, *, completed: bool = True, away_class: str = "fcs") -> dict:
     return {
         "id": game_id, "season": 2026, "week": 1, "seasonType": "regular",
-        "startDate": "2026-08-29T00:00:00Z", "completed": completed, "neutralSite": False,
+        "startDate": "2026-08-29T00:00:00Z", "startTimeTBD": False,
+        "completed": completed, "neutralSite": False,
         "conferenceGame": False, "homeId": "1", "homeTeam": "One", "homeClassification": "fbs",
         "homeConference": "A", "homePoints": 21 if completed else None, "awayId": "3",
         "awayTeam": "Three", "awayClassification": away_class, "awayConference": "B",

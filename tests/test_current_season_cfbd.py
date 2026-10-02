@@ -16,10 +16,17 @@ from gippyrank.data.cfbd import (
 )
 
 
-def _game(game_id: int, *, completed: bool = True, away_class: str = "fcs") -> dict:
+def _game(
+    game_id: int,
+    *,
+    completed: bool = True,
+    away_class: str = "fcs",
+    start_time_tbd: bool = False,
+) -> dict:
     return {
         "id": game_id, "season": 2026, "week": 1, "seasonType": "regular",
-        "startDate": "2026-08-29T00:00:00Z", "completed": completed,
+        "startDate": "2026-08-29T00:00:00Z", "startTimeTBD": start_time_tbd,
+        "completed": completed,
         "neutralSite": False, "conferenceGame": False, "homeId": 1,
         "homeTeam": "One", "homeClassification": "fbs", "homeConference": "A",
         "homePoints": 20 if completed else None, "awayId": 3, "awayTeam": "Three",
@@ -47,6 +54,11 @@ def test_current_acquisition_requests_only_fbs_and_fcs_games_with_provenance(
     assert [request.url.path for request in requests] == ["/games", "/games"]
     assert [request.url.params["classification"] for request in requests] == ["fbs", "fcs"]
     assert all(request.headers["Authorization"] == "Bearer test-secret" for request in requests)
+    assert all(
+        game["startTimeTBD"] is False
+        for games in acquisition.schedules.values()
+        for game in games
+    )
     assert acquisition.retrieved_at == fcs_time
     assert acquisition.source_retrieval_times == {"fbs": fbs_time, "fcs": fcs_time}
     for filename, classification, timestamp in (("2026.json", "fbs", fbs_time), ("2026-fcs.json", "fcs", fcs_time)):
@@ -58,6 +70,38 @@ def test_current_acquisition_requests_only_fbs_and_fcs_games_with_provenance(
         }
 
 
+@pytest.mark.parametrize("tbd_value", [None, "", "maybe", 1, "missing"])
+def test_current_acquisition_rejects_missing_or_invalid_kickoff_certainty(
+    tmp_path: Path, tbd_value: object
+) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        game = _game(100)
+        if tbd_value == "missing":
+            game.pop("startTimeTBD")
+        else:
+            game["startTimeTBD"] = tbd_value
+        return httpx.Response(200, json=[game])
+
+    with (
+        httpx.Client(transport=httpx.MockTransport(handler)) as client,
+        pytest.raises(ValueError, match="game 100 has missing or invalid startTimeTBD"),
+    ):
+        fetch_current_season(season=2026, root=tmp_path, client=client)
+    assert not (tmp_path / "data/raw/cfbd/games/2026.json").exists()
+
+
+def test_processed_current_schedule_rejects_invalid_kickoff_certainty(tmp_path: Path) -> None:
+    invalid = _game(100)
+    invalid["startTimeTBD"] = "unknown"
+    with pytest.raises(ValueError, match="game 100 has missing or invalid startTimeTBD"):
+        update_processed_game_corpus(
+            root=tmp_path,
+            season=2026,
+            schedules={"fbs": [invalid], "fcs": []},
+        )
+    assert not (tmp_path / "data/processed/cfbd/games.csv").exists()
+
+
 def test_overlap_deduplicates_conflicts_fail_and_historical_rows_are_retained(tmp_path: Path) -> None:
     processed = tmp_path / "data/processed/cfbd/games.csv"
     processed.parent.mkdir(parents=True)
@@ -67,13 +111,18 @@ def test_overlap_deduplicates_conflicts_fail_and_historical_rows_are_retained(tm
         writer = csv.DictWriter(handle, fieldnames=list(historical))
         writer.writeheader()
         writer.writerow(historical)
-    schedules = {"fbs": [_game(100), _game(101, completed=False)], "fcs": [_game(100)]}
+    schedules = {
+        "fbs": [_game(100), _game(101, completed=False, start_time_tbd=True)],
+        "fcs": [_game(100)],
+    }
     report = update_processed_game_corpus(root=tmp_path, season=2026, schedules=schedules)
     with processed.open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
     assert report == {"overlap_count": 1, "current_game_count": 2}
     assert rows[0] == {key: str(value) if value is not None else "" for key, value in historical.items()}
     assert rows[-1]["completed"] == "False"  # raw corpus retains future games
+    assert rows[-2]["startTimeTBD"] == "False"
+    assert rows[-1]["startTimeTBD"] == "True"
     conflict = dict(_game(100))
     conflict["homePoints"] = 99
     with pytest.raises(ValueError, match="Conflicting"):

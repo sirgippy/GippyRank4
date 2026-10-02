@@ -215,13 +215,29 @@ A modeled completed game has a compact `game_rating` summary containing:
   presentation-only `performance_grade`.
 
 The browser-facing team and weekly schedules publish `date_display_mode` for
-each game. This is a display policy because the source has no reliable flag
-for a confirmed kickoff time. `local_time` applies to scored games, including
-scored `out_of_scope` games; consumers show their timezone-aware timestamp in
-the viewer's local time zone. `utc_calendar` applies to unscored games;
-consumers preserve the source timestamp's lexical UTC calendar day and omit a
-kickoff time. A score establishes that the game happened, not the precision or original
-meaning of its timestamp. All dates must carry a timezone; unscored calendar
+each game. New CFBD schedule rows require a boolean `startTimeTBD` value and
+retain its inverse as `kickoff_time_known`: `true` means the kickoff is known,
+while `false` means it is TBD. A known kickoff uses `local_time`; a TBD kickoff
+uses `utc_calendar`, even if the game has already been played. `local_time`
+makes consumers display the timestamp in the viewer's local time zone.
+`utc_calendar` preserves the source timestamp's lexical UTC calendar day and
+omits a kickoff time.
+
+When a retained snapshot omits kickoff certainty but its FBS and FCS response
+hashes and retrieval timestamps identify the verified CFBD responses, the
+retained team-season schedule stores `kickoff_time_known` alongside each game.
+Its `kickoff_time_certainty_provenance` records those response hashes and
+retrieval timestamps. Site-data regeneration reads this snapshot-local record;
+it does not depend on mutable current-season raw-cache files. The repair is
+presentation-only and leaves included-game evidence and analytical outputs
+unchanged.
+
+Retained pre-certainty snapshots and frozen schedule artifacts may omit
+`kickoff_time_known`. Only those legacy provenance forms keep the previous
+display policy (scored games use local time and unscored games remain date-only)
+to preserve historical rendering. New current-source artifacts require the
+certainty version marker and a valid boolean for every game; missing or invalid
+values fail publication. All dates must carry a timezone; unscored calendar
 anchors must have a UTC offset.
 
 No full per-game PMF is serialized. Games outside the selected evidence retain
