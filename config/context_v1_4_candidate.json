@@ -1,0 +1,51 @@
+{
+  "alpha": 0.75,
+  "base_model": {
+    "model_family": "context_prior",
+    "spec_version": "1.3",
+    "display_name": "Context 1.3"
+  },
+  "candidate_version": "Context 1.4 candidate",
+  "model_family": "context_prior",
+  "spec_version": "1.4-candidate",
+  "moderation_metric": "context_only_subtotal",
+  "moderation_rule": {
+    "x_lte_0": "x",
+    "x_gt_0": "0.75 * x",
+    "formula": "min(x, 0) + 0.75 * max(x, 0)"
+  },
+  "selection_source": {
+    "issue": 158,
+    "pull_request": 159,
+    "development_commit": "0fca0ede27ddaa153b1b22516979700f1f950646",
+    "merged_main_commit": "9a4601f341f4c9b6d9fd15adf4eb9a092d4fd2c6"
+  },
+  "status": "frozen research candidate",
+  "production": false,
+  "validation_status": "not yet holdout validated",
+  "development_panel": {
+    "seasons": [2022, 2023, 2024, 2025],
+    "purpose": "parity fixture only; not candidate validation",
+    "experiment_script_sha256": "edbd4668a7429d2932ffe3dc43550c4d2b1ef0cfe3cd884b14ed324685f83888",
+    "artifact_sha256": {
+      "data/processed/context_positive_net_moderation/team_season_results.csv": "3f8c22189d0df55c8a8ffecf61ae61f5b806994dea7d59695d903281dad64787",
+      "data/processed/context_positive_net_moderation/checkpoint_results.csv": "f804f73e566aa33b00130264e9b9cd196902ff5a01c52b83cc4463f042786b4b",
+      "data/processed/context_positive_net_moderation/summary.json": "bac288cdc8278d28d9aa3bffac7af30c8e32dfd8f2df9a54d902426b21048eb6",
+      "data/processed/context_positive_net_moderation/provenance.json": "b0965ab71d3d62ee4b9e42505ab7120504ec8ba6efa0e166c39a2b5f64a6fb15"
+    },
+    "source_sha256": {
+      "data/processed/context_history_crossover/team_season_prior_decomposition.csv": "0f9dc7c2516a2d2d155b5d943c86991290b3e018272bb5ae8d37af6d53085864",
+      "data/processed/context_history_crossover/hybrid_prior_results.csv": "2dab15692d0591e4f96bffc9e11123d90e00f17a262f75fb2192fe65d1a1a297",
+      "data/processed/context_history_crossover/provenance.json": "a43aca30cb08687f826fd8e2e2aca114f274156107091c5ad1996ba78d449569",
+      "data/processed/context_location_error_diagnostics/team_seasons.csv": "8dd91a0f8998b9dc77e340f53f100b422be7d30ba2a2dcf0fb15f171d22a4606",
+      "data/processed/context_location_error_diagnostics/provenance.json": "7a61a500623682305b9e883f6e2da8077fdfa8821861a22a5d5eb616d28df593",
+      "data/processed/context_location_error_study/provenance.json": "a2de61f9cea39bdafbc295876962578dacb9e7be61103aa0638521db084ff5cf",
+      "data/processed/context_location_error_study/contribution_diagnostics.csv": "f0bd8731a3a95c30769179e59c5c631916340a891a40f4103ab74fd2422a8ca9"
+    }
+  },
+  "future_validation_contract": {
+    "compare": ["Context 1.4 candidate", "Context 1.3", "History 1.1"],
+    "candidate_changes_require_new_identity_and_validation_cycle": true,
+    "holdout_results_must_not_change_candidate": true
+  }
+}
