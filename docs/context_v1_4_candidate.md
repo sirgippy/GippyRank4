@@ -79,11 +79,12 @@ development-selection lineage. The
 2022–2025 hashes are named as retained PR #159 reference-output hashes in
 [`data/processed/context_v1_4_candidate/development_panel_parity.json`](../data/processed/context_v1_4_candidate/development_panel_parity.json)
 and are not candidate-output hashes. The canonical parity test computes the
-candidate/reference PMF differences across all 534 2022–2025 team-seasons; the
-record pins the observed maximum absolute difference and caps machine-level
-variation at `5e-17`. The checked-in outcome-free model and inference fixture
-exercises the canonical decomposition path; it is not fresh validation
-evidence.
+candidate/reference PMF differences across all 534 2022–2025 team-seasons. The
+record pins the largest observed absolute and relative differences across the
+Python 3.13 local and GitHub CI runs (`8.326672684688674e-17` and
+`1.03152444e-15`) and caps them at `1e-16` absolute and `1e-14` relative. The
+checked-in outcome-free model and inference fixture exercises the canonical
+decomposition path; it is not fresh validation evidence.
 
 Any change to alpha, selection logic, or the moderation semantics creates a
 different candidate identity and requires a new validation cycle. Future
