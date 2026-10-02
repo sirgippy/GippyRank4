@@ -112,38 +112,46 @@ The browser suite was reviewed and left unchanged. Its retained checks exercise
 DOM rendering, navigation and URL state, timezone-aware date presentation,
 keyboard disclosures, and desktop/mobile layout. JavaScript checks cover
 probability formatting and Playwright endpoint configuration. The latest local
-browser run before the CI split passed **113 tests and skipped 9 existing
-viewport-specific cases** in 33.2 seconds. No browser-runtime reduction is
-claimed.
+browser run passed **113 tests and skipped 9 existing viewport-specific cases**
+in 32.4 seconds. No browser-runtime reduction is claimed.
 
 ## CI parallelism evaluation
 
 The previous workflow ran the Python suite, static API build, and browser suite
-sequentially in one job. In successful CI run
-[37053660314](https://github.com/sirgippy/GippyRank4/actions/runs/37053660314),
-the whole job took 4:59 and the Python step took about 119 seconds. The
-remaining validation path took about three minutes. The Python suite does not
-consume the generated static API, so it can run independently while the
-existing validation job builds and checks the site. The workflow now has a
-separate Python job for pytest and Ruff, while the `validate` job retains the
-static API build, JavaScript checks, browser setup and tests, and diff checks.
+sequentially in one job. Successful CI run
+[37053660314](https://github.com/sirgippy/GippyRank4/actions/runs/37053660314)
+took 4:59; pytest took about 119 seconds, static API validation 41 seconds,
+Chromium setup 22 seconds, and browser tests 77 seconds.
 
-This duplicates checkout and Python environment setup. Based on that CI run,
-the extra checkout, uv setup, and locked dependency installation add about 19
-seconds of runner time. They run concurrently with the existing validation
-path, so expected workflow wall time is about three minutes instead of 4:59,
-while aggregate runner time increases by about those 19 seconds. The Python
-job also checks `git diff --exit-code` after pytest and Ruff, preserving the
-tracked-file side-effect check that was previously after the tests in the
-single job. The `validate` job retains its own final side-effect check for the
-static build and browser steps. The exact wall and summed job times will be
-recorded from the first CI run with the split workflow.
+The Python suite and Ruff do not read generated static API output, so they now
+run in an independent job. The JavaScript checks are also independent of the
+generated API, but took under a second, so a third job would add setup without
+a meaningful wall-time gain. The static API build and browser tests stay
+sequential in `validate`: the browser harness exercises the built site. The
+Python job checks `git diff --exit-code` after pytest and Ruff; `validate`
+retains its own final side-effect check for site generation and browser steps.
+
+The first split-workflow run
+[37059307804](https://github.com/sirgippy/GippyRank4/actions/runs/37059307804)
+passed. The workflow took **2:45** wall time; `validate` ran for **2:42** and
+the `python` job for **1:47**. The Python step passed all **696 tests in 78.39
+seconds**. The static API check validated **41 publications**, and the browser
+suite passed **113 tests with 9 existing skips**. The two jobs used **4:29**
+combined runner time. For the same code with pytest appended to `validate`, the
+observed `validate` duration plus the 78.39-second test step estimates about
+**4:00** serial wall time. Running the Python checks concurrently therefore
+saves about **75 seconds** on the critical path and adds about **29 seconds**
+of duplicated setup and check overhead to aggregate runner time. Against the
+older 4:59 PR run, the complete updated workflow is about 2:14 shorter; that
+total also includes the further Week 5 test reduction and is not attributed
+solely to parallelism.
 
 ## Validation
 
 The alternating sandbox-compatible profiles each passed all 691 collected
-tests. The full CI suite remains the validation path for the API tests. Other
-checks on the existing PR before this follow-up passed: Ruff, 17 JavaScript
-tests, production static API validation for 41 publications, and 113 browser
-tests with 9 existing skips. Final post-change CI results will be added here
-after the updated workflow completes.
+tests. A final local compatible run passed **691 tests in 62.32 seconds** while
+the browser suite was running concurrently. The full split-workflow CI run
+passed all **696 tests in 78.39 seconds**, including the API tests. Ruff, 17
+JavaScript tests, production static API validation for 41 publications, and
+113 browser tests with 9 existing skips also passed. `git diff --check` and
+both jobs' tracked-file side-effect checks passed.
