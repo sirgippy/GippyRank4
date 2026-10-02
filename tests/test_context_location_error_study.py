@@ -307,22 +307,23 @@ def test_non_zero_restoration_cases_use_generic_repair_state(
     )
 
 
-def test_machine_outputs_are_byte_identical_on_two_runs(
+def test_machine_outputs_reproduce_committed_artifact_bytes(
     source: tuple[pd.DataFrame, list[str]],
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     del source
-    signatures = []
-    for index in (1, 2):
-        destination = tmp_path / str(index)
-        monkeypatch.setattr(study, "OUT", destination)
-        study.main()
-        signatures.append(
-            {path.name: path.read_bytes() for path in destination.iterdir()}
-        )
-        provenance = json.loads((destination / "provenance.json").read_text())
-        assert provenance["source_hashes"][
-            str((study.SOURCE / "team_seasons.csv").relative_to(ROOT))
-        ] == study.sha256(study.SOURCE / "team_seasons.csv")
-    assert signatures[0] == signatures[1]
+    committed_output = study.OUT
+    destination = tmp_path / "generated"
+    monkeypatch.setattr(study, "OUT", destination)
+    study.main()
+
+    generated = {path.name: path.read_bytes() for path in destination.iterdir()}
+    committed = {
+        path.name: path.read_bytes() for path in committed_output.iterdir()
+    }
+    assert generated == committed
+    provenance = json.loads((destination / "provenance.json").read_text())
+    assert provenance["source_hashes"][
+        str((study.SOURCE / "team_seasons.csv").relative_to(ROOT))
+    ] == study.sha256(study.SOURCE / "team_seasons.csv")

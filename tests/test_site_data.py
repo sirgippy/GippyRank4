@@ -890,14 +890,9 @@ def _isolated_publication_root(tmp_path: Path) -> Path:
 
 
 def _week_5_schedule_views(
-    root: Path,
+    output: Path,
+    manifest: dict[str, object],
 ) -> tuple[dict[str, dict[str, object]], dict[str, dict[str, object]]]:
-    output = root / "site/data"
-    manifest = build_site_data(
-        root=root,
-        config_path=root / "site/publish_config.json",
-        output_directory=output,
-    )
     cases = {
         "401871049": {"home": "166", "away": "98", "known": True},
         "401856707": {"home": "344", "away": "333", "known": True},
@@ -979,7 +974,9 @@ def _replace_canonical_raw_with_later_acquisition(root: Path) -> None:
 
 def test_week_5_kickoff_certainty_survives_replacing_mutable_cfbd_cache(
     tmp_path: Path,
+    production_site_data: tuple[Path, dict[str, object]],
 ) -> None:
+    baseline_output, baseline_manifest = production_site_data
     root = _isolated_publication_root(tmp_path)
     source_metadata_path = (
         root
@@ -1000,7 +997,9 @@ def test_week_5_kickoff_certainty_survives_replacing_mutable_cfbd_cache(
             "retrieved_at"
         ]
 
-    initial_team_views, initial_weekly_views = _week_5_schedule_views(root)
+    initial_team_views, initial_weekly_views = _week_5_schedule_views(
+        baseline_output, baseline_manifest
+    )
     assert _local_time(initial_team_views["context:401871049"]["date"]) == (
         2026, 10, 1, 19, 0
     )
@@ -1032,7 +1031,15 @@ def test_week_5_kickoff_certainty_survives_replacing_mutable_cfbd_cache(
     assert initial_weekly_views["context:401858260"]["date_display_mode"] == "utc_calendar"
 
     _replace_canonical_raw_with_later_acquisition(root)
-    later_team_views, later_weekly_views = _week_5_schedule_views(root)
+    later_output = root / "site/data"
+    later_manifest = build_site_data(
+        root=root,
+        config_path=root / "site/publish_config.json",
+        output_directory=later_output,
+    )
+    later_team_views, later_weekly_views = _week_5_schedule_views(
+        later_output, later_manifest
+    )
     assert later_team_views == initial_team_views
     assert later_weekly_views == initial_weekly_views
 
