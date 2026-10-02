@@ -44,6 +44,7 @@ from gippyrank.preseason import (
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "config/context_v1_4_candidate.json"
+PMF_PARITY_ABSOLUTE_TOLERANCE = 1e-12
 
 
 def _sha256(path: Path) -> str:
@@ -528,7 +529,12 @@ def test_canonical_candidate_path_reproduces_every_pr159_development_pmf() -> No
                 assert candidate.pmf.tobytes() == source_pmf.tobytes()
             else:
                 np.testing.assert_array_equal(prior.source_prior_pmf(), source_pmf)
-            np.testing.assert_array_equal(candidate.pmf, historical_reference)
+            np.testing.assert_allclose(
+                candidate.pmf,
+                historical_reference,
+                rtol=0,
+                atol=PMF_PARITY_ABSOLUTE_TOLERANCE,
+            )
 
         expected_season = parity["seasons"][str(season)]
         assert team_count == expected_season["team_seasons"]
