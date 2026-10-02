@@ -38,6 +38,9 @@ Cold starts cannot be constructed from a caller-supplied PMF. They are derived
 through `GenericRankPrior` or loaded from the canonical annual History 1.1
 prediction artifact, and serialize the fallback method, source parameters or
 artifact hash, fallback PMF hash, reason, target team, season, and population.
+The retained PR #159 cold-start fixture does not contain its original reason,
+so it explicitly records `unspecified_in_pr159_reference` instead of inferring
+one from the PMF.
 Cold-start artifacts set `context_model_sha256` to null because the Context 1.3
 fitted model did not produce those PMFs. PR #159 comparison fixtures use a
 separately named research-only artifact-copy path.

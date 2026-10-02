@@ -424,6 +424,15 @@ def test_nonpositive_fitted_and_cold_start_pmfs_remain_bit_identical() -> None:
         population=3,
         cold_start_reason="no_prior_rank_distribution",
     )
+    with pytest.raises(ValueError, match="only valid for no-prior cold starts"):
+        Context13FallbackSource.from_generic_rank_prior(
+            prior=generic,
+            target_season=2026,
+            team_id="cold-team",
+            team_name="Cold Start University",
+            population=3,
+            cold_start_reason="fcs_to_fbs_transition",
+        )
     cold_source = fallback.pmf.copy()
     cold = Context13PriorInput.cold_start(
         fitted_instance=_instance(),
@@ -736,9 +745,6 @@ def test_canonical_candidate_path_reproduces_every_pr159_development_pmf() -> No
                     target_season=season,
                     team_id=team_id,
                     population=int(source["target_population"]),
-                    cold_start_reason=(
-                        source.get("cold_start_reason") or "no_prior_rank_distribution"
-                    ),
                 )
                 prior = Context13PriorInput.cold_start(
                     fitted_instance=instance,
@@ -753,6 +759,9 @@ def test_canonical_candidate_path_reproduces_every_pr159_development_pmf() -> No
                 assert candidate.context_model_sha256 is None
                 assert candidate.fallback_source is not None
                 assert candidate.fallback_source.source_artifact_sha256 == _sha256(retained_path)
+                assert candidate.fallback_source.cold_start_reason == (
+                    "unspecified_in_pr159_reference"
+                )
             assert candidate.source_prior_pmf_sha256 == sha256_json(source_pmf.tolist())
             if source["component_status"] == COLD_START_STATUS:
                 assert candidate.pmf.tobytes() == source_pmf.tobytes()

@@ -197,6 +197,28 @@ class Context13FallbackSource:
             or not self.source_artifact_id
         ):
             raise ValueError("cold-start fallback identity is incomplete")
+        if self.research_fixture:
+            if (
+                self.model_identity != "pr159-retained-research-reference"
+                or self.cold_start_reason != "unspecified_in_pr159_reference"
+            ):
+                raise ValueError(
+                    "retained PR #159 fallback reason must remain explicitly unspecified"
+                )
+        elif self.model_identity == "gippyrank.preseason.GenericRankPrior":
+            if self.cold_start_reason != "no_prior_rank_distribution":
+                raise ValueError(
+                    "GenericRankPrior is only valid for no-prior cold starts"
+                )
+        elif self.model_identity == "history_prior/1.1":
+            expected_method = {
+                "fcs_to_fbs_transition": "learned_fcs_to_fbs_transition",
+                "no_prior_rank_distribution": "generic_fbs_cold_start",
+            }.get(self.cold_start_reason)
+            if expected_method is None or self.method_identity != expected_method:
+                raise ValueError("History cold-start reason and method identity disagree")
+        else:
+            raise ValueError("cold-start fallback model identity is unsupported")
         if self.source_artifact_sha256 is None and self.source_parameters_sha256 is None:
             raise ValueError("cold-start fallback must bind its source artifact or parameters")
         for digest in (self.source_artifact_sha256, self.source_parameters_sha256):
@@ -328,9 +350,8 @@ class Context13FallbackSource:
         target_season: int,
         team_id: str,
         population: int,
-        cold_start_reason: str,
     ) -> Context13FallbackSource:
-        """Read a retained PR #159 comparison PMF as research-only fixture data."""
+        """Read a retained PR #159 PMF with no cold-start reason in the source."""
         content = Path(artifact_path).read_bytes()
         try:
             reader = csv.DictReader(io.StringIO(content.decode("utf-8"), newline=""))
@@ -357,7 +378,7 @@ class Context13FallbackSource:
             team_id=team_id,
             team_name=row["team_name"],
             population=population,
-            cold_start_reason=cold_start_reason,
+            cold_start_reason="unspecified_in_pr159_reference",
             model_identity="pr159-retained-research-reference",
             method_identity="copy-retained-CC-source-PMF",
             source_artifact_id="context-history-crossover/hybrid-prior-results.csv",
