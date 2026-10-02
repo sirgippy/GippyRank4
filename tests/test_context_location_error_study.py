@@ -322,6 +322,9 @@ def test_machine_outputs_reproduce_committed_artifact_bytes(
     committed = {
         path.name: path.read_bytes() for path in committed_output.iterdir()
     }
+    # The committed provenance pins the analysis code, four source files, and
+    # five generated data artifacts; parity checks this run against that
+    # independent canonical materialization, including provenance itself.
     assert generated == committed
     provenance = json.loads((destination / "provenance.json").read_text())
     assert provenance["source_hashes"][

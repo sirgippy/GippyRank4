@@ -972,6 +972,29 @@ def _replace_canonical_raw_with_later_acquisition(root: Path) -> None:
         assert datetime.fromisoformat(new_provenance["retrieved_at"]) > old_retrieved_at
 
 
+def _focus_week_5_publish_config(root: Path) -> Path:
+    config_path = root / "site/publish_config.json"
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    slot = "2026-09-27"
+    snapshots = [
+        entry
+        for entry in config["snapshots"]
+        if entry["publication_slot"] == slot
+        and entry["source"].endswith(("/predictive/context", "/predictive/history"))
+    ]
+    assert {entry["source"].rsplit("/", 1)[-1] for entry in snapshots} == {
+        "context",
+        "history",
+    }
+    config["publication_slots"] = [
+        entry for entry in config["publication_slots"] if entry["id"] == slot
+    ]
+    config["default_publication_slot"] = slot
+    config["snapshots"] = snapshots
+    config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+    return config_path
+
+
 def test_week_5_kickoff_certainty_survives_replacing_mutable_cfbd_cache(
     tmp_path: Path,
     production_site_data: tuple[Path, dict[str, object]],
@@ -1031,12 +1054,15 @@ def test_week_5_kickoff_certainty_survives_replacing_mutable_cfbd_cache(
     assert initial_weekly_views["context:401858260"]["date_display_mode"] == "utc_calendar"
 
     _replace_canonical_raw_with_later_acquisition(root)
-    later_output = root / "site/data"
+    focused_config = _focus_week_5_publish_config(root)
+    later_output = root / "test-output/week-5-site-data"
     later_manifest = build_site_data(
         root=root,
-        config_path=root / "site/publish_config.json",
+        config_path=focused_config,
         output_directory=later_output,
     )
+    assert len(later_manifest["snapshots"]) == 2
+    assert not (root / "site/api/v1").exists()
     later_team_views, later_weekly_views = _week_5_schedule_views(
         later_output, later_manifest
     )
