@@ -19,6 +19,7 @@ import numpy as np
 
 from gippyrank.context_prior import AnnualFittedInstance, InferenceRow
 from gippyrank.context_prior_v1_3 import (
+    Context13FittedModelSource,
     Context13LocationDecomposition,
     ContextTransferInputProvenance,
     decompose_context13_location,
@@ -27,7 +28,6 @@ from gippyrank.context_prior_v1_3 import (
 )
 from gippyrank.preseason import (
     DirectRankModel,
-    GenericRankPrior,
     conditional_rank_mixture_pmf,
 )
 
@@ -54,6 +54,13 @@ COLD_START_STATUS = "cold_start_fallback"
 PMF_TOLERANCE = 5e-16
 _CANDIDATE_PRIOR_TOKEN = object()
 _FALLBACK_SOURCE_TOKEN = object()
+_HISTORY_ANNUAL_SOURCE_TOKEN = object()
+_HISTORY_2026_PREDICTIONS_SEMANTIC_SHA256 = (
+    "12ab4ee6ba4d75b0cdd5855d9a13a99f9769919683f3d3aee6ecb2a7485ae9b1"
+)
+_HISTORY_2026_MODEL_METADATA_SHA256 = (
+    "159423c81d5f9bc5d12b8ccf65c1e185512a1a5ba73e23fad86108fdebef314d"
+)
 
 
 def _semantic_contract() -> dict[str, object]:
@@ -126,6 +133,210 @@ def _validate_pmf(pmf: np.ndarray, population: int, label: str) -> np.ndarray:
 
 
 @dataclass(frozen=True, init=False)
+class HistoryAnnualArtifactSource:
+    """Validated lineage for the retained canonical History 1.1 annual file."""
+
+    model_family: str
+    spec_version: str
+    target_season: int
+    trained_through_season: int
+    fitted_instance_identity_sha256: str
+    model_metadata_sha256: str
+    prediction_artifact_sha256: str
+    prediction_semantic_sha256: str
+    artifact_id: str
+    _team_rows_json: str
+    source_identity_sha256: str
+
+    def __init__(
+        self,
+        *,
+        model_family: str,
+        spec_version: str,
+        target_season: int,
+        trained_through_season: int,
+        fitted_instance_identity_sha256: str,
+        model_metadata_sha256: str,
+        prediction_artifact_sha256: str,
+        prediction_semantic_sha256: str,
+        artifact_id: str,
+        team_rows_json: str,
+        _construction_token: object = None,
+    ) -> None:
+        if _construction_token is not _HISTORY_ANNUAL_SOURCE_TOKEN:
+            raise TypeError("History annual sources must come from the validated History loader")
+        for name, value in (
+            ("model_family", model_family),
+            ("spec_version", spec_version),
+            ("target_season", target_season),
+            ("trained_through_season", trained_through_season),
+            ("fitted_instance_identity_sha256", fitted_instance_identity_sha256),
+            ("model_metadata_sha256", model_metadata_sha256),
+            ("prediction_artifact_sha256", prediction_artifact_sha256),
+            ("prediction_semantic_sha256", prediction_semantic_sha256),
+            ("artifact_id", artifact_id),
+            ("_team_rows_json", team_rows_json),
+        ):
+            object.__setattr__(self, name, value)
+        object.__setattr__(self, "source_identity_sha256", sha256_json(self.identity_payload()))
+        self.__post_init__()
+
+    def __post_init__(self) -> None:
+        if (
+            self.model_family != "history_prior"
+            or self.spec_version != "1.1"
+            or self.target_season != 2026
+            or self.trained_through_season != self.target_season - 1
+            or self.artifact_id != "gippyrank.history.annual_predictions.season_2026"
+        ):
+            raise ValueError("History annual source is not the canonical rolling-origin artifact")
+        for digest in (
+            self.fitted_instance_identity_sha256,
+            self.model_metadata_sha256,
+            self.prediction_artifact_sha256,
+            self.prediction_semantic_sha256,
+            self.source_identity_sha256,
+        ):
+            if not _is_sha256(digest):
+                raise ValueError("History annual source hashes must be SHA-256")
+        try:
+            rows = json.loads(self._team_rows_json)
+        except json.JSONDecodeError as error:
+            raise ValueError("History annual source team rows are invalid") from error
+        if not isinstance(rows, dict) or not rows:
+            raise ValueError("History annual source requires team rows")
+        if sha256_json(self.identity_payload()) != self.source_identity_sha256:
+            raise ValueError("History annual source identity hash is inconsistent")
+
+    def identity_payload(self) -> dict[str, object]:
+        return {
+            "model_family": self.model_family,
+            "spec_version": self.spec_version,
+            "target_season": self.target_season,
+            "trained_through_season": self.trained_through_season,
+            "fitted_instance_identity_sha256": self.fitted_instance_identity_sha256,
+            "model_metadata_sha256": self.model_metadata_sha256,
+            "prediction_artifact_sha256": self.prediction_artifact_sha256,
+            "prediction_semantic_sha256": self.prediction_semantic_sha256,
+            "artifact_id": self.artifact_id,
+        }
+
+    def to_metadata(self) -> dict[str, object]:
+        return {
+            **self.identity_payload(),
+            "source_identity_sha256": self.source_identity_sha256,
+        }
+
+    def prediction_row(self, team_id: str) -> dict[str, object]:
+        rows = json.loads(self._team_rows_json)
+        try:
+            return dict(rows[team_id])
+        except KeyError as error:
+            raise ValueError("History annual source has no row for the requested team") from error
+
+
+def load_validated_history_annual_artifact(
+    prediction_artifact_path: str | Path,
+    fitted_instance_path: str | Path,
+    *,
+    target_season: int,
+    trained_through_season: int,
+) -> HistoryAnnualArtifactSource:
+    """Validate the retained History 1.1 annual source without trusting its path."""
+    if target_season != 2026 or trained_through_season != target_season - 1:
+        raise ValueError("no authoritative History annual source is registered for this season")
+    try:
+        prediction_bytes = Path(prediction_artifact_path).read_bytes()
+        fitted_instance = json.loads(Path(fitted_instance_path).read_text(encoding="utf-8"))
+        reader = csv.DictReader(io.StringIO(prediction_bytes.decode("utf-8"), newline=""))
+        prediction_rows = list(reader)
+    except (OSError, UnicodeDecodeError, csv.Error, json.JSONDecodeError) as error:
+        raise ValueError("History annual artifacts are unreadable") from error
+    required_columns = {
+        "season",
+        "subdivision",
+        "team_id",
+        "team_name",
+        "model_family",
+        "spec_version",
+        "trained_through_season",
+        "pmf",
+        "prior_method",
+    }
+    if not reader.fieldnames or len(reader.fieldnames) != len(set(reader.fieldnames)):
+        raise ValueError("History annual prediction artifact has invalid columns")
+    if not required_columns <= set(reader.fieldnames):
+        raise ValueError("History annual prediction artifact is missing required columns")
+    if not isinstance(fitted_instance, dict) or not isinstance(
+        fitted_instance.get("model"), dict
+    ):
+        raise TypeError("History annual fitted-instance artifact is invalid")
+    model_sha256 = sha256_json(fitted_instance["model"])
+    if (
+        fitted_instance.get("model_family") != "history_prior"
+        or fitted_instance.get("spec_version") != "1.1"
+        or fitted_instance.get("target_season") != target_season
+        or fitted_instance.get("trained_through_season") != trained_through_season
+        or fitted_instance.get("context_effective_cutoff") is not None
+        or model_sha256 != _HISTORY_2026_MODEL_METADATA_SHA256
+    ):
+        raise ValueError("History fitted instance does not match the authoritative 1.1 fit")
+    prediction_rows.sort(
+        key=lambda row: (row.get("season"), row.get("subdivision"), row.get("team_id"))
+    )
+    semantic_sha256 = sha256_json(prediction_rows)
+    if semantic_sha256 != _HISTORY_2026_PREDICTIONS_SEMANTIC_SHA256:
+        raise ValueError("History predictions differ from the retained canonical annual artifact")
+    by_team: dict[str, dict[str, object]] = {}
+    for row in prediction_rows:
+        if (
+            row.get("season") != str(target_season)
+            or row.get("subdivision") != "fbs"
+            or row.get("model_family") != "history_prior"
+            or row.get("spec_version") != "1.1"
+            or row.get("trained_through_season") != str(trained_through_season)
+        ):
+            raise ValueError("History prediction row has mismatched model or season identity")
+        team_id = str(row.get("team_id", ""))
+        if not team_id or team_id in by_team:
+            raise ValueError("History annual predictions contain duplicate or empty team IDs")
+        try:
+            pmf = np.asarray(json.loads(str(row["pmf"])), dtype=float)
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+            raise ValueError("History prediction row contains an invalid PMF") from error
+        _validate_pmf(pmf, 138, "History annual")
+        by_team[team_id] = {
+            "team_id": team_id,
+            "team_name": str(row.get("team_name", "")),
+            "prior_method": str(row.get("prior_method", "")),
+            "pmf": [float(value) for value in pmf],
+        }
+    if len(by_team) != 138:
+        raise ValueError("History annual source must contain the exact 2026 FBS population")
+    model_identity = {
+        "model_family": "history_prior",
+        "spec_version": "1.1",
+        "target_season": target_season,
+        "trained_through_season": trained_through_season,
+        "context_effective_cutoff": None,
+        "model_metadata_sha256": model_sha256,
+    }
+    return HistoryAnnualArtifactSource(
+        model_family="history_prior",
+        spec_version="1.1",
+        target_season=target_season,
+        trained_through_season=trained_through_season,
+        fitted_instance_identity_sha256=sha256_json(model_identity),
+        model_metadata_sha256=model_sha256,
+        prediction_artifact_sha256=hashlib.sha256(prediction_bytes).hexdigest(),
+        prediction_semantic_sha256=semantic_sha256,
+        artifact_id="gippyrank.history.annual_predictions.season_2026",
+        team_rows_json=json.dumps(by_team, sort_keys=True, separators=(",", ":")),
+        _construction_token=_HISTORY_ANNUAL_SOURCE_TOKEN,
+    )
+
+
+@dataclass(frozen=True, init=False)
 class Context13FallbackSource:
     """A cold-start PMF derived from a named model or read from a source artifact."""
 
@@ -140,9 +351,13 @@ class Context13FallbackSource:
     source_artifact_sha256: str | None
     source_parameters_json: str | None
     source_parameters_sha256: str | None
+    trained_through_season: int | None
+    fitted_instance_identity_sha256: str | None
+    source_model_metadata_sha256: str | None
     pmf_sha256: str
     pmf: np.ndarray
     research_fixture: bool
+    source_identity_sha256: str
 
     def __init__(
         self,
@@ -158,6 +373,9 @@ class Context13FallbackSource:
         source_artifact_sha256: str | None,
         source_parameters_json: str | None,
         source_parameters_sha256: str | None,
+        trained_through_season: int | None = None,
+        fitted_instance_identity_sha256: str | None = None,
+        source_model_metadata_sha256: str | None = None,
         pmf: np.ndarray,
         research_fixture: bool,
         _construction_token: object = None,
@@ -177,11 +395,15 @@ class Context13FallbackSource:
             ("source_artifact_sha256", source_artifact_sha256),
             ("source_parameters_json", source_parameters_json),
             ("source_parameters_sha256", source_parameters_sha256),
+            ("trained_through_season", trained_through_season),
+            ("fitted_instance_identity_sha256", fitted_instance_identity_sha256),
+            ("source_model_metadata_sha256", source_model_metadata_sha256),
             ("pmf_sha256", sha256_json(values.tolist())),
             ("pmf", values),
             ("research_fixture", research_fixture),
         ):
             object.__setattr__(self, name, value)
+        object.__setattr__(self, "source_identity_sha256", sha256_json(self.identity_payload()))
         self.__post_init__()
 
     def __post_init__(self) -> None:
@@ -205,11 +427,6 @@ class Context13FallbackSource:
                 raise ValueError(
                     "retained PR #159 fallback reason must remain explicitly unspecified"
                 )
-        elif self.model_identity == "gippyrank.preseason.GenericRankPrior":
-            if self.cold_start_reason != "no_prior_rank_distribution":
-                raise ValueError(
-                    "GenericRankPrior is only valid for no-prior cold starts"
-                )
         elif self.model_identity == "history_prior/1.1":
             expected_method = {
                 "fcs_to_fbs_transition": "learned_fcs_to_fbs_transition",
@@ -217,6 +434,12 @@ class Context13FallbackSource:
             }.get(self.cold_start_reason)
             if expected_method is None or self.method_identity != expected_method:
                 raise ValueError("History cold-start reason and method identity disagree")
+            if (
+                self.trained_through_season != self.target_season - 1
+                or not _is_sha256(self.fitted_instance_identity_sha256)
+                or not _is_sha256(self.source_model_metadata_sha256)
+            ):
+                raise ValueError("History fallback must bind its rolling-origin fitted instance")
         else:
             raise ValueError("cold-start fallback model identity is unsupported")
         if self.source_artifact_sha256 is None and self.source_parameters_sha256 is None:
@@ -236,43 +459,47 @@ class Context13FallbackSource:
                 raise ValueError("cold-start source parameters do not match their SHA-256")
         elif self.source_parameters_sha256 is not None:
             raise ValueError("cold-start source parameter hash requires its parameters")
+        if self.research_fixture and any(
+            value is not None
+            for value in (
+                self.trained_through_season,
+                self.fitted_instance_identity_sha256,
+                self.source_model_metadata_sha256,
+            )
+        ):
+            raise ValueError("research fallback cannot claim a canonical History fitted instance")
+        if self.source_identity_sha256 != sha256_json(self.identity_payload()):
+            raise ValueError("cold-start fallback source identity is inconsistent")
+
+    def identity_payload(self) -> dict[str, object]:
+        return {
+            "target_season": self.target_season,
+            "trained_through_season": self.trained_through_season,
+            "team_id": self.team_id,
+            "team_name": self.team_name,
+            "population": self.population,
+            "cold_start_reason": self.cold_start_reason,
+            "model_identity": self.model_identity,
+            "method_identity": self.method_identity,
+            "source_artifact_id": self.source_artifact_id,
+            "source_artifact_sha256": self.source_artifact_sha256,
+            "source_parameters": (
+                json.loads(self.source_parameters_json)
+                if self.source_parameters_json is not None
+                else None
+            ),
+            "source_parameters_sha256": self.source_parameters_sha256,
+            "fitted_instance_identity_sha256": self.fitted_instance_identity_sha256,
+            "source_model_metadata_sha256": self.source_model_metadata_sha256,
+            "pmf_sha256": self.pmf_sha256,
+            "research_fixture": self.research_fixture,
+        }
 
     @classmethod
-    def from_generic_rank_prior(
+    def from_history_annual_source(
         cls,
         *,
-        prior: GenericRankPrior,
-        target_season: int,
-        team_id: str,
-        team_name: str,
-        population: int,
-        cold_start_reason: str,
-    ) -> Context13FallbackSource:
-        """Compute the canonical generic cold-start PMF from fitted parameters."""
-        parameters = prior.metadata()
-        parameters_json = json.dumps(parameters, sort_keys=True, separators=(",", ":"))
-        return cls(
-            target_season=target_season,
-            team_id=team_id,
-            team_name=team_name,
-            population=population,
-            cold_start_reason=cold_start_reason,
-            model_identity="gippyrank.preseason.GenericRankPrior",
-            method_identity="analytical equal-team empirical moments",
-            source_artifact_id=f"generic-rank-prior/fitted-parameters/{target_season - 1}",
-            source_artifact_sha256=None,
-            source_parameters_json=parameters_json,
-            source_parameters_sha256=sha256_json(parameters),
-            pmf=prior.pmf(population),
-            research_fixture=False,
-            _construction_token=_FALLBACK_SOURCE_TOKEN,
-        )
-
-    @classmethod
-    def from_history_prediction_artifact(
-        cls,
-        artifact_path: str | Path,
-        *,
+        source: HistoryAnnualArtifactSource,
         target_season: int,
         trained_through_season: int,
         team_id: str,
@@ -280,49 +507,33 @@ class Context13FallbackSource:
         population: int,
         cold_start_reason: str,
     ) -> Context13FallbackSource:
-        """Load and verify a canonical History 1.1 cold-start prediction row."""
-        path = Path(artifact_path)
-        logical_path = Path(
-            "data/processed/preseason/history/annual"
-        ) / str(target_season) / "predictions.csv"
-        if path.parts[-len(logical_path.parts) :] != logical_path.parts:
-            raise ValueError(
-                "History fallback must come from its canonical annual prediction artifact"
-            )
-        content = path.read_bytes()
-        try:
-            reader = csv.DictReader(io.StringIO(content.decode("utf-8"), newline=""))
-            rows = [
-                row
-                for row in reader
-                if row.get("season") == str(target_season)
-                and row.get("subdivision") == "fbs"
-                and row.get("team_id") == team_id
-            ]
-        except (UnicodeDecodeError, csv.Error) as error:
-            raise ValueError("History fallback artifact is not a valid UTF-8 CSV") from error
-        if len(rows) != 1:
-            raise ValueError("History fallback artifact must contain exactly one target team row")
-        row = rows[0]
+        """Select a canonical History row from an already validated typed source."""
         if (
-            row.get("model_family") != "history_prior"
-            or row.get("spec_version") != "1.1"
-            or row.get("trained_through_season") != str(trained_through_season)
-            or row.get("team_name") != team_name
+            source.model_family != "history_prior"
+            or source.spec_version != "1.1"
+            or source.target_season != target_season
+            or source.trained_through_season != trained_through_season
+            or trained_through_season != target_season - 1
         ):
-            raise ValueError("History fallback artifact row does not match History 1.1 identity")
+            raise ValueError("History source does not match the requested rolling-origin identity")
+        row = source.prediction_row(team_id)
+        if row.get("team_name") != team_name:
+            raise ValueError("History source team identity does not match the requested team")
         expected_method = {
             "fcs_to_fbs_transition": "learned_fcs_to_fbs_transition",
+            # Context 1.3 consumes this method only for any future canonical
+            # History 1.1 no-prior output. The retained 2026 artifact has only
+            # FCS transition fallbacks.
             "no_prior_rank_distribution": "generic_fbs_cold_start",
         }.get(cold_start_reason)
         if expected_method is None or row.get("prior_method") != expected_method:
             raise ValueError("History fallback method does not match its cold-start reason")
         try:
-            pmf = np.asarray(json.loads(row["pmf"]), dtype=float)
-        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
-            raise ValueError("History fallback artifact has an invalid PMF") from error
+            pmf = np.asarray(row["pmf"], dtype=float)
+        except (KeyError, TypeError, ValueError) as error:
+            raise ValueError("History source row has an invalid PMF") from error
         if len(pmf) != population:
-            raise ValueError("History fallback population does not match the target team")
+            raise ValueError("History source population does not match the target team")
         return cls(
             target_season=target_season,
             team_id=team_id,
@@ -331,12 +542,13 @@ class Context13FallbackSource:
             cold_start_reason=cold_start_reason,
             model_identity="history_prior/1.1",
             method_identity=str(row["prior_method"]),
-            source_artifact_id=(
-                f"preseason/history/annual/{target_season}/predictions.csv"
-            ),
-            source_artifact_sha256=hashlib.sha256(content).hexdigest(),
+            source_artifact_id=source.artifact_id,
+            source_artifact_sha256=source.prediction_artifact_sha256,
             source_parameters_json=None,
             source_parameters_sha256=None,
+            trained_through_season=source.trained_through_season,
+            fitted_instance_identity_sha256=source.fitted_instance_identity_sha256,
+            source_model_metadata_sha256=source.model_metadata_sha256,
             pmf=pmf,
             research_fixture=False,
             _construction_token=_FALLBACK_SOURCE_TOKEN,
@@ -385,6 +597,9 @@ class Context13FallbackSource:
             source_artifact_sha256=hashlib.sha256(content).hexdigest(),
             source_parameters_json=None,
             source_parameters_sha256=None,
+            trained_through_season=None,
+            fitted_instance_identity_sha256=None,
+            source_model_metadata_sha256=None,
             pmf=pmf,
             research_fixture=True,
             _construction_token=_FALLBACK_SOURCE_TOKEN,
@@ -392,6 +607,7 @@ class Context13FallbackSource:
 
     def metadata(self) -> dict[str, object]:
         return {
+            "source_identity_sha256": self.source_identity_sha256,
             "cold_start_reason": self.cold_start_reason,
             "model_identity": self.model_identity,
             "method_identity": self.method_identity,
@@ -406,8 +622,12 @@ class Context13FallbackSource:
             "pmf_sha256": self.pmf_sha256,
             "research_fixture": self.research_fixture,
             "target_season": self.target_season,
+            "trained_through_season": self.trained_through_season,
             "team_id": self.team_id,
+            "team_name": self.team_name,
             "population": self.population,
+            "fitted_instance_identity_sha256": self.fitted_instance_identity_sha256,
+            "source_model_metadata_sha256": self.source_model_metadata_sha256,
         }
 
 
@@ -428,6 +648,7 @@ class Context13PriorInput:
 
     fitted_model: DirectRankModel | None
     fitted_instance: AnnualFittedInstance
+    fitted_model_source: Context13FittedModelSource | None
     transfer_provenance: ContextTransferInputProvenance
     component_status: str
     fitted_prior_pmf: np.ndarray | None = None
@@ -448,10 +669,23 @@ class Context13PriorInput:
             raise ValueError("candidate input must name a rolling-origin Context 1.3 instance")
         if self.transfer_provenance.target_season != self.fitted_instance.target_season:
             raise ValueError("transfer provenance does not match the Context target season")
+        model_source = self.fitted_model_source
+        if model_source is None:
+            raise ValueError("Context 1.3 candidate inputs require authoritative fit provenance")
+        model_source.validate_instance(self.fitted_instance)
+        production_transfer = self.transfer_provenance.provenance_class == (
+            "production_preseason_immutable_snapshot"
+        )
         if self.component_status == FITTED_STATUS:
             if self.fitted_model is None or self.inference_row is None:
                 raise ValueError("fitted Context priors require an inference row")
-            validate_context13_fitted_model(self.fitted_model, self.fitted_instance)
+            model_source.validate_model(
+                self.fitted_model,
+                self.fitted_instance,
+                allow_research_only=not production_transfer,
+            )
+            if model_source.provenance_class == "research_only" and production_transfer:
+                raise ValueError("research-only Context fit source cannot claim production provenance")
             if (
                 self.expected_team_id != self.inference_row.team_id
                 or self.expected_target_season != self.fitted_instance.target_season
@@ -501,6 +735,8 @@ class Context13PriorInput:
                 "retrospective_research_transfer_reconstruction"
             ):
                 raise ValueError("research and non-research fallback provenance cannot be mixed")
+            if model_source.provenance_class == "research_only" and production_transfer:
+                raise ValueError("research-only Context fit source cannot claim production provenance")
         else:
             raise ValueError(f"unsupported Context component status: {self.component_status}")
 
@@ -510,6 +746,7 @@ class Context13PriorInput:
         *,
         model: DirectRankModel,
         fitted_instance: AnnualFittedInstance,
+        fitted_model_source: Context13FittedModelSource | None = None,
         inference_row: InferenceRow,
         transfer_provenance: ContextTransferInputProvenance,
         prior_pmf: np.ndarray,
@@ -518,10 +755,11 @@ class Context13PriorInput:
     ) -> Context13PriorInput:
         """Create a fitted input whose PMF and decomposition come from the model."""
         return cls(
-            model,
-            fitted_instance,
-            transfer_provenance,
-            FITTED_STATUS,
+            fitted_model=model,
+            fitted_instance=fitted_instance,
+            fitted_model_source=fitted_model_source,
+            transfer_provenance=transfer_provenance,
+            component_status=FITTED_STATUS,
             fitted_prior_pmf=prior_pmf,
             inference_row=inference_row,
             expected_team_id=expected_team_id,
@@ -533,15 +771,17 @@ class Context13PriorInput:
         cls,
         *,
         fitted_instance: AnnualFittedInstance,
+        fitted_model_source: Context13FittedModelSource | None = None,
         transfer_provenance: ContextTransferInputProvenance,
         fallback_source: Context13FallbackSource,
     ) -> Context13PriorInput:
         """Create an unchanged, source-bound fallback with no C1.3 model claim."""
         return cls(
-            None,
-            fitted_instance,
-            transfer_provenance,
-            COLD_START_STATUS,
+            fitted_model=None,
+            fitted_instance=fitted_instance,
+            fitted_model_source=fitted_model_source,
+            transfer_provenance=transfer_provenance,
+            component_status=COLD_START_STATUS,
             fallback_source=fallback_source,
         )
 
@@ -622,6 +862,7 @@ class Context14CandidatePrior:
     target_season: int
     trained_through_season: int
     context_model_sha256: str | None
+    fitted_model_source: Context13FittedModelSource
     source_prior_pmf_sha256: str
     candidate_semantics_sha256: str
     inference_inputs_sha256: str
@@ -639,6 +880,7 @@ class Context14CandidatePrior:
         target_season: int,
         trained_through_season: int,
         context_model_sha256: str | None,
+        fitted_model_source: Context13FittedModelSource,
         source_prior_pmf_sha256: str,
         candidate_semantics_sha256: str,
         inference_inputs_sha256: str,
@@ -657,6 +899,7 @@ class Context14CandidatePrior:
             ("target_season", target_season),
             ("trained_through_season", trained_through_season),
             ("context_model_sha256", context_model_sha256),
+            ("fitted_model_source", fitted_model_source),
             ("source_prior_pmf_sha256", source_prior_pmf_sha256),
             ("candidate_semantics_sha256", candidate_semantics_sha256),
             ("inference_inputs_sha256", inference_inputs_sha256),
@@ -677,12 +920,29 @@ class Context14CandidatePrior:
             raise ValueError("candidate identity must be rolling-origin")
         if self.transfer_provenance.target_season != self.target_season:
             raise ValueError("candidate source provenance has the wrong target season")
+        self.fitted_model_source.validate_instance(
+            AnnualFittedInstance(
+                "context_prior",
+                CONTEXT_1_3_VERSION,
+                self.trained_through_season,
+                self.target_season,
+                None,
+            )
+        )
+        if (
+            self.fitted_model_source.provenance_class == "research_only"
+            and self.transfer_provenance.provenance_class
+            == "production_preseason_immutable_snapshot"
+        ):
+            raise ValueError("research-only Context fit source cannot claim production provenance")
         if self.component_status not in {FITTED_STATUS, COLD_START_STATUS}:
             raise ValueError("candidate component status is invalid")
         if self.candidate_semantics_sha256 != candidate_spec_sha256():
             raise ValueError("candidate semantic identity does not match the frozen contract")
         if self.component_status == FITTED_STATUS and (
             self.context_model_sha256 is None
+            or self.context_model_sha256
+            != self.fitted_model_source.model_metadata_sha256
             or self.fallback_source is not None
             or self.decomposition_sha256 is None
         ):
@@ -732,6 +992,7 @@ class Context14CandidatePrior:
                 "candidate_semantics_sha256": self.candidate_semantics_sha256,
                 "component_status": self.component_status,
                 "context_model_sha256": self.context_model_sha256,
+                "context_fit_provenance": self.fitted_model_source.to_metadata(),
                 "decomposition_sha256": self.decomposition_sha256,
                 "inference_inputs_sha256": self.inference_inputs_sha256,
                 "transfer_input_provenance": self.transfer_provenance.to_metadata(),
@@ -818,6 +1079,7 @@ def construct_candidate_prior(prior: Context13PriorInput) -> Context14CandidateP
         target_season=instance.target_season,
         trained_through_season=instance.trained_through_season,
         context_model_sha256=model_sha256,
+        fitted_model_source=prior.fitted_model_source,
         source_prior_pmf_sha256=sha256_json(source_pmf.tolist()),
         candidate_semantics_sha256=semantic_sha256,
         inference_inputs_sha256=prior.inference_inputs_sha256(),
@@ -834,10 +1096,13 @@ def construct_candidate_prior(prior: Context13PriorInput) -> Context14CandidateP
 __all__ = [
     "COLD_START_STATUS",
     "FITTED_STATUS",
+    "Context13FallbackSource",
     "Context13PriorInput",
     "Context14CandidatePrior",
+    "HistoryAnnualArtifactSource",
     "candidate_spec_sha256",
     "construct_candidate_prior",
     "load_candidate_spec",
+    "load_validated_history_annual_artifact",
     "sha256_json",
 ]

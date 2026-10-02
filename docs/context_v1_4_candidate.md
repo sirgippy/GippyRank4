@@ -12,13 +12,27 @@ metadata. The checked-in
 is its audit mirror; candidate construction does not read from the repository
 filesystem. The API
 `gippyrank.context_prior_v1_4_candidate.construct_candidate_prior` requires the
-actual Context 1.3 fitted model, its rolling-origin instance, an outcome-free
-`InferenceRow`, the authoritative transfer-input provenance returned by a
-validated transfer loader, and the source Context 1.3 PMF. It verifies the
-model specification and PMF, derives location terms from the model and row,
-and computes the model and input hashes itself. It has no alpha or
-caller-supplied model-hash parameter. The frozen model contract also requires
-Context-only numeric and missingness scale coefficients to be zero.
+actual Context 1.3 fitted model, its rolling-origin instance, the typed fit
+source returned by the canonical fitting or validated loading path, an
+outcome-free `InferenceRow`, authoritative transfer-input provenance, and the
+source Context 1.3 PMF. It verifies the model, fit source, inference row and
+PMF, derives location terms from the model and row, and computes the model and
+input hashes itself. It has no alpha or caller-supplied model-hash parameter.
+The frozen model contract also requires Context-only numeric and missingness
+scale coefficients to be zero.
+
+The fitted-model source binds model family and spec version, target season,
+rolling-origin cutoff, model metadata SHA-256, fitted-instance identity,
+frozen specification identity, and a content-addressed training-corpus
+identity. `fit_model_with_source` rejects non-FBS rows and any training row
+after `target_season - 1`. When source rows are available, the loader refits
+through that canonical path and verifies model and corpus identity. The
+retained 2026 annual model is loaded through its checked-in, content-pinned fit
+attestation, which binds the committed model and instance to the corpus
+identity recorded by the canonical fit. A hand-built model without an
+authoritative source, or a research-only source presented as canonical, is
+rejected. Future Context 1.3 builds write the typed source metadata beside the
+fitted model.
 
 `ContextTransferInputProvenance` identifies transfer lineage only; it does not
 certify recruiting, talent, returning-production, coaching, or rank-history
@@ -32,15 +46,25 @@ team-level transfer values. Absolute filesystem paths are diagnostic only and
 do not affect identity. Retrospective 2026 provenance explicitly retains its
 late retrieval timestamps, endpoints, raw hashes, missing archived August 15
 snapshot declaration, and reconstructed-state statement. Development fixtures
-use a constructor that can create only retrospective research provenance.
+use a constructor that can create only retrospective research provenance. The
+real committed 2026 reconstruction artifacts pass a content-pinned
+compatibility loader with their original serialized class
+`retrospective_2026_reconstruction`; no artifact regeneration or relabeling is
+needed. The published Context 1.3 class strings remain
+`production_preseason_immutable_snapshot` and
+`retrospective_2026_reconstruction`.
 
-Cold starts cannot be constructed from a caller-supplied PMF. They are derived
-through `GenericRankPrior` or loaded from the canonical annual History 1.1
-prediction artifact, and serialize the fallback method, source parameters or
-artifact hash, fallback PMF hash, reason, target team, season, and population.
-The retained PR #159 cold-start fixture does not contain its original reason,
-so it explicitly records `unspecified_in_pr159_reference` instead of inferring
-one from the PMF.
+Production-shaped cold starts cannot be constructed from a caller-supplied PMF
+or arbitrary `GenericRankPrior` parameters. They select the requested row from
+the validated canonical History 1.1 annual source. That source binds model
+family/version, target season, `trained_through_season`, fitted-instance
+identity, model metadata, prediction artifact bytes and semantics, and the
+exact FBS team PMFs. The fallback identity records the selected team, prior
+method, source artifact hash, History fitted-instance identity,
+`trained_through_season`, reason, and PMF hash. The retained PR #159
+cold-start fixture remains available only through its explicitly research-only
+artifact-copy path. It does not contain its original reason, so it records
+`unspecified_in_pr159_reference` rather than inferring one from the PMF.
 Cold-start artifacts set `context_model_sha256` to null because the Context 1.3
 fitted model did not produce those PMFs. PR #159 comparison fixtures use a
 separately named research-only artifact-copy path.

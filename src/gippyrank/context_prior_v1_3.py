@@ -38,6 +38,7 @@ from gippyrank.context_prior import (
 from gippyrank.preseason import (
     QUADRATURE_POINTS,
     DirectRankModel,
+    Preprocessor,
     TeamSeason,
     product_quadrature,
 )
@@ -53,15 +54,30 @@ from gippyrank.preseason_transfer import (
 
 CONTEXT_PRIOR_CANDIDATE_VERSION = "1.3"
 ACTIVE_CONTEXT_PRIOR_VERSION = "1.3"
-RETROSPECTIVE_2026_PROVENANCE = "retrospective_2026_transfer_reconstruction"
+RETROSPECTIVE_2026_PROVENANCE = "retrospective_2026_reconstruction"
 RETROSPECTIVE_RESEARCH_PROVENANCE = "retrospective_research_transfer_reconstruction"
-PRODUCTION_TRANSFER_PROVENANCE = "production_preseason_immutable_transfer_snapshot"
+PRODUCTION_TRANSFER_PROVENANCE = "production_preseason_immutable_snapshot"
 FROZEN_PENALTY = 0.25
 PRODUCTION_CUTOFF_MONTH = 8
 PRODUCTION_CUTOFF_DAY = 15
 # The 2026 artifact is allowed only through the retrospective validator below.
 # Future seasons continue to require the production-safe validator.
 RETROSPECTIVE_RECONSTRUCTION_SEASONS = frozenset({2026})
+_CONTEXT13_2026_MODEL_METADATA_SHA256 = (
+    "6a6c759c250a9b4845bce563072dcf146fd66dca8264017f215aff1580bc9dce"
+)
+_CONTEXT13_2026_FITTED_SOURCE_ARTIFACT_SHA256 = (
+    "2756bee8545e0ebf143438dc15fed3a2208f1eb4379c60d4b559be3ec3e58db1"
+)
+_COMMITTED_2026_TRANSFER_FEATURE_SHA256 = (
+    "db8fad38bb81e437059b8cf44c85be5760f3426466b53c5cf649ea5c0718fef0"
+)
+_COMMITTED_2026_TRANSFER_MANIFEST_SHA256 = (
+    "574e705ec9e3c51658ee83cb1bbb1c1792a326ab1a89333219e9b27e7a8b00c9"
+)
+_COMMITTED_2026_TRANSFER_PROVENANCE_SHA256 = (
+    "2c4725d18ad9dbadbc02c6d08dcb754492409173d924f606ffd7c1e6c4c1ca16"
+)
 
 H_FEATURES = (
     "lag2_z_mean",
@@ -515,6 +531,223 @@ def validate_context13_fitted_model(
     return sha256_json(model.metadata())
 
 
+_CONTEXT13_FITTED_SOURCE_TOKEN = object()
+
+
+@dataclass(frozen=True, init=False)
+class Context13FittedModelSource:
+    """Typed identity for a Context 1.3 fit and its exact training inputs.
+
+    Canonical objects are created by :func:`fit_model_with_source` or by the
+    validating annual-artifact loader below. Development fixtures must use the
+    explicitly research-only constructor. Candidate validation prevents a
+    research-only fit source from being paired with production transfer
+    provenance or being represented as a canonical fit.
+    """
+
+    model_family: str
+    spec_version: str
+    target_season: int
+    trained_through_season: int
+    model_metadata_sha256: str
+    fitted_instance_identity_sha256: str
+    frozen_model_spec_identity_sha256: str
+    training_corpus_input_sha256: str
+    training_row_count: int
+    provenance_class: str
+    source_identity_sha256: str
+
+    def __init__(
+        self,
+        *,
+        model_family: str,
+        spec_version: str,
+        target_season: int,
+        trained_through_season: int,
+        model_metadata_sha256: str,
+        fitted_instance_identity_sha256: str,
+        frozen_model_spec_identity_sha256: str,
+        training_corpus_input_sha256: str,
+        training_row_count: int,
+        provenance_class: str,
+        _construction_token: object = None,
+    ) -> None:
+        if _construction_token is not _CONTEXT13_FITTED_SOURCE_TOKEN:
+            raise TypeError("Context 1.3 fit sources must come from the canonical fit or loader")
+        values = {
+            "model_family": model_family,
+            "spec_version": spec_version,
+            "target_season": target_season,
+            "trained_through_season": trained_through_season,
+            "model_metadata_sha256": model_metadata_sha256,
+            "fitted_instance_identity_sha256": fitted_instance_identity_sha256,
+            "frozen_model_spec_identity_sha256": frozen_model_spec_identity_sha256,
+            "training_corpus_input_sha256": training_corpus_input_sha256,
+            "training_row_count": training_row_count,
+            "provenance_class": provenance_class,
+        }
+        for name, value in values.items():
+            object.__setattr__(self, name, value)
+        object.__setattr__(self, "source_identity_sha256", sha256_json(values))
+        self.__post_init__()
+
+    def __post_init__(self) -> None:
+        if (
+            self.model_family != "context_prior"
+            or self.spec_version != CONTEXT_PRIOR_CANDIDATE_VERSION
+            or self.target_season <= 1
+            or self.trained_through_season != self.target_season - 1
+            or self.training_row_count < 0
+            or self.provenance_class not in {"canonical_context13_fit", "research_only"}
+        ):
+            raise ValueError("Context 1.3 fitted-model source identity is invalid")
+        for digest in (
+            self.model_metadata_sha256,
+            self.fitted_instance_identity_sha256,
+            self.frozen_model_spec_identity_sha256,
+            self.training_corpus_input_sha256,
+            self.source_identity_sha256,
+        ):
+            if not _is_sha256(digest):
+                raise ValueError("Context 1.3 fitted-model source hashes must be SHA-256")
+        if sha256_json(self.identity_payload()) != self.source_identity_sha256:
+            raise ValueError("Context 1.3 fitted-model source identity hash is inconsistent")
+
+    def identity_payload(self) -> dict[str, object]:
+        return {
+            "model_family": self.model_family,
+            "spec_version": self.spec_version,
+            "target_season": self.target_season,
+            "trained_through_season": self.trained_through_season,
+            "model_metadata_sha256": self.model_metadata_sha256,
+            "fitted_instance_identity_sha256": self.fitted_instance_identity_sha256,
+            "frozen_model_spec_identity_sha256": self.frozen_model_spec_identity_sha256,
+            "training_corpus_input_sha256": self.training_corpus_input_sha256,
+            "training_row_count": self.training_row_count,
+            "provenance_class": self.provenance_class,
+        }
+
+    def to_metadata(self) -> dict[str, object]:
+        return {
+            **self.identity_payload(),
+            "source_identity_sha256": self.source_identity_sha256,
+        }
+
+    def validate_instance(self, instance: AnnualFittedInstance) -> None:
+        if (
+            instance.model_family != self.model_family
+            or instance.spec_version != self.spec_version
+            or instance.target_season != self.target_season
+            or instance.trained_through_season != self.trained_through_season
+            or instance.context_effective_cutoff is not None
+            or sha256_json(instance.metadata()) != self.fitted_instance_identity_sha256
+        ):
+            raise ValueError("fitted-model source does not match the annual instance")
+
+    def validate_model(
+        self,
+        model: DirectRankModel,
+        instance: AnnualFittedInstance,
+        *,
+        allow_research_only: bool = False,
+        training_rows: Sequence[TeamSeason] | None = None,
+    ) -> None:
+        if sha256_json(self.identity_payload()) != self.source_identity_sha256:
+            raise ValueError("fitted-model source identity hash is inconsistent")
+        validate_context13_fitted_model(model, instance)
+        self.validate_instance(instance)
+        if sha256_json(model.metadata()) != self.model_metadata_sha256:
+            raise ValueError("fitted-model source metadata hash does not match the model")
+        if self.frozen_model_spec_identity_sha256 != sha256_json(
+            model_specification_metadata()
+        ):
+            raise ValueError("fitted-model source uses a different frozen specification")
+        if self.provenance_class == "research_only" and not allow_research_only:
+            raise ValueError("research-only Context 1.3 fit provenance is not promotable")
+        if training_rows is not None and (
+            self.training_row_count != len(training_rows)
+            or self.training_corpus_input_sha256
+            != _training_corpus_input_sha256(training_rows)
+        ):
+            raise ValueError("fitted-model source training-corpus identity does not match its rows")
+
+    @classmethod
+    def research_only(
+        cls,
+        model: DirectRankModel,
+        instance: AnnualFittedInstance,
+        *,
+        fixture_id: str,
+    ) -> Context13FittedModelSource:
+        """Bind a retained development fixture without claiming a canonical fit."""
+        if not fixture_id.strip():
+            raise ValueError("research-only fit provenance needs a fixture identifier")
+        validate_context13_fitted_model(model, instance)
+        instance_identity = sha256_json(instance.metadata())
+        model_sha = sha256_json(model.metadata())
+        training_identity = sha256_json(
+            {
+                "fixture_id": fixture_id,
+                "model_metadata_sha256": model_sha,
+                "fitted_instance_identity_sha256": instance_identity,
+                "provenance_class": "research_only",
+            }
+        )
+        return cls(
+            model_family=instance.model_family,
+            spec_version=instance.spec_version,
+            target_season=instance.target_season,
+            trained_through_season=instance.trained_through_season,
+            model_metadata_sha256=model_sha,
+            fitted_instance_identity_sha256=instance_identity,
+            frozen_model_spec_identity_sha256=sha256_json(model_specification_metadata()),
+            training_corpus_input_sha256=training_identity,
+            training_row_count=0,
+            provenance_class="research_only",
+            _construction_token=_CONTEXT13_FITTED_SOURCE_TOKEN,
+        )
+
+
+def _training_row_payload(row: TeamSeason) -> dict[str, object]:
+    def vector(values: object) -> list[float]:
+        result = np.asarray(values, dtype=float)
+        if result.ndim != 1 or not np.isfinite(result).all():
+            raise ValueError("Context 1.3 training inputs must be finite vectors")
+        return [float(value) for value in result]
+
+    features: dict[str, float | None] = {}
+    for name in MODEL_FEATURE_NAMES:
+        value = row.features.get(name)
+        if value is None:
+            features[name] = None
+        else:
+            numeric = float(value)
+            if not np.isfinite(numeric):
+                raise ValueError("Context 1.3 training features must be finite or missing")
+            features[name] = numeric
+    return {
+        "season": row.season,
+        "subdivision": row.subdivision,
+        "team_id": row.team_id,
+        "team_name": row.team_name,
+        "population": row.population,
+        "lag1_z": vector(row.lag1_z),
+        "lag_zs": [vector(values) for values in row.lag_zs],
+        "target_z": vector(row.target_z),
+        "target_ranks": [int(value) for value in np.asarray(row.target_ranks)],
+        "features": features,
+    }
+
+
+def _training_corpus_input_sha256(rows: Sequence[TeamSeason]) -> str:
+    payload = [_training_row_payload(row) for row in rows]
+    keys = [(row["season"], row["subdivision"], row["team_id"]) for row in payload]
+    if len(keys) != len(set(keys)):
+        raise ValueError("Context 1.3 training corpus has duplicate team-season rows")
+    payload.sort(key=lambda row: (row["season"], row["subdivision"], row["team_id"]))
+    return sha256_json(payload)
+
+
 def _inference_input_sha256(row: InferenceRow) -> str:
     row.require_no_target()
     values: dict[str, float | None] = {}
@@ -786,6 +1019,199 @@ def fit_model(
         target_season,
         None,
     )
+
+
+def fit_model_with_source(
+    rows: Sequence[TeamSeason],
+    *,
+    target_season: int,
+    trained_through_season: int,
+) -> tuple[DirectRankModel, AnnualFittedInstance, Context13FittedModelSource]:
+    """Fit the frozen Context 1.3 model and bind its exact historical corpus.
+
+    This canonical source-producing path accepts only FBS team-season rows at
+    or before the rolling-origin cutoff. It rejects future rows rather than
+    silently filtering them, so a source identity cannot hide target-season
+    training inputs.
+    """
+    if trained_through_season != target_season - 1:
+        raise ValueError("Context 1.3 annual fits must train through target season - 1")
+    if not rows:
+        raise ValueError("Context 1.3 fit provenance requires a non-empty training corpus")
+    if any(row.season > trained_through_season for row in rows):
+        raise ValueError("Context 1.3 training corpus includes rows beyond its cutoff")
+    if any(row.subdivision != "fbs" for row in rows):
+        raise ValueError("Context 1.3 training corpus must contain only FBS rows")
+    model, instance = fit_model(
+        list(rows),
+        target_season=target_season,
+        trained_through_season=trained_through_season,
+        context_features=CONTEXT_1_3_FEATURES,
+    )
+    model_sha = sha256_json(model.metadata())
+    instance_sha = sha256_json(instance.metadata())
+    corpus_sha = _training_corpus_input_sha256(rows)
+    source = Context13FittedModelSource(
+        model_family=instance.model_family,
+        spec_version=instance.spec_version,
+        target_season=instance.target_season,
+        trained_through_season=instance.trained_through_season,
+        model_metadata_sha256=model_sha,
+        fitted_instance_identity_sha256=instance_sha,
+        frozen_model_spec_identity_sha256=sha256_json(model_specification_metadata()),
+        training_corpus_input_sha256=corpus_sha,
+        training_row_count=len(rows),
+        provenance_class="canonical_context13_fit",
+        _construction_token=_CONTEXT13_FITTED_SOURCE_TOKEN,
+    )
+    source.validate_model(model, instance, training_rows=rows)
+    return model, instance, source
+
+
+def load_validated_context13_fitted_model(
+    model_artifact_path: str | Path,
+    fitted_instance_path: str | Path,
+    *,
+    training_rows: Sequence[TeamSeason] | None = None,
+    fitted_source_path: str | Path | None = None,
+) -> tuple[DirectRankModel, AnnualFittedInstance, Context13FittedModelSource]:
+    """Load an annual model only after validating its authoritative fit source.
+
+    When the corpus is available, refit through the canonical code and require
+    exact model and instance parity. The retained 2026 production artifact has
+    a separately committed, content-pinned source attestation because its
+    generated training table is not part of every checkout. Neither path trusts
+    the caller's filesystem path as source identity.
+    """
+    try:
+        model_artifact = json.loads(Path(model_artifact_path).read_text(encoding="utf-8"))
+        instance_artifact = json.loads(
+            Path(fitted_instance_path).read_text(encoding="utf-8")
+        )
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError("Context 1.3 fitted artifacts are unreadable") from error
+    if not isinstance(model_artifact, dict) or not isinstance(instance_artifact, dict):
+        raise TypeError("Context 1.3 fitted artifacts must contain JSON objects")
+    if (
+        model_artifact.get("model_family") != "context_prior"
+        or model_artifact.get("spec_version") != CONTEXT_PRIOR_CANDIDATE_VERSION
+        or not isinstance(model_artifact.get("model"), dict)
+    ):
+        raise ValueError("annual model artifact does not identify Context 1.3")
+    try:
+        instance = AnnualFittedInstance(
+            model_family=str(instance_artifact["model_family"]),
+            spec_version=str(instance_artifact["spec_version"]),
+            trained_through_season=int(instance_artifact["trained_through_season"]),
+            target_season=int(instance_artifact["target_season"]),
+            context_effective_cutoff=instance_artifact.get("context_effective_cutoff"),
+        )
+    except (KeyError, TypeError, ValueError) as error:
+        raise ValueError("annual fitted-instance artifact has an invalid identity") from error
+    if training_rows is not None:
+        model, expected_instance, source = fit_model_with_source(
+            training_rows,
+            target_season=instance.target_season,
+            trained_through_season=instance.trained_through_season,
+        )
+        if instance.metadata() != expected_instance.metadata():
+            raise ValueError("annual fitted-instance artifact differs from the canonical fit")
+        if sha256_json(model_artifact["model"]) != sha256_json(model.metadata()):
+            raise ValueError("annual model metadata differs from the canonical Context 1.3 fit")
+        recorded_source = model_artifact.get("fit_provenance")
+        if recorded_source is not None and recorded_source != source.to_metadata():
+            raise ValueError(
+                "annual model fit provenance differs from the canonical training corpus"
+            )
+        source.validate_model(model, instance, training_rows=training_rows)
+        return model, instance, source
+
+    if instance.target_season != 2026:
+        raise ValueError("an authoritative fit-source attestation is required for this season")
+    source_path = Path(fitted_source_path) if fitted_source_path else Path(
+        model_artifact_path
+    ).with_name("fitted_model_source.json")
+    try:
+        source_bytes = source_path.read_bytes()
+        source_metadata = json.loads(source_bytes.decode("utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValueError("Context 1.3 fitted-source attestation is unreadable") from error
+    if hashlib.sha256(source_bytes).hexdigest() != _CONTEXT13_2026_FITTED_SOURCE_ARTIFACT_SHA256:
+        raise ValueError("Context 1.3 fitted-source attestation is not the committed source record")
+    if (
+        instance.model_family != "context_prior"
+        or instance.spec_version != CONTEXT_PRIOR_CANDIDATE_VERSION
+        or instance.trained_through_season != instance.target_season - 1
+        or instance.context_effective_cutoff is not None
+        or model_artifact.get("transfer_provenance_class")
+        != RETROSPECTIVE_2026_PROVENANCE
+        or sha256_json(model_artifact["model"])
+        != _CONTEXT13_2026_MODEL_METADATA_SHA256
+    ):
+        raise ValueError("annual artifact does not match the retained Context 1.3 fit")
+    if not isinstance(source_metadata, dict):
+        raise TypeError("Context 1.3 fit-source attestation must be a JSON object")
+    try:
+        source = Context13FittedModelSource(
+            model_family=str(source_metadata["model_family"]),
+            spec_version=str(source_metadata["spec_version"]),
+            target_season=int(source_metadata["target_season"]),
+            trained_through_season=int(source_metadata["trained_through_season"]),
+            model_metadata_sha256=str(source_metadata["model_metadata_sha256"]),
+            fitted_instance_identity_sha256=str(
+                source_metadata["fitted_instance_identity_sha256"]
+            ),
+            frozen_model_spec_identity_sha256=str(
+                source_metadata["frozen_model_spec_identity_sha256"]
+            ),
+            training_corpus_input_sha256=str(
+                source_metadata["training_corpus_input_sha256"]
+            ),
+            training_row_count=int(source_metadata["training_row_count"]),
+            provenance_class=str(source_metadata["provenance_class"]),
+            _construction_token=_CONTEXT13_FITTED_SOURCE_TOKEN,
+        )
+    except (KeyError, TypeError, ValueError) as error:
+        raise ValueError("Context 1.3 fit-source attestation has an invalid identity") from error
+    if source_metadata != source.to_metadata():
+        raise ValueError("Context 1.3 fit-source attestation identity does not match its fields")
+    model = _direct_rank_model_from_metadata(model_artifact["model"])
+    if sha256_json(model_artifact["model"]) != sha256_json(model.metadata()):
+        raise ValueError("Context 1.3 annual model metadata cannot be reconstructed")
+    source.validate_model(model, instance)
+    return model, instance, source
+
+
+def _direct_rank_model_from_metadata(metadata: Mapping[str, Any]) -> DirectRankModel:
+    try:
+        preprocessing = metadata["preprocessing"]
+        if not isinstance(preprocessing, dict):
+            raise TypeError("model preprocessing metadata must be an object")
+        return DirectRankModel(
+            feature_names=list(metadata["feature_names"]),
+            preprocessor=Preprocessor(
+                tuple(preprocessing["feature_names"]),
+                dict(preprocessing["medians"]),
+                dict(preprocessing["means"]),
+                dict(preprocessing["scales"]),
+            ),
+            beta=np.asarray(metadata["location_coefficients"], dtype=float),
+            gamma=np.asarray(metadata["log_scale_coefficients"], dtype=float),
+            minimum_scale=float(metadata["minimum_scale"]),
+            penalty=float(metadata["penalty"]),
+            optimizer=dict(metadata["optimizer"]),
+            lag_count=int(metadata["lag_count"]),
+            family=str(metadata["family"]),
+            degrees_of_freedom=(
+                None
+                if metadata["degrees_of_freedom"] is None
+                else float(metadata["degrees_of_freedom"])
+            ),
+            location_feature_names=list(metadata["location_feature_names"]),
+            scale_feature_names=list(metadata["scale_feature_names"]),
+        )
+    except (KeyError, TypeError, ValueError) as error:
+        raise ValueError("annual Context 1.3 model metadata is malformed") from error
 
 
 def _key(row: Mapping[str, Any] | TeamSeason | InferenceRow) -> tuple[int, str, str]:
@@ -1233,6 +1659,161 @@ def load_validated_reconstructed_transfer_features(
     )
 
 
+def load_validated_committed_2026_reconstruction(
+    artifact_directory: str | Path,
+) -> tuple[list[dict[str, str]], ContextTransferInputProvenance]:
+    """Validate the retained 2026 reconstruction from its committed attestations.
+
+    The original raw snapshot payloads are intentionally not checked into the
+    repository. This path accepts only the exact committed derived CSV,
+    processed source manifest, and provenance attestation whose content hashes
+    were recorded when the reconstruction was validated. It preserves the
+    historical provenance value and creates the same typed identity as the
+    raw-backed loader, without relying on checkout-specific paths.
+    """
+    directory = Path(artifact_directory)
+    feature_path = directory / "transfer_features.csv"
+    manifest_path = directory / "source_manifest.json"
+    provenance_path = directory / "feature_provenance.json"
+    try:
+        feature_bytes = feature_path.read_bytes()
+        manifest_bytes = manifest_path.read_bytes()
+        provenance_bytes = provenance_path.read_bytes()
+        manifest = json.loads(manifest_bytes.decode("utf-8"))
+        provenance = json.loads(provenance_bytes.decode("utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ManifestValidationError(
+            "committed 2026 transfer reconstruction artifacts are unreadable"
+        ) from error
+    feature_sha = hashlib.sha256(feature_bytes).hexdigest()
+    manifest_sha = hashlib.sha256(manifest_bytes).hexdigest()
+    provenance_sha = hashlib.sha256(provenance_bytes).hexdigest()
+    if (
+        feature_sha != _COMMITTED_2026_TRANSFER_FEATURE_SHA256
+        or manifest_sha != _COMMITTED_2026_TRANSFER_MANIFEST_SHA256
+        or provenance_sha != _COMMITTED_2026_TRANSFER_PROVENANCE_SHA256
+    ):
+        raise ManifestValidationError(
+            "committed 2026 transfer artifacts do not match the retained attestation"
+        )
+    if not isinstance(manifest, dict) or not isinstance(provenance, dict):
+        raise ManifestValidationError("committed 2026 transfer metadata must be JSON objects")
+    records = manifest.get("snapshots")
+    if not isinstance(records, list) or len(records) != 37:
+        raise ManifestValidationError("committed 2026 source manifest has an invalid snapshot set")
+    snapshot_ids: list[str] = []
+    snapshot_hashes: list[str] = []
+    retrieval_timestamps: list[str] = []
+    source_endpoints: list[str] = []
+    source_kinds: set[str] = set()
+    for record in records:
+        if not isinstance(record, dict):
+            raise ManifestValidationError("committed 2026 source manifest has an invalid record")
+        snapshot_id = record.get("snapshot_id")
+        digest = record.get("sha256")
+        timestamp = record.get("retrieval_timestamp")
+        endpoint = record.get("endpoint")
+        if (
+            record.get("target_season") != 2026
+            or record.get("target_cutoff") != "2026-08-15"
+            or record.get("canonical") is not True
+            or record.get("captured_on_or_before_cutoff") is not False
+            or not isinstance(snapshot_id, str)
+            or not snapshot_id
+            or not _is_sha256(digest)
+            or not isinstance(timestamp, str)
+            or not timestamp
+            or not isinstance(endpoint, str)
+            or not endpoint
+            or not isinstance(record.get("source"), str)
+        ):
+            raise ManifestValidationError("committed 2026 snapshot metadata is incomplete")
+        snapshot_ids.append(snapshot_id)
+        snapshot_hashes.append(digest)
+        retrieval_timestamps.append(timestamp)
+        source_endpoints.append(endpoint)
+        source_kinds.add(str(record["source"]))
+    expected_sources = {"games_players", "portal", "roster", "stats", "usage"}
+    if (
+        len(snapshot_ids) != len(set(snapshot_ids))
+        or source_kinds != expected_sources
+        or provenance.get("provenance_class") != RETROSPECTIVE_2026_PROVENANCE
+        or provenance.get("target_season") != 2026
+        or provenance.get("cutoff") != "2026-08-15"
+        or provenance.get("all_snapshots_on_or_before_cutoff") is not False
+        or provenance.get("known_absence_of_archived_august_15_transfer_snapshot") is not True
+        or provenance.get("source_manifest_sha256") != manifest_sha
+        or provenance.get("snapshot_ids") != snapshot_ids
+        or provenance.get("snapshot_sha256") != snapshot_hashes
+        or provenance.get("raw_source_hashes") != snapshot_hashes
+        or provenance.get("retrieval_timestamps") != retrieval_timestamps
+        or provenance.get("source_endpoints") != source_endpoints
+        or not isinstance(provenance.get("provenance_statement"), str)
+        or not provenance["provenance_statement"].strip()
+    ):
+        raise ManifestValidationError("committed 2026 provenance does not match its source manifest")
+    feature_rows = _read_csv_bytes(feature_bytes, str(feature_path))
+    expected_columns = {
+        "season",
+        "subdivision",
+        "team_id",
+        "team_name",
+        *TRANSFER_FEATURE_COLUMNS,
+        "provenance_class",
+    }
+    if not feature_rows or set(feature_rows[0]) != expected_columns:
+        raise ManifestValidationError("committed 2026 transfer feature schema is invalid")
+    actual: dict[str, dict[str, float | None]] = {}
+    for row in feature_rows:
+        if (
+            row.get("season") != "2026"
+            or row.get("subdivision") != "fbs"
+            or row.get("provenance_class") != RETROSPECTIVE_2026_PROVENANCE
+            or not row.get("team_id")
+            or not row.get("team_name")
+        ):
+            raise ManifestValidationError("committed 2026 transfer feature row is invalid")
+        team_id = row["team_id"]
+        if team_id in actual:
+            raise ManifestValidationError("committed 2026 transfer features duplicate a team")
+        values: dict[str, float | None] = {}
+        try:
+            for name in TRANSFER_FEATURE_COLUMNS:
+                values[name] = None if not row[name].strip() else float(row[name])
+            _team_feature_sha256(values)
+        except (KeyError, TypeError, ValueError) as error:
+            raise ManifestValidationError(
+                "committed 2026 transfer feature value is invalid"
+            ) from error
+        actual[team_id] = values
+    if len(actual) != 138:
+        raise ManifestValidationError("committed 2026 transfer population must contain 138 FBS teams")
+    team_hashes = _team_transfer_feature_hashes(actual)
+    identity = ContextTransferInputProvenance(
+        target_season=2026,
+        provenance_class=RETROSPECTIVE_2026_PROVENANCE,
+        transfer_feature_artifact_sha256=feature_sha,
+        source_manifest_sha256=manifest_sha,
+        canonical_snapshot_ids=tuple(snapshot_ids),
+        canonical_snapshot_sha256=tuple(snapshot_hashes),
+        cutoff_state="retrospective_reconstruction",
+        feature_artifact_id="gippyrank.context1_3.transfer_features.season_2026",
+        manifest_artifact_id="gippyrank.preseason_transfer.snapshot_manifest.season_2026",
+        target_fbs_team_ids=tuple(team_id for team_id, _ in team_hashes),
+        target_fbs_population_sha256=sha256_json(
+            [team_id for team_id, _ in team_hashes]
+        ),
+        target_team_feature_sha256=team_hashes,
+        retrieval_timestamps=tuple(retrieval_timestamps),
+        source_endpoints=tuple(source_endpoints),
+        reconstructed_state_declaration=str(provenance["provenance_statement"]),
+        archived_august_15_snapshot_absent=True,
+        diagnostic_paths=(str(feature_path), str(manifest_path)),
+        _construction_token=_CONTEXT_TRANSFER_PROVENANCE_TOKEN,
+    )
+    return feature_rows, identity
+
+
 def candidate_guard(target_season: int) -> None:
     """Retain the old call boundary while allowing the activated 2026 path."""
     if target_season < 2003:
@@ -1257,6 +1838,7 @@ __all__ = [
     "RETROSPECTIVE_RESEARCH_PROVENANCE",
     "RETURNING_FEATURES",
     "SCALE_FEATURE_NAMES",
+    "Context13FittedModelSource",
     "Context13LocationDecomposition",
     "ContextTransferInputProvenance",
     "attach_transfer_features",
@@ -1264,6 +1846,9 @@ __all__ = [
     "candidate_guard",
     "decompose_context13_location",
     "fit_model",
+    "fit_model_with_source",
+    "load_validated_committed_2026_reconstruction",
+    "load_validated_context13_fitted_model",
     "load_validated_production_transfer_features",
     "load_validated_reconstructed_transfer_features",
     "model_specification",

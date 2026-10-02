@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 
 import gippyrank.context_prior_v1_3 as candidate_module
-from gippyrank.context_prior import AnnualFittedInstance, InferenceRow
+from gippyrank.context_prior import InferenceRow
 from gippyrank.context_prior_v1_3 import (
     CONTEXT_PRIOR_CANDIDATE_VERSION,
     D5_CONTEXT_FEATURES,
@@ -28,12 +28,7 @@ from gippyrank.context_prior_v1_3 import (
     model_specification_metadata,
     validate_feature_contract,
 )
-from gippyrank.context_prior_v1_4_candidate import (
-    Context13FallbackSource,
-    Context13PriorInput,
-    construct_candidate_prior,
-)
-from gippyrank.preseason import GenericRankPrior, TeamSeason
+from gippyrank.preseason import TeamSeason
 from gippyrank.preseason_transfer import (
     ManifestValidationError,
     SnapshotRecord,
@@ -372,37 +367,11 @@ def test_2026_reconstruction_requires_retrospective_class_and_complete_attestati
     assert identity.retrieval_timestamps
     assert identity.source_endpoints
     assert identity.reconstructed_state_declaration
+    assert identity.to_metadata()["provenance_class"] == (
+        "retrospective_2026_reconstruction"
+    )
     with pytest.raises(TypeError):
         replace(identity, provenance_class=PRODUCTION_TRANSFER_PROVENANCE)
-    fallback = Context13FallbackSource.from_generic_rank_prior(
-        prior=GenericRankPrior(location=0.0, scale=1.0, n_team_seasons=1),
-        target_season=2026,
-        team_id="alpha",
-        team_name="Alpha",
-        population=1,
-        cold_start_reason="no_prior_rank_distribution",
-    )
-    candidate = construct_candidate_prior(
-        Context13PriorInput.cold_start(
-            fitted_instance=AnnualFittedInstance(
-                "context_prior", "1.3", 2025, 2026, None
-            ),
-            transfer_provenance=identity,
-            fallback_source=fallback,
-        )
-    )
-    artifact = json.loads(candidate.artifact_bytes())
-    assert artifact["context_model_sha256"] is None
-    assert artifact["transfer_input_provenance"] == identity.to_metadata()
-    assert artifact["transfer_input_provenance"]["provenance_class"] == (
-        RETROSPECTIVE_2026_PROVENANCE
-    )
-    assert artifact["transfer_input_provenance"]["source_manifest_sha256"] == (
-        identity.source_manifest_sha256
-    )
-    assert artifact["transfer_input_provenance"]["canonical_snapshot_sha256"] == list(
-        identity.canonical_snapshot_sha256
-    )
     with pytest.raises(ManifestValidationError, match="must acknowledge the absent"):
         load_validated_reconstructed_transfer_features(
             feature_path,

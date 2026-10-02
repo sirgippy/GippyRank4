@@ -23,7 +23,6 @@ import build_preseason_prior as v1
 import numpy as np
 
 from gippyrank.context_prior_v1_3 import (
-    CONTEXT_1_3_FEATURES,
     CONTEXT_PRIOR_CANDIDATE_VERSION,
     MODEL_FEATURE_NAMES,
     RETROSPECTIVE_2026_PROVENANCE,
@@ -196,11 +195,10 @@ def build_starting_prior(
 ) -> dict[str, Any]:
     """Fit through 2025 and produce an independent reconstructed 2026 prior."""
     rows, _cold, _coverage = c13.load_candidate_rows(HISTORICAL_TRANSFER_FEATURES)
-    model, fitted = c13.fit_model(
+    model, fitted, fit_source = c13.fit_model_with_source(
         rows,
         target_season=2026,
         trained_through_season=2025,
-        context_features=CONTEXT_1_3_FEATURES,
     )
     team_rows = _read_csv(TEAM_FEATURES)
     index = {
@@ -273,14 +271,20 @@ def build_starting_prior(
             "model_family": "context_prior",
             "spec_version": CONTEXT_PRIOR_CANDIDATE_VERSION,
             "model": model.metadata(),
+            "fit_provenance": fit_source.to_metadata(),
             "prior_artifact_kind": "reconstructed_preseason_forecast",
             "transfer_provenance_class": RETROSPECTIVE_2026_PROVENANCE,
         },
     )
+    _write_json(annual / "fitted_model_source.json", fit_source.to_metadata())
     _write_json(annual / "model_spec.json", model_specification_metadata())
     _write_json(
         annual / "feature_provenance.json",
-        {"context_1_3": c13.feature_provenance(), "transfer": transfer_provenance},
+        {
+            "context_1_3": c13.feature_provenance(),
+            "transfer": validated_metadata,
+            "transfer_derivation": transfer_provenance,
+        },
     )
     _write_json(
         annual / "model_report.json",
@@ -293,6 +297,7 @@ def build_starting_prior(
             "starting_point_status": "retrospective_2026_reconstruction",
             "target_outcomes_used": False,
             "n_fbs": len(predictions),
+            "fitted_model_source": fit_source.to_metadata(),
             "transfer_provenance": transfer_provenance,
             "validated_transfer_metadata": validated_metadata,
             "prior_artifact_sha256": _sha256(annual / "predictions.csv"),
