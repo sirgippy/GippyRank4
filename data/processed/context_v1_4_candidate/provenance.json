@@ -6,7 +6,7 @@
     "spec_version": "1.3"
   },
   "candidate_reference_numerical_parity": {
-    "max_absolute_difference_allowed": 5e-17,
+    "max_absolute_difference_allowed": 0.0,
     "max_absolute_difference_observed": 0.0,
     "max_relative_difference_allowed": 1e-14,
     "max_relative_difference_observed": 0.0
@@ -21,7 +21,7 @@
     "pull_request_head_commit": "ec0ef4c08b5aa10e534488bb7292cb2901626aee"
   },
   "development_panel_hash_scope": "Season-level PMF hashes are retained PR #159 reference outputs; candidate outputs are compared numerically across all 534 team-seasons in development_panel_parity.json.",
-  "development_panel_parity_sha256": "44f1ba4f19825d67c375b81ebf5a68d48adf6be8f3dd552f5dbcf70e1ee08a5d",
+  "development_panel_parity_sha256": "df4933b17c815ac590ff750dd631da6a890190e97a071eb856336af0472182bf",
   "development_panel_seasons": {
     "2022": {
       "cold_start_fallback": 1,

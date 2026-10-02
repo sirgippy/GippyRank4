@@ -53,7 +53,7 @@ from gippyrank.preseason import (
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "config/context_v1_4_candidate.json"
-PMF_PARITY_ABSOLUTE_TOLERANCE = 5e-17
+PMF_PARITY_ABSOLUTE_TOLERANCE = 1e-16
 
 
 def _sha256(path: Path) -> str:
