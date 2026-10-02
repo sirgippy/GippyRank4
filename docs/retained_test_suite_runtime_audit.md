@@ -18,7 +18,7 @@ because Starlette `TestClient` can stall in the WSL sandbox; CI still runs the
 full suite, including API tests. There were 691 collected and passed tests, with
 no skips, in every profile.
 
-To reduce cache and machine-load bias, the profiles ran in alternating order:
+The profiles ran in repeated base-then-branch pairs:
 base, branch, base, branch, base, branch. Times below are the pytest-reported
 suite wall times; module and test times are sums of pytest phase durations.
 
@@ -33,10 +33,14 @@ suite wall times; module and test times are sums of pytest phase durations.
 | **Median** | **`origin/main`** | **134.09 s** |
 | **Median** | **issue branch** | **53.62 s** |
 
-The median reduction is **80.47 seconds (60.0%)**. The first base run was
-slower than its next two runs; alternating the checkout order and reporting
-medians avoids presenting that first run as the baseline. These measurements
-are local to this WSL environment. CI timing is tracked separately below.
+The observed median reduction is **80.47 seconds (60.0%)**. The base checkout
+always ran first within each pair, so the sequence is not counterbalanced and
+cannot rule out page-cache or order effects. Reporting three runs per checkout
+shows the measured spread, but the local percentage should not be read as a
+fully order-neutral causal estimate. The large Week 5 test reduction and the
+independent CI improvement corroborate the direction of the result. These
+measurements are local to this WSL environment; CI timing is tracked separately
+below.
 
 ## Main runtime contributors
 
@@ -123,35 +127,42 @@ sequentially in one job. Successful CI run
 took 4:59; pytest took about 119 seconds, static API validation 41 seconds,
 Chromium setup 22 seconds, and browser tests 77 seconds.
 
-The Python suite and Ruff do not read generated static API output, so they now
-run in an independent job. The JavaScript checks are also independent of the
-generated API, but took under a second, so a third job would add setup without
-a meaningful wall-time gain. The static API build and browser tests stay
-sequential in `validate`: the browser harness exercises the built site. The
-Python job checks `git diff --exit-code` after pytest and Ruff; `validate`
+The Python suite and Ruff do not read generated static API output, so they run
+in the independent `python` job. The JavaScript checks are also independent of
+the generated API, but took under a second, so a third validation job would add
+setup without a meaningful wall-time gain. The static API build and browser
+tests stay sequential in `site`: the browser harness exercises the built site.
+The `python` job checks `git diff --exit-code` after pytest and Ruff; `site`
 retains its own final side-effect check for site generation and browser steps.
 
-The first split-workflow run
+The required `validate` status is now a small final gate with `needs: [python,
+site]`. Its `always()` condition makes it run even when a dependency fails or is
+skipped, and it exits successfully only when both dependency results are
+`success`. Thus a failed Python or site check fails the existing required
+status context rather than leaving it skipped.
+
+The first split-workflow run, before adding the required final gate,
 [37059307804](https://github.com/sirgippy/GippyRank4/actions/runs/37059307804)
-passed. The workflow took **2:45** wall time; `validate` ran for **2:42** and
-the `python` job for **1:47**. The Python step passed all **696 tests in 78.39
-seconds**. The static API check validated **41 publications**, and the browser
-suite passed **113 tests with 9 existing skips**. The two jobs used **4:29**
-combined runner time. For the same code with pytest appended to `validate`, the
-observed `validate` duration plus the 78.39-second test step estimates about
-**4:00** serial wall time. Running the Python checks concurrently therefore
-saves about **75 seconds** on the critical path and adds about **29 seconds**
-of duplicated setup and check overhead to aggregate runner time. Against the
-older 4:59 PR run, the complete updated workflow is about 2:14 shorter; that
-total also includes the further Week 5 test reduction and is not attributed
-solely to parallelism.
+passed. The workflow took **2:45** wall time; its then-named `validate` site
+path ran for **2:42** and the `python` job for **1:47**. The Python step passed
+all **696 tests in 78.39 seconds**. The static API check validated **41
+publications**, and the browser suite passed **113 tests with 9 existing
+skips**. The two jobs used **4:29** combined runner time. For the same code
+with pytest appended to the site path, the observed 2:42 site duration plus
+the 78.39-second test step estimates about **4:00** serial wall time. Running
+the Python checks concurrently therefore saves about **75 seconds** on the
+critical path and adds about **29 seconds** of duplicated setup and check
+overhead to aggregate runner time. Against the older 4:59 PR run, that workflow
+was about 2:14 shorter; the total also includes the further Week 5 test
+reduction and is not attributed solely to parallelism.
 
 ## Validation
 
 The alternating sandbox-compatible profiles each passed all 691 collected
 tests. A final local compatible run passed **691 tests in 62.32 seconds** while
-the browser suite was running concurrently. The full split-workflow CI run
+the browser suite was running concurrently. The initial split-workflow CI run
 passed all **696 tests in 78.39 seconds**, including the API tests. Ruff, 17
 JavaScript tests, production static API validation for 41 publications, and
 113 browser tests with 9 existing skips also passed. `git diff --check` and
-both jobs' tracked-file side-effect checks passed.
+both validation jobs' tracked-file side-effect checks passed. The final
+required-gate run is linked from the PR.
