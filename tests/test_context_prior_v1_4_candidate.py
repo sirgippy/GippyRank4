@@ -12,6 +12,7 @@ import pytest
 from scipy.stats import norm
 
 import gippyrank.context_prior_v1_4_candidate as candidate_module
+from gippyrank.context_positive_net_moderation import parts_from_fitted_contributions
 from gippyrank.context_prior import AnnualFittedInstance, InferenceRow
 from gippyrank.context_prior_v1_3 import (
     H_FEATURES,
@@ -161,6 +162,17 @@ def _model_from_metadata(metadata: dict[str, object]) -> DirectRankModel:
         location_feature_names=list(metadata["location_feature_names"]),
         scale_feature_names=list(metadata["scale_feature_names"]),
     )
+
+
+def _legacy_normal_mixture_pmf(
+    locations: np.ndarray, scale: float, population: int
+) -> np.ndarray:
+    """Independent copy of the PR #159 research reference for parity only."""
+    edges = rank_bin_edges(population)
+    cdf = norm.cdf((edges[None, :] - locations[:, None]) / scale)
+    masses = np.maximum(np.diff(cdf, axis=1), 0.0)
+    pmf = np.mean(masses, axis=0)
+    return pmf / pmf.sum()
 
 
 def test_candidate_semantics_are_exact_and_lifecycle_is_not_hashed() -> None:
@@ -419,6 +431,12 @@ def test_canonical_candidate_path_reproduces_every_pr159_development_pmf() -> No
         ]
     source_by_key = {(int(row["season"]), row["team_id"]): row for row in source_rows}
     retained_by_key = {(int(row["season"]), row["team_id"]): row for row in retained_rows}
+    diagnostics_path = ROOT / "data/processed/context_location_error_diagnostics/team_seasons.csv"
+    with diagnostics_path.open(newline="", encoding="utf-8") as handle:
+        diagnostic_rows = list(csv.DictReader(handle))
+    diagnostic_by_key = {
+        (int(row["season"]), row["team_id"]): row for row in diagnostic_rows
+    }
     provenance_path = ROOT / "data/processed/context_history_crossover/provenance.json"
     base_provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
     expected_panel: dict[str, int] = {}
@@ -447,15 +465,17 @@ def test_canonical_candidate_path_reproduces_every_pr159_development_pmf() -> No
             )
             for row in season_fixture["fitted_rows"]
         }
-        team_hashes = []
+        team_count = fitted_count = fallback_count = 0
         for (source_season, team_id), source in sorted(
             source_by_key.items(), key=lambda item: (item[0][0], item[0][1])
         ):
             if source_season != season:
                 continue
+            team_count += 1
             retained = retained_by_key[source_season, team_id]
             source_pmf = np.asarray(json.loads(retained["prior_pmf"]), dtype=float)
             if source["component_status"] == FITTED_STATUS:
+                fitted_count += 1
                 prior = Context13PriorInput.fitted(
                     model=model,
                     fitted_instance=instance,
@@ -465,8 +485,31 @@ def test_canonical_candidate_path_reproduces_every_pr159_development_pmf() -> No
                     expected_team_id=team_id,
                     expected_target_season=season,
                 )
+                diagnostic = diagnostic_by_key[source_season, team_id]
+                source_locations = np.asarray(
+                    json.loads(source["context_conditional_location_points"]),
+                    dtype=float,
+                )
+                research_parts = parts_from_fitted_contributions(
+                    diagnostic, source_locations
+                )
+                if research_parts.context_only_subtotal <= 0:
+                    historical_reference = source_pmf.copy()
+                else:
+                    moderated_context = min(
+                        research_parts.context_only_subtotal, 0.0
+                    ) + 0.75 * max(research_parts.context_only_subtotal, 0.0)
+                    reference_locations = source_locations + (
+                        moderated_context - research_parts.context_only_subtotal
+                    )
+                    historical_reference = _legacy_normal_mixture_pmf(
+                        reference_locations,
+                        float(source["context_conditional_residual_scale"]),
+                        int(source["target_population"]),
+                    )
             else:
                 assert source["component_status"] == COLD_START_STATUS
+                fallback_count += 1
                 prior = Context13PriorInput.cold_start(
                     model=model,
                     fitted_instance=instance,
@@ -477,6 +520,7 @@ def test_canonical_candidate_path_reproduces_every_pr159_development_pmf() -> No
                     prior_pmf=source_pmf,
                     reason=source.get("cold_start_reason") or "no_fitted_lag1_input",
                 )
+                historical_reference = source_pmf.copy()
             candidate = construct_candidate_prior(prior)
             assert candidate.context_model_sha256 == model_sha256
             assert candidate.source_context13_pmf_sha256 == sha256_json(source_pmf.tolist())
@@ -484,16 +528,12 @@ def test_canonical_candidate_path_reproduces_every_pr159_development_pmf() -> No
                 assert candidate.pmf.tobytes() == source_pmf.tobytes()
             else:
                 np.testing.assert_array_equal(prior.source_prior_pmf(), source_pmf)
-            team_hashes.append(
-                {
-                    "team_id": team_id,
-                    "prior_pmf_sha256": sha256_json(candidate.pmf.tolist()),
-                }
-            )
+            np.testing.assert_array_equal(candidate.pmf, historical_reference)
 
         expected_season = parity["seasons"][str(season)]
-        assert len(team_hashes) == expected_season["team_seasons"]
-        assert sha256_json(team_hashes) == expected_season["team_pmf_hashes_sha256"]
-        expected_panel[str(season)] = len(team_hashes)
+        assert team_count == expected_season["team_seasons"]
+        assert fitted_count == expected_season["fitted"]
+        assert fallback_count == expected_season["cold_start_fallback"]
+        expected_panel[str(season)] = team_count
 
     assert expected_panel == {"2022": 131, "2023": 133, "2024": 134, "2025": 136}
