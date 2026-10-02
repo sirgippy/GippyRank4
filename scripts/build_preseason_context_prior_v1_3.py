@@ -38,6 +38,8 @@ from gippyrank.context_prior_v1_3 import (
     D5_CONTEXT_FEATURES,
     LOCATION_FEATURE_NAMES,
     MODEL_FEATURE_NAMES,
+    RETROSPECTIVE_2026_PROVENANCE,
+    RETROSPECTIVE_RESEARCH_PROVENANCE,
     SCALE_FEATURE_NAMES,
     attach_transfer_features,
     attach_transfer_features_to_inference_rows,
@@ -394,7 +396,7 @@ def coverage_rows(rows: list, coverage: list[dict[str, object]]) -> list[dict[st
                     f"{name}_available": row.features.get(name) is not None
                     for name in CONTEXT_1_3_FEATURES
                 },
-                "transfer_provenance_class": "retrospective_research_reconstruction",
+                "transfer_provenance_class": RETROSPECTIVE_RESEARCH_PROVENANCE,
             }
         )
     return result
@@ -483,10 +485,10 @@ def build_annual_inference_rows(
     loader = (
         load_validated_reconstructed_transfer_features
         if provenance.get("provenance_class")
-        == "retrospective_2026_reconstruction"
+        == RETROSPECTIVE_2026_PROVENANCE
         else load_validated_production_transfer_features
     )
-    feature_rows, metadata = loader(
+    feature_rows, transfer_provenance = loader(
         transfer_feature_path,
         transfer_manifest_path,
         target_season=target_season,
@@ -507,7 +509,7 @@ def build_annual_inference_rows(
         for row in base
     ]
     attached = attach_transfer_features_to_inference_rows(base, feature_rows)
-    return attached, metadata
+    return attached, transfer_provenance.to_metadata(include_diagnostic_paths=True)
 
 
 def build_report(
@@ -557,7 +559,7 @@ def build_report(
             "target_seasons": list(TEST_SEASONS),
             "n_team_seasons": len(predictions),
             "target_outcomes_used_for_features": False,
-            "transfer_provenance": "retrospective_research_reconstruction",
+            "transfer_provenance": RETROSPECTIVE_RESEARCH_PROVENANCE,
         },
         "aggregate_metrics": {
             "context_1_2": c12_score,

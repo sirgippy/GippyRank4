@@ -230,10 +230,10 @@ def build_starting_prior(
         expected_team_keys={(2026, "fbs", row.team_id) for row in base},
         provenance=transfer_provenance,
     )
-    validated = {
-        **validated,
-        "feature_artifact": _repo_relative(feature_path),
-        "manifest": _repo_relative(manifest_path),
+    validated_metadata = validated.to_metadata()
+    validated_metadata["diagnostic_paths"] = {
+        "transfer_feature_artifact": _repo_relative(feature_path),
+        "snapshot_manifest": _repo_relative(manifest_path),
     }
     fallback = {
         item.key: item
@@ -294,7 +294,7 @@ def build_starting_prior(
             "target_outcomes_used": False,
             "n_fbs": len(predictions),
             "transfer_provenance": transfer_provenance,
-            "validated_transfer_metadata": validated,
+            "validated_transfer_metadata": validated_metadata,
             "prior_artifact_sha256": _sha256(annual / "predictions.csv"),
         },
     )

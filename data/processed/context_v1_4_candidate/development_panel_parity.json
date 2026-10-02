@@ -1,29 +1,36 @@
 {
   "alpha": 0.75,
+  "candidate_reference_numerical_parity": {
+    "max_absolute_difference_allowed": 5e-17,
+    "max_absolute_difference_observed": 0.0,
+    "max_relative_difference_allowed": 1e-14,
+    "max_relative_difference_observed": 0.0
+  },
   "candidate_spec_sha256": "db84045d2f7d80b1648360da52ef1e71f76093696cad4e4e7bbdbd57a086573f",
+  "reference_output_hash_scope": "retained PR #159 reference candidate PMF outputs; candidate construction is checked against these numerically across the full 2022-2025 panel",
   "seasons": {
     "2022": {
       "cold_start_fallback": 1,
       "fitted": 130,
-      "team_pmf_hashes_sha256": "7a29324a9a293e5704a2a809aae1cf95d85c034ed016c47826ced98fe020ac4c",
+      "pr159_reference_team_pmf_hashes_sha256": "7a29324a9a293e5704a2a809aae1cf95d85c034ed016c47826ced98fe020ac4c",
       "team_seasons": 131
     },
     "2023": {
       "cold_start_fallback": 2,
       "fitted": 131,
-      "team_pmf_hashes_sha256": "42ba0e24fe995fd278c49f5cb92fba1a1394bf35a26f36444163004b58dfe22e",
+      "pr159_reference_team_pmf_hashes_sha256": "42ba0e24fe995fd278c49f5cb92fba1a1394bf35a26f36444163004b58dfe22e",
       "team_seasons": 133
     },
     "2024": {
       "cold_start_fallback": 1,
       "fitted": 133,
-      "team_pmf_hashes_sha256": "35dcbacb3ba2218faf3057c2053e018e63f3a86f71bf792a709bbac209425ea9",
+      "pr159_reference_team_pmf_hashes_sha256": "35dcbacb3ba2218faf3057c2053e018e63f3a86f71bf792a709bbac209425ea9",
       "team_seasons": 134
     },
     "2025": {
       "cold_start_fallback": 2,
       "fitted": 134,
-      "team_pmf_hashes_sha256": "b1c5e1327d68fffbc88bdb96307974fcffa64cec2f842a966ced09cc55190f5a",
+      "pr159_reference_team_pmf_hashes_sha256": "b1c5e1327d68fffbc88bdb96307974fcffa64cec2f842a966ced09cc55190f5a",
       "team_seasons": 136
     }
   },

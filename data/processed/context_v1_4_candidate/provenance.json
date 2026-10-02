@@ -14,41 +14,42 @@
     "pull_request": 159,
     "pull_request_head_commit": "ec0ef4c08b5aa10e534488bb7292cb2901626aee"
   },
-  "development_panel_parity_sha256": "3e78716518757167f5a3a301d9203f17c2d1b2bcb7f6171ae4f21fb6d096369d",
+  "development_panel_parity_sha256": "44f1ba4f19825d67c375b81ebf5a68d48adf6be8f3dd552f5dbcf70e1ee08a5d",
   "development_panel_seasons": {
     "2022": {
       "cold_start_fallback": 1,
       "fitted": 130,
-      "team_pmf_hashes_sha256": "7a29324a9a293e5704a2a809aae1cf95d85c034ed016c47826ced98fe020ac4c",
+      "pr159_reference_team_pmf_hashes_sha256": "7a29324a9a293e5704a2a809aae1cf95d85c034ed016c47826ced98fe020ac4c",
       "team_seasons": 131
     },
     "2023": {
       "cold_start_fallback": 2,
       "fitted": 131,
-      "team_pmf_hashes_sha256": "42ba0e24fe995fd278c49f5cb92fba1a1394bf35a26f36444163004b58dfe22e",
+      "pr159_reference_team_pmf_hashes_sha256": "42ba0e24fe995fd278c49f5cb92fba1a1394bf35a26f36444163004b58dfe22e",
       "team_seasons": 133
     },
     "2024": {
       "cold_start_fallback": 1,
       "fitted": 133,
-      "team_pmf_hashes_sha256": "35dcbacb3ba2218faf3057c2053e018e63f3a86f71bf792a709bbac209425ea9",
+      "pr159_reference_team_pmf_hashes_sha256": "35dcbacb3ba2218faf3057c2053e018e63f3a86f71bf792a709bbac209425ea9",
       "team_seasons": 134
     },
     "2025": {
       "cold_start_fallback": 2,
       "fitted": 134,
-      "team_pmf_hashes_sha256": "b1c5e1327d68fffbc88bdb96307974fcffa64cec2f842a966ced09cc55190f5a",
+      "pr159_reference_team_pmf_hashes_sha256": "b1c5e1327d68fffbc88bdb96307974fcffa64cec2f842a966ced09cc55190f5a",
       "team_seasons": 136
     }
   },
   "implementation_sources_sha256": {
-    "candidate_builder": "3827a6c3cc4edd5fe47a6000b9bb304d56dac17c779810862c5fd62e711d4db9",
-    "context_prior_core": "857ea3966e21a62729a9e85e52b40267c812899f4e95460799ac4e8cc62c37ec",
-    "context_prior_v1_3": "89e6619658f789194fc1157b58862e10ad2302559ff585271b5598eb72285e79",
-    "dependency_lock": "5d4ac8b7e55111b44edd2996ccbc0d113fb0937dec21e9c6ad1b75b24e72e3ce",
+    "candidate_builder": "ee96c73264b4985aaaf123eb489bbb579e6f087932683c9f0a3a7b2566240c70",
     "positive_net_moderation": "ec7a9123e7d07e6b9081a8b23d54989a0132c4dfdf309a3754fbc97e2ca7bc6e",
-    "rank_distribution": "35fd2300658e5333fe43087c78d38f22e34d27060c470948c0996ffc8193c449",
-    "research_crossover": "4c6628bbead1aa354cfe9f6f62efb91ca61063c0cef6d06edbc9eaf675ee60e4"
+    "context_prior_v1_3": "adf02c6b04b8604c7e9e8072a5549f448e101967781f41e0f65c1ff0a1cdd903",
+    "transfer_manifest_validator": "c3ca700cf775ba462200a998e9008f6a824fc3f16a9920015fc2e34bb45ab3d2",
+    "context_prior_core": "857ea3966e21a62729a9e85e52b40267c812899f4e95460799ac4e8cc62c37ec",
+    "rank_distribution": "68346a936f6e691c5509b23722bcaad3e73522870d131166dbdfc87e0ded0a86",
+    "research_crossover": "4c6628bbead1aa354cfe9f6f62efb91ca61063c0cef6d06edbc9eaf675ee60e4",
+    "dependency_lock": "5d4ac8b7e55111b44edd2996ccbc0d113fb0937dec21e9c6ad1b75b24e72e3ce"
   },
   "model_family": "context_prior",
   "moderation_metric": "context_only_subtotal",
@@ -75,5 +76,12 @@
   },
   "spec_version": "1.4-candidate",
   "status": "frozen research candidate",
-  "validation_status": "not yet holdout validated"
+  "validation_status": "not yet holdout validated",
+  "development_panel_hash_scope": "Season-level PMF hashes are retained PR #159 reference outputs; candidate outputs are compared numerically across all 534 team-seasons in development_panel_parity.json.",
+  "candidate_reference_numerical_parity": {
+    "max_absolute_difference_allowed": 5e-17,
+    "max_absolute_difference_observed": 0.0,
+    "max_relative_difference_allowed": 1e-14,
+    "max_relative_difference_observed": 0.0
+  }
 }

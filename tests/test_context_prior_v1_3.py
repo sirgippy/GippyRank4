@@ -3,32 +3,39 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
 import pytest
 
 import gippyrank.context_prior_v1_3 as candidate_module
-from gippyrank.context_prior import InferenceRow
+from gippyrank.context_prior import AnnualFittedInstance, InferenceRow
 from gippyrank.context_prior_v1_3 import (
     CONTEXT_PRIOR_CANDIDATE_VERSION,
     D5_CONTEXT_FEATURES,
     LOCATION_FEATURE_NAMES,
     MODEL_FEATURE_NAMES,
+    PRODUCTION_TRANSFER_PROVENANCE,
     RETROSPECTIVE_2026_PROVENANCE,
     SCALE_FEATURE_NAMES,
     attach_transfer_features,
     attach_transfer_features_to_inference_rows,
     candidate_guard,
+    load_validated_production_transfer_features,
     load_validated_reconstructed_transfer_features,
     model_specification,
     model_specification_metadata,
     validate_feature_contract,
 )
-from gippyrank.preseason import TeamSeason
+from gippyrank.context_prior_v1_4_candidate import (
+    Context13FallbackSource,
+    Context13PriorInput,
+    construct_candidate_prior,
+)
+from gippyrank.preseason import GenericRankPrior, TeamSeason
 from gippyrank.preseason_transfer import (
     ManifestValidationError,
-    SnapshotManifest,
     SnapshotRecord,
 )
 
@@ -61,6 +68,86 @@ def _transfer_row() -> dict[str, object]:
         "transfer_in_prior_defensive_impact_db_available": 1.0,
         "audit_unresolved_count": 4,
     }
+
+
+def _write_transfer_validation_inputs(
+    root: Path, *, season: int, late: bool = False, usage: float = 1.0
+) -> tuple[Path, Path, dict[str, object], list[tuple[int, str, str]]]:
+    raw_root = root / "raw"
+    raw_root.mkdir(parents=True)
+    sources = ("portal", "usage", "stats", "roster", "games_players")
+    retrieval = f"{season}-09-01T00:00:00+00:00" if late else f"{season}-08-01T00:00:00+00:00"
+    records = []
+    for source in sources:
+        relative = Path("snapshots") / f"{source}.json"
+        raw_path = raw_root / relative
+        raw_path.parent.mkdir(parents=True, exist_ok=True)
+        raw_content = f'[{{"source":"{source}"}}]'.encode()
+        raw_path.write_bytes(raw_content)
+        records.append(
+            SnapshotRecord(
+                snapshot_id=f"{season}:{source}",
+                target_season=season,
+                source=source,
+                source_season=season if source in {"portal", "usage", "stats"} else season - 1,
+                path=relative.as_posix(),
+                source_filename=relative.name,
+                endpoint=f"/{source}",
+                query_parameters={},
+                retrieval_timestamp=retrieval,
+                target_cutoff=f"{season}-08-15",
+                captured_on_or_before_cutoff=not late,
+                sha256=hashlib.sha256(raw_content).hexdigest(),
+                record_count=1,
+                canonical=True,
+            ).as_dict()
+        )
+    manifest_path = root / "manifest.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "raw_root": "raw",
+                "cutoff": {"month": 8, "day": 15},
+                "snapshots": records,
+            }
+        ),
+        encoding="utf-8",
+    )
+    feature_path = root / "features.csv"
+    feature_path.write_text(
+        "season,subdivision,team_id,team_name,transfer_in_prior_usage_sum,"
+        "transfer_in_prior_defensive_impact_db_sum,"
+        "transfer_in_prior_defensive_impact_db_available\n"
+        f"{season},fbs,alpha,Alpha,{usage},0.0,1.0\n",
+        encoding="utf-8",
+    )
+    snapshot_ids = [str(record["snapshot_id"]) for record in records]
+    snapshot_hashes = [str(record["sha256"]) for record in records]
+    provenance: dict[str, object] = {
+        "provenance_class": (
+            RETROSPECTIVE_2026_PROVENANCE if late else PRODUCTION_TRANSFER_PROVENANCE
+        ),
+        "target_season": season,
+        "cutoff": f"{season}-08-15",
+        "snapshot_ids": snapshot_ids,
+        "snapshot_sha256": snapshot_hashes,
+        "all_snapshots_on_or_before_cutoff": not late,
+    }
+    if late:
+        provenance.update(
+            {
+                "raw_source_hashes": snapshot_hashes,
+                "retrieval_timestamps": [retrieval] * len(records),
+                "source_endpoints": [str(record["endpoint"]) for record in records],
+                "derivation_timestamp": f"{season}-09-02T00:00:00+00:00",
+                "known_absence_of_archived_august_15_transfer_snapshot": True,
+                "provenance_statement": "retrospective reconstructed state from late source retrievals",
+            }
+        )
+    provenance["source_manifest_sha256"] = hashlib.sha256(
+        manifest_path.read_bytes()
+    ).hexdigest()
+    return feature_path, manifest_path, provenance, [(season, "fbs", "alpha")]
 
 
 def test_frozen_contract_has_exact_features_and_equation_placement() -> None:
@@ -141,122 +228,208 @@ def test_activated_guard_allows_2026_without_relabeling_its_provenance() -> None
         )
 
 
-def test_production_transfer_validation_requires_manifest_identity(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+def test_production_transfer_provenance_is_authoritative_and_content_addressed(
+    tmp_path: Path,
 ) -> None:
-    sources = ("portal", "usage", "stats", "roster", "games_players")
-    records = tuple(
-        SnapshotRecord(
-            snapshot_id=f"2027:{source}",
-            target_season=2027,
-            source=source,
-            source_season=2027 if source == "portal" else 2026,
-            path=f"{source}.json",
-            source_filename=f"{source}.json",
-            endpoint=f"/{source}",
-            query_parameters={},
-            retrieval_timestamp="2027-08-01T00:00:00+00:00",
-            target_cutoff="2027-08-15",
-            captured_on_or_before_cutoff=True,
-            sha256=f"{len(source):064x}",
-            record_count=1,
-            canonical=True,
-        )
-        for source in sources
+    feature_path, manifest_path, provenance, expected = _write_transfer_validation_inputs(
+        tmp_path / "checkout-a", season=2027
     )
-    manifest = SnapshotManifest(tmp_path / "manifest.json", tmp_path, records)
-    monkeypatch.setattr(candidate_module, "load_snapshot_manifest", lambda *args, **kwargs: manifest)
-    feature_path = tmp_path / "features.csv"
-    feature_path.write_text(
-        "season,subdivision,team_id,transfer_in_prior_usage_sum,"
-        "transfer_in_prior_defensive_impact_db_sum,"
-        "transfer_in_prior_defensive_impact_db_available\n"
-        "2027,fbs,alpha,1.0,0.0,1.0\n",
-        encoding="utf-8",
-    )
-    provenance = {
-        "provenance_class": "production_preseason_immutable_snapshot",
-        "target_season": 2027,
-        "cutoff": "2027-08-15",
-        "snapshot_ids": [record.snapshot_id for record in records],
-        "snapshot_sha256": [record.sha256 for record in records],
-        "all_snapshots_on_or_before_cutoff": True,
-    }
-    loaded, metadata = candidate_module.load_validated_production_transfer_features(
+    loaded, identity = candidate_module.load_validated_production_transfer_features(
         feature_path,
-        manifest.path,
+        manifest_path,
         target_season=2027,
-        expected_team_keys=[(2027, "fbs", "alpha")],
+        expected_team_keys=expected,
         provenance=provenance,
     )
     assert loaded[0]["team_id"] == "alpha"
-    assert metadata["snapshot_ids"] == provenance["snapshot_ids"]
+    assert identity.provenance_class == PRODUCTION_TRANSFER_PROVENANCE
+    assert identity.cutoff_state == "on_time"
+    assert identity.transfer_feature_artifact_sha256 == hashlib.sha256(
+        feature_path.read_bytes()
+    ).hexdigest()
+    assert identity.source_manifest_sha256 == provenance["source_manifest_sha256"]
+    assert identity.canonical_snapshot_ids
+    assert identity.to_metadata()["feature_artifact_id"] == (
+        "gippyrank.context1_3.transfer_features.season_2027"
+    )
 
-    with pytest.raises(ManifestValidationError, match="canonical snapshot set"):
+    with pytest.raises(ManifestValidationError, match="canonical snapshot IDs and hashes"):
         candidate_module.load_validated_production_transfer_features(
             feature_path,
-            manifest.path,
+            manifest_path,
             target_season=2027,
-            expected_team_keys=[(2027, "fbs", "alpha")],
+            expected_team_keys=expected,
             provenance={**provenance, "snapshot_ids": []},
         )
-
-
-def test_2026_reconstruction_accepts_late_inputs_only_with_explicit_provenance(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    sources = ("portal", "usage", "stats", "roster", "games_players")
-    records = tuple(
-        SnapshotRecord(
-            snapshot_id=f"2026:{source}",
-            target_season=2026,
-            source=source,
-            source_season=2026 if source == "portal" else 2025,
-            path=f"{source}.json",
-            source_filename=f"{source}.json",
-            endpoint=f"/{source}",
-            query_parameters={},
-            retrieval_timestamp="2026-09-01T00:00:00+00:00",
-            target_cutoff="2026-08-15",
-            captured_on_or_before_cutoff=False,
-            sha256=f"{len(source) + 100:064x}",
-            record_count=1,
-            canonical=True,
+    with pytest.raises(ManifestValidationError, match="source manifest hash is mismatched"):
+        candidate_module.load_validated_production_transfer_features(
+            feature_path,
+            manifest_path,
+            target_season=2027,
+            expected_team_keys=expected,
+            provenance={**provenance, "source_manifest_sha256": "f" * 64},
         )
-        for source in sources
+    with pytest.raises(ManifestValidationError, match="feature artifact hash is mismatched"):
+        candidate_module.load_validated_production_transfer_features(
+            feature_path,
+            manifest_path,
+            target_season=2027,
+            expected_team_keys=expected,
+            provenance={**provenance, "transfer_feature_artifact_sha256": "e" * 64},
+        )
+    with pytest.raises(ManifestValidationError, match="cutoff state"):
+        candidate_module.load_validated_production_transfer_features(
+            feature_path,
+            manifest_path,
+            target_season=2027,
+            expected_team_keys=expected,
+            provenance={**provenance, "all_snapshots_on_or_before_cutoff": False},
+        )
+    with pytest.raises(ManifestValidationError, match="population differs"):
+        candidate_module.load_validated_production_transfer_features(
+            feature_path,
+            manifest_path,
+            target_season=2027,
+            expected_team_keys=[(2027, "fbs", "different-team")],
+            provenance=provenance,
+        )
+
+    malformed_root = tmp_path / "malformed-canonical-flag"
+    malformed_feature, malformed_manifest, malformed_provenance, malformed_expected = (
+        _write_transfer_validation_inputs(malformed_root, season=2027)
     )
-    manifest = SnapshotManifest(tmp_path / "manifest.json", tmp_path, records)
-    monkeypatch.setattr(candidate_module, "load_snapshot_manifest", lambda *args, **kwargs: manifest)
-    feature_path = tmp_path / "features.csv"
-    feature_path.write_text(
-        "season,subdivision,team_id,transfer_in_prior_usage_sum,"
-        "transfer_in_prior_defensive_impact_db_sum,"
-        "transfer_in_prior_defensive_impact_db_available\n"
-        "2026,fbs,alpha,1.0,0.0,1.0\n",
+    manifest_payload = json.loads(malformed_manifest.read_text(encoding="utf-8"))
+    manifest_payload["snapshots"][0]["canonical"] = "false"
+    malformed_manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
+    malformed_provenance["source_manifest_sha256"] = hashlib.sha256(
+        malformed_manifest.read_bytes()
+    ).hexdigest()
+    with pytest.raises(ManifestValidationError, match="canonical flag is not boolean"):
+        candidate_module.load_validated_production_transfer_features(
+            malformed_feature,
+            malformed_manifest,
+            target_season=2027,
+            expected_team_keys=malformed_expected,
+            provenance=malformed_provenance,
+        )
+
+    second_root = tmp_path / "checkout-b"
+    second_feature, second_manifest, second_provenance, second_expected = (
+        _write_transfer_validation_inputs(second_root, season=2027)
+    )
+    _, second_identity = candidate_module.load_validated_production_transfer_features(
+        second_feature,
+        second_manifest,
+        target_season=2027,
+        expected_team_keys=second_expected,
+        provenance=second_provenance,
+    )
+    assert second_identity.source_identity_sha256 == identity.source_identity_sha256
+    assert second_feature.resolve() != feature_path.resolve()
+
+    second_feature.write_text(
+        second_feature.read_text(encoding="utf-8").replace(",Alpha,1.0,", ",Alpha,2.0,"),
         encoding="utf-8",
     )
-    provenance = {
-        "provenance_class": RETROSPECTIVE_2026_PROVENANCE,
-        "target_season": 2026,
-        "cutoff": "2026-08-15",
-        "snapshot_ids": [record.snapshot_id for record in records],
-        "snapshot_sha256": [record.sha256 for record in records],
-        "raw_source_hashes": [record.sha256 for record in records],
-        "retrieval_timestamps": [record.retrieval_timestamp for record in records],
-        "source_endpoints": [record.endpoint for record in records],
-        "derivation_timestamp": "2026-09-01T00:00:00+00:00",
-        "known_absence_of_archived_august_15_transfer_snapshot": True,
-        "provenance_statement": "retrospective reconstruction",
-    }
-    loaded, metadata = load_validated_reconstructed_transfer_features(
+    _, changed_identity = candidate_module.load_validated_production_transfer_features(
+        second_feature,
+        second_manifest,
+        target_season=2027,
+        expected_team_keys=second_expected,
+        provenance=second_provenance,
+    )
+    assert changed_identity.transfer_feature_artifact_sha256 != identity.transfer_feature_artifact_sha256
+    assert changed_identity.source_identity_sha256 != identity.source_identity_sha256
+    bad_raw_source = second_root / "raw/snapshots/portal.json"
+    bad_raw_source.write_text('{"changed":true}', encoding="utf-8")
+    with pytest.raises(ManifestValidationError, match="snapshot hash mismatch"):
+        candidate_module.load_validated_production_transfer_features(
+            second_feature,
+            second_manifest,
+            target_season=2027,
+            expected_team_keys=second_expected,
+            provenance=second_provenance,
+        )
+
+
+def test_2026_reconstruction_requires_retrospective_class_and_complete_attestation(
+    tmp_path: Path,
+) -> None:
+    feature_path, manifest_path, provenance, expected = _write_transfer_validation_inputs(
+        tmp_path / "retrospective-2026", season=2026, late=True
+    )
+    loaded, identity = load_validated_reconstructed_transfer_features(
         feature_path,
-        manifest.path,
+        manifest_path,
         target_season=2026,
-        expected_team_keys=[(2026, "fbs", "alpha")],
+        expected_team_keys=expected,
         provenance=provenance,
     )
     assert loaded[0]["team_id"] == "alpha"
-    assert metadata["provenance_class"] == RETROSPECTIVE_2026_PROVENANCE
+    assert identity.provenance_class == RETROSPECTIVE_2026_PROVENANCE
+    assert identity.cutoff_state == "retrospective_reconstruction"
+    assert identity.archived_august_15_snapshot_absent is True
+    assert identity.retrieval_timestamps
+    assert identity.source_endpoints
+    assert identity.reconstructed_state_declaration
+    with pytest.raises(TypeError):
+        replace(identity, provenance_class=PRODUCTION_TRANSFER_PROVENANCE)
+    fallback = Context13FallbackSource.from_generic_rank_prior(
+        prior=GenericRankPrior(location=0.0, scale=1.0, n_team_seasons=1),
+        target_season=2026,
+        team_id="alpha",
+        team_name="Alpha",
+        population=1,
+        cold_start_reason="no_prior_rank_distribution",
+    )
+    candidate = construct_candidate_prior(
+        Context13PriorInput.cold_start(
+            fitted_instance=AnnualFittedInstance(
+                "context_prior", "1.3", 2025, 2026, None
+            ),
+            transfer_provenance=identity,
+            fallback_source=fallback,
+        )
+    )
+    artifact = json.loads(candidate.artifact_bytes())
+    assert artifact["context_model_sha256"] is None
+    assert artifact["transfer_input_provenance"] == identity.to_metadata()
+    assert artifact["transfer_input_provenance"]["provenance_class"] == (
+        RETROSPECTIVE_2026_PROVENANCE
+    )
+    assert artifact["transfer_input_provenance"]["source_manifest_sha256"] == (
+        identity.source_manifest_sha256
+    )
+    assert artifact["transfer_input_provenance"]["canonical_snapshot_sha256"] == list(
+        identity.canonical_snapshot_sha256
+    )
+    with pytest.raises(ManifestValidationError, match="must acknowledge the absent"):
+        load_validated_reconstructed_transfer_features(
+            feature_path,
+            manifest_path,
+            target_season=2026,
+            expected_team_keys=expected,
+            provenance={
+                **provenance,
+                "known_absence_of_archived_august_15_transfer_snapshot": False,
+            },
+        )
+    with pytest.raises(ManifestValidationError, match="must be"):
+        load_validated_reconstructed_transfer_features(
+            feature_path,
+            manifest_path,
+            target_season=2026,
+            expected_team_keys=expected,
+            provenance={**provenance, "provenance_class": PRODUCTION_TRANSFER_PROVENANCE},
+        )
+    with pytest.raises(ManifestValidationError, match="on-time production snapshot"):
+        load_validated_production_transfer_features(
+            feature_path,
+            manifest_path,
+            target_season=2026,
+            expected_team_keys=expected,
+            provenance={**provenance, "provenance_class": PRODUCTION_TRANSFER_PROVENANCE},
+        )
 
 
 def test_candidate_artifacts_are_separate_and_parity_validated() -> None:

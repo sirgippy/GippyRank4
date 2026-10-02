@@ -494,7 +494,13 @@ class DirectRankModel:
             list(scale_feature_names) if scale_feature_names is not None else None,
         )
 
-    def _matrix(self, features: dict[str, float | None]) -> np.ndarray:
+    def design_vector(self, features: dict[str, float | None]) -> np.ndarray:
+        """Return the intercept, standardized values, and missingness flags.
+
+        This public method is the single source for model design construction.
+        It also allows callers to inspect fitted feature contributions without
+        reproducing preprocessing outside the model.
+        """
         return np.r_[1.0, self.preprocessor.transform([features])[0]]
 
     def conditional_parameters(
@@ -503,7 +509,7 @@ class DirectRankModel:
         lag1_z: np.ndarray,
         lag_zs: tuple[np.ndarray, ...] = (),
     ) -> tuple[np.ndarray, float]:
-        x = self._matrix(features)
+        x = self.design_vector(features)
         distributions = (lag1_z, *lag_zs[: self.lag_count - 1])
         if len(distributions) != self.lag_count:
             raise ValueError("prediction lacks required lag distributions")
