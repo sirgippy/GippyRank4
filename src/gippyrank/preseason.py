@@ -107,6 +107,54 @@ def rank_bin_edges(population: int) -> np.ndarray:
     return np.r_[-np.inf, np.log(interior) - np.log1p(-interior), np.inf]
 
 
+def conditional_rank_mixture_pmf(
+    locations: np.ndarray,
+    scale: float,
+    population: int,
+    *,
+    family: str = "normal",
+    degrees_of_freedom: float | None = None,
+) -> np.ndarray:
+    """Integrate a conditional location mixture over discrete rank bins.
+
+    This is the shared rank-PMF construction used by fitted rank models and
+    location-only research transformations.  For valid Normal inputs it keeps
+    the existing Context model's operation order and normalization unchanged.
+    """
+    points = np.asarray(locations, dtype=float)
+    if points.ndim != 1 or not len(points) or not np.isfinite(points).all():
+        raise ValueError("conditional location points must be a finite vector")
+    if (
+        isinstance(population, (bool, np.bool_))
+        or not isinstance(population, (int, np.integer))
+        or population < 1
+    ):
+        raise ValueError("population must be a positive integer")
+    population = int(population)
+    if not np.isfinite(scale) or scale <= 0:
+        raise ValueError("conditional residual scale must be finite and positive")
+    edges = rank_bin_edges(population)
+    standardized_edges = (edges[None, :] - points[:, None]) / scale
+    if family == "normal":
+        cdf = norm.cdf(standardized_edges)
+    elif family == "student_t":
+        if (
+            degrees_of_freedom is None
+            or not np.isfinite(degrees_of_freedom)
+            or degrees_of_freedom <= 0
+        ):
+            raise ValueError("Student-t rank mixtures require positive degrees of freedom")
+        cdf = t.cdf(standardized_edges, degrees_of_freedom)
+    else:
+        raise ValueError(f"unsupported conditional distribution family: {family}")
+    masses = np.maximum(np.diff(cdf, axis=1), 0.0)
+    pmf = np.mean(masses, axis=0)
+    total = float(pmf.sum())
+    if not np.isfinite(pmf).all() or np.any(pmf < 0) or total <= 0:
+        raise ValueError("conditional rank mixture produced an invalid PMF")
+    return pmf / total
+
+
 def normal_pmf(location: float, scale: float, population: int, **_: Any) -> np.ndarray:
     """Integrate a Normal coordinate distribution over discrete rank bins."""
     if scale <= 0:
@@ -476,16 +524,13 @@ class DirectRankModel:
         lag_zs: tuple[np.ndarray, ...] = (),
     ) -> np.ndarray:
         locations, scale = self.conditional_parameters(features, lag1_z, lag_zs)
-        edges = rank_bin_edges(population)
-        standardized_edges = (edges[None, :] - locations[:, None]) / scale
-        cdf = (
-            norm.cdf(standardized_edges)
-            if self.family == "normal"
-            else t.cdf(standardized_edges, self.degrees_of_freedom)
+        return conditional_rank_mixture_pmf(
+            locations,
+            scale,
+            population,
+            family=self.family,
+            degrees_of_freedom=self.degrees_of_freedom,
         )
-        masses = np.maximum(np.diff(cdf, axis=1), 0.0)
-        pmf = np.mean(masses, axis=0)
-        return pmf / pmf.sum()
 
     def metadata(self) -> dict[str, object]:
         metadata = {

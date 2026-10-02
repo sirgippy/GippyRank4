@@ -5,15 +5,16 @@
     "model_family": "context_prior",
     "spec_version": "1.3"
   },
-  "candidate_spec_sha256": "4291c2640c6baaca835b99ac21069757a3103d778173bdf1a83cea2070be54d7",
+  "candidate_spec_sha256": "db84045d2f7d80b1648360da52ef1e71f76093696cad4e4e7bbdbd57a086573f",
   "candidate_version": "Context 1.4 candidate",
   "development_lineage": {
     "development_commit": "0fca0ede27ddaa153b1b22516979700f1f950646",
     "issue": 158,
     "merged_main_commit": "9a4601f341f4c9b6d9fd15adf4eb9a092d4fd2c6",
-    "pull_request": 159
+    "pull_request": 159,
+    "pull_request_head_commit": "ec0ef4c08b5aa10e534488bb7292cb2901626aee"
   },
-  "development_panel_parity_sha256": "c0772b25fb814fe8f3f37b4a381c592f2226edc23d794b2568821ba3336152c6",
+  "development_panel_parity_sha256": "3e78716518757167f5a3a301d9203f17c2d1b2bcb7f6171ae4f21fb6d096369d",
   "development_panel_seasons": {
     "2022": {
       "cold_start_fallback": 1,
@@ -41,12 +42,13 @@
     }
   },
   "implementation_sources_sha256": {
-    "candidate_builder": "86f8d02b1b4eb9c9ee6f882428acd3fe6297e24b030a95a8b523c35b92d43d4e",
+    "candidate_builder": "3827a6c3cc4edd5fe47a6000b9bb304d56dac17c779810862c5fd62e711d4db9",
     "context_prior_core": "857ea3966e21a62729a9e85e52b40267c812899f4e95460799ac4e8cc62c37ec",
-    "context_prior_v1_3": "0998dd618da111490671565a533ebb5fc03f433375af423180026be10b3752c5",
+    "context_prior_v1_3": "89e6619658f789194fc1157b58862e10ad2302559ff585271b5598eb72285e79",
     "dependency_lock": "5d4ac8b7e55111b44edd2996ccbc0d113fb0937dec21e9c6ad1b75b24e72e3ce",
-    "positive_net_moderation": "f035ce58766178256da43a80b14f8b1d6bd86909a86bd2925d6d35a6dd0f9164",
-    "rank_distribution": "a7a66dd1c892292b8306937c72416f986a943dc3b76c1f5b33034ee65330b636"
+    "positive_net_moderation": "ec7a9123e7d07e6b9081a8b23d54989a0132c4dfdf309a3754fbc97e2ca7bc6e",
+    "rank_distribution": "35fd2300658e5333fe43087c78d38f22e34d27060c470948c0996ffc8193c449",
+    "research_crossover": "4c6628bbead1aa354cfe9f6f62efb91ca61063c0cef6d06edbc9eaf675ee60e4"
   },
   "model_family": "context_prior",
   "moderation_metric": "context_only_subtotal",
@@ -68,7 +70,8 @@
     "data/processed/context_positive_net_moderation/checkpoint_results.csv": "f804f73e566aa33b00130264e9b9cd196902ff5a01c52b83cc4463f042786b4b",
     "data/processed/context_positive_net_moderation/provenance.json": "b0965ab71d3d62ee4b9e42505ab7120504ec8ba6efa0e166c39a2b5f64a6fb15",
     "data/processed/context_positive_net_moderation/summary.json": "bac288cdc8278d28d9aa3bffac7af30c8e32dfd8f2df9a54d902426b21048eb6",
-    "data/processed/context_positive_net_moderation/team_season_results.csv": "3f8c22189d0df55c8a8ffecf61ae61f5b806994dea7d59695d903281dad64787"
+    "data/processed/context_positive_net_moderation/team_season_results.csv": "3f8c22189d0df55c8a8ffecf61ae61f5b806994dea7d59695d903281dad64787",
+    "data/processed/context_v1_4_candidate/development_model_inputs.json": "8014a8dc0bd260740224f227a5f80a412a843d7205ae758b131669501bada601"
   },
   "spec_version": "1.4-candidate",
   "status": "frozen research candidate",

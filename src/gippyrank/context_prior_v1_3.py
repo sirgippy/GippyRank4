@@ -20,17 +20,26 @@ preseason production snapshots.
 from __future__ import annotations
 
 import csv
+import hashlib
+import json
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
+
+import numpy as np
 
 from gippyrank.context_prior import (
     AnnualFittedInstance,
     InferenceRow,
     ModelSpecification,
 )
-from gippyrank.preseason import DirectRankModel, TeamSeason
+from gippyrank.preseason import (
+    QUADRATURE_POINTS,
+    DirectRankModel,
+    TeamSeason,
+    product_quadrature,
+)
 from gippyrank.preseason_transfer import (
     MODEL_FEATURE_COLUMNS as TRANSFER_FEATURE_COLUMNS,
 )
@@ -44,6 +53,7 @@ from gippyrank.preseason_transfer import (
 CONTEXT_PRIOR_CANDIDATE_VERSION = "1.3"
 ACTIVE_CONTEXT_PRIOR_VERSION = "1.3"
 RETROSPECTIVE_2026_PROVENANCE = "retrospective_2026_reconstruction"
+RETROSPECTIVE_RESEARCH_PROVENANCE = "retrospective_research_reconstruction"
 PRODUCTION_TRANSFER_PROVENANCE = "production_preseason_immutable_snapshot"
 FROZEN_PENALTY = 0.25
 PRODUCTION_CUTOFF_MONTH = 8
@@ -85,6 +95,284 @@ CONTEXT_1_3_FEATURES = (
 MODEL_FEATURE_NAMES = (*H_FEATURES, *CONTEXT_1_3_FEATURES)
 LOCATION_FEATURE_NAMES = MODEL_FEATURE_NAMES
 SCALE_FEATURE_NAMES = H_FEATURES
+
+_CONTEXT_INPUT_PROVENANCE_CLASSES = frozenset(
+    {
+        PRODUCTION_TRANSFER_PROVENANCE,
+        RETROSPECTIVE_2026_PROVENANCE,
+        RETROSPECTIVE_RESEARCH_PROVENANCE,
+    }
+)
+_LOCATION_RECONSTRUCTION_TOLERANCE = 1e-8
+
+
+def _canonical_json_bytes(value: object) -> bytes:
+    return json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+
+def sha256_json(value: object) -> str:
+    """Hash a JSON-compatible model or inference representation."""
+    return hashlib.sha256(_canonical_json_bytes(value)).hexdigest()
+
+
+@dataclass(frozen=True)
+class ContextInputProvenance:
+    """Identity of the validated source state behind target inference inputs."""
+
+    target_season: int
+    provenance_class: str
+    source_metadata_sha256: str
+
+    def __post_init__(self) -> None:
+        if (
+            isinstance(self.target_season, bool)
+            or not isinstance(self.target_season, int)
+            or self.target_season < 1
+        ):
+            raise ValueError("Context input provenance requires a valid target season")
+        if self.provenance_class not in _CONTEXT_INPUT_PROVENANCE_CLASSES:
+            raise ValueError("unsupported Context input provenance class")
+        digest = self.source_metadata_sha256
+        if len(digest) != 64 or any(c not in "0123456789abcdef" for c in digest):
+            raise ValueError("Context input provenance must carry a SHA-256 identity")
+
+    @classmethod
+    def from_validated_metadata(
+        cls, target_season: int, metadata: Mapping[str, object]
+    ) -> ContextInputProvenance:
+        """Bind the exact metadata returned by a validated transfer loader."""
+        metadata_season = metadata.get("target_season")
+        if isinstance(metadata_season, bool) or not isinstance(metadata_season, int):
+            raise TypeError("validated Context input metadata has an invalid target season")
+        if metadata_season != target_season:
+            raise ValueError("validated Context input metadata has the wrong season")
+        provenance_class = metadata.get("provenance_class")
+        if not isinstance(provenance_class, str):
+            raise TypeError("validated Context input metadata lacks its provenance class")
+        return cls(target_season, provenance_class, sha256_json(dict(metadata)))
+
+    @classmethod
+    def from_research_metadata(
+        cls, target_season: int, metadata: Mapping[str, object]
+    ) -> ContextInputProvenance:
+        """Bind a retrospective research panel without implying archived inputs."""
+        if metadata.get("provenance_class") != RETROSPECTIVE_RESEARCH_PROVENANCE:
+            raise ValueError("research metadata must be labeled retrospective reconstruction")
+        return cls.from_validated_metadata(target_season, metadata)
+
+
+@dataclass(frozen=True)
+class Context13LocationDecomposition:
+    """Canonical outcome-free decomposition of one fitted Context 1.3 prior."""
+
+    target_season: int
+    trained_through_season: int
+    team_id: str
+    team_name: str
+    population: int
+    context_model_sha256: str
+    inference_inputs_sha256: str
+    input_provenance: ContextInputProvenance
+    intercept: float
+    history_derived_subtotal: float
+    context_only_subtotal: float
+    conditional_location_points: np.ndarray
+    residual_scale: float
+
+    def __post_init__(self) -> None:
+        if self.input_provenance.target_season != self.target_season:
+            raise ValueError("decomposition source provenance has the wrong season")
+        if not self.team_id or not self.team_name:
+            raise ValueError("decomposition team identity must be non-empty")
+        if isinstance(self.population, bool) or self.population < 1:
+            raise ValueError("decomposition population must be positive")
+        for name, value in (
+            ("Context model", self.context_model_sha256),
+            ("inference inputs", self.inference_inputs_sha256),
+        ):
+            if len(value) != 64 or any(c not in "0123456789abcdef" for c in value):
+                raise ValueError(f"decomposition {name} identity must be SHA-256")
+        scalars = (
+            self.intercept,
+            self.history_derived_subtotal,
+            self.context_only_subtotal,
+            self.residual_scale,
+        )
+        if not all(np.isfinite(value) for value in scalars) or self.residual_scale <= 0:
+            raise ValueError("decomposition values must be finite with positive scale")
+        points = np.asarray(self.conditional_location_points, dtype=float)
+        if points.ndim != 1 or not len(points) or not np.isfinite(points).all():
+            raise ValueError("conditional location points must be a finite vector")
+        center = self.intercept + self.history_derived_subtotal + self.context_only_subtotal
+        if not np.isclose(
+            points.mean(), center, rtol=0, atol=_LOCATION_RECONSTRUCTION_TOLERANCE
+        ):
+            raise ValueError("Context 1.3 location terms do not reconstruct the center")
+        object.__setattr__(self, "conditional_location_points", points.copy())
+
+    @property
+    def location_center(self) -> float:
+        return float(self.conditional_location_points.mean())
+
+
+def validate_context13_fitted_model(
+    model: DirectRankModel, instance: AnnualFittedInstance
+) -> str:
+    """Validate the fitted model against the full frozen Context 1.3 contract."""
+    if (
+        instance.model_family != "context_prior"
+        or instance.spec_version != CONTEXT_PRIOR_CANDIDATE_VERSION
+        or instance.target_season <= 1
+        or instance.trained_through_season != instance.target_season - 1
+        or instance.context_effective_cutoff is not None
+    ):
+        raise ValueError("candidate input must be a rolling-origin Context 1.3 fit")
+    if (
+        tuple(model.feature_names) != MODEL_FEATURE_NAMES
+        or tuple(model.preprocessor.feature_names) != MODEL_FEATURE_NAMES
+        or model.location_feature_names != list(LOCATION_FEATURE_NAMES)
+        or model.scale_feature_names != list(SCALE_FEATURE_NAMES)
+        or model.family != "normal"
+        or model.lag_count != 1
+        or model.degrees_of_freedom is not None
+        or model.penalty != FROZEN_PENALTY
+        or model.minimum_scale != 0.10
+        or not isinstance(model.optimizer, dict)
+        or model.optimizer.get("success") is not True
+    ):
+        raise ValueError("fitted model does not match the Context 1.3 model specification")
+    expected_beta_size = 1 + 2 * len(MODEL_FEATURE_NAMES) + model.lag_count
+    if model.beta.shape != (expected_beta_size,) or model.gamma.shape != (
+        1 + 2 * len(MODEL_FEATURE_NAMES),
+    ):
+        raise ValueError("fitted model coefficient shape does not match Context 1.3")
+    if not np.isfinite(model.beta).all() or not np.isfinite(model.gamma).all():
+        raise ValueError("fitted model coefficients must be finite")
+    for values in (
+        model.preprocessor.medians,
+        model.preprocessor.means,
+        model.preprocessor.scales,
+    ):
+        if set(values) != set(MODEL_FEATURE_NAMES) or not all(
+            np.isfinite(value) for value in values.values()
+        ):
+            raise ValueError("fitted model preprocessing does not match Context 1.3")
+    if any(value <= 0 for value in model.preprocessor.scales.values()):
+        raise ValueError("Context 1.3 preprocessing scales must be positive")
+    return sha256_json(model.metadata())
+
+
+def _inference_input_sha256(row: InferenceRow) -> str:
+    row.require_no_target()
+    values: dict[str, float | None] = {}
+    for name, value in row.features.items():
+        numeric = None if value is None else float(value)
+        if numeric is not None and not np.isfinite(numeric):
+            raise ValueError(f"inference feature {name!r} must be finite or missing")
+        values[name] = numeric
+    return sha256_json(
+        {
+            "season": row.season,
+            "subdivision": row.subdivision,
+            "team_id": row.team_id,
+            "team_name": row.team_name,
+            "population": row.population,
+            "lag1_z": None if row.lag1_z is None else list(row.lag1_z),
+            "lag_zs": [list(values) for values in row.lag_zs],
+            "features": values,
+        }
+    )
+
+
+def decompose_context13_location(
+    model: DirectRankModel,
+    instance: AnnualFittedInstance,
+    row: InferenceRow,
+    input_provenance: ContextInputProvenance,
+) -> Context13LocationDecomposition:
+    """Derive fitted Context 1.3 location terms from a validated input row.
+
+    The result is bound to the actual model metadata, input values, team, target
+    season, and the source provenance returned by the inference-input validator.
+    """
+    model_sha256 = validate_context13_fitted_model(model, instance)
+    if (
+        row.season != instance.target_season
+        or input_provenance.target_season != instance.target_season
+    ):
+        raise ValueError("Context decomposition team input and model seasons differ")
+    if input_provenance.provenance_class not in _CONTEXT_INPUT_PROVENANCE_CLASSES:
+        raise ValueError("Context decomposition input provenance is invalid")
+    if row.subdivision != "fbs":
+        raise ValueError("Context 1.3 candidate decomposition requires an FBS team")
+    if row.population < 1 or row.lag1_z is None or not len(row.lag1_z):
+        raise ValueError("fitted Context 1.3 inference requires a lag-1 rank distribution")
+    if row.lag_zs:
+        raise ValueError("Context 1.3 inference accepts only its frozen lag-1 distribution")
+    if set(row.features) != set(MODEL_FEATURE_NAMES):
+        raise ValueError("inference row features do not match the Context 1.3 specification")
+
+    features = {name: row.features[name] for name in MODEL_FEATURE_NAMES}
+    lag1 = np.asarray(row.lag1_z, dtype=float)
+    if not np.isfinite(lag1).all():
+        raise ValueError("lag-1 inference values must be finite")
+    locations, scale = model.conditional_parameters(features, lag1)
+    design = model._matrix(features)
+    base_coefficients = model.beta[model.lag_count :]
+    intercept = float(base_coefficients[0])
+    context_subtotal = 0.0
+    history_subtotal = float(
+        np.mean(product_quadrature((lag1,), QUADRATURE_POINTS) @ model.beta[:1])
+    )
+    n_features = len(model.feature_names)
+    for index, name in enumerate(model.feature_names):
+        value_and_missing = float(
+            design[1 + index] * base_coefficients[1 + index]
+            + design[1 + n_features + index]
+            * base_coefficients[1 + n_features + index]
+        )
+        if name in H_FEATURES:
+            history_subtotal += value_and_missing
+        else:
+            context_subtotal += value_and_missing
+    return Context13LocationDecomposition(
+        target_season=row.season,
+        trained_through_season=instance.trained_through_season,
+        team_id=row.team_id,
+        team_name=row.team_name,
+        population=row.population,
+        context_model_sha256=model_sha256,
+        inference_inputs_sha256=_inference_input_sha256(row),
+        input_provenance=input_provenance,
+        intercept=intercept,
+        history_derived_subtotal=history_subtotal,
+        context_only_subtotal=context_subtotal,
+        conditional_location_points=np.asarray(locations, dtype=float),
+        residual_scale=float(scale),
+    )
+
+
+def moderate_positive_net(value: float, alpha: float) -> float:
+    """Keep nonpositive terms and scale only their positive portion."""
+    if not np.isfinite(value) or not np.isfinite(alpha) or not 0 <= alpha <= 1:
+        raise ValueError("net contribution must be finite and alpha within [0, 1]")
+    return min(value, 0.0) + alpha * max(value, 0.0)
+
+
+def moderated_location_points(
+    decomposition: Context13LocationDecomposition, alpha: float
+) -> np.ndarray:
+    """Shift a fitted Context location mixture using its context-only subtotal."""
+    moderated = moderate_positive_net(decomposition.context_only_subtotal, alpha)
+    points = decomposition.conditional_location_points + (
+        moderated - decomposition.context_only_subtotal
+    )
+    center = decomposition.intercept + decomposition.history_derived_subtotal + moderated
+    if not np.isclose(
+        points.mean(), center, rtol=0, atol=_LOCATION_RECONSTRUCTION_TOLERANCE
+    ):
+        raise ValueError("moderated Context location does not reconstruct the center")
+    return points
 
 D5_CONTEXT_FEATURES = (
     *COACHING_FEATURES,
@@ -585,15 +873,23 @@ __all__ = [
     "REJECTED_TRANSFER_FEATURES",
     "REMOVED_CONTEXT_1_2_FEATURES",
     "RETROSPECTIVE_2026_PROVENANCE",
+    "RETROSPECTIVE_RESEARCH_PROVENANCE",
     "RETURNING_FEATURES",
     "SCALE_FEATURE_NAMES",
+    "Context13LocationDecomposition",
+    "ContextInputProvenance",
     "attach_transfer_features",
     "attach_transfer_features_to_inference_rows",
     "candidate_guard",
+    "decompose_context13_location",
     "fit_model",
     "load_validated_production_transfer_features",
     "load_validated_reconstructed_transfer_features",
     "model_specification",
     "model_specification_metadata",
+    "moderate_positive_net",
+    "moderated_location_points",
+    "sha256_json",
+    "validate_context13_fitted_model",
     "validate_feature_contract",
 ]

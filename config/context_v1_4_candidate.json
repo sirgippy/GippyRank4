@@ -18,7 +18,8 @@
     "issue": 158,
     "pull_request": 159,
     "development_commit": "0fca0ede27ddaa153b1b22516979700f1f950646",
-    "merged_main_commit": "9a4601f341f4c9b6d9fd15adf4eb9a092d4fd2c6"
+    "merged_main_commit": "9a4601f341f4c9b6d9fd15adf4eb9a092d4fd2c6",
+    "pull_request_head_commit": "ec0ef4c08b5aa10e534488bb7292cb2901626aee"
   },
   "status": "frozen research candidate",
   "production": false,
@@ -26,6 +27,8 @@
   "development_panel": {
     "seasons": [2022, 2023, 2024, 2025],
     "purpose": "parity fixture only; not candidate validation",
+    "canonical_input_fixture": "data/processed/context_v1_4_candidate/development_model_inputs.json",
+    "canonical_input_fixture_sha256": "8014a8dc0bd260740224f227a5f80a412a843d7205ae758b131669501bada601",
     "experiment_script_sha256": "edbd4668a7429d2932ffe3dc43550c4d2b1ef0cfe3cd884b14ed324685f83888",
     "artifact_sha256": {
       "data/processed/context_positive_net_moderation/team_season_results.csv": "3f8c22189d0df55c8a8ffecf61ae61f5b806994dea7d59695d903281dad64787",
