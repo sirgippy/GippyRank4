@@ -37,6 +37,8 @@ HISTORY_1_1_FAMILY = "normal"
 HISTORY_1_1_DEGREES_OF_FREEDOM = None
 HISTORY_1_1_ROW_WEIGHT = 1.0
 HISTORY_1_1_PMF_DECIMALS = 12
+HISTORY_1_1_HISTORY_START_SEASON = 2002
+HISTORY_1_1_CONSTITUENT_RANK_FILTER_SEMANTICS_VERSION = 1
 _INPUT_TOKEN = object()
 
 
@@ -104,6 +106,14 @@ def history11_semantic_specification() -> dict[str, object]:
         },
         "training": "all eligible FBS outcome rows through target season minus one",
         "historical_features": "same-subdivision prior ranks and completed rank history",
+        "completed_history_start_season": HISTORY_1_1_HISTORY_START_SEASON,
+        "constituent_rank_filter": {
+            "semantics_version": HISTORY_1_1_CONSTITUENT_RANK_FILTER_SEMANTICS_VERSION,
+            "numeric_conversion": "finite observed ranks converted to integer by truncation toward zero",
+            "retained_bounds": "inclusive integer ranks from 1 through team_population",
+            "out_of_population": "discard observation",
+            "empty_outcome": "skip team-season row when no usable ranks remain",
+        },
         "target_population": "exact FBS rows in the target team-season feature artifact",
         "target_outcomes": "forbidden in annual build inputs",
         "input_retention": "copy exact canonical input bytes into the annual artifact for later reproduction",
@@ -206,6 +216,8 @@ def _csv_rows(raw: bytes, label: str) -> list[dict[str, str]]:
 
 
 def _rank_values(row: dict[str, str]) -> np.ndarray:
+    if HISTORY_1_1_CONSTITUENT_RANK_FILTER_SEMANTICS_VERSION != 1:
+        raise ValueError("unsupported History constituent-rank filter semantics")
     try:
         population = int(row["team_population"])
         ranks = np.asarray(json.loads(row["rank_observations"]), dtype=float)
@@ -320,7 +332,7 @@ def _load_inputs(
     ) -> dict[str, float | None]:
         prior = tuple(
             values
-            for year in range(2002, season)
+            for year in range(HISTORY_1_1_HISTORY_START_SEASON, season)
             if (values := z((year, "fbs", team_id))) is not None
         )
         features = historical_rank_features(lag1, prior)
@@ -553,7 +565,18 @@ def reproduce_canonical_history_annual(
     instance = AnnualFittedInstance(
         "history_prior", "1.1", target_season - 1, target_season
     )
-    fitted = {**instance.metadata(), "model": model.metadata()}
+    fitted = {
+        **instance.metadata(),
+        "model": model.metadata(),
+        "transition_model": (
+            promotion_model.metadata() if promotion_model is not None else None
+        ),
+        "generic_prior": (
+            {"location": generic_prior.location, "scale": generic_prior.scale}
+            if generic_prior is not None
+            else None
+        ),
+    }
     return output.getvalue().encode("utf-8"), fitted, source
 
 
@@ -633,9 +656,19 @@ _HISTORY_2026_MODEL_METADATA_SHA256 = (
     "159423c81d5f9bc5d12b8ccf65c1e185512a1a5ba73e23fad86108fdebef314d"
 )
 _HISTORY_ANNUAL_LEGACY_SCHEMA_VERSION = 1
-_HISTORY_ANNUAL_CANONICAL_SCHEMA_VERSION = 2
+_HISTORY_ANNUAL_CANONICAL_SCHEMA_VERSION = 3
+_HISTORY_ANNUAL_RESEARCH_SCHEMA_VERSION = 2
 _HISTORY_1_1_PRIOR_METHODS = frozenset({
     "same_subdivision_lag1", "learned_fcs_to_fbs_transition", "generic_fbs_cold_start"
+})
+_HISTORY_PRODUCER_FIELDS = frozenset({
+    "producer_kind",
+    "producer_role",
+    "producer_identity_status",
+    "producer_model_metadata_sha256",
+    "producer_parameters",
+    "producer_parameters_sha256",
+    "producer_identity_sha256",
 })
 
 
@@ -655,6 +688,55 @@ def _validate_history_pmf(pmf: np.ndarray, population: int) -> None:
         or not np.isclose(values.sum(), 1.0, rtol=0, atol=1e-8)
     ):
         raise ValueError("History annual PMF is invalid")
+
+
+def _direct_model_producer(
+    role: str, model_sha256: str, *, status: str = "verified_canonical_build"
+) -> dict[str, object]:
+    payload = {
+        "producer_kind": "direct_rank_model",
+        "producer_role": role,
+        "producer_identity_status": status,
+        "producer_model_metadata_sha256": model_sha256,
+        "producer_parameters": None,
+        "producer_parameters_sha256": None,
+    }
+    return {**payload, "producer_identity_sha256": _sha256_json(payload)}
+
+
+def _generic_prior_producer(location: float, scale: float, semantic_sha256: str) -> dict[str, object]:
+    parameters = {
+        "location": location,
+        "scale": scale,
+        "history_semantic_spec_identity_sha256": semantic_sha256,
+    }
+    payload = {
+        "producer_kind": "generic_rank_prior",
+        "producer_role": "generic_fbs_cold_start",
+        "producer_identity_status": "verified_canonical_build",
+        "producer_model_metadata_sha256": None,
+        "producer_parameters": parameters,
+        "producer_parameters_sha256": _sha256_json(parameters),
+    }
+    return {**payload, "producer_identity_sha256": _sha256_json(payload)}
+
+
+def _unavailable_producer(method: str, status: str) -> dict[str, object]:
+    return {
+        "producer_kind": None,
+        "producer_role": method,
+        "producer_identity_status": status,
+        "producer_model_metadata_sha256": None,
+        "producer_parameters": None,
+        "producer_parameters_sha256": None,
+        "producer_identity_sha256": None,
+    }
+
+
+def _retained_model_producer(model_sha256: str) -> dict[str, object]:
+    return _direct_model_producer(
+        "same_subdivision_lag1", model_sha256, status="identified_retained_model"
+    )
 
 
 @dataclass(frozen=True, init=False)
@@ -679,6 +761,7 @@ class HistoryAnnualArtifactSource:
     history_semantic_spec_identity_sha256: str | None
     training_input_source_identity_sha256: str | None
     _team_rows_json: str
+    _method_producers_json: str
     _authority_token: object
     source_identity_sha256: str
 
@@ -703,6 +786,7 @@ class HistoryAnnualArtifactSource:
         history_semantic_spec_identity_sha256: str | None,
         training_input_source_identity_sha256: str | None,
         team_rows_json: str,
+        method_producers_json: str,
         _construction_token: object = None,
     ) -> None:
         if _construction_token is not _HISTORY_ANNUAL_SOURCE_TOKEN:
@@ -726,6 +810,7 @@ class HistoryAnnualArtifactSource:
             ("history_semantic_spec_identity_sha256", history_semantic_spec_identity_sha256),
             ("training_input_source_identity_sha256", training_input_source_identity_sha256),
             ("_team_rows_json", team_rows_json),
+            ("_method_producers_json", method_producers_json),
         ):
             object.__setattr__(self, name, value)
         object.__setattr__(
@@ -759,7 +844,11 @@ class HistoryAnnualArtifactSource:
         expected_schema = (
             _HISTORY_ANNUAL_LEGACY_SCHEMA_VERSION
             if self.provenance_class == "retained_legacy_history_artifact"
-            else _HISTORY_ANNUAL_CANONICAL_SCHEMA_VERSION
+            else (
+                _HISTORY_ANNUAL_CANONICAL_SCHEMA_VERSION
+                if self.provenance_class == "canonical_history_1_1_annual_output"
+                else _HISTORY_ANNUAL_RESEARCH_SCHEMA_VERSION
+            )
         )
         if self.provenance_schema_version != expected_schema:
             raise ValueError("History annual provenance schema does not match its class")
@@ -802,6 +891,7 @@ class HistoryAnnualArtifactSource:
                 raise ValueError("History annual source hashes must be SHA-256")
         try:
             rows = json.loads(self._team_rows_json)
+            producers = json.loads(self._method_producers_json)
         except json.JSONDecodeError as error:
             raise ValueError("History annual source team rows are invalid") from error
         if (
@@ -814,6 +904,64 @@ class HistoryAnnualArtifactSource:
             or _sha256_json([rows[key] for key in sorted(rows)]) != self.team_rows_sha256
         ):
             raise ValueError("History annual source requires team rows")
+        if not isinstance(producers, dict) or set(producers) != set(self.prior_methods):
+            raise ValueError("History producer identities must cover its exact prior methods")
+        for method, producer in producers.items():
+            if (
+                not isinstance(producer, dict)
+                or set(producer) != _HISTORY_PRODUCER_FIELDS
+                or producer.get("producer_role") != method
+            ):
+                raise ValueError("History producer role does not match its prior method")
+            kind = producer.get("producer_kind")
+            status = producer.get("producer_identity_status")
+            model_sha = producer.get("producer_model_metadata_sha256")
+            parameters = producer.get("producer_parameters")
+            parameters_sha = producer.get("producer_parameters_sha256")
+            identity_sha = producer.get("producer_identity_sha256")
+            if self.provenance_class == "canonical_history_1_1_annual_output":
+                if status != "verified_canonical_build" or not _is_sha256(identity_sha):
+                    raise ValueError("canonical History method producer is not verified")
+                if method == "generic_fbs_cold_start":
+                    if (
+                        kind != "generic_rank_prior"
+                        or model_sha is not None
+                        or not isinstance(parameters, dict)
+                        or set(parameters) != {"location", "scale", "history_semantic_spec_identity_sha256"}
+                        or parameters.get("history_semantic_spec_identity_sha256")
+                        != self.history_semantic_spec_identity_sha256
+                        or not _is_sha256(parameters_sha)
+                        or _sha256_json(parameters) != parameters_sha
+                    ):
+                        raise ValueError("generic History producer must bind prior parameters")
+                    try:
+                        location, scale = float(parameters["location"]), float(parameters["scale"])
+                    except (TypeError, ValueError) as error:
+                        raise ValueError("generic History producer parameters are invalid") from error
+                    if not np.isfinite(location) or not np.isfinite(scale) or scale < HISTORY_1_1_MINIMUM_SCALE:
+                        raise ValueError("generic History producer parameters are invalid")
+                elif (
+                    kind != "direct_rank_model"
+                    or not _is_sha256(model_sha)
+                    or parameters is not None
+                    or parameters_sha is not None
+                    or (method == "same_subdivision_lag1" and model_sha != self.model_metadata_sha256)
+                    or (method == "learned_fcs_to_fbs_transition" and model_sha == self.model_metadata_sha256)
+                ):
+                    raise ValueError("History DirectRankModel producer does not match its method")
+                if _sha256_json({key: value for key, value in producer.items() if key != "producer_identity_sha256"}) != identity_sha:
+                    raise ValueError("History method producer identity is inconsistent")
+            elif self.provenance_class == "retained_legacy_history_artifact" and method == "same_subdivision_lag1":
+                if producer != _retained_model_producer(self.model_metadata_sha256):
+                    raise ValueError("retained ordinary History producer must be its main model")
+            else:
+                expected_status = (
+                    "unavailable_in_retained_legacy_artifact"
+                    if self.provenance_class == "retained_legacy_history_artifact"
+                    else "unverified_research_fixture"
+                )
+                if producer != _unavailable_producer(method, expected_status):
+                    raise ValueError("unverified History producer cannot claim a model identity")
         if _sha256_json(self.identity_payload()) != self.source_identity_sha256:
             raise ValueError("History annual source identity hash is inconsistent")
 
@@ -831,6 +979,7 @@ class HistoryAnnualArtifactSource:
             "team_ids_sha256": self.team_ids_sha256,
             "team_rows_sha256": self.team_rows_sha256,
             "prior_methods": list(self.prior_methods),
+            "method_producers": json.loads(self._method_producers_json),
             "artifact_id": self.artifact_id,
             "provenance_class": self.provenance_class,
             "provenance_schema_version": self.provenance_schema_version,
@@ -853,7 +1002,9 @@ class HistoryAnnualArtifactSource:
     def prediction_row(self, team_id: str) -> dict[str, object]:
         rows = json.loads(self._team_rows_json)
         try:
-            return dict(rows[team_id])
+            row = dict(rows[team_id])
+            row["producer"] = json.loads(self._method_producers_json)[row["prior_method"]]
+            return row
         except KeyError as error:
             raise ValueError("History annual source has no row for the requested team") from error
 
@@ -902,13 +1053,17 @@ class HistoryAnnualArtifactSource:
         return pmf
 
 
-def _validate_history_1_1_model_metadata(model: Mapping[str, object]) -> None:
+def _validate_history_1_1_model_metadata(
+    model: Mapping[str, object],
+    *,
+    features: tuple[str, ...] = HISTORY_1_1_FEATURES,
+) -> None:
     preprocessing = model.get("preprocessing")
     if not isinstance(preprocessing, dict):
         raise TypeError("History 1.1 model preprocessing is missing")
     if (
         model.get("family") != HISTORY_1_1_FAMILY
-        or model.get("feature_names") != list(HISTORY_1_1_FEATURES)
+        or model.get("feature_names") != list(features)
         or model.get("lag_count") != HISTORY_1_1_LAG_COUNT
         or model.get("degrees_of_freedom") != HISTORY_1_1_DEGREES_OF_FREEDOM
         or model.get("penalty") != HISTORY_1_1_PENALTY
@@ -916,15 +1071,15 @@ def _validate_history_1_1_model_metadata(model: Mapping[str, object]) -> None:
         or model.get("quadrature_points") != fit_semantics.QUADRATURE_POINTS
         or model.get("quadrature_method")
         != fit_semantics.DETERMINISTIC_QUADRATURE_METHOD
-        or preprocessing.get("feature_names") != list(HISTORY_1_1_FEATURES)
+        or preprocessing.get("feature_names") != list(features)
     ):
         raise ValueError("History model identity does not match the frozen 1.1 contract")
     for key in ("medians", "means", "scales"):
         values = preprocessing.get(key)
-        if not isinstance(values, dict) or set(values) != set(HISTORY_1_1_FEATURES):
+        if not isinstance(values, dict) or set(values) != set(features):
             raise ValueError("History 1.1 preprocessing does not match its model features")
         try:
-            numeric = np.asarray([values[name] for name in HISTORY_1_1_FEATURES], dtype=float)
+            numeric = np.asarray([values[name] for name in features], dtype=float)
         except (TypeError, ValueError) as error:
             raise ValueError("History 1.1 preprocessing values are invalid") from error
         if not np.isfinite(numeric).all() or (key == "scales" and np.any(numeric <= 0)):
@@ -934,7 +1089,7 @@ def _validate_history_1_1_model_metadata(model: Mapping[str, object]) -> None:
         gamma = np.asarray(model.get("log_scale_coefficients"), dtype=float)
     except (TypeError, ValueError) as error:
         raise ValueError("History 1.1 model coefficients are invalid") from error
-    if beta.shape != (8,) or gamma.shape != (7,) or not np.isfinite(beta).all() or not np.isfinite(gamma).all():
+    if beta.shape != (2 + 2 * len(features),) or gamma.shape != (1 + 2 * len(features),) or not np.isfinite(beta).all() or not np.isfinite(gamma).all():
         raise ValueError("History 1.1 model coefficients do not match its frozen layout")
     optimizer = model.get("optimizer")
     if not isinstance(optimizer, dict) or optimizer.get("success") is not True:
@@ -1070,6 +1225,50 @@ def _history_annual_source_from_files(
         raise ValueError("future History annual output provenance is invalid")
     team_ids = sorted(by_team)
     team_rows = [by_team[team_id] for team_id in team_ids]
+    prior_methods = tuple(sorted({str(row["prior_method"]) for row in team_rows}))
+    method_producers: dict[str, dict[str, object]] = {}
+    if provenance_class == "canonical_history_1_1_annual_output":
+        transition_model = fitted_instance.get("transition_model")
+        generic_prior = fitted_instance.get("generic_prior")
+        if "same_subdivision_lag1" in prior_methods:
+            method_producers["same_subdivision_lag1"] = _direct_model_producer(
+                "same_subdivision_lag1", model_sha256
+            )
+        if "learned_fcs_to_fbs_transition" in prior_methods:
+            if not isinstance(transition_model, dict):
+                raise ValueError("canonical History transition producer model is missing")
+            _validate_history_1_1_model_metadata(
+                transition_model, features=HISTORY_1_1_TRANSITION_FEATURES
+            )
+            method_producers["learned_fcs_to_fbs_transition"] = _direct_model_producer(
+                "learned_fcs_to_fbs_transition", _sha256_json(transition_model)
+            )
+        elif transition_model is not None:
+            raise ValueError("canonical History fit has an unused transition producer")
+        if "generic_fbs_cold_start" in prior_methods:
+            if not isinstance(generic_prior, dict) or set(generic_prior) != {"location", "scale"}:
+                raise ValueError("canonical History generic producer parameters are missing")
+            method_producers["generic_fbs_cold_start"] = _generic_prior_producer(
+                float(generic_prior["location"]),
+                float(generic_prior["scale"]),
+                history_semantic_spec_identity_sha256,
+            )
+        elif generic_prior is not None:
+            raise ValueError("canonical History fit has an unused generic producer")
+    elif provenance_class == "retained_legacy_history_artifact":
+        method_producers = {
+            method: (
+                _retained_model_producer(model_sha256)
+                if method == "same_subdivision_lag1"
+                else _unavailable_producer(method, "unavailable_in_retained_legacy_artifact")
+            )
+            for method in prior_methods
+        }
+    else:
+        method_producers = {
+            method: _unavailable_producer(method, "unverified_research_fixture")
+            for method in prior_methods
+        }
     return HistoryAnnualArtifactSource(
         model_family="history_prior",
         spec_version="1.1",
@@ -1084,17 +1283,22 @@ def _history_annual_source_from_files(
         population=population,
         team_ids_sha256=_sha256_json(team_ids),
         team_rows_sha256=_sha256_json(team_rows),
-        prior_methods=tuple(sorted({str(row["prior_method"]) for row in team_rows})),
+        prior_methods=prior_methods,
         artifact_id=f"gippyrank.history.annual_predictions.season_{target_season}",
         provenance_class=provenance_class,
         provenance_schema_version=(
             _HISTORY_ANNUAL_LEGACY_SCHEMA_VERSION
             if provenance_class == "retained_legacy_history_artifact"
-            else _HISTORY_ANNUAL_CANONICAL_SCHEMA_VERSION
+            else (
+                _HISTORY_ANNUAL_CANONICAL_SCHEMA_VERSION
+                if provenance_class == "canonical_history_1_1_annual_output"
+                else _HISTORY_ANNUAL_RESEARCH_SCHEMA_VERSION
+            )
         ),
         history_semantic_spec_identity_sha256=history_semantic_spec_identity_sha256,
         training_input_source_identity_sha256=training_input_source_identity_sha256,
         team_rows_json=json.dumps(by_team, sort_keys=True, separators=(",", ":")),
+        method_producers_json=json.dumps(method_producers, sort_keys=True, separators=(",", ":")),
         _construction_token=_HISTORY_ANNUAL_SOURCE_TOKEN,
     )
 

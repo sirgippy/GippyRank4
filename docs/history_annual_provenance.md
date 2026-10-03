@@ -8,8 +8,8 @@ History does not import the research candidate.
 The retained 2026 History annual forecast is loaded as
 `retained_legacy_history_artifact`. Its fitted model and prediction semantics
 are pinned to the committed artifact under provenance schema 1. The published
-predictions are unchanged. Future canonical and research source metadata uses
-schema 2.
+predictions are unchanged. Future canonical source metadata uses schema 3,
+while research fixtures use schema 2.
 
 For a future season, run `uv run python scripts/build_history_annual_v1_1.py YEAR`
 after the canonical processed historical rank distributions and target-season
@@ -34,6 +34,16 @@ Synthetic files can be
 inspected as `research_history_fixture`, which cannot supply a canonical
 Context 1.3 cold-start fallback.
 
+Canonical schema 3 records the producer for each prediction method. Ordinary
+rows bind the main `DirectRankModel`; transition rows bind the separately fitted
+transition `DirectRankModel`; generic rows bind `GenericRankPrior` location,
+scale, and the History semantic identity. Each selected row exposes its own
+producer identity, and the annual source identity covers the complete method
+map. The retained 2026 main model is identifiable for ordinary rows, while
+its transition producer is marked
+`unavailable_in_retained_legacy_artifact`. Context fallback artifacts carry
+that status rather than attributing transition PMFs to the main model.
+
 ## Independent retained reference
 
 The historical rank-distribution table needed to refit the published 2026
@@ -56,9 +66,10 @@ recalculation. A separate future-season fixture compares the new annual builder
 with the older annual procedure across all three arms, including a generic
 no-prior team.
 
-The History semantic specification records rank-coordinate transforms, PMF
-integration, the main and transition fits, generic equal-team moments, and
-prediction rounding. Named values are shared with the model implementation;
+The History semantic specification records the 2002 start of completed program
+history, constituent-rank filtering and empty-outcome skipping, rank-coordinate
+transforms, PMF integration, the main and transition fits, generic equal-team
+moments, and prediction rounding. Named values are shared with the model implementation;
 formula tests pin the estimators and integration behavior.
 
 Context 1.4 remains a research candidate and Context 1.3 remains active.

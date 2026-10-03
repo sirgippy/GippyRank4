@@ -65,8 +65,8 @@ fitted-instance hash.
 New Context 1.3 model/report metadata uses artifact schema 2. Transfer
 provenance uses schema 2, fitted-model provenance uses schema 3, and immutable
 Context 1.3 semantic metadata uses schema 3. Context 1.4 candidate artifacts
-use schema 4. Retained 2026 History provenance uses schema 1; future canonical
-History sources and research fixtures use schema 2. The Context 1.3 prediction
+use schema 5. Retained 2026 History provenance uses schema 1; future canonical
+History sources use schema 3 and research fixtures use schema 2. The Context 1.3 prediction
 CSV schema remains version 1. Its committed model, prediction, and publication
 files remain unchanged. Provenance sidecars and model-spec metadata may advance
 without changing PMFs or publication semantics.
@@ -105,7 +105,12 @@ trained-through seasons, History semantic and training-input identities,
 fitted-instance and model identities, prediction bytes and semantics, actual
 FBS population, prior methods, and exact team PMFs. The candidate fallback
 records the source provenance class and lineage, selected team and method,
-source artifact hash, fitted-instance identity, reason, and PMF hash. The retained PR #159
+source artifact hash, fitted-instance identity, reason, PMF hash, and the
+selected method's actual producer identity. A canonical transition fallback
+names its transition model, while a generic fallback binds prior parameters
+without claiming a `DirectRankModel`. The retained 2026 transition producer is
+explicitly unavailable; its main History model hash is not presented as the
+producer. The retained PR #159
 cold-start fixture remains available only through its explicitly research-only
 artifact-copy path. It does not contain its original reason, so it records
 `unspecified_in_pr159_reference` rather than inferring one from the PMF.

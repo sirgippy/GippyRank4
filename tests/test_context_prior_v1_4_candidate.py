@@ -907,9 +907,13 @@ def test_canonical_history_cold_start_is_loaded_and_bound_without_context_model(
     assert candidate.fallback_source.source_artifact_sha256 == _sha256(artifact_path)
     assert candidate.fallback_source.model_identity == "history_prior/1.1"
     assert candidate.fallback_source.trained_through_season == 2025
-    assert candidate.fallback_source.source_model_metadata_sha256 == (
-        source.model_metadata_sha256
+    assert candidate.fallback_source.source_model_metadata_sha256 is None
+    assert candidate.fallback_source.source_producer_kind is None
+    assert candidate.fallback_source.source_producer_identity_sha256 is None
+    assert candidate.fallback_source.source_producer_identity_status == (
+        "unavailable_in_retained_legacy_artifact"
     )
+    assert source.prediction_row("16")["producer"]["producer_model_metadata_sha256"] is None
     with pytest.raises(ValueError, match="no row for the requested team"):
         Context13FallbackSource.from_history_annual_source(
             source=source,
@@ -1016,7 +1020,7 @@ def test_future_history_annual_source_builds_a_frozen_2027_cold_start(
     assert source.trained_through_season == 2026
     assert source.model_family == "history_prior"
     assert source.spec_version == "1.1"
-    assert source.provenance_schema_version == 2
+    assert source.provenance_schema_version == 3
     assert source.prediction_artifact_sha256 == _sha256(prediction_path)
     assert source.to_metadata() == json.loads(attestation_path.read_text())
     assert built.source_identity_sha256 == source.source_identity_sha256
@@ -1025,6 +1029,16 @@ def test_future_history_annual_source_builds_a_frozen_2027_cold_start(
     )
     assert source.training_input_source_identity_sha256 == (
         history_annual_module.load_canonical_history_annual_build_inputs(2027).source_identity_sha256
+    )
+    main = source.prediction_row("history-team-0")["producer"]
+    transition = source.prediction_row("history-team-2")["producer"]
+    assert main["producer_kind"] == transition["producer_kind"] == "direct_rank_model"
+    assert main["producer_model_metadata_sha256"] == source.model_metadata_sha256
+    assert transition["producer_model_metadata_sha256"] != source.model_metadata_sha256
+    assert transition["producer_identity_sha256"] != main["producer_identity_sha256"]
+    fitted = json.loads(instance_path.read_text(encoding="utf-8"))
+    assert transition["producer_model_metadata_sha256"] == sha256_json(
+        fitted["transition_model"]
     )
 
     fallback = Context13FallbackSource.from_history_annual_source(
@@ -1063,6 +1077,11 @@ def test_future_history_annual_source_builds_a_frozen_2027_cold_start(
     )
     assert serialized["fallback_source"]["source_team_rows_sha256"] == (
         source.team_rows_sha256
+    )
+    assert fallback.source_model_metadata_sha256 == transition["producer_model_metadata_sha256"]
+    assert serialized["fallback_source"]["source_producer_kind"] == "direct_rank_model"
+    assert serialized["fallback_source"]["source_producer_identity_sha256"] == (
+        transition["producer_identity_sha256"]
     )
     assert serialized["fallback_source"]["upstream_provenance_class"] == (
         "canonical_history_1_1_annual_output"
@@ -1109,8 +1128,104 @@ def test_future_history_generic_fallback_preserves_the_source_pmf(
         )
     )
     assert fallback.method_identity == "generic_fbs_cold_start"
+    generic = source.prediction_row("history-team-3")["producer"]
+    assert generic["producer_kind"] == "generic_rank_prior"
+    assert generic["producer_model_metadata_sha256"] is None
+    assert generic["producer_parameters"]["scale"] >= 0.1
+    assert fallback.source_model_metadata_sha256 is None
+    assert fallback.source_producer_kind == "generic_rank_prior"
+    assert fallback.source_producer_identity_sha256 == generic["producer_identity_sha256"]
+    assert fallback.source_parameters_sha256 == generic["producer_parameters_sha256"]
     assert candidate.pmf.tobytes() == fallback.pmf.tobytes()
     assert candidate.component_status == COLD_START_STATUS
+
+
+@pytest.mark.parametrize(
+    ("target_method", "spoof_method"),
+    [
+        ("learned_fcs_to_fbs_transition", "same_subdivision_lag1"),
+        ("generic_fbs_cold_start", "same_subdivision_lag1"),
+        ("generic_fbs_cold_start", "learned_fcs_to_fbs_transition"),
+    ],
+)
+def test_future_history_source_rejects_wrong_method_producer(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    target_method: str,
+    spoof_method: str,
+) -> None:
+    _write_canonical_history_2027_inputs(tmp_path, include_generic=True)
+    monkeypatch.setattr(history_annual_module, "_CANONICAL_HISTORY_ROOT", tmp_path)
+    source = build_canonical_history_annual(
+        2027, tmp_path / "data/processed/preseason/history/annual/2027"
+    )
+    producers = json.loads(source._method_producers_json)
+    producers[target_method] = dict(
+        producers[spoof_method], producer_role=target_method
+    )
+    producers[target_method]["producer_identity_sha256"] = sha256_json({
+        key: value for key, value in producers[target_method].items()
+        if key != "producer_identity_sha256"
+    })
+    object.__setattr__(source, "_method_producers_json", json.dumps(producers, sort_keys=True))
+    object.__setattr__(source, "source_identity_sha256", sha256_json(source.identity_payload()))
+    with pytest.raises(ValueError, match="producer does not match|generic History producer"):
+        source.__post_init__()
+
+
+@pytest.mark.parametrize(
+    ("changed_season", "changed_team", "changed_subdivision", "changed_ranks", "method"),
+    [
+        (2017, "history-team-0", "fcs", "[1,1,1]", "learned_fcs_to_fbs_transition"),
+        (2017, "history-team-1", "fbs", "[3,3,3]", "generic_fbs_cold_start"),
+    ],
+)
+def test_future_history_producer_and_source_identity_track_training_changes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    changed_season: int,
+    changed_team: str,
+    changed_subdivision: str,
+    changed_ranks: str,
+    method: str,
+) -> None:
+    sources = []
+    for suffix in ("original", "changed"):
+        root = tmp_path / suffix
+        _write_canonical_history_2027_inputs(root, include_generic=True)
+        if suffix == "changed":
+            path = root / "data/processed/modeling/team_season_rank_distributions.csv"
+            with path.open(newline="", encoding="utf-8") as handle:
+                reader = csv.DictReader(handle)
+                rows = list(reader)
+                fields = reader.fieldnames
+            assert fields is not None
+            selected = [
+                row for row in rows
+                if row["season"] == str(changed_season)
+                and row["team_id"] == changed_team
+                and row["subdivision"] == changed_subdivision
+            ]
+            assert len(selected) == 1
+            assert selected[0]["rank_observations"] != changed_ranks
+            selected[0]["rank_observations"] = changed_ranks
+            with path.open("w", newline="", encoding="utf-8") as handle:
+                writer = csv.DictWriter(handle, fieldnames=fields, lineterminator="\n")
+                writer.writeheader()
+                writer.writerows(rows)
+        monkeypatch.setattr(history_annual_module, "_CANONICAL_HISTORY_ROOT", root)
+        sources.append(build_canonical_history_annual(
+            2027, root / "data/processed/preseason/history/annual/2027"
+        ))
+    before, after = sources
+    before_producer = before.to_metadata()["method_producers"][method]
+    after_producer = after.to_metadata()["method_producers"][method]
+    assert before.source_identity_sha256 != after.source_identity_sha256
+    assert before_producer["producer_identity_sha256"] != after_producer["producer_identity_sha256"]
+    if method == "learned_fcs_to_fbs_transition":
+        assert before_producer["producer_model_metadata_sha256"] != after_producer["producer_model_metadata_sha256"]
+    else:
+        assert before_producer["producer_parameters"] != after_producer["producer_parameters"]
 
 
 def test_self_signed_future_history_files_cannot_become_canonical(
@@ -1156,7 +1271,7 @@ def test_self_signed_future_history_files_cannot_become_canonical(
     object.__setattr__(research, "history_semantic_spec_identity_sha256", "b" * 64)
     object.__setattr__(research, "training_input_source_identity_sha256", "c" * 64)
     object.__setattr__(research, "source_identity_sha256", sha256_json(research.identity_payload()))
-    with pytest.raises(ValueError, match="verified build lineage"):
+    with pytest.raises(ValueError, match="schema does not match|verified build lineage"):
         Context13FallbackSource.from_history_annual_source(
             source=research, target_season=2027, trained_through_season=2026,
             team_id="history-team-0", team_name="History Team 0", population=3,
@@ -1425,7 +1540,7 @@ def test_committed_2026_context_lineage_loads_without_relabeling_or_side_effects
         )
     )
     artifact = json.loads(candidate.artifact_bytes())
-    assert artifact["artifact_schema_version"] == 4
+    assert artifact["artifact_schema_version"] == 5
     assert artifact["transfer_input_provenance"]["provenance_class"] == (
         "retrospective_2026_reconstruction"
     )
@@ -1450,8 +1565,9 @@ def test_committed_2026_context_lineage_loads_without_relabeling_or_side_effects
     assert artifact["context_fit_reproducibility_level"] == (
         "retained_legacy_attestation"
     )
-    assert artifact["fallback_source"]["source_model_metadata_sha256"] == (
-        history_source.model_metadata_sha256
+    assert artifact["fallback_source"]["source_model_metadata_sha256"] is None
+    assert artifact["fallback_source"]["source_producer_identity_status"] == (
+        "unavailable_in_retained_legacy_artifact"
     )
     assert candidate.context_model_sha256 is None
     after = {

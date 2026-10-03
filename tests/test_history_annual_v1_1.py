@@ -101,6 +101,13 @@ def test_retained_2026_history_artifacts_keep_their_legacy_identity() -> None:
     assert source.model_metadata_sha256 == (
         "159423c81d5f9bc5d12b8ccf65c1e185512a1a5ba73e23fad86108fdebef314d"
     )
+    ordinary = source.prediction_row("2")["producer"]
+    transition = source.prediction_row("16")["producer"]
+    assert ordinary["producer_kind"] == "direct_rank_model"
+    assert ordinary["producer_model_metadata_sha256"] == source.model_metadata_sha256
+    assert transition["producer_identity_status"] == "unavailable_in_retained_legacy_artifact"
+    assert transition["producer_model_metadata_sha256"] is None
+    assert transition["producer_identity_sha256"] is None
     rows = list(csv.DictReader(predictions.open()))
     assert Counter(row["prior_method"] for row in rows) == {
         "same_subdivision_lag1": 136,
@@ -204,6 +211,8 @@ def test_history11_retained_2022_2025_golden_parity() -> None:
         (history, "HISTORY_1_1_MINIMUM_SCALE", 0.11),
         (history, "HISTORY_1_1_ROW_WEIGHT", 2.0),
         (history, "HISTORY_1_1_PMF_DECIMALS", 11),
+        (history, "HISTORY_1_1_HISTORY_START_SEASON", 2003),
+        (history, "HISTORY_1_1_CONSTITUENT_RANK_FILTER_SEMANTICS_VERSION", 2),
         (fit_semantics, "DIRECT_RANK_OPTIMIZER_METHOD", "BFGS"),
         (fit_semantics, "DIRECT_RANK_INITIAL_LAG_BETA", 0.56),
         (fit_semantics, "DIRECT_RANK_GAMMA_COEFFICIENT_BOUNDS", (-4.0, 4.0)),
@@ -239,6 +248,36 @@ def test_history_semantic_identity_excludes_paths_and_retained_attestation(
     monkeypatch.setattr(history, "_CANONICAL_HISTORY_ROOT", tmp_path)
     monkeypatch.setattr(history, "_HISTORY_2026_MODEL_METADATA_SHA256", "a" * 64)
     assert history.history11_semantic_specification_sha256() == original
+
+
+def test_history_constituent_rank_filter_matches_frozen_contract(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    spec = history.history11_semantic_specification()
+    assert spec["completed_history_start_season"] == 2002
+    assert spec["constituent_rank_filter"] == {
+        "semantics_version": 1,
+        "numeric_conversion": "finite observed ranks converted to integer by truncation toward zero",
+        "retained_bounds": "inclusive integer ranks from 1 through team_population",
+        "out_of_population": "discard observation",
+        "empty_outcome": "skip team-season row when no usable ranks remain",
+    }
+    assert history._rank_values({"team_population": "3", "rank_observations": "[0,1,3,4]"}).tolist() == [1, 3]
+    assert len(history._rank_values({"team_population": "3", "rank_observations": "[0,4]"})) == 0
+    monkeypatch.setattr(history, "HISTORY_1_1_CONSTITUENT_RANK_FILTER_SEMANTICS_VERSION", 2)
+    with pytest.raises(ValueError, match="unsupported History constituent-rank filter"):
+        history._rank_values({"team_population": "3", "rank_observations": "[1]"})
+
+
+@pytest.mark.parametrize(("location", "scale"), [(0.3, 0.7), (0.2, 0.8)])
+def test_generic_producer_identity_binds_each_fitted_parameter(
+    location: float, scale: float
+) -> None:
+    semantic = history.history11_semantic_specification_sha256()
+    baseline = history._generic_prior_producer(0.2, 0.7, semantic)
+    changed = history._generic_prior_producer(location, scale, semantic)
+    assert changed["producer_parameters_sha256"] != baseline["producer_parameters_sha256"]
+    assert changed["producer_identity_sha256"] != baseline["producer_identity_sha256"]
 
 
 def test_generic_history_moments_and_rank_coordinate_contract(

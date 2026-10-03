@@ -50,7 +50,7 @@ _DEFAULT_LIFECYCLE_JSON = (
 FROZEN_CANDIDATE_SEMANTICS_SHA256 = (
     "db84045d2f7d80b1648360da52ef1e71f76093696cad4e4e7bbdbd57a086573f"
 )
-CANDIDATE_ARTIFACT_SCHEMA_VERSION = 4
+CANDIDATE_ARTIFACT_SCHEMA_VERSION = 5
 CONTEXT_1_3_VERSION = "1.3"
 FITTED_STATUS = "fitted"
 COLD_START_STATUS = "cold_start_fallback"
@@ -146,6 +146,9 @@ class Context13FallbackSource:
     trained_through_season: int | None
     fitted_instance_identity_sha256: str | None
     source_model_metadata_sha256: str | None
+    source_producer_kind: str | None
+    source_producer_identity_status: str | None
+    source_producer_identity_sha256: str | None
     upstream_source_identity_sha256: str | None
     upstream_provenance_class: str | None
     source_history_semantic_spec_identity_sha256: str | None
@@ -176,6 +179,9 @@ class Context13FallbackSource:
         trained_through_season: int | None = None,
         fitted_instance_identity_sha256: str | None = None,
         source_model_metadata_sha256: str | None = None,
+        source_producer_kind: str | None = None,
+        source_producer_identity_status: str | None = None,
+        source_producer_identity_sha256: str | None = None,
         upstream_source_identity_sha256: str | None = None,
         upstream_provenance_class: str | None = None,
         source_history_semantic_spec_identity_sha256: str | None = None,
@@ -206,6 +212,9 @@ class Context13FallbackSource:
             ("trained_through_season", trained_through_season),
             ("fitted_instance_identity_sha256", fitted_instance_identity_sha256),
             ("source_model_metadata_sha256", source_model_metadata_sha256),
+            ("source_producer_kind", source_producer_kind),
+            ("source_producer_identity_status", source_producer_identity_status),
+            ("source_producer_identity_sha256", source_producer_identity_sha256),
             ("upstream_source_identity_sha256", upstream_source_identity_sha256),
             ("upstream_provenance_class", upstream_provenance_class),
             ("source_history_semantic_spec_identity_sha256", source_history_semantic_spec_identity_sha256),
@@ -263,7 +272,6 @@ class Context13FallbackSource:
             if (
                 self.trained_through_season != self.target_season - 1
                 or not _is_sha256(self.fitted_instance_identity_sha256)
-                or not _is_sha256(self.source_model_metadata_sha256)
                 or not _is_sha256(self.upstream_source_identity_sha256)
                 or not _is_sha256(self.source_prediction_semantic_sha256)
                 or not _is_sha256(self.source_population_identity_sha256)
@@ -274,6 +282,36 @@ class Context13FallbackSource:
                 or self.method_identity not in self.source_prior_methods
             ):
                 raise ValueError("History fallback must bind its rolling-origin fitted instance")
+            if self.upstream_provenance_class == "canonical_history_1_1_annual_output":
+                if self.source_producer_identity_status != "verified_canonical_build" or not _is_sha256(
+                    self.source_producer_identity_sha256
+                ):
+                    raise ValueError("canonical History fallback requires its actual producer identity")
+                if self.method_identity == "learned_fcs_to_fbs_transition":
+                    if (
+                        self.source_producer_kind != "direct_rank_model"
+                        or not _is_sha256(self.source_model_metadata_sha256)
+                        or self.source_parameters_json is not None
+                    ):
+                        raise ValueError("History transition fallback requires its transition model")
+                elif self.method_identity == "generic_fbs_cold_start":
+                    if (
+                        self.source_producer_kind != "generic_rank_prior"
+                        or self.source_model_metadata_sha256 is not None
+                        or self.source_parameters_json is None
+                    ):
+                        raise ValueError("History generic fallback requires its GenericRankPrior parameters")
+                else:
+                    raise ValueError("History fallback method is not a cold-start method")
+            elif (
+                self.source_producer_identity_status != "unavailable_in_retained_legacy_artifact"
+                or self.source_producer_kind is not None
+                or self.source_producer_identity_sha256 is not None
+                or self.source_model_metadata_sha256 is not None
+                or self.source_parameters_json is not None
+                or self.method_identity != "learned_fcs_to_fbs_transition"
+            ):
+                raise ValueError("retained History transition producer identity must be unavailable")
         else:
             raise ValueError("cold-start fallback model identity is unsupported")
         if self.source_artifact_sha256 is None and self.source_parameters_sha256 is None:
@@ -293,6 +331,21 @@ class Context13FallbackSource:
                 raise ValueError("cold-start source parameters do not match their SHA-256")
         elif self.source_parameters_sha256 is not None:
             raise ValueError("cold-start source parameter hash requires its parameters")
+        if self.upstream_provenance_class == "canonical_history_1_1_annual_output":
+            producer_payload = {
+                "producer_kind": self.source_producer_kind,
+                "producer_role": self.method_identity,
+                "producer_identity_status": self.source_producer_identity_status,
+                "producer_model_metadata_sha256": self.source_model_metadata_sha256,
+                "producer_parameters": (
+                    json.loads(self.source_parameters_json)
+                    if self.source_parameters_json is not None
+                    else None
+                ),
+                "producer_parameters_sha256": self.source_parameters_sha256,
+            }
+            if sha256_json(producer_payload) != self.source_producer_identity_sha256:
+                raise ValueError("History fallback producer identity is inconsistent")
         if self.research_fixture and (
             any(
                 value is not None
@@ -300,6 +353,9 @@ class Context13FallbackSource:
                     self.trained_through_season,
                     self.fitted_instance_identity_sha256,
                     self.source_model_metadata_sha256,
+                    self.source_producer_kind,
+                    self.source_producer_identity_status,
+                    self.source_producer_identity_sha256,
                     self.upstream_source_identity_sha256,
                     self.upstream_provenance_class,
                     self.source_history_semantic_spec_identity_sha256,
@@ -335,6 +391,9 @@ class Context13FallbackSource:
             "source_parameters_sha256": self.source_parameters_sha256,
             "fitted_instance_identity_sha256": self.fitted_instance_identity_sha256,
             "source_model_metadata_sha256": self.source_model_metadata_sha256,
+            "source_producer_kind": self.source_producer_kind,
+            "source_producer_identity_status": self.source_producer_identity_status,
+            "source_producer_identity_sha256": self.source_producer_identity_sha256,
             "upstream_source_identity_sha256": self.upstream_source_identity_sha256,
             **(
                 {
@@ -377,6 +436,8 @@ class Context13FallbackSource:
             cold_start_reason=cold_start_reason,
         )
         pmf = np.asarray(row["pmf"], dtype=float)
+        producer = row["producer"]
+        parameters = producer["producer_parameters"]
         return cls(
             target_season=target_season,
             team_id=team_id,
@@ -387,11 +448,18 @@ class Context13FallbackSource:
             method_identity=str(row["prior_method"]),
             source_artifact_id=source.artifact_id,
             source_artifact_sha256=source.prediction_artifact_sha256,
-            source_parameters_json=None,
-            source_parameters_sha256=None,
+            source_parameters_json=(
+                json.dumps(parameters, sort_keys=True, separators=(",", ":"))
+                if parameters is not None
+                else None
+            ),
+            source_parameters_sha256=producer["producer_parameters_sha256"],
             trained_through_season=source.trained_through_season,
             fitted_instance_identity_sha256=source.fitted_instance_identity_sha256,
-            source_model_metadata_sha256=source.model_metadata_sha256,
+            source_model_metadata_sha256=producer["producer_model_metadata_sha256"],
+            source_producer_kind=producer["producer_kind"],
+            source_producer_identity_status=producer["producer_identity_status"],
+            source_producer_identity_sha256=producer["producer_identity_sha256"],
             upstream_source_identity_sha256=source.source_identity_sha256,
             upstream_provenance_class=source.provenance_class,
             source_history_semantic_spec_identity_sha256=source.history_semantic_spec_identity_sha256,
@@ -484,6 +552,9 @@ class Context13FallbackSource:
             "population": self.population,
             "fitted_instance_identity_sha256": self.fitted_instance_identity_sha256,
             "source_model_metadata_sha256": self.source_model_metadata_sha256,
+            "source_producer_kind": self.source_producer_kind,
+            "source_producer_identity_status": self.source_producer_identity_status,
+            "source_producer_identity_sha256": self.source_producer_identity_sha256,
             "upstream_source_identity_sha256": self.upstream_source_identity_sha256,
             "upstream_provenance_class": self.upstream_provenance_class,
             "source_history_semantic_spec_identity_sha256": self.source_history_semantic_spec_identity_sha256,

@@ -5,7 +5,7 @@
     "model_family": "context_prior",
     "spec_version": "1.3"
   },
-  "candidate_artifact_schema_version": 4,
+  "candidate_artifact_schema_version": 5,
   "candidate_reference_numerical_parity": {
     "max_absolute_difference_allowed": 1e-16,
     "max_absolute_difference_observed": 8.326672684688674e-17,
@@ -52,16 +52,17 @@
   "history_annual_source_contract": {
     "future": "canonical builder captures fixed processed inputs, fits History 1.1, and stores exact input snapshots; the loader reproduces model and every prediction before accepting the source sidecar",
     "independent_reference": "retained 2022-2025 History V1.1 panel: 528 recomputed same-subdivision PMFs match exactly, six retained FCS-transition rows are pinned and cross-checked, no retained generic FBS row exists; a synthetic old-builder comparison covers all three methods",
+    "method_producers": "Canonical annual source identity binds main DirectRankModel, transition DirectRankModel, and GenericRankPrior parameter identities by prior method; retained 2026 transition producer is explicitly unavailable.",
     "retained_2026": "pinned retained_legacy_history_artifact",
     "synthetic": "research_history_fixture cannot become a canonical Context cold-start source"
   },
   "implementation_sources_sha256": {
-    "candidate_builder": "c19dc35524e9673a627de21b0e5035ba4adf0f6c3dd4260e8e55251c95f1cf66",
+    "candidate_builder": "e1ef356ca8c9b7a95a89899a52925c30e74765c409cfc08d70c63ad28fedf8d9",
     "context_prior_core": "857ea3966e21a62729a9e85e52b40267c812899f4e95460799ac4e8cc62c37ec",
     "context_prior_v1_3": "d6ae41c967c848a6d82e13893473b7bd57ac6be99a2465b06fc0b6a7a07f2438",
     "dependency_lock": "5d4ac8b7e55111b44edd2996ccbc0d113fb0937dec21e9c6ad1b75b24e72e3ce",
     "history_annual_build_entrypoint": "57bf138368780b15b37831281a4c8c94cf772e31e418b44c09fd067d12c7018a",
-    "history_annual_builder": "0254fd145c0f44275249a7bcd659f1a409f6024737b206a0d9f8606f1dfe6107",
+    "history_annual_builder": "e3556a64d6106687afe1d9cf117c5edbf53d147ae76816a4504f42e6e4d92bc5",
     "positive_net_moderation": "ec7a9123e7d07e6b9081a8b23d54989a0132c4dfdf309a3754fbc97e2ca7bc6e",
     "rank_distribution": "b5953963ce7beafee0f2bec4724d0c9a47e2d9ca3da44365fa564932ccc6a296",
     "research_crossover": "4c6628bbead1aa354cfe9f6f62efb91ca61063c0cef6d06edbc9eaf675ee60e4",
