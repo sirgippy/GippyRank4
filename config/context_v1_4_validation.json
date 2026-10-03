@@ -1,0 +1,457 @@
+{
+  "analysis": {
+    "bootstrap": {
+      "confidence_level": 0.95,
+      "method": "paired_percentile",
+      "quantile_method": "linear",
+      "resamples": 10000,
+      "rng": "numpy.random.Generator(numpy.random.PCG64(seed))",
+      "sample_size": "number_of_scored_teams_with_replacement",
+      "seed": 1642026,
+      "team_order": "lexicographic_team_id",
+      "unit": "team_id"
+    },
+    "decision": {
+      "below_minimum_population": "inconclusive",
+      "failed_identity_or_evidence_guardrail": "abort_without_decision",
+      "minimum_practical_effect_nats_per_team": 0.01,
+      "otherwise": "inconclusive",
+      "promote": {
+        "bootstrap_upper_lt": 0.0,
+        "mean_difference_lte": -0.01
+      },
+      "retain_context_1_3": {
+        "bootstrap_lower_gt": 0.0,
+        "mean_difference_gte": 0.01
+      },
+      "secondary_metrics_cannot_override": true
+    },
+    "primary": {
+      "checkpoint_id": "final",
+      "difference": "candidate_minus_context_1_3",
+      "formula": "-sum(target_rank_probability * ln(max(posterior_rank_probability, 1e-15)))",
+      "negative_difference_favors": "candidate",
+      "outputs": [
+        "n",
+        "candidate_mean_nll",
+        "context_1_3_mean_nll",
+        "paired_mean_difference",
+        "paired_median_difference",
+        "paired_mean_95_percent_interval"
+      ],
+      "score": "posterior_target_weighted_nll",
+      "weighting": "one_equal_weight_per_scored_team"
+    },
+    "secondary": {
+      "history_crossover": "context_1_3_minus_history_1_1_and_candidate_minus_history_1_1_mean_nll_at_each_checkpoint",
+      "posterior_nll": "three_model_means_and_all_three_paired_differences_at_all_seven_checkpoints",
+      "quantile_method": "linear",
+      "rank_error_checkpoints": [
+        "preseason",
+        "final"
+      ],
+      "rank_error_metrics": [
+        "mean_absolute_error",
+        "median_absolute_error",
+        "mean_signed_error"
+      ],
+      "signed_rank_error": "forecast_expected_rank_minus_target_expected_rank",
+      "team_difference_quantiles": [
+        0.1,
+        0.25,
+        0.5,
+        0.75,
+        0.9
+      ],
+      "team_difference_tie_tolerance": 1e-10,
+      "team_extremes_each_tail": 10
+    }
+  },
+  "artifacts_for_later_validator": {
+    "evidence_audit": "data/processed/context_v1_4_validation/evidence_audit.csv",
+    "exclusions": "data/processed/context_v1_4_validation/exclusions.csv",
+    "failure_report": "data/processed/context_v1_4_validation/failure.json",
+    "provenance": "data/processed/context_v1_4_validation/provenance.json",
+    "report": "docs/context_v1_4_validation_result.md",
+    "script": "scripts/validate_context_v1_4.py",
+    "summary": "data/processed/context_v1_4_validation/summary.json",
+    "team_checkpoint_results": "data/processed/context_v1_4_validation/team_checkpoint_results.csv"
+  },
+  "checkpoints": [
+    {
+      "cutoff_utc": "2026-08-22T23:59:59Z",
+      "id": "preseason",
+      "index": 1
+    },
+    {
+      "cutoff_utc": "2026-09-18T23:59:59Z",
+      "id": "early_season",
+      "index": 2
+    },
+    {
+      "cutoff_utc": "2026-10-07T23:59:59Z",
+      "id": "early_midseason",
+      "index": 3
+    },
+    {
+      "cutoff_utc": "2026-10-23T23:59:59Z",
+      "id": "midseason",
+      "index": 4
+    },
+    {
+      "cutoff_utc": "2026-11-08T23:59:59Z",
+      "id": "late_season_1",
+      "index": 5
+    },
+    {
+      "cutoff_utc": "2026-11-22T23:59:59Z",
+      "id": "late_season_2",
+      "index": 6
+    },
+    {
+      "cutoff_utc": "2026-12-12T23:59:59Z",
+      "id": "final",
+      "index": 7
+    }
+  ],
+  "descriptive_strata": {
+    "context_fit_state": [
+      "fitted",
+      "cold_start_fallback"
+    ],
+    "context_only_sign": [
+      "negative",
+      "zero",
+      "positive",
+      "cold_start_not_applicable"
+    ],
+    "positive_context_only_magnitude": {
+      "bins": [
+        "not_positive_or_cold_start",
+        "0_to_q50_inclusive",
+        "q50_to_q75_inclusive",
+        "above_q75"
+      ],
+      "development_seasons": [
+        2022,
+        2023,
+        2024,
+        2025
+      ],
+      "positive_only_q50": 0.529952779961,
+      "positive_only_q75": 0.795976339044,
+      "source_path": "data/processed/context_location_error_study/contribution_diagnostics.csv",
+      "source_sha256": "f0bd8731a3a95c30769179e59c5c631916340a891a40f4103ab74fd2422a8ca9"
+    },
+    "subgroups_do_not_change_primary_population_or_decision": true,
+    "transfer_coverage_definition": {
+      "complete": "fitted_row_with_offensive_usage_and_defensive_impact_present",
+      "history_fallback": "cold_start_fallback_row",
+      "incomplete": "fitted_row_with_either_transfer_input_missing"
+    },
+    "transfer_coverage_state": [
+      "complete",
+      "incomplete",
+      "history_fallback"
+    ],
+    "use_only_preseason_inputs": true
+  },
+  "evidence": {
+    "cutoff_source": "2025_retained_rolling_backtest_cutoffs_plus_364_days",
+    "eligible_result_rule": "completed_final_score_and_actual_kickoff_at_or_before_cutoff_minus_48_hours",
+    "fcs_fallback": {
+      "included_fcs_team_rule": "fcs_participants_in_eligible_or_scheduled_2026_games",
+      "kind": "uniform_full_subdivision_rank",
+      "new_fcs_id_outside_locked_population": "abort_without_decision",
+      "population_size": 128,
+      "population_source": "preregistered_2026_cfbd_full_season_schedule_participant_ids",
+      "population_team_ids_sha256": "2d4a09d18cbe9d94eba75026cfc0cefaa3d66fbe80a341be6529c6fe90151304",
+      "raw_schedule_files": [
+        {
+          "path": "data/raw/cfbd/games/2026.json",
+          "sha256": "8bc73e07cb96af9105f38330e4e3b7ed465a961edd091c8d1f3fb1e6fbc001c9"
+        },
+        {
+          "path": "data/raw/cfbd/games/2026-fcs.json",
+          "sha256": "62dbcb0d1f702c387fb858ce3efc2ecf8d028c3f00790b7a11ef2acefac8a2c8"
+        }
+      ],
+      "target_corpus_cannot_supply_fcs_population": true
+    },
+    "game_evidence": "identical_for_all_three_models_and_checkpoint",
+    "inference": {
+      "damping": 0.35,
+      "max_iterations": 500,
+      "tolerance": 1e-09
+    },
+    "likelihood": "Historical Likelihood V1",
+    "likelihood_path": "data/processed/posterior/historical_likelihood_v1.json",
+    "likelihood_sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+    "no_new_team_evidence_policy": "retain_team_in_shared_inference_network",
+    "postponed_or_suspended_unknown_completion": "exclude_at_all_checkpoints_and_audit_unless_completion_timestamp_proves_cutoff_safety",
+    "preseason_game_count": 0,
+    "result_availability_lag_hours": 48,
+    "retained_2025_cutoffs_file_sha256": "698a0620d869ebf54eeedaed370d04be5a07fbaf3130cfb9d81f909539af7fe4",
+    "retained_2025_cutoffs_path": "data/processed/posterior_backtest/2025_rolling.json",
+    "unscored_or_unknown_kickoff": "exclude_and_audit_if_source_is_complete; abort_if_source_is_incomplete"
+  },
+  "failure_policy": {
+    "all_exclusions_require_team_checkpoint_reason_and_models_affected": true,
+    "candidate_construction_failure": "abort_without_decision",
+    "global_target_source_absent_or_ambiguous": "abort_without_decision",
+    "incomplete_game_source_or_inference_nonconvergence": "abort_without_decision",
+    "individual_missing_or_invalid_target": "exclude_team_all_checkpoints_all_models",
+    "score_imputation": "forbidden",
+    "source_or_model_identity_mismatch": "abort_without_decision",
+    "unmatched_model_team": "abort_without_decision"
+  },
+  "guardrails": {
+    "candidate_identity": "exact_frozen_semantic_hash_and_builder_file_hash",
+    "centered_mixture_offset_absolute_tolerance": 1e-12,
+    "cold_start_prior_identity": "bitwise_equal_to_context_1_3",
+    "failure": "abort_without_decision",
+    "model_artifact_mutation": "forbidden",
+    "nonpositive_context_only_subtotal_prior_identity": "bitwise_equal_to_context_1_3",
+    "positive_fitted_moderation": "verify_frozen_builder_location_rule_without_external_alpha",
+    "residual_scale_identity": "exact",
+    "source_prior_pmf_absolute_tolerance": 5e-16
+  },
+  "models": {
+    "candidate": {
+      "audit_spec_file_sha256": "9859eea16cec6916a795af999f6a2b9b397547ca7d6acb8a515b17cc50ef803c",
+      "audit_spec_path": "config/context_v1_4_candidate.json",
+      "builder_file_sha256": "e1ef356ca8c9b7a95a89899a52925c30e74765c409cfc08d70c63ad28fedf8d9",
+      "builder_path": "src/gippyrank/context_prior_v1_4_candidate.py",
+      "candidate_semantics_sha256": "db84045d2f7d80b1648360da52ef1e71f76093696cad4e4e7bbdbd57a086573f",
+      "construction_api": "gippyrank.context_prior_v1_4_candidate.construct_candidate_prior",
+      "name": "Context 1.4 candidate"
+    },
+    "context_1_3": {
+      "fit_provenance_class": "legacy_attested_context13_fit",
+      "fit_source_file_sha256": "18bcafddf18f8147d91ca59196554140827f500e4e0f20f5f90866bb4f4fc9d6",
+      "fit_source_identity_sha256": "3bf97e5a42b5d6eb150d958368b1d53cec8fbb2be16222b0cb8e5cb483c475fe",
+      "fit_source_path": "data/processed/preseason/context_v1_3/annual/2026/fitted_model_source.json",
+      "model_metadata_sha256": "6a6c759c250a9b4845bce563072dcf146fd66dca8264017f215aff1580bc9dce",
+      "name": "Context 1.3",
+      "predictions_file_sha256": "2ef3cc2e5249271c5de2fca471b862b8762eee66b40aefc9a679abf2a45ef1f5",
+      "predictions_path": "data/processed/preseason/context_v1_3/annual/2026/predictions.csv",
+      "semantic_model_spec_sha256": "01437795fb34318b6534ba69825323bed54fd34d287cdb87133dae1bfb93e02c",
+      "spec_version": "1.3",
+      "transfer_features_file_sha256": "db8fad38bb81e437059b8cf44c85be5760f3426466b53c5cf649ea5c0718fef0",
+      "transfer_features_path": "data/processed/preseason/context_v1_3_2026_reconstruction/transfer_features.csv",
+      "transfer_manifest_file_sha256": "574e705ec9e3c51658ee83cb1bbb1c1792a326ab1a89333219e9b27e7a8b00c9",
+      "transfer_manifest_path": "data/processed/preseason/context_v1_3_2026_reconstruction/source_manifest.json",
+      "transfer_provenance_class": "retrospective_2026_reconstruction",
+      "transfer_provenance_file_sha256": "2c4725d18ad9dbadbc02c6d08dcb754492409173d924f606ffd7c1e6c4c1ca16",
+      "transfer_provenance_path": "data/processed/preseason/context_v1_3_2026_reconstruction/feature_provenance.json",
+      "transfer_source_identity_sha256": "1ff3d9ff51e1bb8d9026accdca30fdb5326d81f716a8bdb6dd6230e34bdefabf"
+    },
+    "history_1_1": {
+      "fitted_instance_file_sha256": "583b2583ae30e9056266bc07a4cb034cd9f2a4c36ac4d217a35603c1aa1ece91",
+      "fitted_instance_path": "data/processed/preseason/history/annual/2026/fitted_instance.json",
+      "model_metadata_sha256": "159423c81d5f9bc5d12b8ccf65c1e185512a1a5ba73e23fad86108fdebef314d",
+      "name": "History 1.1",
+      "predictions_file_sha256": "0b3454a09288019e17739869c42aed3123fdda2163694f52f63bca65baf37f90",
+      "predictions_path": "data/processed/preseason/history/annual/2026/predictions.csv",
+      "predictions_semantic_sha256": "12ab4ee6ba4d75b0cdd5855d9a13a99f9769919683f3d3aee6ecb2a7485ae9b1",
+      "provenance_class": "retained_legacy_history_artifact",
+      "semantic_spec_sha256": "9681b1fc835dc75d9f2c6f8894ce56c8403cc2098ac7ce7afdc0817aa1c908db",
+      "spec_version": "1.1"
+    }
+  },
+  "population": {
+    "cold_start_policy": "include_unchanged_history_1_1_fallback",
+    "cold_start_team_ids": [
+      "16",
+      "2449"
+    ],
+    "expected_count": 138,
+    "expected_team_ids": [
+      "103",
+      "113",
+      "12",
+      "120",
+      "127",
+      "130",
+      "135",
+      "142",
+      "145",
+      "150",
+      "151",
+      "152",
+      "153",
+      "154",
+      "158",
+      "16",
+      "164",
+      "166",
+      "167",
+      "183",
+      "189",
+      "193",
+      "194",
+      "195",
+      "197",
+      "2",
+      "2005",
+      "2006",
+      "201",
+      "202",
+      "2026",
+      "2032",
+      "204",
+      "2050",
+      "2084",
+      "21",
+      "2116",
+      "2117",
+      "213",
+      "2132",
+      "218",
+      "2199",
+      "221",
+      "2226",
+      "2229",
+      "2247",
+      "228",
+      "2294",
+      "23",
+      "2305",
+      "2306",
+      "2309",
+      "2335",
+      "2348",
+      "235",
+      "238",
+      "239",
+      "2390",
+      "2393",
+      "24",
+      "242",
+      "2426",
+      "2429",
+      "2433",
+      "2439",
+      "2440",
+      "2449",
+      "245",
+      "2459",
+      "248",
+      "2483",
+      "249",
+      "25",
+      "2509",
+      "251",
+      "252",
+      "2534",
+      "254",
+      "256",
+      "2567",
+      "2572",
+      "2579",
+      "258",
+      "259",
+      "26",
+      "2623",
+      "2628",
+      "2633",
+      "2636",
+      "2638",
+      "264",
+      "2641",
+      "2649",
+      "265",
+      "2653",
+      "2655",
+      "2711",
+      "275",
+      "2751",
+      "276",
+      "277",
+      "278",
+      "290",
+      "295",
+      "30",
+      "309",
+      "324",
+      "326",
+      "328",
+      "333",
+      "338",
+      "344",
+      "349",
+      "356",
+      "36",
+      "38",
+      "41",
+      "48",
+      "5",
+      "52",
+      "55",
+      "57",
+      "58",
+      "59",
+      "6",
+      "61",
+      "62",
+      "66",
+      "68",
+      "77",
+      "8",
+      "84",
+      "87",
+      "9",
+      "96",
+      "97",
+      "98",
+      "99"
+    ],
+    "membership_policy": "lock_retained_2026_fbs_ids_even_if_later_reclassified",
+    "minimum_scored_teams_for_decision": 132,
+    "missing_or_unverifiable_transfer_source": "abort_validation_without_decision",
+    "missing_transfer_or_feature_values": "preserve_validated_context_1_3_missingness_and_training_median_semantics",
+    "primary_and_history_pairing": "same_target_complete_team_ids_at_every_checkpoint_for_all_three_models",
+    "prior_or_candidate_missing_policy": "abort_validation_without_decision",
+    "season": 2026,
+    "source": "retained_2026_context_1_3_and_history_1_1_preseason_prediction_intersection",
+    "subdivision": "fbs",
+    "target_missing_policy": "exclude_team_from_every_checkpoint_for_all_models_and_log_reason",
+    "team_ids_sha256": "a30abe533a607cab94e926c426a437721d1219e2feea48a0370bbed3bca6965f"
+  },
+  "registration": {
+    "candidate_2026_outcome_scoring_at_registration": "unopened",
+    "candidate_freeze_head_commit": "7726b072aec6d1f8c9627f5e702cc828b64841c5",
+    "candidate_freeze_issue": 160,
+    "candidate_freeze_pr": 161,
+    "development_seasons": [
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "final_2026_massey_target_at_registration": "unavailable",
+    "holdout_season": 2026,
+    "issue": 164,
+    "origin_main_at_registration": "578af1df51e86eb70546547073888851f87ec88e",
+    "preexisting_2026_non_candidate_diagnostics_through": "2026-09-27"
+  },
+  "schema_version": 1,
+  "target": {
+    "canonical_builder": "scripts/build_historical_modeling.py",
+    "canonical_output": "data/processed/modeling/team_season_rank_distributions.csv",
+    "invalid_team_row_policy": "exclude_team_at_all_checkpoints_and_log_all_three_models",
+    "missing_global_source_policy": "abort_without_decision",
+    "rank_support": "1_through_138",
+    "source": "final_2026_massey_constituent_rank_distribution",
+    "target_pmf_reused_at_every_checkpoint": true,
+    "target_used_only_after_all_prior_and_posterior_construction": true,
+    "team_row_validity": [
+      "unique_team_id",
+      "fbs_2026",
+      "138_rank_support",
+      "unique_supported_ranks_within_1_through_138",
+      "finite_nonnegative_probabilities",
+      "probability_sum_within_1e-8_of_one"
+    ]
+  }
+}
