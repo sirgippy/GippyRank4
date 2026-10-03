@@ -27,6 +27,7 @@ from gippyrank.context_prior_v1_3 import (
     fit_model_with_source,
     load_validated_committed_2026_reconstruction,
     load_validated_context13_fitted_model,
+    validate_context13_fit_transfer_compatibility,
 )
 from gippyrank.context_prior_v1_3 import (
     sha256_json as context_sha256_json,
@@ -346,6 +347,8 @@ def test_context13_fit_source_cannot_be_forged_from_plausible_fields() -> None:
             frozen_model_spec_identity_sha256="a" * 64,
             training_corpus_input_sha256="b" * 64,
             training_row_count=2744,
+            training_corpus_source_identity_sha256=None,
+            training_corpus_provenance_class="canonical_reproducible",
             provenance_class="canonical_context13_fit",
         )
 
@@ -387,6 +390,73 @@ def test_context13_fit_source_binds_model_instance_and_training_corpus(
             [target_row],
             target_season=instance.target_season,
             trained_through_season=instance.trained_through_season,
+        )
+
+
+@pytest.mark.parametrize(
+    ("fit_class", "transfer_class", "allowed"),
+    [
+        ("canonical_context13_fit", PRODUCTION_TRANSFER_PROVENANCE, True),
+        ("canonical_context13_fit", RETROSPECTIVE_2026_PROVENANCE, True),
+        ("legacy_attested_context13_fit", RETROSPECTIVE_2026_PROVENANCE, True),
+        ("research_only", RETROSPECTIVE_RESEARCH_PROVENANCE, True),
+        ("research_only", PRODUCTION_TRANSFER_PROVENANCE, False),
+        ("research_only", RETROSPECTIVE_2026_PROVENANCE, False),
+        ("canonical_context13_fit", RETROSPECTIVE_RESEARCH_PROVENANCE, False),
+        ("legacy_attested_context13_fit", PRODUCTION_TRANSFER_PROVENANCE, False),
+    ],
+)
+def test_fit_transfer_provenance_compatibility_matrix(
+    fit_class: str, transfer_class: str, allowed: bool
+) -> None:
+    if allowed:
+        validate_context13_fit_transfer_compatibility(fit_class, transfer_class)
+    else:
+        with pytest.raises(ValueError, match="provenance classes are incompatible"):
+            validate_context13_fit_transfer_compatibility(fit_class, transfer_class)
+
+
+def test_research_fit_cannot_pair_with_authoritative_2026_transfer_for_fitted_or_cold() -> None:
+    reconstruction = ROOT / "data/processed/preseason/context_v1_3_2026_reconstruction"
+    _, transfer_source = load_validated_committed_2026_reconstruction(reconstruction)
+    model = _model()
+    instance = _instance()
+    research_source = _research_fit_source(model, instance)
+    row = _row(team_id="16")
+    with pytest.raises(ValueError, match="provenance classes are incompatible"):
+        Context13PriorInput.fitted(
+            model=model,
+            fitted_instance=instance,
+            fitted_model_source=research_source,
+            inference_row=row,
+            transfer_provenance=transfer_source,
+            prior_pmf=model.pmf(row.features, np.asarray(row.lag1_z), row.population),
+            expected_team_id=row.team_id,
+            expected_target_season=row.season,
+        )
+
+    history_dir = ROOT / "data/processed/preseason/history/annual/2026"
+    history_source = load_validated_history_annual_artifact(
+        history_dir / "predictions.csv",
+        history_dir / "fitted_instance.json",
+        target_season=2026,
+        trained_through_season=2025,
+    )
+    fallback = Context13FallbackSource.from_history_annual_source(
+        source=history_source,
+        target_season=2026,
+        trained_through_season=2025,
+        team_id="16",
+        team_name="Sacramento State",
+        population=138,
+        cold_start_reason="fcs_to_fbs_transition",
+    )
+    with pytest.raises(ValueError, match="provenance classes are incompatible"):
+        Context13PriorInput.cold_start(
+            fitted_instance=instance,
+            fitted_model_source=research_source,
+            transfer_provenance=transfer_source,
+            fallback_source=fallback,
         )
 @pytest.mark.parametrize("forbidden_coefficient", ["numeric", "missingness"])
 def test_context_only_scale_coefficients_must_remain_zero(
@@ -726,11 +796,40 @@ def test_committed_2026_context_lineage_loads_without_relabeling_or_side_effects
     assert {row["transfer_provenance_class"] for row in prediction_rows} == {
         "retrospective_2026_reconstruction"
     }
-    assert fit_source.provenance_class == "canonical_context13_fit"
+    assert fit_source.provenance_class == "legacy_attested_context13_fit"
+    assert fit_source.training_corpus_provenance_class == "legacy_attested"
+    assert fit_source.training_corpus_source_identity_sha256 is None
+    assert fit_source.provenance_schema_version == 2
+    assert fit_source.reproducibility_level == "retained_legacy_attestation"
+    assert model_artifact.get("artifact_schema_version") is None
+    fit_sidecar = json.loads((annual / "fitted_model_source.json").read_text(encoding="utf-8"))
+    assert fit_sidecar["provenance_schema_version"] == 2
+    assert fit_sidecar["provenance_class"] == "legacy_attested_context13_fit"
     assert fit_source.model_metadata_sha256 == context_sha256_json(model.metadata())
     assert fit_source.training_corpus_input_sha256
     assert fit_source.frozen_model_spec_identity_sha256
     assert instance.trained_through_season == 2025
+
+    historical_rank_distribution = ROOT / "data/processed/modeling/team_season_rank_distributions.csv"
+    assert not historical_rank_distribution.exists()
+    import sys
+
+    scripts = str(ROOT / "scripts")
+    if scripts not in sys.path:
+        sys.path.insert(0, scripts)
+    import build_preseason_context_prior_v1_3 as context_builder
+
+    with pytest.raises(FileNotFoundError, match="team_season_rank_distributions.csv"):
+        context_builder.load_context13_training_corpus(
+            target_season=2026,
+            trained_through_season=2025,
+        )
+    with pytest.raises(ValueError, match="authoritative training-corpus source"):
+        load_validated_context13_fitted_model(
+            annual / "fitted_model.json",
+            annual / "fitted_instance.json",
+            training_rows=[],
+        )
 
     feature_rows, transfer_source = load_validated_committed_2026_reconstruction(
         reconstruction
@@ -770,6 +869,7 @@ def test_committed_2026_context_lineage_loads_without_relabeling_or_side_effects
         )
     )
     artifact = json.loads(candidate.artifact_bytes())
+    assert artifact["artifact_schema_version"] == 2
     assert artifact["transfer_input_provenance"]["provenance_class"] == (
         "retrospective_2026_reconstruction"
     )
@@ -777,6 +877,10 @@ def test_committed_2026_context_lineage_loads_without_relabeling_or_side_effects
         transfer_source.source_identity_sha256
     )
     assert artifact["context_fit_provenance"] == fit_source.to_metadata()
+    assert artifact["context_fit_provenance"]["provenance_class"] == (
+        "legacy_attested_context13_fit"
+    )
+    assert artifact["context_fit_provenance"]["training_row_count"] == 2744
     assert artifact["fallback_source"]["source_model_metadata_sha256"] == (
         history_source.model_metadata_sha256
     )
@@ -836,6 +940,13 @@ def test_artifact_records_computed_source_semantics_and_retrospective_inputs() -
     )
     assert artifact["transfer_input_provenance"]["source_manifest_sha256"] is None
     assert artifact["transfer_input_provenance"]["target_fbs_team_ids"] == ["team-1"]
+    assert artifact["context_fit_provenance_class"] == "research_only"
+    assert artifact["context_fit_reproducibility_level"] == "research_only"
+    assert artifact["training_corpus_source_identity_sha256"] is None
+    assert artifact["training_corpus_row_count"] == 0
+    assert artifact["semantic_model_spec_sha256"] == (
+        prior.fitted_model_source.frozen_model_spec_identity_sha256
+    )
     assert "diagnostic_paths" not in artifact["transfer_input_provenance"]
     assert artifact["decomposition_sha256"]
 

@@ -24,6 +24,7 @@ from gippyrank.context_prior_v1_3 import (
     ContextTransferInputProvenance,
     decompose_context13_location,
     moderated_location_points,
+    validate_context13_fit_transfer_compatibility,
     validate_context13_fitted_model,
 )
 from gippyrank.preseason import (
@@ -48,6 +49,7 @@ _DEFAULT_LIFECYCLE_JSON = (
 FROZEN_CANDIDATE_SEMANTICS_SHA256 = (
     "db84045d2f7d80b1648360da52ef1e71f76093696cad4e4e7bbdbd57a086573f"
 )
+CANDIDATE_ARTIFACT_SCHEMA_VERSION = 2
 CONTEXT_1_3_VERSION = "1.3"
 FITTED_STATUS = "fitted"
 COLD_START_STATUS = "cold_start_fallback"
@@ -673,8 +675,9 @@ class Context13PriorInput:
         if model_source is None:
             raise ValueError("Context 1.3 candidate inputs require authoritative fit provenance")
         model_source.validate_instance(self.fitted_instance)
-        production_transfer = self.transfer_provenance.provenance_class == (
-            "production_preseason_immutable_snapshot"
+        validate_context13_fit_transfer_compatibility(
+            model_source.provenance_class,
+            self.transfer_provenance.provenance_class,
         )
         if self.component_status == FITTED_STATUS:
             if self.fitted_model is None or self.inference_row is None:
@@ -682,10 +685,8 @@ class Context13PriorInput:
             model_source.validate_model(
                 self.fitted_model,
                 self.fitted_instance,
-                allow_research_only=not production_transfer,
+                allow_research_only=(model_source.provenance_class == "research_only"),
             )
-            if model_source.provenance_class == "research_only" and production_transfer:
-                raise ValueError("research-only Context fit source cannot claim production provenance")
             if (
                 self.expected_team_id != self.inference_row.team_id
                 or self.expected_target_season != self.fitted_instance.target_season
@@ -735,8 +736,6 @@ class Context13PriorInput:
                 "retrospective_research_transfer_reconstruction"
             ):
                 raise ValueError("research and non-research fallback provenance cannot be mixed")
-            if model_source.provenance_class == "research_only" and production_transfer:
-                raise ValueError("research-only Context fit source cannot claim production provenance")
         else:
             raise ValueError(f"unsupported Context component status: {self.component_status}")
 
@@ -929,12 +928,10 @@ class Context14CandidatePrior:
                 None,
             )
         )
-        if (
-            self.fitted_model_source.provenance_class == "research_only"
-            and self.transfer_provenance.provenance_class
-            == "production_preseason_immutable_snapshot"
-        ):
-            raise ValueError("research-only Context fit source cannot claim production provenance")
+        validate_context13_fit_transfer_compatibility(
+            self.fitted_model_source.provenance_class,
+            self.transfer_provenance.provenance_class,
+        )
         if self.component_status not in {FITTED_STATUS, COLD_START_STATUS}:
             raise ValueError("candidate component status is invalid")
         if self.candidate_semantics_sha256 != candidate_spec_sha256():
@@ -989,10 +986,18 @@ class Context14CandidatePrior:
         values = np.asarray(self.pmf, dtype=float).tolist()
         return json.dumps(
             {
+                "artifact_schema_version": CANDIDATE_ARTIFACT_SCHEMA_VERSION,
                 "candidate_semantics_sha256": self.candidate_semantics_sha256,
                 "component_status": self.component_status,
                 "context_model_sha256": self.context_model_sha256,
                 "context_fit_provenance": self.fitted_model_source.to_metadata(),
+                "context_fit_provenance_class": self.fitted_model_source.provenance_class,
+                "context_fit_reproducibility_level": self.fitted_model_source.reproducibility_level,
+                "training_corpus_source_identity_sha256": self.fitted_model_source.training_corpus_source_identity_sha256,
+                "training_corpus_row_count": self.fitted_model_source.training_row_count,
+                "semantic_model_spec_sha256": self.fitted_model_source.frozen_model_spec_identity_sha256,
+                "fitted_model_metadata_sha256": self.fitted_model_source.model_metadata_sha256,
+                "fitted_instance_identity_sha256": self.fitted_model_source.fitted_instance_identity_sha256,
                 "decomposition_sha256": self.decomposition_sha256,
                 "inference_inputs_sha256": self.inference_inputs_sha256,
                 "transfer_input_provenance": self.transfer_provenance.to_metadata(),

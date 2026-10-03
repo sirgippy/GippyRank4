@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import importlib
 import json
+import sys
 from dataclasses import replace
 from pathlib import Path
 
@@ -10,8 +12,10 @@ import numpy as np
 import pytest
 
 import gippyrank.context_prior_v1_3 as candidate_module
-from gippyrank.context_prior import InferenceRow
+from gippyrank.context_prior import AnnualFittedInstance, InferenceRow
 from gippyrank.context_prior_v1_3 import (
+    CONTEXT13_PROVENANCE_SCHEMA_VERSION,
+    CONTEXT_1_3_FEATURES,
     CONTEXT_PRIOR_CANDIDATE_VERSION,
     D5_CONTEXT_FEATURES,
     LOCATION_FEATURE_NAMES,
@@ -19,16 +23,20 @@ from gippyrank.context_prior_v1_3 import (
     PRODUCTION_TRANSFER_PROVENANCE,
     RETROSPECTIVE_2026_PROVENANCE,
     SCALE_FEATURE_NAMES,
+    Context13TrainingCorpusSource,
     attach_transfer_features,
     attach_transfer_features_to_inference_rows,
     candidate_guard,
+    context13_semantic_specification,
+    context13_semantic_specification_sha256,
+    fit_model_with_source,
     load_validated_production_transfer_features,
     load_validated_reconstructed_transfer_features,
     model_specification,
     model_specification_metadata,
     validate_feature_contract,
 )
-from gippyrank.preseason import TeamSeason
+from gippyrank.preseason import DirectRankModel, Preprocessor, TeamSeason
 from gippyrank.preseason_transfer import (
     ManifestValidationError,
     SnapshotRecord,
@@ -36,6 +44,13 @@ from gippyrank.preseason_transfer import (
 
 ROOT = Path(__file__).parents[1]
 CANDIDATE = ROOT / "data/processed/preseason/context_v1_3_candidate"
+
+
+def _context13_builder_module():
+    scripts = str(ROOT / "scripts")
+    if scripts not in sys.path:
+        sys.path.insert(0, scripts)
+    return importlib.import_module("build_preseason_context_prior_v1_3")
 
 
 def _team() -> TeamSeason:
@@ -49,6 +64,51 @@ def _team() -> TeamSeason:
         np.asarray([0.1]),
         np.asarray([1]),
         {name: 0.0 for name in MODEL_FEATURE_NAMES},
+    )
+
+
+def _training_rows(count: int = 8) -> list[TeamSeason]:
+    base = np.asarray([-1.5, -0.5, 0.5, 1.5])
+    return [
+        TeamSeason(
+            season=2010 + index,
+            subdivision="fbs",
+            team_id=f"training-{index}",
+            team_name=f"Training {index}",
+            population=4,
+            lag1_z=base + index * 0.01,
+            target_z=base[::-1] + index * 0.02,
+            target_ranks=np.asarray([1, 2, 3, 4]),
+            features={
+                name: float((index + offset) % 5)
+                for offset, name in enumerate(MODEL_FEATURE_NAMES)
+            },
+        )
+        for index in range(count)
+    ]
+
+
+def _valid_context13_model() -> DirectRankModel:
+    names = list(MODEL_FEATURE_NAMES)
+    preprocessor = Preprocessor(
+        tuple(names),
+        {name: 0.0 for name in names},
+        {name: 0.0 for name in names},
+        {name: 1.0 for name in names},
+    )
+    return DirectRankModel(
+        feature_names=names,
+        preprocessor=preprocessor,
+        beta=np.zeros(2 + 2 * len(names)),
+        gamma=np.zeros(1 + 2 * len(names)),
+        minimum_scale=0.1,
+        penalty=0.25,
+        optimizer={"success": True},
+        lag_count=1,
+        family="normal",
+        degrees_of_freedom=None,
+        location_feature_names=list(MODEL_FEATURE_NAMES),
+        scale_feature_names=list(SCALE_FEATURE_NAMES),
     )
 
 
@@ -164,6 +224,275 @@ def test_frozen_contract_has_exact_features_and_equation_placement() -> None:
     assert metadata["context_features_affect"] == "location_only"
     assert metadata["history_features_affect"] == ["location", "scale"]
     assert metadata["active_production_version"] == "1.3"
+
+
+def test_context13_semantic_hash_excludes_lifecycle_metadata(monkeypatch) -> None:
+    original = context13_semantic_specification_sha256()
+    original_spec = context13_semantic_specification()
+    assert "active_production_version" not in original_spec
+    assert "candidate" not in original_spec
+    assert "status" not in original_spec
+
+    monkeypatch.setattr(candidate_module, "ACTIVE_CONTEXT_PRIOR_VERSION", "1.4")
+    monkeypatch.setattr(candidate_module, "CONTEXT13_LIFECYCLE_STATUS", "validated")
+    monkeypatch.setattr(candidate_module, "CONTEXT13_IS_CANDIDATE", True)
+    lifecycle_spec = model_specification_metadata()
+    assert lifecycle_spec["active_production_version"] == "1.4"
+    assert lifecycle_spec["status"] == "validated"
+    assert lifecycle_spec["candidate"] is True
+    assert context13_semantic_specification_sha256() == original
+
+
+def test_context13_semantic_hash_changes_with_model_semantics(monkeypatch) -> None:
+    original = context13_semantic_specification_sha256()
+    monkeypatch.setattr(candidate_module, "FROZEN_PENALTY", 0.3)
+    assert context13_semantic_specification_sha256() != original
+
+
+def test_canonical_training_loader_mints_typed_complete_corpus_source(
+    tmp_path: Path, monkeypatch
+) -> None:
+    builder = _context13_builder_module()
+    rows = _training_rows()
+    transfer_path = tmp_path / "historical_transfer_features.csv"
+    transfer_provenance_path = tmp_path / "historical_transfer_features.provenance.json"
+    artifact_names = (
+        "historical_rank_distribution_artifact",
+        "historical_context_feature_artifact",
+        "historical_transfer_feature_artifact",
+        "historical_transfer_feature_provenance",
+        "context13_semantic_implementation",
+        "direct_rank_implementation",
+        "historical_row_builder",
+        "context_feature_builder",
+        "transfer_feature_builder",
+    )
+    paths = {}
+    for name in artifact_names:
+        path = {
+            "historical_transfer_feature_artifact": transfer_path,
+            "historical_transfer_feature_provenance": transfer_provenance_path,
+        }.get(name, tmp_path / f"{name}.txt")
+        if path not in {transfer_path, transfer_provenance_path}:
+            path.write_text(f"{name} source\n", encoding="utf-8")
+        paths[name] = path
+    transfer_provenance_path.write_text(
+        json.dumps(
+            {
+                "candidate_spec_version": "1.3",
+                "context_features": list(CONTEXT_1_3_FEATURES),
+                "provenance_class": "retrospective_research_reconstruction",
+                "row_count": len(rows),
+                "transfer_features": [
+                    "transfer_in_prior_usage_sum",
+                    "transfer_in_prior_defensive_impact_db_sum",
+                    "transfer_in_prior_defensive_impact_db_available",
+                ],
+            }
+        )
+    )
+
+    def write_transfer_rows(usage_offset: float = 0.0) -> None:
+        fields = (
+            "season",
+            "subdivision",
+            "team_id",
+            "team_name",
+            "transfer_in_prior_usage_sum",
+            "transfer_in_prior_defensive_impact_db_sum",
+            "transfer_in_prior_defensive_impact_db_available",
+            "provenance_class",
+        )
+        with transfer_path.open("w", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=fields, lineterminator="\n")
+            writer.writeheader()
+            writer.writerows(
+                {
+                    "season": row.season,
+                    "subdivision": row.subdivision,
+                    "team_id": row.team_id,
+                    "team_name": row.team_name,
+                    "transfer_in_prior_usage_sum": 0.5 + index + usage_offset,
+                    "transfer_in_prior_defensive_impact_db_sum": 0.1 * index,
+                    "transfer_in_prior_defensive_impact_db_available": 1.0,
+                    "provenance_class": "retrospective_research_reconstruction",
+                }
+                for index, row in enumerate(rows)
+            )
+
+    write_transfer_rows()
+    monkeypatch.setattr(builder, "HISTORICAL_TRANSFER_FEATURES", transfer_path)
+    monkeypatch.setattr(builder, "_training_source_artifact_paths", lambda: paths)
+    monkeypatch.setattr(builder, "base_context_rows", lambda *, max_season: (rows, [], []))
+    built_rows, corpus_source, _, _ = builder.load_context13_training_corpus(
+        target_season=2026,
+        trained_through_season=2025,
+    )
+    assert len(built_rows) == len(rows)
+    assert corpus_source.training_row_count == len(rows)
+    assert corpus_source.target_season == 2026
+    assert corpus_source.trained_through_season == 2025
+    assert corpus_source.to_metadata()["provenance_schema_version"] == (
+        CONTEXT13_PROVENANCE_SCHEMA_VERSION
+    )
+    assert corpus_source.historical_transfer_feature_artifact_sha256 == (
+        hashlib.sha256(transfer_path.read_bytes()).hexdigest()
+    )
+    assert corpus_source.source_identity_sha256
+    corpus_source.validate_rows(built_rows)
+
+    model = _valid_context13_model()
+
+    def fit_stub(
+        _rows,
+        *,
+        target_season,
+        trained_through_season,
+        context_features,
+    ):
+        assert tuple(context_features) == CONTEXT_1_3_FEATURES
+        return model, AnnualFittedInstance(
+            "context_prior", "1.3", trained_through_season, target_season
+        )
+
+    monkeypatch.setattr(candidate_module, "fit_model", fit_stub)
+    fitted_model, fitted_instance, canonical_fit = fit_model_with_source(
+        built_rows,
+        target_season=2026,
+        trained_through_season=2025,
+        training_corpus_source=corpus_source,
+    )
+    assert canonical_fit.provenance_class == "canonical_context13_fit"
+    assert canonical_fit.training_corpus_provenance_class == "canonical_reproducible"
+    assert canonical_fit.training_corpus_source_identity_sha256 == (
+        corpus_source.source_identity_sha256
+    )
+    model_path = tmp_path / "fitted_model.json"
+    instance_path = tmp_path / "fitted_instance.json"
+    model_path.write_text(
+        json.dumps(
+            {
+                "model_family": "context_prior",
+                "spec_version": "1.3",
+                "model": fitted_model.metadata(),
+                "fit_provenance": canonical_fit.to_metadata(),
+            }
+        ),
+        encoding="utf-8",
+    )
+    instance_path.write_text(
+        json.dumps(fitted_instance.metadata()),
+        encoding="utf-8",
+    )
+    _, loaded_instance, loaded_source = candidate_module.load_validated_context13_fitted_model(
+        model_path,
+        instance_path,
+        training_rows=built_rows,
+        training_corpus_source=corpus_source,
+    )
+    assert loaded_instance.metadata() == fitted_instance.metadata()
+    assert loaded_source.to_metadata() == canonical_fit.to_metadata()
+    with pytest.raises(ValueError, match="authoritative Context 1.3 training corpus"):
+        fit_model_with_source(
+            built_rows[:-1],
+            target_season=2026,
+            trained_through_season=2025,
+            training_corpus_source=corpus_source,
+        )
+
+    with pytest.raises(TypeError, match="canonical historical loader"):
+        Context13TrainingCorpusSource(
+            target_season=2026,
+            trained_through_season=2025,
+            source_artifact_sha256=(),
+            canonical_base_historical_source_identity_sha256="a" * 64,
+            context_feature_construction_identity_sha256="b" * 64,
+            historical_transfer_feature_artifact_sha256="c" * 64,
+            historical_transfer_feature_provenance_sha256="d" * 64,
+            fbs_team_season_keys_sha256="e" * 64,
+            training_corpus_input_sha256="f" * 64,
+            training_row_count=len(rows),
+        )
+
+    row = built_rows[0]
+    changed_corpora = []
+    changed_features = dict(row.features)
+    changed_features["transfer_in_prior_usage_sum"] = 999.0
+    changed_corpora.append([replace(row, features=changed_features), *built_rows[1:]])
+    changed_corpora.append([replace(row, lag1_z=row.lag1_z + 0.25), *built_rows[1:]])
+    changed_corpora.append([replace(row, target_z=row.target_z + 0.25), *built_rows[1:]])
+    changed_corpora.append(
+        [replace(row, target_ranks=np.asarray([4, 3, 2, 1])), *built_rows[1:]]
+    )
+    changed_corpora.append([replace(row, team_id="changed-identity"), *built_rows[1:]])
+    for changed_rows in changed_corpora:
+        with pytest.raises(ValueError, match="authoritative Context 1.3 training corpus"):
+            corpus_source.validate_rows(changed_rows)
+    with pytest.raises(ValueError, match="authoritative Context 1.3 training corpus"):
+        corpus_source.validate_rows(built_rows[:-1])
+    with pytest.raises(ValueError, match="authoritative Context 1.3 training corpus"):
+        corpus_source.validate_rows([*built_rows, replace(built_rows[0], team_id="extra")])
+
+    write_transfer_rows(usage_offset=1.0)
+    _, changed_source, _, _ = builder.load_context13_training_corpus(
+        target_season=2026,
+        trained_through_season=2025,
+    )
+    assert changed_source.source_identity_sha256 != corpus_source.source_identity_sha256
+    assert changed_source.training_corpus_input_sha256 != corpus_source.training_corpus_input_sha256
+
+
+def test_only_typed_canonical_corpus_source_can_mint_canonical_fit(
+    monkeypatch,
+) -> None:
+    rows = _training_rows()
+    model = _valid_context13_model()
+
+    def fit_stub(
+        _rows,
+        *,
+        target_season,
+        trained_through_season,
+        context_features,
+    ):
+        assert tuple(context_features) == CONTEXT_1_3_FEATURES
+        return model, AnnualFittedInstance(
+            "context_prior", "1.3", trained_through_season, target_season
+        )
+
+    monkeypatch.setattr(candidate_module, "fit_model", fit_stub)
+    arbitrary_source_fit = fit_model_with_source(
+        rows,
+        target_season=2026,
+        trained_through_season=2025,
+    )
+    assert arbitrary_source_fit[2].provenance_class == "research_only"
+    assert arbitrary_source_fit[2].training_row_count == len(rows)
+    with pytest.raises(TypeError, match="typed training-corpus source"):
+        fit_model_with_source(
+            rows,
+            target_season=2026,
+            trained_through_season=2025,
+            training_corpus_source=object(),
+        )
+    truncated_fit = fit_model_with_source(
+        rows[:-1],
+        target_season=2026,
+        trained_through_season=2025,
+    )
+    assert truncated_fit[2].provenance_class == "research_only"
+    extra_fit = fit_model_with_source(
+        [*rows, replace(rows[-1], team_id="extra-team")],
+        target_season=2026,
+        trained_through_season=2025,
+    )
+    assert extra_fit[2].provenance_class == "research_only"
+    with pytest.raises(ValueError, match="includes rows beyond its cutoff"):
+        fit_model_with_source(
+            [*rows, replace(rows[0], season=2026, team_id="target-season")],
+            target_season=2026,
+            trained_through_season=2025,
+        )
 
 
 def test_transfer_attachment_is_attach_only_and_preserves_history() -> None:

@@ -23,16 +23,50 @@ scale coefficients to be zero.
 
 The fitted-model source binds model family and spec version, target season,
 rolling-origin cutoff, model metadata SHA-256, fitted-instance identity,
-frozen specification identity, and a content-addressed training-corpus
-identity. `fit_model_with_source` rejects non-FBS rows and any training row
-after `target_season - 1`. When source rows are available, the loader refits
-through that canonical path and verifies model and corpus identity. The
-retained 2026 annual model is loaded through its checked-in, content-pinned fit
-attestation, which binds the committed model and instance to the corpus
-identity recorded by the canonical fit. A hand-built model without an
-authoritative source, or a research-only source presented as canonical, is
-rejected. Future Context 1.3 builds write the typed source metadata beside the
-fitted model.
+immutable semantic-specification identity, corpus source identity, exact row
+payload identity, and row count. Lifecycle fields such as active version,
+candidate status, and promotion state are reported separately and do not
+affect the Context 1.3 semantic hash.
+
+Only `load_context13_training_corpus` creates a typed
+`Context13TrainingCorpusSource`. It binds the canonical historical rank and
+Context inputs, feature-construction implementation, historical transfer
+artifact and provenance, sorted FBS team-season keys, and exact resulting
+`TeamSeason` rows. `fit_model_with_source` rejects non-FBS or post-cutoff rows;
+without that typed source, caller-supplied rows can produce only a
+`research_only` fit source. The source validator rejects subsets, extra rows,
+identity changes, and changes to lag, target, or feature values.
+
+The committed 2026 Context 1.3 model remains usable through its
+`legacy_attested_context13_fit` source, which pins its model metadata, fitted
+instance, claimed corpus digest, and 2,744-row count. It is explicitly marked
+`retained_legacy_attestation`, not independently reproducible. The checkout
+does not contain `data/processed/modeling/team_season_rank_distributions.csv`,
+which the canonical loader needs to rebuild that corpus, so the recorded
+`e74613…` row digest cannot currently be verified from the committed inputs.
+The committed model and instance hashes are still checked. If the historical
+rank-distribution source is later supplied, the canonical loader and refit
+path can independently verify the corpus and model. A hand-built model without
+an authoritative source, or a research-only source presented as canonical, is
+rejected.
+
+Fit and transfer provenance use an explicit compatibility matrix:
+canonical fits pair with production or retrospective-2026 transfer lineage;
+the retained legacy attestation pairs only with retrospective-2026 lineage;
+research-only fits pair only with retrospective-research transfer fixtures.
+Candidate artifacts serialize the fit provenance class, reproducibility level,
+corpus identity and row count, semantic-spec hash, model metadata hash, and
+fitted-instance hash.
+
+## Artifact schema versions
+
+New Context 1.3 model/report metadata uses artifact schema 2 and provenance
+schema 2. The prediction CSV schema remains version 1; changing provenance
+metadata does not change PMF or publication semantics. Existing committed 2026
+model and prediction files remain in their legacy schema and are not rewritten
+by this change. Tests pin their prediction bytes and verify the separate fit
+attestation schema, so deterministic rebuild checks distinguish prediction
+identity from metadata identity.
 
 `ContextTransferInputProvenance` identifies transfer lineage only; it does not
 certify recruiting, talent, returning-production, coaching, or rank-history

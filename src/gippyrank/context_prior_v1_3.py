@@ -54,6 +54,11 @@ from gippyrank.preseason_transfer import (
 
 CONTEXT_PRIOR_CANDIDATE_VERSION = "1.3"
 ACTIVE_CONTEXT_PRIOR_VERSION = "1.3"
+CONTEXT13_LIFECYCLE_STATUS = "active_production"
+CONTEXT13_IS_CANDIDATE = False
+CONTEXT13_PROVENANCE_SCHEMA_VERSION = 2
+CONTEXT13_MODEL_ARTIFACT_SCHEMA_VERSION = 2
+CONTEXT13_PREDICTION_SCHEMA_VERSION = 1
 RETROSPECTIVE_2026_PROVENANCE = "retrospective_2026_reconstruction"
 RETROSPECTIVE_RESEARCH_PROVENANCE = "retrospective_research_transfer_reconstruction"
 PRODUCTION_TRANSFER_PROVENANCE = "production_preseason_immutable_snapshot"
@@ -67,7 +72,7 @@ _CONTEXT13_2026_MODEL_METADATA_SHA256 = (
     "6a6c759c250a9b4845bce563072dcf146fd66dca8264017f215aff1580bc9dce"
 )
 _CONTEXT13_2026_FITTED_SOURCE_ARTIFACT_SHA256 = (
-    "2756bee8545e0ebf143438dc15fed3a2208f1eb4379c60d4b559be3ec3e58db1"
+    "631f822a99cdf0b134b0812512ca96833b30ccdb5e335c5aa1703cc2fe4ab10e"
 )
 _COMMITTED_2026_TRANSFER_FEATURE_SHA256 = (
     "db8fad38bb81e437059b8cf44c85be5760f3426466b53c5cf649ea5c0718fef0"
@@ -120,6 +125,13 @@ _CONTEXT_TRANSFER_PROVENANCE_CLASSES = frozenset(
         RETROSPECTIVE_RESEARCH_PROVENANCE,
     }
 )
+_CONTEXT13_FIT_TRANSFER_COMPATIBILITY = {
+    "canonical_context13_fit": frozenset(
+        {PRODUCTION_TRANSFER_PROVENANCE, RETROSPECTIVE_2026_PROVENANCE}
+    ),
+    "legacy_attested_context13_fit": frozenset({RETROSPECTIVE_2026_PROVENANCE}),
+    "research_only": frozenset({RETROSPECTIVE_RESEARCH_PROVENANCE}),
+}
 _LOCATION_RECONSTRUCTION_TOLERANCE = 1e-8
 _CONTEXT_TRANSFER_PROVENANCE_TOKEN = object()
 
@@ -137,6 +149,18 @@ def _is_sha256(value: object) -> bool:
     return isinstance(value, str) and len(value) == 64 and all(
         character in "0123456789abcdef" for character in value
     )
+
+
+def validate_context13_fit_transfer_compatibility(
+    fit_provenance_class: str, transfer_provenance_class: str
+) -> None:
+    """Enforce the explicit fit/transfer lineage compatibility matrix."""
+    allowed = _CONTEXT13_FIT_TRANSFER_COMPATIBILITY.get(fit_provenance_class)
+    if allowed is None or transfer_provenance_class not in allowed:
+        raise ValueError(
+            "Context 1.3 fit and transfer provenance classes are incompatible: "
+            f"{fit_provenance_class!r} + {transfer_provenance_class!r}"
+        )
 
 
 def _team_feature_sha256(values: Mapping[str, float | None]) -> str:
@@ -532,17 +556,18 @@ def validate_context13_fitted_model(
 
 
 _CONTEXT13_FITTED_SOURCE_TOKEN = object()
+_CONTEXT13_TRAINING_CORPUS_TOKEN = object()
 
 
 @dataclass(frozen=True, init=False)
 class Context13FittedModelSource:
     """Typed identity for a Context 1.3 fit and its exact training inputs.
 
-    Canonical objects are created by :func:`fit_model_with_source` or by the
-    validating annual-artifact loader below. Development fixtures must use the
-    explicitly research-only constructor. Candidate validation prevents a
-    research-only fit source from being paired with production transfer
-    provenance or being represented as a canonical fit.
+    Independently reproducible canonical fits require a typed
+    :class:`Context13TrainingCorpusSource`. The committed 2026 model is a
+    legacy fit whose attestation is pinned, but whose historical row table is
+    absent from this checkout. Development fixtures use the explicit
+    research-only constructor.
     """
 
     model_family: str
@@ -554,7 +579,10 @@ class Context13FittedModelSource:
     frozen_model_spec_identity_sha256: str
     training_corpus_input_sha256: str
     training_row_count: int
+    training_corpus_source_identity_sha256: str | None
+    training_corpus_provenance_class: str
     provenance_class: str
+    provenance_schema_version: int
     source_identity_sha256: str
 
     def __init__(
@@ -569,7 +597,10 @@ class Context13FittedModelSource:
         frozen_model_spec_identity_sha256: str,
         training_corpus_input_sha256: str,
         training_row_count: int,
+        training_corpus_source_identity_sha256: str | None,
+        training_corpus_provenance_class: str,
         provenance_class: str,
+        provenance_schema_version: int = CONTEXT13_PROVENANCE_SCHEMA_VERSION,
         _construction_token: object = None,
     ) -> None:
         if _construction_token is not _CONTEXT13_FITTED_SOURCE_TOKEN:
@@ -584,7 +615,10 @@ class Context13FittedModelSource:
             "frozen_model_spec_identity_sha256": frozen_model_spec_identity_sha256,
             "training_corpus_input_sha256": training_corpus_input_sha256,
             "training_row_count": training_row_count,
+            "training_corpus_source_identity_sha256": training_corpus_source_identity_sha256,
+            "training_corpus_provenance_class": training_corpus_provenance_class,
             "provenance_class": provenance_class,
+            "provenance_schema_version": provenance_schema_version,
         }
         for name, value in values.items():
             object.__setattr__(self, name, value)
@@ -598,7 +632,13 @@ class Context13FittedModelSource:
             or self.target_season <= 1
             or self.trained_through_season != self.target_season - 1
             or self.training_row_count < 0
-            or self.provenance_class not in {"canonical_context13_fit", "research_only"}
+            or self.provenance_class
+            not in {
+                "canonical_context13_fit",
+                "legacy_attested_context13_fit",
+                "research_only",
+            }
+            or self.provenance_schema_version != CONTEXT13_PROVENANCE_SCHEMA_VERSION
         ):
             raise ValueError("Context 1.3 fitted-model source identity is invalid")
         for digest in (
@@ -610,6 +650,26 @@ class Context13FittedModelSource:
         ):
             if not _is_sha256(digest):
                 raise ValueError("Context 1.3 fitted-model source hashes must be SHA-256")
+        if self.training_corpus_source_identity_sha256 is not None and not _is_sha256(
+            self.training_corpus_source_identity_sha256
+        ):
+            raise ValueError("Context 1.3 training-corpus source identity must be SHA-256")
+        expected_corpus_class = {
+            "canonical_context13_fit": "canonical_reproducible",
+            "legacy_attested_context13_fit": "legacy_attested",
+            "research_only": "research_only",
+        }[self.provenance_class]
+        if self.training_corpus_provenance_class != expected_corpus_class:
+            raise ValueError("Context 1.3 training-corpus provenance class is inconsistent")
+        if (self.provenance_class == "canonical_context13_fit") != (
+            self.training_corpus_source_identity_sha256 is not None
+        ):
+            raise ValueError("canonical Context 1.3 fits require an authoritative corpus source")
+        if self.provenance_class == "legacy_attested_context13_fit" and (
+            self.training_corpus_source_identity_sha256 is not None
+            or self.training_row_count == 0
+        ):
+            raise ValueError("legacy Context 1.3 fits require a retained corpus attestation")
         if sha256_json(self.identity_payload()) != self.source_identity_sha256:
             raise ValueError("Context 1.3 fitted-model source identity hash is inconsistent")
 
@@ -624,14 +684,27 @@ class Context13FittedModelSource:
             "frozen_model_spec_identity_sha256": self.frozen_model_spec_identity_sha256,
             "training_corpus_input_sha256": self.training_corpus_input_sha256,
             "training_row_count": self.training_row_count,
+            "training_corpus_source_identity_sha256": self.training_corpus_source_identity_sha256,
+            "training_corpus_provenance_class": self.training_corpus_provenance_class,
             "provenance_class": self.provenance_class,
+            "provenance_schema_version": self.provenance_schema_version,
         }
 
     def to_metadata(self) -> dict[str, object]:
         return {
             **self.identity_payload(),
+            "training_corpus_row_count": self.training_row_count,
+            "reproducibility_level": self.reproducibility_level,
             "source_identity_sha256": self.source_identity_sha256,
         }
+
+    @property
+    def reproducibility_level(self) -> str:
+        return {
+            "canonical_context13_fit": "independently_reproducible",
+            "legacy_attested_context13_fit": "retained_legacy_attestation",
+            "research_only": "research_only",
+        }[self.provenance_class]
 
     def validate_instance(self, instance: AnnualFittedInstance) -> None:
         if (
@@ -651,6 +724,7 @@ class Context13FittedModelSource:
         *,
         allow_research_only: bool = False,
         training_rows: Sequence[TeamSeason] | None = None,
+        training_corpus_source: Context13TrainingCorpusSource | None = None,
     ) -> None:
         if sha256_json(self.identity_payload()) != self.source_identity_sha256:
             raise ValueError("fitted-model source identity hash is inconsistent")
@@ -658,12 +732,31 @@ class Context13FittedModelSource:
         self.validate_instance(instance)
         if sha256_json(model.metadata()) != self.model_metadata_sha256:
             raise ValueError("fitted-model source metadata hash does not match the model")
-        if self.frozen_model_spec_identity_sha256 != sha256_json(
-            model_specification_metadata()
-        ):
+        if self.frozen_model_spec_identity_sha256 != context13_semantic_specification_sha256():
             raise ValueError("fitted-model source uses a different frozen specification")
         if self.provenance_class == "research_only" and not allow_research_only:
             raise ValueError("research-only Context 1.3 fit provenance is not promotable")
+        if self.provenance_class == "canonical_context13_fit":
+            if training_corpus_source is not None and type(training_corpus_source) is not Context13TrainingCorpusSource:
+                raise TypeError(
+                    "canonical Context 1.3 validation requires a typed training-corpus source"
+                )
+            if training_rows is not None and training_corpus_source is None:
+                raise ValueError(
+                    "validating canonical fit rows requires their typed training-corpus source"
+                )
+            if training_corpus_source is not None:
+                if training_corpus_source.source_identity_sha256 != (
+                    self.training_corpus_source_identity_sha256
+                ):
+                    raise ValueError(
+                        "fitted-model source training-corpus source identity does not match"
+                    )
+                training_corpus_source.validate_rows(
+                    training_rows if training_rows is not None else ()
+                )
+        elif training_corpus_source is not None:
+            raise ValueError("non-canonical fit provenance cannot carry a canonical corpus source")
         if training_rows is not None and (
             self.training_row_count != len(training_rows)
             or self.training_corpus_input_sha256
@@ -700,9 +793,11 @@ class Context13FittedModelSource:
             trained_through_season=instance.trained_through_season,
             model_metadata_sha256=model_sha,
             fitted_instance_identity_sha256=instance_identity,
-            frozen_model_spec_identity_sha256=sha256_json(model_specification_metadata()),
+            frozen_model_spec_identity_sha256=context13_semantic_specification_sha256(),
             training_corpus_input_sha256=training_identity,
             training_row_count=0,
+            training_corpus_source_identity_sha256=None,
+            training_corpus_provenance_class="research_only",
             provenance_class="research_only",
             _construction_token=_CONTEXT13_FITTED_SOURCE_TOKEN,
         )
@@ -746,6 +841,231 @@ def _training_corpus_input_sha256(rows: Sequence[TeamSeason]) -> str:
         raise ValueError("Context 1.3 training corpus has duplicate team-season rows")
     payload.sort(key=lambda row: (row["season"], row["subdivision"], row["team_id"]))
     return sha256_json(payload)
+
+
+def _training_corpus_keys_sha256(rows: Sequence[TeamSeason]) -> str:
+    keys = [
+        {
+            "season": int(row.season),
+            "subdivision": str(row.subdivision),
+            "team_id": str(row.team_id),
+            "population": int(row.population),
+        }
+        for row in rows
+    ]
+    keys.sort(key=lambda row: (row["season"], row["subdivision"], row["team_id"]))
+    return sha256_json(keys)
+
+
+@dataclass(frozen=True, init=False)
+class Context13TrainingCorpusSource:
+    """Authoritative identity for rows built by the canonical Context 1.3 loader."""
+
+    target_season: int
+    trained_through_season: int
+    source_artifact_sha256: tuple[tuple[str, str], ...]
+    canonical_base_historical_source_identity_sha256: str
+    context_feature_construction_identity_sha256: str
+    historical_transfer_feature_artifact_sha256: str
+    historical_transfer_feature_provenance_sha256: str
+    fbs_team_season_keys_sha256: str
+    training_corpus_input_sha256: str
+    training_row_count: int
+    source_identity_sha256: str
+
+    def __init__(
+        self,
+        *,
+        target_season: int,
+        trained_through_season: int,
+        source_artifact_sha256: tuple[tuple[str, str], ...],
+        canonical_base_historical_source_identity_sha256: str,
+        context_feature_construction_identity_sha256: str,
+        historical_transfer_feature_artifact_sha256: str,
+        historical_transfer_feature_provenance_sha256: str,
+        fbs_team_season_keys_sha256: str,
+        training_corpus_input_sha256: str,
+        training_row_count: int,
+        _construction_token: object = None,
+    ) -> None:
+        if _construction_token is not _CONTEXT13_TRAINING_CORPUS_TOKEN:
+            raise TypeError(
+                "Context 1.3 training-corpus sources must come from the canonical historical loader"
+            )
+        values = {
+            "target_season": target_season,
+            "trained_through_season": trained_through_season,
+            "source_artifact_sha256": [list(item) for item in source_artifact_sha256],
+            "canonical_base_historical_source_identity_sha256": canonical_base_historical_source_identity_sha256,
+            "context_feature_construction_identity_sha256": context_feature_construction_identity_sha256,
+            "historical_transfer_feature_artifact_sha256": historical_transfer_feature_artifact_sha256,
+            "historical_transfer_feature_provenance_sha256": historical_transfer_feature_provenance_sha256,
+            "fbs_team_season_keys_sha256": fbs_team_season_keys_sha256,
+            "training_corpus_input_sha256": training_corpus_input_sha256,
+            "training_row_count": training_row_count,
+        }
+        object.__setattr__(self, "target_season", target_season)
+        object.__setattr__(self, "trained_through_season", trained_through_season)
+        object.__setattr__(
+            self, "source_artifact_sha256", tuple(tuple(item) for item in source_artifact_sha256)
+        )
+        object.__setattr__(
+            self,
+            "canonical_base_historical_source_identity_sha256",
+            canonical_base_historical_source_identity_sha256,
+        )
+        object.__setattr__(
+            self,
+            "context_feature_construction_identity_sha256",
+            context_feature_construction_identity_sha256,
+        )
+        object.__setattr__(
+            self,
+            "historical_transfer_feature_artifact_sha256",
+            historical_transfer_feature_artifact_sha256,
+        )
+        object.__setattr__(
+            self,
+            "historical_transfer_feature_provenance_sha256",
+            historical_transfer_feature_provenance_sha256,
+        )
+        object.__setattr__(self, "fbs_team_season_keys_sha256", fbs_team_season_keys_sha256)
+        object.__setattr__(self, "training_corpus_input_sha256", training_corpus_input_sha256)
+        object.__setattr__(self, "training_row_count", training_row_count)
+        object.__setattr__(self, "source_identity_sha256", sha256_json(values))
+        self.__post_init__()
+
+    def identity_payload(self) -> dict[str, object]:
+        return {
+            "provenance_schema_version": CONTEXT13_PROVENANCE_SCHEMA_VERSION,
+            "provenance_class": "canonical_context13_training_corpus",
+            "target_season": self.target_season,
+            "trained_through_season": self.trained_through_season,
+            "source_artifact_sha256": [list(item) for item in self.source_artifact_sha256],
+            "canonical_base_historical_source_identity_sha256": self.canonical_base_historical_source_identity_sha256,
+            "context_feature_construction_identity_sha256": self.context_feature_construction_identity_sha256,
+            "historical_transfer_feature_artifact_sha256": self.historical_transfer_feature_artifact_sha256,
+            "historical_transfer_feature_provenance_sha256": self.historical_transfer_feature_provenance_sha256,
+            "fbs_team_season_keys_sha256": self.fbs_team_season_keys_sha256,
+            "training_corpus_input_sha256": self.training_corpus_input_sha256,
+            "training_row_count": self.training_row_count,
+        }
+
+    def __post_init__(self) -> None:
+        if (
+            self.target_season <= 1
+            or self.trained_through_season != self.target_season - 1
+            or self.training_row_count < 1
+        ):
+            raise ValueError("Context 1.3 training-corpus identity is invalid")
+        artifact_ids = [artifact for artifact, _ in self.source_artifact_sha256]
+        if (
+            artifact_ids != sorted(set(artifact_ids))
+            or any(not artifact or artifact.startswith("/") or ".." in artifact.split("/") for artifact in artifact_ids)
+            or not {
+                "historical_rank_distribution_artifact",
+                "historical_context_feature_artifact",
+                "historical_transfer_feature_artifact",
+                "historical_transfer_feature_provenance",
+                "context13_semantic_implementation",
+                "direct_rank_implementation",
+                "historical_row_builder",
+                "context_feature_builder",
+                "transfer_feature_builder",
+            }
+            <= set(artifact_ids)
+        ):
+            raise ValueError("Context 1.3 corpus source is missing a stable logical artifact identity")
+        for digest in (
+            *(value for _, value in self.source_artifact_sha256),
+            self.canonical_base_historical_source_identity_sha256,
+            self.context_feature_construction_identity_sha256,
+            self.historical_transfer_feature_artifact_sha256,
+            self.historical_transfer_feature_provenance_sha256,
+            self.fbs_team_season_keys_sha256,
+            self.training_corpus_input_sha256,
+            self.source_identity_sha256,
+        ):
+            if not _is_sha256(digest):
+                raise ValueError("Context 1.3 corpus source hashes must be SHA-256")
+        if dict(self.source_artifact_sha256)["historical_transfer_feature_artifact"] != (
+            self.historical_transfer_feature_artifact_sha256
+        ) or dict(self.source_artifact_sha256)["historical_transfer_feature_provenance"] != (
+            self.historical_transfer_feature_provenance_sha256
+        ):
+            raise ValueError("Context 1.3 corpus transfer artifact identities are inconsistent")
+        payload = self.identity_payload()
+        payload.pop("provenance_schema_version")
+        payload.pop("provenance_class")
+        if sha256_json(payload) != self.source_identity_sha256:
+            raise ValueError("Context 1.3 training-corpus source identity hash is inconsistent")
+
+    def to_metadata(self) -> dict[str, object]:
+        return {
+            **self.identity_payload(),
+            "source_identity_sha256": self.source_identity_sha256,
+        }
+
+    def validate_rows(self, rows: Sequence[TeamSeason]) -> None:
+        if (
+            not rows
+            or len(rows) != self.training_row_count
+            or any(
+                row.subdivision != "fbs" or row.season > self.trained_through_season
+                for row in rows
+            )
+            or _training_corpus_input_sha256(rows) != self.training_corpus_input_sha256
+            or _training_corpus_keys_sha256(rows) != self.fbs_team_season_keys_sha256
+        ):
+            raise ValueError("rows do not match the authoritative Context 1.3 training corpus")
+
+
+def _mint_context13_training_corpus_source(
+    rows: Sequence[TeamSeason],
+    *,
+    target_season: int,
+    trained_through_season: int,
+    source_artifact_sha256: Mapping[str, str],
+    context_feature_construction_identity_sha256: str,
+    historical_transfer_feature_artifact_sha256: str,
+    historical_transfer_feature_provenance_sha256: str,
+) -> Context13TrainingCorpusSource:
+    """Mint only inside the canonical historical Context-row construction path."""
+    if trained_through_season != target_season - 1 or not rows:
+        raise ValueError("canonical Context training corpus must end at target season - 1")
+    if any(row.subdivision != "fbs" or row.season > trained_through_season for row in rows):
+        raise ValueError("canonical Context training corpus has an unexpected row")
+    sorted_artifacts = tuple(sorted(source_artifact_sha256.items()))
+    artifact_map = dict(sorted_artifacts)
+    source = Context13TrainingCorpusSource(
+        target_season=target_season,
+        trained_through_season=trained_through_season,
+        source_artifact_sha256=sorted_artifacts,
+        canonical_base_historical_source_identity_sha256=sha256_json(
+            [
+                list(item)
+                for item in sorted_artifacts
+                if item[0]
+                not in {
+                    "historical_transfer_feature_artifact",
+                    "historical_transfer_feature_provenance",
+                }
+            ]
+        ),
+        context_feature_construction_identity_sha256=context_feature_construction_identity_sha256,
+        historical_transfer_feature_artifact_sha256=historical_transfer_feature_artifact_sha256,
+        historical_transfer_feature_provenance_sha256=historical_transfer_feature_provenance_sha256,
+        fbs_team_season_keys_sha256=_training_corpus_keys_sha256(rows),
+        training_corpus_input_sha256=_training_corpus_input_sha256(rows),
+        training_row_count=len(rows),
+        _construction_token=_CONTEXT13_TRAINING_CORPUS_TOKEN,
+    )
+    if artifact_map["historical_transfer_feature_artifact"] != historical_transfer_feature_artifact_sha256:
+        raise ValueError("canonical corpus transfer feature hash disagrees with its inventory")
+    if artifact_map["historical_transfer_feature_provenance"] != historical_transfer_feature_provenance_sha256:
+        raise ValueError("canonical corpus transfer provenance hash disagrees with its inventory")
+    source.validate_rows(rows)
+    return source
 
 
 def _inference_input_sha256(row: InferenceRow) -> str:
@@ -958,19 +1278,77 @@ def model_specification() -> ModelSpecification:
     )
 
 
-def model_specification_metadata() -> dict[str, object]:
-    """Return an artifact-ready specification with equation placement."""
+def context13_semantic_specification() -> dict[str, object]:
+    """Return only the immutable Context 1.3 mathematical/input contract.
+
+    This payload deliberately excludes candidate, status, active-version,
+    validation, and promotion lifecycle metadata.
+    """
     return {
+        "semantic_schema_version": 1,
         **model_specification().metadata(),
-        "candidate": False,
-        "status": "active_production",
-        "active_production_version": ACTIVE_CONTEXT_PRIOR_VERSION,
+        "ordered_model_features": list(MODEL_FEATURE_NAMES),
         "location_feature_names": list(LOCATION_FEATURE_NAMES),
         "scale_feature_names": list(SCALE_FEATURE_NAMES),
+        "location_feature_placement": {
+            "history_features": list(H_FEATURES),
+            "context_features": list(CONTEXT_1_3_FEATURES),
+        },
+        "scale_feature_placement": {"history_features": list(H_FEATURES)},
+        "lag_count": 1,
+        "lag_semantics": "target-season t-1 empirical rank distribution",
+        "distribution_family": "normal",
+        "degrees_of_freedom": None,
+        "minimum_scale": 0.10,
+        "quadrature_points": QUADRATURE_POINTS,
+        "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+        "target_distribution_semantics": "deterministic evenly spaced order statistics per empirical team-season target",
+        "team_season_weighting": "equal team-season weight; target outcomes averaged within row",
+        "penalty": FROZEN_PENALTY,
+        "optimizer": {
+            "method": "L-BFGS-B",
+            "initial_maxiter": 500,
+            "retry_maxiter": 2000,
+            "retry_only_on_iteration_limit": True,
+            "ftol": 1e-10,
+            "gtol": 1e-6,
+        },
+        "preprocessing": {
+            "missing_values": "training median imputation",
+            "numeric_values": "training-only mean/std standardization",
+            "missingness_indicators": True,
+            "missing_indicator_placement": {
+                "location": list(LOCATION_FEATURE_NAMES),
+                "scale": list(SCALE_FEATURE_NAMES),
+            },
+        },
+        "target_season_outcomes_forbidden": True,
+        "training_cutoff": "trained_through_season == target_season - 1",
+    }
+
+
+def context13_semantic_specification_sha256() -> str:
+    """Hash the immutable Context 1.3 semantics, excluding lifecycle state."""
+    return sha256_json(context13_semantic_specification())
+
+
+def context13_lifecycle_metadata() -> dict[str, object]:
+    """Return mutable production lifecycle metadata for artifact reporting."""
+    return {
+        "candidate": CONTEXT13_IS_CANDIDATE,
+        "status": CONTEXT13_LIFECYCLE_STATUS,
+        "active_production_version": ACTIVE_CONTEXT_PRIOR_VERSION,
+    }
+
+
+def model_specification_metadata() -> dict[str, object]:
+    """Return semantic Context 1.3 specification plus separate lifecycle state."""
+    return {
+        **context13_semantic_specification(),
+        **context13_lifecycle_metadata(),
         "context_features_affect": "location_only",
         "history_features_affect": ["location", "scale"],
         "optimizer_retry": "retry with maxiter=2000 only after iteration-limit failure",
-        "target_season_outcomes_forbidden": True,
     }
 
 
@@ -1026,13 +1404,15 @@ def fit_model_with_source(
     *,
     target_season: int,
     trained_through_season: int,
+    training_corpus_source: Context13TrainingCorpusSource | None = None,
 ) -> tuple[DirectRankModel, AnnualFittedInstance, Context13FittedModelSource]:
-    """Fit the frozen Context 1.3 model and bind its exact historical corpus.
+    """Fit Context 1.3, minting canonical provenance only for typed corpus input.
 
-    This canonical source-producing path accepts only FBS team-season rows at
-    or before the rolling-origin cutoff. It rejects future rows rather than
-    silently filtering them, so a source identity cannot hide target-season
-    training inputs.
+    Caller-supplied rows without a ``Context13TrainingCorpusSource`` can still
+    be fitted for research, but their returned source is always
+    ``research_only``. The typed corpus source is minted by the canonical
+    historical Context-row loader and validates the full row payload before
+    this function labels a fit canonical.
     """
     if trained_through_season != target_season - 1:
         raise ValueError("Context 1.3 annual fits must train through target season - 1")
@@ -1042,6 +1422,17 @@ def fit_model_with_source(
         raise ValueError("Context 1.3 training corpus includes rows beyond its cutoff")
     if any(row.subdivision != "fbs" for row in rows):
         raise ValueError("Context 1.3 training corpus must contain only FBS rows")
+    if training_corpus_source is not None:
+        if type(training_corpus_source) is not Context13TrainingCorpusSource:
+            raise TypeError(
+                "canonical Context 1.3 fits require a typed training-corpus source"
+            )
+        if (
+            training_corpus_source.target_season != target_season
+            or training_corpus_source.trained_through_season != trained_through_season
+        ):
+            raise ValueError("Context training-corpus source has the wrong target/cutoff")
+        training_corpus_source.validate_rows(rows)
     model, instance = fit_model(
         list(rows),
         target_season=target_season,
@@ -1051,6 +1442,11 @@ def fit_model_with_source(
     model_sha = sha256_json(model.metadata())
     instance_sha = sha256_json(instance.metadata())
     corpus_sha = _training_corpus_input_sha256(rows)
+    provenance_class = (
+        "canonical_context13_fit"
+        if training_corpus_source is not None
+        else "research_only"
+    )
     source = Context13FittedModelSource(
         model_family=instance.model_family,
         spec_version=instance.spec_version,
@@ -1058,13 +1454,29 @@ def fit_model_with_source(
         trained_through_season=instance.trained_through_season,
         model_metadata_sha256=model_sha,
         fitted_instance_identity_sha256=instance_sha,
-        frozen_model_spec_identity_sha256=sha256_json(model_specification_metadata()),
+        frozen_model_spec_identity_sha256=context13_semantic_specification_sha256(),
         training_corpus_input_sha256=corpus_sha,
         training_row_count=len(rows),
-        provenance_class="canonical_context13_fit",
+        training_corpus_source_identity_sha256=(
+            training_corpus_source.source_identity_sha256
+            if training_corpus_source is not None
+            else None
+        ),
+        training_corpus_provenance_class=(
+            "canonical_reproducible"
+            if training_corpus_source is not None
+            else "research_only"
+        ),
+        provenance_class=provenance_class,
         _construction_token=_CONTEXT13_FITTED_SOURCE_TOKEN,
     )
-    source.validate_model(model, instance, training_rows=rows)
+    source.validate_model(
+        model,
+        instance,
+        allow_research_only=provenance_class == "research_only",
+        training_rows=rows,
+        training_corpus_source=training_corpus_source,
+    )
     return model, instance, source
 
 
@@ -1073,15 +1485,16 @@ def load_validated_context13_fitted_model(
     fitted_instance_path: str | Path,
     *,
     training_rows: Sequence[TeamSeason] | None = None,
+    training_corpus_source: Context13TrainingCorpusSource | None = None,
     fitted_source_path: str | Path | None = None,
 ) -> tuple[DirectRankModel, AnnualFittedInstance, Context13FittedModelSource]:
     """Load an annual model only after validating its authoritative fit source.
 
-    When the corpus is available, refit through the canonical code and require
-    exact model and instance parity. The retained 2026 production artifact has
-    a separately committed, content-pinned source attestation because its
-    generated training table is not part of every checkout. Neither path trusts
-    the caller's filesystem path as source identity.
+    When an authoritative typed corpus is available, refit and require exact
+    model and instance parity. The retained 2026 model is classified as a
+    legacy attestation because the source rank-distribution table required to
+    reconstruct its historical rows is absent from this checkout. Neither
+    path trusts a caller's filesystem path as source identity.
     """
     try:
         model_artifact = json.loads(Path(model_artifact_path).read_text(encoding="utf-8"))
@@ -1109,10 +1522,15 @@ def load_validated_context13_fitted_model(
     except (KeyError, TypeError, ValueError) as error:
         raise ValueError("annual fitted-instance artifact has an invalid identity") from error
     if training_rows is not None:
+        if training_corpus_source is None:
+            raise ValueError(
+                "reproducible Context 1.3 model loading requires its authoritative training-corpus source"
+            )
         model, expected_instance, source = fit_model_with_source(
             training_rows,
             target_season=instance.target_season,
             trained_through_season=instance.trained_through_season,
+            training_corpus_source=training_corpus_source,
         )
         if instance.metadata() != expected_instance.metadata():
             raise ValueError("annual fitted-instance artifact differs from the canonical fit")
@@ -1123,7 +1541,12 @@ def load_validated_context13_fitted_model(
             raise ValueError(
                 "annual model fit provenance differs from the canonical training corpus"
             )
-        source.validate_model(model, instance, training_rows=training_rows)
+        source.validate_model(
+            model,
+            instance,
+            training_rows=training_rows,
+            training_corpus_source=training_corpus_source,
+        )
         return model, instance, source
 
     if instance.target_season != 2026:
@@ -1137,7 +1560,7 @@ def load_validated_context13_fitted_model(
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
         raise ValueError("Context 1.3 fitted-source attestation is unreadable") from error
     if hashlib.sha256(source_bytes).hexdigest() != _CONTEXT13_2026_FITTED_SOURCE_ARTIFACT_SHA256:
-        raise ValueError("Context 1.3 fitted-source attestation is not the committed source record")
+        raise ValueError("Context 1.3 legacy fitted-source attestation is not the committed source record")
     if (
         instance.model_family != "context_prior"
         or instance.spec_version != CONTEXT_PRIOR_CANDIDATE_VERSION
@@ -1168,13 +1591,26 @@ def load_validated_context13_fitted_model(
                 source_metadata["training_corpus_input_sha256"]
             ),
             training_row_count=int(source_metadata["training_row_count"]),
+            training_corpus_source_identity_sha256=(
+                None
+                if source_metadata.get("training_corpus_source_identity_sha256") is None
+                else str(source_metadata["training_corpus_source_identity_sha256"])
+            ),
+            training_corpus_provenance_class=str(
+                source_metadata["training_corpus_provenance_class"]
+            ),
             provenance_class=str(source_metadata["provenance_class"]),
+            provenance_schema_version=int(source_metadata["provenance_schema_version"]),
             _construction_token=_CONTEXT13_FITTED_SOURCE_TOKEN,
         )
     except (KeyError, TypeError, ValueError) as error:
         raise ValueError("Context 1.3 fit-source attestation has an invalid identity") from error
     if source_metadata != source.to_metadata():
         raise ValueError("Context 1.3 fit-source attestation identity does not match its fields")
+    if source.provenance_class != "legacy_attested_context13_fit":
+        raise ValueError(
+            "a fitted-source sidecar cannot claim canonical fit provenance without rebuilding the corpus"
+        )
     model = _direct_rank_model_from_metadata(model_artifact["model"])
     if sha256_json(model_artifact["model"]) != sha256_json(model.metadata()):
         raise ValueError("Context 1.3 annual model metadata cannot be reconstructed")
@@ -1822,6 +2258,9 @@ def candidate_guard(target_season: int) -> None:
 
 __all__ = [
     "ACTIVE_CONTEXT_PRIOR_VERSION",
+    "CONTEXT13_MODEL_ARTIFACT_SCHEMA_VERSION",
+    "CONTEXT13_PREDICTION_SCHEMA_VERSION",
+    "CONTEXT13_PROVENANCE_SCHEMA_VERSION",
     "CONTEXT_1_3_FEATURES",
     "CONTEXT_PRIOR_CANDIDATE_VERSION",
     "D5_CONTEXT_FEATURES",
@@ -1840,10 +2279,14 @@ __all__ = [
     "SCALE_FEATURE_NAMES",
     "Context13FittedModelSource",
     "Context13LocationDecomposition",
+    "Context13TrainingCorpusSource",
     "ContextTransferInputProvenance",
     "attach_transfer_features",
     "attach_transfer_features_to_inference_rows",
     "candidate_guard",
+    "context13_lifecycle_metadata",
+    "context13_semantic_specification",
+    "context13_semantic_specification_sha256",
     "decompose_context13_location",
     "fit_model",
     "fit_model_with_source",
@@ -1856,6 +2299,7 @@ __all__ = [
     "moderate_positive_net",
     "moderated_location_points",
     "sha256_json",
+    "validate_context13_fit_transfer_compatibility",
     "validate_context13_fitted_model",
     "validate_feature_contract",
 ]
