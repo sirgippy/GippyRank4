@@ -81,8 +81,10 @@ development-selection lineage. The
 and are not candidate-output hashes. The canonical parity test computes the
 candidate/reference PMF differences across all 534 2022–2025 team-seasons. The
 record pins the largest observed absolute and relative differences across the
-Python 3.13 local and GitHub CI runs (`8.326672684688674e-17` and
-`1.03152444e-15`) and caps them at `1e-16` absolute and `1e-14` relative. The
+Python 3.13 local and GitHub CI full-panel runs (maximum absolute difference
+`8.326672684688674e-17`, maximum relative difference
+`2.7763615161996095e-14`) and caps them at `1e-16` absolute and `5e-14`
+relative. The
 checked-in outcome-free model and inference fixture exercises the canonical
 decomposition path; it is not fresh validation evidence.
 

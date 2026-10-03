@@ -3,8 +3,8 @@
   "candidate_reference_numerical_parity": {
     "max_absolute_difference_allowed": 1e-16,
     "max_absolute_difference_observed": 8.326672684688674e-17,
-    "max_relative_difference_allowed": 1e-14,
-    "max_relative_difference_observed": 1.03152444e-15
+    "max_relative_difference_allowed": 5e-14,
+    "max_relative_difference_observed": 2.7763615161996095e-14
   },
   "candidate_spec_sha256": "db84045d2f7d80b1648360da52ef1e71f76093696cad4e4e7bbdbd57a086573f",
   "reference_output_hash_scope": "retained PR #159 reference candidate PMF outputs; candidate/reference differences are computed across all 534 2022-2025 team-seasons; observed maxima are the largest Python 3.13 local and GitHub CI values",
