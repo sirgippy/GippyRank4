@@ -30,6 +30,7 @@ from typing import Any
 
 import numpy as np
 
+from gippyrank import preseason as preseason_semantics
 from gippyrank.context_prior import (
     AnnualFittedInstance,
     InferenceRow,
@@ -57,12 +58,15 @@ ACTIVE_CONTEXT_PRIOR_VERSION = "1.3"
 CONTEXT13_LIFECYCLE_STATUS = "active_production"
 CONTEXT13_IS_CANDIDATE = False
 CONTEXT13_PROVENANCE_SCHEMA_VERSION = 2
+CONTEXT13_FIT_PROVENANCE_SCHEMA_VERSION = 3
 CONTEXT13_MODEL_ARTIFACT_SCHEMA_VERSION = 2
 CONTEXT13_PREDICTION_SCHEMA_VERSION = 1
 RETROSPECTIVE_2026_PROVENANCE = "retrospective_2026_reconstruction"
 RETROSPECTIVE_RESEARCH_PROVENANCE = "retrospective_research_transfer_reconstruction"
 PRODUCTION_TRANSFER_PROVENANCE = "production_preseason_immutable_snapshot"
 FROZEN_PENALTY = 0.25
+CONTEXT13_OPTIMIZER_RETRY_MAXITER = 2000
+CONTEXT13_OPTIMIZER_ITERATION_LIMIT_MESSAGE = "ITERATIONS REACHED LIMIT"
 PRODUCTION_CUTOFF_MONTH = 8
 PRODUCTION_CUTOFF_DAY = 15
 # The 2026 artifact is allowed only through the retrospective validator below.
@@ -72,7 +76,7 @@ _CONTEXT13_2026_MODEL_METADATA_SHA256 = (
     "6a6c759c250a9b4845bce563072dcf146fd66dca8264017f215aff1580bc9dce"
 )
 _CONTEXT13_2026_FITTED_SOURCE_ARTIFACT_SHA256 = (
-    "631f822a99cdf0b134b0812512ca96833b30ccdb5e335c5aa1703cc2fe4ab10e"
+    "cae89f0c75f4b29f5e9f3d767f7f312d71739068d9c45b5b8f9f5e07efaec0eb"
 )
 _COMMITTED_2026_TRANSFER_FEATURE_SHA256 = (
     "db8fad38bb81e437059b8cf44c85be5760f3426466b53c5cf649ea5c0718fef0"
@@ -525,6 +529,13 @@ def validate_context13_fitted_model(
         raise ValueError("fitted model coefficient shape does not match Context 1.3")
     if not np.isfinite(model.beta).all() or not np.isfinite(model.gamma).all():
         raise ValueError("fitted model coefficients must be finite")
+    gamma_lower, gamma_upper = (
+        preseason_semantics.DIRECT_RANK_GAMMA_COEFFICIENT_BOUNDS
+    )
+    if np.any(model.gamma < gamma_lower - 1e-12) or np.any(
+        model.gamma > gamma_upper + 1e-12
+    ):
+        raise ValueError("Context 1.3 scale coefficients exceed their frozen bounds")
     # Context-only covariates are location-only by the frozen C1.3 contract.
     # The design is [intercept, numeric values..., missingness indicators...].
     context_only = tuple(name for name in MODEL_FEATURE_NAMES if name not in H_FEATURES)
@@ -561,14 +572,7 @@ _CONTEXT13_TRAINING_CORPUS_TOKEN = object()
 
 @dataclass(frozen=True, init=False)
 class Context13FittedModelSource:
-    """Typed identity for a Context 1.3 fit and its exact training inputs.
-
-    Independently reproducible canonical fits require a typed
-    :class:`Context13TrainingCorpusSource`. The committed 2026 model is a
-    legacy fit whose attestation is pinned, but whose historical row table is
-    absent from this checkout. Development fixtures use the explicit
-    research-only constructor.
-    """
+    """Typed source record whose corpus claims are explicit and class-specific."""
 
     model_family: str
     spec_version: str
@@ -577,10 +581,17 @@ class Context13FittedModelSource:
     model_metadata_sha256: str
     fitted_instance_identity_sha256: str
     frozen_model_spec_identity_sha256: str
-    training_corpus_input_sha256: str
-    training_row_count: int
+    verified_training_corpus_input_sha256: str | None
+    verified_training_row_count: int | None
     training_corpus_source_identity_sha256: str | None
-    training_corpus_provenance_class: str
+    attested_training_row_count: int | None
+    claimed_training_corpus_input_sha256: str | None
+    claim_verification: str | None
+    published_prediction_artifact_id: str | None
+    published_prediction_artifact_sha256: str | None
+    research_fixture_identity_sha256: str | None
+    research_training_rows_sha256: str | None
+    research_training_row_count: int | None
     provenance_class: str
     provenance_schema_version: int
     source_identity_sha256: str
@@ -595,12 +606,19 @@ class Context13FittedModelSource:
         model_metadata_sha256: str,
         fitted_instance_identity_sha256: str,
         frozen_model_spec_identity_sha256: str,
-        training_corpus_input_sha256: str,
-        training_row_count: int,
+        verified_training_corpus_input_sha256: str | None,
+        verified_training_row_count: int | None,
         training_corpus_source_identity_sha256: str | None,
-        training_corpus_provenance_class: str,
+        attested_training_row_count: int | None,
+        claimed_training_corpus_input_sha256: str | None,
+        claim_verification: str | None,
+        published_prediction_artifact_id: str | None,
+        published_prediction_artifact_sha256: str | None,
+        research_fixture_identity_sha256: str | None,
+        research_training_rows_sha256: str | None,
+        research_training_row_count: int | None,
         provenance_class: str,
-        provenance_schema_version: int = CONTEXT13_PROVENANCE_SCHEMA_VERSION,
+        provenance_schema_version: int = CONTEXT13_FIT_PROVENANCE_SCHEMA_VERSION,
         _construction_token: object = None,
     ) -> None:
         if _construction_token is not _CONTEXT13_FITTED_SOURCE_TOKEN:
@@ -613,10 +631,17 @@ class Context13FittedModelSource:
             "model_metadata_sha256": model_metadata_sha256,
             "fitted_instance_identity_sha256": fitted_instance_identity_sha256,
             "frozen_model_spec_identity_sha256": frozen_model_spec_identity_sha256,
-            "training_corpus_input_sha256": training_corpus_input_sha256,
-            "training_row_count": training_row_count,
+            "verified_training_corpus_input_sha256": verified_training_corpus_input_sha256,
+            "verified_training_row_count": verified_training_row_count,
             "training_corpus_source_identity_sha256": training_corpus_source_identity_sha256,
-            "training_corpus_provenance_class": training_corpus_provenance_class,
+            "attested_training_row_count": attested_training_row_count,
+            "claimed_training_corpus_input_sha256": claimed_training_corpus_input_sha256,
+            "claim_verification": claim_verification,
+            "published_prediction_artifact_id": published_prediction_artifact_id,
+            "published_prediction_artifact_sha256": published_prediction_artifact_sha256,
+            "research_fixture_identity_sha256": research_fixture_identity_sha256,
+            "research_training_rows_sha256": research_training_rows_sha256,
+            "research_training_row_count": research_training_row_count,
             "provenance_class": provenance_class,
             "provenance_schema_version": provenance_schema_version,
         }
@@ -631,45 +656,96 @@ class Context13FittedModelSource:
             or self.spec_version != CONTEXT_PRIOR_CANDIDATE_VERSION
             or self.target_season <= 1
             or self.trained_through_season != self.target_season - 1
-            or self.training_row_count < 0
             or self.provenance_class
             not in {
                 "canonical_context13_fit",
                 "legacy_attested_context13_fit",
                 "research_only",
             }
-            or self.provenance_schema_version != CONTEXT13_PROVENANCE_SCHEMA_VERSION
+            or self.provenance_schema_version != CONTEXT13_FIT_PROVENANCE_SCHEMA_VERSION
         ):
             raise ValueError("Context 1.3 fitted-model source identity is invalid")
         for digest in (
             self.model_metadata_sha256,
             self.fitted_instance_identity_sha256,
             self.frozen_model_spec_identity_sha256,
-            self.training_corpus_input_sha256,
             self.source_identity_sha256,
         ):
             if not _is_sha256(digest):
                 raise ValueError("Context 1.3 fitted-model source hashes must be SHA-256")
-        if self.training_corpus_source_identity_sha256 is not None and not _is_sha256(
-            self.training_corpus_source_identity_sha256
-        ):
-            raise ValueError("Context 1.3 training-corpus source identity must be SHA-256")
-        expected_corpus_class = {
-            "canonical_context13_fit": "canonical_reproducible",
-            "legacy_attested_context13_fit": "legacy_attested",
-            "research_only": "research_only",
-        }[self.provenance_class]
-        if self.training_corpus_provenance_class != expected_corpus_class:
-            raise ValueError("Context 1.3 training-corpus provenance class is inconsistent")
-        if (self.provenance_class == "canonical_context13_fit") != (
-            self.training_corpus_source_identity_sha256 is not None
-        ):
-            raise ValueError("canonical Context 1.3 fits require an authoritative corpus source")
-        if self.provenance_class == "legacy_attested_context13_fit" and (
-            self.training_corpus_source_identity_sha256 is not None
-            or self.training_row_count == 0
-        ):
-            raise ValueError("legacy Context 1.3 fits require a retained corpus attestation")
+        digest_fields = (
+            self.verified_training_corpus_input_sha256,
+            self.training_corpus_source_identity_sha256,
+            self.claimed_training_corpus_input_sha256,
+            self.published_prediction_artifact_sha256,
+            self.research_fixture_identity_sha256,
+            self.research_training_rows_sha256,
+        )
+        if any(value is not None and not _is_sha256(value) for value in digest_fields):
+            raise ValueError("Context 1.3 fit source identities must be SHA-256")
+
+        canonical_fields = (
+            self.verified_training_corpus_input_sha256,
+            self.verified_training_row_count,
+            self.training_corpus_source_identity_sha256,
+        )
+        legacy_fields = (
+            self.attested_training_row_count,
+            self.claimed_training_corpus_input_sha256,
+            self.claim_verification,
+            self.published_prediction_artifact_id,
+            self.published_prediction_artifact_sha256,
+        )
+        research_fields = (
+            self.research_fixture_identity_sha256,
+            self.research_training_rows_sha256,
+            self.research_training_row_count,
+        )
+        if self.provenance_class == "canonical_context13_fit":
+            if (
+                not _is_sha256(self.verified_training_corpus_input_sha256)
+                or not _is_sha256(self.training_corpus_source_identity_sha256)
+                or not isinstance(self.verified_training_row_count, int)
+                or isinstance(self.verified_training_row_count, bool)
+                or self.verified_training_row_count < 1
+                or any(value is not None for value in (*legacy_fields, *research_fields))
+            ):
+                raise ValueError(
+                    "canonical Context 1.3 fits require verified corpus fields only"
+                )
+        elif self.provenance_class == "legacy_attested_context13_fit":
+            if (
+                any(value is not None for value in canonical_fields)
+                or not isinstance(self.attested_training_row_count, int)
+                or isinstance(self.attested_training_row_count, bool)
+                or self.attested_training_row_count < 1
+                or self.claim_verification != "unavailable"
+                or self.published_prediction_artifact_id
+                != f"gippyrank.context.annual_predictions.season_{self.target_season}"
+                or not _is_sha256(self.published_prediction_artifact_sha256)
+                or any(value is not None for value in research_fields)
+            ):
+                raise ValueError(
+                    "legacy Context 1.3 fits require unverified attestation fields only"
+                )
+        else:
+            if (
+                any(value is not None for value in (*canonical_fields, *legacy_fields))
+                or (self.research_fixture_identity_sha256 is None)
+                == (self.research_training_rows_sha256 is None)
+            ):
+                raise ValueError(
+                    "research Context 1.3 fits require exactly one explicit research identity"
+                )
+            if self.research_fixture_identity_sha256 is not None:
+                if self.research_training_row_count is not None:
+                    raise ValueError("research fixtures cannot claim a training-row count")
+            elif (
+                not isinstance(self.research_training_row_count, int)
+                or isinstance(self.research_training_row_count, bool)
+                or self.research_training_row_count < 1
+            ):
+                raise ValueError("research row fits require their row count")
         if sha256_json(self.identity_payload()) != self.source_identity_sha256:
             raise ValueError("Context 1.3 fitted-model source identity hash is inconsistent")
 
@@ -682,10 +758,17 @@ class Context13FittedModelSource:
             "model_metadata_sha256": self.model_metadata_sha256,
             "fitted_instance_identity_sha256": self.fitted_instance_identity_sha256,
             "frozen_model_spec_identity_sha256": self.frozen_model_spec_identity_sha256,
-            "training_corpus_input_sha256": self.training_corpus_input_sha256,
-            "training_row_count": self.training_row_count,
+            "verified_training_corpus_input_sha256": self.verified_training_corpus_input_sha256,
+            "verified_training_row_count": self.verified_training_row_count,
             "training_corpus_source_identity_sha256": self.training_corpus_source_identity_sha256,
-            "training_corpus_provenance_class": self.training_corpus_provenance_class,
+            "attested_training_row_count": self.attested_training_row_count,
+            "claimed_training_corpus_input_sha256": self.claimed_training_corpus_input_sha256,
+            "claim_verification": self.claim_verification,
+            "published_prediction_artifact_id": self.published_prediction_artifact_id,
+            "published_prediction_artifact_sha256": self.published_prediction_artifact_sha256,
+            "research_fixture_identity_sha256": self.research_fixture_identity_sha256,
+            "research_training_rows_sha256": self.research_training_rows_sha256,
+            "research_training_row_count": self.research_training_row_count,
             "provenance_class": self.provenance_class,
             "provenance_schema_version": self.provenance_schema_version,
         }
@@ -693,9 +776,38 @@ class Context13FittedModelSource:
     def to_metadata(self) -> dict[str, object]:
         return {
             **self.identity_payload(),
-            "training_corpus_row_count": self.training_row_count,
+            "training_lineage": self.training_lineage_metadata(),
             "reproducibility_level": self.reproducibility_level,
             "source_identity_sha256": self.source_identity_sha256,
+        }
+
+    def training_lineage_metadata(self) -> dict[str, object]:
+        if self.provenance_class == "canonical_context13_fit":
+            return {
+                "kind": "verified_canonical",
+                "verified_training_corpus_input_sha256": self.verified_training_corpus_input_sha256,
+                "training_corpus_source_identity_sha256": self.training_corpus_source_identity_sha256,
+                "verified_training_row_count": self.verified_training_row_count,
+            }
+        if self.provenance_class == "legacy_attested_context13_fit":
+            return {
+                "kind": "legacy_attested_unverified",
+                "verified_training_corpus_input_sha256": None,
+                "attested_training_row_count": self.attested_training_row_count,
+                "claimed_training_corpus_input_sha256": self.claimed_training_corpus_input_sha256,
+                "claim_verification": self.claim_verification,
+                "published_prediction_artifact_id": self.published_prediction_artifact_id,
+                "published_prediction_artifact_sha256": self.published_prediction_artifact_sha256,
+            }
+        if self.research_fixture_identity_sha256 is not None:
+            return {
+                "kind": "research_fixture",
+                "research_fixture_identity_sha256": self.research_fixture_identity_sha256,
+            }
+        return {
+            "kind": "research_training_rows",
+            "research_training_rows_sha256": self.research_training_rows_sha256,
+            "research_training_row_count": self.research_training_row_count,
         }
 
     @property
@@ -757,12 +869,28 @@ class Context13FittedModelSource:
                 )
         elif training_corpus_source is not None:
             raise ValueError("non-canonical fit provenance cannot carry a canonical corpus source")
-        if training_rows is not None and (
-            self.training_row_count != len(training_rows)
-            or self.training_corpus_input_sha256
-            != _training_corpus_input_sha256(training_rows)
+        if self.provenance_class == "legacy_attested_context13_fit" and training_rows is not None:
+            raise ValueError("legacy Context 1.3 corpus rows are not independently verified")
+        if (
+            self.provenance_class == "research_only"
+            and training_rows is not None
+            and (
+                self.research_training_rows_sha256 is None
+                or self.research_training_row_count != len(training_rows)
+                or self.research_training_rows_sha256
+                != _training_corpus_input_sha256(training_rows)
+            )
         ):
-            raise ValueError("fitted-model source training-corpus identity does not match its rows")
+            raise ValueError("research fit input rows differ from their recorded identity")
+
+    @property
+    def attested_or_research_row_count(self) -> int | None:
+        """Return a display-only row count without implying corpus verification."""
+        if self.provenance_class == "canonical_context13_fit":
+            return self.verified_training_row_count
+        if self.provenance_class == "legacy_attested_context13_fit":
+            return self.attested_training_row_count
+        return self.research_training_row_count
 
     @classmethod
     def research_only(
@@ -778,7 +906,7 @@ class Context13FittedModelSource:
         validate_context13_fitted_model(model, instance)
         instance_identity = sha256_json(instance.metadata())
         model_sha = sha256_json(model.metadata())
-        training_identity = sha256_json(
+        fixture_identity = sha256_json(
             {
                 "fixture_id": fixture_id,
                 "model_metadata_sha256": model_sha,
@@ -794,10 +922,17 @@ class Context13FittedModelSource:
             model_metadata_sha256=model_sha,
             fitted_instance_identity_sha256=instance_identity,
             frozen_model_spec_identity_sha256=context13_semantic_specification_sha256(),
-            training_corpus_input_sha256=training_identity,
-            training_row_count=0,
+            verified_training_corpus_input_sha256=None,
+            verified_training_row_count=None,
             training_corpus_source_identity_sha256=None,
-            training_corpus_provenance_class="research_only",
+            attested_training_row_count=None,
+            claimed_training_corpus_input_sha256=None,
+            claim_verification=None,
+            published_prediction_artifact_id=None,
+            published_prediction_artifact_sha256=None,
+            research_fixture_identity_sha256=fixture_identity,
+            research_training_rows_sha256=None,
+            research_training_row_count=None,
             provenance_class="research_only",
             _construction_token=_CONTEXT13_FITTED_SOURCE_TOKEN,
         )
@@ -1285,7 +1420,7 @@ def context13_semantic_specification() -> dict[str, object]:
     validation, and promotion lifecycle metadata.
     """
     return {
-        "semantic_schema_version": 1,
+        "semantic_schema_version": 2,
         **model_specification().metadata(),
         "ordered_model_features": list(MODEL_FEATURE_NAMES),
         "location_feature_names": list(LOCATION_FEATURE_NAMES),
@@ -1307,11 +1442,64 @@ def context13_semantic_specification() -> dict[str, object]:
         "penalty": FROZEN_PENALTY,
         "optimizer": {
             "method": "L-BFGS-B",
-            "initial_maxiter": 500,
-            "retry_maxiter": 2000,
-            "retry_only_on_iteration_limit": True,
-            "ftol": 1e-10,
-            "gtol": 1e-6,
+            "maxiter": preseason_semantics.DIRECT_RANK_OPTIMIZER_MAXITER,
+            "ftol": preseason_semantics.DIRECT_RANK_OPTIMIZER_FTOL,
+            "gtol": preseason_semantics.DIRECT_RANK_OPTIMIZER_GTOL,
+            "retry": {
+                "trigger_message": CONTEXT13_OPTIMIZER_ITERATION_LIMIT_MESSAGE,
+                "maxiter": CONTEXT13_OPTIMIZER_RETRY_MAXITER,
+                "attempts": 1,
+                "restart_from_initialization": True,
+                "otherwise": "raise optimizer failure",
+            },
+        },
+        "fit_algorithm_semantics_version": 1,
+        "optimizer_initialization": {
+            "lag_beta_1": preseason_semantics.DIRECT_RANK_INITIAL_LAG_BETA,
+            "remaining_beta_coefficients": 0.0,
+            "gamma_intercept": {
+                "value": float(np.log(preseason_semantics.DIRECT_RANK_INITIAL_SCALE)),
+                "scale_before_log": preseason_semantics.DIRECT_RANK_INITIAL_SCALE,
+            },
+            "remaining_gamma_coefficients": 0.0,
+        },
+        "parameter_bounds": {
+            "beta": "unbounded except feature-placement fixed-zero coefficients",
+            "gamma_coefficients": list(
+                preseason_semantics.DIRECT_RANK_GAMMA_COEFFICIENT_BOUNDS
+            ),
+            "feature-placement_fixed_zero": {
+                "bounds": list(
+                    preseason_semantics.DIRECT_RANK_FIXED_ZERO_COEFFICIENT_BOUNDS
+                ),
+                "location_numeric_and_missingness": "features outside location_feature_names",
+                "scale_numeric_and_missingness": "features outside scale_feature_names",
+            },
+        },
+        "scale_link": {
+            "formula": "minimum_scale + exp(clip(eta, lower, upper))",
+            "eta_clip_bounds": list(
+                preseason_semantics.DIRECT_RANK_LOG_SCALE_CLIP_BOUNDS
+            ),
+        },
+        "regularization": {
+            "normalization": "divide by number of training rows",
+            "beta_objective": "penalty * sum(beta ** 2) / N",
+            "beta_gradient": "2 * penalty * beta / N",
+            "beta_regularization_weight": (
+                preseason_semantics.DIRECT_RANK_BETA_REGULARIZATION_WEIGHT
+            ),
+            "beta_includes": "lag and location coefficients",
+            "gamma_objective": (
+                "penalty * gamma_regularization_weight * sum(gamma[1:] ** 2) / N"
+            ),
+            "gamma_gradient": (
+                "2 * penalty * gamma_regularization_weight * gamma[1:] / N"
+            ),
+            "gamma_regularization_weight": (
+                preseason_semantics.DIRECT_RANK_GAMMA_REGULARIZATION_WEIGHT
+            ),
+            "gamma_intercept_penalized": False,
         },
         "preprocessing": {
             "missing_values": "training median imputation",
@@ -1345,10 +1533,11 @@ def model_specification_metadata() -> dict[str, object]:
     """Return semantic Context 1.3 specification plus separate lifecycle state."""
     return {
         **context13_semantic_specification(),
+        "semantic_model_spec_identity_sha256": context13_semantic_specification_sha256(),
         **context13_lifecycle_metadata(),
         "context_features_affect": "location_only",
         "history_features_affect": ["location", "scale"],
-        "optimizer_retry": "retry with maxiter=2000 only after iteration-limit failure",
+        "optimizer_retry": "retry once with maxiter=2000 after iteration-limit failure",
     }
 
 
@@ -1385,9 +1574,9 @@ def fit_model(
     try:
         model = fit()
     except RuntimeError as error:
-        if "ITERATIONS REACHED LIMIT" not in str(error):
+        if CONTEXT13_OPTIMIZER_ITERATION_LIMIT_MESSAGE not in str(error):
             raise
-        model = fit({"maxiter": 2000})
+        model = fit({"maxiter": CONTEXT13_OPTIMIZER_RETRY_MAXITER})
     return model, AnnualFittedInstance(
         "context_prior",
         CONTEXT_PRIOR_CANDIDATE_VERSION
@@ -1455,18 +1644,25 @@ def fit_model_with_source(
         model_metadata_sha256=model_sha,
         fitted_instance_identity_sha256=instance_sha,
         frozen_model_spec_identity_sha256=context13_semantic_specification_sha256(),
-        training_corpus_input_sha256=corpus_sha,
-        training_row_count=len(rows),
+        verified_training_corpus_input_sha256=(
+            corpus_sha if training_corpus_source is not None else None
+        ),
+        verified_training_row_count=len(rows) if training_corpus_source is not None else None,
         training_corpus_source_identity_sha256=(
             training_corpus_source.source_identity_sha256
             if training_corpus_source is not None
             else None
         ),
-        training_corpus_provenance_class=(
-            "canonical_reproducible"
-            if training_corpus_source is not None
-            else "research_only"
+        attested_training_row_count=None,
+        claimed_training_corpus_input_sha256=None,
+        claim_verification=None,
+        published_prediction_artifact_id=None,
+        published_prediction_artifact_sha256=None,
+        research_fixture_identity_sha256=None,
+        research_training_rows_sha256=(
+            corpus_sha if training_corpus_source is None else None
         ),
+        research_training_row_count=len(rows) if training_corpus_source is None else None,
         provenance_class=provenance_class,
         _construction_token=_CONTEXT13_FITTED_SOURCE_TOKEN,
     )
@@ -1487,6 +1683,7 @@ def load_validated_context13_fitted_model(
     training_rows: Sequence[TeamSeason] | None = None,
     training_corpus_source: Context13TrainingCorpusSource | None = None,
     fitted_source_path: str | Path | None = None,
+    prediction_artifact_path: str | Path | None = None,
 ) -> tuple[DirectRankModel, AnnualFittedInstance, Context13FittedModelSource]:
     """Load an annual model only after validating its authoritative fit source.
 
@@ -1587,17 +1784,60 @@ def load_validated_context13_fitted_model(
             frozen_model_spec_identity_sha256=str(
                 source_metadata["frozen_model_spec_identity_sha256"]
             ),
-            training_corpus_input_sha256=str(
-                source_metadata["training_corpus_input_sha256"]
+            verified_training_corpus_input_sha256=(
+                None
+                if source_metadata.get("verified_training_corpus_input_sha256") is None
+                else str(source_metadata["verified_training_corpus_input_sha256"])
             ),
-            training_row_count=int(source_metadata["training_row_count"]),
+            verified_training_row_count=(
+                None
+                if source_metadata.get("verified_training_row_count") is None
+                else int(source_metadata["verified_training_row_count"])
+            ),
             training_corpus_source_identity_sha256=(
                 None
                 if source_metadata.get("training_corpus_source_identity_sha256") is None
                 else str(source_metadata["training_corpus_source_identity_sha256"])
             ),
-            training_corpus_provenance_class=str(
-                source_metadata["training_corpus_provenance_class"]
+            attested_training_row_count=(
+                None
+                if source_metadata.get("attested_training_row_count") is None
+                else int(source_metadata["attested_training_row_count"])
+            ),
+            claimed_training_corpus_input_sha256=(
+                None
+                if source_metadata.get("claimed_training_corpus_input_sha256") is None
+                else str(source_metadata["claimed_training_corpus_input_sha256"])
+            ),
+            claim_verification=(
+                None
+                if source_metadata.get("claim_verification") is None
+                else str(source_metadata["claim_verification"])
+            ),
+            published_prediction_artifact_id=(
+                None
+                if source_metadata.get("published_prediction_artifact_id") is None
+                else str(source_metadata["published_prediction_artifact_id"])
+            ),
+            published_prediction_artifact_sha256=(
+                None
+                if source_metadata.get("published_prediction_artifact_sha256") is None
+                else str(source_metadata["published_prediction_artifact_sha256"])
+            ),
+            research_fixture_identity_sha256=(
+                None
+                if source_metadata.get("research_fixture_identity_sha256") is None
+                else str(source_metadata["research_fixture_identity_sha256"])
+            ),
+            research_training_rows_sha256=(
+                None
+                if source_metadata.get("research_training_rows_sha256") is None
+                else str(source_metadata["research_training_rows_sha256"])
+            ),
+            research_training_row_count=(
+                None
+                if source_metadata.get("research_training_row_count") is None
+                else int(source_metadata["research_training_row_count"])
             ),
             provenance_class=str(source_metadata["provenance_class"]),
             provenance_schema_version=int(source_metadata["provenance_schema_version"]),
@@ -1611,6 +1851,17 @@ def load_validated_context13_fitted_model(
         raise ValueError(
             "a fitted-source sidecar cannot claim canonical fit provenance without rebuilding the corpus"
         )
+    prediction_path = (
+        Path(prediction_artifact_path)
+        if prediction_artifact_path is not None
+        else Path(model_artifact_path).with_name("predictions.csv")
+    )
+    try:
+        prediction_bytes = prediction_path.read_bytes()
+    except OSError as error:
+        raise ValueError("retained Context 1.3 prediction artifact is unreadable") from error
+    if hashlib.sha256(prediction_bytes).hexdigest() != source.published_prediction_artifact_sha256:
+        raise ValueError("retained Context 1.3 prediction artifact differs from its fit source")
     model = _direct_rank_model_from_metadata(model_artifact["model"])
     if sha256_json(model_artifact["model"]) != sha256_json(model.metadata()):
         raise ValueError("Context 1.3 annual model metadata cannot be reconstructed")

@@ -20,6 +20,18 @@ from scipy.stats import norm, t
 EPSILON = 1e-6
 QUADRATURE_POINTS = 12
 MULTI_LAG_QUADRATURE_POINTS = 2
+# Named fit semantics are also included in the frozen Context 1.3 semantic
+# specification. Keep the optimizer and the durable contract on one source.
+DIRECT_RANK_INITIAL_LAG_BETA = 0.55
+DIRECT_RANK_INITIAL_SCALE = 0.7
+DIRECT_RANK_LOG_SCALE_CLIP_BOUNDS = (-5.0, 4.0)
+DIRECT_RANK_GAMMA_COEFFICIENT_BOUNDS = (-5.0, 4.0)
+DIRECT_RANK_FIXED_ZERO_COEFFICIENT_BOUNDS = (0.0, 0.0)
+DIRECT_RANK_BETA_REGULARIZATION_WEIGHT = 1.0
+DIRECT_RANK_GAMMA_REGULARIZATION_WEIGHT = 0.25
+DIRECT_RANK_OPTIMIZER_MAXITER = 500
+DIRECT_RANK_OPTIMIZER_FTOL = 1e-10
+DIRECT_RANK_OPTIMIZER_GTOL = 1e-6
 
 
 def deterministic_quadrature(
@@ -351,7 +363,7 @@ class DirectRankModel:
             )
             base_locations = x @ beta[lag_count:]
             eta = x @ gamma
-            exp_eta = np.exp(np.clip(eta, -5, 4))
+            exp_eta = np.exp(np.clip(eta, *DIRECT_RANK_LOG_SCALE_CLIP_BOUNDS))
             scales = minimum_scale + exp_eta
             locations = base_locations[:, None] + lags @ beta[:lag_count]
             if family == "normal":
@@ -368,7 +380,10 @@ class DirectRankModel:
             log_mixture = logsumexp(densities, axis=2)
             target_log_probability = log_mixture - np.log(lag_counts[:, None])
             losses = -(target_log_probability * target_mask).sum(axis=1) / target_counts
-            regularizer = penalty * (np.sum(beta**2) + 0.25 * np.sum(gamma[1:] ** 2))
+            regularizer = penalty * (
+                DIRECT_RANK_BETA_REGULARIZATION_WEIGHT * np.sum(beta**2)
+                + DIRECT_RANK_GAMMA_REGULARIZATION_WEIGHT * np.sum(gamma[1:] ** 2)
+            )
             objective = float(
                 np.dot(weights, losses) / weight_total + regularizer / len(rows)
             )
@@ -425,8 +440,20 @@ class DirectRankModel:
                     scale_score * exp_eta[:, None, None] * target_weight, axis=(1, 2)
                 )
             )
-            beta_gradient += 2 * penalty * beta / len(rows)
-            gamma_gradient[1:] += 0.5 * penalty * gamma[1:] / len(rows)
+            beta_gradient += (
+                2
+                * DIRECT_RANK_BETA_REGULARIZATION_WEIGHT
+                * penalty
+                * beta
+                / len(rows)
+            )
+            gamma_gradient[1:] += (
+                2
+                * DIRECT_RANK_GAMMA_REGULARIZATION_WEIGHT
+                * penalty
+                * gamma[1:]
+                / len(rows)
+            )
             return objective, np.r_[beta_gradient, gamma_gradient]
 
         def objective(theta: np.ndarray) -> float:
@@ -436,15 +463,21 @@ class DirectRankModel:
             return objective_gradient(theta)[1]
 
         initial_beta = np.zeros(x.shape[1] + lag_count)
-        initial_beta[0] = 0.55
+        initial_beta[0] = DIRECT_RANK_INITIAL_LAG_BETA
         initial_gamma = np.zeros(x.shape[1])
-        initial_gamma[0] = np.log(0.7)
-        options = {"maxiter": 500, "ftol": 1e-10, "gtol": 1e-6}
+        initial_gamma[0] = np.log(DIRECT_RANK_INITIAL_SCALE)
+        options = {
+            "maxiter": DIRECT_RANK_OPTIMIZER_MAXITER,
+            "ftol": DIRECT_RANK_OPTIMIZER_FTOL,
+            "gtol": DIRECT_RANK_OPTIMIZER_GTOL,
+        }
         options.update(optimizer_options or {})
         beta_bounds: list[tuple[float | None, float | None]] = [(None, None)] * len(
             initial_beta
         )
-        gamma_bounds: list[tuple[float | None, float | None]] = [(-5.0, 4.0)] * len(
+        gamma_bounds: list[tuple[float | None, float | None]] = [
+            DIRECT_RANK_GAMMA_COEFFICIENT_BOUNDS
+        ] * len(
             initial_gamma
         )
         # The design matrix is intercept, numeric features, then their missingness
@@ -455,10 +488,12 @@ class DirectRankModel:
             columns = (1 + feature_index, 1 + len(feature_names) + feature_index)
             if feature_name not in location_features:
                 for column in columns:
-                    beta_bounds[lag_count + column] = (0.0, 0.0)
+                    beta_bounds[lag_count + column] = (
+                        DIRECT_RANK_FIXED_ZERO_COEFFICIENT_BOUNDS
+                    )
             if feature_name not in scale_features:
                 for column in columns:
-                    gamma_bounds[column] = (0.0, 0.0)
+                    gamma_bounds[column] = DIRECT_RANK_FIXED_ZERO_COEFFICIENT_BOUNDS
         result = minimize(
             objective,
             np.r_[initial_beta, initial_gamma],
@@ -519,7 +554,10 @@ class DirectRankModel:
         lags = product_quadrature(distributions, points)
         base_location = float(x @ self.beta[self.lag_count :])
         locations = base_location + lags @ self.beta[: self.lag_count]
-        scale = float(self.minimum_scale + np.exp(np.clip(x @ self.gamma, -5, 4)))
+        scale = float(
+            self.minimum_scale
+            + np.exp(np.clip(x @ self.gamma, *DIRECT_RANK_LOG_SCALE_CLIP_BOUNDS))
+        )
         return locations, scale
 
     def pmf(

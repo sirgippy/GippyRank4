@@ -12,6 +12,7 @@ import numpy as np
 import pytest
 
 import gippyrank.context_prior_v1_3 as candidate_module
+import gippyrank.preseason as preseason_module
 from gippyrank.context_prior import AnnualFittedInstance, InferenceRow
 from gippyrank.context_prior_v1_3 import (
     CONTEXT13_PROVENANCE_SCHEMA_VERSION,
@@ -249,6 +250,52 @@ def test_context13_semantic_hash_changes_with_model_semantics(monkeypatch) -> No
     assert context13_semantic_specification_sha256() != original
 
 
+@pytest.mark.parametrize(
+    ("constant", "changed"),
+    [
+        ("DIRECT_RANK_INITIAL_LAG_BETA", 0.56),
+        ("DIRECT_RANK_INITIAL_SCALE", 0.71),
+        ("DIRECT_RANK_GAMMA_COEFFICIENT_BOUNDS", (-4.0, 4.0)),
+        ("DIRECT_RANK_FIXED_ZERO_COEFFICIENT_BOUNDS", (-1e-12, 1e-12)),
+        ("DIRECT_RANK_LOG_SCALE_CLIP_BOUNDS", (-5.0, 3.9)),
+        ("DIRECT_RANK_BETA_REGULARIZATION_WEIGHT", 1.01),
+        ("DIRECT_RANK_GAMMA_REGULARIZATION_WEIGHT", 0.26),
+        ("DIRECT_RANK_OPTIMIZER_MAXITER", 501),
+    ],
+)
+def test_context13_semantic_hash_tracks_fit_algorithm_contract(
+    monkeypatch, constant: str, changed: object
+) -> None:
+    original = context13_semantic_specification_sha256()
+    spec = context13_semantic_specification()
+    regularization = spec["regularization"]
+    assert regularization["beta_objective"] == "penalty * sum(beta ** 2) / N"
+    assert regularization["beta_gradient"] == "2 * penalty * beta / N"
+    assert regularization["gamma_objective"] == (
+        "penalty * gamma_regularization_weight * sum(gamma[1:] ** 2) / N"
+    )
+    assert regularization["gamma_gradient"] == (
+        "2 * penalty * gamma_regularization_weight * gamma[1:] / N"
+    )
+    assert regularization["gamma_intercept_penalized"] is False
+    monkeypatch.setattr(preseason_module, constant, changed)
+    assert context13_semantic_specification_sha256() != original
+
+
+def test_context13_semantic_hash_tracks_optimizer_retry_contract(monkeypatch) -> None:
+    original = context13_semantic_specification_sha256()
+    optimizer = context13_semantic_specification()["optimizer"]
+    assert optimizer["retry"] == {
+        "trigger_message": "ITERATIONS REACHED LIMIT",
+        "maxiter": 2000,
+        "attempts": 1,
+        "restart_from_initialization": True,
+        "otherwise": "raise optimizer failure",
+    }
+    monkeypatch.setattr(candidate_module, "CONTEXT13_OPTIMIZER_RETRY_MAXITER", 2001)
+    assert context13_semantic_specification_sha256() != original
+
+
 def test_canonical_training_loader_mints_typed_complete_corpus_source(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -363,7 +410,10 @@ def test_canonical_training_loader_mints_typed_complete_corpus_source(
         training_corpus_source=corpus_source,
     )
     assert canonical_fit.provenance_class == "canonical_context13_fit"
-    assert canonical_fit.training_corpus_provenance_class == "canonical_reproducible"
+    assert canonical_fit.verified_training_corpus_input_sha256 == (
+        corpus_source.training_corpus_input_sha256
+    )
+    assert canonical_fit.verified_training_row_count == len(built_rows)
     assert canonical_fit.training_corpus_source_identity_sha256 == (
         corpus_source.source_identity_sha256
     )
@@ -467,7 +517,9 @@ def test_only_typed_canonical_corpus_source_can_mint_canonical_fit(
         trained_through_season=2025,
     )
     assert arbitrary_source_fit[2].provenance_class == "research_only"
-    assert arbitrary_source_fit[2].training_row_count == len(rows)
+    assert arbitrary_source_fit[2].research_training_row_count == len(rows)
+    assert arbitrary_source_fit[2].research_training_rows_sha256
+    assert arbitrary_source_fit[2].verified_training_corpus_input_sha256 is None
     with pytest.raises(TypeError, match="typed training-corpus source"):
         fit_model_with_source(
             rows,
