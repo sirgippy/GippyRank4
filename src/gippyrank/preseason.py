@@ -17,9 +17,19 @@ from scipy.optimize import minimize
 from scipy.special import logsumexp
 from scipy.stats import norm, t
 
-EPSILON = 1e-6
+RANK_PERCENTILE_MIDPOINT_OFFSET = 0.5
+RANK_TRANSFORM_EPSILON = 1e-6
+RANK_BIN_LOWER_ENDPOINT = -np.inf
+RANK_BIN_UPPER_ENDPOINT = np.inf
+RANK_PMF_MASS_FLOOR = 0.0
+RANK_TRANSFORM_SEMANTICS_VERSION = 1
+RANK_PMF_INTEGRATION_SEMANTICS_VERSION = 1
+GENERIC_RANK_PRIOR_MOMENTS_VERSION = 1
 QUADRATURE_POINTS = 12
 MULTI_LAG_QUADRATURE_POINTS = 2
+DETERMINISTIC_QUADRATURE_METHOD = (
+    "sort empirical values then retain evenly spaced order statistics"
+)
 # Named fit semantics are also included in the frozen Context 1.3 semantic
 # specification. Keep the optimizer and the durable contract on one source.
 DIRECT_RANK_INITIAL_LAG_BETA = 0.55
@@ -108,18 +118,29 @@ def rank_sample(row: dict[str, str]) -> np.ndarray:
 
 def rank_to_z(ranks: np.ndarray, population: int) -> np.ndarray:
     """Map actual ranks to an unbounded representation of rank percentile."""
+    if RANK_TRANSFORM_SEMANTICS_VERSION != 1:
+        raise ValueError("unsupported rank-coordinate transform semantics")
     percentile = np.clip(
-        (np.asarray(ranks, dtype=float) - 0.5) / population, EPSILON, 1 - EPSILON
+        (np.asarray(ranks, dtype=float) - RANK_PERCENTILE_MIDPOINT_OFFSET)
+        / population,
+        RANK_TRANSFORM_EPSILON,
+        1 - RANK_TRANSFORM_EPSILON,
     )
     return np.log(percentile) - np.log1p(-percentile)
 
 
 def rank_bin_edges(population: int) -> np.ndarray:
     """Transformed bin boundaries for ranks 1..N, including infinite edges."""
+    if RANK_TRANSFORM_SEMANTICS_VERSION != 1:
+        raise ValueError("unsupported rank-coordinate transform semantics")
     if population < 1:
         raise ValueError("population must be positive")
     interior = np.arange(1, population, dtype=float) / population
-    return np.r_[-np.inf, np.log(interior) - np.log1p(-interior), np.inf]
+    return np.r_[
+        RANK_BIN_LOWER_ENDPOINT,
+        np.log(interior) - np.log1p(-interior),
+        RANK_BIN_UPPER_ENDPOINT,
+    ]
 
 
 def conditional_rank_mixture_pmf(
@@ -136,6 +157,8 @@ def conditional_rank_mixture_pmf(
     location-only research transformations.  For valid Normal inputs it keeps
     the existing Context model's operation order and normalization unchanged.
     """
+    if RANK_PMF_INTEGRATION_SEMANTICS_VERSION != 1:
+        raise ValueError("unsupported rank PMF integration semantics")
     points = np.asarray(locations, dtype=float)
     if points.ndim != 1 or not len(points) or not np.isfinite(points).all():
         raise ValueError("conditional location points must be a finite vector")
@@ -162,7 +185,7 @@ def conditional_rank_mixture_pmf(
         cdf = t.cdf(standardized_edges, degrees_of_freedom)
     else:
         raise ValueError(f"unsupported conditional distribution family: {family}")
-    masses = np.maximum(np.diff(cdf, axis=1), 0.0)
+    masses = np.maximum(np.diff(cdf, axis=1), RANK_PMF_MASS_FLOOR)
     pmf = np.mean(masses, axis=0)
     total = float(pmf.sum())
     if not np.isfinite(pmf).all() or np.any(pmf < 0) or total <= 0:
@@ -172,10 +195,14 @@ def conditional_rank_mixture_pmf(
 
 def normal_pmf(location: float, scale: float, population: int, **_: Any) -> np.ndarray:
     """Integrate a Normal coordinate distribution over discrete rank bins."""
+    if RANK_PMF_INTEGRATION_SEMANTICS_VERSION != 1:
+        raise ValueError("unsupported rank PMF integration semantics")
     if scale <= 0:
         raise ValueError("scale must be positive")
     edges = rank_bin_edges(population)
-    pmf = np.maximum(np.diff(norm.cdf((edges - location) / scale)), 0.0)
+    pmf = np.maximum(
+        np.diff(norm.cdf((edges - location) / scale)), RANK_PMF_MASS_FLOOR
+    )
     return pmf / pmf.sum()
 
 
@@ -610,7 +637,7 @@ class DirectRankModel:
             "quadrature_points": QUADRATURE_POINTS
             if self.lag_count == 1
             else MULTI_LAG_QUADRATURE_POINTS,
-            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_method": DETERMINISTIC_QUADRATURE_METHOD,
             "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
         }
         if self.location_feature_names is not None:
@@ -632,6 +659,8 @@ class GenericRankPrior:
     def fit(
         cls, rows: list[TeamSeason], minimum_scale: float = 0.10
     ) -> GenericRankPrior:
+        if GENERIC_RANK_PRIOR_MOMENTS_VERSION != 1:
+            raise ValueError("unsupported generic rank-prior moment semantics")
         if not rows:
             raise ValueError("cannot fit cold-start prior without historical rows")
         # Equal team-season weight: every team's empirical constituent outcomes

@@ -7,6 +7,7 @@ import hashlib
 import importlib
 import json
 import sys
+from collections import Counter
 from dataclasses import replace
 from pathlib import Path
 
@@ -44,13 +45,13 @@ from gippyrank.context_prior_v1_4_candidate import (
     candidate_spec_sha256,
     construct_candidate_prior,
     load_candidate_spec,
-    load_research_history_annual_fixture,
-    load_validated_history_annual_artifact,
     sha256_json,
 )
 from gippyrank.history_annual_v1_1 import (
     build_canonical_history_annual,
     history11_semantic_specification_sha256,
+    load_research_history_annual_fixture,
+    load_validated_history_annual_artifact,
 )
 from gippyrank.preseason import (
     DirectRankModel,
@@ -278,7 +279,9 @@ def _write_history_2027_fixture(root: Path) -> tuple[Path, Path, Path]:
     return prediction_path, instance_path, attestation_path
 
 
-def _write_canonical_history_2027_inputs(root: Path) -> None:
+def _write_canonical_history_2027_inputs(
+    root: Path, *, include_generic: bool = False
+) -> None:
     rank_path = root / "data/processed/modeling/team_season_rank_distributions.csv"
     feature_path = root / "data/processed/preseason/team_season_features.csv"
     rank_path.parent.mkdir(parents=True)
@@ -322,7 +325,7 @@ def _write_canonical_history_2027_inputs(root: Path) -> None:
             "team_id": f"history-team-{index}",
             "team_name": f"History Team {index}",
         }
-        for index in range(3)
+        for index in range(4 if include_generic else 3)
     ]
     with feature_path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(features[0]), lineterminator="\n")
@@ -333,7 +336,7 @@ def _write_canonical_history_2027_inputs(root: Path) -> None:
 def test_future_history_builder_matches_the_history_1_1_annual_procedure(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    _write_canonical_history_2027_inputs(tmp_path)
+    _write_canonical_history_2027_inputs(tmp_path, include_generic=True)
     monkeypatch.setattr(history_annual_module, "_CANONICAL_HISTORY_ROOT", tmp_path)
     script_path = str(ROOT / "scripts")
     if script_path not in sys.path:
@@ -367,6 +370,11 @@ def test_future_history_builder_matches_the_history_1_1_annual_procedure(
     assert predictions == expected_path.read_bytes()
     assert json.loads(json.dumps(fitted["model"])) == json.loads(json.dumps(model.metadata()))
     assert fitted["trained_through_season"] == instance.trained_through_season
+    assert Counter(row["prior_method"] for row in expected) == {
+        "same_subdivision_lag1": 2,
+        "learned_fcs_to_fbs_transition": 1,
+        "generic_fbs_cold_start": 1,
+    }
 
 
 def _fitted_input(
@@ -1065,6 +1073,44 @@ def test_future_history_annual_source_builds_a_frozen_2027_cold_start(
     assert serialized["fallback_source"]["source_training_input_source_identity_sha256"] == (
         source.training_input_source_identity_sha256
     )
+
+
+def test_future_history_generic_fallback_preserves_the_source_pmf(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_canonical_history_2027_inputs(tmp_path, include_generic=True)
+    monkeypatch.setattr(history_annual_module, "_CANONICAL_HISTORY_ROOT", tmp_path)
+    annual = tmp_path / "data/processed/preseason/history/annual/2027"
+    build_canonical_history_annual(2027, annual)
+    source = load_validated_history_annual_artifact(
+        annual / "predictions.csv",
+        annual / "fitted_instance.json",
+        target_season=2027,
+        trained_through_season=2026,
+    )
+    fallback = Context13FallbackSource.from_history_annual_source(
+        source=source,
+        target_season=2027,
+        trained_through_season=2026,
+        team_id="history-team-3",
+        team_name="History Team 3",
+        population=4,
+        cold_start_reason="no_prior_rank_distribution",
+    )
+    context_instance = _instance(target_season=2027, trained_through_season=2026)
+    candidate = construct_candidate_prior(
+        Context13PriorInput.cold_start(
+            fitted_instance=context_instance,
+            fitted_model_source=_research_fit_source(_model(), context_instance),
+            transfer_provenance=_provenance(
+                season=2027, team_id="history-team-3", population=4
+            ),
+            fallback_source=fallback,
+        )
+    )
+    assert fallback.method_identity == "generic_fbs_cold_start"
+    assert candidate.pmf.tobytes() == fallback.pmf.tobytes()
+    assert candidate.component_status == COLD_START_STATUS
 
 
 def test_self_signed_future_history_files_cannot_become_canonical(

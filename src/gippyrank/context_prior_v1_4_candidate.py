@@ -27,6 +27,7 @@ from gippyrank.context_prior_v1_3 import (
     validate_context13_fit_transfer_compatibility,
     validate_context13_fitted_model,
 )
+from gippyrank.history_annual_v1_1 import HistoryAnnualArtifactSource
 from gippyrank.preseason import (
     DirectRankModel,
     conditional_rank_mixture_pmf,
@@ -56,26 +57,6 @@ COLD_START_STATUS = "cold_start_fallback"
 PMF_TOLERANCE = 5e-16
 _CANDIDATE_PRIOR_TOKEN = object()
 _FALLBACK_SOURCE_TOKEN = object()
-_HISTORY_ANNUAL_SOURCE_TOKEN = object()
-_CANONICAL_HISTORY_AUTHORITY_TOKEN = object()
-_RETAINED_HISTORY_AUTHORITY_TOKEN = object()
-_RESEARCH_HISTORY_AUTHORITY_TOKEN = object()
-_HISTORY_2026_PREDICTIONS_SEMANTIC_SHA256 = (
-    "12ab4ee6ba4d75b0cdd5855d9a13a99f9769919683f3d3aee6ecb2a7485ae9b1"
-)
-_HISTORY_2026_MODEL_METADATA_SHA256 = (
-    "159423c81d5f9bc5d12b8ccf65c1e185512a1a5ba73e23fad86108fdebef314d"
-)
-_HISTORY_ANNUAL_LEGACY_SCHEMA_VERSION = 1
-_HISTORY_ANNUAL_CANONICAL_SCHEMA_VERSION = 2
-_HISTORY_1_1_FEATURES = ("lag2_z_mean", "lag3_z_mean", "long_run_z_mean")
-_HISTORY_1_1_PRIOR_METHODS = frozenset(
-    {
-        "same_subdivision_lag1",
-        "learned_fcs_to_fbs_transition",
-        "generic_fbs_cold_start",
-    }
-)
 
 
 def _semantic_contract() -> dict[str, object]:
@@ -145,468 +126,6 @@ def _validate_pmf(pmf: np.ndarray, population: int, label: str) -> np.ndarray:
     result = values.copy()
     result.setflags(write=False)
     return result
-
-
-@dataclass(frozen=True, init=False)
-class HistoryAnnualArtifactSource:
-    """Content-addressed History 1.1 annual source for any rolling-origin season."""
-
-    model_family: str
-    spec_version: str
-    target_season: int
-    trained_through_season: int
-    fitted_instance_identity_sha256: str
-    model_metadata_sha256: str
-    prediction_artifact_sha256: str
-    prediction_semantic_sha256: str
-    population: int
-    team_ids_sha256: str
-    team_rows_sha256: str
-    prior_methods: tuple[str, ...]
-    artifact_id: str
-    provenance_class: str
-    provenance_schema_version: int
-    history_semantic_spec_identity_sha256: str | None
-    training_input_source_identity_sha256: str | None
-    _team_rows_json: str
-    _authority_token: object
-    source_identity_sha256: str
-
-    def __init__(
-        self,
-        *,
-        model_family: str,
-        spec_version: str,
-        target_season: int,
-        trained_through_season: int,
-        fitted_instance_identity_sha256: str,
-        model_metadata_sha256: str,
-        prediction_artifact_sha256: str,
-        prediction_semantic_sha256: str,
-        population: int,
-        team_ids_sha256: str,
-        team_rows_sha256: str,
-        prior_methods: tuple[str, ...],
-        artifact_id: str,
-        provenance_class: str,
-        provenance_schema_version: int,
-        history_semantic_spec_identity_sha256: str | None,
-        training_input_source_identity_sha256: str | None,
-        team_rows_json: str,
-        _construction_token: object = None,
-    ) -> None:
-        if _construction_token is not _HISTORY_ANNUAL_SOURCE_TOKEN:
-            raise TypeError("History annual sources must come from the validated History loader")
-        for name, value in (
-            ("model_family", model_family),
-            ("spec_version", spec_version),
-            ("target_season", target_season),
-            ("trained_through_season", trained_through_season),
-            ("fitted_instance_identity_sha256", fitted_instance_identity_sha256),
-            ("model_metadata_sha256", model_metadata_sha256),
-            ("prediction_artifact_sha256", prediction_artifact_sha256),
-            ("prediction_semantic_sha256", prediction_semantic_sha256),
-            ("population", population),
-            ("team_ids_sha256", team_ids_sha256),
-            ("team_rows_sha256", team_rows_sha256),
-            ("prior_methods", tuple(prior_methods)),
-            ("artifact_id", artifact_id),
-            ("provenance_class", provenance_class),
-            ("provenance_schema_version", provenance_schema_version),
-            ("history_semantic_spec_identity_sha256", history_semantic_spec_identity_sha256),
-            ("training_input_source_identity_sha256", training_input_source_identity_sha256),
-            ("_team_rows_json", team_rows_json),
-        ):
-            object.__setattr__(self, name, value)
-        object.__setattr__(
-            self,
-            "_authority_token",
-            {
-                "canonical_history_1_1_annual_output": _CANONICAL_HISTORY_AUTHORITY_TOKEN,
-                "retained_legacy_history_artifact": _RETAINED_HISTORY_AUTHORITY_TOKEN,
-                "research_history_fixture": _RESEARCH_HISTORY_AUTHORITY_TOKEN,
-            }.get(provenance_class),
-        )
-        object.__setattr__(self, "source_identity_sha256", sha256_json(self.identity_payload()))
-        self.__post_init__()
-
-    def __post_init__(self) -> None:
-        if (
-            self.model_family != "history_prior"
-            or self.spec_version != "1.1"
-            or self.trained_through_season != self.target_season - 1
-            or self.target_season <= 1
-            or self.artifact_id
-            != f"gippyrank.history.annual_predictions.season_{self.target_season}"
-            or self.provenance_class
-            not in {
-                "retained_legacy_history_artifact",
-                "canonical_history_1_1_annual_output",
-                "research_history_fixture",
-            }
-        ):
-            raise ValueError("History annual source has an invalid rolling-origin identity")
-        expected_schema = (
-            _HISTORY_ANNUAL_LEGACY_SCHEMA_VERSION
-            if self.provenance_class == "retained_legacy_history_artifact"
-            else _HISTORY_ANNUAL_CANONICAL_SCHEMA_VERSION
-        )
-        if self.provenance_schema_version != expected_schema:
-            raise ValueError("History annual provenance schema does not match its class")
-        if (
-            self.provenance_class == "retained_legacy_history_artifact"
-            and self.target_season != 2026
-        ) or (
-            self.provenance_class in {
-                "canonical_history_1_1_annual_output",
-                "research_history_fixture",
-            }
-            and self.target_season <= 2026
-        ):
-            raise ValueError("History annual provenance class does not match its source season")
-        if self.provenance_class == "canonical_history_1_1_annual_output":
-            if self._authority_token is not _CANONICAL_HISTORY_AUTHORITY_TOKEN or not _is_sha256(self.history_semantic_spec_identity_sha256) or not _is_sha256(
-                self.training_input_source_identity_sha256
-            ):
-                raise ValueError("canonical History output requires verified build lineage")
-        elif self.provenance_class == "retained_legacy_history_artifact":
-            if self._authority_token is not _RETAINED_HISTORY_AUTHORITY_TOKEN:
-                raise ValueError("retained History authority does not match its class")
-        elif self._authority_token is not _RESEARCH_HISTORY_AUTHORITY_TOKEN:
-            raise ValueError("research History authority does not match its class")
-        if self.provenance_class != "canonical_history_1_1_annual_output" and (
-            self.history_semantic_spec_identity_sha256 is not None
-            or self.training_input_source_identity_sha256 is not None
-        ):
-            raise ValueError("legacy and research History sources cannot claim canonical build lineage")
-        for digest in (
-            self.fitted_instance_identity_sha256,
-            self.model_metadata_sha256,
-            self.prediction_artifact_sha256,
-            self.prediction_semantic_sha256,
-            self.team_ids_sha256,
-            self.team_rows_sha256,
-            self.source_identity_sha256,
-        ):
-            if not _is_sha256(digest):
-                raise ValueError("History annual source hashes must be SHA-256")
-        try:
-            rows = json.loads(self._team_rows_json)
-        except json.JSONDecodeError as error:
-            raise ValueError("History annual source team rows are invalid") from error
-        if (
-            not isinstance(rows, dict)
-            or not rows
-            or len(rows) != self.population
-            or tuple(sorted({str(row.get("prior_method")) for row in rows.values()}))
-            != self.prior_methods
-            or sha256_json(sorted(rows)) != self.team_ids_sha256
-            or sha256_json([rows[key] for key in sorted(rows)]) != self.team_rows_sha256
-        ):
-            raise ValueError("History annual source requires team rows")
-        if sha256_json(self.identity_payload()) != self.source_identity_sha256:
-            raise ValueError("History annual source identity hash is inconsistent")
-
-    def identity_payload(self) -> dict[str, object]:
-        return {
-            "model_family": self.model_family,
-            "spec_version": self.spec_version,
-            "target_season": self.target_season,
-            "trained_through_season": self.trained_through_season,
-            "fitted_instance_identity_sha256": self.fitted_instance_identity_sha256,
-            "model_metadata_sha256": self.model_metadata_sha256,
-            "prediction_artifact_sha256": self.prediction_artifact_sha256,
-            "prediction_semantic_sha256": self.prediction_semantic_sha256,
-            "population": self.population,
-            "team_ids_sha256": self.team_ids_sha256,
-            "team_rows_sha256": self.team_rows_sha256,
-            "prior_methods": list(self.prior_methods),
-            "artifact_id": self.artifact_id,
-            "provenance_class": self.provenance_class,
-            "provenance_schema_version": self.provenance_schema_version,
-            **(
-                {
-                    "history_semantic_spec_identity_sha256": self.history_semantic_spec_identity_sha256,
-                    "training_input_source_identity_sha256": self.training_input_source_identity_sha256,
-                }
-                if self.provenance_class == "canonical_history_1_1_annual_output"
-                else {}
-            ),
-        }
-
-    def to_metadata(self) -> dict[str, object]:
-        return {
-            **self.identity_payload(),
-            "source_identity_sha256": self.source_identity_sha256,
-        }
-
-    def prediction_row(self, team_id: str) -> dict[str, object]:
-        rows = json.loads(self._team_rows_json)
-        try:
-            return dict(rows[team_id])
-        except KeyError as error:
-            raise ValueError("History annual source has no row for the requested team") from error
-
-
-def _validate_history_1_1_model_metadata(model: Mapping[str, object]) -> None:
-    preprocessing = model.get("preprocessing")
-    if not isinstance(preprocessing, dict):
-        raise TypeError("History 1.1 model preprocessing is missing")
-    if (
-        model.get("family") != "normal"
-        or model.get("feature_names") != list(_HISTORY_1_1_FEATURES)
-        or model.get("lag_count") != 1
-        or model.get("degrees_of_freedom") is not None
-        or model.get("penalty") != 0.25
-        or model.get("minimum_scale") != 0.1
-        or model.get("quadrature_points") != 12
-        or model.get("quadrature_method")
-        != "sort empirical values then retain evenly spaced order statistics"
-        or preprocessing.get("feature_names") != list(_HISTORY_1_1_FEATURES)
-    ):
-        raise ValueError("History model identity does not match the frozen 1.1 contract")
-    for key in ("medians", "means", "scales"):
-        values = preprocessing.get(key)
-        if not isinstance(values, dict) or set(values) != set(_HISTORY_1_1_FEATURES):
-            raise ValueError("History 1.1 preprocessing does not match its model features")
-        try:
-            numeric = np.asarray([values[name] for name in _HISTORY_1_1_FEATURES], dtype=float)
-        except (TypeError, ValueError) as error:
-            raise ValueError("History 1.1 preprocessing values are invalid") from error
-        if not np.isfinite(numeric).all() or (key == "scales" and np.any(numeric <= 0)):
-            raise ValueError("History 1.1 preprocessing values are invalid")
-    try:
-        beta = np.asarray(model.get("location_coefficients"), dtype=float)
-        gamma = np.asarray(model.get("log_scale_coefficients"), dtype=float)
-    except (TypeError, ValueError) as error:
-        raise ValueError("History 1.1 model coefficients are invalid") from error
-    if beta.shape != (8,) or gamma.shape != (7,) or not np.isfinite(beta).all() or not np.isfinite(gamma).all():
-        raise ValueError("History 1.1 model coefficients do not match its frozen layout")
-    optimizer = model.get("optimizer")
-    if not isinstance(optimizer, dict) or optimizer.get("success") is not True:
-        raise ValueError("History 1.1 model was not successfully fitted")
-
-
-def _history_fitted_instance_identity(
-    fitted_instance: Mapping[str, object], model_sha256: str
-) -> str:
-    return sha256_json(
-        {
-            "model_family": fitted_instance.get("model_family"),
-            "spec_version": fitted_instance.get("spec_version"),
-            "target_season": fitted_instance.get("target_season"),
-            "trained_through_season": fitted_instance.get("trained_through_season"),
-            "context_effective_cutoff": fitted_instance.get("context_effective_cutoff"),
-            "model_metadata_sha256": model_sha256,
-        }
-    )
-
-
-def _history_annual_source_from_files(
-    prediction_artifact_path: str | Path,
-    fitted_instance_path: str | Path,
-    *,
-    target_season: int,
-    trained_through_season: int,
-    provenance_class: str,
-) -> HistoryAnnualArtifactSource:
-    history_semantic_spec_identity_sha256: str | None = None
-    training_input_source_identity_sha256: str | None = None
-    if provenance_class == "canonical_history_1_1_annual_output":
-        from gippyrank.history_annual_v1_1 import (
-            history11_semantic_specification_sha256,
-            reproduce_canonical_history_annual,
-        )
-
-        expected_predictions, expected_instance, inputs = reproduce_canonical_history_annual(
-            target_season
-        )
-        try:
-            actual_predictions = Path(prediction_artifact_path).read_bytes()
-            actual_instance = json.loads(
-                Path(fitted_instance_path).read_text(encoding="utf-8")
-            )
-        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
-            raise ValueError("future History annual outputs are unreadable") from error
-        if actual_predictions != expected_predictions or actual_instance != json.loads(
-            json.dumps(expected_instance)
-        ):
-            raise ValueError("History annual outputs differ from the canonical History build")
-        history_semantic_spec_identity_sha256 = history11_semantic_specification_sha256()
-        training_input_source_identity_sha256 = inputs.source_identity_sha256
-    try:
-        prediction_bytes = Path(prediction_artifact_path).read_bytes()
-        fitted_instance = json.loads(Path(fitted_instance_path).read_text(encoding="utf-8"))
-        reader = csv.DictReader(io.StringIO(prediction_bytes.decode("utf-8"), newline=""))
-        prediction_rows = list(reader)
-    except (OSError, UnicodeDecodeError, csv.Error, json.JSONDecodeError) as error:
-        raise ValueError("History annual artifacts are unreadable") from error
-    required_columns = {
-        "season",
-        "subdivision",
-        "team_id",
-        "team_name",
-        "model_family",
-        "spec_version",
-        "trained_through_season",
-        "pmf",
-        "prior_method",
-    }
-    if not reader.fieldnames or len(reader.fieldnames) != len(set(reader.fieldnames)):
-        raise ValueError("History annual prediction artifact has invalid columns")
-    if not required_columns <= set(reader.fieldnames):
-        raise ValueError("History annual prediction artifact is missing required columns")
-    if not isinstance(fitted_instance, dict) or not isinstance(
-        fitted_instance.get("model"), dict
-    ):
-        raise TypeError("History annual fitted-instance artifact is invalid")
-    model = fitted_instance["model"]
-    _validate_history_1_1_model_metadata(model)
-    model_sha256 = sha256_json(model)
-    if (
-        fitted_instance.get("model_family") != "history_prior"
-        or fitted_instance.get("spec_version") != "1.1"
-        or fitted_instance.get("target_season") != target_season
-        or fitted_instance.get("trained_through_season") != trained_through_season
-        or fitted_instance.get("context_effective_cutoff") is not None
-    ):
-        raise ValueError("History fitted instance does not match the requested 1.1 fit")
-    prediction_rows.sort(
-        key=lambda row: (row.get("season"), row.get("subdivision"), row.get("team_id"))
-    )
-    semantic_sha256 = sha256_json(prediction_rows)
-    by_team: dict[str, dict[str, object]] = {}
-    population = len(prediction_rows)
-    if population < 1:
-        raise ValueError("History annual predictions must contain the target FBS population")
-    for row in prediction_rows:
-        if (
-            row.get("season") != str(target_season)
-            or row.get("subdivision") != "fbs"
-            or row.get("model_family") != "history_prior"
-            or row.get("spec_version") != "1.1"
-            or row.get("trained_through_season") != str(trained_through_season)
-        ):
-            raise ValueError("History prediction row has mismatched model or season identity")
-        team_id = str(row.get("team_id", ""))
-        team_name = str(row.get("team_name", ""))
-        method = str(row.get("prior_method", ""))
-        if not team_id or not team_name or team_id in by_team:
-            raise ValueError("History annual predictions contain duplicate or empty team IDs")
-        if method not in _HISTORY_1_1_PRIOR_METHODS:
-            raise ValueError("History annual prediction has an unknown prior method")
-        try:
-            pmf = np.asarray(json.loads(str(row["pmf"])), dtype=float)
-        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
-            raise ValueError("History prediction row contains an invalid PMF") from error
-        _validate_pmf(pmf, population, "History annual")
-        by_team[team_id] = {
-            "team_id": team_id,
-            "team_name": team_name,
-            "prior_method": method,
-            "pmf": [float(value) for value in pmf],
-        }
-    if target_season == 2026:
-        if (
-            provenance_class != "retained_legacy_history_artifact"
-            or population != 138
-            or model_sha256 != _HISTORY_2026_MODEL_METADATA_SHA256
-            or semantic_sha256 != _HISTORY_2026_PREDICTIONS_SEMANTIC_SHA256
-        ):
-            raise ValueError("History predictions differ from the pinned 2026 annual artifact")
-    elif provenance_class not in {
-        "canonical_history_1_1_annual_output",
-        "research_history_fixture",
-    }:
-        raise ValueError("future History annual output provenance is invalid")
-    team_ids = sorted(by_team)
-    team_rows = [by_team[team_id] for team_id in team_ids]
-    return HistoryAnnualArtifactSource(
-        model_family="history_prior",
-        spec_version="1.1",
-        target_season=target_season,
-        trained_through_season=trained_through_season,
-        fitted_instance_identity_sha256=_history_fitted_instance_identity(
-            fitted_instance, model_sha256
-        ),
-        model_metadata_sha256=model_sha256,
-        prediction_artifact_sha256=hashlib.sha256(prediction_bytes).hexdigest(),
-        prediction_semantic_sha256=semantic_sha256,
-        population=population,
-        team_ids_sha256=sha256_json(team_ids),
-        team_rows_sha256=sha256_json(team_rows),
-        prior_methods=tuple(sorted({str(row["prior_method"]) for row in team_rows})),
-        artifact_id=f"gippyrank.history.annual_predictions.season_{target_season}",
-        provenance_class=provenance_class,
-        provenance_schema_version=(
-            _HISTORY_ANNUAL_LEGACY_SCHEMA_VERSION
-            if provenance_class == "retained_legacy_history_artifact"
-            else _HISTORY_ANNUAL_CANONICAL_SCHEMA_VERSION
-        ),
-        history_semantic_spec_identity_sha256=history_semantic_spec_identity_sha256,
-        training_input_source_identity_sha256=training_input_source_identity_sha256,
-        team_rows_json=json.dumps(by_team, sort_keys=True, separators=(",", ":")),
-        _construction_token=_HISTORY_ANNUAL_SOURCE_TOKEN,
-    )
-
-
-def load_research_history_annual_fixture(
-    prediction_artifact_path: str | Path,
-    fitted_instance_path: str | Path,
-    *,
-    target_season: int,
-    trained_through_season: int,
-) -> HistoryAnnualArtifactSource:
-    """Inspect synthetic History files as a non-promotable research fixture."""
-    if target_season <= 2026 or trained_through_season != target_season - 1:
-        raise ValueError("research History fixture requires a future T-1 season")
-    return _history_annual_source_from_files(
-        prediction_artifact_path,
-        fitted_instance_path,
-        target_season=target_season,
-        trained_through_season=trained_through_season,
-        provenance_class="research_history_fixture",
-    )
-
-
-def load_validated_history_annual_artifact(
-    prediction_artifact_path: str | Path,
-    fitted_instance_path: str | Path,
-    *,
-    target_season: int,
-    trained_through_season: int,
-    source_attestation_path: str | Path | None = None,
-) -> HistoryAnnualArtifactSource:
-    """Load pinned 2026 History or reproduce a future canonical annual build."""
-    if target_season <= 1 or trained_through_season != target_season - 1:
-        raise ValueError("History annual source must use the rolling-origin T-1 cutoff")
-    if target_season == 2026:
-        return _history_annual_source_from_files(
-            prediction_artifact_path,
-            fitted_instance_path,
-            target_season=target_season,
-            trained_through_season=trained_through_season,
-            provenance_class="retained_legacy_history_artifact",
-        )
-    source = _history_annual_source_from_files(
-        prediction_artifact_path,
-        fitted_instance_path,
-        target_season=target_season,
-        trained_through_season=trained_through_season,
-        provenance_class="canonical_history_1_1_annual_output",
-    )
-    sidecar_path = (
-        Path(source_attestation_path)
-        if source_attestation_path is not None
-        else Path(fitted_instance_path).with_name("fitted_model_source.json")
-    )
-    try:
-        sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
-        raise ValueError("future History annual source attestation is unreadable") from error
-    if sidecar != source.to_metadata():
-        raise ValueError("History annual outputs differ from their canonical source attestation")
-    return source
 
 
 @dataclass(frozen=True, init=False)
@@ -725,12 +244,8 @@ class Context13FallbackSource:
                     "retained PR #159 fallback reason must remain explicitly unspecified"
                 )
         elif self.model_identity == "history_prior/1.1":
-            expected_method = {
-                "fcs_to_fbs_transition": "learned_fcs_to_fbs_transition",
-                "no_prior_rank_distribution": "generic_fbs_cold_start",
-            }.get(self.cold_start_reason)
-            if expected_method is None or self.method_identity != expected_method:
-                raise ValueError("History cold-start reason and method identity disagree")
+            # HistoryAnnualArtifactSource.cold_start_prediction has already
+            # validated its method/reason mapping against the source row.
             if self.upstream_provenance_class not in {
                 "retained_legacy_history_artifact", "canonical_history_1_1_annual_output"
             }:
@@ -853,49 +368,22 @@ class Context13FallbackSource:
         """Select a canonical History row from an already validated typed source."""
         if type(source) is not HistoryAnnualArtifactSource:
             raise TypeError("History fallback requires a validated typed annual source")
-        source.__post_init__()
-        if (
-            source.provenance_class
-            not in {"retained_legacy_history_artifact", "canonical_history_1_1_annual_output"}
-            or (
-                source.provenance_class == "canonical_history_1_1_annual_output"
-                and (
-                    not _is_sha256(source.history_semantic_spec_identity_sha256)
-                    or not _is_sha256(source.training_input_source_identity_sha256)
-                )
-            )
-            or source.model_family != "history_prior"
-            or source.spec_version != "1.1"
-            or source.target_season != target_season
-            or source.trained_through_season != trained_through_season
-            or trained_through_season != target_season - 1
-        ):
-            raise ValueError("History source does not match the requested rolling-origin identity")
-        row = source.prediction_row(team_id)
-        if row.get("team_name") != team_name:
-            raise ValueError("History source team identity does not match the requested team")
-        expected_method = {
-            "fcs_to_fbs_transition": "learned_fcs_to_fbs_transition",
-            # Context 1.3 consumes this method only for any future canonical
-            # History 1.1 no-prior output. The retained 2026 artifact has only
-            # FCS transition fallbacks.
-            "no_prior_rank_distribution": "generic_fbs_cold_start",
-        }.get(cold_start_reason)
-        if expected_method is None or row.get("prior_method") != expected_method:
-            raise ValueError("History fallback method does not match its cold-start reason")
-        try:
-            pmf = np.asarray(row["pmf"], dtype=float)
-        except (KeyError, TypeError, ValueError) as error:
-            raise ValueError("History source row has an invalid PMF") from error
-        if population != source.population or len(pmf) != population:
-            raise ValueError("History source population does not match the target team")
+        row = source.cold_start_prediction(
+            target_season=target_season,
+            trained_through_season=trained_through_season,
+            team_id=team_id,
+            team_name=team_name,
+            population=population,
+            cold_start_reason=cold_start_reason,
+        )
+        pmf = np.asarray(row["pmf"], dtype=float)
         return cls(
             target_season=target_season,
             team_id=team_id,
             team_name=team_name,
             population=population,
             cold_start_reason=cold_start_reason,
-            model_identity="history_prior/1.1",
+            model_identity=f"{source.model_family}/{source.spec_version}",
             method_identity=str(row["prior_method"]),
             source_artifact_id=source.artifact_id,
             source_artifact_sha256=source.prediction_artifact_sha256,
@@ -1481,7 +969,5 @@ __all__ = [
     "candidate_spec_sha256",
     "construct_candidate_prior",
     "load_candidate_spec",
-    "load_research_history_annual_fixture",
-    "load_validated_history_annual_artifact",
     "sha256_json",
 ]

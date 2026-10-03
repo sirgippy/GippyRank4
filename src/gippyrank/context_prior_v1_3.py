@@ -1441,7 +1441,7 @@ def context13_semantic_specification() -> dict[str, object]:
         "degrees_of_freedom": CONTEXT13_DEGREES_OF_FREEDOM,
         "minimum_scale": CONTEXT13_MINIMUM_SCALE,
         "quadrature_points": QUADRATURE_POINTS,
-        "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+        "quadrature_method": preseason_semantics.DETERMINISTIC_QUADRATURE_METHOD,
         "target_distribution_semantics": "deterministic evenly spaced order statistics per empirical team-season target",
         "team_season_weighting": "equal team-season weight; target outcomes averaged within row",
         "team_season_weight": CONTEXT13_TEAM_SEASON_WEIGHT,

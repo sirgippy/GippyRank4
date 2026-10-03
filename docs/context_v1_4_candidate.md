@@ -93,10 +93,12 @@ needed. The published Context 1.3 class strings remain
 
 Production-shaped cold starts cannot be constructed from a caller-supplied PMF
 or arbitrary `GenericRankPrior` parameters. They select the requested row from
-the validated History 1.1 annual source. The 2026 source is a pinned retained
-legacy artifact. A future canonical source is emitted by the History annual
-builder from fixed processed inputs retained with its output; loading it
-reproduces the fit and every PMF before accepting the sidecar. See
+the validated History 1.1 annual source. History owns its source type, builder,
+loader, and cold-start row checks; Context 1.4 consumes that public API. The
+2026 source is a pinned retained legacy artifact. A future canonical source is
+emitted by the History annual builder from fixed processed inputs retained with
+its output; loading it reproduces the fit and every PMF before accepting the
+sidecar. See
 [`history_annual_provenance.md`](history_annual_provenance.md) for the build and
 verification path. The annual source binds model family/version, target and
 trained-through seasons, History semantic and training-input identities,
