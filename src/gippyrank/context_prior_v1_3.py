@@ -65,6 +65,11 @@ RETROSPECTIVE_2026_PROVENANCE = "retrospective_2026_reconstruction"
 RETROSPECTIVE_RESEARCH_PROVENANCE = "retrospective_research_transfer_reconstruction"
 PRODUCTION_TRANSFER_PROVENANCE = "production_preseason_immutable_snapshot"
 FROZEN_PENALTY = 0.25
+CONTEXT13_MINIMUM_SCALE = 0.10
+CONTEXT13_LAG_COUNT = 1
+CONTEXT13_DISTRIBUTION_FAMILY = "normal"
+CONTEXT13_DEGREES_OF_FREEDOM = None
+CONTEXT13_TEAM_SEASON_WEIGHT = 1.0
 CONTEXT13_OPTIMIZER_RETRY_MAXITER = 2000
 CONTEXT13_OPTIMIZER_ITERATION_LIMIT_MESSAGE = "ITERATIONS REACHED LIMIT"
 PRODUCTION_CUTOFF_MONTH = 8
@@ -76,7 +81,7 @@ _CONTEXT13_2026_MODEL_METADATA_SHA256 = (
     "6a6c759c250a9b4845bce563072dcf146fd66dca8264017f215aff1580bc9dce"
 )
 _CONTEXT13_2026_FITTED_SOURCE_ARTIFACT_SHA256 = (
-    "cae89f0c75f4b29f5e9f3d767f7f312d71739068d9c45b5b8f9f5e07efaec0eb"
+    "18bcafddf18f8147d91ca59196554140827f500e4e0f20f5f90866bb4f4fc9d6"
 )
 _COMMITTED_2026_TRANSFER_FEATURE_SHA256 = (
     "db8fad38bb81e437059b8cf44c85be5760f3426466b53c5cf649ea5c0718fef0"
@@ -513,11 +518,11 @@ def validate_context13_fitted_model(
         or tuple(model.preprocessor.feature_names) != MODEL_FEATURE_NAMES
         or model.location_feature_names != list(LOCATION_FEATURE_NAMES)
         or model.scale_feature_names != list(SCALE_FEATURE_NAMES)
-        or model.family != "normal"
-        or model.lag_count != 1
-        or model.degrees_of_freedom is not None
+        or model.family != CONTEXT13_DISTRIBUTION_FAMILY
+        or model.lag_count != CONTEXT13_LAG_COUNT
+        or model.degrees_of_freedom != CONTEXT13_DEGREES_OF_FREEDOM
         or model.penalty != FROZEN_PENALTY
-        or model.minimum_scale != 0.10
+        or model.minimum_scale != CONTEXT13_MINIMUM_SCALE
         or not isinstance(model.optimizer, dict)
         or model.optimizer.get("success") is not True
     ):
@@ -1407,7 +1412,7 @@ def model_specification() -> ModelSpecification:
         "context_prior",
         CONTEXT_PRIOR_CANDIDATE_VERSION,
         MODEL_FEATURE_NAMES,
-        "normal",
+        CONTEXT13_DISTRIBUTION_FAMILY,
         FROZEN_PENALTY,
         "full t-1 empirical quadrature; t-2/t-3 summaries",
     )
@@ -1420,7 +1425,7 @@ def context13_semantic_specification() -> dict[str, object]:
     validation, and promotion lifecycle metadata.
     """
     return {
-        "semantic_schema_version": 2,
+        "semantic_schema_version": 3,
         **model_specification().metadata(),
         "ordered_model_features": list(MODEL_FEATURE_NAMES),
         "location_feature_names": list(LOCATION_FEATURE_NAMES),
@@ -1430,18 +1435,19 @@ def context13_semantic_specification() -> dict[str, object]:
             "context_features": list(CONTEXT_1_3_FEATURES),
         },
         "scale_feature_placement": {"history_features": list(H_FEATURES)},
-        "lag_count": 1,
+        "lag_count": CONTEXT13_LAG_COUNT,
         "lag_semantics": "target-season t-1 empirical rank distribution",
-        "distribution_family": "normal",
-        "degrees_of_freedom": None,
-        "minimum_scale": 0.10,
+        "distribution_family": CONTEXT13_DISTRIBUTION_FAMILY,
+        "degrees_of_freedom": CONTEXT13_DEGREES_OF_FREEDOM,
+        "minimum_scale": CONTEXT13_MINIMUM_SCALE,
         "quadrature_points": QUADRATURE_POINTS,
         "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
         "target_distribution_semantics": "deterministic evenly spaced order statistics per empirical team-season target",
         "team_season_weighting": "equal team-season weight; target outcomes averaged within row",
+        "team_season_weight": CONTEXT13_TEAM_SEASON_WEIGHT,
         "penalty": FROZEN_PENALTY,
         "optimizer": {
-            "method": "L-BFGS-B",
+            "method": preseason_semantics.DIRECT_RANK_OPTIMIZER_METHOD,
             "maxiter": preseason_semantics.DIRECT_RANK_OPTIMIZER_MAXITER,
             "ftol": preseason_semantics.DIRECT_RANK_OPTIMIZER_FTOL,
             "gtol": preseason_semantics.DIRECT_RANK_OPTIMIZER_GTOL,
@@ -1453,7 +1459,7 @@ def context13_semantic_specification() -> dict[str, object]:
                 "otherwise": "raise optimizer failure",
             },
         },
-        "fit_algorithm_semantics_version": 1,
+        "fit_algorithm_semantics_version": 2,
         "optimizer_initialization": {
             "lag_beta_1": preseason_semantics.DIRECT_RANK_INITIAL_LAG_BETA,
             "remaining_beta_coefficients": 0.0,
@@ -1504,6 +1510,8 @@ def context13_semantic_specification() -> dict[str, object]:
         "preprocessing": {
             "missing_values": "training median imputation",
             "numeric_values": "training-only mean/std standardization",
+            "scale_floor": preseason_semantics.PREPROCESSOR_SCALE_FLOOR,
+            "std_ddof": preseason_semantics.PREPROCESSOR_STD_DDOF,
             "missingness_indicators": True,
             "missing_indicator_placement": {
                 "location": list(LOCATION_FEATURE_NAMES),
@@ -1537,7 +1545,10 @@ def model_specification_metadata() -> dict[str, object]:
         **context13_lifecycle_metadata(),
         "context_features_affect": "location_only",
         "history_features_affect": ["location", "scale"],
-        "optimizer_retry": "retry once with maxiter=2000 after iteration-limit failure",
+        "optimizer_retry": (
+            f"retry once with maxiter={CONTEXT13_OPTIMIZER_RETRY_MAXITER} "
+            "after iteration-limit failure"
+        ),
     }
 
 
@@ -1562,13 +1573,26 @@ def fit_model(
         raise ValueError("cannot fit Context 1.3 without training rows")
 
     def fit(options: dict[str, float | int] | None = None) -> DirectRankModel:
+        optimizer_options = {
+            "maxiter": preseason_semantics.DIRECT_RANK_OPTIMIZER_MAXITER,
+            "ftol": preseason_semantics.DIRECT_RANK_OPTIMIZER_FTOL,
+            "gtol": preseason_semantics.DIRECT_RANK_OPTIMIZER_GTOL,
+        }
+        optimizer_options.update(options or {})
         return DirectRankModel.fit(
             training,
             features,
             penalty=FROZEN_PENALTY,
+            minimum_scale=CONTEXT13_MINIMUM_SCALE,
+            lag_count=CONTEXT13_LAG_COUNT,
+            family=CONTEXT13_DISTRIBUTION_FAMILY,
+            degrees_of_freedom=CONTEXT13_DEGREES_OF_FREEDOM,
             location_feature_names=location,
             scale_feature_names=scale,
-            optimizer_options=options,
+            row_weights=np.full(len(training), CONTEXT13_TEAM_SEASON_WEIGHT),
+            preprocessor_scale_floor=preseason_semantics.PREPROCESSOR_SCALE_FLOOR,
+            preprocessor_std_ddof=preseason_semantics.PREPROCESSOR_STD_DDOF,
+            optimizer_options=optimizer_options,
         )
 
     try:

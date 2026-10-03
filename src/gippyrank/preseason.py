@@ -32,6 +32,9 @@ DIRECT_RANK_GAMMA_REGULARIZATION_WEIGHT = 0.25
 DIRECT_RANK_OPTIMIZER_MAXITER = 500
 DIRECT_RANK_OPTIMIZER_FTOL = 1e-10
 DIRECT_RANK_OPTIMIZER_GTOL = 1e-6
+DIRECT_RANK_OPTIMIZER_METHOD = "L-BFGS-B"
+PREPROCESSOR_SCALE_FLOOR = 1e-8
+PREPROCESSOR_STD_DDOF = 0
 
 
 def deterministic_quadrature(
@@ -215,7 +218,12 @@ class Preprocessor:
 
     @classmethod
     def fit(
-        cls, rows: list[dict[str, float | None]], feature_names: list[str]
+        cls,
+        rows: list[dict[str, float | None]],
+        feature_names: list[str],
+        *,
+        scale_floor: float = PREPROCESSOR_SCALE_FLOOR,
+        std_ddof: int = PREPROCESSOR_STD_DDOF,
     ) -> Preprocessor:
         medians: dict[str, float] = {}
         means: dict[str, float] = {}
@@ -230,7 +238,10 @@ class Preprocessor:
                 dtype=float,
             )
             means[name] = float(np.mean(imputed))
-            scales[name] = max(float(np.std(imputed)), 1e-8)
+            scales[name] = max(
+                float(np.std(imputed, ddof=std_ddof)),
+                scale_floor,
+            )
         return cls(tuple(feature_names), medians, means, scales)
 
     def transform(self, rows: list[dict[str, float | None]]) -> np.ndarray:
@@ -301,6 +312,8 @@ class DirectRankModel:
         location_feature_names: list[str] | None = None,
         scale_feature_names: list[str] | None = None,
         row_weights: np.ndarray | None = None,
+        preprocessor_scale_floor: float = PREPROCESSOR_SCALE_FLOOR,
+        preprocessor_std_ddof: int = PREPROCESSOR_STD_DDOF,
     ) -> DirectRankModel:
         if not rows:
             raise ValueError("cannot fit without rows")
@@ -313,7 +326,12 @@ class DirectRankModel:
             if not np.all(np.isfinite(weights)) or np.any(weights <= 0):
                 raise ValueError("row_weights must be finite and strictly positive")
         weight_total = float(weights.sum())
-        preprocessor = Preprocessor.fit([r.features for r in rows], feature_names)
+        preprocessor = Preprocessor.fit(
+            [r.features for r in rows],
+            feature_names,
+            scale_floor=preprocessor_scale_floor,
+            std_ddof=preprocessor_std_ddof,
+        )
         x = np.column_stack(
             [np.ones(len(rows)), preprocessor.transform([r.features for r in rows])]
         )
@@ -497,7 +515,7 @@ class DirectRankModel:
         result = minimize(
             objective,
             np.r_[initial_beta, initial_gamma],
-            method="L-BFGS-B",
+            method=DIRECT_RANK_OPTIMIZER_METHOD,
             jac=gradient,
             bounds=beta_bounds + gamma_bounds,
             options=options,

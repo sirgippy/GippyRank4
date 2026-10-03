@@ -7,6 +7,7 @@ import json
 import sys
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -19,6 +20,7 @@ from gippyrank.context_prior_v1_3 import (
     CONTEXT_1_3_FEATURES,
     CONTEXT_PRIOR_CANDIDATE_VERSION,
     D5_CONTEXT_FEATURES,
+    H_FEATURES,
     LOCATION_FEATURE_NAMES,
     MODEL_FEATURE_NAMES,
     PRODUCTION_TRANSFER_PROVENANCE,
@@ -294,6 +296,96 @@ def test_context13_semantic_hash_tracks_optimizer_retry_contract(monkeypatch) ->
     }
     monkeypatch.setattr(candidate_module, "CONTEXT13_OPTIMIZER_RETRY_MAXITER", 2001)
     assert context13_semantic_specification_sha256() != original
+
+
+@pytest.mark.parametrize(
+    ("module", "constant", "changed"),
+    [
+        (candidate_module, "CONTEXT13_MINIMUM_SCALE", 0.11),
+        (candidate_module, "CONTEXT13_LAG_COUNT", 2),
+        (candidate_module, "CONTEXT13_DISTRIBUTION_FAMILY", "student_t"),
+        (candidate_module, "CONTEXT13_DEGREES_OF_FREEDOM", 5.0),
+        (candidate_module, "CONTEXT13_TEAM_SEASON_WEIGHT", 2.0),
+        (candidate_module, "SCALE_FEATURE_NAMES", H_FEATURES[:-1]),
+        (preseason_module, "DIRECT_RANK_OPTIMIZER_METHOD", "BFGS"),
+        (preseason_module, "DIRECT_RANK_OPTIMIZER_FTOL", 1e-9),
+        (preseason_module, "DIRECT_RANK_OPTIMIZER_GTOL", 1e-5),
+        (preseason_module, "PREPROCESSOR_SCALE_FLOOR", 1e-7),
+        (preseason_module, "PREPROCESSOR_STD_DDOF", 1),
+    ],
+)
+def test_context13_semantic_hash_tracks_explicit_fit_and_preprocessing_contract(
+    monkeypatch, module, constant: str, changed: object
+) -> None:
+    original = context13_semantic_specification_sha256()
+    monkeypatch.setattr(module, constant, changed)
+    assert context13_semantic_specification_sha256() != original
+
+
+def test_context13_fit_ignores_poisoned_generic_defaults(monkeypatch) -> None:
+    rows = _training_rows()
+    calls = []
+
+    def poisoned_fit(
+        cls, training, features, penalty=9.0, minimum_scale=9.0,
+        optimizer_options=None, lag_count=9, family="student_t",
+        degrees_of_freedom=9.0, location_feature_names=None,
+        scale_feature_names=None, row_weights=None,
+        preprocessor_scale_floor=9.0, preprocessor_std_ddof=9,
+    ):
+        assert len(training) == len(rows)
+        assert all(actual is expected for actual, expected in zip(training, rows, strict=True))
+        assert tuple(features) == MODEL_FEATURE_NAMES
+        assert penalty == 0.25
+        assert minimum_scale == 0.10
+        assert lag_count == 1
+        assert family == "normal"
+        assert degrees_of_freedom is None
+        assert location_feature_names == list(LOCATION_FEATURE_NAMES)
+        assert scale_feature_names == list(SCALE_FEATURE_NAMES)
+        np.testing.assert_array_equal(row_weights, np.ones(len(rows)))
+        assert preprocessor_scale_floor == 1e-8
+        assert preprocessor_std_ddof == 0
+        assert optimizer_options == {"maxiter": 500, "ftol": 1e-10, "gtol": 1e-6}
+        calls.append(True)
+        return _valid_context13_model()
+
+    monkeypatch.setattr(DirectRankModel, "fit", classmethod(poisoned_fit))
+    model, instance = candidate_module.fit_model(
+        rows, target_season=2026, trained_through_season=2025
+    )
+    assert calls == [True]
+    assert model.minimum_scale == 0.1
+    assert instance.trained_through_season == 2025
+
+
+def test_context13_optimizer_uses_the_semantic_method_and_tolerances(monkeypatch) -> None:
+    expected = context13_semantic_specification()["optimizer"]
+    observed = []
+
+    def optimizer_stub(_objective, initial, *, method, jac, bounds, options):
+        assert callable(jac)
+        assert len(bounds) == len(initial)
+        observed.append((method, options))
+        return SimpleNamespace(
+            x=initial, success=True, status=0, message="converged",
+            nit=0, nfev=1, fun=0.0,
+        )
+
+    monkeypatch.setattr(preseason_module, "minimize", optimizer_stub)
+    candidate_module.fit_model(
+        _training_rows(), target_season=2026, trained_through_season=2025
+    )
+    assert observed == [
+        (
+            expected["method"],
+            {
+                "maxiter": expected["maxiter"],
+                "ftol": expected["ftol"],
+                "gtol": expected["gtol"],
+            },
+        )
+    ]
 
 
 def test_canonical_training_loader_mints_typed_complete_corpus_source(

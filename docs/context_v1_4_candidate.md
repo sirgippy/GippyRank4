@@ -22,11 +22,17 @@ The frozen model contract also requires Context-only numeric and missingness
 scale coefficients to be zero.
 
 The fitted-model source binds model family and spec version, target season,
-rolling-origin cutoff, model metadata SHA-256, fitted-instance identity,
-immutable semantic-specification identity, corpus source identity, exact row
-payload identity, and row count. Lifecycle fields such as active version,
-candidate status, and promotion state are reported separately and do not
-affect the Context 1.3 semantic hash.
+rolling-origin cutoff, model metadata SHA-256, fitted-instance identity, and
+immutable semantic-specification identity. Canonical fits additionally bind a
+verified corpus source, exact row payload digest, and row count. Legacy and
+research classes have distinct lineage fields. Lifecycle fields such as active
+version, candidate status, and promotion state are reported separately and do
+not affect the Context 1.3 semantic hash. The semantic specification covers
+the minimum scale, lag and distribution settings, equal row weights,
+optimizer method, initialization, tolerances and retry, coefficient bounds,
+regularization, scale link, and preprocessing scale floor and standard deviation
+convention. Context 1.3 passes its frozen fit settings explicitly to the
+generic fitter.
 
 Only `load_context13_training_corpus` creates a typed
 `Context13TrainingCorpusSource`. It binds the canonical historical rank and
@@ -39,16 +45,12 @@ identity changes, and changes to lag, target, or feature values.
 
 The committed 2026 Context 1.3 model remains usable through its
 `legacy_attested_context13_fit` source, which pins its model metadata, fitted
-instance, claimed corpus digest, and 2,744-row count. It is explicitly marked
-`retained_legacy_attestation`, not independently reproducible. The checkout
-does not contain `data/processed/modeling/team_season_rank_distributions.csv`,
-which the canonical loader needs to rebuild that corpus, so the recorded
-`e74613…` row digest cannot currently be verified from the committed inputs.
-The committed model and instance hashes are still checked. If the historical
-rank-distribution source is later supplied, the canonical loader and refit
-path can independently verify the corpus and model. A hand-built model without
-an authoritative source, or a research-only source presented as canonical, is
-rejected.
+instance, published prediction artifact, and the retained 2,744-row coverage
+claim. It is explicitly marked `retained_legacy_attestation`, with no verified
+or claimed corpus digest. The checkout does not contain
+`data/processed/modeling/team_season_rank_distributions.csv`, so that corpus
+cannot currently be reconstructed. A hand-built model without an authoritative
+source, or a research-only source presented as canonical, is rejected.
 
 Fit and transfer provenance use an explicit compatibility matrix:
 canonical fits pair with production or retrospective-2026 transfer lineage;
@@ -60,13 +62,14 @@ fitted-instance hash.
 
 ## Artifact schema versions
 
-New Context 1.3 model/report metadata uses artifact schema 2 and provenance
-schema 2. The prediction CSV schema remains version 1; changing provenance
-metadata does not change PMF or publication semantics. Existing committed 2026
-model and prediction files remain in their legacy schema and are not rewritten
-by this change. Tests pin their prediction bytes and verify the separate fit
-attestation schema, so deterministic rebuild checks distinguish prediction
-identity from metadata identity.
+New Context 1.3 model/report metadata uses artifact schema 2. Transfer
+provenance uses schema 2, fitted-model provenance uses schema 3, and immutable
+Context 1.3 semantic metadata uses schema 3. Context 1.4 candidate artifacts
+use schema 4. Retained 2026 History provenance uses schema 1; future canonical
+History sources and research fixtures use schema 2. The Context 1.3 prediction
+CSV schema remains version 1. Its committed model, prediction, and publication
+files remain unchanged. Provenance sidecars and model-spec metadata may advance
+without changing PMFs or publication semantics.
 
 `ContextTransferInputProvenance` identifies transfer lineage only; it does not
 certify recruiting, talent, returning-production, coaching, or rank-history
@@ -90,12 +93,17 @@ needed. The published Context 1.3 class strings remain
 
 Production-shaped cold starts cannot be constructed from a caller-supplied PMF
 or arbitrary `GenericRankPrior` parameters. They select the requested row from
-the validated canonical History 1.1 annual source. That source binds model
-family/version, target season, `trained_through_season`, fitted-instance
-identity, model metadata, prediction artifact bytes and semantics, and the
-exact FBS team PMFs. The fallback identity records the selected team, prior
-method, source artifact hash, History fitted-instance identity,
-`trained_through_season`, reason, and PMF hash. The retained PR #159
+the validated History 1.1 annual source. The 2026 source is a pinned retained
+legacy artifact. A future canonical source is emitted by the History annual
+builder from fixed processed inputs retained with its output; loading it
+reproduces the fit and every PMF before accepting the sidecar. See
+[`history_annual_provenance.md`](history_annual_provenance.md) for the build and
+verification path. The annual source binds model family/version, target and
+trained-through seasons, History semantic and training-input identities,
+fitted-instance and model identities, prediction bytes and semantics, actual
+FBS population, prior methods, and exact team PMFs. The candidate fallback
+records the source provenance class and lineage, selected team and method,
+source artifact hash, fitted-instance identity, reason, and PMF hash. The retained PR #159
 cold-start fixture remains available only through its explicitly research-only
 artifact-copy path. It does not contain its original reason, so it records
 `unspecified_in_pr159_reference` rather than inferring one from the PMF.
@@ -104,8 +112,8 @@ fitted model did not produce those PMFs. PR #159 comparison fixtures use a
 separately named research-only artifact-copy path.
 
 The candidate is not the active production model and has not been holdout
-validated. This freeze does not change Context 1.3 fitting, publication,
-rankings, snapshots, or API defaults.
+validated. Context 1.3's fitted coefficients, predictions, publications,
+rankings, snapshots, and API defaults remain unchanged.
 
 Issue #158 and PR #159 head at merge
 (`ec0ef4c08b5aa10e534488bb7292cb2901626aee`) are recorded as the

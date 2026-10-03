@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import importlib
 import json
+import sys
 from dataclasses import replace
 from pathlib import Path
 
@@ -13,6 +15,7 @@ import pytest
 from scipy.stats import norm
 
 import gippyrank.context_prior_v1_4_candidate as candidate_module
+import gippyrank.history_annual_v1_1 as history_annual_module
 from gippyrank.context_positive_net_moderation import parts_from_fitted_contributions
 from gippyrank.context_prior import AnnualFittedInstance, InferenceRow
 from gippyrank.context_prior_v1_3 import (
@@ -40,11 +43,14 @@ from gippyrank.context_prior_v1_4_candidate import (
     Context14CandidatePrior,
     candidate_spec_sha256,
     construct_candidate_prior,
-    create_history_annual_artifact_source,
     load_candidate_spec,
+    load_research_history_annual_fixture,
     load_validated_history_annual_artifact,
     sha256_json,
-    write_history_annual_source_attestation,
+)
+from gippyrank.history_annual_v1_1 import (
+    build_canonical_history_annual,
+    history11_semantic_specification_sha256,
 )
 from gippyrank.preseason import (
     DirectRankModel,
@@ -255,13 +261,112 @@ def _write_history_2027_fixture(root: Path) -> tuple[Path, Path, Path]:
         writer = csv.DictWriter(handle, fieldnames=list(prediction_rows[0]))
         writer.writeheader()
         writer.writerows(prediction_rows)
-    attestation_path = write_history_annual_source_attestation(
-        prediction_path,
-        instance_path,
-        target_season=2027,
+    research = load_research_history_annual_fixture(
+        prediction_path, instance_path, target_season=2027,
         trained_through_season=2026,
     )
+    forged = research.to_metadata()
+    forged.pop("source_identity_sha256")
+    forged.update({
+        "provenance_class": "canonical_history_1_1_annual_output",
+        "history_semantic_spec_identity_sha256": history11_semantic_specification_sha256(),
+        "training_input_source_identity_sha256": "a" * 64,
+    })
+    forged["source_identity_sha256"] = sha256_json(forged)
+    attestation_path = history_dir / "fitted_model_source.json"
+    attestation_path.write_text(json.dumps(forged), encoding="utf-8")
     return prediction_path, instance_path, attestation_path
+
+
+def _write_canonical_history_2027_inputs(root: Path) -> None:
+    rank_path = root / "data/processed/modeling/team_season_rank_distributions.csv"
+    feature_path = root / "data/processed/preseason/team_season_features.csv"
+    rank_path.parent.mkdir(parents=True)
+    feature_path.parent.mkdir(parents=True)
+    ranks = []
+    for season in range(2017, 2027):
+        for team_index in (0, 1):
+            if team_index == 0 and season == 2017:
+                subdivision = "fcs"
+            else:
+                subdivision = "fbs"
+            samples = [1 + ((season + team_index + offset) % 3) for offset in (0, 1, 1)]
+            ranks.append(
+                {
+                    "season": season,
+                    "subdivision": subdivision,
+                    "team_id": f"history-team-{team_index}",
+                    "team_name": f"History Team {team_index}",
+                    "team_population": 3,
+                    "rank_observations": json.dumps(samples),
+                }
+            )
+    ranks.append(
+        {
+            "season": 2026,
+            "subdivision": "fcs",
+            "team_id": "history-team-2",
+            "team_name": "History Team 2",
+            "team_population": 3,
+            "rank_observations": "[1,2,3]",
+        }
+    )
+    with rank_path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(ranks[0]), lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(ranks)
+    features = [
+        {
+            "season": 2027,
+            "subdivision": "fbs",
+            "team_id": f"history-team-{index}",
+            "team_name": f"History Team {index}",
+        }
+        for index in range(3)
+    ]
+    with feature_path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(features[0]), lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(features)
+
+
+def test_future_history_builder_matches_the_history_1_1_annual_procedure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_canonical_history_2027_inputs(tmp_path)
+    monkeypatch.setattr(history_annual_module, "_CANONICAL_HISTORY_ROOT", tmp_path)
+    script_path = str(ROOT / "scripts")
+    if script_path not in sys.path:
+        sys.path.insert(0, script_path)
+    historical_builder = importlib.import_module("build_preseason_prior")
+    annual_builder = importlib.import_module("build_preseason_context_prior_v1_2")
+    monkeypatch.setattr(historical_builder, "ROOT", tmp_path)
+    monkeypatch.setattr(historical_builder, "OUT", tmp_path / "data/processed/preseason")
+    monkeypatch.setattr(annual_builder, "MODELING", tmp_path / "data/processed/modeling")
+    monkeypatch.setattr(annual_builder, "PRESEASON", tmp_path / "data/processed/preseason")
+    history_rows, cold_rows, _coverage = historical_builder.load_rows(max_season=2026)
+    model, instance = annual_builder.build_history_prior(
+        [row for row in history_rows if row.subdivision == "fbs"],
+        target_season=2027, trained_through_season=2026,
+    )
+    future = annual_builder.inference_rows(
+        2027, 2026, annual_builder.feature_index(), {}
+    )
+    promotion, generic = annual_builder.annual_cold_start_models(
+        cold_rows, trained_through_season=2026
+    )
+    expected, _context = annual_builder.future_predictions(
+        future, model, None, trained_through_season=2026,
+        promotion_model=promotion, generic_prior=generic,
+    )
+    expected_path = tmp_path / "expected_history.csv"
+    annual_builder.write_csv(expected_path, expected)
+    predictions, fitted, _inputs = history_annual_module.reproduce_canonical_history_annual(
+        2027, from_snapshot=False
+    )
+    assert predictions == expected_path.read_bytes()
+    assert json.loads(json.dumps(fitted["model"])) == json.loads(json.dumps(model.metadata()))
+    assert fitted["trained_through_season"] == instance.trained_through_season
 
 
 def _fitted_input(
@@ -768,6 +873,8 @@ def test_canonical_history_cold_start_is_loaded_and_bound_without_context_model(
         target_season=2026,
         trained_through_season=2025,
     )
+    assert source.provenance_class == "retained_legacy_history_artifact"
+    assert source.provenance_schema_version == 1
     fallback = Context13FallbackSource.from_history_annual_source(
         source=source,
         target_season=2026,
@@ -879,11 +986,15 @@ def test_canonical_history_cold_start_is_loaded_and_bound_without_context_model(
 
 
 def test_future_history_annual_source_builds_a_frozen_2027_cold_start(
-    tmp_path: Path,
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    prediction_path, instance_path, attestation_path = _write_history_2027_fixture(
-        tmp_path
-    )
+    _write_canonical_history_2027_inputs(tmp_path)
+    monkeypatch.setattr(history_annual_module, "_CANONICAL_HISTORY_ROOT", tmp_path)
+    annual = tmp_path / "data/processed/preseason/history/annual/2027"
+    built = build_canonical_history_annual(2027, annual)
+    prediction_path = annual / "predictions.csv"
+    instance_path = annual / "fitted_instance.json"
+    attestation_path = annual / "fitted_model_source.json"
     source = load_validated_history_annual_artifact(
         prediction_path,
         instance_path,
@@ -897,22 +1008,23 @@ def test_future_history_annual_source_builds_a_frozen_2027_cold_start(
     assert source.trained_through_season == 2026
     assert source.model_family == "history_prior"
     assert source.spec_version == "1.1"
+    assert source.provenance_schema_version == 2
     assert source.prediction_artifact_sha256 == _sha256(prediction_path)
     assert source.to_metadata() == json.loads(attestation_path.read_text())
-    minted = create_history_annual_artifact_source(
-        prediction_path,
-        instance_path,
-        target_season=2027,
-        trained_through_season=2026,
+    assert built.source_identity_sha256 == source.source_identity_sha256
+    assert source.history_semantic_spec_identity_sha256 == (
+        history11_semantic_specification_sha256()
     )
-    assert minted.source_identity_sha256 == source.source_identity_sha256
+    assert source.training_input_source_identity_sha256 == (
+        history_annual_module.load_canonical_history_annual_build_inputs(2027).source_identity_sha256
+    )
 
     fallback = Context13FallbackSource.from_history_annual_source(
         source=source,
         target_season=2027,
         trained_through_season=2026,
-        team_id="history-team-0",
-        team_name="History Team 0",
+        team_id="history-team-2",
+        team_name="History Team 2",
         population=3,
         cold_start_reason="fcs_to_fbs_transition",
     )
@@ -922,7 +1034,7 @@ def test_future_history_annual_source_builds_a_frozen_2027_cold_start(
         fitted_instance=context_instance,
         fitted_model_source=_research_fit_source(context_model, context_instance),
         transfer_provenance=_provenance(
-            season=2027, team_id="history-team-0", population=3
+            season=2027, team_id="history-team-2", population=3
         ),
         fallback_source=fallback,
     )
@@ -944,6 +1056,78 @@ def test_future_history_annual_source_builds_a_frozen_2027_cold_start(
     assert serialized["fallback_source"]["source_team_rows_sha256"] == (
         source.team_rows_sha256
     )
+    assert serialized["fallback_source"]["upstream_provenance_class"] == (
+        "canonical_history_1_1_annual_output"
+    )
+    assert serialized["fallback_source"]["source_history_semantic_spec_identity_sha256"] == (
+        source.history_semantic_spec_identity_sha256
+    )
+    assert serialized["fallback_source"]["source_training_input_source_identity_sha256"] == (
+        source.training_input_source_identity_sha256
+    )
+
+
+def test_self_signed_future_history_files_cannot_become_canonical(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_canonical_history_2027_inputs(tmp_path)
+    monkeypatch.setattr(history_annual_module, "_CANONICAL_HISTORY_ROOT", tmp_path)
+    build_canonical_history_annual(
+        2027, tmp_path / "data/processed/preseason/history/annual/2027"
+    )
+    with pytest.raises(ValueError, match="fixed repository directory"):
+        build_canonical_history_annual(2027, tmp_path / "forged/history/annual/2027")
+    prediction_path, instance_path, attestation_path = _write_history_2027_fixture(
+        tmp_path / "forged"
+    )
+    research = load_research_history_annual_fixture(
+        prediction_path, instance_path, target_season=2027,
+        trained_through_season=2026,
+    )
+    assert research.provenance_class == "research_history_fixture"
+    assert research.provenance_schema_version == 2
+    assert research.training_input_source_identity_sha256 is None
+    with pytest.raises(ValueError, match="canonical History build"):
+        load_validated_history_annual_artifact(
+            prediction_path, instance_path, target_season=2027,
+            trained_through_season=2026, source_attestation_path=attestation_path,
+        )
+    rank_path = tmp_path / "data/processed/modeling/team_season_rank_distributions.csv"
+    rank_path.write_text(
+        rank_path.read_text(encoding="utf-8")
+        + '2027,fbs,history-team-0,History Team 0,3,"[1,2,3]"\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="target-season outcomes"):
+        history_annual_module.load_canonical_history_annual_build_inputs(2027)
+    with pytest.raises(ValueError, match="validated typed annual source|rolling-origin identity"):
+        Context13FallbackSource.from_history_annual_source(
+            source=research, target_season=2027, trained_through_season=2026,
+            team_id="history-team-0", team_name="History Team 0", population=3,
+            cold_start_reason="fcs_to_fbs_transition",
+        )
+    object.__setattr__(research, "provenance_class", "canonical_history_1_1_annual_output")
+    object.__setattr__(research, "history_semantic_spec_identity_sha256", "b" * 64)
+    object.__setattr__(research, "training_input_source_identity_sha256", "c" * 64)
+    object.__setattr__(research, "source_identity_sha256", sha256_json(research.identity_payload()))
+    with pytest.raises(ValueError, match="verified build lineage"):
+        Context13FallbackSource.from_history_annual_source(
+            source=research, target_season=2027, trained_through_season=2026,
+            team_id="history-team-0", team_name="History Team 0", population=3,
+            cold_start_reason="fcs_to_fbs_transition",
+        )
+
+
+def test_future_history_source_rejects_changed_fit_prediction_and_lineage(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_canonical_history_2027_inputs(tmp_path)
+    monkeypatch.setattr(history_annual_module, "_CANONICAL_HISTORY_ROOT", tmp_path)
+    annual = tmp_path / "data/processed/preseason/history/annual/2027"
+    source = build_canonical_history_annual(2027, annual)
+    prediction_path = annual / "predictions.csv"
+    instance_path = annual / "fitted_instance.json"
+    attestation_path = annual / "fitted_model_source.json"
 
     with pytest.raises(ValueError, match="rolling-origin T-1 cutoff"):
         load_validated_history_annual_artifact(
@@ -957,7 +1141,7 @@ def test_future_history_annual_source_builds_a_frozen_2027_cold_start(
     wrong_instance = json.loads(instance_path.read_text())
     wrong_instance["spec_version"] = "1.0"
     wrong_spec.write_text(json.dumps(wrong_instance), encoding="utf-8")
-    with pytest.raises(ValueError, match="fitted instance does not match"):
+    with pytest.raises(ValueError, match="canonical History build"):
         load_validated_history_annual_artifact(
             prediction_path,
             wrong_spec,
@@ -969,7 +1153,7 @@ def test_future_history_annual_source_builds_a_frozen_2027_cold_start(
     wrong_instance_payload = json.loads(instance_path.read_text())
     wrong_instance_payload["model"]["location_coefficients"][0] += 0.01
     wrong_model.write_text(json.dumps(wrong_instance_payload), encoding="utf-8")
-    with pytest.raises(ValueError, match="canonical source attestation"):
+    with pytest.raises(ValueError, match="canonical History build"):
         load_validated_history_annual_artifact(
             prediction_path,
             wrong_model,
@@ -978,42 +1162,98 @@ def test_future_history_annual_source_builds_a_frozen_2027_cold_start(
             source_attestation_path=attestation_path,
         )
     original_prediction_bytes = prediction_path.read_bytes()
-    prediction_path.write_bytes(
-        original_prediction_bytes.replace(b"[0.2,0.3,0.5]", b"[0.1,0.3,0.6]")
+    prediction_rows = list(csv.DictReader(original_prediction_bytes.decode("utf-8").splitlines()))
+    prediction_rows[0]["pmf"] = "[0.2,0.3,0.5]"
+    changed_prediction = tmp_path / "changed_predictions.csv"
+    with changed_prediction.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(prediction_rows[0]), lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(prediction_rows)
+    changed_research = load_research_history_annual_fixture(
+        changed_prediction, instance_path, target_season=2027,
+        trained_through_season=2026,
     )
-    with pytest.raises(ValueError, match="canonical source attestation"):
+    original_research = load_research_history_annual_fixture(
+        prediction_path, instance_path, target_season=2027,
+        trained_through_season=2026,
+    )
+    assert changed_research.source_identity_sha256 != original_research.source_identity_sha256
+    forged_changed = changed_research.to_metadata()
+    forged_changed.pop("source_identity_sha256")
+    forged_changed.update({
+        "provenance_class": "canonical_history_1_1_annual_output",
+        "history_semantic_spec_identity_sha256": history11_semantic_specification_sha256(),
+        "training_input_source_identity_sha256": source.training_input_source_identity_sha256,
+    })
+    forged_changed["source_identity_sha256"] = sha256_json(forged_changed)
+    forged_sidecar = tmp_path / "changed_source.json"
+    forged_sidecar.write_text(json.dumps(forged_changed), encoding="utf-8")
+    with pytest.raises(ValueError, match="canonical History build"):
         load_validated_history_annual_artifact(
-            prediction_path,
+            changed_prediction,
             instance_path,
             target_season=2027,
             trained_through_season=2026,
-            source_attestation_path=attestation_path,
+            source_attestation_path=forged_sidecar,
         )
-    changed_source_attestation = write_history_annual_source_attestation(
-        prediction_path,
-        instance_path,
-        target_season=2027,
-        trained_through_season=2026,
-        attestation_path=tmp_path / "changed-source.json",
+    wrong_semantic = json.loads(attestation_path.read_text())
+    wrong_semantic["history_semantic_spec_identity_sha256"] = "b" * 64
+    wrong_sidecar = tmp_path / "wrong_semantic.json"
+    wrong_sidecar.write_text(json.dumps(wrong_semantic), encoding="utf-8")
+    with pytest.raises(ValueError, match="canonical source attestation"):
+        load_validated_history_annual_artifact(
+            prediction_path, instance_path, target_season=2027,
+            trained_through_season=2026, source_attestation_path=wrong_sidecar,
+        )
+    shortened = tmp_path / "shortened.csv"
+    with shortened.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(prediction_rows[0]), lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(prediction_rows[:-1])
+    with pytest.raises(ValueError, match="canonical History build"):
+        load_validated_history_annual_artifact(
+            shortened, instance_path, target_season=2027,
+            trained_through_season=2026, source_attestation_path=attestation_path,
+        )
+    changed_method_rows = [
+        dict(row) for row in csv.DictReader(original_prediction_bytes.decode("utf-8").splitlines())
+    ]
+    changed_method_rows[-1]["prior_method"] = "generic_fbs_cold_start"
+    changed_method = tmp_path / "changed_method.csv"
+    with changed_method.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(changed_method_rows[0]), lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(changed_method_rows)
+    with pytest.raises(ValueError, match="canonical History build"):
+        load_validated_history_annual_artifact(
+            changed_method, instance_path, target_season=2027,
+            trained_through_season=2026, source_attestation_path=attestation_path,
+        )
+    team_features = tmp_path / "data/processed/preseason/team_season_features.csv"
+    before_input_identity = source.training_input_source_identity_sha256
+    team_features.write_text(
+        team_features.read_text(encoding="utf-8")
+        + "2027,fbs,history-team-3,History Team 3\n",
+        encoding="utf-8",
     )
-    changed_source = load_validated_history_annual_artifact(
-        prediction_path,
-        instance_path,
-        target_season=2027,
-        trained_through_season=2026,
-        source_attestation_path=changed_source_attestation,
+    changed_inputs = history_annual_module.load_canonical_history_annual_build_inputs(2027)
+    assert changed_inputs.source_identity_sha256 != before_input_identity
+    assert changed_inputs.target_population == 4
+    assert load_validated_history_annual_artifact(
+        prediction_path, instance_path, target_season=2027,
+        trained_through_season=2026, source_attestation_path=attestation_path,
+    ).source_identity_sha256 == source.source_identity_sha256
+    retained_features = annual / "source_inputs/team_season_features.csv"
+    retained_features.write_text(
+        retained_features.read_text(encoding="utf-8")
+        + "2027,fbs,history-team-3,History Team 3\n",
+        encoding="utf-8",
     )
-    changed_fallback = Context13FallbackSource.from_history_annual_source(
-        source=changed_source,
-        target_season=2027,
-        trained_through_season=2026,
-        team_id="history-team-0",
-        team_name="History Team 0",
-        population=3,
-        cold_start_reason="fcs_to_fbs_transition",
-    )
-    assert changed_source.source_identity_sha256 != source.source_identity_sha256
-    assert changed_fallback.source_identity_sha256 != fallback.source_identity_sha256
+    with pytest.raises(ValueError, match="canonical History build"):
+        load_validated_history_annual_artifact(
+            prediction_path, instance_path, target_season=2027,
+            trained_through_season=2026, source_attestation_path=attestation_path,
+        )
 
 
 def test_committed_2026_context_lineage_loads_without_relabeling_or_side_effects(
@@ -1139,7 +1379,7 @@ def test_committed_2026_context_lineage_loads_without_relabeling_or_side_effects
         )
     )
     artifact = json.loads(candidate.artifact_bytes())
-    assert artifact["artifact_schema_version"] == 3
+    assert artifact["artifact_schema_version"] == 4
     assert artifact["transfer_input_provenance"]["provenance_class"] == (
         "retrospective_2026_reconstruction"
     )
@@ -1287,6 +1527,8 @@ def test_canonical_candidate_path_reproduces_every_pr159_development_pmf() -> No
         "transfer_manifest_validator": ROOT / "src/gippyrank/preseason_transfer.py",
         "context_prior_core": ROOT / "src/gippyrank/context_prior.py",
         "rank_distribution": ROOT / "src/gippyrank/preseason.py",
+        "history_annual_builder": ROOT / "src/gippyrank/history_annual_v1_1.py",
+        "history_annual_build_entrypoint": ROOT / "scripts/build_history_annual_v1_1.py",
         "research_crossover": ROOT / "scripts/study_context_history_crossover.py",
         "dependency_lock": ROOT / "uv.lock",
     }

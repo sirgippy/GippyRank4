@@ -21,7 +21,7 @@
     "transfer_in_prior_defensive_impact_db_sum",
     "transfer_in_prior_defensive_impact_db_available"
   ],
-  "fit_algorithm_semantics_version": 1,
+  "fit_algorithm_semantics_version": 2,
   "history_features_affect": [
     "location",
     "scale"
@@ -151,7 +151,9 @@
     },
     "missing_values": "training median imputation",
     "missingness_indicators": true,
-    "numeric_values": "training-only mean/std standardization"
+    "numeric_values": "training-only mean/std standardization",
+    "scale_floor": 1e-08,
+    "std_ddof": 0
   },
   "quadrature": "full t-1 empirical quadrature; t-2/t-3 summaries",
   "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
@@ -186,12 +188,13 @@
     ],
     "formula": "minimum_scale + exp(clip(eta, lower, upper))"
   },
-  "semantic_model_spec_identity_sha256": "e4eeb4adc3416f6d1d60a61b709fc9140b5aa14c2e361b4587484acde3490711",
-  "semantic_schema_version": 2,
+  "semantic_model_spec_identity_sha256": "01437795fb34318b6534ba69825323bed54fd34d287cdb87133dae1bfb93e02c",
+  "semantic_schema_version": 3,
   "spec_version": "1.3",
   "status": "active_production",
   "target_distribution_semantics": "deterministic evenly spaced order statistics per empirical team-season target",
   "target_season_outcomes_forbidden": true,
+  "team_season_weight": 1.0,
   "team_season_weighting": "equal team-season weight; target outcomes averaged within row",
   "training_cutoff": "trained_through_season == target_season - 1"
 }
