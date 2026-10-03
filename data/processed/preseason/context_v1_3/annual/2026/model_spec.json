@@ -2,6 +2,7 @@
   "active_production_version": "1.3",
   "candidate": false,
   "context_features_affect": "location_only",
+  "degrees_of_freedom": null,
   "distribution_family": "normal",
   "features": [
     "lag2_z_mean",
@@ -20,10 +21,13 @@
     "transfer_in_prior_defensive_impact_db_sum",
     "transfer_in_prior_defensive_impact_db_available"
   ],
+  "fit_algorithm_semantics_version": 2,
   "history_features_affect": [
     "location",
     "scale"
   ],
+  "lag_count": 1,
+  "lag_semantics": "target-season t-1 empirical rank distribution",
   "location_feature_names": [
     "lag2_z_mean",
     "lag3_z_mean",
@@ -41,16 +45,156 @@
     "transfer_in_prior_defensive_impact_db_sum",
     "transfer_in_prior_defensive_impact_db_available"
   ],
+  "location_feature_placement": {
+    "context_features": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "transfer_in_prior_usage_sum",
+      "transfer_in_prior_defensive_impact_db_sum",
+      "transfer_in_prior_defensive_impact_db_available"
+    ],
+    "history_features": [
+      "lag2_z_mean",
+      "lag3_z_mean",
+      "long_run_z_mean"
+    ]
+  },
+  "minimum_scale": 0.1,
   "model_family": "context_prior",
-  "optimizer_retry": "retry with maxiter=2000 only after iteration-limit failure",
+  "optimizer": {
+    "ftol": 1e-10,
+    "gtol": 1e-06,
+    "maxiter": 500,
+    "method": "L-BFGS-B",
+    "retry": {
+      "attempts": 1,
+      "maxiter": 2000,
+      "otherwise": "raise optimizer failure",
+      "restart_from_initialization": true,
+      "trigger_message": "ITERATIONS REACHED LIMIT"
+    }
+  },
+  "optimizer_initialization": {
+    "gamma_intercept": {
+      "scale_before_log": 0.7,
+      "value": -0.35667494393873245
+    },
+    "lag_beta_1": 0.55,
+    "remaining_beta_coefficients": 0.0,
+    "remaining_gamma_coefficients": 0.0
+  },
+  "optimizer_retry": "retry once with maxiter=2000 after iteration-limit failure",
+  "ordered_model_features": [
+    "lag2_z_mean",
+    "lag3_z_mean",
+    "long_run_z_mean",
+    "coach_tenure_seasons",
+    "recruiting_class_rank",
+    "recruiting_class_points",
+    "recruiting_points_2y_mean",
+    "recruiting_points_3y_mean",
+    "recruiting_points_4y_mean",
+    "recruiting_points_trend",
+    "talent_composite",
+    "returning_pct_ppa",
+    "transfer_in_prior_usage_sum",
+    "transfer_in_prior_defensive_impact_db_sum",
+    "transfer_in_prior_defensive_impact_db_available"
+  ],
+  "parameter_bounds": {
+    "beta": "unbounded except feature-placement fixed-zero coefficients",
+    "feature-placement_fixed_zero": {
+      "bounds": [
+        0.0,
+        0.0
+      ],
+      "location_numeric_and_missingness": "features outside location_feature_names",
+      "scale_numeric_and_missingness": "features outside scale_feature_names"
+    },
+    "gamma_coefficients": [
+      -5.0,
+      4.0
+    ]
+  },
   "penalty": 0.25,
+  "preprocessing": {
+    "missing_indicator_placement": {
+      "location": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean",
+        "coach_tenure_seasons",
+        "recruiting_class_rank",
+        "recruiting_class_points",
+        "recruiting_points_2y_mean",
+        "recruiting_points_3y_mean",
+        "recruiting_points_4y_mean",
+        "recruiting_points_trend",
+        "talent_composite",
+        "returning_pct_ppa",
+        "transfer_in_prior_usage_sum",
+        "transfer_in_prior_defensive_impact_db_sum",
+        "transfer_in_prior_defensive_impact_db_available"
+      ],
+      "scale": [
+        "lag2_z_mean",
+        "lag3_z_mean",
+        "long_run_z_mean"
+      ]
+    },
+    "missing_values": "training median imputation",
+    "missingness_indicators": true,
+    "numeric_values": "training-only mean/std standardization",
+    "scale_floor": 1e-08,
+    "std_ddof": 0
+  },
   "quadrature": "full t-1 empirical quadrature; t-2/t-3 summaries",
+  "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+  "quadrature_points": 12,
+  "regularization": {
+    "beta_gradient": "2 * penalty * beta / N",
+    "beta_includes": "lag and location coefficients",
+    "beta_objective": "penalty * sum(beta ** 2) / N",
+    "beta_regularization_weight": 1.0,
+    "gamma_gradient": "2 * penalty * gamma_regularization_weight * gamma[1:] / N",
+    "gamma_intercept_penalized": false,
+    "gamma_objective": "penalty * gamma_regularization_weight * sum(gamma[1:] ** 2) / N",
+    "gamma_regularization_weight": 0.25,
+    "normalization": "divide by number of training rows"
+  },
   "scale_feature_names": [
     "lag2_z_mean",
     "lag3_z_mean",
     "long_run_z_mean"
   ],
+  "scale_feature_placement": {
+    "history_features": [
+      "lag2_z_mean",
+      "lag3_z_mean",
+      "long_run_z_mean"
+    ]
+  },
+  "scale_link": {
+    "eta_clip_bounds": [
+      -5.0,
+      4.0
+    ],
+    "formula": "minimum_scale + exp(clip(eta, lower, upper))"
+  },
+  "semantic_model_spec_identity_sha256": "01437795fb34318b6534ba69825323bed54fd34d287cdb87133dae1bfb93e02c",
+  "semantic_schema_version": 3,
   "spec_version": "1.3",
   "status": "active_production",
-  "target_season_outcomes_forbidden": true
+  "target_distribution_semantics": "deterministic evenly spaced order statistics per empirical team-season target",
+  "target_season_outcomes_forbidden": true,
+  "team_season_weight": 1.0,
+  "team_season_weighting": "equal team-season weight; target outcomes averaged within row",
+  "training_cutoff": "trained_through_season == target_season - 1"
 }

@@ -17,9 +17,34 @@ from scipy.optimize import minimize
 from scipy.special import logsumexp
 from scipy.stats import norm, t
 
-EPSILON = 1e-6
+RANK_PERCENTILE_MIDPOINT_OFFSET = 0.5
+RANK_TRANSFORM_EPSILON = 1e-6
+RANK_BIN_LOWER_ENDPOINT = -np.inf
+RANK_BIN_UPPER_ENDPOINT = np.inf
+RANK_PMF_MASS_FLOOR = 0.0
+RANK_TRANSFORM_SEMANTICS_VERSION = 1
+RANK_PMF_INTEGRATION_SEMANTICS_VERSION = 1
+GENERIC_RANK_PRIOR_MOMENTS_VERSION = 1
 QUADRATURE_POINTS = 12
 MULTI_LAG_QUADRATURE_POINTS = 2
+DETERMINISTIC_QUADRATURE_METHOD = (
+    "sort empirical values then retain evenly spaced order statistics"
+)
+# Named fit semantics are also included in the frozen Context 1.3 semantic
+# specification. Keep the optimizer and the durable contract on one source.
+DIRECT_RANK_INITIAL_LAG_BETA = 0.55
+DIRECT_RANK_INITIAL_SCALE = 0.7
+DIRECT_RANK_LOG_SCALE_CLIP_BOUNDS = (-5.0, 4.0)
+DIRECT_RANK_GAMMA_COEFFICIENT_BOUNDS = (-5.0, 4.0)
+DIRECT_RANK_FIXED_ZERO_COEFFICIENT_BOUNDS = (0.0, 0.0)
+DIRECT_RANK_BETA_REGULARIZATION_WEIGHT = 1.0
+DIRECT_RANK_GAMMA_REGULARIZATION_WEIGHT = 0.25
+DIRECT_RANK_OPTIMIZER_MAXITER = 500
+DIRECT_RANK_OPTIMIZER_FTOL = 1e-10
+DIRECT_RANK_OPTIMIZER_GTOL = 1e-6
+DIRECT_RANK_OPTIMIZER_METHOD = "L-BFGS-B"
+PREPROCESSOR_SCALE_FLOOR = 1e-8
+PREPROCESSOR_STD_DDOF = 0
 
 
 def deterministic_quadrature(
@@ -93,26 +118,91 @@ def rank_sample(row: dict[str, str]) -> np.ndarray:
 
 def rank_to_z(ranks: np.ndarray, population: int) -> np.ndarray:
     """Map actual ranks to an unbounded representation of rank percentile."""
+    if RANK_TRANSFORM_SEMANTICS_VERSION != 1:
+        raise ValueError("unsupported rank-coordinate transform semantics")
     percentile = np.clip(
-        (np.asarray(ranks, dtype=float) - 0.5) / population, EPSILON, 1 - EPSILON
+        (np.asarray(ranks, dtype=float) - RANK_PERCENTILE_MIDPOINT_OFFSET)
+        / population,
+        RANK_TRANSFORM_EPSILON,
+        1 - RANK_TRANSFORM_EPSILON,
     )
     return np.log(percentile) - np.log1p(-percentile)
 
 
 def rank_bin_edges(population: int) -> np.ndarray:
     """Transformed bin boundaries for ranks 1..N, including infinite edges."""
+    if RANK_TRANSFORM_SEMANTICS_VERSION != 1:
+        raise ValueError("unsupported rank-coordinate transform semantics")
     if population < 1:
         raise ValueError("population must be positive")
     interior = np.arange(1, population, dtype=float) / population
-    return np.r_[-np.inf, np.log(interior) - np.log1p(-interior), np.inf]
+    return np.r_[
+        RANK_BIN_LOWER_ENDPOINT,
+        np.log(interior) - np.log1p(-interior),
+        RANK_BIN_UPPER_ENDPOINT,
+    ]
+
+
+def conditional_rank_mixture_pmf(
+    locations: np.ndarray,
+    scale: float,
+    population: int,
+    *,
+    family: str = "normal",
+    degrees_of_freedom: float | None = None,
+) -> np.ndarray:
+    """Integrate a conditional location mixture over discrete rank bins.
+
+    This is the shared rank-PMF construction used by fitted rank models and
+    location-only research transformations.  For valid Normal inputs it keeps
+    the existing Context model's operation order and normalization unchanged.
+    """
+    if RANK_PMF_INTEGRATION_SEMANTICS_VERSION != 1:
+        raise ValueError("unsupported rank PMF integration semantics")
+    points = np.asarray(locations, dtype=float)
+    if points.ndim != 1 or not len(points) or not np.isfinite(points).all():
+        raise ValueError("conditional location points must be a finite vector")
+    if (
+        isinstance(population, (bool, np.bool_))
+        or not isinstance(population, (int, np.integer))
+        or population < 1
+    ):
+        raise ValueError("population must be a positive integer")
+    population = int(population)
+    if not np.isfinite(scale) or scale <= 0:
+        raise ValueError("conditional residual scale must be finite and positive")
+    edges = rank_bin_edges(population)
+    standardized_edges = (edges[None, :] - points[:, None]) / scale
+    if family == "normal":
+        cdf = norm.cdf(standardized_edges)
+    elif family == "student_t":
+        if (
+            degrees_of_freedom is None
+            or not np.isfinite(degrees_of_freedom)
+            or degrees_of_freedom <= 0
+        ):
+            raise ValueError("Student-t rank mixtures require positive degrees of freedom")
+        cdf = t.cdf(standardized_edges, degrees_of_freedom)
+    else:
+        raise ValueError(f"unsupported conditional distribution family: {family}")
+    masses = np.maximum(np.diff(cdf, axis=1), RANK_PMF_MASS_FLOOR)
+    pmf = np.mean(masses, axis=0)
+    total = float(pmf.sum())
+    if not np.isfinite(pmf).all() or np.any(pmf < 0) or total <= 0:
+        raise ValueError("conditional rank mixture produced an invalid PMF")
+    return pmf / total
 
 
 def normal_pmf(location: float, scale: float, population: int, **_: Any) -> np.ndarray:
     """Integrate a Normal coordinate distribution over discrete rank bins."""
+    if RANK_PMF_INTEGRATION_SEMANTICS_VERSION != 1:
+        raise ValueError("unsupported rank PMF integration semantics")
     if scale <= 0:
         raise ValueError("scale must be positive")
     edges = rank_bin_edges(population)
-    pmf = np.maximum(np.diff(norm.cdf((edges - location) / scale)), 0.0)
+    pmf = np.maximum(
+        np.diff(norm.cdf((edges - location) / scale)), RANK_PMF_MASS_FLOOR
+    )
     return pmf / pmf.sum()
 
 
@@ -155,7 +245,12 @@ class Preprocessor:
 
     @classmethod
     def fit(
-        cls, rows: list[dict[str, float | None]], feature_names: list[str]
+        cls,
+        rows: list[dict[str, float | None]],
+        feature_names: list[str],
+        *,
+        scale_floor: float = PREPROCESSOR_SCALE_FLOOR,
+        std_ddof: int = PREPROCESSOR_STD_DDOF,
     ) -> Preprocessor:
         medians: dict[str, float] = {}
         means: dict[str, float] = {}
@@ -170,7 +265,10 @@ class Preprocessor:
                 dtype=float,
             )
             means[name] = float(np.mean(imputed))
-            scales[name] = max(float(np.std(imputed)), 1e-8)
+            scales[name] = max(
+                float(np.std(imputed, ddof=std_ddof)),
+                scale_floor,
+            )
         return cls(tuple(feature_names), medians, means, scales)
 
     def transform(self, rows: list[dict[str, float | None]]) -> np.ndarray:
@@ -241,6 +339,8 @@ class DirectRankModel:
         location_feature_names: list[str] | None = None,
         scale_feature_names: list[str] | None = None,
         row_weights: np.ndarray | None = None,
+        preprocessor_scale_floor: float = PREPROCESSOR_SCALE_FLOOR,
+        preprocessor_std_ddof: int = PREPROCESSOR_STD_DDOF,
     ) -> DirectRankModel:
         if not rows:
             raise ValueError("cannot fit without rows")
@@ -253,7 +353,12 @@ class DirectRankModel:
             if not np.all(np.isfinite(weights)) or np.any(weights <= 0):
                 raise ValueError("row_weights must be finite and strictly positive")
         weight_total = float(weights.sum())
-        preprocessor = Preprocessor.fit([r.features for r in rows], feature_names)
+        preprocessor = Preprocessor.fit(
+            [r.features for r in rows],
+            feature_names,
+            scale_floor=preprocessor_scale_floor,
+            std_ddof=preprocessor_std_ddof,
+        )
         x = np.column_stack(
             [np.ones(len(rows)), preprocessor.transform([r.features for r in rows])]
         )
@@ -303,7 +408,7 @@ class DirectRankModel:
             )
             base_locations = x @ beta[lag_count:]
             eta = x @ gamma
-            exp_eta = np.exp(np.clip(eta, -5, 4))
+            exp_eta = np.exp(np.clip(eta, *DIRECT_RANK_LOG_SCALE_CLIP_BOUNDS))
             scales = minimum_scale + exp_eta
             locations = base_locations[:, None] + lags @ beta[:lag_count]
             if family == "normal":
@@ -320,7 +425,10 @@ class DirectRankModel:
             log_mixture = logsumexp(densities, axis=2)
             target_log_probability = log_mixture - np.log(lag_counts[:, None])
             losses = -(target_log_probability * target_mask).sum(axis=1) / target_counts
-            regularizer = penalty * (np.sum(beta**2) + 0.25 * np.sum(gamma[1:] ** 2))
+            regularizer = penalty * (
+                DIRECT_RANK_BETA_REGULARIZATION_WEIGHT * np.sum(beta**2)
+                + DIRECT_RANK_GAMMA_REGULARIZATION_WEIGHT * np.sum(gamma[1:] ** 2)
+            )
             objective = float(
                 np.dot(weights, losses) / weight_total + regularizer / len(rows)
             )
@@ -377,8 +485,20 @@ class DirectRankModel:
                     scale_score * exp_eta[:, None, None] * target_weight, axis=(1, 2)
                 )
             )
-            beta_gradient += 2 * penalty * beta / len(rows)
-            gamma_gradient[1:] += 0.5 * penalty * gamma[1:] / len(rows)
+            beta_gradient += (
+                2
+                * DIRECT_RANK_BETA_REGULARIZATION_WEIGHT
+                * penalty
+                * beta
+                / len(rows)
+            )
+            gamma_gradient[1:] += (
+                2
+                * DIRECT_RANK_GAMMA_REGULARIZATION_WEIGHT
+                * penalty
+                * gamma[1:]
+                / len(rows)
+            )
             return objective, np.r_[beta_gradient, gamma_gradient]
 
         def objective(theta: np.ndarray) -> float:
@@ -388,15 +508,21 @@ class DirectRankModel:
             return objective_gradient(theta)[1]
 
         initial_beta = np.zeros(x.shape[1] + lag_count)
-        initial_beta[0] = 0.55
+        initial_beta[0] = DIRECT_RANK_INITIAL_LAG_BETA
         initial_gamma = np.zeros(x.shape[1])
-        initial_gamma[0] = np.log(0.7)
-        options = {"maxiter": 500, "ftol": 1e-10, "gtol": 1e-6}
+        initial_gamma[0] = np.log(DIRECT_RANK_INITIAL_SCALE)
+        options = {
+            "maxiter": DIRECT_RANK_OPTIMIZER_MAXITER,
+            "ftol": DIRECT_RANK_OPTIMIZER_FTOL,
+            "gtol": DIRECT_RANK_OPTIMIZER_GTOL,
+        }
         options.update(optimizer_options or {})
         beta_bounds: list[tuple[float | None, float | None]] = [(None, None)] * len(
             initial_beta
         )
-        gamma_bounds: list[tuple[float | None, float | None]] = [(-5.0, 4.0)] * len(
+        gamma_bounds: list[tuple[float | None, float | None]] = [
+            DIRECT_RANK_GAMMA_COEFFICIENT_BOUNDS
+        ] * len(
             initial_gamma
         )
         # The design matrix is intercept, numeric features, then their missingness
@@ -407,14 +533,16 @@ class DirectRankModel:
             columns = (1 + feature_index, 1 + len(feature_names) + feature_index)
             if feature_name not in location_features:
                 for column in columns:
-                    beta_bounds[lag_count + column] = (0.0, 0.0)
+                    beta_bounds[lag_count + column] = (
+                        DIRECT_RANK_FIXED_ZERO_COEFFICIENT_BOUNDS
+                    )
             if feature_name not in scale_features:
                 for column in columns:
-                    gamma_bounds[column] = (0.0, 0.0)
+                    gamma_bounds[column] = DIRECT_RANK_FIXED_ZERO_COEFFICIENT_BOUNDS
         result = minimize(
             objective,
             np.r_[initial_beta, initial_gamma],
-            method="L-BFGS-B",
+            method=DIRECT_RANK_OPTIMIZER_METHOD,
             jac=gradient,
             bounds=beta_bounds + gamma_bounds,
             options=options,
@@ -446,7 +574,13 @@ class DirectRankModel:
             list(scale_feature_names) if scale_feature_names is not None else None,
         )
 
-    def _matrix(self, features: dict[str, float | None]) -> np.ndarray:
+    def design_vector(self, features: dict[str, float | None]) -> np.ndarray:
+        """Return the intercept, standardized values, and missingness flags.
+
+        This public method is the single source for model design construction.
+        It also allows callers to inspect fitted feature contributions without
+        reproducing preprocessing outside the model.
+        """
         return np.r_[1.0, self.preprocessor.transform([features])[0]]
 
     def conditional_parameters(
@@ -455,7 +589,7 @@ class DirectRankModel:
         lag1_z: np.ndarray,
         lag_zs: tuple[np.ndarray, ...] = (),
     ) -> tuple[np.ndarray, float]:
-        x = self._matrix(features)
+        x = self.design_vector(features)
         distributions = (lag1_z, *lag_zs[: self.lag_count - 1])
         if len(distributions) != self.lag_count:
             raise ValueError("prediction lacks required lag distributions")
@@ -465,7 +599,10 @@ class DirectRankModel:
         lags = product_quadrature(distributions, points)
         base_location = float(x @ self.beta[self.lag_count :])
         locations = base_location + lags @ self.beta[: self.lag_count]
-        scale = float(self.minimum_scale + np.exp(np.clip(x @ self.gamma, -5, 4)))
+        scale = float(
+            self.minimum_scale
+            + np.exp(np.clip(x @ self.gamma, *DIRECT_RANK_LOG_SCALE_CLIP_BOUNDS))
+        )
         return locations, scale
 
     def pmf(
@@ -476,16 +613,13 @@ class DirectRankModel:
         lag_zs: tuple[np.ndarray, ...] = (),
     ) -> np.ndarray:
         locations, scale = self.conditional_parameters(features, lag1_z, lag_zs)
-        edges = rank_bin_edges(population)
-        standardized_edges = (edges[None, :] - locations[:, None]) / scale
-        cdf = (
-            norm.cdf(standardized_edges)
-            if self.family == "normal"
-            else t.cdf(standardized_edges, self.degrees_of_freedom)
+        return conditional_rank_mixture_pmf(
+            locations,
+            scale,
+            population,
+            family=self.family,
+            degrees_of_freedom=self.degrees_of_freedom,
         )
-        masses = np.maximum(np.diff(cdf, axis=1), 0.0)
-        pmf = np.mean(masses, axis=0)
-        return pmf / pmf.sum()
 
     def metadata(self) -> dict[str, object]:
         metadata = {
@@ -503,7 +637,7 @@ class DirectRankModel:
             "quadrature_points": QUADRATURE_POINTS
             if self.lag_count == 1
             else MULTI_LAG_QUADRATURE_POINTS,
-            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_method": DETERMINISTIC_QUADRATURE_METHOD,
             "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
         }
         if self.location_feature_names is not None:
@@ -525,6 +659,8 @@ class GenericRankPrior:
     def fit(
         cls, rows: list[TeamSeason], minimum_scale: float = 0.10
     ) -> GenericRankPrior:
+        if GENERIC_RANK_PRIOR_MOMENTS_VERSION != 1:
+            raise ValueError("unsupported generic rank-prior moment semantics")
         if not rows:
             raise ValueError("cannot fit cold-start prior without historical rows")
         # Equal team-season weight: every team's empirical constituent outcomes

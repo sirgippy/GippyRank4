@@ -249,6 +249,11 @@ class SnapshotRecord:
         record_count = _required_int(value.get("record_count"), "record_count")
         if record_count < 0:
             raise ManifestValidationError(f"snapshot has negative record count: {path}")
+        canonical = value.get("canonical", True)
+        if not isinstance(canonical, bool):
+            raise ManifestValidationError(
+                f"snapshot canonical flag is not boolean: {path}"
+            )
         source_filename = str(value.get("source_filename") or Path(path).name).strip()
         snapshot_id = str(value.get("snapshot_id") or "").strip()
         if not snapshot_id:
@@ -267,7 +272,7 @@ class SnapshotRecord:
             captured_on_or_before_cutoff=captured,
             sha256=digest.lower(),
             record_count=record_count,
-            canonical=bool(value.get("canonical", True)),
+            canonical=canonical,
             version=str(value.get("version") or "v1"),
         )
 

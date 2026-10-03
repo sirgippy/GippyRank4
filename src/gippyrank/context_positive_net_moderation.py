@@ -7,7 +7,17 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from gippyrank.context_prior_v1_3 import H_FEATURES, LOCATION_FEATURE_NAMES
+from gippyrank.context_prior_v1_3 import (
+    H_FEATURES,
+    LOCATION_FEATURE_NAMES,
+)
+from gippyrank.context_prior_v1_3 import (
+    moderate_positive_net as _moderate_positive_net,
+)
+from gippyrank.context_prior_v1_3 import (
+    moderated_location_points as _moderated_location_points,
+)
+from gippyrank.preseason import conditional_rank_mixture_pmf
 
 ALPHAS = (1.0, 0.75, 0.5, 0.25, 0.0)
 LOCATION_TOLERANCE = 1e-8
@@ -42,7 +52,7 @@ class LocationParts:
 def parts_from_fitted_contributions(
     row: Mapping[str, str], conditional_location_points: np.ndarray
 ) -> LocationParts:
-    """Read only fitted, preseason-available terms from a diagnostic row."""
+    """Read a retained research diagnostic row (never used by candidate API)."""
     history = float(row["lag1_contribution"])
     context_only = 0.0
     for name in LOCATION_FEATURE_NAMES:
@@ -62,22 +72,20 @@ def parts_from_fitted_contributions(
 
 
 def moderate_positive_net(value: float, alpha: float) -> float:
-    """Keep a nonpositive net term; scale only its positive portion."""
-    if not np.isfinite(value) or not np.isfinite(alpha) or not 0 <= alpha <= 1:
-        raise ValueError("net contribution must be finite and alpha within [0, 1]")
-    return min(value, 0.0) + alpha * max(value, 0.0)
+    """Compatibility export for the canonical Context 1.3 moderation rule."""
+    return _moderate_positive_net(value, alpha)
 
 
 def moderated_location_points(parts: LocationParts, alpha: float) -> np.ndarray:
-    """Shift the fitted mixture as a whole, retaining offsets and residual scale."""
-    moderated = moderate_positive_net(parts.context_only_subtotal, alpha)
-    points = parts.conditional_location_points + (
-        moderated - parts.context_only_subtotal
-    )
-    expected = parts.intercept + parts.history_derived_subtotal + moderated
-    if not np.isclose(points.mean(), expected, rtol=0, atol=LOCATION_TOLERANCE):
-        raise ValueError("moderated location does not reconstruct the center")
-    return points
+    """Compatibility wrapper for the canonical location moderation helper."""
+    return _moderated_location_points(parts, alpha)  # type: ignore[arg-type]
+
+
+def normal_mixture_pmf(
+    locations: np.ndarray, scale: float, population: int
+) -> np.ndarray:
+    """Compatibility wrapper for the shared conditional rank-PMF helper."""
+    return conditional_rank_mixture_pmf(locations, scale, population)
 
 
 def require_rolling_origin(

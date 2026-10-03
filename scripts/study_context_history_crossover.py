@@ -21,7 +21,7 @@ from datetime import datetime
 from pathlib import Path
 
 import numpy as np
-from scipy.stats import norm, spearmanr
+from scipy.stats import spearmanr
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -35,7 +35,7 @@ from gippyrank.posterior.snapshots import (
     filter_games,
     load_pinned_likelihood,
 )
-from gippyrank.preseason import rank_bin_edges
+from gippyrank.preseason import conditional_rank_mixture_pmf
 
 SEASONS = hcp.SEASONS
 OUT = ROOT / "data/processed/context_history_crossover"
@@ -109,23 +109,8 @@ def json_values(values: Iterable[float]) -> str:
 def normal_mixture_pmf(
     locations: np.ndarray, scale: float, population: int
 ) -> np.ndarray:
-    """Use DirectRankModel's equal-weight Normal rank-bin mixture semantics."""
-    locations = np.asarray(locations, dtype=float)
-    if locations.ndim != 1 or not len(locations) or not np.isfinite(locations).all():
-        raise ValueError("hybrid locations must be a finite, non-empty vector")
-    if not np.isfinite(scale) or scale <= 0:
-        raise ValueError("hybrid conditional scale must be finite and positive")
-    edges = rank_bin_edges(population)
-    cdf = norm.cdf((edges[None, :] - locations[:, None]) / scale)
-    masses = np.maximum(np.diff(cdf, axis=1), 0.0)
-    pmf = np.mean(masses, axis=0)
-    total = float(pmf.sum())
-    if not np.isfinite(pmf).all() or np.any(pmf < 0) or total <= 0:
-        raise ValueError("hybrid construction produced an invalid PMF")
-    pmf /= total
-    if len(pmf) != population or not np.isclose(pmf.sum(), 1.0, atol=1e-12):
-        raise ValueError("hybrid PMF has invalid support or normalization")
-    return pmf
+    """Use the shared fitted-model Normal rank-bin mixture implementation."""
+    return conditional_rank_mixture_pmf(locations, scale, population)
 
 
 def pmf_summary(pmf: np.ndarray) -> dict[str, float]:

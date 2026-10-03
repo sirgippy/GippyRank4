@@ -23,7 +23,9 @@ import build_preseason_prior as v1
 import numpy as np
 
 from gippyrank.context_prior_v1_3 import (
-    CONTEXT_1_3_FEATURES,
+    CONTEXT13_MODEL_ARTIFACT_SCHEMA_VERSION,
+    CONTEXT13_PREDICTION_SCHEMA_VERSION,
+    CONTEXT13_PROVENANCE_SCHEMA_VERSION,
     CONTEXT_PRIOR_CANDIDATE_VERSION,
     MODEL_FEATURE_NAMES,
     RETROSPECTIVE_2026_PROVENANCE,
@@ -44,11 +46,6 @@ TEAM_FEATURES = PRESEASON / "team_season_features.csv"
 DEFAULT_MANIFEST = ROOT / "data/raw/cfbd/preseason/transfers/manifest.json"
 DEFAULT_OUTPUT = PRESEASON / "context_v1_3_2026_reconstruction"
 ACTIVE_PRIOR = PRESEASON / "context_v1_3"
-HISTORICAL_TRANSFER_FEATURES = (
-    PRESEASON / "context_v1_3_candidate/historical_transfer_features.csv"
-)
-
-
 def _read_csv(path: Path) -> list[dict[str, str]]:
     with path.open(newline="", encoding="utf-8") as handle:
         return list(csv.DictReader(handle))
@@ -195,12 +192,15 @@ def build_starting_prior(
     transfer_provenance: dict[str, Any],
 ) -> dict[str, Any]:
     """Fit through 2025 and produce an independent reconstructed 2026 prior."""
-    rows, _cold, _coverage = c13.load_candidate_rows(HISTORICAL_TRANSFER_FEATURES)
-    model, fitted = c13.fit_model(
+    rows, corpus_source, _cold, _coverage = c13.load_context13_training_corpus(
+        target_season=2026,
+        trained_through_season=2025,
+    )
+    model, fitted, fit_source = c13.fit_model_with_source(
         rows,
         target_season=2026,
         trained_through_season=2025,
-        context_features=CONTEXT_1_3_FEATURES,
+        training_corpus_source=corpus_source,
     )
     team_rows = _read_csv(TEAM_FEATURES)
     index = {
@@ -230,10 +230,10 @@ def build_starting_prior(
         expected_team_keys={(2026, "fbs", row.team_id) for row in base},
         provenance=transfer_provenance,
     )
-    validated = {
-        **validated,
-        "feature_artifact": _repo_relative(feature_path),
-        "manifest": _repo_relative(manifest_path),
+    validated_metadata = validated.to_metadata()
+    validated_metadata["diagnostic_paths"] = {
+        "transfer_feature_artifact": _repo_relative(feature_path),
+        "snapshot_manifest": _repo_relative(manifest_path),
     }
     fallback = {
         item.key: item
@@ -272,29 +272,41 @@ def build_starting_prior(
         {
             "model_family": "context_prior",
             "spec_version": CONTEXT_PRIOR_CANDIDATE_VERSION,
+            "artifact_schema_version": CONTEXT13_MODEL_ARTIFACT_SCHEMA_VERSION,
             "model": model.metadata(),
+            "fit_provenance": fit_source.to_metadata(),
             "prior_artifact_kind": "reconstructed_preseason_forecast",
             "transfer_provenance_class": RETROSPECTIVE_2026_PROVENANCE,
         },
     )
+    _write_json(annual / "fitted_model_source.json", fit_source.to_metadata())
     _write_json(annual / "model_spec.json", model_specification_metadata())
     _write_json(
         annual / "feature_provenance.json",
-        {"context_1_3": c13.feature_provenance(), "transfer": transfer_provenance},
+        {
+            "provenance_schema_version": CONTEXT13_PROVENANCE_SCHEMA_VERSION,
+            "context_1_3": c13.feature_provenance(),
+            "transfer": validated_metadata,
+            "transfer_derivation": transfer_provenance,
+        },
     )
     _write_json(
         annual / "model_report.json",
         {
             "model_family": "context_prior",
             "spec_version": CONTEXT_PRIOR_CANDIDATE_VERSION,
+            "artifact_schema_version": CONTEXT13_MODEL_ARTIFACT_SCHEMA_VERSION,
+            "prediction_schema_version": CONTEXT13_PREDICTION_SCHEMA_VERSION,
+            "provenance_schema_version": CONTEXT13_PROVENANCE_SCHEMA_VERSION,
             "status": "active_production",
             "target_season": 2026,
             "trained_through_season": 2025,
             "starting_point_status": "retrospective_2026_reconstruction",
             "target_outcomes_used": False,
             "n_fbs": len(predictions),
+            "fitted_model_source": fit_source.to_metadata(),
             "transfer_provenance": transfer_provenance,
-            "validated_transfer_metadata": validated,
+            "validated_transfer_metadata": validated_metadata,
             "prior_artifact_sha256": _sha256(annual / "predictions.csv"),
         },
     )

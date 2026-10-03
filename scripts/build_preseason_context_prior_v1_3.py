@@ -38,15 +38,22 @@ from gippyrank.context_prior_v1_3 import (
     D5_CONTEXT_FEATURES,
     LOCATION_FEATURE_NAMES,
     MODEL_FEATURE_NAMES,
+    RETROSPECTIVE_2026_PROVENANCE,
+    RETROSPECTIVE_RESEARCH_PROVENANCE,
     SCALE_FEATURE_NAMES,
+    Context13TrainingCorpusSource,
+    _mint_context13_training_corpus_source,
     attach_transfer_features,
     attach_transfer_features_to_inference_rows,
     candidate_guard,
+    context13_semantic_specification_sha256,
     fit_model,
     load_validated_production_transfer_features,
     load_validated_reconstructed_transfer_features,
     model_specification_metadata,
+    sha256_json,
 )
+from gippyrank.preseason_transfer import MODEL_FEATURE_COLUMNS
 
 ROOT = Path(__file__).resolve().parents[1]
 PRESEASON = ROOT / "data/processed/preseason"
@@ -136,6 +143,136 @@ def load_candidate_rows(
     rows, cold, coverage = base_context_rows()
     attached = attach_transfer_features(rows, read_csv(feature_path), require_all=True)
     return attached, cold, coverage
+
+
+def _training_source_artifact_paths() -> dict[str, Path]:
+    """Canonical source inventory used by independently reproducible annual fits."""
+    paths = {
+        "historical_rank_distribution_artifact": c12.MODELING
+        / "team_season_rank_distributions.csv",
+        "historical_context_feature_artifact": c12.PRESEASON
+        / "team_season_features.csv",
+        "historical_transfer_feature_artifact": HISTORICAL_TRANSFER_FEATURES,
+        "historical_transfer_feature_provenance": HISTORICAL_TRANSFER_FEATURES.with_name(
+            "historical_transfer_features.provenance.json"
+        ),
+        "context13_semantic_implementation": ROOT
+        / "src/gippyrank/context_prior_v1_3.py",
+        "direct_rank_implementation": ROOT / "src/gippyrank/preseason.py",
+        "historical_row_builder": ROOT / "scripts/build_preseason_prior.py",
+        "context_feature_builder": ROOT / "scripts/build_preseason_context_prior_v1_2.py",
+        "transfer_feature_builder": ROOT / "scripts/build_preseason_context_prior_v1_3.py",
+    }
+    for path in sorted(c12.TENURES.glob("*.json")):
+        paths[f"coach_tenure_source/{path.name}"] = path
+    return paths
+
+
+def load_context13_training_corpus(
+    *, target_season: int, trained_through_season: int
+) -> tuple[list, Context13TrainingCorpusSource, list, list[dict[str, object]]]:
+    """Build rows and typed corpus provenance from the canonical historical inputs.
+
+    Unlike :func:`load_candidate_rows`, this production-shaped loader does not
+    accept an arbitrary transfer feature path. Its typed source binds the
+    committed rank, Context feature, coaching, and historical transfer inputs
+    plus the exact resulting rows.
+    """
+    if trained_through_season != target_season - 1:
+        raise ValueError("Context training corpus must end at target season - 1")
+    paths = _training_source_artifact_paths()
+    missing = [str(path) for path in paths.values() if not path.is_file()]
+    if missing:
+        raise FileNotFoundError(
+            "canonical Context 1.3 training inputs are unavailable: " + ", ".join(missing)
+        )
+    source_hashes = {
+        logical_id: sha256_file(path) for logical_id, path in paths.items()
+    }
+    base_rows, cold, coverage = base_context_rows(max_season=trained_through_season)
+    if any(row.season > trained_through_season or row.subdivision != "fbs" for row in base_rows):
+        raise ValueError("canonical Context training loader returned an invalid historical row")
+    historical_transfer_rows = read_csv(HISTORICAL_TRANSFER_FEATURES)
+    try:
+        historical_transfer_provenance = json.loads(
+            paths["historical_transfer_feature_provenance"].read_text(encoding="utf-8")
+        )
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError("canonical historical transfer provenance is unreadable") from error
+    expected_base_keys = _keys(base_rows)
+    actual_transfer_keys = set()
+    try:
+        for row in historical_transfer_rows:
+            if row.get("provenance_class") != "retrospective_research_reconstruction":
+                raise ValueError("historical transfer row has an unexpected provenance class")
+            actual_transfer_keys.add(
+                (int(row["season"]), str(row["subdivision"]), str(row["team_id"]))
+            )
+    except (KeyError, TypeError, ValueError) as error:
+        raise ValueError("historical transfer artifact has an invalid row identity") from error
+    transfer_contract_checks = {
+        "sidecar_object": isinstance(historical_transfer_provenance, dict),
+        "spec_version": (
+            isinstance(historical_transfer_provenance, dict)
+            and historical_transfer_provenance.get("candidate_spec_version")
+            == CONTEXT_PRIOR_CANDIDATE_VERSION
+        ),
+        "provenance_class": (
+            isinstance(historical_transfer_provenance, dict)
+            and historical_transfer_provenance.get("provenance_class")
+            == "retrospective_research_reconstruction"
+        ),
+        "context_features": (
+            isinstance(historical_transfer_provenance, dict)
+            and historical_transfer_provenance.get("context_features")
+            == list(CONTEXT_1_3_FEATURES)
+        ),
+        "transfer_features": (
+            isinstance(historical_transfer_provenance, dict)
+            and historical_transfer_provenance.get("transfer_features")
+            == list(MODEL_FEATURE_COLUMNS)
+        ),
+        "row_count": (
+            isinstance(historical_transfer_provenance, dict)
+            and historical_transfer_provenance.get("row_count")
+            == len(historical_transfer_rows)
+        ),
+        "team_season_keys": actual_transfer_keys == expected_base_keys,
+    }
+    if not all(transfer_contract_checks.values()):
+        failed_checks = ", ".join(
+            check for check, passed in transfer_contract_checks.items() if not passed
+        )
+        raise ValueError(
+            "historical transfer artifact does not match the canonical Context 1.3 corpus: "
+            + failed_checks
+        )
+    attached = attach_transfer_features(
+        base_rows,
+        historical_transfer_rows,
+        require_all=True,
+    )
+    corpus_source = _mint_context13_training_corpus_source(
+        attached,
+        target_season=target_season,
+        trained_through_season=trained_through_season,
+        source_artifact_sha256=source_hashes,
+        context_feature_construction_identity_sha256=sha256_json(
+            {
+                "semantic_specification_sha256": context13_semantic_specification_sha256(),
+                "historical_row_builder_sha256": source_hashes["historical_row_builder"],
+                "context_feature_builder_sha256": source_hashes["context_feature_builder"],
+                "transfer_feature_builder_sha256": source_hashes["transfer_feature_builder"],
+            }
+        ),
+        historical_transfer_feature_artifact_sha256=source_hashes[
+            "historical_transfer_feature_artifact"
+        ],
+        historical_transfer_feature_provenance_sha256=source_hashes[
+            "historical_transfer_feature_provenance"
+        ],
+    )
+    return attached, corpus_source, cold, coverage
 
 
 def prediction_rows(model, rows: list, label: str):
@@ -394,7 +531,7 @@ def coverage_rows(rows: list, coverage: list[dict[str, object]]) -> list[dict[st
                     f"{name}_available": row.features.get(name) is not None
                     for name in CONTEXT_1_3_FEATURES
                 },
-                "transfer_provenance_class": "retrospective_research_reconstruction",
+                "transfer_provenance_class": RETROSPECTIVE_RESEARCH_PROVENANCE,
             }
         )
     return result
@@ -483,10 +620,10 @@ def build_annual_inference_rows(
     loader = (
         load_validated_reconstructed_transfer_features
         if provenance.get("provenance_class")
-        == "retrospective_2026_reconstruction"
+        == RETROSPECTIVE_2026_PROVENANCE
         else load_validated_production_transfer_features
     )
-    feature_rows, metadata = loader(
+    feature_rows, transfer_provenance = loader(
         transfer_feature_path,
         transfer_manifest_path,
         target_season=target_season,
@@ -507,7 +644,7 @@ def build_annual_inference_rows(
         for row in base
     ]
     attached = attach_transfer_features_to_inference_rows(base, feature_rows)
-    return attached, metadata
+    return attached, transfer_provenance.to_metadata(include_diagnostic_paths=True)
 
 
 def build_report(
@@ -557,7 +694,7 @@ def build_report(
             "target_seasons": list(TEST_SEASONS),
             "n_team_seasons": len(predictions),
             "target_outcomes_used_for_features": False,
-            "transfer_provenance": "retrospective_research_reconstruction",
+            "transfer_provenance": RETROSPECTIVE_RESEARCH_PROVENANCE,
         },
         "aggregate_metrics": {
             "context_1_2": c12_score,
