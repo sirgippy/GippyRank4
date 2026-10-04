@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import io
 import json
+import shutil
 import sys
+from collections import Counter
 from dataclasses import replace
 from pathlib import Path
 
@@ -28,7 +31,9 @@ from gippyrank.posterior.snapshots import load_likelihood
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-from validate_context_v1_4 import run
+import validate_context_v1_4 as cli
+
+run = cli.run
 
 
 @pytest.fixture(scope="module")
@@ -66,6 +71,339 @@ def synthetic_games(tmp_path: Path, inputs) -> tuple[Path, list[dict[str, str]]]
 
 def _audit(path: Path, protocol, inputs):
     return validator.audit_game_source(path, protocol, inputs, ROOT)
+
+
+def _write_synthetic_manifest(
+    directory: Path,
+    games_path: Path,
+    rows: list[dict[str, str]],
+    exceptions: list[dict[str, str]],
+) -> tuple[Path, dict[str, object]]:
+    raw_by_coverage: dict[str, list[dict[str, object]]] = {"fbs": [], "fcs": []}
+    for row in rows:
+        raw: dict[str, object] = dict(row)
+        for field in ("id", "season", "week", "homeId", "awayId"):
+            raw[field] = int(row[field])
+        raw["completed"] = row["completed"] == "True"
+        for field in ("homePoints", "awayPoints"):
+            raw[field] = int(row[field]) if raw["completed"] else None
+        raw["neutralSite"] = row["neutralSite"] == "True"
+        raw["startTimeTBD"] = False
+        if "fbs" in (row["homeClassification"], row["awayClassification"]):
+            raw_by_coverage["fbs"].append(raw)
+        if "fcs" in (row["homeClassification"], row["awayClassification"]):
+            raw_by_coverage["fcs"].append(raw)
+
+    files = []
+    for coverage in ("fbs", "fcs"):
+        raw_path = directory / f"raw_{coverage}.json"
+        raw_path.write_text(
+            json.dumps(raw_by_coverage[coverage], sort_keys=True), encoding="utf-8"
+        )
+        files.append(
+            {
+                "coverage": coverage,
+                "path": raw_path.name,
+                "sha256": hashlib.sha256(raw_path.read_bytes()).hexdigest(),
+            }
+        )
+    manifest = {
+        "source_kind": "cfbd_api_schedule",
+        "retrieved_at_utc": "2026-10-05T12:00:00+00:00",
+        "games_sha256": hashlib.sha256(games_path.read_bytes()).hexdigest(),
+        "source_files": files,
+    }
+    manifest_path = directory / "source-manifest.json"
+    manifest_path.write_text(json.dumps(manifest, sort_keys=True), encoding="utf-8")
+    (directory / "exceptions.json").write_text(
+        json.dumps(exceptions, sort_keys=True), encoding="utf-8"
+    )
+    return manifest_path, manifest
+
+
+@pytest.fixture(scope="module")
+def complete_cli_runs(tmp_path_factory, inputs):
+    directory = tmp_path_factory.mktemp("context-v1-4-complete-cli")
+    week_5 = [row for row in inputs["registered_schedule"] if row["week"] == "5"]
+    prior_weeks = [row for row in inputs["registered_schedule"] if row["week"] != "5"]
+    completed_ids = {row["id"] for row in prior_weeks[:10]} | {
+        row["id"] for row in week_5[:40]
+    }
+    rows = [
+        {
+            **item,
+            "completed": "True" if item["id"] in completed_ids else "False",
+            "homePoints": "21" if item["id"] in completed_ids else "",
+            "awayPoints": "14" if item["id"] in completed_ids else "",
+        }
+        for item in inputs["registered_schedule"]
+    ]
+    exceptions = [
+        {
+            "game_id": row["id"],
+            "disposition": "terminal_exception",
+            "reason": "synthetic terminal cancellation",
+            "evidence": "synthetic complete-path fixture",
+        }
+        for row in rows
+        if row["id"] not in completed_ids
+    ]
+    games_path = directory / "synthetic_games.csv"
+    _write_games(games_path, rows)
+    manifest_path, manifest = _write_synthetic_manifest(
+        directory, games_path, rows, exceptions
+    )
+    exceptions_path = directory / "exceptions.json"
+    outputs = (directory / "successful_run_a", directory / "successful_run_b")
+    captured: dict[str, object] = {}
+    original_priors = validator.construct_frozen_priors
+    original_construct = cli.construct_forecast_states
+    original_score = cli.score_complete_source
+
+    def capture_priors(*args, **kwargs):
+        value = original_priors(*args, **kwargs)
+        captured["priors"] = value
+        return value
+
+    def capture_states(*args, **kwargs):
+        value = original_construct(*args, **kwargs)
+        captured["states"] = value
+        return value
+
+    def capture_scores(*args, **kwargs):
+        value = original_score(*args, **kwargs)
+        captured["scores"] = value
+        return value
+
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(validator, "construct_frozen_priors", capture_priors)
+        patch.setattr(cli, "construct_forecast_states", capture_states)
+        patch.setattr(cli, "score_complete_source", capture_scores)
+        assert (
+            run(
+                games=games_path,
+                output=outputs[0],
+                source_manifest=manifest_path,
+                exceptions=exceptions_path,
+                root=ROOT,
+            )
+            == 0
+        )
+    assert (
+        run(
+            games=games_path,
+            output=outputs[1],
+            source_manifest=manifest_path,
+            exceptions=exceptions_path,
+            root=ROOT,
+        )
+        == 0
+    )
+    machine_names = (
+        "game_results.csv",
+        "by_origin.json",
+        "evidence_audit.csv",
+        "exclusions.csv",
+        "summary.json",
+        "provenance.json",
+    )
+    machine_artifacts = tuple(
+        {name: (output / name).read_bytes() for name in machine_names}
+        for output in outputs
+    )
+    artifact_names = tuple(
+        tuple(sorted(path.name for path in output.iterdir())) for output in outputs
+    )
+    reports = tuple(
+        (output / "context_v1_4_validation_result.md").read_bytes()
+        for output in outputs
+    )
+    return {
+        "directory": directory,
+        "games_path": games_path,
+        "rows": rows,
+        "manifest_path": manifest_path,
+        "manifest": manifest,
+        "exceptions_path": exceptions_path,
+        "completed_ids": completed_ids,
+        "exceptions": exceptions,
+        "priors": captured["priors"],
+        "states": captured["states"],
+        "scores": captured["scores"],
+        "outputs": outputs,
+        "machine_names": machine_names,
+        "machine_artifacts": machine_artifacts,
+        "artifact_names": artifact_names,
+        "reports": reports,
+    }
+
+
+def test_complete_synthetic_cli_path_is_deterministic(
+    complete_cli_runs, protocol, inputs
+):
+    artifacts = complete_cli_runs
+    expected_origins = {
+        origin["publication_slot"] for origin in protocol.data["forecast_origins"]
+    }
+    expected_models = set(validator.MODELS)
+    expected_artifact_names = set(artifacts["machine_names"]) | {
+        "context_v1_4_validation_result.md"
+    }
+    for names in artifacts["artifact_names"]:
+        assert set(names) == expected_artifact_names
+        assert "failure.json" not in names
+    assert artifacts["machine_artifacts"][0] == artifacts["machine_artifacts"][1]
+    assert artifacts["reports"][0] == artifacts["reports"][1]
+
+    evidence = list(
+        csv.DictReader(
+            io.StringIO(
+                artifacts["machine_artifacts"][0]["evidence_audit.csv"].decode()
+            )
+        )
+    )
+    assert {(row["origin"], row["model"]) for row in evidence} == {
+        (origin, model) for origin in expected_origins for model in expected_models
+    }
+    assert len(evidence) == 5 * 3
+    assert all(row["converged"] == "True" for row in evidence)
+
+    scores = list(
+        csv.DictReader(
+            io.StringIO(artifacts["machine_artifacts"][0]["game_results.csv"].decode())
+        )
+    )
+    expected_game_ids = artifacts["completed_ids"]
+    score_counts = Counter((row["game_id"], row["model"]) for row in scores)
+    assert set(score_counts) == {
+        (game_id, model) for game_id in expected_game_ids for model in expected_models
+    }
+    assert all(count == 1 for count in score_counts.values())
+    assert len(scores) == len(expected_game_ids) * len(expected_models)
+
+    week_5_ids = artifacts["completed_ids"] & {
+        row["id"] for row in inputs["registered_schedule"] if row["week"] == "5"
+    }
+    assert len(week_5_ids) == 40
+    prospective = [row for row in scores if row["game_id"] in week_5_ids]
+    assert len(prospective) == len(week_5_ids) * len(expected_models)
+    assert {(row["origin"], row["stratum"]) for row in prospective} == {
+        ("2026-09-27", "prospective_week_5")
+    }
+    summary = json.loads(artifacts["machine_artifacts"][0]["summary.json"])
+    assert summary["prospective_week_5"]["eligible_game_count"] == len(week_5_ids)
+    assert set(summary["by_origin"]) == expected_origins
+    assert summary["decision"] == "inconclusive"
+
+
+def test_manifest_abort_removes_previous_success_artifacts(complete_cli_runs):
+    artifacts = complete_cli_runs
+    output = artifacts["outputs"][0]
+    assert (output / "summary.json").is_file()
+    assert (output / "game_results.csv").is_file()
+    assert (output / "context_v1_4_validation_result.md").is_file()
+
+    bad_manifest = dict(artifacts["manifest"])
+    bad_manifest["games_sha256"] = "0" * 64
+    bad_manifest_path = artifacts["directory"] / "bad-source-manifest.json"
+    bad_manifest_path.write_text(
+        json.dumps(bad_manifest, sort_keys=True), encoding="utf-8"
+    )
+    result = run(
+        games=artifacts["games_path"],
+        output=output,
+        source_manifest=bad_manifest_path,
+        exceptions=artifacts["exceptions_path"],
+        root=ROOT,
+    )
+    assert result == 2
+    failure = json.loads((output / "failure.json").read_text(encoding="utf-8"))
+    assert failure["status"] == "VALIDATION_ABORTED"
+    assert failure["abort_stage"] == "source_manifest_validation"
+    assert failure["candidate_scores_opened"] is False
+    assert failure["decision"] == "unavailable"
+    assert failure["observed_completed_count"] == len(artifacts["completed_ids"])
+    assert {path.name for path in output.iterdir()} == {"failure.json"}
+
+
+@pytest.mark.parametrize(
+    ("failure_point", "expected_stage", "candidate_scores_opened"),
+    [
+        ("forecast_state", "forecast_state_construction", False),
+        ("posterior", "forecast_state_construction", False),
+        ("scoring", "scoring", True),
+        ("aggregation", "aggregation_and_decision", True),
+        ("artifact_generation", "artifact_generation", True),
+    ],
+)
+def test_post_gate_abort_stages_clear_previous_success(
+    tmp_path: Path,
+    monkeypatch,
+    complete_cli_runs,
+    failure_point: str,
+    expected_stage: str,
+    candidate_scores_opened: bool,
+):
+    artifacts = complete_cli_runs
+    output = tmp_path / "old-success"
+    shutil.copytree(artifacts["outputs"][1], output)
+
+    def abort(*args, **kwargs):
+        raise ProtocolError(f"synthetic {failure_point} failure")
+
+    if failure_point == "forecast_state":
+        monkeypatch.setattr(cli, "construct_forecast_states", abort)
+    elif failure_point == "posterior":
+        monkeypatch.setattr(
+            validator,
+            "construct_frozen_priors",
+            lambda *args, **kwargs: artifacts["priors"],
+        )
+        monkeypatch.setattr(validator, "infer_registered_posterior", abort)
+    elif failure_point == "scoring":
+        monkeypatch.setattr(
+            cli,
+            "construct_forecast_states",
+            lambda *args, **kwargs: artifacts["states"],
+        )
+        monkeypatch.setattr(cli, "score_complete_source", abort)
+    else:
+        monkeypatch.setattr(
+            cli,
+            "construct_forecast_states",
+            lambda *args, **kwargs: artifacts["states"],
+        )
+        monkeypatch.setattr(
+            cli,
+            "score_complete_source",
+            lambda *args, **kwargs: artifacts["scores"],
+        )
+        if failure_point == "aggregation":
+            monkeypatch.setattr(validator, "decide_validation", abort)
+        else:
+
+            def write_partial_then_abort(output_path, *args, **kwargs):
+                (output_path / "summary.json").write_text(
+                    '{"decision":"promote"}', encoding="utf-8"
+                )
+                abort()
+
+            monkeypatch.setattr(cli, "write_success", write_partial_then_abort)
+
+    result = run(
+        games=artifacts["games_path"],
+        output=output,
+        source_manifest=artifacts["manifest_path"],
+        exceptions=artifacts["exceptions_path"],
+        root=ROOT,
+    )
+    assert result == 2
+    failure = json.loads((output / "failure.json").read_text(encoding="utf-8"))
+    assert failure["status"] == "VALIDATION_ABORTED"
+    assert failure["abort_stage"] == expected_stage
+    assert failure["candidate_scores_opened"] is candidate_scores_opened
+    assert failure["decision"] == "unavailable"
+    assert {path.name for path in output.iterdir()} == {"failure.json"}
 
 
 def test_frozen_protocol_and_validator_inputs_fail_closed(

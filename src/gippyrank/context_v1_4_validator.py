@@ -1185,7 +1185,55 @@ def failure_object(
     }
 
 
-def _clear_output_products(path: Path, report_path: Path | None = None) -> None:
+def validation_abort_object(
+    *,
+    reason: str,
+    abort_stage: str,
+    candidate_scores_opened: bool,
+    protocol: RegisteredProtocol | None,
+    inputs: dict[str, Any] | None,
+    audit: SourceAudit | None,
+) -> dict[str, object]:
+    """Describe a failed execution without leaving a success-shaped result."""
+    registered_schedule = inputs["registered_schedule"] if inputs else []
+    expected_scope: dict[str, object] = {
+        "season": 2026,
+        "game_weeks": "1_through_5",
+        "prospective_game_week": 5,
+        "expected_game_count": len(registered_schedule),
+        "expected_week_5_game_count": sum(
+            row["week"] == "5" for row in registered_schedule
+        ),
+    }
+    if protocol is not None:
+        expected_scope["prospective_forecast_origin"] = protocol.data["evidence"][
+            "week_6_origin"
+        ]
+    return {
+        "status": "VALIDATION_ABORTED",
+        "reason": reason,
+        "abort_stage": abort_stage,
+        "decision": "unavailable",
+        "candidate_scores_opened": candidate_scores_opened,
+        "missing_or_unresolved_game_ids": (
+            list(audit.unresolved_ids) if audit is not None else []
+        ),
+        "registered_expected_scope": expected_scope,
+        "observed_completed_count": (
+            audit.completed_count if audit is not None else None
+        ),
+        "source_sha256": audit.source_sha256 if audit is not None else None,
+        "source_hashes": {
+            **({"canonical_games_csv": audit.source_sha256} if audit else {}),
+            **(inputs["source_sha256"] if inputs else {}),
+        },
+        "protocol_sha256": protocol.sha256 if protocol is not None else None,
+        "validator_inputs_sha256": VALIDATOR_INPUTS_SHA256,
+    }
+
+
+def clear_output_products(path: Path, report_path: Path | None = None) -> None:
+    """Remove products from any previous invocation before a new one starts."""
     path.mkdir(parents=True, exist_ok=True)
     for name in OUTPUT_PRODUCTS:
         (path / name).unlink(missing_ok=True)
@@ -1196,14 +1244,14 @@ def _clear_output_products(path: Path, report_path: Path | None = None) -> None:
 def write_failure(
     path: Path, value: dict[str, object], *, report_path: Path | None = None
 ) -> None:
-    _clear_output_products(path, report_path)
+    clear_output_products(path, report_path)
     (path / "failure.json").write_bytes(_json_bytes(value))
 
 
 def write_source_audit(
     path: Path, value: dict[str, object], *, report_path: Path | None = None
 ) -> None:
-    _clear_output_products(path, report_path)
+    clear_output_products(path, report_path)
     (path / "source_audit.json").write_bytes(_json_bytes(value))
 
 
@@ -1221,7 +1269,7 @@ def write_success(
     """Write only sorted deterministic products after a complete run."""
     if audit.status != "SOURCE_COMPLETE":
         raise ProtocolError("cannot write a success artifact for an incomplete source")
-    _clear_output_products(output, report_path)
+    clear_output_products(output, report_path)
     root = Path(__file__).resolve().parents[2]
     provenance = {
         "protocol_sha256": protocol.sha256,

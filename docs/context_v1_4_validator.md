@@ -44,6 +44,12 @@ candidate state or score is constructed. Its `failure.json` reports
 `SOURCE_INCOMPLETE`, unresolved game IDs, source and protocol hashes, and
 `candidate_scores_opened: false`.
 
+Every invocation clears prior result products before validation begins. Any
+later abort writes a deterministic `VALIDATION_ABORTED` failure artifact with
+the failed stage and a `candidate_scores_opened` value that becomes true when
+predictive scoring starts. This also removes partial outputs if artifact
+writing itself fails.
+
 Once Week 5 is complete, preserve the raw FBS and FCS CFBD responses and
 write a source manifest. The manifest is a JSON object of this shape:
 

@@ -18,17 +18,20 @@ from gippyrank.context_v1_4_validation_protocol import (
 from gippyrank.context_v1_4_validator import (
     aggregate_scores,
     audit_game_source,
+    clear_output_products,
     construct_forecast_states,
     failure_object,
     load_source_manifest,
     load_validator_inputs,
     score_complete_source,
+    validation_abort_object,
     write_failure,
     write_source_audit,
     write_success,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
+REGISTERED_REPORT_PATH = "docs/context_v1_4_validation_result.md"
 
 
 def run(
@@ -40,72 +43,123 @@ def run(
     check_source_only: bool = False,
     root: Path = ROOT,
 ) -> int:
-    protocol = load_registered_protocol(root)
-    inputs = load_validator_inputs(root, protocol)
     report = (
-        root / protocol.data["artifacts_for_later_validator"]["report"]
+        root / REGISTERED_REPORT_PATH
         if output.resolve()
         == (root / "data/processed/context_v1_4_validation").resolve()
         else None
     )
-    audit = audit_game_source(games, protocol, inputs, root, exceptions_path=exceptions)
-    if audit.status != "SOURCE_COMPLETE":
-        write_failure(
+    protocol = None
+    inputs = None
+    audit = None
+    stage = "output_invalidation"
+    candidate_scores_opened = False
+    try:
+        clear_output_products(output, report)
+
+        stage = "protocol_validation"
+        protocol = load_registered_protocol(root)
+        configured_report = (
+            root / protocol.data["artifacts_for_later_validator"]["report"]
+        )
+        if report is not None and configured_report.resolve() != report.resolve():
+            raise ProtocolError("registered result report path changed")
+
+        stage = "validator_input_validation"
+        inputs = load_validator_inputs(root, protocol)
+
+        stage = "source_audit"
+        audit = audit_game_source(
+            games, protocol, inputs, root, exceptions_path=exceptions
+        )
+        if audit.status != "SOURCE_COMPLETE":
+            write_failure(
+                output,
+                failure_object(
+                    audit, protocol, inputs, reason="Week 5 game source is incomplete"
+                ),
+                report_path=report,
+            )
+            print(
+                f"SOURCE_INCOMPLETE: {len(audit.unresolved_ids)} missing or unresolved games; candidate scoring not executed"
+            )
+            return 2
+
+        if check_source_only:
+            write_source_audit(
+                output,
+                {
+                    "status": audit.status,
+                    "candidate_scores_opened": False,
+                    "completed_game_count": audit.completed_count,
+                    "source_sha256": audit.source_sha256,
+                    "protocol_sha256": protocol.sha256,
+                },
+                report_path=report,
+            )
+            print(
+                "SOURCE_COMPLETE: source audit passed; candidate scoring not executed"
+            )
+            return 0
+
+        if source_manifest is None:
+            value = failure_object(
+                audit,
+                protocol,
+                inputs,
+                reason="completed game source requires a frozen source manifest",
+            )
+            value["status"] = "SOURCE_UNVERIFIED"
+            value["abort_stage"] = "source_manifest_validation"
+            write_failure(output, value, report_path=report)
+            print("SOURCE_UNVERIFIED: supply --source-manifest before scoring")
+            return 2
+
+        stage = "source_manifest_validation"
+        provenance = load_source_manifest(
+            source_manifest, games, exceptions_path=exceptions
+        )
+
+        stage = "forecast_state_construction"
+        states = construct_forecast_states(root, protocol, inputs)
+
+        stage = "scoring"
+        candidate_scores_opened = True
+        rows = score_complete_source(audit, states, protocol, root)
+
+        stage = "aggregation_and_decision"
+        summary = aggregate_scores(rows, protocol)
+
+        stage = "artifact_generation"
+        write_success(
             output,
-            failure_object(
-                audit, protocol, inputs, reason="Week 5 game source is incomplete"
-            ),
+            rows,
+            states,
+            audit,
+            summary,
+            protocol,
+            provenance,
             report_path=report,
         )
         print(
-            f"SOURCE_INCOMPLETE: {len(audit.unresolved_ids)} missing or unresolved games; candidate scoring not executed"
+            f"{summary['decision']}: {summary['full_sample']['eligible_game_count']} games"
         )
-        return 2
-    if check_source_only:
-        write_source_audit(
-            output,
-            {
-                "status": audit.status,
-                "candidate_scores_opened": False,
-                "completed_game_count": audit.completed_count,
-                "source_sha256": audit.source_sha256,
-                "protocol_sha256": protocol.sha256,
-            },
-            report_path=report,
-        )
-        print("SOURCE_COMPLETE: source audit passed; candidate scoring not executed")
         return 0
-    if source_manifest is None:
-        value = failure_object(
-            audit,
-            protocol,
-            inputs,
-            reason="completed game source requires a frozen source manifest",
+    except Exception as error:  # noqa: BLE001 - every failed run must invalidate stale outputs
+        value = validation_abort_object(
+            reason=f"{type(error).__name__}: {error}",
+            abort_stage=stage,
+            candidate_scores_opened=candidate_scores_opened,
+            protocol=protocol,
+            inputs=inputs,
+            audit=audit,
         )
-        value["status"] = "SOURCE_UNVERIFIED"
         write_failure(output, value, report_path=report)
-        print("SOURCE_UNVERIFIED: supply --source-manifest before scoring")
+        print(
+            f"VALIDATION_ABORTED during {stage}: {error}",
+            file=sys.stderr,
+        )
         return 2
-    provenance = load_source_manifest(
-        source_manifest, games, exceptions_path=exceptions
-    )
-    states = construct_forecast_states(root, protocol, inputs)
-    rows = score_complete_source(audit, states, protocol, root)
-    summary = aggregate_scores(rows, protocol)
-    write_success(
-        output,
-        rows,
-        states,
-        audit,
-        summary,
-        protocol,
-        provenance,
-        report_path=report,
-    )
-    print(
-        f"{summary['decision']}: {summary['full_sample']['eligible_game_count']} games"
-    )
-    return 0
 
 
 def main() -> int:
