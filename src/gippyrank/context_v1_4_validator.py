@@ -1195,14 +1195,18 @@ def validation_abort_object(
     audit: SourceAudit | None,
 ) -> dict[str, object]:
     """Describe a failed execution without leaving a success-shaped result."""
-    registered_schedule = inputs["registered_schedule"] if inputs else []
+    registered_schedule = inputs["registered_schedule"] if inputs else None
     expected_scope: dict[str, object] = {
         "season": 2026,
         "game_weeks": "1_through_5",
         "prospective_game_week": 5,
-        "expected_game_count": len(registered_schedule),
-        "expected_week_5_game_count": sum(
-            row["week"] == "5" for row in registered_schedule
+        "expected_game_count": (
+            len(registered_schedule) if registered_schedule is not None else None
+        ),
+        "expected_week_5_game_count": (
+            sum(row["week"] == "5" for row in registered_schedule)
+            if registered_schedule is not None
+            else None
         ),
     }
     if protocol is not None:
@@ -1216,7 +1220,7 @@ def validation_abort_object(
         "decision": "unavailable",
         "candidate_scores_opened": candidate_scores_opened,
         "missing_or_unresolved_game_ids": (
-            list(audit.unresolved_ids) if audit is not None else []
+            list(audit.unresolved_ids) if audit is not None else None
         ),
         "registered_expected_scope": expected_scope,
         "observed_completed_count": (

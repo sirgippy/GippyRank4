@@ -422,6 +422,22 @@ def test_frozen_protocol_and_validator_inputs_fail_closed(
         validator.load_validator_inputs(ROOT, protocol)
 
 
+def test_early_abort_reports_unavailable_source_counts_truthfully():
+    artifact = validator.validation_abort_object(
+        reason="ProtocolError: preregistration mismatch",
+        abort_stage="protocol_validation",
+        candidate_scores_opened=False,
+        protocol=None,
+        inputs=None,
+        audit=None,
+    )
+    assert artifact["status"] == "VALIDATION_ABORTED"
+    assert artifact["candidate_scores_opened"] is False
+    assert artifact["registered_expected_scope"]["expected_game_count"] is None
+    assert artifact["registered_expected_scope"]["expected_week_5_game_count"] is None
+    assert artifact["missing_or_unresolved_game_ids"] is None
+
+
 def test_current_incomplete_week_5_cache_refuses_before_scoring(
     tmp_path: Path, protocol
 ):
