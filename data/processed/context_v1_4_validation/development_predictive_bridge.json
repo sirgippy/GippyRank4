@@ -1,0 +1,130 @@
+{
+  "candidate_semantics_sha256": "db84045d2f7d80b1648360da52ef1e71f76093696cad4e4e7bbdbd57a086573f",
+  "cutoff_index": 3,
+  "pooled": {
+    "context_1_3": {
+      "brier": 0.190500183048204,
+      "mae": 12.867944752022364,
+      "n": 2700,
+      "nll": 4.208784130434348
+    },
+    "context_1_4": {
+      "brier": 0.19047570535704725,
+      "mae": 12.867073760811794,
+      "n": 2700,
+      "nll": 4.208723512418421
+    }
+  },
+  "purpose": "development_only_predictive_bridge_no_candidate_retuning",
+  "seasons": {
+    "2022": {
+      "context_1_3": {
+        "brier": 0.20487531697273337,
+        "mae": 13.52992389379892,
+        "n": 618,
+        "nll": 4.2572908379310315
+      },
+      "context_1_4": {
+        "brier": 0.20482344390670146,
+        "mae": 13.525241146653517,
+        "n": 618,
+        "nll": 4.2569337575401045
+      },
+      "cutoff": "2022-10-27T23:59:59+00:00"
+    },
+    "2023": {
+      "context_1_3": {
+        "brier": 0.187506919556705,
+        "mae": 13.070849281260738,
+        "n": 642,
+        "nll": 4.240885735579037
+      },
+      "context_1_4": {
+        "brier": 0.1876856309155389,
+        "mae": 13.078134943112202,
+        "n": 642,
+        "nll": 4.241738277411862
+      },
+      "cutoff": "2023-10-21T23:59:59+00:00"
+    },
+    "2024": {
+      "context_1_3": {
+        "brier": 0.19446480771303779,
+        "mae": 12.524297738221115,
+        "n": 716,
+        "nll": 4.175703336572451
+      },
+      "context_1_4": {
+        "brier": 0.19432396758490786,
+        "mae": 12.520534064951493,
+        "n": 716,
+        "nll": 4.175135743811442
+      },
+      "cutoff": "2024-10-24T23:59:59+00:00"
+    },
+    "2025": {
+      "context_1_3": {
+        "brier": 0.17696312660643915,
+        "mae": 12.462811388062061,
+        "n": 724,
+        "nll": 4.171628705944402
+      },
+      "context_1_4": {
+        "brier": 0.17689693410375157,
+        "mae": 12.460821963503681,
+        "n": 724,
+        "nll": 4.171512782738322
+      },
+      "cutoff": "2025-10-24T23:59:59+00:00"
+    }
+  },
+  "sources": {
+    "candidate_fixture_sha256": "8014a8dc0bd260740224f227a5f80a412a843d7205ae758b131669501bada601",
+    "game_corpus_by_season": {
+      "2022": [
+        {
+          "filename": "2022.json",
+          "sha256": "3b4d9d353faa8ca9312534ded0747bdaa1cdcca21e89fcff1458980ab9f00747"
+        },
+        {
+          "filename": "2022-fcs.json",
+          "sha256": "a20030838476f73d1f3aea63bba57ed1ecfa03f99e95cee5c2a780deeee05816"
+        }
+      ],
+      "2023": [
+        {
+          "filename": "2023.json",
+          "sha256": "417fb8191bec11e20fb2370e5510a2ff8a85cc67f07ec4371e873a935f9af35f"
+        },
+        {
+          "filename": "2023-fcs.json",
+          "sha256": "df5bb461fe8f3e302eb1d5f52896b509d7f5660364d3d43643c5c540e5476817"
+        }
+      ],
+      "2024": [
+        {
+          "filename": "2024.json",
+          "sha256": "9aeccada4e63f4ddf22d676eb55dbded71fd9bdb3ac07202ee44ed8f47d93f93"
+        },
+        {
+          "filename": "2024-fcs.json",
+          "sha256": "3cb6327c61d807fd4b8dfe669f0905694afa67164770ab2e997773ea2aaa72c5"
+        }
+      ],
+      "2025": [
+        {
+          "filename": "2025.json",
+          "sha256": "6312d8406be09dee0064069668fc40879dd0736ed3e49946c6c72192e6a0e4fc"
+        },
+        {
+          "filename": "2025-fcs.json",
+          "sha256": "38329f854c0df38d17b34d5f7841753d6638d7377592dcf743cb4e27cbd9d32f"
+        }
+      ]
+    },
+    "historical_likelihood_sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+    "hybrid_prior_results_sha256": "2dab15692d0591e4f96bffc9e11123d90e00f17a262f75fb2192fe65d1a1a297",
+    "prior_decomposition_sha256": "0f9dc7c2516a2d2d155b5d943c86991290b3e018272bb5ae8d37af6d53085864",
+    "uv_lock_sha256": "5d4ac8b7e55111b44edd2996ccbc0d113fb0937dec21e9c6ad1b75b24e72e3ce"
+  }
+}

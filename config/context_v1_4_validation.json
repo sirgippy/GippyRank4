@@ -2,118 +2,77 @@
   "analysis": {
     "bootstrap": {
       "confidence_level": 0.95,
+      "game_order": "lexicographic_game_id",
       "method": "paired_percentile",
       "quantile_method": "linear",
       "resamples": 10000,
       "rng": "numpy.random.Generator(numpy.random.PCG64(seed))",
-      "sample_size": "number_of_scored_teams_with_replacement",
+      "sample_size": "number_of_unique_scored_games_with_replacement",
       "seed": 1642026,
-      "team_order": "lexicographic_team_id",
-      "unit": "team_id"
+      "unit": "game_id"
     },
     "decision": {
-      "below_minimum_population": "inconclusive",
-      "failed_identity_or_evidence_guardrail": "abort_without_decision",
-      "minimum_practical_effect_nats_per_team": 0.01,
-      "otherwise": "inconclusive",
-      "promote": {
-        "bootstrap_upper_lt": 0.0,
-        "mean_difference_lte": -0.01
-      },
+      "development_evidence_is_part_of_promotion_decision": true,
+      "guardrails_required": true,
+      "otherwise_if_valid": "promote",
       "retain_context_1_3": {
-        "bootstrap_lower_gt": 0.0,
-        "mean_difference_gte": 0.01
+        "paired_interval_low_gt": 0.0,
+        "paired_mean_delta_gt": 0.0
       },
-      "secondary_metrics_cannot_override": true
+      "secondary_metrics_cannot_override_primary": true,
+      "substantive_validation_failure": "inconclusive_or_abort",
+      "week_6_alone_cannot_veto_except_structural_failure": true
     },
     "primary": {
-      "checkpoint_id": "final",
       "difference": "candidate_minus_context_1_3",
-      "formula": "-sum(target_rank_probability * ln(max(posterior_rank_probability, 1e-15)))",
+      "full_sample": "regular_season_weeks_1_through_6",
       "negative_difference_favors": "candidate",
       "outputs": [
-        "n",
-        "candidate_mean_nll",
-        "context_1_3_mean_nll",
-        "paired_mean_difference",
-        "paired_median_difference",
-        "paired_mean_95_percent_interval"
+        "eligible_game_count",
+        "candidate_mean_margin_nll",
+        "context_1_3_mean_margin_nll",
+        "paired_mean_delta",
+        "paired_median_delta",
+        "paired_mean_95_percent_interval",
+        "by_official_forecast_origin",
+        "week_6_same_metrics"
       ],
-      "score": "posterior_target_weighted_nll",
-      "weighting": "one_equal_weight_per_scored_team"
+      "score": "posterior_predictive_margin_nll",
+      "week_6_slice": "strictly_prospective_confirmation",
+      "weighting": "one_equal_weight_per_unique_completed_game"
     },
     "secondary": {
-      "history_crossover": "context_1_3_minus_history_1_1_and_candidate_minus_history_1_1_mean_nll_at_each_checkpoint",
-      "posterior_nll": "three_model_means_and_all_three_paired_differences_at_all_seven_checkpoints",
-      "quantile_method": "linear",
-      "rank_error_checkpoints": [
-        "preseason",
-        "final"
+      "cannot_replace_primary": true,
+      "metrics": [
+        "margin_mae",
+        "win_brier",
+        "interval_coverage_50",
+        "interval_coverage_80",
+        "interval_coverage_95"
       ],
-      "rank_error_metrics": [
-        "mean_absolute_error",
-        "median_absolute_error",
-        "mean_signed_error"
+      "models": [
+        "candidate",
+        "context_1_3",
+        "history_1_1"
       ],
-      "signed_rank_error": "forecast_expected_rank_minus_target_expected_rank",
-      "team_difference_quantiles": [
-        0.1,
-        0.25,
-        0.5,
-        0.75,
-        0.9
-      ],
-      "team_difference_tie_tolerance": 1e-10,
-      "team_extremes_each_tail": 10
+      "same_common_game_rows": true,
+      "strata": [
+        "official_forecast_origin",
+        "week_6_strictly_prospective"
+      ]
     }
   },
   "artifacts_for_later_validator": {
+    "by_origin_summary": "data/processed/context_v1_4_validation/by_origin.json",
     "evidence_audit": "data/processed/context_v1_4_validation/evidence_audit.csv",
     "exclusions": "data/processed/context_v1_4_validation/exclusions.csv",
     "failure_report": "data/processed/context_v1_4_validation/failure.json",
+    "per_game_results": "data/processed/context_v1_4_validation/game_results.csv",
     "provenance": "data/processed/context_v1_4_validation/provenance.json",
     "report": "docs/context_v1_4_validation_result.md",
     "script": "scripts/validate_context_v1_4.py",
-    "summary": "data/processed/context_v1_4_validation/summary.json",
-    "team_checkpoint_results": "data/processed/context_v1_4_validation/team_checkpoint_results.csv"
+    "summary": "data/processed/context_v1_4_validation/summary.json"
   },
-  "checkpoints": [
-    {
-      "cutoff_utc": "2026-08-22T23:59:59Z",
-      "id": "preseason",
-      "index": 1
-    },
-    {
-      "cutoff_utc": "2026-09-18T23:59:59Z",
-      "id": "early_season",
-      "index": 2
-    },
-    {
-      "cutoff_utc": "2026-10-07T23:59:59Z",
-      "id": "early_midseason",
-      "index": 3
-    },
-    {
-      "cutoff_utc": "2026-10-23T23:59:59Z",
-      "id": "midseason",
-      "index": 4
-    },
-    {
-      "cutoff_utc": "2026-11-08T23:59:59Z",
-      "id": "late_season_1",
-      "index": 5
-    },
-    {
-      "cutoff_utc": "2026-11-22T23:59:59Z",
-      "id": "late_season_2",
-      "index": 6
-    },
-    {
-      "cutoff_utc": "2026-12-12T23:59:59Z",
-      "id": "final",
-      "index": 7
-    }
-  ],
   "descriptive_strata": {
     "context_fit_state": [
       "fitted",
@@ -156,15 +115,175 @@
     ],
     "use_only_preseason_inputs": true
   },
+  "development_predictive_bridge": {
+    "candidate": "frozen_pr_161_builder_without_parameter_search",
+    "historical_panel": "standard_midseason_cutoff_index_3_per_season",
+    "inference": {
+      "damping": 0.35,
+      "max_iterations": 100,
+      "method": "prior_stripping",
+      "tolerance": 1e-06
+    },
+    "major_systematic_rank_vs_game_conflict": "report_and_stop_for_explicit_review",
+    "metrics": [
+      "margin_nll",
+      "margin_mae",
+      "win_brier"
+    ],
+    "no_retuning": true,
+    "reference": "scripts/validate_predictive_game_v1.py",
+    "result_path": "data/processed/context_v1_4_validation/development_predictive_bridge.json",
+    "result_sha256": "59eb68751d005a86f0f22af76a1e20087c8b6c79a932a8e0029e75a07966677b",
+    "run_before_2026_candidate_score_access": true,
+    "same_future_game_rows_for_both_context_arms": true,
+    "script_path": "scripts/bridge_context_v1_4_predictive.py",
+    "script_sha256": "901388b4713168539957689486b1215b226c7a6669a4dfaa62cf23b0155058ee",
+    "seasons": [
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "status": "development_only_not_new_holdout"
+  },
   "evidence": {
-    "cutoff_source": "2025_retained_rolling_backtest_cutoffs_plus_364_days",
-    "eligible_result_rule": "completed_final_score_and_actual_kickoff_at_or_before_cutoff_minus_48_hours",
+    "each_game_scored_once": true,
     "fcs_fallback": {
       "included_fcs_team_rule": "fcs_participants_in_eligible_or_scheduled_2026_games",
       "kind": "uniform_full_subdivision_rank",
       "new_fcs_id_outside_locked_population": "abort_without_decision",
       "population_size": 128,
       "population_source": "preregistered_2026_cfbd_full_season_schedule_participant_ids",
+      "population_team_ids": [
+        "107",
+        "108",
+        "110242",
+        "119",
+        "13",
+        "147",
+        "149",
+        "155",
+        "159",
+        "160",
+        "163",
+        "171",
+        "172",
+        "2000",
+        "2010",
+        "2011",
+        "2016",
+        "2029",
+        "2046",
+        "2065",
+        "2083",
+        "2086",
+        "2097",
+        "2110",
+        "2115",
+        "2127",
+        "2130",
+        "2142",
+        "2166",
+        "2168",
+        "2169",
+        "2181",
+        "2184",
+        "219",
+        "2193",
+        "2197",
+        "2198",
+        "2210",
+        "222",
+        "2230",
+        "2241",
+        "225",
+        "2261",
+        "227",
+        "2277",
+        "2287",
+        "2296",
+        "231",
+        "2320",
+        "2329",
+        "233",
+        "2341",
+        "236",
+        "2368",
+        "2377",
+        "2382",
+        "2385",
+        "2400",
+        "2405",
+        "2413",
+        "2415",
+        "2428",
+        "2441",
+        "2447",
+        "2448",
+        "2450",
+        "2453",
+        "2458",
+        "2460",
+        "2464",
+        "2466",
+        "2502",
+        "2504",
+        "2506",
+        "2523",
+        "2529",
+        "253",
+        "2535",
+        "2545",
+        "2546",
+        "2569",
+        "257",
+        "2571",
+        "2582",
+        "2617",
+        "2619",
+        "2627",
+        "2630",
+        "2634",
+        "2635",
+        "2640",
+        "2643",
+        "2674",
+        "2678",
+        "2681",
+        "2692",
+        "2698",
+        "2710",
+        "2717",
+        "2729",
+        "2747",
+        "2754",
+        "2755",
+        "2771",
+        "2803",
+        "2815",
+        "282",
+        "2837",
+        "284",
+        "2900",
+        "2916",
+        "292",
+        "301",
+        "302",
+        "304",
+        "3101",
+        "311",
+        "322",
+        "331",
+        "399",
+        "43",
+        "46",
+        "47",
+        "50",
+        "56",
+        "70",
+        "79",
+        "93"
+      ],
       "population_team_ids_sha256": "2d4a09d18cbe9d94eba75026cfc0cefaa3d66fbe80a341be6529c6fe90151304",
       "raw_schedule_files": [
         {
@@ -176,9 +295,13 @@
           "sha256": "62dbcb0d1f702c387fb858ce3efc2ecf8d028c3f00790b7a11ef2acefac8a2c8"
         }
       ],
-      "target_corpus_cannot_supply_fcs_population": true
+      "raw_schedule_hash_role": "registration_provenance_only_not_mutable_week_6_score_source",
+      "target_corpus_cannot_supply_fcs_population": true,
+      "unseen_forecast_fcs_team_rule": "locked_uniform_128_rank_fallback_for_forecast_only_without_future_outcome_evidence"
     },
-    "game_evidence": "identical_for_all_three_models_and_checkpoint",
+    "forecast_assignment": "latest_registered_origin_with_logical_cutoff_strictly_before_kickoff",
+    "game_corpus": "canonical_completed_2026_cfbd_regular_season_games_through_week_6",
+    "game_eligibility": "weeks_1_through_6_completed_final_score_known_utc_kickoff_both_teams_fbs_or_fcs",
     "inference": {
       "damping": 0.35,
       "max_iterations": 500,
@@ -187,24 +310,223 @@
     "likelihood": "Historical Likelihood V1",
     "likelihood_path": "data/processed/posterior/historical_likelihood_v1.json",
     "likelihood_sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
-    "no_new_team_evidence_policy": "retain_team_in_shared_inference_network",
-    "postponed_or_suspended_unknown_completion": "exclude_at_all_checkpoints_and_audit_unless_completion_timestamp_proves_cutoff_safety",
-    "preseason_game_count": 0,
-    "result_availability_lag_hours": 48,
-    "retained_2025_cutoffs_file_sha256": "698a0620d869ebf54eeedaed370d04be5a07fbaf3130cfb9d81f909539af7fe4",
-    "retained_2025_cutoffs_path": "data/processed/posterior_backtest/2025_rolling.json",
-    "unscored_or_unknown_kickoff": "exclude_and_audit_if_source_is_complete; abort_if_source_is_incomplete"
+    "minimum_full_sample_games": 500,
+    "minimum_week_6_games": 40,
+    "no_live_or_temporary_forecast_origins": true,
+    "outcome_used_only_for_scoring_after_forecast_inference": true,
+    "same_inputs_all_arms": [
+      "included_game_rows",
+      "fcs_fallbacks",
+      "likelihood",
+      "inference_configuration",
+      "team_population"
+    ],
+    "snapshot_local_included_game_evidence_preferred": true,
+    "source_completeness": "all_in_scope_week_6_scheduled_games_terminal_or_explicitly_audited_and_corpus_complete",
+    "week_6_origin": "2026-09-27",
+    "week_6_score_before_new_production_snapshot": true,
+    "week_6_source_state": "official_september_27_week_5_context_1_3_snapshot"
   },
   "failure_policy": {
-    "all_exclusions_require_team_checkpoint_reason_and_models_affected": true,
-    "candidate_construction_failure": "abort_without_decision",
-    "global_target_source_absent_or_ambiguous": "abort_without_decision",
-    "incomplete_game_source_or_inference_nonconvergence": "abort_without_decision",
-    "individual_missing_or_invalid_target": "exclude_team_all_checkpoints_all_models",
+    "bridge_major_unresolved_contradiction": "inconclusive_pending_explicit_review",
+    "candidate_or_baseline_identity_mismatch": "abort_without_decision",
+    "evidence_or_fcs_parity_mismatch": "abort_without_decision",
+    "forecast_origin_or_snapshot_hash_mismatch": "abort_without_decision",
+    "game_assigned_zero_or_multiple_origins": "abort_without_decision",
+    "game_in_origin_evidence": "abort_without_decision",
+    "game_source_incomplete_or_ambiguous": "abort_without_decision",
+    "inference_nonconvergence": "abort_without_decision",
+    "insufficient_eligible_data": "inconclusive",
     "score_imputation": "forbidden",
-    "source_or_model_identity_mismatch": "abort_without_decision",
-    "unmatched_model_team": "abort_without_decision"
+    "week_6_structural_failure": "abort_without_decision"
   },
+  "forecast_origins": [
+    {
+      "context_files": {
+        "included_games.csv": {
+          "path": "data/processed/snapshots/2026/2026-preseason-context-v1.3/predictive/context/included_games.csv",
+          "sha256": "bdeb91392e0a2e6886dde5e6c6b486e9b240fa06dff1495044fc7eb8884c90fc"
+        },
+        "metadata.json": {
+          "path": "data/processed/snapshots/2026/2026-preseason-context-v1.3/predictive/context/metadata.json",
+          "sha256": "2e29c5f895291dd1f8b4bb29a70656b396f49f15a4a6b6bcdbfd067f04b2bfb8"
+        },
+        "posterior_pmfs.csv": {
+          "path": "data/processed/snapshots/2026/2026-preseason-context-v1.3/predictive/context/posterior_pmfs.csv",
+          "sha256": "e3c7b48eb2204973b51073c1bd7aea38e886ccd328528ba12867136e9fb80a28"
+        }
+      },
+      "context_snapshot_id": "2026-preseason-context-v1.3",
+      "evidence_status": "retrospective_official_backfill",
+      "generation_timestamp_utc": "2026-09-19T22:12:15.043275+00:00",
+      "history_files": {
+        "included_games.csv": {
+          "path": "data/processed/snapshots/2026/2026-preseason-history-context-1.3/predictive/history/included_games.csv",
+          "sha256": "bdeb91392e0a2e6886dde5e6c6b486e9b240fa06dff1495044fc7eb8884c90fc"
+        },
+        "metadata.json": {
+          "path": "data/processed/snapshots/2026/2026-preseason-history-context-1.3/predictive/history/metadata.json",
+          "sha256": "f071ebc8ad560cfe614049853f0bc4d6b70f541ab1a728782175956379d629df"
+        },
+        "posterior_pmfs.csv": {
+          "path": "data/processed/snapshots/2026/2026-preseason-history-context-1.3/predictive/history/posterior_pmfs.csv",
+          "sha256": "3bf445e5158902363c791b1e611d203ea83efcc2a80b675954b8bb3d748929b6"
+        }
+      },
+      "history_snapshot_id": "2026-preseason-history-context-1.3",
+      "included_game_count": 0,
+      "logical_cutoff_utc": "2026-08-22T23:59:59+00:00",
+      "publication_slot": "2026-preseason-context-1.3"
+    },
+    {
+      "context_files": {
+        "included_games.csv": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.3/predictive/context/included_games.csv",
+          "sha256": "e465bb4bd10dd83afd3d867ecf2c873c4f4db1312fd4f25ea469ebc75e1e05fa"
+        },
+        "metadata.json": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.3/predictive/context/metadata.json",
+          "sha256": "b551615cc2d99f934784497e1b81f5364a9fbb66a96b030c0c7fbedcb45d60cd"
+        },
+        "posterior_pmfs.csv": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.3/predictive/context/posterior_pmfs.csv",
+          "sha256": "119c3f660aa50d4c4a689a48d75566eb238d330afe1d7207d1405ef18afb45fb"
+        }
+      },
+      "context_snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.3",
+      "evidence_status": "retrospective_official_backfill",
+      "generation_timestamp_utc": "2026-09-20T12:00:00+00:00",
+      "history_files": {
+        "included_games.csv": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-history/predictive/history/included_games.csv",
+          "sha256": "e465bb4bd10dd83afd3d867ecf2c873c4f4db1312fd4f25ea469ebc75e1e05fa"
+        },
+        "metadata.json": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-history/predictive/history/metadata.json",
+          "sha256": "5556090d9df5ad9d29993aa40d4290e99146d1c75770c5a66f3be772714b66eb"
+        },
+        "posterior_pmfs.csv": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-history/predictive/history/posterior_pmfs.csv",
+          "sha256": "c0dfe7cfb67e71a0e8b0a70ae33a5c86649999ed80e26c5951141e2abb032045"
+        }
+      },
+      "history_snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-history",
+      "included_game_count": 172,
+      "logical_cutoff_utc": "2026-09-08T11:43:00.275833+00:00",
+      "publication_slot": "2026-09-08"
+    },
+    {
+      "context_files": {
+        "included_games.csv": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-13T12-02-55.255941Z-context-v1.3/predictive/context/included_games.csv",
+          "sha256": "a4add0352070c764e177ef74273219efea2d68336d47e4c69b4fc70b979e388f"
+        },
+        "metadata.json": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-13T12-02-55.255941Z-context-v1.3/predictive/context/metadata.json",
+          "sha256": "b1054e7f156d63a7cf059903e8a2403b14ee5f032bf154cacd5a1dca22b04b36"
+        },
+        "posterior_pmfs.csv": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-13T12-02-55.255941Z-context-v1.3/predictive/context/posterior_pmfs.csv",
+          "sha256": "4ae6c44f4c353ad1e984fc2bf6533dae3dc146b5246ecbd77b7d696d4b209920"
+        }
+      },
+      "context_snapshot_id": "2026-weekly-2026-09-13T12-02-55.255941Z-context-v1.3",
+      "evidence_status": "retrospective_official_backfill",
+      "generation_timestamp_utc": "2026-09-20T12:00:00+00:00",
+      "history_files": {
+        "included_games.csv": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-13T12-02-55.255941Z-history/predictive/history/included_games.csv",
+          "sha256": "a4add0352070c764e177ef74273219efea2d68336d47e4c69b4fc70b979e388f"
+        },
+        "metadata.json": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-13T12-02-55.255941Z-history/predictive/history/metadata.json",
+          "sha256": "56313d9ed597b4544719d79f1443f9322ce9482dd864dbdc53081aeee8abce4d"
+        },
+        "posterior_pmfs.csv": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-13T12-02-55.255941Z-history/predictive/history/posterior_pmfs.csv",
+          "sha256": "a999cb86e25c360c66668955f81d3ada709c02837e9b630eac443eb904e84986"
+        }
+      },
+      "history_snapshot_id": "2026-weekly-2026-09-13T12-02-55.255941Z-history",
+      "included_game_count": 291,
+      "logical_cutoff_utc": "2026-09-13T12:02:55.255941+00:00",
+      "publication_slot": "2026-09-13"
+    },
+    {
+      "context_files": {
+        "included_games.csv": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-20T11-00-14.294077Z-context-v1.3/predictive/context/included_games.csv",
+          "sha256": "d2b391736d818c4deb404b9fa4bd2cd1b6e889f22b783b9ae116730ea33b6dde"
+        },
+        "metadata.json": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-20T11-00-14.294077Z-context-v1.3/predictive/context/metadata.json",
+          "sha256": "ae35fa6dd8b7938297dcdaa9b165ba4e4743b24ff0d7a85337619f1b55648426"
+        },
+        "posterior_pmfs.csv": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-20T11-00-14.294077Z-context-v1.3/predictive/context/posterior_pmfs.csv",
+          "sha256": "d73e15d61855cc4b14af492f6d1bd4af7bbebb5bfedd1bec2de266475da97b95"
+        }
+      },
+      "context_snapshot_id": "2026-weekly-2026-09-20T11-00-14.294077Z-context-v1.3",
+      "evidence_status": "official_state_before_scored_games",
+      "generation_timestamp_utc": "2026-09-20T11:10:59.833306+00:00",
+      "history_files": {
+        "included_games.csv": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-20T11-00-14.294077Z-history/predictive/history/included_games.csv",
+          "sha256": "d2b391736d818c4deb404b9fa4bd2cd1b6e889f22b783b9ae116730ea33b6dde"
+        },
+        "metadata.json": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-20T11-00-14.294077Z-history/predictive/history/metadata.json",
+          "sha256": "f22d697455e5f25f8da27f424fcd3bd8c81299136bea3dd6af3220dfd9d3cc92"
+        },
+        "posterior_pmfs.csv": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-20T11-00-14.294077Z-history/predictive/history/posterior_pmfs.csv",
+          "sha256": "0aa22ab4d38b403ee4215bd39128f65f7bb2c9dfb2fce97453985d6e6dc5e754"
+        }
+      },
+      "history_snapshot_id": "2026-weekly-2026-09-20T11-00-14.294077Z-history",
+      "included_game_count": 410,
+      "logical_cutoff_utc": "2026-09-20T11:00:14.294077+00:00",
+      "publication_slot": "2026-09-20"
+    },
+    {
+      "context_files": {
+        "included_games.csv": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3/predictive/context/included_games.csv",
+          "sha256": "75c2ee81cbefd750e6dce6d681433bf8c1731c7f92ce268406e9b6f0926d4414"
+        },
+        "metadata.json": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3/predictive/context/metadata.json",
+          "sha256": "5ad7acb5054c04785fc3c4177f0d6721f0add42699f1b3b199d2f6cb68c0dbf7"
+        },
+        "posterior_pmfs.csv": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3/predictive/context/posterior_pmfs.csv",
+          "sha256": "e68961c830493b1a88a46c1661403a5770f40689a5c0a6fb09d72cb8a1230688"
+        }
+      },
+      "context_snapshot_id": "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3",
+      "evidence_status": "official_state_before_scored_games",
+      "generation_timestamp_utc": "2026-09-27T12:27:35.698895+00:00",
+      "history_files": {
+        "included_games.csv": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-27T12-27-35.698895Z-history/predictive/history/included_games.csv",
+          "sha256": "75c2ee81cbefd750e6dce6d681433bf8c1731c7f92ce268406e9b6f0926d4414"
+        },
+        "metadata.json": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-27T12-27-35.698895Z-history/predictive/history/metadata.json",
+          "sha256": "29552aaacb7172ce31a5cc9e1bbad0d04dd73b071b9574f65da532933499a62d"
+        },
+        "posterior_pmfs.csv": {
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-27T12-27-35.698895Z-history/predictive/history/posterior_pmfs.csv",
+          "sha256": "4d3e1c032d900d4178fc9547d28c38ae80c14dbda0a01edd5e873ccb0d5bf853"
+        }
+      },
+      "history_snapshot_id": "2026-weekly-2026-09-27T12-27-35.698895Z-history",
+      "included_game_count": 530,
+      "logical_cutoff_utc": "2026-09-27T12:27:35.698895+00:00",
+      "publication_slot": "2026-09-27"
+    }
+  ],
   "guardrails": {
     "candidate_identity": "exact_frozen_semantic_hash_and_builder_file_hash",
     "centered_mixture_offset_absolute_tolerance": 1e-12,
@@ -215,6 +537,11 @@
     "positive_fitted_moderation": "verify_frozen_builder_location_rule_without_external_alpha",
     "residual_scale_identity": "exact",
     "source_prior_pmf_absolute_tolerance": 5e-16
+  },
+  "later_postseason_corroboration": {
+    "blocks_issue_164_completion": false,
+    "changes_registered_promotion_decision": false,
+    "final_2026_massey_target": "optional_later_only"
   },
   "models": {
     "candidate": {
@@ -265,6 +592,7 @@
       "16",
       "2449"
     ],
+    "common_game_population": "same_unique_eligible_game_ids_for_candidate_context_1_3_and_history_1_1",
     "expected_count": 138,
     "expected_team_ids": [
       "103",
@@ -407,51 +735,50 @@
       "99"
     ],
     "membership_policy": "lock_retained_2026_fbs_ids_even_if_later_reclassified",
-    "minimum_scored_teams_for_decision": 132,
     "missing_or_unverifiable_transfer_source": "abort_validation_without_decision",
     "missing_transfer_or_feature_values": "preserve_validated_context_1_3_missingness_and_training_median_semantics",
-    "primary_and_history_pairing": "same_target_complete_team_ids_at_every_checkpoint_for_all_three_models",
     "prior_or_candidate_missing_policy": "abort_validation_without_decision",
     "season": 2026,
     "source": "retained_2026_context_1_3_and_history_1_1_preseason_prediction_intersection",
     "subdivision": "fbs",
-    "target_missing_policy": "exclude_team_from_every_checkpoint_for_all_models_and_log_reason",
-    "team_ids_sha256": "a30abe533a607cab94e926c426a437721d1219e2feea48a0370bbed3bca6965f"
+    "team_ids_sha256": "a30abe533a607cab94e926c426a437721d1219e2feea48a0370bbed3bca6965f",
+    "unmatched_scoring_team_policy": "abort_without_decision"
+  },
+  "post_promotion_handoff": {
+    "canonical_context_lineage": "regenerate_preseason_and_weeks_1_through_6_under_frozen_context_1_4_at_original_evidence_boundaries",
+    "continue_context_1_4": "yes",
+    "history_1_1": "active_independent_lineage",
+    "retain_context_1_3_validation_provenance": "internal",
+    "user_facing_retrospective_reconstruction_labels": "none"
   },
   "registration": {
     "candidate_2026_outcome_scoring_at_registration": "unopened",
+    "candidate_2026_predictive_scores_at_amendment": "unopened",
     "candidate_freeze_head_commit": "7726b072aec6d1f8c9627f5e702cc828b64841c5",
     "candidate_freeze_issue": 160,
     "candidate_freeze_pr": 161,
+    "confirmation_evidence_strata": [
+      "candidate_score_unseen_weeks_1_through_5",
+      "strictly_prospective_week_6"
+    ],
     "development_seasons": [
       2022,
       2023,
       2024,
       2025
     ],
-    "final_2026_massey_target_at_registration": "unavailable",
     "holdout_season": 2026,
     "issue": 164,
     "origin_main_at_registration": "578af1df51e86eb70546547073888851f87ec88e",
-    "preexisting_2026_non_candidate_diagnostics_through": "2026-09-27"
+    "preexisting_2026_non_candidate_diagnostics_through": "2026-09-27",
+    "protocol_amendment": {
+      "authoritative_preregistration": "final_merged_commit",
+      "candidate_score_influence": "none",
+      "corrected_endpoint": "in_season_posterior_predictive_games_through_week_6",
+      "correction_timing": "before_merge_and_before_any_context_1_4_2026_score_was_opened",
+      "initial_endpoint": "eventual_final_2026_massey_target",
+      "initial_pr_165_draft_commit": "a118ef21364232090ab084d6ea58fdb81f0c18e7"
+    }
   },
-  "schema_version": 1,
-  "target": {
-    "canonical_builder": "scripts/build_historical_modeling.py",
-    "canonical_output": "data/processed/modeling/team_season_rank_distributions.csv",
-    "invalid_team_row_policy": "exclude_team_at_all_checkpoints_and_log_all_three_models",
-    "missing_global_source_policy": "abort_without_decision",
-    "rank_support": "1_through_138",
-    "source": "final_2026_massey_constituent_rank_distribution",
-    "target_pmf_reused_at_every_checkpoint": true,
-    "target_used_only_after_all_prior_and_posterior_construction": true,
-    "team_row_validity": [
-      "unique_team_id",
-      "fbs_2026",
-      "138_rank_support",
-      "unique_supported_ranks_within_1_through_138",
-      "finite_nonnegative_probabilities",
-      "probability_sum_within_1e-8_of_one"
-    ]
-  }
+  "schema_version": 2
 }
