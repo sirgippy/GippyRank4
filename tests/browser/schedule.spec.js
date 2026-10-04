@@ -95,7 +95,7 @@ test.describe("kickoff certainty and browser-local date grouping", () => {
   });
 
   test("renders the source-backed Week 5 kickoffs in Chicago local time", async ({ page }) => {
-    const snapshot = "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3";
+    const snapshot = "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.4";
     await loadSchedule(page, `/schedule.html?season=2026&family=predictive&prior=context&snapshot=${snapshot}&week=5`);
 
     const wkuAtNewMexicoState = page.locator('.weekly-game-card[data-game-id="401871049"]');
@@ -123,7 +123,7 @@ test.describe("cross-surface date display", () => {
   test.use({ timezoneId: "America/Los_Angeles" });
 
   test("keeps a future calendar anchor on the same day without a kickoff time", async ({ page }) => {
-    const snapshot = "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3";
+    const snapshot = "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.4";
     const gameId = "401856712";
     await page.goto(`/team.html?team=61&season=2026&family=predictive&prior=context&snapshot=${snapshot}`);
     const teamDate = page.locator(`.game-card[data-game-id="${gameId}"] .game-date`);
@@ -143,7 +143,7 @@ test.describe("calendar anchor with no timezone in a malformed browser payload",
   test.use({ timezoneId: "Asia/Tokyo" });
 
   test("preserves the lexical calendar day on both schedule surfaces", async ({ page }) => {
-    const snapshot = "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3";
+    const snapshot = "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.4";
     const gameId = "401856712";
     for (const folder of ["team-seasons", "week-games"]) {
       const artifact = JSON.parse(fs.readFileSync(path.join(__dirname, "../..", `site/data/${folder}/${snapshot}.json`), "utf8"));

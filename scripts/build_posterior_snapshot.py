@@ -14,8 +14,8 @@ def main() -> None:
     parser.add_argument("--prior-family", choices=("context", "history"), required=True)
     parser.add_argument(
         "--prior-model-version",
-        choices=("1.2", "1.3"),
-        help="Context lineage to rebuild; defaults to the active version (1.3)",
+        choices=("1.2", "1.3", "1.4"),
+        help="Context lineage to rebuild; defaults to the active version (1.4)",
     )
     parser.add_argument("--lineage-suffix")
     parser.add_argument(

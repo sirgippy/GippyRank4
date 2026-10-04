@@ -32,21 +32,46 @@ def _write(path: Path, fields: list[str], rows: list[dict[str, object]]) -> None
 
 
 def _root(tmp_path: Path) -> Path:
-    likelihood_path = tmp_path / "data/processed/posterior/historical_likelihood_v1.json"
+    likelihood_path = (
+        tmp_path / "data/processed/posterior/historical_likelihood_v1.json"
+    )
     likelihood_path.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(
-        Path(__file__).resolve().parents[1] / "data/processed/posterior/historical_likelihood_v1.json",
+        Path(__file__).resolve().parents[1]
+        / "data/processed/posterior/historical_likelihood_v1.json",
         likelihood_path,
     )
-    prior_fields = ["season", "subdivision", "team_id", "team_name", "conference", "pmf"]
+    prior_fields = [
+        "season",
+        "subdivision",
+        "team_id",
+        "team_name",
+        "conference",
+        "pmf",
+    ]
     prior_rows = [
-        {"season": 2026, "subdivision": "fbs", "team_id": "1", "team_name": "One", "conference": "A", "pmf": "[0.7,0.3]"},
-        {"season": 2026, "subdivision": "fbs", "team_id": "2", "team_name": "Two", "conference": "A", "pmf": "[0.3,0.7]"},
+        {
+            "season": 2026,
+            "subdivision": "fbs",
+            "team_id": "1",
+            "team_name": "One",
+            "conference": "A",
+            "pmf": "[0.7,0.3]",
+        },
+        {
+            "season": 2026,
+            "subdivision": "fbs",
+            "team_id": "2",
+            "team_name": "Two",
+            "conference": "A",
+            "pmf": "[0.3,0.7]",
+        },
     ]
     for family in ("context", "history"):
         roots = [family]
         if family == "context":
             roots.append("context_v1_3")
+            roots.append("context_v1_4")
         for family_root in roots:
             _write(
                 tmp_path
@@ -55,16 +80,72 @@ def _root(tmp_path: Path) -> Path:
                 prior_rows,
             )
     fields = [
-        "id", "season", "week", "seasonType", "startDate", "startTimeTBD", "completed", "neutralSite",
-        "conferenceGame", "homeId", "homeTeam", "homeClassification", "homeConference",
-        "homePoints", "awayId", "awayTeam", "awayClassification", "awayConference", "awayPoints",
+        "id",
+        "season",
+        "week",
+        "seasonType",
+        "startDate",
+        "startTimeTBD",
+        "completed",
+        "neutralSite",
+        "conferenceGame",
+        "homeId",
+        "homeTeam",
+        "homeClassification",
+        "homeConference",
+        "homePoints",
+        "awayId",
+        "awayTeam",
+        "awayClassification",
+        "awayConference",
+        "awayPoints",
     ]
     _write(
         tmp_path / "data/processed/cfbd/games.csv",
         fields,
         [
-            {"id": "early", "season": 2026, "week": 1, "seasonType": "regular", "startDate": "2026-08-29T00:00:00Z", "startTimeTBD": "False", "completed": "True", "neutralSite": "False", "conferenceGame": "True", "homeId": "1", "homeTeam": "One", "homeClassification": "fbs", "homeConference": "A", "homePoints": 20, "awayId": "2", "awayTeam": "Two", "awayClassification": "fbs", "awayConference": "A", "awayPoints": 10},
-            {"id": "later", "season": 2026, "week": 2, "seasonType": "regular", "startDate": "2026-09-10T00:00:00Z", "startTimeTBD": "False", "completed": "True", "neutralSite": "False", "conferenceGame": "True", "homeId": "1", "homeTeam": "One", "homeClassification": "fbs", "homeConference": "A", "homePoints": 7, "awayId": "2", "awayTeam": "Two", "awayClassification": "fbs", "awayConference": "A", "awayPoints": 24},
+            {
+                "id": "early",
+                "season": 2026,
+                "week": 1,
+                "seasonType": "regular",
+                "startDate": "2026-08-29T00:00:00Z",
+                "startTimeTBD": "False",
+                "completed": "True",
+                "neutralSite": "False",
+                "conferenceGame": "True",
+                "homeId": "1",
+                "homeTeam": "One",
+                "homeClassification": "fbs",
+                "homeConference": "A",
+                "homePoints": 20,
+                "awayId": "2",
+                "awayTeam": "Two",
+                "awayClassification": "fbs",
+                "awayConference": "A",
+                "awayPoints": 10,
+            },
+            {
+                "id": "later",
+                "season": 2026,
+                "week": 2,
+                "seasonType": "regular",
+                "startDate": "2026-09-10T00:00:00Z",
+                "startTimeTBD": "False",
+                "completed": "True",
+                "neutralSite": "False",
+                "conferenceGame": "True",
+                "homeId": "1",
+                "homeTeam": "One",
+                "homeClassification": "fbs",
+                "homeConference": "A",
+                "homePoints": 7,
+                "awayId": "2",
+                "awayTeam": "Two",
+                "awayClassification": "fbs",
+                "awayConference": "A",
+                "awayPoints": 24,
+            },
         ],
     )
     return tmp_path
@@ -184,17 +265,26 @@ def test_later_retrieval_cannot_prove_result_across_utc_midnight(
     _write(path, fields, [*rows, midnight_game])
     cutoff = datetime(2026, 9, 10, 0, 15, tzinfo=UTC)
     games, included, _, _ = filter_games(
-        root, 2026, cutoff, "live",
+        root,
+        2026,
+        cutoff,
+        "live",
         source_retrieved_at=datetime(2026, 9, 11, 12, tzinfo=UTC),
     )
     assert games == []
     assert included == []
-    assert _schedule_state(midnight_game, {
-        "snapshot_type": "live",
-        "effective_cutoff": cutoff.isoformat(),
-        "source_retrieved_at": "2026-09-11T12:00:00+00:00",
-        "included_game_ids": [],
-    }) == "unresolved"
+    assert (
+        _schedule_state(
+            midnight_game,
+            {
+                "snapshot_type": "live",
+                "effective_cutoff": cutoff.isoformat(),
+                "source_retrieved_at": "2026-09-11T12:00:00+00:00",
+                "included_game_ids": [],
+            },
+        )
+        == "unresolved"
+    )
 
 
 def test_date_cutoff_includes_its_calendar_day(tmp_path: Path) -> None:
@@ -231,7 +321,7 @@ def test_producer_rejects_dates_that_publication_cannot_accept(
             prior_family="context",
             snapshot_type="weekly",
             root=root,
-            )
+        )
 
 
 @pytest.mark.parametrize("week", ["Bowl", "-1"])
@@ -240,7 +330,9 @@ def test_producer_rejects_unsupported_week(week: str) -> None:
         _week(week)
 
 
-def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path: Path) -> None:
+def test_team_artifact_hides_future_results_and_site_exports_lazy_path(
+    tmp_path: Path,
+) -> None:
     root = _root(tmp_path)
     snapshot = build_snapshot(
         season=2026,
@@ -273,18 +365,29 @@ def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path:
         },
     }
     assert artifact["performance_percentile"]["reference_count"] == 2
-    assert later["result"] is None and later["score"] is None and later["game_rating"] is None
+    assert (
+        later["result"] is None
+        and later["score"] is None
+        and later["game_rating"] is None
+    )
     assert later["retrospective_expectation_id"] is None
     retrospective = artifact["retrospective_game_expectations"]
     assert retrospective["source_snapshot_id"] == snapshot.snapshot_id
     assert retrospective["effective_cutoff"] == snapshot.metadata["effective_cutoff"]
     assert set(retrospective["games"]) == {"early"}
     assert retrospective["games"]["early"]["actual_home_margin"] == 10
-    assert snapshot.metadata["retrospective_game_expectations_path"] == "team_seasons.json"
+    assert (
+        snapshot.metadata["retrospective_game_expectations_path"] == "team_seasons.json"
+    )
     assert snapshot.metadata["retrospective_game_expectations_version"] == "2.0"
     prediction = artifact["future_predictions"][later["future_prediction_id"]]
     assert len(prediction["display_distribution"]["masses"]) == 40
-    assert sum(prediction["display_distribution"]["masses"]) + prediction["display_distribution"]["lower_tail_probability"] + prediction["display_distribution"]["upper_tail_probability"] == 1000
+    assert (
+        sum(prediction["display_distribution"]["masses"])
+        + prediction["display_distribution"]["lower_tail_probability"]
+        + prediction["display_distribution"]["upper_tail_probability"]
+        == 1000
+    )
     assert early["future_prediction_id"] is None
     assert later["future_prediction_id"] == "later"
     prediction = artifact["future_predictions"]["later"]
@@ -292,21 +395,51 @@ def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path:
     assert prediction["home_team_id"] == "1"
     assert prediction["away_team_id"] == "2"
     assert prediction["margin_interval_50"][0] <= prediction["margin_interval_50"][1]
-    assert prediction["home_win_probability"] + prediction["away_win_probability"] == pytest.approx(1.0)
+    assert prediction["home_win_probability"] + prediction[
+        "away_win_probability"
+    ] == pytest.approx(1.0)
     simulation = artifact["season_simulation"]
     assert simulation["artifact_kind"] == "season_simulation"
-    assert simulation["configuration"]["conditional_distribution_method"] == "exact_poisson_binomial"
+    assert (
+        simulation["configuration"]["conditional_distribution_method"]
+        == "exact_poisson_binomial"
+    )
     assert simulation["latent_quality"]["held_fixed_throughout_universe"]
     assert simulation["teams"]["1"]["forecast_status"] == "available"
-    assert sum(simulation["teams"]["1"]["record_probabilities"].values()) == pytest.approx(1.0)
-    assert simulation["teams"]["1"]["variance_decomposition"]["team_quality_fraction"] + simulation["teams"]["1"]["variance_decomposition"]["game_randomness_fraction"] == pytest.approx(1.0)
+    assert sum(
+        simulation["teams"]["1"]["record_probabilities"].values()
+    ) == pytest.approx(1.0)
+    assert simulation["teams"]["1"]["variance_decomposition"][
+        "team_quality_fraction"
+    ] + simulation["teams"]["1"]["variance_decomposition"][
+        "game_randomness_fraction"
+    ] == pytest.approx(1.0)
 
     config = root / "site/publish_config.json"
     config.parent.mkdir(parents=True)
-    config.write_text(json.dumps({"schema_version": "1.0", "publication_slots": [{"id": "2026-09-01", "status": "official"}], "snapshots": [{"source": snapshot.directory.relative_to(root).as_posix(), "display_label": "Test", "publication_slot": "2026-09-01"}]}))
-    manifest = build_site_data(root=root, config_path=config, output_directory=root / "site/data")
+    config.write_text(
+        json.dumps(
+            {
+                "schema_version": "1.0",
+                "publication_slots": [{"id": "2026-09-01", "status": "official"}],
+                "snapshots": [
+                    {
+                        "source": snapshot.directory.relative_to(root).as_posix(),
+                        "display_label": "Test",
+                        "publication_slot": "2026-09-01",
+                    }
+                ],
+            }
+        )
+    )
+    manifest = build_site_data(
+        root=root, config_path=config, output_directory=root / "site/data"
+    )
     entry = manifest["snapshots"][0]
-    assert entry["team_seasons_path"] == "data/team-seasons/2026-weekly-2026-09-01-context-v1.3.json"
+    assert (
+        entry["team_seasons_path"]
+        == "data/team-seasons/2026-weekly-2026-09-01-context-v1.4.json"
+    )
     assert (root / "site" / entry["team_seasons_path"]).is_file()
     assert entry["completed_visualization_bytes"] > 0
     assert entry["completed_visualization_bytes_per_game"] > 0
@@ -327,7 +460,9 @@ def test_team_artifact_hides_future_results_and_site_exports_lazy_path(tmp_path:
     )
 
 
-def test_future_predictions_use_posterior_after_completed_evidence(tmp_path: Path) -> None:
+def test_future_predictions_use_posterior_after_completed_evidence(
+    tmp_path: Path,
+) -> None:
     root = _root(tmp_path)
     likelihood = LikelihoodV1(np.r_[10.0, np.zeros(33)], 1.0, 15.0)
     before_evidence = build_snapshot(
@@ -361,7 +496,9 @@ def test_future_predictions_use_posterior_after_completed_evidence(tmp_path: Pat
     assert after_margin != pytest.approx(before_margin)
 
 
-def test_unresolved_future_schedule_is_fail_closed_for_season_forecast(tmp_path: Path) -> None:
+def test_unresolved_future_schedule_is_fail_closed_for_season_forecast(
+    tmp_path: Path,
+) -> None:
     root = _root(tmp_path)
     schedule_path = root / "data/processed/cfbd/games.csv"
     with schedule_path.open(newline="", encoding="utf-8") as handle:
@@ -382,8 +519,13 @@ def test_unresolved_future_schedule_is_fail_closed_for_season_forecast(tmp_path:
 
     assert artifact["season_simulation"]["season_scope"]["future_game_count"] == 1
     assert artifact["season_simulation"]["game_marginals"] == {}
-    assert artifact["season_simulation"]["teams"]["1"]["forecast_status"] == "unavailable"
-    assert artifact["season_simulation"]["teams"]["1"]["unsupported_games"][0]["reason"] == "unsupported_subdivision"
+    assert (
+        artifact["season_simulation"]["teams"]["1"]["forecast_status"] == "unavailable"
+    )
+    assert (
+        artifact["season_simulation"]["teams"]["1"]["unsupported_games"][0]["reason"]
+        == "unsupported_subdivision"
+    )
 
 
 def test_schedule_accounting_keeps_unresolved_and_excluded_completed_games(
@@ -466,9 +608,25 @@ def test_team_artifact_provenance_mismatch_fails_closed(tmp_path: Path) -> None:
     artifact_path.write_text(json.dumps(artifact), encoding="utf-8")
     config = root / "site/publish_config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
-    config.write_text(json.dumps({"schema_version": "1.0", "publication_slots": [{"id": "2026-09-01", "status": "official"}], "snapshots": [{"source": snapshot.directory.relative_to(root).as_posix(), "display_label": "Test", "publication_slot": "2026-09-01"}]}))
+    config.write_text(
+        json.dumps(
+            {
+                "schema_version": "1.0",
+                "publication_slots": [{"id": "2026-09-01", "status": "official"}],
+                "snapshots": [
+                    {
+                        "source": snapshot.directory.relative_to(root).as_posix(),
+                        "display_label": "Test",
+                        "publication_slot": "2026-09-01",
+                    }
+                ],
+            }
+        )
+    )
     with pytest.raises(SiteDataValidationError, match="provenance mismatch"):
-        build_site_data(root=root, config_path=config, output_directory=root / "site/data")
+        build_site_data(
+            root=root, config_path=config, output_directory=root / "site/data"
+        )
 
 
 def test_declared_season_simulation_missing_fails_closed(tmp_path: Path) -> None:
@@ -502,7 +660,9 @@ def test_declared_season_simulation_missing_fails_closed(tmp_path: Path) -> None
         )
     )
     with pytest.raises(SiteDataValidationError, match="declared but missing"):
-        build_site_data(root=root, config_path=config, output_directory=root / "site/data")
+        build_site_data(
+            root=root, config_path=config, output_directory=root / "site/data"
+        )
 
 
 def test_declared_team_artifact_missing_fails_closed(tmp_path: Path) -> None:
@@ -517,9 +677,27 @@ def test_declared_team_artifact_missing_fails_closed(tmp_path: Path) -> None:
     (snapshot.directory / "team_seasons.json").unlink()
     config = root / "site/publish_config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
-    config.write_text(json.dumps({"schema_version": "1.0", "publication_slots": [{"id": "2026-09-01", "status": "official"}], "snapshots": [{"source": snapshot.directory.relative_to(root).as_posix(), "display_label": "Test", "publication_slot": "2026-09-01"}]}))
-    with pytest.raises(SiteDataValidationError, match="declared team-season artifact is unavailable"):
-        build_site_data(root=root, config_path=config, output_directory=root / "site/data")
+    config.write_text(
+        json.dumps(
+            {
+                "schema_version": "1.0",
+                "publication_slots": [{"id": "2026-09-01", "status": "official"}],
+                "snapshots": [
+                    {
+                        "source": snapshot.directory.relative_to(root).as_posix(),
+                        "display_label": "Test",
+                        "publication_slot": "2026-09-01",
+                    }
+                ],
+            }
+        )
+    )
+    with pytest.raises(
+        SiteDataValidationError, match="declared team-season artifact is unavailable"
+    ):
+        build_site_data(
+            root=root, config_path=config, output_directory=root / "site/data"
+        )
 
 
 def test_started_but_unincluded_game_stays_redacted(tmp_path: Path) -> None:
@@ -527,17 +705,49 @@ def test_started_but_unincluded_game_stays_redacted(tmp_path: Path) -> None:
     _write(
         root / "data/processed/cfbd/games.csv",
         [
-            "id", "season", "week", "seasonType", "startDate", "startTimeTBD", "completed", "neutralSite",
-            "conferenceGame", "homeId", "homeTeam", "homeClassification", "homeConference",
-            "homePoints", "awayId", "awayTeam", "awayClassification", "awayConference", "awayPoints",
+            "id",
+            "season",
+            "week",
+            "seasonType",
+            "startDate",
+            "startTimeTBD",
+            "completed",
+            "neutralSite",
+            "conferenceGame",
+            "homeId",
+            "homeTeam",
+            "homeClassification",
+            "homeConference",
+            "homePoints",
+            "awayId",
+            "awayTeam",
+            "awayClassification",
+            "awayConference",
+            "awayPoints",
         ],
-        [{
-            "id": "started", "season": 2026, "week": 1, "seasonType": "regular",
-            "startDate": "2026-09-01T12:00:00Z", "startTimeTBD": "False", "completed": "True", "neutralSite": "False",
-            "conferenceGame": "True", "homeId": "1", "homeTeam": "One", "homeClassification": "fbs",
-            "homeConference": "A", "homePoints": 15, "awayId": "2", "awayTeam": "Two",
-            "awayClassification": "fbs", "awayConference": "A", "awayPoints": 34,
-        }],
+        [
+            {
+                "id": "started",
+                "season": 2026,
+                "week": 1,
+                "seasonType": "regular",
+                "startDate": "2026-09-01T12:00:00Z",
+                "startTimeTBD": "False",
+                "completed": "True",
+                "neutralSite": "False",
+                "conferenceGame": "True",
+                "homeId": "1",
+                "homeTeam": "One",
+                "homeClassification": "fbs",
+                "homeConference": "A",
+                "homePoints": 15,
+                "awayId": "2",
+                "awayTeam": "Two",
+                "awayClassification": "fbs",
+                "awayConference": "A",
+                "awayPoints": 34,
+            }
+        ],
     )
     teams = [
         Team("1", "One", "fbs", np.array([0.7, 0.3])),
@@ -591,7 +801,9 @@ def test_current_processed_schedule_requires_valid_kickoff_certainty(
     ]
     posterior = infer_posterior(teams, [], LikelihoodV1(np.zeros(34), 1.0, 15.0))
 
-    with pytest.raises(ValueError, match="current CFBD schedule game early.*startTimeTBD"):
+    with pytest.raises(
+        ValueError, match="current CFBD schedule game early.*startTimeTBD"
+    ):
         build_team_season_artifact(
             root=root,
             metadata={
@@ -624,7 +836,10 @@ def test_current_processed_schedule_requires_valid_kickoff_certainty(
     ],
 )
 def test_completed_lower_division_score_requires_available_source_but_not_model_membership(
-    tmp_path: Path, source_mode: str, retrieved_at: str | None, known: bool,
+    tmp_path: Path,
+    source_mode: str,
+    retrieved_at: str | None,
+    known: bool,
 ) -> None:
     root = _root(tmp_path)
     schedule_path = root / "data/processed/cfbd/games.csv"
@@ -665,7 +880,9 @@ def test_completed_lower_division_score_requires_available_source_but_not_model_
             "source_mode": source_mode,
             "source_retrieval_times": {},
             "source_response_hashes": {},
-            "game_corpus_sha256": hashlib.sha256(schedule_path.read_bytes()).hexdigest(),
+            "game_corpus_sha256": hashlib.sha256(
+                schedule_path.read_bytes()
+            ).hexdigest(),
             "included_game_ids": [],
         },
         teams=teams,
@@ -676,7 +893,9 @@ def test_completed_lower_division_score_requires_available_source_but_not_model_
         likelihood=None,
     )
     game = next(
-        game for game in artifact["teams"]["1"]["games"] if game["game_id"] == "lower-division"
+        game
+        for game in artifact["teams"]["1"]["games"]
+        if game["game_id"] == "lower-division"
     )
     assert game["game_state"] == ("out_of_scope" if known else "unresolved")
     assert game["result"] == ("W" if known else None)
@@ -692,30 +911,54 @@ def test_known_unmodeled_result_exports_with_local_time(tmp_path: Path) -> None:
     with schedule_path.open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
     lower = dict(rows[0])
-    lower.update({
-        "id": "known-lower-division", "homeId": "1", "homeTeam": "One",
-        "homeClassification": "fbs", "homePoints": "31",
-        "awayId": "99", "awayTeam": "Lower", "awayClassification": "ii",
-        "awayConference": "Division II", "awayPoints": "7",
-    })
+    lower.update(
+        {
+            "id": "known-lower-division",
+            "homeId": "1",
+            "homeTeam": "One",
+            "homeClassification": "fbs",
+            "homePoints": "31",
+            "awayId": "99",
+            "awayTeam": "Lower",
+            "awayClassification": "ii",
+            "awayConference": "Division II",
+            "awayPoints": "7",
+        }
+    )
     _write(schedule_path, list(rows[0]), [*rows, lower])
     snapshot = build_snapshot(
-        season=2026, cutoff=date(2026, 9, 1), prior_family="context",
-        snapshot_type="weekly", root=root,
+        season=2026,
+        cutoff=date(2026, 9, 1),
+        prior_family="context",
+        snapshot_type="weekly",
+        root=root,
     )
     config = root / "site/publish_config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
-    config.write_text(json.dumps({
-        "schema_version": "1.0",
-        "publication_slots": [{"id": "2026-09-01", "status": "official"}],
-        "snapshots": [{
-            "source": snapshot.directory.relative_to(root).as_posix(),
-            "display_label": "Test", "publication_slot": "2026-09-01",
-        }],
-    }))
+    config.write_text(
+        json.dumps(
+            {
+                "schema_version": "1.0",
+                "publication_slots": [{"id": "2026-09-01", "status": "official"}],
+                "snapshots": [
+                    {
+                        "source": snapshot.directory.relative_to(root).as_posix(),
+                        "display_label": "Test",
+                        "publication_slot": "2026-09-01",
+                    }
+                ],
+            }
+        )
+    )
     build_site_data(root=root, config_path=config, output_directory=root / "site/data")
-    published = json.loads((root / "site/data/team-seasons" / f"{snapshot.snapshot_id}.json").read_text())
-    game = next(game for game in published["teams"]["1"]["games"] if game["game_id"] == "known-lower-division")
+    published = json.loads(
+        (root / "site/data/team-seasons" / f"{snapshot.snapshot_id}.json").read_text()
+    )
+    game = next(
+        game
+        for game in published["teams"]["1"]["games"]
+        if game["game_id"] == "known-lower-division"
+    )
     assert game["game_state"] == "out_of_scope"
     assert game["result"] == "W"
     assert game["score"] == {"team": 31, "opponent": 7}
@@ -731,7 +974,14 @@ def test_validator_rejects_unincluded_completed_result(tmp_path: Path) -> None:
         rows = list(csv.DictReader(handle))
     for row in rows:
         if row["id"] == "later":
-            row.update({"startDate": "2026-09-01T12:00:00Z", "completed": "False", "homePoints": "", "awayPoints": ""})
+            row.update(
+                {
+                    "startDate": "2026-09-01T12:00:00Z",
+                    "completed": "False",
+                    "homePoints": "",
+                    "awayPoints": "",
+                }
+            )
     _write(schedule_path, list(rows[0]), rows)
     snapshot = build_snapshot(
         season=2026,
@@ -747,8 +997,12 @@ def test_validator_rejects_unincluded_completed_result(tmp_path: Path) -> None:
     _write(schedule_path, list(rows[0]), rows)
     artifact_path = snapshot.directory / "team_seasons.json"
     artifact = json.loads(artifact_path.read_text())
-    artifact["schedule_source"]["sha256"] = hashlib.sha256(schedule_path.read_bytes()).hexdigest()
-    game = next(game for game in artifact["teams"]["1"]["games"] if game["game_id"] == "later")
+    artifact["schedule_source"]["sha256"] = hashlib.sha256(
+        schedule_path.read_bytes()
+    ).hexdigest()
+    game = next(
+        game for game in artifact["teams"]["1"]["games"] if game["game_id"] == "later"
+    )
     game.update(
         {
             "game_state": "completed",
@@ -759,9 +1013,25 @@ def test_validator_rejects_unincluded_completed_result(tmp_path: Path) -> None:
     artifact_path.write_text(json.dumps(artifact), encoding="utf-8")
     config = root / "site/publish_config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
-    config.write_text(json.dumps({"schema_version": "1.0", "publication_slots": [{"id": "2026-09-01", "status": "official"}], "snapshots": [{"source": snapshot.directory.relative_to(root).as_posix(), "display_label": "Test", "publication_slot": "2026-09-01"}]}))
+    config.write_text(
+        json.dumps(
+            {
+                "schema_version": "1.0",
+                "publication_slots": [{"id": "2026-09-01", "status": "official"}],
+                "snapshots": [
+                    {
+                        "source": snapshot.directory.relative_to(root).as_posix(),
+                        "display_label": "Test",
+                        "publication_slot": "2026-09-01",
+                    }
+                ],
+            }
+        )
+    )
     with pytest.raises(SiteDataValidationError, match="without snapshot evidence"):
-        build_site_data(root=root, config_path=config, output_directory=root / "site/data")
+        build_site_data(
+            root=root, config_path=config, output_directory=root / "site/data"
+        )
 
 
 def test_historical_artifact_survives_later_schedule_refresh(tmp_path: Path) -> None:
@@ -785,13 +1055,31 @@ def test_historical_artifact_survives_later_schedule_refresh(tmp_path: Path) -> 
     _write(schedule_path, list(rows[0]), rows)
     config = root / "site/publish_config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
-    config.write_text(json.dumps({"schema_version": "1.0", "publication_slots": [{"id": "2026-09-01", "status": "official"}], "snapshots": [{"source": snapshot.directory.relative_to(root).as_posix(), "display_label": "Test", "publication_slot": "2026-09-01"}]}))
+    config.write_text(
+        json.dumps(
+            {
+                "schema_version": "1.0",
+                "publication_slots": [{"id": "2026-09-01", "status": "official"}],
+                "snapshots": [
+                    {
+                        "source": snapshot.directory.relative_to(root).as_posix(),
+                        "display_label": "Test",
+                        "publication_slot": "2026-09-01",
+                    }
+                ],
+            }
+        )
+    )
 
-    manifest = build_site_data(root=root, config_path=config, output_directory=root / "site/data")
+    manifest = build_site_data(
+        root=root, config_path=config, output_directory=root / "site/data"
+    )
 
     assert manifest["snapshots"][0]["team_seasons_bytes"] > 0
     assert artifact_path.read_bytes() == original_artifact
-    exported = json.loads((root / "site" / manifest["snapshots"][0]["team_seasons_path"]).read_text())
+    exported = json.loads(
+        (root / "site" / manifest["snapshots"][0]["team_seasons_path"]).read_text()
+    )
     assert exported["schedule_source"] == original_schedule_source
 
 
@@ -799,7 +1087,9 @@ def test_context_history_and_performance_use_declared_prediction_sources(
     tmp_path: Path,
 ) -> None:
     root = _root(tmp_path)
-    history_prior = root / "data/processed/preseason/history/annual/2026/predictions.csv"
+    history_prior = (
+        root / "data/processed/preseason/history/annual/2026/predictions.csv"
+    )
     with history_prior.open(newline="", encoding="utf-8") as handle:
         history_rows = list(csv.DictReader(handle))
         history_fields = list(history_rows[0])
@@ -846,8 +1136,13 @@ def test_context_history_and_performance_use_declared_prediction_sources(
         encoding="utf-8",
     )
 
-    manifest = build_site_data(root=root, config_path=config, output_directory=root / "site/data")
-    entries = {entry["ranking_family"] + ":" + entry.get("prior_family", ""): entry for entry in manifest["snapshots"]}
+    manifest = build_site_data(
+        root=root, config_path=config, output_directory=root / "site/data"
+    )
+    entries = {
+        entry["ranking_family"] + ":" + entry.get("prior_family", ""): entry
+        for entry in manifest["snapshots"]
+    }
     artifacts = {
         key: json.loads(
             (root / "site" / entry["team_seasons_path"]).read_text(encoding="utf-8")
@@ -858,15 +1153,30 @@ def test_context_history_and_performance_use_declared_prediction_sources(
     assert artifacts["predictive:context"]["prediction_source"] == "predictive_context"
     assert artifacts["predictive:history"]["prediction_source"] == "predictive_history"
     assert artifacts["performance:"]["prediction_source"] == "predictive_context"
-    assert artifacts["predictive:context"]["season_simulation"]["prediction_source"] == "predictive_context"
-    assert artifacts["predictive:history"]["season_simulation"]["prediction_source"] == "predictive_history"
-    assert artifacts["performance:"]["season_simulation"]["prediction_source"] == "predictive_context"
-    assert artifacts["predictive:context"]["future_predictions"]["later"]["expected_home_margin"] != pytest.approx(
-        artifacts["predictive:history"]["future_predictions"]["later"]["expected_home_margin"]
+    assert (
+        artifacts["predictive:context"]["season_simulation"]["prediction_source"]
+        == "predictive_context"
+    )
+    assert (
+        artifacts["predictive:history"]["season_simulation"]["prediction_source"]
+        == "predictive_history"
+    )
+    assert (
+        artifacts["performance:"]["season_simulation"]["prediction_source"]
+        == "predictive_context"
+    )
+    assert artifacts["predictive:context"]["future_predictions"]["later"][
+        "expected_home_margin"
+    ] != pytest.approx(
+        artifacts["predictive:history"]["future_predictions"]["later"][
+            "expected_home_margin"
+        ]
     )
     for artifact in artifacts.values():
         prediction = artifact["future_predictions"]["later"]
-        assert prediction["home_win_probability"] + prediction["away_win_probability"] == pytest.approx(1.0)
+        assert prediction["home_win_probability"] + prediction[
+            "away_win_probability"
+        ] == pytest.approx(1.0)
         assert artifact["teams"]["1"]["games"][1]["future_prediction_id"] == "later"
         assert artifact["teams"]["2"]["games"][1]["future_prediction_id"] == "later"
 
@@ -877,8 +1187,12 @@ def test_legacy_replay_contract_publishes_static_site(tmp_path: Path) -> None:
     prior.write_text(prior.read_text().replace("[0.7,0.3]", "[0.6,0.4]"))
     cutoff = date(2026, 9, 1)
     source = build_snapshot(
-        season=2026, cutoff=cutoff, prior_family="context",
-        prior_model_version="1.2", snapshot_type="weekly", root=root,
+        season=2026,
+        cutoff=cutoff,
+        prior_family="context",
+        prior_model_version="1.2",
+        snapshot_type="weekly",
+        root=root,
     )
     source_path = source.directory / "metadata.json"
     metadata = json.loads(source_path.read_text())
@@ -894,20 +1208,31 @@ def test_legacy_replay_contract_publishes_static_site(tmp_path: Path) -> None:
     metadata["source_retrieved_at_contract"] = "legacy_first_response"
     source_path.write_text(json.dumps(metadata))
     replay = build_snapshot(
-        season=2026, cutoff=cutoff, prior_family="context",
-        prior_model_version="1.3", snapshot_type="weekly", root=root,
+        season=2026,
+        cutoff=cutoff,
+        prior_family="context",
+        prior_model_version="1.3",
+        snapshot_type="weekly",
+        root=root,
         evidence_snapshot=source.directory,
     )
     config = root / "site/publish_config.json"
     config.parent.mkdir(parents=True)
-    config.write_text(json.dumps({
-        "schema_version": "1.0",
-        "publication_slots": [{"id": "2026-09-01", "status": "official"}],
-        "snapshots": [{
-            "source": replay.directory.relative_to(root).as_posix(),
-            "display_label": "Replay", "publication_slot": "2026-09-01",
-        }],
-    }))
+    config.write_text(
+        json.dumps(
+            {
+                "schema_version": "1.0",
+                "publication_slots": [{"id": "2026-09-01", "status": "official"}],
+                "snapshots": [
+                    {
+                        "source": replay.directory.relative_to(root).as_posix(),
+                        "display_label": "Replay",
+                        "publication_slot": "2026-09-01",
+                    }
+                ],
+            }
+        )
+    )
     manifest = build_site_data(
         root=root, config_path=config, output_directory=root / "site/data"
     )

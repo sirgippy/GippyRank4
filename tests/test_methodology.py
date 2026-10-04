@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from gippyrank.methodology import (
+    CONTEXT_PRIOR_VERSION,
     PREDICTION_SCHEMA_VERSION,
     PRODUCTION_MODEL_VERSIONS,
     PRODUCTION_SCHEMA_VERSIONS,
@@ -30,6 +31,12 @@ from gippyrank.site_data import (
 )
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_context14_is_active_and_historical_context_versions_remain_supported() -> None:
+    assert CONTEXT_PRIOR_VERSION == "1.4"
+    assert PRODUCTION_MODEL_VERSIONS["context_prior"] == "1.4"
+    assert SUPPORTED_ARTIFACT_MODEL_VERSIONS["context_prior"] == {"1.2", "1.3", "1.4"}
 
 
 def test_published_methodology_metadata_matches_the_central_contract() -> None:

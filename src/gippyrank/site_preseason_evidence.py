@@ -639,7 +639,7 @@ def build_preseason_input_projection(
                     coach_records=coach_records,
                     transfer_rows=transfer_rows,
                     transfer_audits=transfer_audits,
-                    include_transfers=prior_model_version == "1.3",
+                    include_transfers=prior_model_version in {"1.3", "1.4"},
                 )
             )
         projected_teams[team_id] = groups
@@ -661,7 +661,11 @@ def build_preseason_input_projection(
     }
     if transfer_path is not None:
         provenance["transfer_feature_path"] = transfer_path.relative_to(root).as_posix()
-    if retrospective and prior_family == "context" and prior_model_version == "1.3":
+    if (
+        retrospective
+        and prior_family == "context"
+        and prior_model_version in {"1.3", "1.4"}
+    ):
         provenance["transfer_caveat"] = {
             "status": "retrospective_reconstruction",
             "visible_label": "2026 transfer inputs were reconstructed after the Aug. 15 cutoff.",

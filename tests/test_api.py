@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 
 from gippyrank.api.static import build_static_api
-from gippyrank.api.store import AmbiguousPublicationError, PublicationStore
+from gippyrank.api.store import PublicationStore
 
 ROOT = Path(__file__).resolve().parents[1]
 FULL_MANIFEST = json.loads(
@@ -35,9 +35,9 @@ def _copy_selected_publication(tmp_path: Path) -> tuple[Path, dict[str, Any]]:
         and item["snapshot_type"] == "weekly"
     )
     data_dir = tmp_path / "data"
-    methodology_source = ROOT / "site/data" / FULL_MANIFEST[
-        "methodology_path"
-    ].removeprefix("data/")
+    methodology_source = (
+        ROOT / "site/data" / FULL_MANIFEST["methodology_path"].removeprefix("data/")
+    )
     methodology_destination = data_dir / "methodology.json"
     methodology_destination.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(methodology_source, methodology_destination)
@@ -61,9 +61,7 @@ def _copy_selected_publication(tmp_path: Path) -> tuple[Path, dict[str, Any]]:
         "ranking_families": FULL_MANIFEST["ranking_families"],
         "snapshots": [entry],
     }
-    (data_dir / "manifest.json").write_text(
-        json.dumps(manifest), encoding="utf-8"
-    )
+    (data_dir / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     return data_dir, entry
 
 
@@ -124,8 +122,7 @@ def test_week_games_are_canonical_once_and_match_individual_resources(
     assert len(all_games) == len({game["game_id"] for game in all_games})
     assert all_games
     assert any(
-        game["state"] == "future" and game["prediction"] is None
-        for game in all_games
+        game["state"] == "future" and game["prediction"] is None for game in all_games
     )
 
 
@@ -141,7 +138,9 @@ def test_team_resources_are_scoped_and_prediction_orientation_is_stable(
     assert team["team"] == row
     assert season["ranking"] == row
     assert season["team"]["team_id"] == row["team_id"]
-    assert all(game["opponent"]["team_id"] != row["team_id"] for game in season["games"])
+    assert all(
+        game["opponent"]["team_id"] != row["team_id"] for game in season["games"]
+    )
 
     weeks = _read(api_root, f"{base}/weeks.json")
     future = next(
@@ -171,11 +170,13 @@ def test_static_api_generation_is_deterministic(
 ) -> None:
     api_root, _ = static_api
     before = _tree_hash(api_root)
-    build_static_api(data_dir=api_root.parent.parent / "data", output_directory=api_root)
+    build_static_api(
+        data_dir=api_root.parent.parent / "data", output_directory=api_root
+    )
     assert _tree_hash(api_root) == before
 
 
-def test_same_slot_context_versions_are_distinct_and_snapshot_addressable() -> None:
+def test_canonical_context_is_unambiguous_and_retained_artifacts_are_readable() -> None:
     store = PublicationStore.load(ROOT / "site/data")
     week_2 = store.filter(
         season=2026,
@@ -184,24 +185,24 @@ def test_same_slot_context_versions_are_distinct_and_snapshot_addressable() -> N
     )
     week_2 = [item for item in week_2 if item.metadata.publication_slot == "2026-09-08"]
 
-    assert {
-        item.metadata.snapshot_id for item in week_2
-    } == {
-        "2026-weekly-2026-09-08T11-43-00.275833Z-context",
-        "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.3",
-    }
-    assert {
-        item.metadata.model_versions.context_prior for item in week_2
-    } == {"1.2", "1.3"}
+    canonical_id = "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4"
+    assert {item.metadata.snapshot_id for item in week_2} == {canonical_id}
+    assert {item.metadata.model_versions.context_prior for item in week_2} == {"1.4"}
+    assert store.get(canonical_id).metadata.model_versions.context_prior == "1.4"
     assert (
-        store.get("2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.3")
-        .metadata.model_versions.context_prior
-        == "1.3"
-    )
-    with pytest.raises(AmbiguousPublicationError):
         store.resolve(
             season=2026,
             publication_slot="2026-09-08",
             family="predictive",
             prior="context",
+        ).metadata.snapshot_id
+        == canonical_id
+    )
+    for version, suffix in (("1.2", "context"), ("1.3", "context-v1.3")):
+        retained = (
+            ROOT
+            / "data/processed/snapshots/2026"
+            / f"2026-weekly-2026-09-08T11-43-00.275833Z-{suffix}"
+            / "predictive/context/metadata.json"
         )
+        assert json.loads(retained.read_text())["prior_model_version"] == version

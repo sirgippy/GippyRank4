@@ -1,11 +1,10 @@
 const { test, expect } = require("@playwright/test");
 const { SITE_ORIGIN, installStaticSiteRoute } = require("./static-site");
 
-const contextSnapshot = "2026-weekly-2026-09-11T17-02-26.077461Z-context";
+const contextSnapshot = "2026-weekly-2026-09-20T11-00-14.294077Z-context-v1.4";
 const historySnapshot = "2026-weekly-2026-09-11T17-02-26.077461Z-history";
 const performanceSnapshot = "2026-weekly-2026-09-11T17-02-26.077461Z-performance";
-const currentContextSnapshot = "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3";
-const interimContextSnapshot = "2026-weekly-2026-09-26T12-09-11.589245Z-context-v1.3";
+const currentContextSnapshot = "2026-weekly-2026-10-04T14-51-53.251364Z-context-v1.4";
 
 const logoResponse = `<svg xmlns="http://www.w3.org/2000/svg" width="60" height="40" viewBox="0 0 60 40"><rect width="60" height="40" fill="#d6dfda"/></svg>`;
 
@@ -61,7 +60,7 @@ test.describe("Preseason starting point browser checks", () => {
   test("shows a compact season story and preserves prior selection", async ({ page }) => {
     await loadTeam(page, contextSnapshot, "context");
     await expect(page.locator("#season-story-section")).toBeVisible();
-    await expect(page.locator("#season-story-content")).toContainText("Preseason → Sep 11 interim");
+    await expect(page.locator("#season-story-content")).toContainText("Preseason → Week 4");
     await expect(page.locator("#season-story-content")).toContainText("Central 80%");
     await expect(page.locator("#season-movement-section")).toBeVisible();
     await expect(page.locator("#season-movement")).toContainText("Preseason");
@@ -90,7 +89,7 @@ test.describe("Preseason starting point browser checks", () => {
   });
 
   test("shows team-specific preseason evidence and an expandable distribution", async ({ page }) => {
-    await loadTeam(page, "2026-preseason-context", "context");
+    await loadTeam(page, "2026-preseason-context-v1.4", "context");
     await expect(page.locator("#preseason-starting-point-section")).toBeVisible();
     await expect(page.locator("#preseason-starting-point-content")).toContainText("recruiting");
     await expect(page.locator("#preseason-starting-point-content")).toContainText("Team talent composite");
@@ -101,8 +100,8 @@ test.describe("Preseason starting point browser checks", () => {
     await expect(page.locator("#season-movement-section")).toBeHidden();
   });
 
-  test("shows Context 1.3's published transfer inputs with their provenance caveat", async ({ page }) => {
-    await loadTeam(page, "2026-preseason-context-v1.3", "context");
+  test("shows Context 1.4's retained transfer inputs with their provenance caveat", async ({ page }) => {
+    await loadTeam(page, "2026-preseason-context-v1.4", "context");
     const evidence = page.locator("#preseason-starting-point-content");
     await expect(evidence).toContainText("Incoming prior offensive usage");
     await expect(evidence).toContainText("Incoming DB defensive impact");
@@ -111,7 +110,7 @@ test.describe("Preseason starting point browser checks", () => {
   });
 
   test("keeps the dashboard compact while preserving belief and distribution detail", async ({ page }) => {
-    await loadTeam(page, "2026-weekly-2026-09-20T11-00-14.294077Z-context-v1.3", "context");
+    await loadTeam(page, contextSnapshot, "context");
     await expect(page.locator("#team-ranking-summary")).not.toContainText("Expected final wins");
     await expect(page.locator("#season-outlook")).toContainText("Expected final wins");
     await expect(page.locator("#season-story-content")).toContainText("Preseason → Week 4");
@@ -145,14 +144,14 @@ test.describe("Preseason starting point browser checks", () => {
   test("renders Georgia's current story with an adaptive uncertainty trajectory", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "This overview hierarchy check uses the desktop presentation.");
     await loadTeam(page, currentContextSnapshot, "context", { id: "61", name: "Georgia" });
-    await expect(page.locator("#season-story-content")).toContainText("Preseason → Week 5");
+    await expect(page.locator("#season-story-content")).toContainText("Preseason → Week 6");
     await expect(page.locator("#season-story-content")).toContainText("8 ranks wide");
     await expect(page.locator("#season-story-content")).toContainText("narrower than preseason");
     const probabilityMetric = page.locator(".season-story-metric").filter({
       has: page.getByText("Top 5 probability", { exact: true }),
     });
     await expect(probabilityMetric).toContainText("49%");
-    await expect(probabilityMetric).toContainText("77%");
+    await expect(probabilityMetric).toContainText("78%");
     await expect(page.getByText("Top 25 probability", { exact: true })).toHaveCount(0);
     await expect(page.locator("#season-movement")).toContainText("Week 2");
     await expect(page.locator("#season-movement")).not.toContainText("Context 1.3 retrospective");
@@ -183,12 +182,13 @@ test.describe("Preseason starting point browser checks", () => {
     expect(overflow.document).toBeLessThanOrEqual(overflow.viewport);
   });
 
-  test("keeps a selected interim checkpoint while omitting older interim publications", async ({ page }) => {
-    await loadTeam(page, interimContextSnapshot, "context", { id: "61", name: "Georgia" });
+  test("shows only canonical Context 1.4 checkpoints through Week 6", async ({ page }) => {
+    await loadTeam(page, currentContextSnapshot, "context", { id: "61", name: "Georgia" });
     const checkpoints = page.locator(".trajectory-point-item");
-    await expect(checkpoints.last()).toContainText("Sep 26 interim");
-    await expect(page.locator("#season-movement")).not.toContainText("Sep 19 interim");
-    await expect(page.locator("#season-movement")).not.toContainText("Context 1.3 retrospective");
+    await expect(checkpoints).toHaveCount(6);
+    await expect(checkpoints.last()).toContainText("Week 6");
+    await expect(checkpoints.filter({ hasText: /interim/i })).toHaveCount(0);
+    await expect(page.locator("#season-movement")).not.toContainText("Context 1.3");
   });
 
   test("uses a wider adaptive domain for a materially different team", async ({ page }, testInfo) => {
