@@ -438,8 +438,8 @@ def test_early_abort_reports_unavailable_source_counts_truthfully():
     assert artifact["missing_or_unresolved_game_ids"] is None
 
 
-def test_current_incomplete_week_5_cache_refuses_before_scoring(
-    tmp_path: Path, protocol
+def test_incomplete_week_5_source_refuses_before_scoring(
+    tmp_path: Path, protocol, synthetic_games
 ):
     protected = [
         ROOT / "site/data/manifest.json",
@@ -447,9 +447,16 @@ def test_current_incomplete_week_5_cache_refuses_before_scoring(
         ROOT / protocol.data["models"]["history_1_1"]["predictions_path"],
     ]
     before = [hashlib.sha256(path.read_bytes()).hexdigest() for path in protected]
+    games_path, rows = synthetic_games
+    for row in rows:
+        if row["week"] == "5":
+            row["completed"] = "False"
+            row["homePoints"] = ""
+            row["awayPoints"] = ""
+    _write_games(games_path, rows)
     output = tmp_path / "negative"
     result = run(
-        games=ROOT / "data/processed/cfbd/games.csv",
+        games=games_path,
         output=output,
         root=ROOT,
     )

@@ -3,10 +3,10 @@ const path = require("node:path");
 const { test, expect } = require("@playwright/test");
 const { installStaticSiteRoute } = require("./static-site");
 
-const current = "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3";
+const current = "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.4";
 const currentPerformance = `${current}-performance`;
 const currentHistory = "2026-weekly-2026-09-27T12-27-35.698895Z-history";
-const historical = "2026-weekly-2026-09-26T12-09-11.589245Z-context-v1.3";
+const historical = "2026-weekly-2026-09-20T11-00-14.294077Z-context-v1.4";
 const logoResponse = '<svg xmlns="http://www.w3.org/2000/svg" width="60" height="40" viewBox="0 0 60 40"><rect width="60" height="40" rx="5" fill="#e0e8e2"/><path d="M12 26h36" stroke="#9bafa3" stroke-width="3"/></svg>';
 
 function siteArtifact(folder, snapshot) {
@@ -33,9 +33,9 @@ test("keeps current Georgia results, checkpoint movement, and future predictions
   const completed = page.locator('.game-card[data-game-id="401856700"]');
   const future = page.locator('.game-card[data-game-id="401856705"]');
   await expect(completed).toContainText("W 41–13");
-  await expect(completed).toContainText("Expected Georgia by 15.3");
+  await expect(completed).toContainText("Expected Georgia by 15.1");
   await expect(completed).toContainText("Actual Georgia by 28");
-  await expect(completed.locator(".game-summary-copy")).toHaveText("Expected Georgia by 15.3 · Actual Georgia by 28 · 20% this favorable or better");
+  await expect(completed.locator(".game-summary-copy")).toHaveText("Expected Georgia by 15.1 · Actual Georgia by 28 · 20% this favorable or better");
   await expect(completed).toContainText("20% this favorable or better");
   await expect(page.locator(".team-schedule-heading .team-page-help summary")).toHaveText("How to read games");
   await expect(page.locator("#team-page-status")).toBeHidden();
@@ -46,9 +46,9 @@ test("keeps current Georgia results, checkpoint movement, and future predictions
   await expect(page.locator(".schedule-checkpoint").last()).toContainText("Week 5 update");
   await expect(page.locator("#schedule-list")).not.toContainText("1 Georgia game added to evidence");
   await expect(future).toContainText("Upcoming");
-  await expect(future.locator(".game-prediction-title")).toHaveText("Georgia 91% to win · Georgia by 20.7");
+  await expect(future.locator(".game-prediction-title")).toHaveText("Georgia 91% to win · Georgia by 20.6");
   await expect(page.locator('.game-card[data-game-id="401856712"] .game-prediction-title'))
-    .toHaveText("Alabama 52% to win · Alabama by 0.6");
+    .toHaveText("Alabama 52% to win · Alabama by 0.7");
   await expect(future.locator(".game-retrospective")).toHaveCount(0);
   const maximumCollapsedHeight = testInfo.project.name === "mobile" ? 125 : 85;
   expect((await page.locator(".game-card").first().boundingBox()).height).toBeLessThan(maximumCollapsedHeight);
@@ -61,7 +61,7 @@ test("shows Context-anchored retrospective expectations on a Performance page", 
   await expect(page.locator("#team-page-meta")).toContainText("Performance");
   const completed = page.locator('.game-card[data-game-id="401856700"]');
   await expect(completed).toContainText("W 41–13");
-  await expect(completed.locator(".game-retrospective")).toContainText("Expected Georgia by 15.3");
+  await expect(completed.locator(".game-retrospective")).toContainText("Expected Georgia by 15.1");
   await expect(completed.locator(".game-retrospective")).toContainText("Actual Georgia by 28");
   await expect(completed).not.toContainText("No retrospective expectation available");
 });
@@ -71,15 +71,15 @@ test("orients an away upset from the focal team and keeps an ordinary result qui
   const upset = page.locator('.game-card[data-game-id="401858423"]');
   await expect(upset).toContainText("Rutgers");
   await expect(upset).toContainText("W 37–21");
-  await expect(upset).toContainText("Expected Rutgers by 11.9");
+  await expect(upset).toContainText("Expected Rutgers by 10.7");
   await expect(upset).toContainText("Actual Massachusetts by 16");
-  await expect(upset).toContainText("5.5% this favorable or better");
+  await expect(upset).toContainText("6.2% this favorable or better");
   await upset.locator(".game-distribution-disclosure summary").click();
   await expect(upset.locator(".game-distribution-retrospective .distribution-tail-note"))
-    .toContainText("5% of expected outcomes extend beyond Rutgers by 40");
+    .toContainText("4% of expected outcomes extend beyond Rutgers by 40");
   await expect(upset.locator(".game-distribution-retrospective .distribution-tail")).toHaveCount(0);
   const ordinary = page.locator('.game-card[data-game-id="401866424"]');
-  await expect(ordinary).toContainText("41% this unfavorable or worse");
+  await expect(ordinary).toContainText("39% this unfavorable or worse");
   await expect(ordinary).not.toContainText(/shocking|dominant|fluke|grade/i);
 });
 
@@ -90,14 +90,14 @@ test("uses selected historical evidence and ends checkpoint movement at that sna
   await expect(arkansas).toContainText("Expected Georgia by 23.7");
   await expect(oklahoma).toContainText("Upcoming");
   await expect(oklahoma.locator(".game-prediction")).toBeVisible();
-  await expect(page.locator(".schedule-checkpoint").last()).toContainText("Sep 26 interim");
+  await expect(page.locator(".schedule-checkpoint").last()).toContainText("Week 4 update");
   await expect(page.locator("#schedule-list")).not.toContainText("Week 5 update");
   await expect(page.locator('.game-card[data-game-id="401856741"] .game-prediction-title'))
-    .toHaveText("Georgia 50.1% to win · Georgia by 0.1");
+    .toHaveText("Georgia 50.2% to win · Georgia by 0.1");
   await page.locator('.game-card[data-game-id="401856741"] .game-distribution-disclosure summary').click();
   const nearEven = page.locator('.game-card[data-game-id="401856741"]');
-  await expect(nearEven.locator(".game-facts")).toContainText("Georgia win probability50.1%");
-  await expect(nearEven.locator(".game-facts")).toContainText("Ole Miss win probability49.9%");
+  await expect(nearEven.locator(".game-facts")).toContainText("Georgia win probability50.2%");
+  await expect(nearEven.locator(".game-facts")).toContainText("Ole Miss win probability49.8%");
 });
 
 test("uses History expectations, predictions, and checkpoint sequence for the selected History publication", async ({ page }) => {
@@ -107,8 +107,8 @@ test("uses History expectations, predictions, and checkpoint sequence for the se
   await expect(page.locator('.game-card[data-game-id="401856700"]')).toContainText("Expected Georgia by 15.4");
   await expect(page.locator('.game-card[data-game-id="401856705"] .game-prediction-title'))
     .toHaveText("Georgia 92% to win · Georgia by 21.4");
-  await expect(page.locator(".schedule-checkpoint")).toHaveCount(2);
-  await expect(page.locator(".schedule-checkpoint").first()).toContainText("Week 4 update");
+  await expect(page.locator(".schedule-checkpoint")).toHaveCount(4);
+  await expect(page.locator(".schedule-checkpoint").first()).toContainText("Week 2 update");
   await expect(page.locator(".schedule-checkpoint").last()).toContainText("Week 5 update");
 });
 
@@ -194,16 +194,16 @@ test("opens distinct retrospective and predictive distributions from the keyboar
   const completed = page.locator('.game-card[data-game-id="401856700"]');
   const retrospective = completed.locator(".game-distribution-disclosure");
   const retroToggle = retrospective.locator("summary");
-  await expect(retroToggle).toHaveAccessibleName(/Expected Georgia by 15\.3.*Actual Georgia by 28.*20% this favorable or better.*Show Georgia completed-game retrospective distribution/);
+  await expect(retroToggle).toHaveAccessibleName(/Expected Georgia by 15\.1.*Actual Georgia by 28.*20% this favorable or better.*Show Georgia completed-game retrospective distribution/);
   await expect(retrospective.locator(".retrospective-distribution-chart")).toBeHidden();
   await retroToggle.focus();
   await page.keyboard.press("Enter");
   await expect(retrospective).toHaveAttribute("open", "");
-  await expect(retroToggle).toHaveAccessibleName(/Expected Georgia by 15\.3.*Actual Georgia by 28.*20% this favorable or better.*Hide Georgia completed-game retrospective distribution/);
+  await expect(retroToggle).toHaveAccessibleName(/Expected Georgia by 15\.1.*Actual Georgia by 28.*20% this favorable or better.*Hide Georgia completed-game retrospective distribution/);
   const expectedMargin = Number(await retrospective.locator(".margin-marker-expected").getAttribute("data-margin"));
-  expect(expectedMargin).toBeCloseTo(15.260601463487099, 10);
+  expect(expectedMargin).toBeCloseTo(15.127516915687321, 10);
   await expect(retrospective.locator(".margin-marker-actual")).toHaveAttribute("data-margin", "28");
-  await expect(retrospective.locator(".margin-marker-legend")).toContainText("Expected Georgia by 15.3");
+  await expect(retrospective.locator(".margin-marker-legend")).toContainText("Expected Georgia by 15.1");
   await expect(retrospective.locator(".margin-marker-legend")).toContainText("Actual Georgia by 28");
   await expect(retrospective.locator(".retrospective-distribution-chart .distribution-zero-label")).toHaveCount(0);
   await expect(retrospective.locator(".retrospective-percentile-facts dt")).toHaveText("Observed result");
@@ -220,7 +220,7 @@ test("opens distinct retrospective and predictive distributions from the keyboar
     .toContainText("5% of expected outcomes extend beyond Georgia by 40");
   const future = page.locator('.game-card[data-game-id="401856705"]');
   await expect(future.locator(".game-distribution-disclosure summary"))
-    .toHaveAccessibleName(/Georgia 91% to win.*Georgia by 20\.7.*Show predictive margin distribution/);
+    .toHaveAccessibleName(/Georgia 91% to win.*Georgia by 20\.6.*Show predictive margin distribution/);
   await future.locator(".game-distribution-disclosure summary").click();
   await expect(future.locator(".future-distribution-chart")).toBeVisible();
   await expect(future.locator(".future-distribution-chart .distribution-zero-label")).toHaveCount(0);
@@ -252,7 +252,7 @@ test("uses a full interval view when most Tennessee State probability lies beyon
 test("orients an off-scale away interval view from the selected team's perspective", async ({ page }) => {
   await loadTeam(page, "189");
   const game = page.locator('.game-card[data-game-id="401858441"]');
-  await expect(game).toContainText("Expected Nebraska by 35.0");
+  await expect(game).toContainText("Expected Nebraska by 34.7");
   await expect(game).toContainText("Actual Nebraska by 49");
   await game.locator(".game-distribution-disclosure summary").click();
   await expect(game.locator(".retrospective-interval-chart")).toBeVisible();

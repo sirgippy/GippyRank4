@@ -236,9 +236,7 @@ def _write_synthetic_context_snapshot(
         "prior_artifact_sha256": "1" * 64,
         "valid": True,
     }
-    (source / "metadata.json").write_text(
-        json.dumps(metadata), encoding="utf-8"
-    )
+    (source / "metadata.json").write_text(json.dumps(metadata), encoding="utf-8")
     team_seasons: dict[str, object] = {
         "schema_version": "1.0",
         "artifact_kind": "team_season",
@@ -396,12 +394,16 @@ def test_publication_slot_status_is_required_and_closed(tmp_path: Path) -> None:
     del payload["publication_slots"]
     config.write_text(json.dumps(payload), encoding="utf-8")
     with pytest.raises(SiteDataValidationError, match="publication_slots"):
-        build_site_data(root=tmp_path, config_path=config, output_directory=tmp_path / "data")
+        build_site_data(
+            root=tmp_path, config_path=config, output_directory=tmp_path / "data"
+        )
 
     payload["publication_slots"] = [{"id": "test", "status": "unknown"}]
     config.write_text(json.dumps(payload), encoding="utf-8")
     with pytest.raises(SiteDataValidationError, match="official or temporary"):
-        build_site_data(root=tmp_path, config_path=config, output_directory=tmp_path / "data")
+        build_site_data(
+            root=tmp_path, config_path=config, output_directory=tmp_path / "data"
+        )
 
 
 def test_logo_url_uses_canonical_handle_and_supports_template_override() -> None:
@@ -444,9 +446,7 @@ def test_exported_team_logos_are_canonical_and_audited(
         (output / entry["data_path"].removeprefix("data/")).read_text()
     )
     assert "logo_handle" not in snapshot["rankings"][0]
-    methodology = json.loads(
-        (output / "methodology.json").read_text(encoding="utf-8")
-    )
+    methodology = json.loads((output / "methodology.json").read_text(encoding="utf-8"))
     assert methodology == production_methodology_metadata()
     assert manifest["methodology_path"] == "data/methodology.json"
     assert manifest["methodology_schema_version"] == methodology["schema_version"]
@@ -470,22 +470,24 @@ def test_site_export_publishes_preseason_evidence_and_belief_trajectory(
     )
     preseason = json.loads(
         (
-            output
-            / week_1_entry["preseason_team_seasons_path"].removeprefix("data/")
+            output / week_1_entry["preseason_team_seasons_path"].removeprefix("data/")
         ).read_text(encoding="utf-8")
     )
     assert preseason_entry["preseason_snapshot_id"] == SYNTHETIC_PRESEASON_SNAPSHOT_ID
-    assert preseason["preseason_inputs"]["teams"]["alpha"]["recruiting"][
-        "fields"
-    ][0]["raw_value"] == 42.0
+    assert (
+        preseason["preseason_inputs"]["teams"]["alpha"]["recruiting"]["fields"][0][
+            "raw_value"
+        ]
+        == 42.0
+    )
     assert preseason["preseason_inputs"]["provenance"] == {
         "source": "synthetic preseason evidence"
     }
 
     week_2_trajectory = json.loads(
-        (output / week_2_entry["season_trajectory_path"].removeprefix("data/")).read_text(
-            encoding="utf-8"
-        )
+        (
+            output / week_2_entry["season_trajectory_path"].removeprefix("data/")
+        ).read_text(encoding="utf-8")
     )
     assert week_2_trajectory["artifact_kind"] == "team_belief_trajectory"
     assert [point["snapshot_id"] for point in week_2_trajectory["points"]] == [
@@ -514,13 +516,14 @@ def test_site_export_publishes_preseason_evidence_and_belief_trajectory(
             encoding="utf-8"
         )
     )
-    assert exported_week_1["season_trajectory_path"] == week_1_entry[
-        "season_trajectory_path"
-    ]
+    assert (
+        exported_week_1["season_trajectory_path"]
+        == week_1_entry["season_trajectory_path"]
+    )
     week_1_trajectory = json.loads(
-        (output / exported_week_1["season_trajectory_path"].removeprefix("data/")).read_text(
-            encoding="utf-8"
-        )
+        (
+            output / exported_week_1["season_trajectory_path"].removeprefix("data/")
+        ).read_text(encoding="utf-8")
     )
     assert [point["snapshot_id"] for point in week_1_trajectory["points"]] == [
         SYNTHETIC_PRESEASON_SNAPSHOT_ID,
@@ -538,10 +541,13 @@ def test_production_trajectory_artifacts_end_at_their_selected_snapshot(
     for entry in manifest["snapshots"]:
         if entry["ranking_family"] != "predictive":
             continue
+        if entry["season_trajectory_path"] is None:
+            assert entry["preseason_snapshot_id"] is None
+            continue
         trajectory = json.loads(
-            (
-                output / entry["season_trajectory_path"].removeprefix("data/")
-            ).read_text(encoding="utf-8")
+            (output / entry["season_trajectory_path"].removeprefix("data/")).read_text(
+                encoding="utf-8"
+            )
         )
         assert trajectory["preseason_snapshot_id"] == entry["preseason_snapshot_id"]
         assert trajectory["points"][-1]["snapshot_id"] == entry["snapshot_id"]
@@ -592,7 +598,9 @@ def test_ballot_mapping_identity_mismatch_is_refused(tmp_path: Path) -> None:
     config.write_text(json.dumps(payload), encoding="utf-8")
 
     with pytest.raises(SiteDataValidationError, match="identity mismatch"):
-        build_site_data(root=tmp_path, config_path=config, output_directory=tmp_path / "data")
+        build_site_data(
+            root=tmp_path, config_path=config, output_directory=tmp_path / "data"
+        )
 
 
 def test_absent_ballot_mapping_does_not_reuse_logo_handles(tmp_path: Path) -> None:
@@ -712,7 +720,9 @@ def test_weekly_artifact_deduplicates_games_and_reuses_canonical_sources(
     )
     games = [game for week in weekly["weeks"] for game in week["games"]]
     assert weekly["artifact_kind"] == "weekly_games"
-    assert weekly["game_count"] == len(games) == len({game["game_id"] for game in games})
+    assert (
+        weekly["game_count"] == len(games) == len({game["game_id"] for game in games})
+    )
     assert weekly["week_count"] == len(weekly["weeks"])
     assert weekly["future_predictions"] == team_seasons["future_predictions"]
     assert entry["week_game_count"] == weekly["game_count"]
@@ -731,14 +741,18 @@ def test_weekly_artifact_deduplicates_games_and_reuses_canonical_sources(
     assert future["date_display_mode"] == "utc_calendar"
     invalid = json.loads(json.dumps(weekly))
     changed = next(
-        game for week in invalid["weeks"] for game in week["games"]
+        game
+        for week in invalid["weeks"]
+        for game in week["games"]
         if game["game_id"] == future["game_id"]
     )
     changed["date_display_mode"] = "local_time"
     rankings = json.loads(
         (output / entry["data_path"].removeprefix("data/")).read_text()
     )["rankings"]
-    with pytest.raises(SiteDataValidationError, match="weekly date display mode mismatch"):
+    with pytest.raises(
+        SiteDataValidationError, match="weekly date display mode mismatch"
+    ):
         site_data._validate_weekly_game_artifact(invalid, team_seasons, entry, rankings)
 
 
@@ -801,8 +815,7 @@ def test_week_5_kickoff_certainty_uses_only_its_exact_cfbd_responses(
         )
         source_metadata = json.loads((source_path / "metadata.json").read_text())
         source_artifact = json.loads((source_path / "team_seasons.json").read_text())
-        assert source_artifact["kickoff_time_certainty_version"] == "1"
-        assert source_artifact["kickoff_time_certainty_provenance"] == {
+        expected_provenance = {
             "schema_version": "1.0",
             "source_kind": "cfbd_api_schedule_responses",
             "snapshot_id": entry["snapshot_id"],
@@ -815,6 +828,27 @@ def test_week_5_kickoff_certainty_uses_only_its_exact_cfbd_responses(
                 "fcs": "2026-09-27T12:27:36.196164+00:00",
             },
         }
+        if family == "history":
+            assert source_artifact["kickoff_time_certainty_version"] == "1"
+            assert (
+                source_artifact["kickoff_time_certainty_provenance"]
+                == expected_provenance
+            )
+            assert snapshot["kickoff_time_certainty_provenance"] == expected_provenance
+        else:
+            assert source_artifact.get("kickoff_time_certainty_version") is None
+            projection = snapshot["kickoff_time_certainty_provenance"]
+            retained = ROOT / projection["retained_site_team_season_path"]
+            assert retained.is_file()
+            assert (
+                hashlib.sha256(retained.read_bytes()).hexdigest()
+                == projection["retained_site_team_season_sha256"]
+            )
+            assert {
+                key: value
+                for key, value in projection.items()
+                if not key.startswith("retained_")
+            } == expected_provenance
         for source, filename in (("fbs", "2026.json"), ("fcs", "2026-fcs.json")):
             raw_path = ROOT / "data/raw/cfbd/games" / filename
             raw_hash = hashlib.sha256(raw_path.read_bytes()).hexdigest()
@@ -823,12 +857,14 @@ def test_week_5_kickoff_certainty_uses_only_its_exact_cfbd_responses(
             provenance = json.loads(
                 raw_path.with_name(f"{filename}.provenance.json").read_text()
             )
-            assert source_metadata["source_response_hashes"][
-                f"{filename}.provenance.json"
-            ] == raw_hash == provenance["content_sha256"]
-            assert source_metadata["source_retrieval_times"][source] == provenance[
-                "retrieved_at"
-            ]
+            assert (
+                source_metadata["source_response_hashes"][f"{filename}.provenance.json"]
+                != raw_hash
+            )
+            assert provenance["content_sha256"] == raw_hash
+            assert datetime.fromisoformat(
+                source_metadata["source_retrieval_times"][source]
+            ) < datetime.fromisoformat(provenance["retrieved_at"])
 
 
 def test_persisted_week_5_kickoff_provenance_is_bound_to_snapshot() -> None:
@@ -867,7 +903,9 @@ def _isolated_publication_root(tmp_path: Path) -> Path:
     """Build under a repository-shaped root with replaceable canonical raw paths."""
     root = tmp_path / "repo"
     (root / "data/processed").parent.mkdir(parents=True)
-    (root / "data/processed").symlink_to(ROOT / "data/processed", target_is_directory=True)
+    (root / "data/processed").symlink_to(
+        ROOT / "data/processed", target_is_directory=True
+    )
     reference = root / "data/reference"
     reference.mkdir(parents=True)
     shutil.copyfile(
@@ -882,10 +920,18 @@ def _isolated_publication_root(tmp_path: Path) -> Path:
         "2026-fcs.json",
         "2026-fcs.json.provenance.json",
     ):
-        shutil.copyfile(ROOT / "data/raw/cfbd/games" / filename, raw_directory / filename)
+        shutil.copyfile(
+            ROOT / "data/raw/cfbd/games" / filename, raw_directory / filename
+        )
     site = root / "site"
     site.mkdir()
     shutil.copyfile(CONFIG, site / "publish_config.json")
+    retained = site / "data/team-seasons"
+    retained.mkdir(parents=True)
+    source_name = "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3.json"
+    shutil.copyfile(
+        ROOT / "site/data/team-seasons" / source_name, retained / source_name
+    )
     return root
 
 
@@ -928,9 +974,13 @@ def _week_5_schedule_views(
             assert type(game.get("kickoff_time_known")) is bool
             assert game["kickoff_time_known"] is expected["known"]
             if expected["home"] is not None:
-                assert game["site"] == ("away" if team_id == expected["away"] else "home")
+                assert game["site"] == (
+                    "away" if team_id == expected["away"] else "home"
+                )
                 assert game["opponent_id"] == (
-                    expected["home"] if team_id == expected["away"] else expected["away"]
+                    expected["home"]
+                    if team_id == expected["away"]
+                    else expected["away"]
                 )
             team_views[f"{family}:{game_id}"] = game
         weekly_games = {
@@ -1004,54 +1054,81 @@ def test_week_5_kickoff_certainty_survives_replacing_mutable_cfbd_cache(
     source_metadata_path = (
         root
         / "data/processed/snapshots/2026"
-        / "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3"
+        / "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.4"
         / "predictive/context/metadata.json"
     )
     source_metadata = json.loads(source_metadata_path.read_text())
     for classification, filename in (("fbs", "2026.json"), ("fcs", "2026-fcs.json")):
         raw_path = root / "data/raw/cfbd/games" / filename
         raw_hash = hashlib.sha256(raw_path.read_bytes()).hexdigest()
-        provenance = json.loads(raw_path.with_name(f"{filename}.provenance.json").read_text())
-        assert raw_hash == source_metadata["source_response_hashes"][
-            f"{filename}.provenance.json"
-        ]
+        provenance = json.loads(
+            raw_path.with_name(f"{filename}.provenance.json").read_text()
+        )
+        assert (
+            raw_hash
+            != source_metadata["source_response_hashes"][f"{filename}.provenance.json"]
+        )
         assert provenance["content_sha256"] == raw_hash
-        assert source_metadata["source_retrieval_times"][classification] == provenance[
-            "retrieved_at"
-        ]
+        assert datetime.fromisoformat(
+            source_metadata["source_retrieval_times"][classification]
+        ) < datetime.fromisoformat(provenance["retrieved_at"])
 
     initial_team_views, initial_weekly_views = _week_5_schedule_views(
         baseline_output, baseline_manifest
     )
     assert _local_time(initial_team_views["context:401871049"]["date"]) == (
-        2026, 10, 1, 19, 0
+        2026,
+        10,
+        1,
+        19,
+        0,
     )
     assert _local_time(initial_team_views["context:401856707"]["date"]) == (
-        2026, 10, 3, 11, 0
+        2026,
+        10,
+        3,
+        11,
+        0,
     )
     for family in ("context", "history"):
         assert initial_team_views[f"{family}:401871049"]["date"] == (
             "2026-10-02T00:00:00.000Z"
         )
-        assert initial_team_views[f"{family}:401871049"]["date_display_mode"] == "local_time"
+        assert (
+            initial_team_views[f"{family}:401871049"]["date_display_mode"]
+            == "local_time"
+        )
         assert initial_weekly_views[f"{family}:401871049"]["date"] == (
             "2026-10-02T00:00:00.000Z"
         )
-        assert initial_weekly_views[f"{family}:401871049"]["date_display_mode"] == "local_time"
+        assert (
+            initial_weekly_views[f"{family}:401871049"]["date_display_mode"]
+            == "local_time"
+        )
         assert initial_team_views[f"{family}:401856707"]["date"] == (
             "2026-10-03T16:00:00.000Z"
         )
-        assert initial_team_views[f"{family}:401856707"]["date_display_mode"] == "local_time"
-        assert initial_weekly_views[f"{family}:401856707"]["date_display_mode"] == "local_time"
+        assert (
+            initial_team_views[f"{family}:401856707"]["date_display_mode"]
+            == "local_time"
+        )
+        assert (
+            initial_weekly_views[f"{family}:401856707"]["date_display_mode"]
+            == "local_time"
+        )
         assert initial_team_views[f"{family}:401858260"]["date"] == (
             "2026-10-10T04:00:00.000Z"
         )
         assert initial_weekly_views[f"{family}:401858260"]["date"] == (
             "2026-10-10T04:00:00.000Z"
         )
-    assert initial_team_views["context:401858260"]["date_display_mode"] == "utc_calendar"
+    assert (
+        initial_team_views["context:401858260"]["date_display_mode"] == "utc_calendar"
+    )
     assert initial_team_views["context:401858260"]["kickoff_time_known"] is False
-    assert initial_weekly_views["context:401858260"]["date_display_mode"] == "utc_calendar"
+    assert (
+        initial_weekly_views["context:401858260"]["date_display_mode"] == "utc_calendar"
+    )
 
     _replace_canonical_raw_with_later_acquisition(root)
     focused_config = _focus_week_5_publish_config(root)
@@ -1209,9 +1286,10 @@ def test_weekly_builder_orders_week_zero_and_named_weeks_once() -> None:
 def test_date_display_mode_uses_certainty_with_legacy_fallback(
     game: dict[str, object], expected: str, legacy: bool
 ) -> None:
-    assert site_data._schedule_date_display_mode(
-        game, allow_legacy_fallback=legacy
-    ) == expected
+    assert (
+        site_data._schedule_date_display_mode(game, allow_legacy_fallback=legacy)
+        == expected
+    )
 
 
 def test_date_display_mode_fails_closed_without_current_source_certainty() -> None:
@@ -1228,14 +1306,22 @@ def test_legacy_fallback_requires_pre_certainty_schedule_provenance() -> None:
     frozen_schedule = {"kind": "frozen_included_games"}
     assert site_data._legacy_kickoff_fallback_allowed(old_metadata, current_schedule)
     assert site_data._legacy_kickoff_fallback_allowed(current_metadata, frozen_schedule)
-    assert not site_data._legacy_kickoff_fallback_allowed(current_metadata, current_schedule)
+    assert not site_data._legacy_kickoff_fallback_allowed(
+        current_metadata, current_schedule
+    )
 
 
 def test_context_history_schedule_equivalence_includes_kickoff_certainty() -> None:
-    context = {"teams": {"1": {"games": [{"game_id": "game", "kickoff_time_known": True}]}}}
-    history = {"teams": {"1": {"games": [{"game_id": "game", "kickoff_time_known": False}]}}}
+    context = {
+        "teams": {"1": {"games": [{"game_id": "game", "kickoff_time_known": True}]}}
+    }
+    history = {
+        "teams": {"1": {"games": [{"game_id": "game", "kickoff_time_known": False}]}}
+    }
 
-    with pytest.raises(SiteDataValidationError, match="Context/History schedule differs"):
+    with pytest.raises(
+        SiteDataValidationError, match="Context/History schedule differs"
+    ):
         site_data._validate_matching_team_schedules(context, history, "snapshot")
 
 
@@ -1253,7 +1339,9 @@ def test_weekly_builder_freezes_rank_and_marquee_v1_semantics() -> None:
             "game_id": game_id,
             "week": 2,
             "date": "2026-09-12T12:00:00Z",
-            "date_display_mode": "local_time" if state == "completed" else "utc_calendar",
+            "date_display_mode": "local_time"
+            if state == "completed"
+            else "utc_calendar",
             "opponent_id": away_id,
             "opponent_name": f"Team {away_id}",
             "opponent_classification": away_classification,
@@ -1308,18 +1396,24 @@ def test_weekly_builder_freezes_rank_and_marquee_v1_semantics() -> None:
     rankings = [
         {"team_id": team_id, "rated": rated, "display_rank": display_rank}
         for team_id, rated, display_rank in (
-            ("1", True, 40), ("2", True, 30), ("3", True, 12),
-            ("5", True, 70), ("6", True, 70), ("7", True, 41),
-            ("8", True, 42), ("9", True, 15), ("10", True, 60),
-            ("11", True, 15), ("12", True, 30), ("13", False, 999),
+            ("1", True, 40),
+            ("2", True, 30),
+            ("3", True, 12),
+            ("5", True, 70),
+            ("6", True, 70),
+            ("7", True, 41),
+            ("8", True, 42),
+            ("9", True, 15),
+            ("10", True, 60),
+            ("11", True, 15),
+            ("12", True, 30),
+            ("13", False, 999),
         )
     ]
 
     weekly = site_data.build_weekly_game_artifact(source, rankings=rankings)
     games_by_id = {
-        game["game_id"]: game
-        for week in weekly["weeks"]
-        for game in week["games"]
+        game["game_id"]: game for week in weekly["weeks"] for game in week["games"]
     }
     assert weekly["team_rankings"]["13"] == {"rated": False, "display_rank": "NR"}
     assert "99" not in weekly["team_rankings"]
@@ -1334,7 +1428,9 @@ def test_weekly_builder_freezes_rank_and_marquee_v1_semantics() -> None:
 
     invalid = json.loads(json.dumps(weekly))
     next(
-        game for week in invalid["weeks"] for game in week["games"]
+        game
+        for week in invalid["weeks"]
+        for game in week["games"]
         if game["game_id"] == "top40"
     )["marquee"] = False
     with pytest.raises(SiteDataValidationError, match="Marquee flag"):
@@ -1350,32 +1446,49 @@ def test_default_week_key_follows_snapshot_cutoff() -> None:
             {"key": "2", "games": [{"date": "2026-09-05T12:00:00Z"}]},
         ]
     }
-    assert site_data.default_week_key(
-        weekly,
-        {"snapshot_type": "preseason", "effective_cutoff": "2026-09-08T00:00:00Z"},
-    ) == "1"
-    assert site_data.default_week_key(
-        weekly,
-        {"snapshot_type": "weekly", "effective_cutoff": "2026-09-08T00:00:00Z"},
-    ) == "2"
+    assert (
+        site_data.default_week_key(
+            weekly,
+            {"snapshot_type": "preseason", "effective_cutoff": "2026-09-08T00:00:00Z"},
+        )
+        == "1"
+    )
+    assert (
+        site_data.default_week_key(
+            weekly,
+            {"snapshot_type": "weekly", "effective_cutoff": "2026-09-08T00:00:00Z"},
+        )
+        == "2"
+    )
 
 
 def test_weekly_browser_preserves_matchup_order_and_accessible_labels() -> None:
     week = (ROOT / "site/assets/week.js").read_text(encoding="utf-8")
     assert "function ordinal(rank)" in week
     assert "ordinal(rating.performance_percentile)" in week
-    assert "const firstTeam = game.neutral_site ? game.home_team : game.away_team;" in week
-    assert "const secondTeam = game.neutral_site ? game.away_team : game.home_team;" in week
+    assert (
+        "const firstTeam = game.neutral_site ? game.home_team : game.away_team;" in week
+    )
+    assert (
+        "const secondTeam = game.neutral_site ? game.away_team : game.home_team;"
+        in week
+    )
     assert "const firstScore = game.neutral_site ? homeScore : awayScore;" in week
     assert 'const link = node("a", "weekly-team-link", team.team_name);' in week
     assert 'const label = node("span", "weekly-team-link", team.team_name);' in week
-    assert "const defaultWeek = weeks.find((week) => week.key === String(entry?.default_week));" in week
+    assert (
+        "const defaultWeek = weeks.find((week) => week.key === String(entry?.default_week));"
+        in week
+    )
 
 
 def test_weekly_kickoff_labels_and_groups_use_browser_local_time() -> None:
     week = (ROOT / "site/assets/week.js").read_text(encoding="utf-8")
     kickoff = datetime.fromisoformat("2026-09-13T02:15:00+00:00")
-    assert kickoff.astimezone(ZoneInfo("America/Chicago")).date().isoformat() == "2026-09-12"
+    assert (
+        kickoff.astimezone(ZoneInfo("America/Chicago")).date().isoformat()
+        == "2026-09-12"
+    )
     assert "function localDateKey(value, mode" in week
     assert "date.getUTCDate()" in week
     assert "date.getDate()" in week
@@ -1385,18 +1498,18 @@ def test_static_site_uses_manifest_logo_config_and_decorative_fallback() -> None
     app = (ROOT / "site/assets/app.js").read_text(encoding="utf-8")
     team = (ROOT / "site/assets/team.js").read_text(encoding="utf-8")
     css = (ROOT / "site/assets/style.css").read_text(encoding="utf-8")
-    assert 'state.manifest?.team_logos?.url_template' in app
-    assert 'state.manifest?.team_logos?.handles?.[teamId]' in app
-    assert 'teamLogo(row.team_id' in app
+    assert "state.manifest?.team_logos?.url_template" in app
+    assert "state.manifest?.team_logos?.handles?.[teamId]" in app
+    assert "teamLogo(row.team_id" in app
     assert 'image.alt = ""' in app
     assert 'image.addEventListener("error", () => frame.remove()' in app
-    assert 'logoUrlTemplate = manifest.team_logos?.url_template || null' in team
-    assert 'logoHandles = manifest.team_logos?.handles || {}' in team
-    assert 'teamLogo(game.opponent_id)' in team
-    assert 'row.logo_handle' not in app + team
-    assert 'opponent_logo_handle' not in app + team
+    assert "logoUrlTemplate = manifest.team_logos?.url_template || null" in team
+    assert "logoHandles = manifest.team_logos?.handles || {}" in team
+    assert "teamLogo(game.opponent_id)" in team
+    assert "row.logo_handle" not in app + team
+    assert "opponent_logo_handle" not in app + team
     assert ".team-logo-frame" in css
-    assert "loading = \"lazy\"" in app
+    assert 'loading = "lazy"' in app
 
 
 def _counterpart(
@@ -1467,7 +1580,9 @@ def test_conflicting_fbs_conferences_fail_closed(tmp_path: Path) -> None:
         ],
     )
 
-    with pytest.raises(SiteDataValidationError, match="Conflicting nonblank FBS conferences"):
+    with pytest.raises(
+        SiteDataValidationError, match="Conflicting nonblank FBS conferences"
+    ):
         build_fbs_conference_map(schedule)
 
 
@@ -1495,9 +1610,7 @@ def test_blank_ranking_conferences_are_enriched_from_schedule(tmp_path: Path) ->
         output_directory=tmp_path / "data",
     )
     entry = manifest["snapshots"][0]
-    snapshot = json.loads(
-        (tmp_path / entry["data_path"]).read_text(encoding="utf-8")
-    )
+    snapshot = json.loads((tmp_path / entry["data_path"]).read_text(encoding="utf-8"))
     conference_map = build_fbs_conference_map(
         tmp_path / "data/processed/cfbd/games.csv", seasons={2026}
     )
@@ -1520,9 +1633,9 @@ def test_all_ranking_families_receive_consistent_season_conferences(
             )
         )
         for row in snapshot["rankings"]:
-            conferences_by_team.setdefault((entry["season"], row["team_id"]), set()).add(
-                row["conference"]
-            )
+            conferences_by_team.setdefault(
+                (entry["season"], row["team_id"]), set()
+            ).add(row["conference"])
 
     assert conferences_by_team
     assert all(len(conferences) == 1 for conferences in conferences_by_team.values())
@@ -1549,9 +1662,7 @@ def test_conference_enrichment_preserves_ranking_pmf_and_record_values(
         output_directory=tmp_path / "data",
     )
     entry = manifest["snapshots"][0]
-    snapshot = json.loads(
-        (tmp_path / entry["data_path"]).read_text(encoding="utf-8")
-    )
+    snapshot = json.loads((tmp_path / entry["data_path"]).read_text(encoding="utf-8"))
     distribution = json.loads(
         (tmp_path / entry["distribution_path"]).read_text(encoding="utf-8")
     )
@@ -1586,8 +1697,14 @@ def test_site_data_publishes_all_initial_h_c_preseason_and_current_snapshots(
         "default_publication_slot"
     ]
     assert manifest["default_publication_slot"] == configured_default_slot
-    predictive = [entry for entry in manifest["snapshots"] if entry["ranking_family"] == "predictive"]
-    assert {(entry["snapshot_type"], entry["prior_family"]) for entry in predictive} == {
+    predictive = [
+        entry
+        for entry in manifest["snapshots"]
+        if entry["ranking_family"] == "predictive"
+    ]
+    assert {
+        (entry["snapshot_type"], entry["prior_family"]) for entry in predictive
+    } == {
         ("preseason", "context"),
         ("preseason", "history"),
         ("live", "context"),
@@ -1608,7 +1725,9 @@ def test_site_data_publishes_all_initial_h_c_preseason_and_current_snapshots(
         performance[0]["rated_count"] + performance[0]["unrated_count"]
         == performance[0]["rank_count"]
     )
-    current = [entry for entry in manifest["snapshots"] if entry["snapshot_type"] == "live"]
+    current = [
+        entry for entry in manifest["snapshots"] if entry["snapshot_type"] == "live"
+    ]
     assert {entry["effective_cutoff"] for entry in current} == {
         "2026-09-05T20:11:12.864212+00:00"
     }
@@ -1621,14 +1740,21 @@ def test_site_data_publishes_all_initial_h_c_preseason_and_current_snapshots(
     assert {entry["effective_cutoff"] for entry in weekly} == {
         performance[0]["effective_cutoff"]
     }
-    assert next(
-        entry for entry in predictive if entry["snapshot_type"] == "preseason"
-    )["default_week"] == "1"
-    assert next(
-        entry
-        for entry in predictive
-        if entry["snapshot_type"] == "weekly" and entry["publication_slot"] == "2026-09-08"
-    )["default_week"] == "2"
+    assert (
+        next(entry for entry in predictive if entry["snapshot_type"] == "preseason")[
+            "default_week"
+        ]
+        == "1"
+    )
+    assert (
+        next(
+            entry
+            for entry in predictive
+            if entry["snapshot_type"] == "weekly"
+            and entry["publication_slot"] == "2026-09-08"
+        )["default_week"]
+        == "2"
+    )
 
 
 def test_publication_status_and_official_comparison_chain(
@@ -1637,20 +1763,19 @@ def test_publication_status_and_official_comparison_chain(
     _, manifest = production_site_data
     config = json.loads(CONFIG.read_text(encoding="utf-8"))
     publication_slots = config["publication_slots"]
-    expected_status_by_slot = {
-        slot["id"]: slot["status"] for slot in publication_slots
-    }
+    expected_status_by_slot = {slot["id"]: slot["status"] for slot in publication_slots}
     context_entries = [
         entry
         for entry in manifest["snapshots"]
         if entry["ranking_family"] == "predictive"
         and entry["prior_family"] == "context"
     ]
-    assert len(context_entries) == len(publication_slots) + 2
+    assert len(context_entries) == len(publication_slots)
     for entry in context_entries:
-        assert entry["publication_status"] == expected_status_by_slot[
-            entry["publication_slot"]
-        ]
+        assert (
+            entry["publication_status"]
+            == expected_status_by_slot[entry["publication_slot"]]
+        )
 
     context_by_slot_version = {
         (
@@ -1672,8 +1797,7 @@ def test_publication_status_and_official_comparison_chain(
                     previous["id"]
                     for previous in reversed(publication_slots[:index])
                     if previous["status"] == "official"
-                    and (previous["id"], current_version)
-                    in context_by_slot_version
+                    and (previous["id"], current_version) in context_by_slot_version
                 ),
                 None,
             )
@@ -1715,7 +1839,9 @@ def test_publication_status_and_official_comparison_chain(
                 and publication_order_by_slot[candidate["publication_slot"]]
                 < current_order
             ),
-            key=lambda candidate: publication_order_by_slot[candidate["publication_slot"]],
+            key=lambda candidate: publication_order_by_slot[
+                candidate["publication_slot"]
+            ],
             default=None,
         )
         expected_snapshot_id = (
@@ -1730,11 +1856,16 @@ def test_predictive_entries_reference_the_matching_published_preseason_artifact(
     output, manifest = production_site_data
     by_id = {entry["snapshot_id"]: entry for entry in manifest["snapshots"]}
     predictive = [
-        entry for entry in manifest["snapshots"] if entry["ranking_family"] == "predictive"
+        entry
+        for entry in manifest["snapshots"]
+        if entry["ranking_family"] == "predictive"
     ]
 
     for entry in predictive:
         preseason_id = entry["preseason_snapshot_id"]
+        if preseason_id is None:
+            assert entry["preseason_distribution_path"] is None
+            continue
         preseason = by_id[preseason_id]
         assert preseason["snapshot_type"] == "preseason"
         assert preseason["publication_status"] == "official"
@@ -1767,9 +1898,7 @@ def test_comparison_resolution_uses_explicit_order_and_compatible_family() -> No
         family: str = "context",
         ranking_family: str = "predictive",
     ) -> site_data.PreparedSnapshot:
-        selected = site_data.PublishedSnapshot(
-            Path(slot), slot, slot, status, order
-        )
+        selected = site_data.PublishedSnapshot(Path(slot), slot, slot, status, order)
         metadata = {
             "season": 2026,
             "ranking_family": ranking_family,
@@ -1790,22 +1919,66 @@ def test_comparison_resolution_uses_explicit_order_and_compatible_family() -> No
     later_performance = prepared(
         "week-f", 6, "temporary", ranking_family="performance", family="context"
     )
-    assert site_data._previous_official_snapshot(
-        temporary,
-        [preseason, temporary, history, current, performance, week_2_performance, later_performance],
-    ) is preseason
-    assert site_data._previous_official_snapshot(
-        current,
-        [preseason, temporary, history, current, performance, week_2_performance, later_performance],
-    ) is preseason
-    assert site_data._previous_official_snapshot(
-        performance,
-        [preseason, temporary, history, current, performance, week_2_performance, later_performance],
-    ) is None
-    assert site_data._previous_official_snapshot(
-        later_performance,
-        [preseason, temporary, history, current, performance, week_2_performance, later_performance],
-    ) is week_2_performance
+    assert (
+        site_data._previous_official_snapshot(
+            temporary,
+            [
+                preseason,
+                temporary,
+                history,
+                current,
+                performance,
+                week_2_performance,
+                later_performance,
+            ],
+        )
+        is preseason
+    )
+    assert (
+        site_data._previous_official_snapshot(
+            current,
+            [
+                preseason,
+                temporary,
+                history,
+                current,
+                performance,
+                week_2_performance,
+                later_performance,
+            ],
+        )
+        is preseason
+    )
+    assert (
+        site_data._previous_official_snapshot(
+            performance,
+            [
+                preseason,
+                temporary,
+                history,
+                current,
+                performance,
+                week_2_performance,
+                later_performance,
+            ],
+        )
+        is None
+    )
+    assert (
+        site_data._previous_official_snapshot(
+            later_performance,
+            [
+                preseason,
+                temporary,
+                history,
+                current,
+                performance,
+                week_2_performance,
+                later_performance,
+            ],
+        )
+        is week_2_performance
+    )
 
 
 def test_future_predictive_official_chain_advances_past_interim() -> None:
@@ -1868,7 +2041,10 @@ def test_rank_change_uses_display_rank_and_handles_nr_transitions() -> None:
     )
     site_data._apply_rank_changes(current, previous)
     rows = {row["team_id"]: row for row in current.rankings}
-    assert (rows["up"]["rank_change"], rows["up"]["rank_change_status"]) == (5, "ranked")
+    assert (rows["up"]["rank_change"], rows["up"]["rank_change_status"]) == (
+        5,
+        "ranked",
+    )
     assert rows["same"]["rank_change_display"] == "—"
     assert rows["new"]["rank_change_status"] == "newly_rated"
     assert rows["new"]["rank_change"] is None
@@ -1942,7 +2118,9 @@ def test_distribution_artifact_contains_complete_fbs_pmfs_and_summaries(
     production_site_data: tuple[Path, dict[str, object]],
 ) -> None:
     output, manifest = production_site_data
-    entry = next(item for item in manifest["snapshots"] if item["prior_family"] == "context")
+    entry = next(
+        item for item in manifest["snapshots"] if item["prior_family"] == "context"
+    )
     distribution = json.loads(
         (output / entry["distribution_path"].removeprefix("data/")).read_text()
     )
@@ -1952,14 +2130,24 @@ def test_distribution_artifact_contains_complete_fbs_pmfs_and_summaries(
     assert distribution["schema_version"] == "1.0"
     assert distribution["snapshot_id"] == entry["snapshot_id"]
     assert distribution["rank_count"] == 138
-    assert set(distribution["teams"]) == {row["team_id"] for row in snapshot["rankings"]}
+    assert set(distribution["teams"]) == {
+        row["team_id"] for row in snapshot["rankings"]
+    }
     team = distribution["teams"][snapshot["rankings"][0]["team_id"]]
     assert len(team["pmf"]) == distribution["rank_count"]
     assert sum(team["pmf"]) == pytest.approx(1.0, abs=1e-9)
     assert set(team["summary"]) == {
-        "expected_rank", "median_rank", "modal_rank", "interval_50", "interval_80",
-        "interval_95", "interval_widths", "rank_1_probability", "top5_probability",
-        "top10_probability", "top25_probability",
+        "expected_rank",
+        "median_rank",
+        "modal_rank",
+        "interval_50",
+        "interval_80",
+        "interval_95",
+        "interval_widths",
+        "rank_1_probability",
+        "top5_probability",
+        "top10_probability",
+        "top25_probability",
     }
 
 
@@ -1967,7 +2155,11 @@ def test_performance_export_keeps_nr_after_rated_teams_and_out_of_top25(
     production_site_data: tuple[Path, dict[str, object]],
 ) -> None:
     output, manifest = production_site_data
-    entry = next(item for item in manifest["snapshots"] if item["ranking_family"] == "performance")
+    entry = next(
+        item
+        for item in manifest["snapshots"]
+        if item["ranking_family"] == "performance"
+    )
     snapshot = json.loads(
         (output / entry["data_path"].removeprefix("data/")).read_text()
     )
@@ -1998,7 +2190,10 @@ def test_exported_80_percent_interval_remains_the_ranking_interval(
             (output / entry["distribution_path"].removeprefix("data/")).read_text()
         )
         for row in snapshot["rankings"]:
-            assert distribution["teams"][row["team_id"]]["summary"]["interval_80"] == row["interval_80"]
+            assert (
+                distribution["teams"][row["team_id"]]["summary"]["interval_80"]
+                == row["interval_80"]
+            )
 
 
 @pytest.mark.parametrize(
@@ -2013,11 +2208,15 @@ def test_preseason_and_in_season_distribution_exports_work(
 ) -> None:
     source = _copied_snapshot(tmp_path, relative_source)
     manifest = build_site_data(
-        root=tmp_path, config_path=_config_for(source, tmp_path), output_directory=tmp_path / "data"
+        root=tmp_path,
+        config_path=_config_for(source, tmp_path),
+        output_directory=tmp_path / "data",
     )
     entry = manifest["snapshots"][0]
     distribution = json.loads(
-        (tmp_path / "data" / entry["distribution_path"].removeprefix("data/")).read_text()
+        (
+            tmp_path / "data" / entry["distribution_path"].removeprefix("data/")
+        ).read_text()
     )
     assert distribution["rank_count"] == 138
     assert len(distribution["teams"]) == 138
@@ -2029,9 +2228,12 @@ def test_team_season_source_mode_must_match_snapshot(tmp_path: Path) -> None:
     artifact = json.loads(path.read_text(encoding="utf-8"))
     artifact["source_mode"] = "historical_frozen"
     path.write_text(json.dumps(artifact), encoding="utf-8")
-    with pytest.raises(SiteDataValidationError, match="provenance mismatch: source_mode"):
+    with pytest.raises(
+        SiteDataValidationError, match="provenance mismatch: source_mode"
+    ):
         build_site_data(
-            root=tmp_path, config_path=_config_for(source, tmp_path),
+            root=tmp_path,
+            config_path=_config_for(source, tmp_path),
             output_directory=tmp_path / "data",
         )
 
@@ -2044,7 +2246,8 @@ def test_schedule_sha256_requires_producer_lowercase_hex(tmp_path: Path) -> None
     path.write_text(json.dumps(artifact), encoding="utf-8")
     with pytest.raises(SiteDataValidationError, match="schedule provenance"):
         build_site_data(
-            root=tmp_path, config_path=_config_for(source, tmp_path),
+            root=tmp_path,
+            config_path=_config_for(source, tmp_path),
             output_directory=tmp_path / "data",
         )
 
@@ -2072,19 +2275,33 @@ def test_missing_pmf_rank_is_refused(tmp_path: Path) -> None:
     source = _copied_snapshot(tmp_path)
     path, fields, rows = _pmf_rows(source)
     team_id = rows[0]["team_id"]
-    _write_pmf_rows(path, fields, [row for row in rows if not (row["team_id"] == team_id and row["rank"] == "1")])
+    _write_pmf_rows(
+        path,
+        fields,
+        [row for row in rows if not (row["team_id"] == team_id and row["rank"] == "1")],
+    )
     with pytest.raises(SiteDataValidationError, match="missing or unexpected ranks"):
-        build_site_data(root=tmp_path, config_path=_config_for(source, tmp_path), output_directory=tmp_path / "data")
+        build_site_data(
+            root=tmp_path,
+            config_path=_config_for(source, tmp_path),
+            output_directory=tmp_path / "data",
+        )
 
 
 def test_duplicate_pmf_rank_is_refused(tmp_path: Path) -> None:
     source = _copied_snapshot(tmp_path)
     path, fields, rows = _pmf_rows(source)
     team_id = rows[0]["team_id"]
-    next(row for row in rows if row["team_id"] == team_id and row["rank"] == "2")["rank"] = "1"
+    next(row for row in rows if row["team_id"] == team_id and row["rank"] == "2")[
+        "rank"
+    ] = "1"
     _write_pmf_rows(path, fields, rows)
     with pytest.raises(SiteDataValidationError, match="duplicate PMF rank"):
-        build_site_data(root=tmp_path, config_path=_config_for(source, tmp_path), output_directory=tmp_path / "data")
+        build_site_data(
+            root=tmp_path,
+            config_path=_config_for(source, tmp_path),
+            output_directory=tmp_path / "data",
+        )
 
 
 def test_pmf_team_mismatch_is_refused(tmp_path: Path) -> None:
@@ -2095,13 +2312,23 @@ def test_pmf_team_mismatch_is_refused(tmp_path: Path) -> None:
         if row["team_id"] == team_id:
             row["team_id"] = "not-a-ranking-team"
     _write_pmf_rows(path, fields, rows)
-    with pytest.raises(SiteDataValidationError, match=f"missing PMF for FBS team {team_id}"):
-        build_site_data(root=tmp_path, config_path=_config_for(source, tmp_path), output_directory=tmp_path / "data")
+    with pytest.raises(
+        SiteDataValidationError, match=f"missing PMF for FBS team {team_id}"
+    ):
+        build_site_data(
+            root=tmp_path,
+            config_path=_config_for(source, tmp_path),
+            output_directory=tmp_path / "data",
+        )
 
 
 @pytest.mark.parametrize(
     ("value", "message"),
-    [("nan", "must be finite"), ("-0.01", "must be between 0 and 1"), ("1.01", "must be between 0 and 1")],
+    [
+        ("nan", "must be finite"),
+        ("-0.01", "must be between 0 and 1"),
+        ("1.01", "must be between 0 and 1"),
+    ],
 )
 def test_malformed_pmf_probability_is_refused(
     tmp_path: Path, value: str, message: str
@@ -2111,7 +2338,11 @@ def test_malformed_pmf_probability_is_refused(
     rows[0]["probability"] = value
     _write_pmf_rows(path, fields, rows)
     with pytest.raises(SiteDataValidationError, match=message):
-        build_site_data(root=tmp_path, config_path=_config_for(source, tmp_path), output_directory=tmp_path / "data")
+        build_site_data(
+            root=tmp_path,
+            config_path=_config_for(source, tmp_path),
+            output_directory=tmp_path / "data",
+        )
 
 
 def test_unnormalized_pmf_is_refused_without_renormalizing(tmp_path: Path) -> None:
@@ -2120,7 +2351,11 @@ def test_unnormalized_pmf_is_refused_without_renormalizing(tmp_path: Path) -> No
     rows[0]["probability"] = "0.1"
     _write_pmf_rows(path, fields, rows)
     with pytest.raises(SiteDataValidationError, match="sum to"):
-        build_site_data(root=tmp_path, config_path=_config_for(source, tmp_path), output_directory=tmp_path / "data")
+        build_site_data(
+            root=tmp_path,
+            config_path=_config_for(source, tmp_path),
+            output_directory=tmp_path / "data",
+        )
 
 
 HASHED_WEEKLY_SOURCE = (
@@ -2129,7 +2364,9 @@ HASHED_WEEKLY_SOURCE = (
 )
 
 
-def test_declared_included_game_rows_hash_rejects_changed_evidence(tmp_path: Path) -> None:
+def test_declared_included_game_rows_hash_rejects_changed_evidence(
+    tmp_path: Path,
+) -> None:
     source = _copied_snapshot(tmp_path, HASHED_WEEKLY_SOURCE)
     path = source / "included_games.csv"
     with path.open(newline="", encoding="utf-8") as handle:
@@ -2141,9 +2378,12 @@ def test_declared_included_game_rows_hash_rejects_changed_evidence(tmp_path: Pat
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
         writer.writerows(rows)
-    with pytest.raises(SiteDataValidationError, match="included_game_rows_sha256 disagrees"):
+    with pytest.raises(
+        SiteDataValidationError, match="included_game_rows_sha256 disagrees"
+    ):
         build_site_data(
-            root=tmp_path, config_path=_config_for(source, tmp_path),
+            root=tmp_path,
+            config_path=_config_for(source, tmp_path),
             output_directory=tmp_path / "data",
         )
 
@@ -2152,23 +2392,29 @@ def test_declared_posterior_hash_rejects_normalized_fcs_change(tmp_path: Path) -
     source = _copied_snapshot(tmp_path, HASHED_WEEKLY_SOURCE)
     with (source / "rankings.csv").open(newline="", encoding="utf-8") as handle:
         fcs_id = next(
-            row["team_id"] for row in csv.DictReader(handle)
+            row["team_id"]
+            for row in csv.DictReader(handle)
             if row["subdivision"].casefold() == "fcs"
         )
     path, fields, rows = _pmf_rows(source)
     fcs_rows = [row for row in rows if row["team_id"] == fcs_id]
     first, second = next(
         (first, second)
-        for first in fcs_rows for second in fcs_rows
+        for first in fcs_rows
+        for second in fcs_rows
         if first["probability"] != second["probability"]
     )
     first["probability"], second["probability"] = (
-        second["probability"], first["probability"]
+        second["probability"],
+        first["probability"],
     )
     _write_pmf_rows(path, fields, rows)
-    with pytest.raises(SiteDataValidationError, match="posterior_pmfs_sha256 disagrees"):
+    with pytest.raises(
+        SiteDataValidationError, match="posterior_pmfs_sha256 disagrees"
+    ):
         build_site_data(
-            root=tmp_path, config_path=_config_for(source, tmp_path),
+            root=tmp_path,
+            config_path=_config_for(source, tmp_path),
             output_directory=tmp_path / "data",
         )
 
@@ -2197,7 +2443,9 @@ def test_lower_division_game_does_not_change_modeled_record(tmp_path: Path) -> N
         root=tmp_path, config_path=config, output_directory=tmp_path / "first"
     )
     snapshot_id = json.loads((source / "metadata.json").read_text())["snapshot_id"]
-    first_data = json.loads((tmp_path / f"first/snapshots/{snapshot_id}.json").read_text())
+    first_data = json.loads(
+        (tmp_path / f"first/snapshots/{snapshot_id}.json").read_text()
+    )
     team = first_data["rankings"][0]
     games = source / "included_games.csv"
     with games.open(newline="", encoding="utf-8") as handle:
@@ -2220,7 +2468,9 @@ def test_lower_division_game_does_not_change_modeled_record(tmp_path: Path) -> N
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
         writer.writerows(rows)
-    build_site_data(root=tmp_path, config_path=config, output_directory=tmp_path / "second")
+    build_site_data(
+        root=tmp_path, config_path=config, output_directory=tmp_path / "second"
+    )
     second_data = json.loads(
         (tmp_path / f"second/snapshots/{snapshot_id}.json").read_text()
     )
@@ -2283,7 +2533,9 @@ def test_unknown_ranking_family_is_refused(tmp_path: Path) -> None:
         )
 
 
-def test_registered_published_families_drive_manifest(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_registered_published_families_drive_manifest(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     source = _copied_snapshot(tmp_path)
     metadata_path = source / "metadata.json"
     metadata = json.loads(metadata_path.read_text())
@@ -2310,7 +2562,7 @@ def test_site_uses_base_safe_relative_paths() -> None:
     assert 'href="./assets/style.css"' in index
     assert 'src="./assets/app.js"' in index
     assert 'fetch("./data/manifest.json")' in app
-    assert 'fetch(`./${entry.distribution_path}`)' in app
+    assert "fetch(`./${entry.distribution_path}`)" in app
     assert "distributionCache" in app
     assert "selectedEntry()?.snapshot_id !== entry.snapshot_id" in app
     assert "publication_slot" in app
@@ -2330,18 +2582,20 @@ def test_rankings_header_is_compact_and_links_to_existing_about_disclosure() -> 
     assert "<title>GippyRank4</title>" in index
     assert 'aria-label="GippyRank4 home">GippyRank4</a>' in index
     assert '<details id="about-rankings" class="about-rankings">' in index
-    assert '<summary>About these rankings</summary>' in index
+    assert "<summary>About these rankings</summary>" in index
     assert '<section class="intro"' not in index
     assert "GippyRank 4.0" not in index
     assert "College football rankings, built from the games." not in index
     assert "Expected rank and an 80% interval for every team." not in index
-    assert 'aboutRankings.open = true' in app
+    assert "aboutRankings.open = true" in app
 
 
 def test_bare_rankings_url_defaults_to_a_published_season() -> None:
     """Keep the dependency-free site bootstrap safe when the URL has no query."""
     app = (ROOT / "site/assets/app.js").read_text(encoding="utf-8")
-    manifest = json.loads((ROOT / "site/data/manifest.json").read_text(encoding="utf-8"))
+    manifest = json.loads(
+        (ROOT / "site/data/manifest.json").read_text(encoding="utf-8")
+    )
     assert 'pageParams.has("season") ? Number(pageParams.get("season")) : null' in app
     assert "Number.isSafeInteger(requestedSeason) && requestedSeason > 0" in app
     assert "if (!seasons.includes(state.season)) state.season = seasons[0];" in app
@@ -2369,4 +2623,4 @@ def test_percentage_formatter_preserves_nonzero_and_noncertainty_distinctions() 
     assert 'if (percent === 100) return "100%";' in probability
     assert 'if (percent < 0.01) return "<0.01%";' in probability
     assert 'if (percent >= 99.95) return "<100%";' in probability
-    assert 'if (percent < 10 || percent >= 95)' in probability
+    assert "if (percent < 10 || percent >= 95)" in probability

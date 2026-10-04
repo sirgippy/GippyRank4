@@ -44,6 +44,7 @@ RANKING_FAMILY = "predictive"
 PriorFamily = Literal["context", "history"]
 SnapshotType = Literal["preseason", "weekly", "live"]
 
+
 @dataclass(frozen=True)
 class Snapshot:
     snapshot_id: str
@@ -87,7 +88,7 @@ def snapshot_id(
 ) -> str:
     suffix = (
         f"-v{prior_model_version}"
-        if prior_model_version in {"1.2", "1.3"}
+        if prior_model_version in {"1.2", "1.3", "1.4"}
         else ""
     )
     suffix += f"-{lineage_suffix}" if lineage_suffix else ""
@@ -117,15 +118,17 @@ def _prior_path(
 ) -> Path:
     if family == "context":
         version = prior_model_version or CONTEXT_PRIOR_VERSION
-        if version == "1.3":
-            family_root = "context_v1_3"
+        if version in {"1.3", "1.4"}:
+            family_root = f"context_v{version.replace('.', '_')}"
         elif version == "1.2":
             family_root = "context"
         else:
             raise ValueError(f"unsupported Context prior version: {version}")
     else:
         family_root = family
-    annual = root / f"data/processed/preseason/{family_root}/annual/{season}/predictions.csv"
+    annual = (
+        root / f"data/processed/preseason/{family_root}/annual/{season}/predictions.csv"
+    )
     # Historical prior rows are retained in the frozen multi-season artifact;
     # 2026 additionally has its explicit annually frozen instance.
     return (
@@ -183,14 +186,15 @@ def corpus_provenance(root: Path, season: int) -> CorpusProvenance:
     """Read an explicit current-season CFBD acquisition manifest when present."""
     directory = root / "data/raw/cfbd/games"
     manifests = [
-        directory / f"{season}{suffix}.json.provenance.json"
-        for suffix in ("", "-fcs")
+        directory / f"{season}{suffix}.json.provenance.json" for suffix in ("", "-fcs")
     ]
     present = [path.exists() for path in manifests]
     if any(present) and not all(present):
         raise ValueError("current-season CFBD corpus needs both retrieval manifests")
     if not any(present):
-        return CorpusProvenance("historical_frozen", "frozen_game_corpus", None, {}, {}, "combined_latest")
+        return CorpusProvenance(
+            "historical_frozen", "frozen_game_corpus", None, {}, {}, "combined_latest"
+        )
     values = [json.loads(path.read_text(encoding="utf-8")) for path in manifests]
     retrieval_times = {
         classification: datetime.fromisoformat(value["retrieved_at"]).astimezone(UTC)
@@ -207,8 +211,12 @@ def corpus_provenance(root: Path, season: int) -> CorpusProvenance:
 
 
 def filter_games(
-    root: Path, season: int, cutoff: datetime | date | None, snapshot_type: SnapshotType,
-    *, source_retrieved_at: datetime | None = None,
+    root: Path,
+    season: int,
+    cutoff: datetime | date | None,
+    snapshot_type: SnapshotType,
+    *,
+    source_retrieved_at: datetime | None = None,
 ) -> tuple[list[Game], list[dict[str, str]], int, Path]:
     path = root / "data/processed/cfbd/games.csv"
     if not path.exists():
@@ -229,7 +237,9 @@ def filter_games(
                 # state rather than silently dropping them.
                 continue
             if when.tzinfo is None or when.utcoffset() is None:
-                raise ValueError(f"completed game {row['id']} needs a timezone-aware date")
+                raise ValueError(
+                    f"completed game {row['id']} needs a timezone-aware date"
+                )
             if snapshot_type == "preseason" or (
                 cutoff_dt is not None and when > cutoff_dt
             ):
@@ -281,14 +291,14 @@ def _read_included_game_rows(path: Path) -> list[dict[str, str]]:
         rows: list[dict[str, str]] = []
         seen_ids: set[str] = set()
         for raw in reader:
-            row = {
-                field: str(raw.get(field) or "") for field in INCLUDED_GAME_FIELDS
-            }
+            row = {field: str(raw.get(field) or "") for field in INCLUDED_GAME_FIELDS}
             game_id = row["id"]
             if not game_id:
                 raise ValueError(f"{path}: included game evidence has a blank ID")
             if game_id in seen_ids:
-                raise ValueError(f"{path}: included game ID appears more than once: {game_id}")
+                raise ValueError(
+                    f"{path}: included game ID appears more than once: {game_id}"
+                )
             seen_ids.add(game_id)
             rows.append(row)
     return rows
@@ -355,7 +365,11 @@ def historical_schedule_rows_from_site_artifact(
             home_points = ""
             away_points = ""
             if score is not None:
-                if not isinstance(score, dict) or "home" not in score or "away" not in score:
+                if (
+                    not isinstance(score, dict)
+                    or "home" not in score
+                    or "away" not in score
+                ):
                     raise ValueError(f"{path}: {game_id} has an invalid score")
                 home_points = str(score["home"])
                 away_points = str(score["away"])
@@ -367,9 +381,15 @@ def historical_schedule_rows_from_site_artifact(
                     "week": str(game.get("week", "")),
                     "seasonType": str(game.get("season_type", "regular") or "regular"),
                     "startDate": str(game.get("date", "")),
-                    "completed": "True" if state in {"completed", "out_of_scope"} and score is not None else "False",
-                    "neutralSite": "True" if bool(game.get("neutral_site")) else "False",
-                    "conferenceGame": "True" if bool(game.get("conference_game")) else "False",
+                    "completed": "True"
+                    if state in {"completed", "out_of_scope"} and score is not None
+                    else "False",
+                    "neutralSite": "True"
+                    if bool(game.get("neutral_site"))
+                    else "False",
+                    "conferenceGame": "True"
+                    if bool(game.get("conference_game"))
+                    else "False",
                     "homeId": home_id,
                     "homeTeam": str(home.get("team_name", "")),
                     "homeClassification": str(home.get("subdivision", "")),
@@ -391,7 +411,9 @@ def historical_schedule_rows_from_site_artifact(
     )
     missing = [game_id for game_id in required_ids if game_id not in seen_ids]
     if missing:
-        raise ValueError(f"{path}: frozen schedule is missing included games: {missing}")
+        raise ValueError(
+            f"{path}: frozen schedule is missing included games: {missing}"
+        )
     return rows
 
 
@@ -445,14 +467,23 @@ def _frozen_provenance(metadata: dict[str, object], source: Path) -> CorpusProve
     retrieval_times = {
         str(key): value
         for key, raw in retrieval_values.items()
-        if (value := _metadata_datetime(raw, field="source_retrieval_times", source=source))
+        if (
+            value := _metadata_datetime(
+                raw, field="source_retrieval_times", source=source
+            )
+        )
         is not None
     }
     contract = metadata.get("source_retrieved_at_contract")
     if contract is None:
         if retrieved_at is not None and not retrieval_times:
             contract = "legacy_unverified_availability"
-        elif retrieved_at is not None and retrieval_times and retrieved_at == min(retrieval_times.values()) and retrieved_at < max(retrieval_times.values()):
+        elif (
+            retrieved_at is not None
+            and retrieval_times
+            and retrieved_at == min(retrieval_times.values())
+            and retrieved_at < max(retrieval_times.values())
+        ):
             contract = "legacy_first_response"
         else:
             contract = "combined_latest"
@@ -497,13 +528,15 @@ def _source_inference_configuration(
 
 
 def _source_season_simulation_config(
-    metadata: dict[str, object]
+    metadata: dict[str, object],
 ) -> SeasonSimulationConfig:
     value = metadata.get("season_simulation_configuration")
     values = value if isinstance(value, dict) else {}
     defaults = SeasonSimulationConfig().as_dict()
     return SeasonSimulationConfig(
-        outer_draw_count=int(values.get("outer_draw_count", defaults["outer_draw_count"])),
+        outer_draw_count=int(
+            values.get("outer_draw_count", defaults["outer_draw_count"])
+        ),
         inner_rollout_count=int(
             values.get("inner_rollout_count", defaults["inner_rollout_count"])
         ),
@@ -517,9 +550,7 @@ def _source_season_simulation_config(
     )
 
 
-def _source_lower_division_value(
-    metadata: dict[str, object], field: str
-) -> object:
+def _source_lower_division_value(metadata: dict[str, object], field: str) -> object:
     value = metadata.get(field)
     if value is not None:
         return value
@@ -556,7 +587,9 @@ def _frozen_fcs_fallbacks(
         population_source = _source_lower_division_value(
             source_metadata, "fcs_population_source"
         )
-    population_source = str(population_source) if population_source is not None else None
+    population_source = (
+        str(population_source) if population_source is not None else None
+    )
     if fallback_ids and (population is None or population < 1):
         raise ValueError(f"{source}: frozen FCS fallbacks need a positive population")
 
@@ -609,6 +642,7 @@ def _load_frozen_evidence(
     *,
     source: Path,
     season: int,
+    snapshot_type: SnapshotType,
     teams: list[Team],
     team_rows: dict[str, dict[str, str]],
 ) -> tuple[
@@ -632,8 +666,8 @@ def _load_frozen_evidence(
     source_metadata: dict[str, object] = value
     if int(source_metadata.get("season", -1)) != season:
         raise ValueError(f"{source}: frozen evidence season does not match {season}")
-    if source_metadata.get("snapshot_type") != "weekly":
-        raise ValueError(f"{source}: frozen evidence must be a weekly snapshot")
+    if source_metadata.get("snapshot_type") != snapshot_type:
+        raise ValueError(f"{source}: frozen evidence has the wrong snapshot type")
     rows = _read_included_game_rows(source / "included_games.csv")
     declared_count = source_metadata.get("included_game_count")
     if declared_count is not None and int(declared_count) != len(rows):
@@ -643,15 +677,12 @@ def _load_frozen_evidence(
     if declared_ids is not None and [str(value) for value in declared_ids] != ids:
         raise ValueError(f"{source}: included game IDs do not match its rows")
     games = [_game_from_included_row(row) for row in rows]
-    fbs_ids = {
-        team.team_id for team in teams if team.subdivision == "fbs"
-    }
+    fbs_ids = {team.team_id for team in teams if team.subdivision == "fbs"}
     with (source / "rankings.csv").open(newline="", encoding="utf-8") as handle:
         source_fbs_ids = {
             str(row["team_id"])
             for row in csv.DictReader(handle)
-            if row.get("team_id")
-            and row.get("subdivision", "").casefold() == "fbs"
+            if row.get("team_id") and row.get("subdivision", "").casefold() == "fbs"
         }
     if source_fbs_ids != fbs_ids:
         raise ValueError(
@@ -783,10 +814,7 @@ def subdivision_population_size(
     if path.exists():
         with path.open(newline="", encoding="utf-8") as handle:
             for row in csv.DictReader(handle):
-                if (
-                    int(row["season"]) == season
-                    and row["subdivision"] == subdivision
-                ):
+                if int(row["season"]) == season and row["subdivision"] == subdivision:
                     populations.add(int(row["team_population"]))
     if populations:
         if len(populations) != 1:
@@ -852,8 +880,7 @@ def subdivision_population_source(
 
     games_directory = root / "data/raw/cfbd/games"
     if any(
-        (games_directory / f"{season}{suffix}.json").exists()
-        for suffix in ("", "-fcs")
+        (games_directory / f"{season}{suffix}.json").exists() for suffix in ("", "-fcs")
     ):
         return "cfbd_full_season_schedule"
     return None
@@ -884,8 +911,15 @@ def load_pinned_likelihood(path: Path) -> LikelihoodV1:
 
 def _load_snapshot_likelihood(path: Path) -> LikelihoodV1:
     """Pin the repository's production artifact; allow isolated fixture roots."""
-    production = Path(__file__).resolve().parents[3] / "data/processed/posterior/historical_likelihood_v1.json"
-    return load_pinned_likelihood(path) if path.resolve() == production.resolve() else load_likelihood(path)
+    production = (
+        Path(__file__).resolve().parents[3]
+        / "data/processed/posterior/historical_likelihood_v1.json"
+    )
+    return (
+        load_pinned_likelihood(path)
+        if path.resolve() == production.resolve()
+        else load_likelihood(path)
+    )
 
 
 def _write_csv(
@@ -898,9 +932,7 @@ def _write_csv(
         writer.writerows(rows)
 
 
-def _validate_presentation_schedule(
-    rows: list[dict[str, str]], *, season: int
-) -> None:
+def _validate_presentation_schedule(rows: list[dict[str, str]], *, season: int) -> None:
     schedule_ids = [str(row.get("id", "")) for row in rows]
     if any(not game_id for game_id in schedule_ids):
         raise ValueError("presentation schedule contains a blank game ID")
@@ -928,6 +960,7 @@ def build_snapshot(
     generation_timestamp: datetime | None = None,
     evidence_snapshot: Path | None = None,
     presentation_schedule_path: Path | None = None,
+    canonical_lineage_replay: bool = False,
 ) -> Snapshot:
     """Build an atomic-on-success schema-v1 bundle without any publishing logic."""
     started = time.perf_counter()
@@ -957,6 +990,12 @@ def build_snapshot(
         raise ValueError(
             "presentation schedule is only supported for frozen evidence replay"
         )
+    if canonical_lineage_replay and (
+        evidence_snapshot is None or selected_prior_version != "1.4"
+    ):
+        raise ValueError(
+            "canonical lineage replay requires frozen evidence and Context 1.4"
+        )
 
     if evidence_snapshot is not None:
         replay_source = evidence_snapshot
@@ -964,9 +1003,9 @@ def build_snapshot(
             replay_source = root / replay_source
         if cutoff is not None:
             requested_from_source = _metadata_datetime(
-                json.loads((replay_source / "metadata.json").read_text(encoding="utf-8")).get(
-                    "requested_cutoff"
-                ),
+                json.loads(
+                    (replay_source / "metadata.json").read_text(encoding="utf-8")
+                ).get("requested_cutoff"),
                 field="requested_cutoff",
                 source=replay_source,
             )
@@ -988,6 +1027,7 @@ def build_snapshot(
         ) = _load_frozen_evidence(
             source=replay_source,
             season=season,
+            snapshot_type=snapshot_type,
             teams=teams,
             team_rows=team_rows,
         )
@@ -1001,8 +1041,16 @@ def build_snapshot(
             field="effective_cutoff",
             source=replay_source,
         )
-        if requested_cutoff is None or effective_cutoff is None:
+        if snapshot_type == "weekly" and (
+            requested_cutoff is None or effective_cutoff is None
+        ):
             raise ValueError(f"{replay_source}: weekly replay needs both cutoff values")
+        if snapshot_type == "preseason" and (
+            requested_cutoff is not None or effective_cutoff is not None or games
+        ):
+            raise ValueError(
+                f"{replay_source}: preseason replay must contain no game evidence"
+            )
         if supplied_season_simulation_config is not None and (
             supplied_season_simulation_config.as_dict()
             != frozen_simulation_config.as_dict()
@@ -1025,7 +1073,9 @@ def build_snapshot(
                 else root / presentation_schedule_path
             ).resolve()
             if not schedule_path.is_relative_to(root.resolve()):
-                raise ValueError("frozen presentation schedule must be inside the repository")
+                raise ValueError(
+                    "frozen presentation schedule must be inside the repository"
+                )
             contents = schedule_path.read_bytes()
             required_ids = [
                 row["id"]
@@ -1037,7 +1087,9 @@ def build_snapshot(
                 schedule_path,
                 season=season,
                 expected_snapshot_id=str(replay_metadata["snapshot_id"]),
-                expected_included_game_ids=[str(game_id) for game_id in replay_metadata["included_game_ids"]],
+                expected_included_game_ids=[
+                    str(game_id) for game_id in replay_metadata["included_game_ids"]
+                ],
                 required_included_game_ids=required_ids,
                 _contents=contents,
             )
@@ -1052,21 +1104,30 @@ def build_snapshot(
                 "snapshot_id": str(replay_metadata["snapshot_id"]),
             }
         source_game_corpus_value = replay_metadata.get("game_corpus_sha256")
-        if not isinstance(source_game_corpus_value, str) or len(
-            source_game_corpus_value
-        ) != 64:
+        if (
+            not isinstance(source_game_corpus_value, str)
+            or len(source_game_corpus_value) != 64
+        ):
             raise ValueError(f"{replay_source}: frozen game corpus hash is invalid")
         source_game_corpus_sha256 = source_game_corpus_value
-        if snapshot_type != "weekly" or prior_family != "context":
-            raise ValueError("frozen evidence replay currently supports weekly Context snapshots")
+        if snapshot_type not in {"preseason", "weekly"} or prior_family != "context":
+            raise ValueError(
+                "frozen evidence replay supports preseason or weekly Context snapshots"
+            )
         if selected_prior_version == str(replay_metadata.get("prior_model_version")):
-            raise ValueError("frozen evidence replay must change the prior model version")
-        if selected_prior_version != "1.3":
-            raise ValueError("frozen evidence replay requires Context prior version 1.3")
+            raise ValueError(
+                "frozen evidence replay must change the prior model version"
+            )
+        if selected_prior_version not in {"1.3", "1.4"}:
+            raise ValueError(
+                "frozen evidence replay requires Context prior version 1.3 or 1.4"
+            )
     else:
         requested_cutoff = _as_utc_datetime(cutoff) if cutoff is not None else None
         provenance = (
-            CorpusProvenance("preseason_prior_only", "none", None, {}, {}, "combined_latest")
+            CorpusProvenance(
+                "preseason_prior_only", "none", None, {}, {}, "combined_latest"
+            )
             if snapshot_type == "preseason"
             else corpus_provenance(root, season)
         )
@@ -1074,7 +1135,10 @@ def build_snapshot(
         if provenance.source_retrieved_at is not None and requested_cutoff is not None:
             effective_cutoff = min(requested_cutoff, provenance.source_retrieved_at)
         games, included, excluded_lower, corpus_path = filter_games(
-            root, season, effective_cutoff, snapshot_type,
+            root,
+            season,
+            effective_cutoff,
+            snapshot_type,
             source_retrieved_at=provenance.source_retrieved_at,
         )
         scheduled_future_fcs = _scheduled_future_fcs_rows(
@@ -1086,10 +1150,14 @@ def build_snapshot(
             for side in ("home", "away")
         ) or bool(scheduled_future_fcs)
         fcs_population = (
-            subdivision_population_size(root, season, "fcs") if has_included_fcs else None
+            subdivision_population_size(root, season, "fcs")
+            if has_included_fcs
+            else None
         )
         fcs_population_source = (
-            subdivision_population_source(root, season, "fcs") if has_included_fcs else None
+            subdivision_population_source(root, season, "fcs")
+            if has_included_fcs
+            else None
         )
         teams, fcs_fallbacks = add_fcs_fallbacks(
             teams,
@@ -1100,9 +1168,7 @@ def build_snapshot(
         )
     likelihood_path = root / "data/processed/posterior/historical_likelihood_v1.json"
     if replay_inference_configuration is not None:
-        inference_max_iterations = int(
-            replay_inference_configuration["max_iterations"]
-        )
+        inference_max_iterations = int(replay_inference_configuration["max_iterations"])
         inference_tolerance = float(replay_inference_configuration["tolerance"])
         inference_damping = float(replay_inference_configuration["damping"])
     if likelihood is None and likelihood_path.exists():
@@ -1113,6 +1179,9 @@ def build_snapshot(
         likelihood = _load_snapshot_likelihood(likelihood_path)
     if games:
         likelihood = likelihood or _load_snapshot_likelihood(likelihood_path)
+        prior_pmfs_hash = posterior_pmfs_sha256(
+            {team.team_id: team.prior for team in teams}
+        )
         result = infer_posterior(
             teams,
             games,
@@ -1122,6 +1191,9 @@ def build_snapshot(
             damping=inference_damping,
         )
     else:
+        prior_pmfs_hash = posterior_pmfs_sha256(
+            {team.team_id: team.prior for team in teams}
+        )
         result = infer_posterior(teams, [], LikelihoodV1(np.zeros(34), 1.0, 1.0))
     sid = snapshot_id(
         season,
@@ -1180,9 +1252,7 @@ def build_snapshot(
         if games
         else "prior_passthrough",
     }
-    fbs_team_ids = sorted(
-        team.team_id for team in teams if team.subdivision == "fbs"
-    )
+    fbs_team_ids = sorted(team.team_id for team in teams if team.subdivision == "fbs")
     included_game_ids = [row["id"] for row in included]
     posterior_inference_configuration = {
         "implementation": diagnostics["inference"],
@@ -1196,14 +1266,14 @@ def build_snapshot(
         "fcs_fallback_count": len(fcs_fallbacks),
         "fcs_population_size": fcs_population,
         "fcs_population_source": fcs_population_source,
-        "fcs_fallback_kind": "uniform_full_subdivision_rank"
-        if fcs_fallbacks
-        else None,
+        "fcs_fallback_kind": "uniform_full_subdivision_rank" if fcs_fallbacks else None,
         "fcs_fallback_pmf_semantics": "uniform ranks 1..N_FCS"
         if fcs_fallbacks
         else None,
     }
-    supplied_parameters = supplied_likelihood_parameters(likelihood) if supplied_likelihood else None
+    supplied_parameters = (
+        supplied_likelihood_parameters(likelihood) if supplied_likelihood else None
+    )
     metadata: dict[str, object] = {
         "schema_version": SCHEMA_VERSION,
         "snapshot_id": sid,
@@ -1235,6 +1305,7 @@ def build_snapshot(
         ),
         "historical_likelihood_parameters": supplied_parameters,
         "posterior_pmfs_sha256": posterior_pmfs_sha256(result.pmfs),
+        "prior_pmfs_sha256": prior_pmfs_hash,
         "posterior_inference_configuration": posterior_inference_configuration,
         "season_simulation_schema_version": SEASON_SIMULATION_SCHEMA_VERSION,
         "season_simulation_version": season_simulation_config.simulation_version,
@@ -1250,7 +1321,8 @@ def build_snapshot(
         ),
         "combined_source_available_at": (
             max(provenance.source_retrieval_times.values()).isoformat()
-            if provenance.source_retrieval_times else None
+            if provenance.source_retrieval_times
+            else None
         ),
         "source_retrieved_at_contract": provenance.source_retrieved_at_contract,
         "source_retrieval_times": {
@@ -1302,8 +1374,6 @@ def build_snapshot(
         evidence_hash = included_game_rows_sha256(included)
         metadata.update(
             {
-                "backfill": True,
-                "backfill_kind": "retrospective_prior_replay",
                 "source_evidence_snapshot_id": replay_metadata["snapshot_id"],
                 "source_evidence_snapshot_path": relative_path(replay_source, root),
                 "source_evidence_game_corpus_sha256": replay_metadata.get(
@@ -1319,6 +1389,11 @@ def build_snapshot(
                 "presentation_schedule_source": replay_schedule_source,
             }
         )
+        if canonical_lineage_replay:
+            metadata["lineage_migration"] = "context_1_4_production_promotion"
+        else:
+            metadata["backfill"] = True
+            metadata["backfill_kind"] = "retrospective_prior_replay"
     if likelihood is not None:
         team_season = build_team_season_artifact(
             root=root,
@@ -1332,7 +1407,9 @@ def build_snapshot(
             likelihood_sha256=metadata["historical_likelihood_sha256"],
             season_simulation_config=season_simulation_config,
             prediction_source=(
-                "predictive_history" if prior_family == "history" else "predictive_context"
+                "predictive_history"
+                if prior_family == "history"
+                else "predictive_context"
             ),
             schedule_rows=replay_schedule_rows,
             schedule_source=replay_schedule_source,
