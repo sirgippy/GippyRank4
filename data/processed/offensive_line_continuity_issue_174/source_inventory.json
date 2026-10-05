@@ -1,0 +1,299 @@
+{
+  "data_root_label": "data",
+  "interpretation": {
+    "pairwise_co_play": "No pairwise co-play measure is computed without complete player-game or snap evidence.",
+    "player_participation": "Team box-score payloads do not establish player appearances, starts, or snaps.",
+    "target_roster_membership": "No on-time historical target-season roster panel is established by this inventory."
+  },
+  "inventory_scope": "offline local artifact inventory; no API calls",
+  "local_source_directories": {
+    "preseason_coach_tenures": {
+      "directory_present": true,
+      "filename_seasons": [],
+      "meaning": "team-level coaching-tenure records",
+      "path": "raw/cfbd/preseason/coach_tenures",
+      "payload_file_count": 141,
+      "provenance_sidecar_count": 0,
+      "two_byte_payload_count": 1
+    },
+    "preseason_returning_production": {
+      "directory_present": true,
+      "filename_seasons": [
+        2003,
+        2004,
+        2005,
+        2006,
+        2007,
+        2008,
+        2009,
+        2010,
+        2011,
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024,
+        2025,
+        2026
+      ],
+      "meaning": "team-season returning-production aggregates",
+      "path": "raw/cfbd/preseason/returning",
+      "payload_file_count": 24,
+      "provenance_sidecar_count": 0,
+      "two_byte_payload_count": 11
+    },
+    "preseason_team_recruiting": {
+      "directory_present": true,
+      "filename_seasons": [
+        2003,
+        2004,
+        2005,
+        2006,
+        2007,
+        2008,
+        2009,
+        2010,
+        2011,
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024,
+        2025,
+        2026
+      ],
+      "meaning": "team-season recruiting aggregates",
+      "path": "raw/cfbd/preseason/recruiting_teams",
+      "payload_file_count": 24,
+      "provenance_sidecar_count": 0,
+      "two_byte_payload_count": 0
+    },
+    "preseason_team_talent": {
+      "directory_present": true,
+      "filename_seasons": [
+        2003,
+        2004,
+        2005,
+        2006,
+        2007,
+        2008,
+        2009,
+        2010,
+        2011,
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024,
+        2025,
+        2026
+      ],
+      "meaning": "team-season roster-talent aggregates",
+      "path": "raw/cfbd/preseason/talent",
+      "payload_file_count": 24,
+      "provenance_sidecar_count": 0,
+      "two_byte_payload_count": 12
+    },
+    "season_team_metadata": {
+      "directory_present": true,
+      "filename_seasons": [
+        2003,
+        2004,
+        2005,
+        2006,
+        2007,
+        2008,
+        2009,
+        2010,
+        2011,
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024,
+        2025,
+        2026
+      ],
+      "meaning": "season team metadata, not player rosters",
+      "path": "raw/cfbd/preseason/teams",
+      "payload_file_count": 24,
+      "provenance_sidecar_count": 0,
+      "two_byte_payload_count": 0
+    },
+    "team_game_box_scores": {
+      "directory_present": true,
+      "filename_seasons": [
+        2003,
+        2004,
+        2005,
+        2006,
+        2007,
+        2008,
+        2009,
+        2010,
+        2011,
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024,
+        2025,
+        2026
+      ],
+      "meaning": "team-level game box scores; not player participation",
+      "path": "raw/cfbd/game_stats",
+      "payload_file_count": 764,
+      "provenance_sidecar_count": 27,
+      "two_byte_payload_count": 155
+    },
+    "team_schedules": {
+      "directory_present": true,
+      "filename_seasons": [
+        1997,
+        2003,
+        2004,
+        2005,
+        2006,
+        2007,
+        2008,
+        2009,
+        2010,
+        2011,
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024,
+        2025,
+        2026
+      ],
+      "meaning": "season schedules and results",
+      "path": "raw/cfbd/games",
+      "payload_file_count": 50,
+      "provenance_sidecar_count": 2,
+      "two_byte_payload_count": 0
+    }
+  },
+  "player_snapshot_path_search": {
+    "games_players": {
+      "paths": [],
+      "payload_file_count": 0
+    },
+    "portal": {
+      "paths": [],
+      "payload_file_count": 0
+    },
+    "roster": {
+      "paths": [],
+      "payload_file_count": 0
+    },
+    "stats": {
+      "paths": [],
+      "payload_file_count": 0
+    },
+    "usage": {
+      "paths": [],
+      "payload_file_count": 0
+    }
+  },
+  "preseason_transfer_snapshot_manifest": {
+    "path": "raw/cfbd/preseason/transfers/manifest.json",
+    "present": false,
+    "sources": {
+      "games_players": {
+        "captured_on_or_before_cutoff_count": 0,
+        "manifest_record_count": 0,
+        "raw_payload_present_count": 0,
+        "target_seasons": []
+      },
+      "portal": {
+        "captured_on_or_before_cutoff_count": 0,
+        "manifest_record_count": 0,
+        "raw_payload_present_count": 0,
+        "target_seasons": []
+      },
+      "roster": {
+        "captured_on_or_before_cutoff_count": 0,
+        "manifest_record_count": 0,
+        "raw_payload_present_count": 0,
+        "target_seasons": []
+      },
+      "stats": {
+        "captured_on_or_before_cutoff_count": 0,
+        "manifest_record_count": 0,
+        "raw_payload_present_count": 0,
+        "target_seasons": []
+      },
+      "usage": {
+        "captured_on_or_before_cutoff_count": 0,
+        "manifest_record_count": 0,
+        "raw_payload_present_count": 0,
+        "target_seasons": []
+      }
+    }
+  },
+  "repository_tracked_cfbd_raw_files": {
+    "available": true,
+    "paths": [
+      "data/raw/cfbd/confirmation/context-v1-4-issue-168-2026-10-04/fbs.json",
+      "data/raw/cfbd/confirmation/context-v1-4-issue-168-2026-10-04/fbs.json.provenance.json",
+      "data/raw/cfbd/confirmation/context-v1-4-issue-168-2026-10-04/fcs.json",
+      "data/raw/cfbd/confirmation/context-v1-4-issue-168-2026-10-04/fcs.json.provenance.json",
+      "data/raw/cfbd/games/2026-fcs.json",
+      "data/raw/cfbd/games/2026-fcs.json.provenance.json",
+      "data/raw/cfbd/games/2026.json",
+      "data/raw/cfbd/games/2026.json.provenance.json"
+    ],
+    "payload_file_count": 4,
+    "provenance_sidecar_count": 4
+  },
+  "study": "offensive-line-continuity-issue-174"
+}
