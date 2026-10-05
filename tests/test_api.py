@@ -185,7 +185,7 @@ def test_canonical_context_is_unambiguous_and_retained_artifacts_are_readable() 
     )
     week_2 = [item for item in week_2 if item.metadata.publication_slot == "2026-09-08"]
 
-    canonical_id = "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4"
+    canonical_id = "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-db-repair"
     assert {item.metadata.snapshot_id for item in week_2} == {canonical_id}
     assert {item.metadata.model_versions.context_prior for item in week_2} == {"1.4"}
     assert store.get(canonical_id).metadata.model_versions.context_prior == "1.4"
@@ -198,7 +198,11 @@ def test_canonical_context_is_unambiguous_and_retained_artifacts_are_readable() 
         ).metadata.snapshot_id
         == canonical_id
     )
-    for version, suffix in (("1.2", "context"), ("1.3", "context-v1.3")):
+    for version, suffix in (
+        ("1.2", "context"),
+        ("1.3", "context-v1.3"),
+        ("1.4", "context-v1.4"),
+    ):
         retained = (
             ROOT
             / "data/processed/snapshots/2026"
