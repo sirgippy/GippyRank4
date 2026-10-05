@@ -4231,16 +4231,22 @@ def _project_retained_kickoff_certainty(
     if source.get("kickoff_time_certainty_version") is None:
         return artifact
     provenance = source.get("kickoff_time_certainty_provenance")
+    # The ordinary Week 6 Context 1.4 site artifact predates the nested
+    # provenance field, but carries the same source identity at its top level.
+    identity = source if provenance is None else provenance
     if (
         source.get("snapshot_id") != source_id
         or source.get("kickoff_time_certainty_version")
         != KICKOFF_TIME_CERTAINTY_VERSION
-        or not isinstance(provenance, dict)
-        or provenance.get("snapshot_id") != source_id
-        or provenance.get("source_response_hashes")
+        or not isinstance(identity, dict)
+        or identity.get("snapshot_id") != source_id
+        or identity.get("source_response_hashes")
         != metadata.get("source_response_hashes")
-        or provenance.get("source_retrieval_times")
+        or identity.get("source_retrieval_times")
         != metadata.get("source_retrieval_times")
+        or source.get("game_corpus_sha256") != metadata.get("game_corpus_sha256")
+        or source.get("effective_cutoff") != metadata.get("effective_cutoff")
+        or source.get("included_game_ids") != metadata.get("included_game_ids")
     ):
         raise SiteDataValidationError(
             f"{metadata['snapshot_id']}: retained kickoff provenance differs from replay evidence"
@@ -4290,8 +4296,19 @@ def _project_retained_kickoff_certainty(
         projected_teams[team_id] = {**team, "games": games}
     projected["teams"] = projected_teams
     projected["kickoff_time_certainty_version"] = KICKOFF_TIME_CERTAINTY_VERSION
+    source_provenance = (
+        provenance
+        if isinstance(provenance, dict)
+        else {
+            "schema_version": "1.0",
+            "source_kind": "cfbd_api_schedule_responses",
+            "source_response_hashes": source["source_response_hashes"],
+            "source_retrieval_times": source["source_retrieval_times"],
+            "retained_source_identity_location": "team_season_root",
+        }
+    )
     projected["kickoff_time_certainty_provenance"] = {
-        **provenance,
+        **source_provenance,
         "snapshot_id": metadata["snapshot_id"],
         "retained_site_team_season_path": source_path.relative_to(root).as_posix(),
         "retained_site_team_season_sha256": _file_sha256(source_path),

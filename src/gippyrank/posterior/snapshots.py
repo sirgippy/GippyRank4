@@ -1115,9 +1115,17 @@ def build_snapshot(
                 "frozen evidence replay supports preseason or weekly Context snapshots"
             )
         if selected_prior_version == str(replay_metadata.get("prior_model_version")):
-            raise ValueError(
-                "frozen evidence replay must change the prior model version"
+            corrected_same_version = (
+                canonical_lineage_replay
+                and lineage_suffix == "db-repair"
+                and selected_prior_version == "1.4"
+                and sha256(prior_path) != replay_metadata.get("prior_artifact_sha256")
             )
+            if not corrected_same_version:
+                raise ValueError(
+                    "frozen evidence replay must change the prior model version "
+                    "or identify a changed Context 1.4 DB-repair prior"
+                )
         if selected_prior_version not in {"1.3", "1.4"}:
             raise ValueError(
                 "frozen evidence replay requires Context prior version 1.3 or 1.4"

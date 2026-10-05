@@ -1,0 +1,33 @@
+{
+  "2026_transfer_timing": "Reacquired after the August 15 cutoff; retrospective reconstruction",
+  "correction": "issue_172_repaired_db_transfer_coverage",
+  "db_features": [
+    "observed_db_impact_sum",
+    "db_impact_coverage_fraction"
+  ],
+  "feature_names": [
+    "lag2_z_mean",
+    "lag3_z_mean",
+    "long_run_z_mean",
+    "coach_tenure_seasons",
+    "recruiting_class_rank",
+    "recruiting_class_points",
+    "recruiting_points_2y_mean",
+    "recruiting_points_3y_mean",
+    "recruiting_points_4y_mean",
+    "recruiting_points_trend",
+    "talent_composite",
+    "returning_pct_ppa",
+    "transfer_in_prior_usage_sum",
+    "observed_db_impact_sum",
+    "db_impact_coverage_fraction"
+  ],
+  "historical_db_before_2021": "source unavailable; both DB features missing",
+  "history_1_1": "unchanged",
+  "model_family": "context_prior",
+  "moderation_alpha": 0.75,
+  "moderation_target": "positive context_only_subtotal",
+  "positive_context_only_moderation_alpha": 0.75,
+  "spec_version": "1.4",
+  "status": "active_production"
+}

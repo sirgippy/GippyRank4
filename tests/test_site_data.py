@@ -928,10 +928,13 @@ def _isolated_publication_root(tmp_path: Path) -> Path:
     shutil.copyfile(CONFIG, site / "publish_config.json")
     retained = site / "data/team-seasons"
     retained.mkdir(parents=True)
-    source_name = "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3.json"
-    shutil.copyfile(
-        ROOT / "site/data/team-seasons" / source_name, retained / source_name
-    )
+    for source_name in (
+        "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3.json",
+        "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.4.json",
+    ):
+        shutil.copyfile(
+            ROOT / "site/data/team-seasons" / source_name, retained / source_name
+        )
     return root
 
 

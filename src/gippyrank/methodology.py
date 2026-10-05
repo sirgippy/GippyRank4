@@ -92,4 +92,7 @@ def production_methodology_metadata() -> dict[str, object]:
         "model_versions": dict(PRODUCTION_MODEL_VERSIONS),
         "schema_versions": dict(PRODUCTION_SCHEMA_VERSIONS),
         "feature_status": {"season_simulation": "shipped"},
+        "model_corrections": {
+            "context_prior": "issue_172_repaired_db_transfer_coverage"
+        },
     }
