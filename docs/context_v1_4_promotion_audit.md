@@ -1,5 +1,7 @@
 # Context 1.4 production promotion audit
 
+This document records the original 2026 promotion. Issue #172 corrected its DB transfer input and rebuilt the active Context 1.4 lineage; see [the correction audit](context_db_repair_172.md) for the current production hashes and results.
+
 The frozen Issue #168 / PR #169 verdict was **promote**. Context 1.4 is the
 active production prior. Its prior construction reuses the frozen candidate
 implementation with alpha **0.75** on positive `context_only_subtotal` only.

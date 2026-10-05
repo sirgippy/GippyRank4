@@ -1,10 +1,10 @@
 const { test, expect } = require("@playwright/test");
 const { SITE_ORIGIN, installStaticSiteRoute } = require("./static-site");
 
-const contextSnapshot = "2026-weekly-2026-09-20T11-00-14.294077Z-context-v1.4";
+const contextSnapshot = "2026-weekly-2026-09-20T11-00-14.294077Z-context-v1.4-db-repair";
 const historySnapshot = "2026-weekly-2026-09-11T17-02-26.077461Z-history";
 const performanceSnapshot = "2026-weekly-2026-09-11T17-02-26.077461Z-performance";
-const currentContextSnapshot = "2026-weekly-2026-10-04T14-51-53.251364Z-context-v1.4";
+const currentContextSnapshot = "2026-weekly-2026-10-04T14-51-53.251364Z-context-v1.4-db-repair";
 
 const logoResponse = `<svg xmlns="http://www.w3.org/2000/svg" width="60" height="40" viewBox="0 0 60 40"><rect width="60" height="40" fill="#d6dfda"/></svg>`;
 
@@ -89,7 +89,7 @@ test.describe("Preseason starting point browser checks", () => {
   });
 
   test("shows team-specific preseason evidence and an expandable distribution", async ({ page }) => {
-    await loadTeam(page, "2026-preseason-context-v1.4", "context");
+    await loadTeam(page, "2026-preseason-context-v1.4-db-repair", "context");
     await expect(page.locator("#preseason-starting-point-section")).toBeVisible();
     await expect(page.locator("#preseason-starting-point-content")).toContainText("recruiting");
     await expect(page.locator("#preseason-starting-point-content")).toContainText("Team talent composite");
@@ -100,13 +100,20 @@ test.describe("Preseason starting point browser checks", () => {
     await expect(page.locator("#season-movement-section")).toBeHidden();
   });
 
-  test("shows Context 1.4's retained transfer inputs with their provenance caveat", async ({ page }) => {
-    await loadTeam(page, "2026-preseason-context-v1.4", "context");
+  test("shows repaired complete and partial DB evidence with its provenance caveat", async ({ page }) => {
+    await loadTeam(page, "2026-preseason-context-v1.4-db-repair", "context", { id: "2", name: "Auburn" });
     const evidence = page.locator("#preseason-starting-point-content");
     await expect(evidence).toContainText("Incoming prior offensive usage");
     await expect(evidence).toContainText("Incoming DB defensive impact");
-    await expect(evidence).toContainText("DB transfer-data availability");
+    await expect(evidence).toContainText("3.332");
+    await expect(evidence).toContainText("6/6 complete");
     await expect(evidence.getByText("2026 transfer inputs were reconstructed after the Aug. 15 cutoff.", { exact: false })).toBeVisible();
+
+    await loadTeam(page, "2026-preseason-context-v1.4-db-repair", "context", { id: "235", name: "Memphis" });
+    const partial = page.locator("#preseason-starting-point-content");
+    await expect(partial).toContainText("8.714");
+    await expect(partial).toContainText("7/10 partial");
+    await expect(partial).toContainText("unresolved players remain unknown");
   });
 
   test("keeps the dashboard compact while preserving belief and distribution detail", async ({ page }) => {
@@ -150,8 +157,8 @@ test.describe("Preseason starting point browser checks", () => {
     const probabilityMetric = page.locator(".season-story-metric").filter({
       has: page.getByText("Top 5 probability", { exact: true }),
     });
-    await expect(probabilityMetric).toContainText("49%");
-    await expect(probabilityMetric).toContainText("78%");
+    await expect(probabilityMetric).toContainText("51%");
+    await expect(probabilityMetric).toContainText("79%");
     await expect(page.getByText("Top 25 probability", { exact: true })).toHaveCount(0);
     await expect(page.locator("#season-movement")).toContainText("Week 2");
     await expect(page.locator("#season-movement")).not.toContainText("Context 1.3 retrospective");

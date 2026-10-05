@@ -1,93 +1,68 @@
-"""Production identity for the validated Context 1.4 candidate.
-
-The frozen candidate remains the sole mathematical implementation. Promotion
-changes its lifecycle identity and publication routing, not its computation.
-"""
+"""Active Context 1.4 prior with repaired incoming DB evidence (#172)."""
 
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import dataclass
 
 import numpy as np
 
-from gippyrank.context_prior_v1_4_candidate import (
-    FROZEN_CANDIDATE_SEMANTICS_SHA256,
-    Context13PriorInput,
-    Context14CandidatePrior,
-    candidate_spec_sha256,
-    construct_candidate_prior,
-    load_candidate_spec,
-    sha256_json,
+from gippyrank.context_db_repair import (
+    ALPHA,
+    DB_COVERAGE,
+    DB_SUM,
+    MODEL_FEATURES,
+    production_pmf,
 )
+from gippyrank.context_prior import InferenceRow
+from gippyrank.preseason import DirectRankModel
 
 CONTEXT_1_4_VERSION = "1.4"
-MODERATION_ALPHA = 0.75
-VALIDATION_RESULT_PATH = "data/processed/context_v1_4_validation/summary.json"
-VALIDATION_PROVENANCE_PATH = "data/processed/context_v1_4_validation/provenance.json"
+MODERATION_ALPHA = ALPHA
 
 
 def production_spec() -> dict[str, object]:
-    """Return the promoted identity, bound to the exact frozen candidate."""
-    candidate = load_candidate_spec()
-    if (
-        candidate["alpha"] != MODERATION_ALPHA
-        or candidate_spec_sha256() != FROZEN_CANDIDATE_SEMANTICS_SHA256
-    ):
-        raise ValueError("production Context 1.4 differs from the frozen candidate")
     return {
         "model_family": "context_prior",
         "spec_version": CONTEXT_1_4_VERSION,
         "status": "active_production",
-        "base_model": "Context 1.3",
+        "correction": "issue_172_repaired_db_transfer_coverage",
+        "feature_names": list(MODEL_FEATURES),
+        "db_features": [DB_SUM, DB_COVERAGE],
         "moderation_alpha": MODERATION_ALPHA,
         "moderation_target": "positive context_only_subtotal",
-        "candidate_semantics_sha256": FROZEN_CANDIDATE_SEMANTICS_SHA256,
-        "validation": "Issue #168 / PR #169",
-        "validation_decision": "promote",
     }
 
 
 def production_semantics_sha256() -> str:
-    """Identify production semantics independently of artifact serialization."""
-    return sha256_json(
-        {
-            "model_family": "context_prior",
-            "spec_version": CONTEXT_1_4_VERSION,
-            "base_model": "Context 1.3",
-            "moderation_alpha": MODERATION_ALPHA,
-            "moderation_target": "positive context_only_subtotal",
-            "candidate_semantics_sha256": candidate_spec_sha256(),
-        }
-    )
+    return hashlib.sha256(
+        json.dumps(production_spec(), sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
 
 
 @dataclass(frozen=True)
 class Context14ProductionPrior:
-    """A production lifecycle view of the exact candidate PMF."""
-
-    candidate: Context14CandidatePrior
-
-    @property
-    def pmf(self) -> np.ndarray:
-        return self.candidate.pmf.copy()
-
-    @property
-    def team_id(self) -> str:
-        return self.candidate.team_id
-
-    @property
-    def candidate_semantics_sha256(self) -> str:
-        return self.candidate.candidate_semantics_sha256
+    team_id: str
+    pmf: np.ndarray
+    conditional_location_mean: float
+    predictive_scale: float
 
     @property
     def production_semantics_sha256(self) -> str:
         return production_semantics_sha256()
 
 
-def construct_production_prior(prior: Context13PriorInput) -> Context14ProductionPrior:
-    """Compute a production prior with the frozen validated candidate builder."""
-    production_spec()
-    candidate = construct_candidate_prior(prior)
-    if candidate.candidate_semantics_sha256 != FROZEN_CANDIDATE_SEMANTICS_SHA256:
-        raise ValueError("candidate semantic identity changed during promotion")
-    return Context14ProductionPrior(candidate)
+def construct_production_prior(
+    model: DirectRankModel, row: InferenceRow
+) -> Context14ProductionPrior:
+    """Consume the coverage-aware refit and its outcome-free 2026 input row."""
+    row.require_no_target()
+    if row.subdivision != "fbs" or row.lag1_z is None:
+        raise ValueError("fitted production Context requires an FBS lag-one row")
+    if row.lag_zs:
+        raise ValueError("Context 1.4 uses only the lag-one rank distribution")
+    pmf, center, scale = production_pmf(
+        model, row.features, np.asarray(row.lag1_z, dtype=float), row.population
+    )
+    return Context14ProductionPrior(row.team_id, pmf, center, scale)

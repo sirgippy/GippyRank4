@@ -61,6 +61,21 @@ The attach-only function
 integration point for a later Context 1.3 preprocessing step. Model fitting
 does not fetch CFBD or discover raw files.
 
+## Corrected production Context 1.4 DB input
+
+Context 1.4 now reads the post-repair historical panel and 2026 reacquisition
+under data/processed/transfer_data_repair/. Its fitted DB columns are the
+observed incoming DB impact sum and the observed fraction of incoming DB
+transfers. Missing count and coverage status accompany those values in the
+audit and published evidence. A partial team keeps its observed sum; missing
+players are not assigned an impact. No incoming DB transfers is a natural
+zero with complete coverage. Older seasons without a DB source have missing
+DB features and training-only missingness indicators. The 2026 reacquisition
+occurred after August 15 and is labeled retrospective.
+
+Context 1.3 remains frozen with its earlier three-column contract for
+retained research and historical artifacts.
+
 ## Identity and cutoff policy
 
 Player joins use a verified shared source ID when one exists. Otherwise the

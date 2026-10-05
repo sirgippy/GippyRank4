@@ -10,6 +10,7 @@ It never fits a model or calculates feature attribution.
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import math
 from collections.abc import Iterable, Mapping
@@ -382,12 +383,18 @@ def _context_groups(
         candidate_id: _number(row.get("transfer_in_prior_usage_sum"))
         for candidate_id, row in transfer_rows.items()
     }
+    repaired_db = "db_impact_coverage_fraction" in transfer
+    db_field = (
+        "observed_db_impact_sum"
+        if repaired_db
+        else "transfer_in_prior_defensive_impact_db_sum"
+    )
     db_values = {
-        candidate_id: _number(row.get("transfer_in_prior_defensive_impact_db_sum"))
+        candidate_id: _number(row.get(db_field))
         for candidate_id, row in transfer_rows.items()
     }
     usage = _number(transfer.get("transfer_in_prior_usage_sum"))
-    db_impact = _number(transfer.get("transfer_in_prior_defensive_impact_db_sum"))
+    db_impact = _number(transfer.get(db_field))
     db_available = _number(
         transfer.get("transfer_in_prior_defensive_impact_db_available")
     )
@@ -505,32 +512,58 @@ def _context_groups(
         ),
     }
     if include_transfers:
-        groups["transfers"] = _group(
-            "Transfers",
-            "Frozen preseason transfer-feature artifact",
-            [
-                _field(
-                    "transfer_in_prior_usage_sum",
-                    "Incoming prior offensive usage",
-                    usage,
-                    _format_number(usage, 3),
-                    model_feature="transfer_in_prior_usage_sum",
-                    source="Frozen preseason transfer-feature artifact",
-                    comparison=_comparison(
-                        usage_values, team_id, direction="higher_is_better"
-                    ),
+        transfer_source = (
+            "Repaired 2026 transfer evidence"
+            if repaired_db
+            else "Frozen preseason transfer-feature artifact"
+        )
+        db_detail = (
+            "Observed incoming DB contributions only; unresolved players remain unknown."
+            if repaired_db and transfer.get("db_impact_coverage_status") == "partial"
+            else None
+        )
+        fields = [
+            _field(
+                "transfer_in_prior_usage_sum",
+                "Incoming prior offensive usage",
+                usage,
+                _format_number(usage, 3),
+                model_feature="transfer_in_prior_usage_sum",
+                source=transfer_source,
+                comparison=_comparison(
+                    usage_values, team_id, direction="higher_is_better"
                 ),
-                _field(
-                    "transfer_in_prior_defensive_impact_db_sum",
-                    "Incoming DB defensive impact",
-                    db_impact,
-                    _format_number(db_impact, 3),
-                    model_feature="transfer_in_prior_defensive_impact_db_sum",
-                    source="Frozen preseason transfer-feature artifact",
-                    comparison=_comparison(
-                        db_values, team_id, direction="higher_is_better"
-                    ),
+            ),
+            _field(
+                db_field,
+                "Incoming DB defensive impact",
+                db_impact,
+                _format_number(db_impact, 3),
+                model_feature=db_field,
+                source=transfer_source,
+                comparison=_comparison(
+                    db_values, team_id, direction="higher_is_better"
                 ),
+                detail=db_detail,
+            ),
+        ]
+        if repaired_db:
+            incoming = int(transfer["incoming_db_count"])
+            observed = int(transfer["observed_db_impact_count"])
+            coverage = _number(transfer["db_impact_coverage_fraction"])
+            status = str(transfer["db_impact_coverage_status"])
+            fields.append(
+                _field(
+                    "db_impact_coverage_fraction",
+                    "DB coverage",
+                    coverage,
+                    f"{observed}/{incoming} {status.replace('_', ' ')}",
+                    model_feature="db_impact_coverage_fraction",
+                    source=transfer_source,
+                )
+            )
+        else:
+            fields.append(
                 _field(
                     "transfer_in_prior_defensive_impact_db_available",
                     "DB transfer-data availability",
@@ -546,10 +579,10 @@ def _context_groups(
                         else "Unavailable"
                     ),
                     model_feature="transfer_in_prior_defensive_impact_db_available",
-                    source="Frozen preseason transfer-feature artifact",
-                ),
-            ],
-        )
+                    source=transfer_source,
+                )
+            )
+        groups["transfers"] = _group("Transfers", transfer_source, fields)
     return groups
 
 
@@ -617,6 +650,39 @@ def build_preseason_input_projection(
             for row in _read_csv(audit_path)
             if row.get("season") == str(season) and row.get("subdivision") == "fbs"
         }
+    repaired_db_path = root / "data/processed/transfer_data_repair/db_coverage_2026.csv"
+    corrected_prior_path = (
+        root / "data/processed/preseason/context_v1_4/annual/2026/predictions.csv"
+    )
+    repaired_context_prior = (
+        prior_family == "context"
+        and prior_model_version == "1.4"
+        and season == 2026
+        and repaired_db_path.is_file()
+        and corrected_prior_path.is_file()
+        and metadata.get("prior_artifact_sha256")
+        == hashlib.sha256(corrected_prior_path.read_bytes()).hexdigest()
+    )
+    if repaired_context_prior:
+        from gippyrank.context_db_repair import current_repaired_features
+
+        repaired_features, repaired_db = current_repaired_features(root)
+        if set(repaired_features) != set(transfer_rows):
+            raise ValueError(
+                "published Context 1.4 DB population differs from model inputs"
+            )
+        for team_id, evidence in repaired_db.items():
+            transfer_rows[team_id].update(
+                {
+                    "transfer_in_prior_usage_sum": str(
+                        repaired_features[team_id]["transfer_in_prior_usage_sum"] or 0.0
+                    ),
+                    **{
+                        key: str(value)
+                        for key, value in evidence.audit_fields().items()
+                    },
+                }
+            )
 
     history_records = _program_history_records(root, season)
     coach_records = _coach_tenure_records(root, season)
@@ -661,6 +727,13 @@ def build_preseason_input_projection(
     }
     if transfer_path is not None:
         provenance["transfer_feature_path"] = transfer_path.relative_to(root).as_posix()
+    if repaired_context_prior:
+        provenance["db_repair_feature_path"] = repaired_db_path.relative_to(
+            root
+        ).as_posix()
+        provenance["db_repair_timing"] = (
+            "Reacquired after the August 15 cutoff; retrospective reconstruction."
+        )
     if (
         retrospective
         and prior_family == "context"
@@ -669,7 +742,13 @@ def build_preseason_input_projection(
         provenance["transfer_caveat"] = {
             "status": "retrospective_reconstruction",
             "visible_label": "2026 transfer inputs were reconstructed after the Aug. 15 cutoff.",
-            "detail": transfer_provenance.get("provenance_statement"),
+            "detail": (
+                "The corrected Context 1.4 DB impact and coverage use repaired "
+                "retrospective evidence. These are preseason-semantic transfer "
+                "facts, not a record of what was available on August 15, 2026."
+                if repaired_context_prior
+                else transfer_provenance.get("provenance_statement")
+            ),
             "cutoff": transfer_provenance.get("cutoff"),
             "derivation_timestamp": transfer_provenance.get("derivation_timestamp"),
         }

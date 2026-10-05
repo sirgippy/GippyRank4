@@ -1,0 +1,202 @@
+{
+  "cutoff_policy": "same season-local fixed midseason cutoff for all arms; only earlier final games in posterior evidence",
+  "future_game_policy": "all eligible games after the cutoff; same IDs for every arm",
+  "likelihood_sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+  "pooled": {
+    "corrected_context_1_4": {
+      "coverage_50": 0.4855555555555556,
+      "coverage_80": 0.7870370370370371,
+      "coverage_95": 0.9462962962962963,
+      "games": 2700,
+      "margin_mae": 12.87237935798747,
+      "margin_nll": 4.208599559882502,
+      "win_brier": 0.1902573279538468
+    },
+    "current_context_1_4": {
+      "coverage_50": 0.48518518518518516,
+      "coverage_80": 0.7855555555555556,
+      "coverage_95": 0.9455555555555556,
+      "games": 2700,
+      "margin_mae": 12.867073760811794,
+      "margin_nll": 4.208723512418424,
+      "win_brier": 0.19047570535704716
+    },
+    "history_1_1": {
+      "coverage_50": 0.4837037037037037,
+      "coverage_80": 0.7881481481481482,
+      "coverage_95": 0.9451851851851852,
+      "games": 2700,
+      "margin_mae": 12.908898814312167,
+      "margin_nll": 4.211206369550264,
+      "win_brier": 0.19096391676902258
+    }
+  },
+  "season_results": {
+    "2022": {
+      "corrected_context_1_4": {
+        "coverage_50": 0.4449838187702265,
+        "coverage_80": 0.7815533980582524,
+        "coverage_95": 0.93042071197411,
+        "games": 618,
+        "margin_mae": 13.546628674038184,
+        "margin_nll": 4.257632522591714,
+        "win_brier": 0.20472745214783605
+      },
+      "current_context_1_4": {
+        "coverage_50": 0.44660194174757284,
+        "coverage_80": 0.7783171521035599,
+        "coverage_95": 0.93042071197411,
+        "games": 618,
+        "margin_mae": 13.52524114665352,
+        "margin_nll": 4.256933757540106,
+        "win_brier": 0.2048234439067013
+      },
+      "effective_cutoff": "2022-10-27T23:59:59+00:00",
+      "history_1_1": {
+        "coverage_50": 0.441747572815534,
+        "coverage_80": 0.7718446601941747,
+        "coverage_95": 0.9288025889967637,
+        "games": 618,
+        "margin_mae": 13.575196438857137,
+        "margin_nll": 4.258790599917379,
+        "win_brier": 0.20521692665190558
+      },
+      "included_game_count": 923,
+      "latest_included_start_date": "2022-10-27T23:30:00.000Z",
+      "requested_cutoff": "2022-10-27T23:59:59+00:00"
+    },
+    "2023": {
+      "corrected_context_1_4": {
+        "coverage_50": 0.49065420560747663,
+        "coverage_80": 0.7725856697819314,
+        "coverage_95": 0.9376947040498442,
+        "games": 642,
+        "margin_mae": 13.10218665740511,
+        "margin_nll": 4.242530674538667,
+        "win_brier": 0.18740577139867773
+      },
+      "current_context_1_4": {
+        "coverage_50": 0.49221183800623053,
+        "coverage_80": 0.7741433021806854,
+        "coverage_95": 0.9345794392523364,
+        "games": 642,
+        "margin_mae": 13.078134943112197,
+        "margin_nll": 4.241738277411862,
+        "win_brier": 0.1876856309155389
+      },
+      "effective_cutoff": "2023-10-21T23:59:59+00:00",
+      "history_1_1": {
+        "coverage_50": 0.4937694704049844,
+        "coverage_80": 0.7757009345794392,
+        "coverage_95": 0.9361370716510904,
+        "games": 642,
+        "margin_mae": 13.13252195898168,
+        "margin_nll": 4.245299150781719,
+        "win_brier": 0.1884520676381483
+      },
+      "included_game_count": 903,
+      "latest_included_start_date": "2023-10-21T23:30:00.000Z",
+      "requested_cutoff": "2023-10-21T23:59:59+00:00"
+    },
+    "2024": {
+      "corrected_context_1_4": {
+        "coverage_50": 0.5041899441340782,
+        "coverage_80": 0.7918994413407822,
+        "coverage_95": 0.9594972067039106,
+        "games": 716,
+        "margin_mae": 12.505227121076326,
+        "margin_nll": 4.174081721636075,
+        "win_brier": 0.19380880659821711
+      },
+      "current_context_1_4": {
+        "coverage_50": 0.5027932960893855,
+        "coverage_80": 0.7891061452513967,
+        "coverage_95": 0.9594972067039106,
+        "games": 716,
+        "margin_mae": 12.520534064951505,
+        "margin_nll": 4.175135743811445,
+        "win_brier": 0.19432396758490778
+      },
+      "effective_cutoff": "2024-10-24T23:59:59+00:00",
+      "history_1_1": {
+        "coverage_50": 0.5,
+        "coverage_80": 0.7960893854748603,
+        "coverage_95": 0.9581005586592178,
+        "games": 716,
+        "margin_mae": 12.574123232942453,
+        "margin_nll": 4.17829901561004,
+        "win_brier": 0.1945751012519078
+      },
+      "included_game_count": 895,
+      "latest_included_start_date": "2024-10-24T23:30:00.000Z",
+      "requested_cutoff": "2024-10-24T23:59:59+00:00"
+    },
+    "2025": {
+      "corrected_context_1_4": {
+        "coverage_50": 0.4972375690607735,
+        "coverage_80": 0.7997237569060773,
+        "coverage_95": 0.9544198895027625,
+        "games": 724,
+        "margin_mae": 12.456162007273262,
+        "margin_nll": 4.170793794165501,
+        "win_brier": 0.17692211227313426
+      },
+      "current_context_1_4": {
+        "coverage_50": 0.494475138121547,
+        "coverage_80": 0.7983425414364641,
+        "coverage_95": 0.9544198895027625,
+        "games": 724,
+        "margin_mae": 12.460821963503678,
+        "margin_nll": 4.171512782738327,
+        "win_brier": 0.17689693410375135
+      },
+      "effective_cutoff": "2025-10-24T23:59:59+00:00",
+      "history_1_1": {
+        "coverage_50": 0.494475138121547,
+        "coverage_80": 0.8052486187845304,
+        "coverage_95": 0.9544198895027625,
+        "games": 724,
+        "margin_mae": 12.472933794165892,
+        "margin_nll": 4.172901183781933,
+        "win_brier": 0.17745374956550589
+      },
+      "included_game_count": 901,
+      "latest_included_start_date": "2025-10-24T23:30:00.000Z",
+      "requested_cutoff": "2025-10-24T23:59:59+00:00"
+    }
+  },
+  "source_sha256": {
+    "2022": {
+      "corrected_prior_sha256": "1ac57770484a8376a926ef5ee1878a9f81bd7819bbd3f9befc3d6ecf8af8e50a",
+      "game_source_sha256": {
+        "data/raw/cfbd/games/2022-fcs.json": "a20030838476f73d1f3aea63bba57ed1ecfa03f99e95cee5c2a780deeee05816",
+        "data/raw/cfbd/games/2022.json": "3b4d9d353faa8ca9312534ded0747bdaa1cdcca21e89fcff1458980ab9f00747"
+      },
+      "history_prior_sha256": "474f5587b8db44847bc375931e4f4937e7e8029077d5814af3f6b6e55056a706"
+    },
+    "2023": {
+      "corrected_prior_sha256": "3d9435165206f6048ff740bb32718752d3054c18ae15b47b83459db06d9597ee",
+      "game_source_sha256": {
+        "data/raw/cfbd/games/2023-fcs.json": "df5bb461fe8f3e302eb1d5f52896b509d7f5660364d3d43643c5c540e5476817",
+        "data/raw/cfbd/games/2023.json": "417fb8191bec11e20fb2370e5510a2ff8a85cc67f07ec4371e873a935f9af35f"
+      },
+      "history_prior_sha256": "474f5587b8db44847bc375931e4f4937e7e8029077d5814af3f6b6e55056a706"
+    },
+    "2024": {
+      "corrected_prior_sha256": "94fddd45a9dbfa989a4780e069930498f228d95814192133bb6775a769e5df0e",
+      "game_source_sha256": {
+        "data/raw/cfbd/games/2024-fcs.json": "3cb6327c61d807fd4b8dfe669f0905694afa67164770ab2e997773ea2aaa72c5",
+        "data/raw/cfbd/games/2024.json": "9aeccada4e63f4ddf22d676eb55dbded71fd9bdb3ac07202ee44ed8f47d93f93"
+      },
+      "history_prior_sha256": "474f5587b8db44847bc375931e4f4937e7e8029077d5814af3f6b6e55056a706"
+    },
+    "2025": {
+      "corrected_prior_sha256": "3f2218e00474b75b882a571f744cbf46521a46023d9a9920204e17941e26d941",
+      "game_source_sha256": {
+        "data/raw/cfbd/games/2025-fcs.json": "38329f854c0df38d17b34d5f7841753d6638d7377592dcf743cb4e27cbd9d32f",
+        "data/raw/cfbd/games/2025.json": "6312d8406be09dee0064069668fc40879dd0736ed3e49946c6c72192e6a0e4fc"
+      },
+      "history_prior_sha256": "474f5587b8db44847bc375931e4f4937e7e8029077d5814af3f6b6e55056a706"
+    }
+  }
+}

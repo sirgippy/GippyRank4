@@ -1,0 +1,350 @@
+{
+  "2026_fitted_model_sha256": "d98dd9ade01cf6164d0b60da4e33adb5d1e0d35140279705a3bcad5679b04aed",
+  "2026_inventory": {
+    "auburn": {
+      "change_class": "became_complete",
+      "new_coverage_fraction": 1.0,
+      "new_incoming_count": 6,
+      "new_missing_count": 0,
+      "new_observed_count": 6,
+      "new_observed_db_impact": 3.3319573489815544,
+      "new_status": "complete",
+      "old_availability": 0,
+      "old_db_impact": 0.0,
+      "old_incoming_count": 6,
+      "old_observed_count": 5,
+      "old_status": "unavailable_unresolved_db_transfer",
+      "team": "Auburn",
+      "team_id": "2"
+    },
+    "class_counts": {
+      "became_complete": 20,
+      "complete_impact_corrected": 14,
+      "natural_zero": 6,
+      "partial_gained_observed": 11,
+      "partial_observed_sum_exposed": 27,
+      "unchanged": 60
+    },
+    "natural_zero": 6,
+    "new_complete_including_natural_zero": 100,
+    "new_partial": 38,
+    "old_complete_including_natural_zero": 80,
+    "old_partial": 57,
+    "team_count": 138
+  },
+  "2026_predictions_sha256": "70a8e6c49f159eb91d5108acee0829f9194a51865198ee663c6af40037027a9a",
+  "2026_prior_pmfs_sha256": "cb592e467ee9192ebb85c57527ab1b18560ccf630bc1c3a6a9df1b545d7985c9",
+  "auburn_prior_change": {
+    "coverage_status": "complete",
+    "new_expected_rank": 27.530111022345025,
+    "observed_db_impact_sum": 3.3319573489815544,
+    "old_db_impact": 0.0,
+    "old_expected_rank": 30.127776256697448,
+    "rank_change": -2.597665234352423,
+    "team": "Auburn",
+    "team_id": "2"
+  },
+  "historical_db_status": {
+    "complete": 281,
+    "natural_zero": 117,
+    "no_observed": 44,
+    "partial": 213
+  },
+  "historical_preseason": [
+    {
+      "corrected_context_1_4_expected_rank_mae": 19.610737438390593,
+      "corrected_context_1_4_nll": 4.454790382524695,
+      "current_context_1_4_expected_rank_mae": 19.83225657050977,
+      "current_context_1_4_nll": 4.455001626363071,
+      "fitted_team_count": 130,
+      "history_1_1_expected_rank_mae": 22.082283372881754,
+      "history_1_1_nll": 4.522758688417136,
+      "model_sha256": "89bcd5bbea5785f89368eb6db5aa917652249476517aa82497fc9f2e2cc026fb",
+      "season": 2022,
+      "trained_through": 2021
+    },
+    {
+      "corrected_context_1_4_expected_rank_mae": 20.09137001489845,
+      "corrected_context_1_4_nll": 4.4640906914520855,
+      "current_context_1_4_expected_rank_mae": 20.164710097400878,
+      "current_context_1_4_nll": 4.45915532734648,
+      "fitted_team_count": 131,
+      "history_1_1_expected_rank_mae": 21.15454898408187,
+      "history_1_1_nll": 4.490051269014645,
+      "model_sha256": "6d279582d3489e33a7b66f9064df1a89b8a8892190593b3a7d0eba47ef581394",
+      "season": 2023,
+      "trained_through": 2022
+    },
+    {
+      "corrected_context_1_4_expected_rank_mae": 21.531342347116595,
+      "corrected_context_1_4_nll": 4.549999654408955,
+      "current_context_1_4_expected_rank_mae": 21.80272328338684,
+      "current_context_1_4_nll": 4.553460787690525,
+      "fitted_team_count": 133,
+      "history_1_1_expected_rank_mae": 23.7936916168619,
+      "history_1_1_nll": 4.600354952202796,
+      "model_sha256": "2bb04021f6ab89069683646c0ce2c2c746f377ff1848f637b4966a4c7e449690",
+      "season": 2024,
+      "trained_through": 2023
+    },
+    {
+      "corrected_context_1_4_expected_rank_mae": 21.152184163446403,
+      "corrected_context_1_4_nll": 4.537944971627734,
+      "current_context_1_4_expected_rank_mae": 21.242217383677055,
+      "current_context_1_4_nll": 4.538965477570238,
+      "fitted_team_count": 134,
+      "history_1_1_expected_rank_mae": 22.483430613031764,
+      "history_1_1_nll": 4.567723809956345,
+      "model_sha256": "7989d10efa9ce04914a3cfb477215a92c23568d0d12f8826394820803587a486",
+      "season": 2025,
+      "trained_through": 2024
+    }
+  ],
+  "production_semantics_sha256": "4d8fa4011279b20c3c1d30f99093cedd8db5514ace8113c350caa036f1fe3180",
+  "source_sha256": {
+    "data/processed/context_v1_4_validation/validator_inputs.jsonl": "50be291962af424b337b848555080a53fe5b8dfde5030f00e502fdaf6251bfd2",
+    "data/processed/defensive_transfer_audit/transfer_player_audit.csv": "cf7b25313093c9ae0f4d21ee5865336fbb81705062e8ea92c9dc5f535aa1135d",
+    "data/processed/modeling/team_season_rank_distributions.csv": "03e4e372017aedb45392ff7d790cea25f461db9b6dc846514c762ff46e2cab00",
+    "data/processed/preseason/context_v1_3_2026_reconstruction/transfer_features.csv": "db8fad38bb81e437059b8cf44c85be5760f3426466b53c5cf649ea5c0718fef0",
+    "data/processed/preseason/context_v1_3_2026_reconstruction/transfer_team_audit.csv": "322a9fa8f062e1f63153a48c380b72205e1b27aae80be7bf3cbc2b89c0916dfb",
+    "data/processed/preseason/team_season_features.csv": "fd6f171131e38b852b94619338c5580e5f4e8c19f45c74e8135b11b20b1a2019",
+    "data/processed/transfer_data_repair/db_coverage_2026.csv": "bdfe71f663817cac711408e9d5b66fea0c3b1a785091616fa1cb8b5ed740aeb0",
+    "data/processed/transfer_data_repair/historical_transfer_features.csv": "d17d174b8b49e22cc118618afb9046c399e5889cb56f43141c2e5cbfcc6e028c",
+    "data/processed/transfer_data_repair/team_seasons.csv": "7b96e7be87f484712f2d88c1beffeb5508688a4aa6e996e309852c44fa174a34"
+  },
+  "spec": {
+    "2026_transfer_timing": "Reacquired after the August 15 cutoff; retrospective reconstruction",
+    "correction": "issue_172_repaired_db_transfer_coverage",
+    "db_features": [
+      "observed_db_impact_sum",
+      "db_impact_coverage_fraction"
+    ],
+    "feature_names": [
+      "lag2_z_mean",
+      "lag3_z_mean",
+      "long_run_z_mean",
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "transfer_in_prior_usage_sum",
+      "observed_db_impact_sum",
+      "db_impact_coverage_fraction"
+    ],
+    "historical_db_before_2021": "source unavailable; both DB features missing",
+    "history_1_1": "unchanged",
+    "model_family": "context_prior",
+    "moderation_alpha": 0.75,
+    "moderation_target": "positive context_only_subtotal",
+    "positive_context_only_moderation_alpha": 0.75,
+    "spec_version": "1.4",
+    "status": "active_production"
+  },
+  "top_prior_rank_changes": [
+    {
+      "coverage_status": "complete",
+      "new_expected_rank": 38.934848839697786,
+      "observed_db_impact_sum": 8.765283865198922,
+      "old_db_impact": 0.0,
+      "old_expected_rank": 50.117552804938214,
+      "rank_change": -11.182703965240428,
+      "team": "Cincinnati",
+      "team_id": "2132"
+    },
+    {
+      "coverage_status": "partial",
+      "new_expected_rank": 62.42179579786903,
+      "observed_db_impact_sum": 8.713569837542476,
+      "old_db_impact": 0.0,
+      "old_expected_rank": 71.97904266274718,
+      "rank_change": -9.557246864878145,
+      "team": "Memphis",
+      "team_id": "235"
+    },
+    {
+      "coverage_status": "complete",
+      "new_expected_rank": 46.53990271966136,
+      "observed_db_impact_sum": 6.917485965927152,
+      "old_db_impact": 0.0,
+      "old_expected_rank": 55.424462747720696,
+      "rank_change": -8.884560028059333,
+      "team": "UCLA",
+      "team_id": "26"
+    },
+    {
+      "coverage_status": "complete",
+      "new_expected_rank": 35.152231835638496,
+      "observed_db_impact_sum": 6.7570280504555456,
+      "old_db_impact": 0.0,
+      "old_expected_rank": 42.77719143018607,
+      "rank_change": -7.624959594547576,
+      "team": "Arizona",
+      "team_id": "12"
+    },
+    {
+      "coverage_status": "partial",
+      "new_expected_rank": 61.066946336253146,
+      "observed_db_impact_sum": 5.796951457975138,
+      "old_db_impact": 0.0,
+      "old_expected_rank": 68.61916622560524,
+      "rank_change": -7.552219889352095,
+      "team": "Michigan State",
+      "team_id": "127"
+    },
+    {
+      "coverage_status": "partial",
+      "new_expected_rank": 55.49795440945802,
+      "observed_db_impact_sum": 5.739711631299469,
+      "old_db_impact": 0.0,
+      "old_expected_rank": 62.77619366541558,
+      "rank_change": -7.2782392559575655,
+      "team": "Virginia Tech",
+      "team_id": "259"
+    },
+    {
+      "coverage_status": "partial",
+      "new_expected_rank": 61.9954569455323,
+      "observed_db_impact_sum": 5.104576913912404,
+      "old_db_impact": 0.0,
+      "old_expected_rank": 68.50072013799141,
+      "rank_change": -6.505263192459111,
+      "team": "Arkansas",
+      "team_id": "8"
+    },
+    {
+      "coverage_status": "complete",
+      "new_expected_rank": 63.143266276460025,
+      "observed_db_impact_sum": 10.540303772899573,
+      "old_db_impact": 8.060305261434271,
+      "old_expected_rank": 69.4985114471721,
+      "rank_change": -6.355245170712081,
+      "team": "Colorado",
+      "team_id": "38"
+    },
+    {
+      "coverage_status": "complete",
+      "new_expected_rank": 63.52642333980349,
+      "observed_db_impact_sum": 4.440796789700955,
+      "old_db_impact": 0.0,
+      "old_expected_rank": 69.19538233067227,
+      "rank_change": -5.668958990868781,
+      "team": "Purdue",
+      "team_id": "2509"
+    },
+    {
+      "coverage_status": "complete",
+      "new_expected_rank": 66.55085255206058,
+      "observed_db_impact_sum": 4.300672296046146,
+      "old_db_impact": 0.0,
+      "old_expected_rank": 72.16100206699382,
+      "rank_change": -5.610149514933241,
+      "team": "Oklahoma State",
+      "team_id": "197"
+    },
+    {
+      "coverage_status": "partial",
+      "new_expected_rank": 59.82027418732419,
+      "observed_db_impact_sum": 4.341625441492312,
+      "old_db_impact": 0.0,
+      "old_expected_rank": 65.13278372692912,
+      "rank_change": -5.312509539604932,
+      "team": "West Virginia",
+      "team_id": "277"
+    },
+    {
+      "coverage_status": "complete",
+      "new_expected_rank": 39.490341201311246,
+      "observed_db_impact_sum": 4.476425685692576,
+      "old_db_impact": 0.0,
+      "old_expected_rank": 44.569786663671294,
+      "rank_change": -5.079445462360049,
+      "team": "Nebraska",
+      "team_id": "158"
+    },
+    {
+      "coverage_status": "partial",
+      "new_expected_rank": 36.87339798448137,
+      "observed_db_impact_sum": 4.293268520504209,
+      "old_db_impact": 0.0,
+      "old_expected_rank": 41.39058898676201,
+      "rank_change": -4.51719100228064,
+      "team": "Iowa State",
+      "team_id": "66"
+    },
+    {
+      "coverage_status": "complete",
+      "new_expected_rank": 32.03511070833406,
+      "observed_db_impact_sum": 5.554960719303476,
+      "old_db_impact": 2.345613531120895,
+      "old_expected_rank": 36.454723773370716,
+      "rank_change": -4.419613065036657,
+      "team": "Clemson",
+      "team_id": "228"
+    },
+    {
+      "coverage_status": "partial",
+      "new_expected_rank": 30.272536697813102,
+      "observed_db_impact_sum": 4.611488666100482,
+      "old_db_impact": 0.0,
+      "old_expected_rank": 34.69084661108141,
+      "rank_change": -4.41830991326831,
+      "team": "Penn State",
+      "team_id": "213"
+    },
+    {
+      "coverage_status": "partial",
+      "new_expected_rank": 56.7199196537899,
+      "observed_db_impact_sum": 2.933770407505581,
+      "old_db_impact": 0.0,
+      "old_expected_rank": 60.1696677614501,
+      "rank_change": -3.4497481076601986,
+      "team": "Toledo",
+      "team_id": "2649"
+    },
+    {
+      "coverage_status": "partial",
+      "new_expected_rank": 84.1451786591336,
+      "observed_db_impact_sum": -1.6432009050479028,
+      "old_db_impact": 0.0,
+      "old_expected_rank": 80.82393365694095,
+      "rank_change": 3.3212450021926543,
+      "team": "Jacksonville State",
+      "team_id": "55"
+    },
+    {
+      "coverage_status": "complete",
+      "new_expected_rank": 40.95744914236141,
+      "observed_db_impact_sum": 3.188095790577627,
+      "old_db_impact": 0.0,
+      "old_expected_rank": 44.25041705056619,
+      "rank_change": -3.29296790820478,
+      "team": "Wisconsin",
+      "team_id": "275"
+    },
+    {
+      "coverage_status": "complete",
+      "new_expected_rank": 41.13434674152861,
+      "observed_db_impact_sum": 3.465867434527236,
+      "old_db_impact": 1.3125457211197316,
+      "old_expected_rank": 44.32428564348688,
+      "rank_change": -3.1899389019582713,
+      "team": "Illinois",
+      "team_id": "356"
+    },
+    {
+      "coverage_status": "complete",
+      "new_expected_rank": 25.228401380130638,
+      "observed_db_impact_sum": 7.361377728052684,
+      "old_db_impact": 5.205217846155789,
+      "old_expected_rank": 28.41087852190082,
+      "rank_change": -3.182477141770182,
+      "team": "Tennessee",
+      "team_id": "2633"
+    }
+  ]
+}

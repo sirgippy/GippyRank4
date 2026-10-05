@@ -36,12 +36,6 @@ from gippyrank.context_prior_v1_3 import (
 from gippyrank.context_prior_v1_3 import (
     sha256_json as context_sha256_json,
 )
-from gippyrank.context_prior_v1_4 import (
-    MODERATION_ALPHA,
-    construct_production_prior,
-    production_semantics_sha256,
-    production_spec,
-)
 from gippyrank.context_prior_v1_4_candidate import (
     COLD_START_STATUS,
     FITTED_STATUS,
@@ -426,60 +420,6 @@ def _fitted_input(
         expected_team_id=row.team_id,
         expected_target_season=row.season,
     )
-
-
-@pytest.mark.parametrize("coach_tenure", [4.0, 0.0, -4.0])
-def test_production_context14_exactly_reuses_frozen_candidate_for_fitted_signs(
-    coach_tenure: float,
-) -> None:
-    source = _fitted_input(coach_tenure=coach_tenure)
-    candidate = construct_candidate_prior(source)
-    production = construct_production_prior(source)
-    assert np.array_equal(production.pmf, candidate.pmf)
-    assert production.candidate_semantics_sha256 == candidate.candidate_semantics_sha256
-    assert production.production_semantics_sha256 == production_semantics_sha256()
-    if source.location_decomposition().context_only_subtotal <= 0:
-        assert np.array_equal(production.pmf, source.source_prior_pmf())
-
-
-def test_production_context14_preserves_cold_start_exactly() -> None:
-    history_dir = ROOT / "data/processed/preseason/history/annual/2026"
-    history_source = load_validated_history_annual_artifact(
-        history_dir / "predictions.csv",
-        history_dir / "fitted_instance.json",
-        target_season=2026,
-        trained_through_season=2025,
-    )
-    fallback = Context13FallbackSource.from_history_annual_source(
-        source=history_source,
-        target_season=2026,
-        trained_through_season=2025,
-        team_id="16",
-        team_name="Sacramento State",
-        population=138,
-        cold_start_reason="fcs_to_fbs_transition",
-    )
-    model = _model()
-    instance = _instance()
-    source = Context13PriorInput.cold_start(
-        fitted_instance=instance,
-        fitted_model_source=_research_fit_source(model, instance),
-        transfer_provenance=_provenance(team_id="16", population=138),
-        fallback_source=fallback,
-    )
-    assert np.array_equal(construct_production_prior(source).pmf, fallback.pmf)
-    assert np.array_equal(
-        construct_production_prior(source).pmf, construct_candidate_prior(source).pmf
-    )
-
-
-def test_production_context14_contract_is_promoted_candidate() -> None:
-    spec = production_spec()
-    assert spec["spec_version"] == "1.4"
-    assert spec["status"] == "active_production"
-    assert spec["validation_decision"] == "promote"
-    assert spec["moderation_alpha"] == MODERATION_ALPHA == 0.75
-    assert spec["candidate_semantics_sha256"] == candidate_spec_sha256()
 
 
 def _model_from_metadata(metadata: dict[str, object]) -> DirectRankModel:
