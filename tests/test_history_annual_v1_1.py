@@ -250,6 +250,59 @@ def test_history_semantic_identity_excludes_paths_and_retained_attestation(
     assert history.history11_semantic_specification_sha256() == original
 
 
+def test_history_annual_fit_enables_abnormal_line_search_retry(monkeypatch) -> None:
+    training = [
+        TeamSeason(
+            2004 + index,
+            "fbs",
+            str(index),
+            str(index),
+            20,
+            np.asarray([-0.2, 0.1 + index / 20]),
+            np.asarray([-0.1, 0.2 + index / 25]),
+            np.asarray([5, 8]),
+            {
+                "lag2_z_mean": index / 10,
+                "lag3_z_mean": -index / 20,
+                "long_run_z_mean": index / 30,
+            },
+        )
+        for index in range(5)
+    ]
+    target = history._TargetInput(
+        "target",
+        "Target",
+        20,
+        np.asarray([-0.1, 0.2]),
+        {
+            "lag2_z_mean": 0.1,
+            "lag3_z_mean": -0.05,
+            "long_run_z_mean": 0.08,
+        },
+        None,
+        None,
+    )
+    monkeypatch.setattr(
+        history,
+        "_load_inputs",
+        lambda *_args, **_kwargs: (None, training, [], [], [target]),
+    )
+    original_fit = DirectRankModel.fit
+    fit_calls = []
+
+    def track_fit(cls, rows, features, **kwargs):
+        fit_calls.append(kwargs.copy())
+        return original_fit(rows, features, **kwargs)
+
+    monkeypatch.setattr(DirectRankModel, "fit", classmethod(track_fit))
+    history.reproduce_canonical_history_annual(2027, from_snapshot=False)
+
+    assert len(fit_calls) == 1
+    assert fit_calls[0]["abnormal_retry_maxls"] == (
+        fit_semantics.DIRECT_RANK_OPTIMIZER_ABNORMAL_RETRY_MAXLS
+    )
+
+
 def test_history_constituent_rank_filter_matches_frozen_contract(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

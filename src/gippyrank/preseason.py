@@ -42,6 +42,7 @@ DIRECT_RANK_GAMMA_REGULARIZATION_WEIGHT = 0.25
 DIRECT_RANK_OPTIMIZER_MAXITER = 500
 DIRECT_RANK_OPTIMIZER_FTOL = 1e-10
 DIRECT_RANK_OPTIMIZER_GTOL = 1e-6
+DIRECT_RANK_OPTIMIZER_ABNORMAL_RETRY_MAXLS = 100
 DIRECT_RANK_OPTIMIZER_METHOD = "L-BFGS-B"
 PREPROCESSOR_SCALE_FLOOR = 1e-8
 PREPROCESSOR_STD_DDOF = 0
@@ -341,9 +342,12 @@ class DirectRankModel:
         row_weights: np.ndarray | None = None,
         preprocessor_scale_floor: float = PREPROCESSOR_SCALE_FLOOR,
         preprocessor_std_ddof: int = PREPROCESSOR_STD_DDOF,
+        abnormal_retry_maxls: int | None = None,
     ) -> DirectRankModel:
         if not rows:
             raise ValueError("cannot fit without rows")
+        if abnormal_retry_maxls is not None and abnormal_retry_maxls < 1:
+            raise ValueError("abnormal_retry_maxls must be positive")
         if row_weights is None:
             weights = np.ones(len(rows), dtype=float)
         else:
@@ -547,6 +551,37 @@ class DirectRankModel:
             bounds=beta_bounds + gamma_bounds,
             options=options,
         )
+        retry_diagnostics: dict[str, object] | None = None
+        if (
+            not result.success
+            and abnormal_retry_maxls is not None
+            and int(result.status) == 2
+            and "ABNORMAL" in str(result.message).upper()
+            and np.asarray(result.x).shape
+            == (len(initial_beta) + len(initial_gamma),)
+            and np.isfinite(result.x).all()
+        ):
+            first_result = result
+            retry_options = dict(options)
+            retry_options["maxls"] = max(
+                int(abnormal_retry_maxls), 2 * int(options.get("maxls", 20))
+            )
+            result = minimize(
+                objective,
+                np.asarray(first_result.x, dtype=float),
+                method=DIRECT_RANK_OPTIMIZER_METHOD,
+                jac=gradient,
+                bounds=beta_bounds + gamma_bounds,
+                options=retry_options,
+            )
+            retry_diagnostics = {
+                "initial_status": int(first_result.status),
+                "initial_message": str(first_result.message),
+                "initial_iterations": int(first_result.nit),
+                "initial_function_evaluations": int(first_result.nfev),
+                "initial_objective": float(first_result.fun),
+                "maxls": int(retry_options["maxls"]),
+            }
         diagnostics = {
             "success": bool(result.success),
             "status": int(result.status),
@@ -555,8 +590,28 @@ class DirectRankModel:
             "function_evaluations": int(result.nfev),
             "objective": float(result.fun),
         }
+        if retry_diagnostics is not None:
+            diagnostics["retry"] = retry_diagnostics
         if not result.success:
-            raise RuntimeError(f"preseason optimizer failed: {result.message}")
+            if retry_diagnostics is not None:
+                raise RuntimeError(
+                    "preseason optimizer failed after abnormal line-search retry: "
+                    f"initial status={retry_diagnostics['initial_status']}, "
+                    f"message={retry_diagnostics['initial_message']}, "
+                    f"iterations={retry_diagnostics['initial_iterations']}, "
+                    "function_evaluations="
+                    f"{retry_diagnostics['initial_function_evaluations']}, "
+                    f"objective={retry_diagnostics['initial_objective']}; "
+                    f"retry status={result.status}, message={result.message}, "
+                    f"iterations={result.nit}, function_evaluations={result.nfev}, "
+                    f"objective={result.fun}"
+                )
+            raise RuntimeError(
+                "preseason optimizer failed: "
+                f"status={result.status}, message={result.message}, "
+                f"iterations={result.nit}, function_evaluations={result.nfev}, "
+                f"objective={result.fun}"
+            )
         return cls(
             feature_names,
             preprocessor,

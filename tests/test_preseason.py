@@ -4,8 +4,10 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from scipy.optimize import OptimizeResult
 from scipy.stats import norm, t
 
+import gippyrank.preseason as preseason_module
 from gippyrank.preseason import (
     DirectRankModel,
     GenericRankPrior,
@@ -189,11 +191,146 @@ def test_optimizer_must_converge_and_retains_diagnostics() -> None:
         )
         for index in range(1, 5)
     ]
-    with pytest.raises(RuntimeError, match="optimizer failed"):
-        DirectRankModel.fit(rows, [], optimizer_options={"maxiter": 0})
+    with pytest.raises(RuntimeError, match="preseason optimizer failed") as failure:
+        DirectRankModel.fit(
+            rows,
+            [],
+            optimizer_options={"maxiter": 0},
+            abnormal_retry_maxls=100,
+        )
+    assert "status=" in str(failure.value)
+    assert "function_evaluations=" in str(failure.value)
     model = DirectRankModel.fit(rows, [], optimizer_options={"maxiter": 100})
     assert model.optimizer and model.optimizer["success"] is True
     assert {"iterations", "function_evaluations", "objective"} <= set(model.optimizer)
+
+
+def test_abnormal_line_search_retries_from_last_iterate(monkeypatch) -> None:
+    rows = [
+        TeamSeason(
+            2010,
+            "fbs",
+            str(index),
+            str(index),
+            20,
+            np.asarray([float(index)]),
+            np.asarray([float(index) / 2]),
+            np.asarray([5]),
+            {},
+        )
+        for index in range(1, 5)
+    ]
+    actual_minimize = preseason_module.minimize
+    calls: list[tuple[np.ndarray, dict[str, object]]] = []
+    initial_objectives: list[float] = []
+
+    def fail_once_then_minimize(function, initial, **kwargs):
+        initial = np.asarray(initial, dtype=float)
+        calls.append((initial.copy(), dict(kwargs["options"])))
+        if len(calls) == 1:
+            initial_objectives.append(float(function(initial)))
+            return OptimizeResult(
+                x=initial,
+                success=False,
+                status=2,
+                message="ABNORMAL_TERMINATION_IN_LNSRCH",
+                nit=2,
+                nfev=3,
+                fun=initial_objectives[0],
+            )
+        return actual_minimize(function, initial, **kwargs)
+
+    monkeypatch.setattr(preseason_module, "minimize", fail_once_then_minimize)
+    recovered = DirectRankModel.fit(rows, [], abnormal_retry_maxls=100)
+    assert len(calls) == 2
+    assert np.array_equal(calls[0][0], calls[1][0])
+    assert calls[1][1]["maxls"] == 100
+    assert recovered.optimizer is not None
+    assert recovered.optimizer["success"] is True
+    retry = recovered.optimizer["retry"]
+    assert retry["initial_status"] == 2
+    assert retry["initial_message"] == "ABNORMAL_TERMINATION_IN_LNSRCH"
+    assert retry["initial_iterations"] == 2
+    assert retry["initial_function_evaluations"] == 3
+    assert retry["initial_objective"] == pytest.approx(initial_objectives[0])
+    assert retry["maxls"] == 100
+
+    baseline = DirectRankModel.fit(rows, [], optimizer_options={"maxls": 100})
+    assert np.array_equal(recovered.beta, baseline.beta)
+    assert np.array_equal(recovered.gamma, baseline.gamma)
+    assert np.array_equal(
+        recovered.pmf({}, np.asarray([-0.5, 0.1]), 20),
+        baseline.pmf({}, np.asarray([-0.5, 0.1]), 20),
+    )
+
+
+def test_abnormal_line_search_failure_after_retry_is_raised(monkeypatch) -> None:
+    rows = [
+        TeamSeason(
+            2010,
+            "fbs",
+            str(index),
+            str(index),
+            20,
+            np.asarray([float(index)]),
+            np.asarray([float(index) / 2]),
+            np.asarray([5]),
+            {},
+        )
+        for index in range(1, 5)
+    ]
+    calls = 0
+
+    def always_abnormal(function, initial, **kwargs):
+        nonlocal calls
+        calls += 1
+        initial = np.asarray(initial, dtype=float)
+        return OptimizeResult(
+            x=initial,
+            success=False,
+            status=2,
+            message="ABNORMAL_TERMINATION_IN_LNSRCH",
+            nit=2,
+            nfev=3,
+            fun=function(initial),
+        )
+
+    monkeypatch.setattr(preseason_module, "minimize", always_abnormal)
+    with pytest.raises(
+        RuntimeError,
+        match=r"after abnormal line-search retry: initial status=2.*retry status=2",
+    ):
+        DirectRankModel.fit(rows, [], abnormal_retry_maxls=100)
+    assert calls == 2
+
+
+def test_repeated_identical_fits_have_identical_outputs() -> None:
+    rows = [
+        TeamSeason(
+            2010,
+            "fbs",
+            str(index),
+            str(index),
+            20,
+            np.asarray([location - 0.2, location, location + 0.3]),
+            np.asarray([location - 0.1, location + 0.2, location + 0.4]),
+            np.asarray([3, 4, 5]),
+            {"history": float(index % 3)},
+        )
+        for index, location in enumerate((-1.0, -0.3, 0.4, 1.0))
+    ]
+    fitted = [DirectRankModel.fit(rows, ["history"]) for _ in range(3)]
+    first = fitted[0]
+
+    for other in fitted[1:]:
+        assert np.array_equal(first.beta, other.beta)
+        assert np.array_equal(first.gamma, other.gamma)
+        assert first.optimizer == other.optimizer
+        for row in rows:
+            assert np.array_equal(
+                first.pmf(row.features, row.lag1_z, row.population),
+                other.pmf(row.features, row.lag1_z, row.population),
+            )
 
 
 def test_fitting_permuted_empirical_distributions_is_equivalent() -> None:

@@ -529,6 +529,9 @@ def reproduce_canonical_history_annual(
             },
             preprocessor_scale_floor=fit_semantics.PREPROCESSOR_SCALE_FLOOR,
             preprocessor_std_ddof=fit_semantics.PREPROCESSOR_STD_DDOF,
+            abnormal_retry_maxls=(
+                fit_semantics.DIRECT_RANK_OPTIMIZER_ABNORMAL_RETRY_MAXLS
+            ),
         )
 
     model = fit(training, list(HISTORY_1_1_FEATURES))

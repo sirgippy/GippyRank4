@@ -1,0 +1,108 @@
+{
+  "base_commit": "191e774c101d989589d9908636dd3f3ffc2f97ea",
+  "gradient_check": {
+    "max_absolute_analytic_gradient": 8.106906600493569e-06,
+    "max_absolute_error": 6.103478312865964e-11,
+    "method": "central difference at fitted solution; h = 1e-5 * (1 + abs(parameter))"
+  },
+  "inputs": {
+    "feature_input_path": "data/processed/preseason/team_season_features.csv",
+    "feature_input_sha256": "fd6f171131e38b852b94619338c5580e5f4e8c19f45c74e8135b11b20b1a2019",
+    "fitted_target_rows": 136,
+    "raw_rank_distribution_path": "data/processed/modeling/team_season_rank_distributions.csv (local ignored cache)",
+    "raw_rank_distribution_sha256": "03e4e372017aedb45392ff7d790cea25f461db9b6dc846514c762ff46e2cab00",
+    "training_rows": 2744,
+    "training_seasons": [
+      2004,
+      2025
+    ]
+  },
+  "issue": 178,
+  "optimizer": {
+    "before_result": {
+      "function_evaluations": 44,
+      "iterations": 41,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "objective": 1.685613543083427,
+      "status": 0,
+      "success": true
+    },
+    "beta": [
+      0.4733646788319078,
+      -0.01695096462886048,
+      -0.002514316446282804,
+      0.11773413783842133,
+      0.4486162561291255,
+      -0.018466553867452842,
+      0.015087429162342786,
+      0.0
+    ],
+    "beta_gamma_sha256": "1bcfa899ef58bafc565b67ffdea3668ed3246877ca56baffb208dae39be0c8cd",
+    "ftol": 1e-10,
+    "gamma": [
+      0.15845231613273678,
+      -0.02014912904776752,
+      -0.020590716012470915,
+      0.05877313504577664,
+      -0.01077064814736158,
+      0.039785488827347455,
+      0.0
+    ],
+    "gtol": 1e-06,
+    "maxiter": 500,
+    "method": "L-BFGS-B"
+  },
+  "repeated_runs": {
+    "after_retry_policy": {
+      "default": 50,
+      "failures": 0,
+      "retries_triggered": 0,
+      "single_thread": 50,
+      "total": 100
+    },
+    "all_runs_same_beta_gamma_and_pmf_map": true,
+    "before_retry_policy": {
+      "default": 60,
+      "failures": 0,
+      "single_thread": 40,
+      "total": 100
+    },
+    "pmf_map_sha256": "e4b6824e5aaa453a4fd043cd08ce5a402f7dadc67487ca7cf39034860cf74172",
+    "records_path": "repeated_fit_runs.jsonl",
+    "records_sha256": "4b9e469f60a44bf2343d955d49bfad7bf26707d358c4cc21aa7bfc065853a423"
+  },
+  "retry_policy": {
+    "enabled_for": "History annual builder",
+    "trigger_status": 2,
+    "trigger_message_contains": "ABNORMAL",
+    "minimum_maxls": 100,
+    "maximum_retries": 1,
+    "restart_from_previous_finite_iterate": true,
+    "raises_if_retry_fails": true,
+    "included_in_frozen_statistical_model_identity": false
+  },
+  "retained_2026_comparison": {
+    "fitted_instance_sha256": "583b2583ae30e9056266bc07a4cb034cd9f2a4c36ac4d217a35603c1aa1ece91",
+    "input_fingerprint_available": false,
+    "max_absolute_beta_delta": 3.520735439299649e-11,
+    "max_absolute_gamma_delta": 9.915828574902363e-12,
+    "predictions_csv_sha256": "0b3454a09288019e17739869c42aed3123fdda2163694f52f63bca65baf37f90",
+    "retained_136_row_pmf_map_sha256": "c19a509d48877f576f3f5a7be402b43d4cce92093f763308b2325727575b3193"
+  },
+  "runtime": {
+    "default_threading_environment": {
+      "MKL_NUM_THREADS": null,
+      "OMP_NUM_THREADS": null,
+      "OPENBLAS_NUM_THREADS": null
+    },
+    "numpy": "2.5.2",
+    "python": "3.13.15",
+    "scipy": "1.18.1",
+    "scipy_openblas": "0.3.34.0.0",
+    "single_thread_environment": {
+      "MKL_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1"
+    }
+  }
+}
