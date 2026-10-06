@@ -1,0 +1,68 @@
+name: Issue 178 optimizer diagnostics
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/optimizer-diagnostics-issue-178.yml"
+      - "scripts/diagnose_history_optimizer_issue_178.py"
+      - "tests/test_context_prior_v1_4_candidate.py"
+      - "src/gippyrank/history_annual_v1_1.py"
+      - "src/gippyrank/preseason.py"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".python-version"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    name: diagnostic runner ${{ matrix.runner }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [1, 2, 3, 4, 5]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Install locked dependencies
+        run: uv sync --locked
+
+      - name: Run default-thread diagnostic subprocess
+        env:
+          ISSUE178_MODE: default
+        run: |
+          mkdir -p "$RUNNER_TEMP/issue-178"
+          uv run python scripts/diagnose_history_optimizer_issue_178.py \
+            --output "$RUNNER_TEMP/issue-178/runner-${{ matrix.runner }}-default.json"
+
+      - name: Run single-thread diagnostic subprocess
+        env:
+          ISSUE178_MODE: single_thread
+          OPENBLAS_NUM_THREADS: "1"
+          OMP_NUM_THREADS: "1"
+          MKL_NUM_THREADS: "1"
+        run: |
+          uv run python scripts/diagnose_history_optimizer_issue_178.py \
+            --output "$RUNNER_TEMP/issue-178/runner-${{ matrix.runner }}-single-thread.json"
+
+      - name: Upload optimizer diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue-178-runner-${{ matrix.runner }}
+          path: ${{ runner.temp }}/issue-178/
+          if-no-files-found: error
