@@ -5,9 +5,11 @@
 This branch starts at `origin/main` commit
 `191e774c101d989589d9908636dd3f3ffc2f97ea`. It adds a diagnostic script and a
 GitHub Actions experiment. The original fit still raises on an unsuccessful
-SciPy result. A separate, explicitly labeled diagnostic pass restarts from a
-captured finite `ABNORMAL` iterate with `maxls=100`; it does not alter model
-code or turn a failed fit into a successful baseline result.
+SciPy result. Separate, explicitly labeled diagnostic passes restart from
+captured finite `ABNORMAL` iterates with `maxls=100`. If a later distinct fit
+in the reproducer also fails, it gets its own captured-iterate restart in
+another pass. The script does not retry the same failed fit repeatedly, alter
+model code, or turn a failed fit into a successful baseline result.
 
 The script invokes
 `test_future_history_builder_matches_the_history_1_1_annual_procedure` with
@@ -59,15 +61,15 @@ include the derivative of that clipping operation. The main fit therefore
 reports relative-objective convergence with a maximum analytic-gradient
 magnitude of about `0.043`, rather than projected-gradient convergence. This
 is consistent with line-search sensitivity, but the local run alone does not
-prove it caused the runner-specific `ABNORMAL` result. The hosted artifacts
-will determine whether the raw failure has the same finite iterate and
-gradient signature, whether single-thread execution changes it, and whether a
-manual larger-`maxls` restart converges to the same coefficients and PMFs.
+prove it caused the runner-specific `ABNORMAL` result. The hosted experiment
+below checks the finite iterate and gradient signature, single-thread
+behavior, and whether a manual larger-`maxls` restart converges to the same
+coefficients and PMFs as an ordinary successful run.
 
 ## Hosted results
 
 The five-runner experiment is recorded by the pull request's
 `Issue 178 optimizer diagnostics` workflow. Its per-process JSON files are
 uploaded as artifacts named `issue-178-runner-1` through
-`issue-178-runner-5`. This section will summarize those artifacts after the
-workflow completes.
+`issue-178-runner-5`. The final hosted results will be added here after the
+workflow completes on this revision.

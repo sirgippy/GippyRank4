@@ -2,9 +2,10 @@
 
 This script is diagnostic only. Its first test invocation calls the production
 fit without changing its options or failure behavior. If that fit returns an
-ABNORMAL result, a separate second invocation measures a manual restart from
-the captured iterate with a larger line-search limit; the library code is
-never patched with a retry policy.
+ABNORMAL result, separate diagnostic invocations measure manual restarts from
+captured iterates with a larger line-search limit. If another distinct fit in
+the reproduction also fails, that fit gets its own captured-iterate restart.
+The library code is never patched with a retry policy.
 """
 
 from __future__ import annotations
@@ -243,8 +244,7 @@ def _run_reproduction(
     root: Path,
     test_module: Any,
     *,
-    restart_call_index: int | None = None,
-    restart_parameters: np.ndarray | None = None,
+    restart_parameters_by_call: Mapping[int, np.ndarray] | None = None,
 ) -> dict[str, Any]:
     original_minimize = preseason.minimize
     original_fit_descriptor = preseason.DirectRankModel.__dict__["fit"]
@@ -295,10 +295,13 @@ def _run_reproduction(
         method = kwargs.get("method")
         options = dict(kwargs.get("options") or {})
         fit_context = fit_contexts[event_index]
-        is_restart = restart_call_index == event_index
+        is_restart = (
+            restart_parameters_by_call is not None
+            and event_index in restart_parameters_by_call
+        )
         start = (
-            np.asarray(restart_parameters, dtype=float)
-            if is_restart and restart_parameters is not None
+            np.asarray(restart_parameters_by_call[event_index], dtype=float)
+            if is_restart
             else initial
         )
         observed: dict[str, Any] = {
@@ -384,6 +387,9 @@ def _run_reproduction(
                 else "additional_history_fit"
             ),
             "restart_from_captured_iterate": is_restart,
+            "restart_source_parameters_sha256": (
+                _array_hash(start) if is_restart else None
+            ),
             "method": method,
             "x0": initial.tolist(),
             "starting_parameters": start.tolist(),
@@ -576,26 +582,81 @@ def _run_experiment(repo_root: Path) -> dict[str, Any]:
             None,
         )
         manual_restart = None
+        restart_passes: list[dict[str, Any]] = []
         if (
             failing is not None
             and failing.get("status") == 2
             and "ABNORMAL" in str(failing.get("message", ""))
             and _array_finite(failing.get("result_x", []))
         ):
-            failed_index = int(failing["call_index"])
-            failed_parameters = np.asarray(failing["result_x"], dtype=float)
-            with tempfile.TemporaryDirectory(
-                prefix="issue178-history-restart-"
-            ) as restart_dir:
-                manual_restart = _run_reproduction(
-                    Path(restart_dir),
-                    test_module,
-                    restart_call_index=failed_index,
-                    restart_parameters=failed_parameters,
+            restart_parameters_by_call = {
+                int(failing["call_index"]): np.asarray(failing["result_x"], dtype=float)
+            }
+            while len(restart_passes) < 4:
+                with tempfile.TemporaryDirectory(
+                    prefix="issue178-history-restart-"
+                ) as restart_dir:
+                    candidate = _run_reproduction(
+                        Path(restart_dir),
+                        test_module,
+                        restart_parameters_by_call=restart_parameters_by_call,
+                    )
+                pass_number = len(restart_passes) + 1
+                restart_passes.append(
+                    {
+                        "pass": pass_number,
+                        "restart_call_indices": sorted(restart_parameters_by_call),
+                        "test_succeeded": candidate["test_succeeded"],
+                        "test_exception": candidate["test_exception"],
+                        "optimizer_runs": [
+                            {
+                                "call_index": run["call_index"],
+                                "model_role": run["model_role"],
+                                "restart_from_captured_iterate": run[
+                                    "restart_from_captured_iterate"
+                                ],
+                                "success": run["success"],
+                                "status": run["status"],
+                                "message": run["message"],
+                                "iterations": run["optimize_result_fields"].get("nit"),
+                                "function_evaluations": run[
+                                    "optimize_result_fields"
+                                ].get("nfev"),
+                                "objective": run["objective_reevaluated_at_result_x"],
+                                "result_x_sha256": _array_hash(
+                                    np.asarray(run.get("result_x", []), dtype=float)
+                                ),
+                            }
+                            for run in candidate["optimizer_runs"]
+                        ],
+                        "prediction_sha256": candidate["prediction_sha256"],
+                        "pmf_map_sha256": candidate["pmf_map_sha256"],
+                    }
                 )
-            manual_restart["diagnostic_only"] = True
-            manual_restart["restart_source_call_index"] = failed_index
-            manual_restart["restart_maxls"] = 100
+                manual_restart = candidate
+                next_failure = next(
+                    (
+                        run
+                        for run in candidate["optimizer_runs"]
+                        if run.get("status") == 2
+                        and "ABNORMAL" in str(run.get("message", ""))
+                        and _array_finite(run.get("result_x", []))
+                        and int(run["call_index"]) not in restart_parameters_by_call
+                    ),
+                    None,
+                )
+                if next_failure is None:
+                    break
+                restart_parameters_by_call[int(next_failure["call_index"])] = (
+                    np.asarray(next_failure["result_x"], dtype=float)
+                )
+            if manual_restart is not None:
+                manual_restart["diagnostic_only"] = True
+                manual_restart["restart_source_call_indices"] = sorted(
+                    restart_parameters_by_call
+                )
+                manual_restart["restart_maxls"] = 100
+                manual_restart["restart_passes"] = restart_passes
 
     return {
         "schema_version": 1,
@@ -655,6 +716,7 @@ def _compact_build(build: Mapping[str, Any]) -> dict[str, Any]:
         "pmf_map_sha256": build.get("pmf_map_sha256"),
         "pmf_team_count": build.get("pmf_team_count"),
         "fitted_model": fitted_model,
+        "restart_passes": build.get("restart_passes"),
     }
 
 
