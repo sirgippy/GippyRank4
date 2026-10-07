@@ -1,0 +1,9 @@
+phase,case_or_scope,started_utc,ended_utc,active_minutes,measurement_note
+source_acquisition,First source discovery/download batch,2026-10-07T12:14:12Z,2026-10-07T12:16:31Z,2.3,Timed batch for official source discovery and initial downloads; the earlier Liberty search pass was already untimed
+source_acquisition,Corrected Air Force 2024 guide URL,2026-10-07T12:21:04Z,2026-10-07T12:21:12Z,0.1,Timed correction after the first URL returned HTML instead of a PDF
+source_acquisition,Original Liberty search pass and other source lookups,,,,Not timed prospectively; minutes are intentionally not reconstructed
+transcription_extraction,Initial PDF extraction and page inspection,2026-10-07T12:16:45Z,2026-10-07T12:21:04Z,4.3,Active extraction/review interval; not equivalent to keyboard-only transcription time
+transcription_extraction,Focused matrix page extraction and completeness audit,2026-10-07T12:21:12Z,2026-10-07T12:25:01Z,3.8,"Focused extraction/review of Ohio State, Toledo, Clemson, Air Force, Liberty, TCU and BYU source pages"
+manual_transcription,Ohio State 2014; Toledo 2014; Clemson 2019; Air Force 2023 matrices,2026-10-07T12:34:26Z,2026-10-07T12:40:37Z,6.2,Manually entered 56 games and 280 five-position starts from the official tables
+identity_resolution,Final source-label alias audit,2026-10-07T12:48:01Z,2026-10-07T12:48:19Z,0.3,Verified 31 source labels map to 29 players; three manual spellings were cross-checked; initial identity lookup was not separately timed
+target_roster_resolution,Preseason/retrospective boundary and status verification,2026-10-07T12:45:51Z,2026-10-07T12:47:12Z,1.4,"Verified dated Liberty notes, Air Force media-day notes, Toledo season roster, Ohio State guide and Clemson guide; initial lookups were not separately timed"
