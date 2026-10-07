@@ -12,6 +12,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from gippyrank.research.data_paths import cfbd_roster_raw_dir, raw_root_relative_path
 from gippyrank.research.offensive_line_roster_continuity import (
     ContinuityBuild,
     build_continuity_artifacts,
@@ -19,7 +20,7 @@ from gippyrank.research.offensive_line_roster_continuity import (
 from gippyrank.transfer_oracle import normalize_team_name
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_RAW_ROOT = ROOT / "data/raw/cfbd/offensive_line_shared_roster_issue_183"
+DEFAULT_RAW_ROOT = cfbd_roster_raw_dir()
 DEFAULT_OUTPUT_DIR = ROOT / "data/processed/offensive_line_shared_roster_issue_183"
 DEFAULT_START_SEASON = 2004
 ISSUE_181_SAMPLE_PATH = (
@@ -42,12 +43,17 @@ def _sha256(content: bytes) -> str:
 def _read_response(
     path: Path,
     *,
+    raw_root: Path,
     endpoint: str,
     parameters: dict[str, Any],
 ) -> tuple[list[dict[str, Any]] | None, dict[str, Any]]:
     sidecar_path = path.with_name(f"{path.name}.provenance.json")
     if not path.exists() and not sidecar_path.exists():
-        return None, {"path": str(path), "status": "not_acquired"}
+        return None, {
+            "path": raw_root_relative_path(path, raw_root),
+            "path_base": "raw_root",
+            "status": "not_acquired",
+        }
     if not path.exists() or not sidecar_path.exists():
         raise RuntimeError(
             f"Raw source and provenance sidecar must appear together: {path}"
@@ -69,7 +75,8 @@ def _read_response(
     return payload, {
         "endpoint": endpoint,
         "parameters": parameters,
-        "path": str(path.resolve().relative_to(ROOT.resolve())),
+        "path": raw_root_relative_path(path, raw_root),
+        "path_base": "raw_root",
         "record_count": len(payload),
         "sha256": digest,
         "retrieved_at": provenance.get("retrieved_at"),
@@ -85,6 +92,7 @@ def load_source_corpus(
     set[tuple[str, int]],
     list[dict[str, Any]],
 ]:
+    raw_root = raw_root.expanduser().resolve()
     roster_payloads: dict[tuple[str, int], list[dict[str, Any]]] = {}
     teams_by_season: dict[int, list[dict[str, Any]]] = {}
     roster_response_seasons: set[tuple[str, int]] = set()
@@ -92,6 +100,7 @@ def load_source_corpus(
     for season in range(start_season, end_season + 1):
         teams, audit = _read_response(
             raw_root / "teams_fbs" / f"{season}.json",
+            raw_root=raw_root,
             endpoint="/teams/fbs",
             parameters={"year": season},
         )
@@ -101,6 +110,7 @@ def load_source_corpus(
         for classification in ("fbs", "fcs"):
             payload, audit = _read_response(
                 raw_root / "roster" / classification / f"{season}.json",
+                raw_root=raw_root,
                 endpoint="/roster",
                 parameters={"year": season, "classification": classification},
             )
@@ -218,6 +228,23 @@ def _build_issue181_overlap_coverage(
                         "ol_share_with_no_prior_roster_season_at_current_program"
                     ],
                     "history_left_censored": summary["history_left_censored"],
+                    "continuity_history_window_start_season": summary[
+                        "continuity_history_window_start_season"
+                    ],
+                    "first_evaluable_target_season": summary[
+                        "first_evaluable_target_season"
+                    ],
+                    "continuity_target_evaluable": summary[
+                        "continuity_target_evaluable"
+                    ],
+                    "continuity_history_status": summary["continuity_history_status"],
+                    "continuity_censor_reason": summary["continuity_censor_reason"],
+                    "pair_count_history_censored": summary[
+                        "pair_count_history_censored"
+                    ],
+                    "pair_count_identity_unresolved": summary[
+                        "pair_count_identity_unresolved"
+                    ],
                 }
             )
     return joined
@@ -331,6 +358,14 @@ def _build_report(
             row["ol_players_median"] or "—",
             row["ol_players_max"] or "—",
             _format_rate(row["ol_player_id_link_rate"]),
+            (
+                "Evaluable"
+                if row["continuity_target_evaluable"]
+                else "Censored: incomplete pre-2009 history"
+                if row["continuity_history_status"]
+                == "censored_incomplete_pre_2009_history"
+                else "Censored: requested panel start"
+            ),
         ]
         for row in coverage
     ]
@@ -361,19 +396,34 @@ def _build_report(
     sample_by_window: dict[str, list[dict[str, Any]]] = {}
     for row in issue181_overlap:
         sample_by_window.setdefault(str(row["window_start"]), []).append(row)
-    issue181_rows = [
-        [
-            window,
-            len(window_rows),
-            sum(bool(row["identifiable_ol_player_count"]) for row in window_rows),
-            sum(not bool(row["identifiable_ol_player_count"]) for row in window_rows),
-            sum(
-                int(row["pairs_with_at_least_1_shared_season"] or 0)
-                for row in window_rows
-            ),
+    issue181_rows = []
+    for window, window_rows in sorted(sample_by_window.items()):
+        evaluable_rows = [
+            row for row in window_rows if row["continuity_target_evaluable"]
         ]
-        for window, window_rows in sorted(sample_by_window.items())
-    ]
+        issue181_rows.append(
+            [
+                window,
+                len(window_rows),
+                len(window_rows) - len(evaluable_rows),
+                len(evaluable_rows),
+                sum(
+                    bool(row["identifiable_ol_player_count"]) for row in evaluable_rows
+                ),
+                sum(
+                    not bool(row["identifiable_ol_player_count"])
+                    for row in evaluable_rows
+                ),
+                (
+                    sum(
+                        int(row["pairs_with_at_least_1_shared_season"] or 0)
+                        for row in evaluable_rows
+                    )
+                    if evaluable_rows
+                    else "—"
+                ),
+            ]
+        )
     latest_fbs_retrieval = max(
         (
             str(row["retrieved_at"])
@@ -398,7 +448,7 @@ def _build_report(
         "",
         "The acquisition script requests CFBD `/teams/fbs?year=T` and `/roster?year=T&classification=fbs|fcs` for each season. FBS lists define the expected team-season denominator and target roster pool. FCS roster rows are retained for same-program history when the school name maps exactly to one CFBD FBS team ID, and for transfer-ID auditing when the source player ID also appears in an FBS roster. No fuzzy team matching is used; other FCS rows remain preserved in the raw corpus but are omitted from this FBS-focused normalized panel.",
         "",
-        f"Verified raw requests in this build: {inventory_hashes}/{len(source_inventory)}. Each response is stored byte-for-byte with query parameters, retrieval time, row count, and SHA-256 sidecar. The acquisition manifest contains no API credential.",
+        f"Verified raw requests in this build: {inventory_hashes}/{len(source_inventory)}. Each response is stored byte-for-byte with query parameters, retrieval time, row count, and SHA-256 sidecar. The acquisition manifest contains no API credential. Source paths are relative to the selected raw-data root, so external cache locations do not depend on the checkout path.",
         "",
         "CFBD documents historical rosters from 2004 onward and notes that player and biographical field completeness varies by season and team ([data availability](https://apinext.collegefootballdata.com/data-availability), [roster endpoint schema](https://apinext.collegefootballdata.com/api/teams)).",
         "",
@@ -423,11 +473,12 @@ def _build_report(
                 "OL median",
                 "OL max",
                 "OL ID rate",
+                "Continuity history",
             ],
             season_rows,
         ),
         "",
-        "Rates use FBS roster rows as the denominator; position rate measures whether CFBD supplied a nonblank label, not whether that label is season-accurate. The complete counts and rates are in `coverage_by_season.csv`; each expected team-season and its missingness category are in `team_season_coverage.csv`.",
+        "Rates use FBS roster rows as the denominator; position rate measures whether CFBD supplied a nonblank label, not whether that label is season-accurate. The complete counts, censor status, and rates are in `coverage_by_season.csv`; each expected team-season and its missingness category are in `team_season_coverage.csv`.",
         "",
         "## Position normalization",
         "",
@@ -450,11 +501,12 @@ def _build_report(
         "",
         "## Shared-roster continuity construction",
         "",
-        "For each target FBS season T, the current roster identifies the target OL pool. A pair's prior shared seasons are the intersection of its members' earlier same-program roster seasons, restricted to years `< T`. The pair table reports the number, earliest, most recent, and consecutive shared seasons immediately before T. Seasons at a different school never contribute. Target-season roster membership itself never contributes to a pair score.",
+        "For each target FBS season T, the current roster identifies the target OL pool. A pair's prior shared seasons are the intersection of its members' earlier same-program roster seasons, restricted to years `< T` and on or after the complete-history window start. Seasons at a different school never contribute. Target-season roster membership itself never contributes to a pair score.",
         "",
         "The team-season summaries report total/mean/maximum pairwise shared seasons; pair counts at 1/2/3 shared seasons; the largest set of target OL simultaneously present on one prior same-program roster; the share of ID-linked target OL with no prior same-program roster row observed in this panel; and aggregate prior roster seasons. These are descriptive candidates, not selected production features.",
         "",
-        f"Season {start_season} is left-censored: the source panel begins in that year, so its prior continuity values are blank rather than zero. For later seasons, ‘no prior’ means no earlier same-program roster row was observed in the acquired panel; it does not prove that the player had never attended the school before {start_season}.",
+        "Roster coverage changes sharply before 2009: CFBD has 3,742 FBS rows in 2008 versus 12,611 in 2009. In 2009, only 4 of 2,142 identified OL have a prior same-program link. Those apparent zero links primarily reflect incomplete historical roster coverage. We treat 2009 as the earliest plausible full-roster history season and 2010 as the first target season whose continuity can be evaluated.",
+        f"Targets before {artifacts.source_audit['first_evaluable_target_season']} are censored when their history depends on incomplete pre-2009 roster coverage or on a missing requested-panel prior season. Their pair measures and continuity summaries are blank and carry `continuity_history_status`; these blanks are not zeros. An evaluated pair with no shared roster season has count `0` and status `observed_zero_shared_prior_roster_seasons_in_history_window`. The history window starts in {artifacts.source_audit['continuity_history_window_start_season']} for this build.",
         "",
         "## Retrospective roster boundary",
         "",
@@ -462,14 +514,16 @@ def _build_report(
         "",
         "## Frozen issue 181 sample comparison",
         "",
-        f"The builder joins all {len(issue181_overlap)} target team-seasons from the frozen issue 181 sample, copied from commit `{ISSUE_181_SAMPLE_COMMIT}`. The sample rows and strata are unchanged; joins use target season and normalized canonical team name, with the explicit `Appalachian State` → `App State` alias. The table counts selected team-seasons with at least one identified OL, with none, and the number of pairs with any shared prior same-school roster season. Row-level joins are in `issue_181_overlap_coverage.csv`.",
+        f"The builder joins all {len(issue181_overlap)} target team-seasons from the frozen issue 181 sample, copied from commit `{ISSUE_181_SAMPLE_COMMIT}`. The sample rows and strata are unchanged; joins use target season and normalized canonical team name, with the explicit `Appalachian State` → `App State` alias. Pair totals include only evaluable rows. Censored rows are reported separately and their blank pair measures are not counted as zero. Row-level joins are in `issue_181_overlap_coverage.csv`.",
         "",
         _markdown_table(
             [
                 "Window start",
                 "Sample rows",
-                "With identified OL",
-                "No identified OL",
+                "Censored rows",
+                "Evaluable rows",
+                "Evaluable with identified OL",
+                "Evaluable with no identified OL",
                 "Pairs with shared prior season",
             ],
             issue181_rows,
@@ -502,7 +556,7 @@ def _build_report(
         "uv run python scripts/build_offensive_line_shared_roster_continuity.py --start-season 2004 --end-season 2026",
         "```",
         "",
-        "The fetch command requires `CFBD_API_KEY`; reruns validate and reuse the byte-preserved responses rather than overwriting them. The builder is offline and checks every raw payload against its provenance hash before producing compressed CSVs. Gzip output timestamps are fixed so identical inputs produce identical artifacts.",
+        "Set `GIPPYRANK_DATA_DIR` to select the shared data root. When unset, it defaults to `$XDG_CACHE_HOME/gippyrank/research-data` or `~/.cache/gippyrank/research-data`; the CFBD corpus lives at `<data-root>/raw/cfbd/offensive_line_shared_roster_issue_183`. Pass `--raw-root` to select another corpus for a run. The fetch command requires `CFBD_API_KEY` only when a response is not already cached; reruns validate and reuse byte-preserved responses rather than overwriting them. The builder is offline and checks every raw payload against its provenance hash before producing compressed CSVs. Normal CI does not acquire or rebuild this external corpus. Gzip output timestamps are fixed so identical inputs produce identical artifacts.",
     ]
     return "\n".join(lines) + "\n"
 
@@ -513,6 +567,7 @@ def build_dataset(
     output_dir: Path,
     start_season: int,
     end_season: int,
+    issue181_sample_path: Path = ISSUE_181_SAMPLE_PATH,
 ) -> ContinuityBuild:
     roster_payloads, teams_by_season, roster_responses, source_inventory = (
         load_source_corpus(
@@ -541,9 +596,7 @@ def build_dataset(
         "team_season_summaries.csv": artifacts.team_season_summaries,
         "source_inventory.csv": source_inventory,
     }
-    issue181_overlap = _build_issue181_overlap_coverage(
-        artifacts, ISSUE_181_SAMPLE_PATH
-    )
+    issue181_overlap = _build_issue181_overlap_coverage(artifacts, issue181_sample_path)
     outputs["issue_181_overlap_coverage.csv"] = issue181_overlap
     for filename, rows in outputs.items():
         write_csv(output_dir / filename, rows)

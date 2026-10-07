@@ -16,6 +16,8 @@ from typing import Any
 
 from gippyrank.transfer_oracle import normalize_player_name, normalize_team_name
 
+COMPLETE_ROSTER_HISTORY_START_SEASON = 2009
+
 OL_POSITION_LABELS = frozenset(
     {
         "C",
@@ -575,6 +577,26 @@ def derive_continuity_tables(
     list[dict[str, Any]],
 ]:
     """Build FBS target coverage, player-pair records, and team summaries."""
+    history_window_start = max(start_season, COMPLETE_ROSTER_HISTORY_START_SEASON)
+    first_evaluable_target_season = max(
+        COMPLETE_ROSTER_HISTORY_START_SEASON + 1, start_season + 1
+    )
+
+    def history_status(season: int) -> tuple[bool, str, str]:
+        if season < COMPLETE_ROSTER_HISTORY_START_SEASON + 1:
+            return (
+                False,
+                "censored_incomplete_pre_2009_history",
+                "source_history_incomplete_before_2009",
+            )
+        if season == start_season:
+            return (
+                False,
+                "censored_requested_panel_start",
+                "requested_panel_has_no_prior_roster_season",
+            )
+        return True, "evaluable_complete_history_window", ""
+
     memberships: dict[tuple[str, str], set[int]] = defaultdict(set)
     roster_rows: dict[tuple[int, str], list[Mapping[str, Any]]] = defaultdict(list)
     for row in rows:
@@ -593,6 +615,9 @@ def derive_continuity_tables(
     pair_rows: list[dict[str, Any]] = []
     summary_rows: list[dict[str, Any]] = []
     for season in range(start_season, end_season + 1):
+        target_evaluable, continuity_history_status, censor_reason = history_status(
+            season
+        )
         teams = list(fbs_teams_by_season.get(season, ()))
         season_coverage: list[dict[str, Any]] = []
         for team in sorted(
@@ -615,7 +640,7 @@ def derive_continuity_tables(
                     {
                         year
                         for year in memberships.get((team_id, unit["player_id"]), set())
-                        if year < season
+                        if history_window_start <= year < season
                     }
                 )
                 for unit in units
@@ -660,6 +685,11 @@ def derive_continuity_tables(
                 "team_name": team_name,
                 "roster_response_available": is_roster_response_available,
                 "roster_status": roster_status,
+                "continuity_history_window_start_season": history_window_start,
+                "first_evaluable_target_season": first_evaluable_target_season,
+                "continuity_target_evaluable": target_evaluable,
+                "continuity_history_status": continuity_history_status,
+                "continuity_censor_reason": censor_reason,
                 "roster_player_rows": len(records),
                 "unique_roster_player_ids": len(unique_roster_ids),
                 "roster_rows_with_player_id": len(records) - missing_id_rows,
@@ -673,14 +703,14 @@ def derive_continuity_tables(
                 "ol_player_ids_missing": len(units) - len(identified_units),
                 "ol_with_prior_same_program_roster_link": (
                     ""
-                    if season == start_season
+                    if not target_evaluable
                     else sum(count > 0 for count in linked_prior_year_counts)
                 ),
                 "ol_with_no_prior_same_program_roster_link": (
-                    "" if season == start_season else no_prior_linked_count
+                    "" if not target_evaluable else no_prior_linked_count
                 ),
                 "aggregate_prior_program_roster_seasons_for_linked_ol": (
-                    "" if season == start_season else sum(linked_prior_year_counts)
+                    "" if not target_evaluable else sum(linked_prior_year_counts)
                 ),
                 "ol_source_rows": ol_record_count,
                 "ambiguous_ol_position_rows": ambiguous_ol_rows,
@@ -689,9 +719,8 @@ def derive_continuity_tables(
             coverage_rows.append(coverage)
             season_coverage.append(coverage)
 
-            left_censored = season == start_season
             prior_counts: list[int] = []
-            for prior_season in range(start_season, season):
+            for prior_season in range(history_window_start, season):
                 prior_ids = {
                     unit["player_id"]
                     for unit in units
@@ -703,6 +732,7 @@ def derive_continuity_tables(
                     prior_counts.append(len(prior_ids))
 
             evaluable_pair_count = 0
+            history_censored_pair_count = 0
             unresolved_pair_count = 0
             pair_shared_season_counts: list[int] = []
             pairs_with_1 = pairs_with_2 = pairs_with_3 = 0
@@ -717,19 +747,22 @@ def derive_continuity_tables(
                             (team_id, second["player_id"]), set()
                         )
                         shared = sorted(
-                            year for year in first_years & second_years if year < season
+                            year
+                            for year in first_years & second_years
+                            if history_window_start <= year < season
                         )
-                        if left_censored:
-                            pair_status = "left_censored_no_prior_source_season"
+                        if not target_evaluable:
+                            pair_status = continuity_history_status
                             shared_value: int | str = ""
                             earliest: int | str = ""
                             most_recent: int | str = ""
                             consecutive: int | str = ""
+                            history_censored_pair_count += 1
                         else:
                             pair_status = (
-                                "shared_prior_roster_seasons_observed"
+                                "observed_shared_prior_roster_seasons_in_history_window"
                                 if shared
-                                else "no_shared_prior_roster_season_observed"
+                                else "observed_zero_shared_prior_roster_seasons_in_history_window"
                             )
                             shared_value = len(shared)
                             earliest = shared[0] if shared else ""
@@ -764,6 +797,11 @@ def derive_continuity_tables(
                             "player_2_name": second["player_name"],
                             "player_2_position": second["position_original"],
                             "player_2_identity_status": second["identity_status"],
+                            "continuity_history_window_start_season": history_window_start,
+                            "first_evaluable_target_season": first_evaluable_target_season,
+                            "continuity_target_evaluable": target_evaluable,
+                            "continuity_history_status": continuity_history_status,
+                            "continuity_censor_reason": censor_reason,
                             "shared_prior_season_count": shared_value,
                             "earliest_shared_prior_season": earliest,
                             "most_recent_shared_prior_season": most_recent,
@@ -775,48 +813,52 @@ def derive_continuity_tables(
             summary_rows.append(
                 {
                     **coverage,
-                    "history_left_censored": left_censored,
+                    "history_left_censored": not target_evaluable,
                     "pair_count_evaluable": evaluable_pair_count,
+                    "pair_count_history_censored": history_censored_pair_count,
                     "pair_count_identity_unresolved": unresolved_pair_count,
                     "total_pairwise_shared_seasons": (
-                        "" if left_censored else sum(pair_shared_season_counts)
+                        "" if not target_evaluable else sum(pair_shared_season_counts)
                     ),
                     "mean_pairwise_shared_seasons": (
                         ""
-                        if left_censored or not pair_shared_season_counts
+                        if not target_evaluable or not pair_shared_season_counts
                         else sum(pair_shared_season_counts)
                         / len(pair_shared_season_counts)
                     ),
                     "max_pairwise_shared_seasons": (
                         ""
-                        if left_censored or not pair_shared_season_counts
+                        if not target_evaluable or not pair_shared_season_counts
                         else max(pair_shared_season_counts)
                     ),
                     "pairs_with_at_least_1_shared_season": ""
-                    if left_censored
+                    if not target_evaluable
                     else pairs_with_1,
                     "pairs_with_at_least_2_shared_seasons": ""
-                    if left_censored
+                    if not target_evaluable
                     else pairs_with_2,
                     "pairs_with_at_least_3_shared_seasons": ""
-                    if left_censored
+                    if not target_evaluable
                     else pairs_with_3,
                     "largest_target_ol_group_on_one_prior_roster": (
-                        "" if left_censored else max(prior_counts, default=0)
+                        "" if not target_evaluable else max(prior_counts, default=0)
                     ),
                     "ol_with_no_prior_roster_season_at_current_program": (
-                        "" if left_censored else no_prior_linked_count
+                        "" if not target_evaluable else no_prior_linked_count
                     ),
                     "ol_share_with_no_prior_roster_season_at_current_program": (
                         ""
-                        if left_censored or not linked_prior_year_counts
+                        if not target_evaluable or not linked_prior_year_counts
                         else no_prior_linked_count / len(linked_prior_year_counts)
                     ),
                     "aggregate_prior_program_roster_seasons_for_linked_ol": (
-                        "" if left_censored else sum(linked_prior_year_counts)
+                        "" if not target_evaluable else sum(linked_prior_year_counts)
                     ),
                     "prior_roster_seasons_available_in_panel": max(
                         0, season - start_season
+                    ),
+                    "continuity_history_seasons_available": max(
+                        0, season - history_window_start
                     ),
                 }
             )
@@ -859,6 +901,32 @@ def derive_continuity_tables(
         coverage_by_season.append(
             {
                 "season": season,
+                "continuity_history_window_start_season": history_window_start,
+                "first_evaluable_target_season": first_evaluable_target_season,
+                "continuity_target_evaluable": target_evaluable,
+                "continuity_history_status": continuity_history_status,
+                "continuity_censor_reason": censor_reason,
+                "continuity_evaluable_team_season_count": (
+                    expected if target_evaluable else 0
+                ),
+                "continuity_censored_team_season_count": (
+                    0 if target_evaluable else expected
+                ),
+                "pair_count_evaluable": sum(
+                    int(row["pair_count_evaluable"])
+                    for row in summary_rows
+                    if int(row["season"]) == season
+                ),
+                "pair_count_history_censored": sum(
+                    int(row["pair_count_history_censored"])
+                    for row in summary_rows
+                    if int(row["season"]) == season
+                ),
+                "pair_count_identity_unresolved": sum(
+                    int(row["pair_count_identity_unresolved"])
+                    for row in summary_rows
+                    if int(row["season"]) == season
+                ),
                 "expected_fbs_teams": expected,
                 "roster_response_available": ("fbs", season) in roster_response_seasons,
                 "roster_available_team_count": expected - missing - unavailable,
@@ -902,7 +970,9 @@ def derive_continuity_tables(
                 "ol_players_with_prior_same_program_roster_link": sum(
                     int(row["ol_with_prior_same_program_roster_link"] or 0)
                     for row in season_coverage
-                ),
+                )
+                if target_evaluable
+                else "",
                 "unmatched_roster_team_rows": sum(
                     row["team_match_status"] != "matched_fbs_program"
                     for row in rows
@@ -1081,6 +1151,17 @@ def build_continuity_artifacts(
     )
     ol_rows = [row for row in rows if row["normalized_ol_status"] == "offensive_line"]
     source_audit = build_source_audit(rows, roster_payloads, fbs_teams_by_season)
+    source_audit.update(
+        {
+            "complete_roster_history_start_season": COMPLETE_ROSTER_HISTORY_START_SEASON,
+            "continuity_history_window_start_season": max(
+                start_season, COMPLETE_ROSTER_HISTORY_START_SEASON
+            ),
+            "first_evaluable_target_season": max(
+                COMPLETE_ROSTER_HISTORY_START_SEASON + 1, start_season + 1
+            ),
+        }
+    )
     return ContinuityBuild(
         player_seasons=rows,
         ol_player_seasons=ol_rows,

@@ -12,7 +12,7 @@ This research panel measures whether target-season offensive linemen shared earl
 
 The acquisition script requests CFBD `/teams/fbs?year=T` and `/roster?year=T&classification=fbs|fcs` for each season. FBS lists define the expected team-season denominator and target roster pool. FCS roster rows are retained for same-program history when the school name maps exactly to one CFBD FBS team ID, and for transfer-ID auditing when the source player ID also appears in an FBS roster. No fuzzy team matching is used; other FCS rows remain preserved in the raw corpus but are omitted from this FBS-focused normalized panel.
 
-Verified raw requests in this build: 69/69. Each response is stored byte-for-byte with query parameters, retrieval time, row count, and SHA-256 sidecar. The acquisition manifest contains no API credential.
+Verified raw requests in this build: 69/69. Each response is stored byte-for-byte with query parameters, retrieval time, row count, and SHA-256 sidecar. The acquisition manifest contains no API credential. Source paths are relative to the selected raw-data root, so external cache locations do not depend on the checkout path.
 
 CFBD documents historical rosters from 2004 onward and notes that player and biographical field completeness varies by season and team ([data availability](https://apinext.collegefootballdata.com/data-availability), [roster endpoint schema](https://apinext.collegefootballdata.com/api/teams)).
 
@@ -22,33 +22,33 @@ Across 2,909 expected FBS team-seasons, 2,909 have at least one roster row mappe
 
 Across 284,278 FBS roster rows, ID coverage is 100.0%, name coverage is 100.0%, nonblank position coverage is 94.9%, and jersey-number coverage is 94.0%. There are 0 repeated ID/team-season rows and 0 FBS roster rows that did not map to one historical FBS team ID. Name, position, and jersey coverage are reported for every season below.
 
-| Season | Expected FBS | Roster mapped | No identifiable OL | FBS rows | ID rate | Name rate | Position rate | Jersey rate | OL min | OL median | OL max | OL ID rate |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2004 | 119 | 119 | 119 | 3327 | 100.0% | 100.0% | 0.2% | 0.2% | — | — | — | — |
-| 2005 | 119 | 119 | 118 | 3530 | 100.0% | 100.0% | 2.0% | 2.0% | 1 | 1.0 | 1 | 100.0% |
-| 2006 | 119 | 119 | 114 | 3549 | 100.0% | 100.0% | 16.2% | 16.2% | 1 | 1.0 | 1 | 100.0% |
-| 2007 | 119 | 119 | 103 | 3653 | 100.0% | 100.0% | 37.3% | 37.3% | 1 | 1.0 | 1 | 100.0% |
-| 2008 | 120 | 120 | 102 | 3742 | 100.0% | 100.0% | 66.5% | 66.5% | 1 | 1.0 | 1 | 100.0% |
-| 2009 | 120 | 120 | 1 | 12611 | 100.0% | 100.0% | 99.2% | 98.5% | 13 | 18.0 | 35 | 100.0% |
-| 2010 | 120 | 120 | 1 | 13072 | 100.0% | 100.0% | 99.3% | 98.3% | 12 | 18.0 | 35 | 100.0% |
-| 2011 | 120 | 120 | 1 | 13305 | 100.0% | 100.0% | 99.2% | 98.4% | 13 | 18.0 | 32 | 100.0% |
-| 2012 | 124 | 124 | 1 | 13736 | 100.0% | 100.0% | 99.2% | 98.7% | 12 | 18.0 | 33 | 100.0% |
-| 2013 | 125 | 125 | 1 | 14180 | 100.0% | 100.0% | 99.4% | 98.6% | 13 | 18.0 | 33 | 100.0% |
-| 2014 | 128 | 128 | 1 | 14810 | 100.0% | 100.0% | 99.5% | 98.8% | 13 | 19.0 | 31 | 100.0% |
-| 2015 | 128 | 128 | 1 | 15010 | 100.0% | 100.0% | 99.6% | 98.9% | 12 | 18.0 | 37 | 100.0% |
-| 2016 | 128 | 128 | 1 | 14714 | 100.0% | 100.0% | 99.4% | 98.6% | 12 | 18.0 | 37 | 100.0% |
-| 2017 | 130 | 130 | 0 | 14757 | 100.0% | 100.0% | 99.9% | 98.9% | 1 | 17.0 | 36 | 100.0% |
-| 2018 | 130 | 130 | 0 | 14511 | 100.0% | 100.0% | 99.4% | 98.2% | 11 | 16.0 | 37 | 100.0% |
-| 2019 | 130 | 130 | 0 | 15558 | 100.0% | 100.0% | 99.9% | 98.4% | 13 | 19.0 | 32 | 100.0% |
-| 2020 | 128 | 128 | 0 | 15989 | 100.0% | 100.0% | 99.8% | 98.0% | 14 | 20.0 | 31 | 100.0% |
-| 2021 | 130 | 130 | 0 | 15129 | 100.0% | 100.0% | 99.2% | 97.1% | 12 | 18.0 | 25 | 100.0% |
-| 2022 | 131 | 131 | 0 | 15548 | 100.0% | 100.0% | 99.9% | 98.5% | 15 | 19.0 | 39 | 100.0% |
-| 2023 | 133 | 133 | 0 | 15918 | 100.0% | 100.0% | 99.5% | 98.5% | 14 | 19.0 | 35 | 100.0% |
-| 2024 | 134 | 134 | 0 | 16221 | 100.0% | 100.0% | 99.5% | 98.7% | 14 | 20.0 | 33 | 100.0% |
-| 2025 | 136 | 136 | 0 | 15599 | 100.0% | 100.0% | 99.9% | 99.6% | 15 | 19.0 | 36 | 100.0% |
-| 2026 | 138 | 138 | 0 | 15809 | 100.0% | 100.0% | 99.9% | 99.4% | 15 | 19.0 | 34 | 100.0% |
+| Season | Expected FBS | Roster mapped | No identifiable OL | FBS rows | ID rate | Name rate | Position rate | Jersey rate | OL min | OL median | OL max | OL ID rate | Continuity history |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2004 | 119 | 119 | 119 | 3327 | 100.0% | 100.0% | 0.2% | 0.2% | — | — | — | — | Censored: incomplete pre-2009 history |
+| 2005 | 119 | 119 | 118 | 3530 | 100.0% | 100.0% | 2.0% | 2.0% | 1 | 1.0 | 1 | 100.0% | Censored: incomplete pre-2009 history |
+| 2006 | 119 | 119 | 114 | 3549 | 100.0% | 100.0% | 16.2% | 16.2% | 1 | 1.0 | 1 | 100.0% | Censored: incomplete pre-2009 history |
+| 2007 | 119 | 119 | 103 | 3653 | 100.0% | 100.0% | 37.3% | 37.3% | 1 | 1.0 | 1 | 100.0% | Censored: incomplete pre-2009 history |
+| 2008 | 120 | 120 | 102 | 3742 | 100.0% | 100.0% | 66.5% | 66.5% | 1 | 1.0 | 1 | 100.0% | Censored: incomplete pre-2009 history |
+| 2009 | 120 | 120 | 1 | 12611 | 100.0% | 100.0% | 99.2% | 98.5% | 13 | 18.0 | 35 | 100.0% | Censored: incomplete pre-2009 history |
+| 2010 | 120 | 120 | 1 | 13072 | 100.0% | 100.0% | 99.3% | 98.3% | 12 | 18.0 | 35 | 100.0% | Evaluable |
+| 2011 | 120 | 120 | 1 | 13305 | 100.0% | 100.0% | 99.2% | 98.4% | 13 | 18.0 | 32 | 100.0% | Evaluable |
+| 2012 | 124 | 124 | 1 | 13736 | 100.0% | 100.0% | 99.2% | 98.7% | 12 | 18.0 | 33 | 100.0% | Evaluable |
+| 2013 | 125 | 125 | 1 | 14180 | 100.0% | 100.0% | 99.4% | 98.6% | 13 | 18.0 | 33 | 100.0% | Evaluable |
+| 2014 | 128 | 128 | 1 | 14810 | 100.0% | 100.0% | 99.5% | 98.8% | 13 | 19.0 | 31 | 100.0% | Evaluable |
+| 2015 | 128 | 128 | 1 | 15010 | 100.0% | 100.0% | 99.6% | 98.9% | 12 | 18.0 | 37 | 100.0% | Evaluable |
+| 2016 | 128 | 128 | 1 | 14714 | 100.0% | 100.0% | 99.4% | 98.6% | 12 | 18.0 | 37 | 100.0% | Evaluable |
+| 2017 | 130 | 130 | 0 | 14757 | 100.0% | 100.0% | 99.9% | 98.9% | 1 | 17.0 | 36 | 100.0% | Evaluable |
+| 2018 | 130 | 130 | 0 | 14511 | 100.0% | 100.0% | 99.4% | 98.2% | 11 | 16.0 | 37 | 100.0% | Evaluable |
+| 2019 | 130 | 130 | 0 | 15558 | 100.0% | 100.0% | 99.9% | 98.4% | 13 | 19.0 | 32 | 100.0% | Evaluable |
+| 2020 | 128 | 128 | 0 | 15989 | 100.0% | 100.0% | 99.8% | 98.0% | 14 | 20.0 | 31 | 100.0% | Evaluable |
+| 2021 | 130 | 130 | 0 | 15129 | 100.0% | 100.0% | 99.2% | 97.1% | 12 | 18.0 | 25 | 100.0% | Evaluable |
+| 2022 | 131 | 131 | 0 | 15548 | 100.0% | 100.0% | 99.9% | 98.5% | 15 | 19.0 | 39 | 100.0% | Evaluable |
+| 2023 | 133 | 133 | 0 | 15918 | 100.0% | 100.0% | 99.5% | 98.5% | 14 | 19.0 | 35 | 100.0% | Evaluable |
+| 2024 | 134 | 134 | 0 | 16221 | 100.0% | 100.0% | 99.5% | 98.7% | 14 | 20.0 | 33 | 100.0% | Evaluable |
+| 2025 | 136 | 136 | 0 | 15599 | 100.0% | 100.0% | 99.9% | 99.6% | 15 | 19.0 | 36 | 100.0% | Evaluable |
+| 2026 | 138 | 138 | 0 | 15809 | 100.0% | 100.0% | 99.9% | 99.4% | 15 | 19.0 | 34 | 100.0% | Evaluable |
 
-Rates use FBS roster rows as the denominator; position rate measures whether CFBD supplied a nonblank label, not whether that label is season-accurate. The complete counts and rates are in `coverage_by_season.csv`; each expected team-season and its missingness category are in `team_season_coverage.csv`.
+Rates use FBS roster rows as the denominator; position rate measures whether CFBD supplied a nonblank label, not whether that label is season-accurate. The complete counts, censor status, and rates are in `coverage_by_season.csv`; each expected team-season and its missingness category are in `team_season_coverage.csv`.
 
 ## Position normalization
 
@@ -99,11 +99,12 @@ An identity position-variant count of zero means the provider label stayed the s
 
 ## Shared-roster continuity construction
 
-For each target FBS season T, the current roster identifies the target OL pool. A pair's prior shared seasons are the intersection of its members' earlier same-program roster seasons, restricted to years `< T`. The pair table reports the number, earliest, most recent, and consecutive shared seasons immediately before T. Seasons at a different school never contribute. Target-season roster membership itself never contributes to a pair score.
+For each target FBS season T, the current roster identifies the target OL pool. A pair's prior shared seasons are the intersection of its members' earlier same-program roster seasons, restricted to years `< T` and on or after the complete-history window start. Seasons at a different school never contribute. Target-season roster membership itself never contributes to a pair score.
 
 The team-season summaries report total/mean/maximum pairwise shared seasons; pair counts at 1/2/3 shared seasons; the largest set of target OL simultaneously present on one prior same-program roster; the share of ID-linked target OL with no prior same-program roster row observed in this panel; and aggregate prior roster seasons. These are descriptive candidates, not selected production features.
 
-Season 2004 is left-censored: the source panel begins in that year, so its prior continuity values are blank rather than zero. For later seasons, ‘no prior’ means no earlier same-program roster row was observed in the acquired panel; it does not prove that the player had never attended the school before 2004.
+Roster coverage changes sharply before 2009: CFBD has 3,742 FBS rows in 2008 versus 12,611 in 2009. In 2009, only 4 of 2,142 identified OL have a prior same-program link. Those apparent zero links primarily reflect incomplete historical roster coverage. We treat 2009 as the earliest plausible full-roster history season and 2010 as the first target season whose continuity can be evaluated.
+Targets before 2010 are censored when their history depends on incomplete pre-2009 roster coverage or on a missing requested-panel prior season. Their pair measures and continuity summaries are blank and carry `continuity_history_status`; these blanks are not zeros. An evaluated pair with no shared roster season has count `0` and status `observed_zero_shared_prior_roster_seasons_in_history_window`. The history window starts in 2009 for this build.
 
 ## Retrospective roster boundary
 
@@ -111,14 +112,14 @@ CFBD returns a season roster, not an archived Week 1 snapshot with an as-of date
 
 ## Frozen issue 181 sample comparison
 
-The builder joins all 40 target team-seasons from the frozen issue 181 sample, copied from commit `806836e5769d4dd80208546c1c0f60cc07038435`. The sample rows and strata are unchanged; joins use target season and normalized canonical team name, with the explicit `Appalachian State` → `App State` alias. The table counts selected team-seasons with at least one identified OL, with none, and the number of pairs with any shared prior same-school roster season. Row-level joins are in `issue_181_overlap_coverage.csv`.
+The builder joins all 40 target team-seasons from the frozen issue 181 sample, copied from commit `806836e5769d4dd80208546c1c0f60cc07038435`. The sample rows and strata are unchanged; joins use target season and normalized canonical team name, with the explicit `Appalachian State` → `App State` alias. Pair totals include only evaluable rows. Censored rows are reported separately and their blank pair measures are not counted as zero. Row-level joins are in `issue_181_overlap_coverage.csv`.
 
-| Window start | Sample rows | With identified OL | No identified OL | Pairs with shared prior season |
-| --- | --- | --- | --- | --- |
-| 2008 | 10 | 6 | 4 | 0 |
-| 2014 | 10 | 10 | 0 | 1127 |
-| 2019 | 10 | 10 | 0 | 679 |
-| 2023 | 10 | 10 | 0 | 671 |
+| Window start | Sample rows | Censored rows | Evaluable rows | Evaluable with identified OL | Evaluable with no identified OL | Pairs with shared prior season |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2008 | 10 | 10 | 0 | 0 | 0 | — |
+| 2014 | 10 | 0 | 10 | 10 | 0 | 1127 |
+| 2019 | 10 | 0 | 10 | 10 | 0 | 679 |
+| 2023 | 10 | 0 | 10 | 10 | 0 | 671 |
 
 ## Bounded official-roster validation
 
@@ -141,4 +142,4 @@ uv run python scripts/fetch_offensive_line_roster_history.py --start-season 2004
 uv run python scripts/build_offensive_line_shared_roster_continuity.py --start-season 2004 --end-season 2026
 ```
 
-The fetch command requires `CFBD_API_KEY`; reruns validate and reuse the byte-preserved responses rather than overwriting them. The builder is offline and checks every raw payload against its provenance hash before producing compressed CSVs. Gzip output timestamps are fixed so identical inputs produce identical artifacts.
+Set `GIPPYRANK_DATA_DIR` to select the shared data root. When unset, it defaults to `$XDG_CACHE_HOME/gippyrank/research-data` or `~/.cache/gippyrank/research-data`; the CFBD corpus lives at `<data-root>/raw/cfbd/offensive_line_shared_roster_issue_183`. Pass `--raw-root` to select another corpus for a run. The fetch command requires `CFBD_API_KEY` only when a response is not already cached; reruns validate and reuse byte-preserved responses rather than overwriting them. The builder is offline and checks every raw payload against its provenance hash before producing compressed CSVs. Normal CI does not acquire or rebuild this external corpus. Gzip output timestamps are fixed so identical inputs produce identical artifacts.

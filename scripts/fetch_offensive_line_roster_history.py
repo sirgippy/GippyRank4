@@ -19,9 +19,15 @@ from typing import Any
 
 import httpx
 
+from gippyrank.research.data_paths import (
+    CFBD_ROSTER_DATASET,
+    cfbd_roster_raw_dir,
+    raw_root_relative_path,
+)
+
 ROOT = Path(__file__).resolve().parents[1]
 API = "https://api.collegefootballdata.com"
-DEFAULT_RAW_ROOT = ROOT / "data/raw/cfbd/offensive_line_shared_roster_issue_183"
+DEFAULT_RAW_ROOT = cfbd_roster_raw_dir()
 DEFAULT_START_SEASON = 2004
 
 
@@ -49,7 +55,11 @@ def _request(
 
 
 def _cached_payload(
-    destination: Path, *, endpoint: str, params: dict[str, Any]
+    destination: Path,
+    *,
+    endpoint: str,
+    params: dict[str, Any],
+    raw_root: Path,
 ) -> dict[str, Any] | None:
     sidecar = destination.with_name(f"{destination.name}.provenance.json")
     if not destination.exists() and not sidecar.exists():
@@ -72,7 +82,8 @@ def _cached_payload(
     return {
         "endpoint": endpoint,
         "parameters": params,
-        "path": str(destination.resolve().relative_to(ROOT.resolve())),
+        "path": raw_root_relative_path(destination, raw_root),
+        "path_base": "raw_root",
         "record_count": len(payload),
         "sha256": _sha256(content),
         "status": "cached",
@@ -80,15 +91,20 @@ def _cached_payload(
 
 
 def _acquire_one(
-    client: httpx.Client,
+    client: httpx.Client | None,
     *,
     destination: Path,
     endpoint: str,
     params: dict[str, Any],
+    raw_root: Path,
 ) -> dict[str, Any]:
-    cached = _cached_payload(destination, endpoint=endpoint, params=params)
+    cached = _cached_payload(
+        destination, endpoint=endpoint, params=params, raw_root=raw_root
+    )
     if cached is not None:
         return cached
+    if client is None:
+        raise RuntimeError("CFBD_API_KEY is required to fetch uncached CFBD responses")
     response = _request(client, endpoint, params)
     content = response.content
     payload = response.json()
@@ -116,7 +132,8 @@ def _acquire_one(
     return {
         "endpoint": endpoint,
         "parameters": params,
-        "path": str(destination.resolve().relative_to(ROOT.resolve())),
+        "path": raw_root_relative_path(destination, raw_root),
+        "path_base": "raw_root",
         "record_count": len(payload),
         "sha256": digest,
         "status": "fetched",
@@ -132,10 +149,9 @@ def acquire_roster_history(
 ) -> dict[str, Any]:
     """Fetch FBS team lists and FBS/FCS season rosters without rewriting raw data."""
     api_key = os.environ.get("CFBD_API_KEY")
-    if client is None and not api_key:
-        raise RuntimeError("CFBD_API_KEY is not configured")
-    owns_client = client is None
-    if client is None:
+    raw_root = raw_root.expanduser().resolve()
+    owns_client = client is None and bool(api_key)
+    if owns_client:
         client = httpx.Client(headers={"Authorization": f"Bearer {api_key}"})
     requests: list[dict[str, Any]] = []
     try:
@@ -146,6 +162,7 @@ def acquire_roster_history(
                     destination=raw_root / "teams_fbs" / f"{season}.json",
                     endpoint="/teams/fbs",
                     params={"year": season},
+                    raw_root=raw_root,
                 )
             )
             for classification in ("fbs", "fcs"):
@@ -158,6 +175,7 @@ def acquire_roster_history(
                         / f"{season}.json",
                         endpoint="/roster",
                         params={"year": season, "classification": classification},
+                        raw_root=raw_root,
                     )
                 )
             print(
@@ -172,8 +190,10 @@ def acquire_roster_history(
             client.close()
 
     manifest = {
-        "dataset": "offensive_line_shared_roster_issue_183",
+        "dataset": CFBD_ROSTER_DATASET,
         "source": "College Football Data API",
+        "raw_root": raw_root.as_posix(),
+        "request_path_base": "raw_root",
         "season_start": start_season,
         "season_end": end_season,
         "target_classification": "fbs",
@@ -208,7 +228,7 @@ def main() -> None:
     )
     print(
         f"Saved {len(manifest['requests'])} immutable CFBD responses to "
-        f"{args.raw_root.relative_to(ROOT)}"
+        f"{args.raw_root.expanduser().resolve()}"
     )
 
 

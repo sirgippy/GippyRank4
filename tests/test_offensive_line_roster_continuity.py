@@ -84,7 +84,10 @@ def test_shared_roster_pairs_use_prior_same_program_seasons_only() -> None:
         and {row["player_1_id"], row["player_2_id"]} == {"p1", "p4"}
     )
     assert transfer_pair["shared_prior_season_count"] == 0
-    assert transfer_pair["pair_status"] == "no_shared_prior_roster_season_observed"
+    assert (
+        transfer_pair["pair_status"]
+        == "observed_zero_shared_prior_roster_seasons_in_history_window"
+    )
 
     target_coverage = next(
         row
@@ -147,7 +150,88 @@ def test_left_censored_first_target_season_has_blank_pair_measure() -> None:
     )
     assert (
         built.pairwise_continuity[0]["pair_status"]
-        == "left_censored_no_prior_source_season"
+        == "censored_incomplete_pre_2009_history"
     )
     assert built.pairwise_continuity[0]["shared_prior_season_count"] == ""
     assert built.team_season_summaries[0]["history_left_censored"] is True
+
+
+def test_pre_2009_rosters_are_censored_and_2010_is_first_evaluable_target() -> None:
+    teams = {
+        season: [{"id": 1, "school": "Alpha", "alternateNames": []}]
+        for season in (2008, 2009, 2010)
+    }
+    roster_payloads = {
+        ("fbs", 2008): [
+            _roster_row("p1", "Alex", "One", "Alpha", "OL"),
+            _roster_row("p2", "Blair", "Two", "Alpha", "OG"),
+            _roster_row("p3", "Casey", "Three", "Alpha", "OT"),
+            _roster_row("p4", "Drew", "Four", "Alpha", "C"),
+        ],
+        ("fbs", 2009): [
+            _roster_row("p1", "Alex", "One", "Alpha", "OL"),
+            _roster_row("p2", "Blair", "Two", "Alpha", "OG"),
+        ],
+        ("fbs", 2010): [
+            _roster_row("p1", "Alex", "One", "Alpha", "OL"),
+            _roster_row("p2", "Blair", "Two", "Alpha", "OG"),
+            _roster_row("p3", "Casey", "Three", "Alpha", "OT"),
+            _roster_row("p4", "Drew", "Four", "Alpha", "C"),
+        ],
+    }
+    built = build_continuity_artifacts(
+        roster_payloads,
+        teams,
+        roster_response_seasons={("fbs", season) for season in (2008, 2009, 2010)},
+        start_season=2008,
+        end_season=2010,
+    )
+
+    censored_2009_pair = next(
+        row
+        for row in built.pairwise_continuity
+        if row["target_season"] == 2009
+        and {row["player_1_id"], row["player_2_id"]} == {"p1", "p2"}
+    )
+    assert censored_2009_pair["continuity_target_evaluable"] is False
+    assert censored_2009_pair["continuity_history_status"] == (
+        "censored_incomplete_pre_2009_history"
+    )
+    assert censored_2009_pair["shared_prior_season_count"] == ""
+
+    evaluable_shared_pair = next(
+        row
+        for row in built.pairwise_continuity
+        if row["target_season"] == 2010
+        and {row["player_1_id"], row["player_2_id"]} == {"p1", "p2"}
+    )
+    assert evaluable_shared_pair["shared_prior_season_count"] == 1
+    assert evaluable_shared_pair["shared_prior_season_count"] != ""
+
+    observed_zero_pair = next(
+        row
+        for row in built.pairwise_continuity
+        if row["target_season"] == 2010
+        and {row["player_1_id"], row["player_2_id"]} == {"p3", "p4"}
+    )
+    assert observed_zero_pair["shared_prior_season_count"] == 0
+    assert observed_zero_pair["pair_status"] == (
+        "observed_zero_shared_prior_roster_seasons_in_history_window"
+    )
+
+    coverage_2009 = next(
+        row for row in built.team_season_coverage if row["season"] == 2009
+    )
+    assert coverage_2009["continuity_target_evaluable"] is False
+    assert coverage_2009["ol_with_no_prior_same_program_roster_link"] == ""
+    summary_2009 = next(
+        row for row in built.team_season_summaries if row["season"] == 2009
+    )
+    assert summary_2009["pair_count_history_censored"] == 1
+    assert summary_2009["pairs_with_at_least_1_shared_season"] == ""
+    annual_2009 = next(row for row in built.coverage_by_season if row["season"] == 2009)
+    assert annual_2009["continuity_censored_team_season_count"] == 1
+    assert annual_2009["pair_count_history_censored"] == 1
+    annual_2010 = next(row for row in built.coverage_by_season if row["season"] == 2010)
+    assert annual_2010["continuity_evaluable_team_season_count"] == 1
+    assert built.source_audit["first_evaluable_target_season"] == 2010
