@@ -4,8 +4,10 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from scipy.optimize import OptimizeResult
 from scipy.stats import norm, t
 
+from gippyrank import preseason
 from gippyrank.preseason import (
     DirectRankModel,
     GenericRankPrior,
@@ -194,6 +196,94 @@ def test_optimizer_must_converge_and_retains_diagnostics() -> None:
     model = DirectRankModel.fit(rows, [], optimizer_options={"maxiter": 100})
     assert model.optimizer and model.optimizer["success"] is True
     assert {"iterations", "function_evaluations", "objective"} <= set(model.optimizer)
+
+
+@pytest.mark.parametrize(
+    ("gamma", "expected_clipped_rows"),
+    [
+        pytest.param((0.15, 0.2, 0.0, 0.0, 0.0), 0, id="all-inside"),
+        pytest.param((-4.5, 0.2, 0.0, 0.0, -1.0), 5, id="all-below-lower-bound"),
+        pytest.param((3.8, 0.2, 0.0, 0.0, 1.0), 5, id="all-above-upper-bound"),
+        pytest.param((0.0, 4.2, 0.0, 0.0, 0.0), 2, id="mixed-clipped-and-unclipped"),
+    ],
+)
+@pytest.mark.parametrize("family", ["normal", "student_t"])
+def test_direct_rank_analytic_gradient_matches_finite_differences_with_scale_clipping(
+    monkeypatch: pytest.MonkeyPatch,
+    family: str,
+    gamma: tuple[float, float, float, float, float],
+    expected_clipped_rows: int,
+) -> None:
+    rows = [
+        TeamSeason(
+            2010,
+            "fbs",
+            str(index),
+            str(index),
+            20,
+            np.asarray([value - 0.2, value + 0.1]),
+            np.asarray([value - 0.35, value + 0.25, value + 0.5]),
+            np.asarray([4, 9, 12]),
+            {"scale": value, "always_missing": None},
+        )
+        for index, value in enumerate((-2.0, -1.0, 0.0, 1.0, 2.0))
+    ]
+    captured: dict[str, object] = {}
+
+    def capture_optimizer(
+        objective: object,
+        initial: np.ndarray,
+        *,
+        jac: object,
+        **_: object,
+    ) -> OptimizeResult:
+        parameters = np.asarray(initial, dtype=float).copy()
+        parameters[-len(gamma) :] = gamma
+        captured["objective"] = objective
+        captured["gradient"] = jac
+        captured["parameters"] = parameters
+        return OptimizeResult(
+            x=parameters,
+            success=True,
+            status=0,
+            message="test captured objective",
+            nit=0,
+            nfev=1,
+            fun=objective(parameters),
+        )
+
+    monkeypatch.setattr(preseason, "minimize", capture_optimizer)
+    model = DirectRankModel.fit(
+        rows,
+        ["scale", "always_missing"],
+        family=family,
+        degrees_of_freedom=5 if family == "student_t" else None,
+    )
+
+    objective = captured["objective"]
+    gradient = captured["gradient"]
+    parameters = np.asarray(captured["parameters"], dtype=float)
+    assert callable(objective)
+    assert callable(gradient)
+    design = np.vstack([model.design_vector(row.features) for row in rows])
+    eta = design @ np.asarray(gamma)
+    clip_low, clip_high = preseason.DIRECT_RANK_LOG_SCALE_CLIP_BOUNDS
+    clipped = (eta < clip_low) | (eta > clip_high)
+    assert int(clipped.sum()) == expected_clipped_rows
+    assert np.all(np.abs(eta - clip_low) > 1e-3)
+    assert np.all(np.abs(eta - clip_high) > 1e-3)
+
+    analytic = np.asarray(gradient(parameters), dtype=float)
+    numeric = np.empty_like(analytic)
+    for index, value in enumerate(parameters):
+        step = 1e-5 * (1.0 + abs(value))
+        forward = parameters.copy()
+        backward = parameters.copy()
+        forward[index] += step
+        backward[index] -= step
+        numeric[index] = (objective(forward) - objective(backward)) / (2.0 * step)
+
+    np.testing.assert_allclose(analytic, numeric, rtol=2e-5, atol=2e-7)
 
 
 def test_fitting_permuted_empirical_distributions_is_equivalent() -> None:

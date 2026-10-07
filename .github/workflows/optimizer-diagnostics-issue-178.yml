@@ -47,6 +47,7 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/issue-178"
           uv run python scripts/diagnose_history_optimizer_issue_178.py \
+            --no-manual-restart \
             --output "$RUNNER_TEMP/issue-178/runner-${{ matrix.runner }}-default.json"
 
       - name: Run single-thread diagnostic subprocess
@@ -57,6 +58,7 @@ jobs:
           MKL_NUM_THREADS: "1"
         run: |
           uv run python scripts/diagnose_history_optimizer_issue_178.py \
+            --no-manual-restart \
             --output "$RUNNER_TEMP/issue-178/runner-${{ matrix.runner }}-single-thread.json"
 
       - name: Upload optimizer diagnostics

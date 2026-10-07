@@ -482,7 +482,16 @@ class DirectRankModel:
                 beta_gradient[lag_count:] = x.T @ base_gradient
             gamma_gradient = x.T @ (
                 -np.sum(
-                    scale_score * exp_eta[:, None, None] * target_weight, axis=(1, 2)
+                    scale_score
+                    * (
+                        exp_eta
+                        * (
+                            (eta > DIRECT_RANK_LOG_SCALE_CLIP_BOUNDS[0])
+                            & (eta < DIRECT_RANK_LOG_SCALE_CLIP_BOUNDS[1])
+                        )
+                    )[:, None, None]
+                    * target_weight,
+                    axis=(1, 2),
                 )
             )
             beta_gradient += (

@@ -166,6 +166,51 @@ def _array_hash(value: np.ndarray) -> str:
     return _sha256_bytes(contiguous.tobytes())
 
 
+def _smooth_probe_gradient_check(
+    objective: Callable[[np.ndarray], float],
+    analytic: Callable[[np.ndarray], np.ndarray],
+    parameters: np.ndarray,
+    design: np.ndarray,
+    beta_count: int,
+) -> dict[str, Any]:
+    """Check the gradient at a nearby point whose finite-difference stencil avoids clip kinks."""
+    lower, upper = preseason.DIRECT_RANK_LOG_SCALE_CLIP_BOUNDS
+    lower_gamma, upper_gamma = preseason.DIRECT_RANK_GAMMA_COEFFICIENT_BOUNDS
+    gamma = parameters[beta_count:]
+    gamma_steps = 1e-5 * (1.0 + np.abs(gamma))
+    max_eta_step = float(np.max(np.abs(design) * gamma_steps[None, :]))
+    required_margin = max(1e-6, 2.0 * max_eta_step)
+    for shift in (0.005, -0.005, 0.01, -0.01, 0.025, -0.025, 0.05, -0.05):
+        intercept = float(gamma[0] + shift)
+        if not lower_gamma <= intercept <= upper_gamma:
+            continue
+        probe = parameters.copy()
+        probe[beta_count] = intercept
+        eta = design @ probe[beta_count:]
+        margin = float(min(np.min(np.abs(eta - lower)), np.min(np.abs(eta - upper))))
+        if margin <= required_margin:
+            continue
+        result = _gradient_check(
+            objective, np.asarray(analytic(probe), dtype=float), probe
+        )
+        result.update(
+            {
+                "probe_gamma_intercept_shift": shift,
+                "minimum_distance_to_clip_boundary": margin,
+                "required_margin_for_finite_difference_stencil": required_margin,
+                "clipped_row_count_at_probe": int(
+                    np.sum((eta < lower) | (eta > upper))
+                ),
+            }
+        )
+        return result
+    return {
+        "available": False,
+        "reason": "could not find a nearby gamma-intercept probe separated from both clip boundaries",
+        "required_margin_for_finite_difference_stencil": required_margin,
+    }
+
+
 def _gradient_check(
     objective: Callable[[np.ndarray], float],
     analytic: np.ndarray,
@@ -484,12 +529,16 @@ def _run_reproduction(
                     "row_count": len(eta),
                     "eta_min": float(np.min(eta)),
                     "eta_max": float(np.max(eta)),
+                    "eta_values": eta.tolist(),
                     "clipped_low_row_indices": low_indices,
                     "clipped_high_row_indices": high_indices,
                     "clipped_row_count": len(set(low_indices + high_indices)),
                 },
                 "gradient_check": _gradient_check(
                     objective, reevaluated_gradient, parameters
+                ),
+                "smooth_probe_gradient_check": _smooth_probe_gradient_check(
+                    objective, analytic, parameters, design, beta_count
                 ),
                 "success": result_success,
                 "status": int(getattr(result, "status", -1)),
@@ -559,7 +608,9 @@ def _run_reproduction(
     return output
 
 
-def _run_experiment(repo_root: Path) -> dict[str, Any]:
+def _run_experiment(
+    repo_root: Path, *, manual_restart_enabled: bool = True
+) -> dict[str, Any]:
     test_module = _load_test_module(repo_root)
     runtime = _runtime_details()
     with tempfile.TemporaryDirectory(prefix="issue178-history-") as temp_dir:
@@ -583,7 +634,7 @@ def _run_experiment(repo_root: Path) -> dict[str, Any]:
         )
         manual_restart = None
         restart_passes: list[dict[str, Any]] = []
-        if (
+        if manual_restart_enabled and (
             failing is not None
             and failing.get("status") == 2
             and "ABNORMAL" in str(failing.get("message", ""))
@@ -693,6 +744,7 @@ def _compact_build(build: Mapping[str, Any]) -> dict[str, Any]:
                     "max_absolute_analytic_gradient",
                     "all_iterates_objectives_gradients_finite",
                     "gradient_check",
+                    "smooth_probe_gradient_check",
                     "bound_diagnostics",
                 )
             }
@@ -819,14 +871,26 @@ def main() -> None:
         default=1,
         help="repeat identical builds in this process and summarize each run",
     )
+    parser.add_argument(
+        "--no-manual-restart",
+        action="store_true",
+        help="record only the original optimizer run; do not run diagnostic restarts",
+    )
     args = parser.parse_args()
     if args.repeat < 1:
         parser.error("--repeat must be positive")
     repo_root = Path(__file__).resolve().parents[1]
     if args.repeat == 1:
-        report = _run_experiment(repo_root)
+        report = _run_experiment(
+            repo_root, manual_restart_enabled=not args.no_manual_restart
+        )
     else:
-        reports = [_run_experiment(repo_root) for _ in range(args.repeat)]
+        reports = [
+            _run_experiment(
+                repo_root, manual_restart_enabled=not args.no_manual_restart
+            )
+            for _ in range(args.repeat)
+        ]
         report = _repeat_summary(reports)
     rendered = json.dumps(report, sort_keys=True, separators=(",", ":")) + "\n"
     if args.output is not None:
