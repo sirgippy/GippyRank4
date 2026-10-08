@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+import csv
+import json
+from pathlib import Path
+
 import pytest
 
 from gippyrank.research.offensive_line_continuity_experiment import (
     CONTINUITY_FEATURES,
     INDIVIDUAL_EXPERIENCE_FEATURES,
+    POST_HOC_MODEL_ARMS,
+    POST_HOC_SHARED_ROSTER_FEATURE,
     build_program_memberships,
     build_team_season_feature_panel,
     feature_values_for_pool,
@@ -211,3 +217,81 @@ def test_season_cluster_bootstrap_is_deterministic_and_paired() -> None:
     assert first["n_team_seasons"] == 5
     assert first["n_season_clusters"] == 3
     assert first["n_resamples"] == 27
+
+
+def test_posthoc_arm_contract_is_limited_to_the_two_requested_comparisons() -> None:
+    assert POST_HOC_SHARED_ROSTER_FEATURE == "ol_mean_shared_roster_seasons_4y"
+    assert POST_HOC_MODEL_ARMS == (
+        (
+            "posthoc_context_plus_ol_mean_shared_roster_seasons_4y",
+            ("ol_mean_shared_roster_seasons_4y",),
+        ),
+        (
+            "posthoc_context_plus_individual_experience_and_ol_mean_shared_roster_seasons_4y",
+            (
+                *INDIVIDUAL_EXPERIENCE_FEATURES,
+                "ol_mean_shared_roster_seasons_4y",
+            ),
+        ),
+    )
+
+
+def test_generated_evaluation_records_both_posthoc_comparisons_on_same_cohort() -> None:
+    results = (
+        Path(__file__).resolve().parents[1]
+        / "data/research/offensive_line_continuity_experiment_issue_187/results"
+    )
+    with (results / "evaluation_aggregate.csv").open(
+        newline="", encoding="utf-8"
+    ) as handle:
+        aggregate = {row["model"]: row for row in csv.DictReader(handle)}
+
+    for name, features in POST_HOC_MODEL_ARMS:
+        row = aggregate[name]
+        assert row["analysis_role"] == "post_hoc_diagnostic"
+        assert row["additional_features"] == ";".join(features)
+        assert (
+            row["training_team_seasons"]
+            == aggregate["context_1_3_style_restricted_refit"]["training_team_seasons"]
+        )
+        assert (
+            row["evaluation_team_seasons"]
+            == aggregate["context_1_3_style_restricted_refit"][
+                "evaluation_team_seasons"
+            ]
+        )
+        assert row["evaluation_seasons"] == "2022;2023;2024;2025"
+
+
+def test_generated_report_inputs_capture_collinearity_and_2025_loss_concentration() -> (
+    None
+):
+    results = (
+        Path(__file__).resolve().parents[1]
+        / "data/research/offensive_line_continuity_experiment_issue_187/results"
+    )
+    manifest = json.loads((results / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["results"][
+        "continuity_2025_share_of_total_heldout_nll_deterioration"
+    ] == pytest.approx(0.70, abs=0.02)
+
+    with (results / "feature_collinearity.csv").open(
+        newline="", encoding="utf-8"
+    ) as handle:
+        collinearity = next(csv.DictReader(handle))
+    assert collinearity["feature_a"] == "ol_returning_player_share_4y"
+    assert collinearity["feature_b"] == "ol_returning_group_share_4y"
+    assert float(collinearity["pearson_r"]) == pytest.approx(0.999, abs=0.002)
+
+    with (results / "feature_coefficients.csv").open(
+        newline="", encoding="utf-8"
+    ) as handle:
+        coefficients = {
+            (row["model"], row["feature"]): float(
+                row["standardized_location_coefficient"]
+            )
+            for row in csv.DictReader(handle)
+        }
+    combined_arm = "context_plus_both_ol_experience_and_continuity"
+    assert coefficients[(combined_arm, "ol_returning_player_share_4y")] > 0.5
+    assert coefficients[(combined_arm, "ol_returning_group_share_4y")] < -0.5

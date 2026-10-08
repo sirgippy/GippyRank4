@@ -2,7 +2,7 @@
 
 **Decision:** Reject
 
-**Recommendation:** Do not advance these four-season OL continuity features into production Context on the current evidence. All added-feature arms worsened held-out rank-distribution likelihood overall, and continuity was worse in each of the four evaluation seasons. Revisit only if point-in-time OL rosters or new independent evidence become available.
+**Recommendation:** Retain Reject for the currently tested OL continuity approach: the isolated mean-shared-roster feature did not improve held-out likelihood, and adding it to individual experience worsened the score. These post-hoc comparisons do not independently confirm or refute the broader continuity hypothesis; do not advance this formulation into production Context 1.4.
 
 ## Scope and cohort
 
@@ -12,41 +12,57 @@ The panel contains 1,691 primary-window team-seasons. Feature status counts: obs
 
 ## Controlled evaluation
 
-Current Context is Context 1.3's direct rank-distribution model and its existing rank-history, recruiting, talent, returning-production, coaching, and transfer inputs. The research adapter holds that feature set, normal likelihood, training-only imputation/standardization, missingness indicators, location-only Context placement, optimizer, and 0.25 regularization fixed. New coefficients are fitted only on 2013–2021; the identical 2022–2025 FBS team-seasons are scored in every arm. Feature scaling and imputation use training data only. The reported score is the repository's empirical rank-distribution negative log-likelihood (nats per team-season), not a game-level score.
+The reference is a Context 1.3-style direct rank-distribution model refitted on the restricted 2013–2021 training cohort, with Context 1.3's rank-history, recruiting, talent, returning-production, coaching, and transfer inputs. It is not the currently active production Context 1.4 model. The research adapter holds that feature set, likelihood, training-only imputation and standardization, missingness indicators, location-only Context placement, optimizer, and 0.25 regularization fixed. New coefficients are fitted only on 2013–2021; the identical 2022–2025 FBS team-seasons are scored in every arm. The reported score is the repository's empirical rank-distribution negative log-likelihood (nats per team-season), not a game-level score.
+
+The two single-feature comparisons are post-hoc diagnostics added after the original holdout was inspected. They use the same train/test cohorts, model settings, target population, and score as the original arms; they are exploratory and do not count as independent confirmation.
 
 ## Held-out predictive results
 
 Negative ΔNLL favors the added-feature model. The interval resamples held-out seasons as clusters and is descriptive with four evaluation seasons.
 
-| Model | Team-seasons | NLL | ΔNLL vs Context | 95% season-bootstrap interval | Seasons better | Team-seasons improved | Top 10 share of gross gains |
-|:--|--:|--:|--:|:--|--:|--:|--:|
-| current_context_1_3 | 528 | 4.5170 | 0.0000 | [0.0000, 0.0000] | 0 / 4 | 0 (0.0%) | 0.0% |
-| context_plus_ol_individual_experience | 528 | 4.5196 | 0.0026 | [-0.0002, 0.0059] | 1 / 4 | 252 (47.7%) | 19.4% |
-| context_plus_ol_shared_roster_continuity | 528 | 4.5258 | 0.0088 | [0.0024, 0.0192] | 0 / 4 | 253 (47.9%) | 32.9% |
-| context_plus_both_ol_experience_and_continuity | 528 | 4.5297 | 0.0127 | [0.0042, 0.0267] | 0 / 4 | 257 (48.7%) | 29.8% |
+| Model | Analysis role | Team-seasons | NLL | ΔNLL vs restricted reference | 95% season-bootstrap interval | Seasons better | Team-seasons improved | Top 10 share of gross gains |
+|:--|:--|--:|--:|--:|:--|--:|--:|--:|
+| context_1_3_style_restricted_refit | reference_model | 528 | 4.5170 | 0.0000 | [0.0000, 0.0000] | 0 / 4 | 0 (0.0%) | 0.0% |
+| context_plus_ol_individual_experience | original_bundle_comparison | 528 | 4.5196 | 0.0026 | [-0.0002, 0.0059] | 1 / 4 | 252 (47.7%) | 19.4% |
+| context_plus_ol_shared_roster_continuity | original_bundle_comparison | 528 | 4.5258 | 0.0088 | [0.0024, 0.0192] | 0 / 4 | 253 (47.9%) | 32.9% |
+| context_plus_both_ol_experience_and_continuity | original_bundle_comparison | 528 | 4.5297 | 0.0127 | [0.0042, 0.0267] | 0 / 4 | 257 (48.7%) | 29.8% |
+| posthoc_context_plus_ol_mean_shared_roster_seasons_4y | post_hoc_diagnostic | 528 | 4.5184 | 0.0014 | [-0.0004, 0.0032] | 1 / 4 | 258 (48.9%) | 17.1% |
+| posthoc_context_plus_individual_experience_and_ol_mean_shared_roster_seasons_4y | post_hoc_diagnostic | 528 | 4.5220 | 0.0050 | [0.0006, 0.0118] | 1 / 4 | 251 (47.5%) | 27.1% |
+
+Post-hoc single-feature results: Context plus `ol_mean_shared_roster_seasons_4y` had ΔNLL 0.0014; adding that feature to the individual-experience arm had ΔNLL 0.0050. Under the stated decision rule, the first comparison maps to **Reject** for the currently tested approach. These are exploratory results on the inspected holdout, not independent confirmation.
 
 Continuity beyond individual experience: combined ΔNLL versus the individual-experience arm is 0.0101, with season-cluster interval 0.0022 to 0.0208.
 
 ### By season
 
-| Season | Model | Team-seasons | NLL | ΔNLL vs Context | ΔCRPS vs Context |
-|--:|:--|--:|--:|--:|--:|
-| 2022 | current_context_1_3 | 130 | 4.4633 | 0.0000 | 0.0000 |
-| 2022 | context_plus_ol_individual_experience | 130 | 4.4625 | -0.0008 | -0.0000 |
-| 2022 | context_plus_ol_shared_roster_continuity | 130 | 4.4651 | 0.0017 | 0.0000 |
-| 2022 | context_plus_both_ol_experience_and_continuity | 130 | 4.4716 | 0.0083 | 0.0006 |
-| 2023 | current_context_1_3 | 131 | 4.4788 | 0.0000 | 0.0000 |
-| 2023 | context_plus_ol_individual_experience | 131 | 4.4819 | 0.0030 | 0.0003 |
-| 2023 | context_plus_ol_shared_roster_continuity | 131 | 4.4835 | 0.0046 | 0.0007 |
-| 2023 | context_plus_both_ol_experience_and_continuity | 131 | 4.4818 | 0.0030 | 0.0004 |
-| 2024 | current_context_1_3 | 133 | 4.5713 | 0.0000 | 0.0000 |
-| 2024 | context_plus_ol_individual_experience | 133 | 4.5716 | 0.0004 | -0.0000 |
-| 2024 | context_plus_ol_shared_roster_continuity | 133 | 4.5755 | 0.0042 | 0.0005 |
-| 2024 | context_plus_both_ol_experience_and_continuity | 133 | 4.5767 | 0.0055 | 0.0008 |
-| 2025 | current_context_1_3 | 134 | 4.5525 | 0.0000 | 0.0000 |
-| 2025 | context_plus_ol_individual_experience | 134 | 4.5602 | 0.0077 | 0.0007 |
-| 2025 | context_plus_ol_shared_roster_continuity | 134 | 4.5767 | 0.0242 | 0.0013 |
-| 2025 | context_plus_both_ol_experience_and_continuity | 134 | 4.5863 | 0.0337 | 0.0025 |
+| Season | Model | Analysis role | Team-seasons | NLL | ΔNLL vs restricted reference | ΔCRPS vs restricted reference |
+|--:|:--|:--|--:|--:|--:|--:|
+| 2022 | context_1_3_style_restricted_refit | reference_model | 130 | 4.4633 | 0.0000 | 0.0000 |
+| 2022 | context_plus_ol_individual_experience | original_bundle_comparison | 130 | 4.4625 | -0.0008 | -0.0000 |
+| 2022 | context_plus_ol_shared_roster_continuity | original_bundle_comparison | 130 | 4.4651 | 0.0017 | 0.0000 |
+| 2022 | context_plus_both_ol_experience_and_continuity | original_bundle_comparison | 130 | 4.4716 | 0.0083 | 0.0006 |
+| 2022 | posthoc_context_plus_ol_mean_shared_roster_seasons_4y | post_hoc_diagnostic | 130 | 4.4625 | -0.0008 | -0.0000 |
+| 2022 | posthoc_context_plus_individual_experience_and_ol_mean_shared_roster_seasons_4y | post_hoc_diagnostic | 130 | 4.4630 | -0.0003 | -0.0001 |
+| 2023 | context_1_3_style_restricted_refit | reference_model | 131 | 4.4788 | 0.0000 | 0.0000 |
+| 2023 | context_plus_ol_individual_experience | original_bundle_comparison | 131 | 4.4819 | 0.0030 | 0.0003 |
+| 2023 | context_plus_ol_shared_roster_continuity | original_bundle_comparison | 131 | 4.4835 | 0.0046 | 0.0007 |
+| 2023 | context_plus_both_ol_experience_and_continuity | original_bundle_comparison | 131 | 4.4818 | 0.0030 | 0.0004 |
+| 2023 | posthoc_context_plus_ol_mean_shared_roster_seasons_4y | post_hoc_diagnostic | 131 | 4.4808 | 0.0020 | 0.0002 |
+| 2023 | posthoc_context_plus_individual_experience_and_ol_mean_shared_roster_seasons_4y | post_hoc_diagnostic | 131 | 4.4821 | 0.0033 | 0.0005 |
+| 2024 | context_1_3_style_restricted_refit | reference_model | 133 | 4.5713 | 0.0000 | 0.0000 |
+| 2024 | context_plus_ol_individual_experience | original_bundle_comparison | 133 | 4.5716 | 0.0004 | -0.0000 |
+| 2024 | context_plus_ol_shared_roster_continuity | original_bundle_comparison | 133 | 4.5755 | 0.0042 | 0.0005 |
+| 2024 | context_plus_both_ol_experience_and_continuity | original_bundle_comparison | 133 | 4.5767 | 0.0055 | 0.0008 |
+| 2024 | posthoc_context_plus_ol_mean_shared_roster_seasons_4y | post_hoc_diagnostic | 133 | 4.5713 | 0.0000 | -0.0000 |
+| 2024 | posthoc_context_plus_individual_experience_and_ol_mean_shared_roster_seasons_4y | post_hoc_diagnostic | 133 | 4.5729 | 0.0017 | 0.0002 |
+| 2025 | context_1_3_style_restricted_refit | reference_model | 134 | 4.5525 | 0.0000 | 0.0000 |
+| 2025 | context_plus_ol_individual_experience | original_bundle_comparison | 134 | 4.5602 | 0.0077 | 0.0007 |
+| 2025 | context_plus_ol_shared_roster_continuity | original_bundle_comparison | 134 | 4.5767 | 0.0242 | 0.0013 |
+| 2025 | context_plus_both_ol_experience_and_continuity | original_bundle_comparison | 134 | 4.5863 | 0.0337 | 0.0025 |
+| 2025 | posthoc_context_plus_ol_mean_shared_roster_seasons_4y | post_hoc_diagnostic | 134 | 4.5568 | 0.0043 | 0.0004 |
+| 2025 | posthoc_context_plus_individual_experience_and_ol_mean_shared_roster_seasons_4y | post_hoc_diagnostic | 134 | 4.5676 | 0.0151 | 0.0011 |
+
+The three-feature continuity arm deteriorated in all four evaluation years. 2025 accounts for 69.9% of its total held-out NLL deterioration when summed over team-seasons.
 
 ## Feature behavior
 
@@ -60,6 +76,14 @@ Correlations use the mean observed final rank divided by team population, where 
 | ol_shared_pair_share_4y | 1668 | 0.4314 | 0.4277 | 0.2105 | 0.6500 | -0.0844 |
 | ol_returning_group_share_4y | 1668 | 0.6512 | 0.6603 | 0.4737 | 0.8125 | -0.0954 |
 
+### Collinearity and coefficient instability
+
+| Feature A | Feature B | Team-seasons | Pearson r | Scope |
+|:--|:--|--:|--:|:--|
+| ol_returning_player_share_4y | ol_returning_group_share_4y | 1668 | 0.999 | primary 2013-2025 common analysis cohort |
+
+Returning-player share and returning-group share correlate at approximately 0.999. In the combined bundle, their standardized coefficients are 0.610 and -0.878, respectively, with opposing signs. The returning-player coefficient is -0.012 in the individual-experience-only bundle. This shift is consistent with unstable allocation across nearly redundant predictors; the bundle coefficients do not identify separate effects.
+
 | Model | Feature | Standardized location coefficient | Missingness coefficient | Mean held-out location contribution |
 |:--|:--|--:|--:|--:|
 | context_plus_ol_individual_experience | ol_returning_player_share_4y | -0.0124 | 0.0000 | 0.0106 |
@@ -72,10 +96,14 @@ Correlations use the mean observed final rank divided by team population, where 
 | context_plus_both_ol_experience_and_continuity | ol_mean_shared_roster_seasons_4y | 0.0892 | 0.0000 | -0.0626 |
 | context_plus_both_ol_experience_and_continuity | ol_shared_pair_share_4y | 0.2257 | 0.0000 | -0.1737 |
 | context_plus_both_ol_experience_and_continuity | ol_returning_group_share_4y | -0.8778 | 0.0000 | 0.7623 |
+| posthoc_context_plus_ol_mean_shared_roster_seasons_4y | ol_mean_shared_roster_seasons_4y | -0.0205 | 0.0000 | 0.0144 |
+| posthoc_context_plus_individual_experience_and_ol_mean_shared_roster_seasons_4y | ol_returning_player_share_4y | -0.0756 | 0.0000 | 0.0647 |
+| posthoc_context_plus_individual_experience_and_ol_mean_shared_roster_seasons_4y | ol_mean_prior_same_program_seasons_4y | -0.1196 | 0.0000 | 0.0819 |
+| posthoc_context_plus_individual_experience_and_ol_mean_shared_roster_seasons_4y | ol_mean_shared_roster_seasons_4y | 0.1597 | 0.0000 | -0.1120 |
 
 ### Held-out room profiles
 
-| Profile | Team-seasons | Seasons | Mean final-rank fraction | Mean OL pool size | ΔNLL vs Context (individual / continuity / both) |
+| Profile | Team-seasons | Seasons | Mean final-rank fraction | Mean OL pool size | ΔNLL vs restricted reference (individual / continuity / both) |
 |:--|--:|--:|--:|--:|:--|
 | stable_veteran_room | 55 | 4 | 0.3956 | 19.1455 | 0.0007, -0.0001, 0.0004 |
 | heavily_rebuilt_room | 6 | 3 | 0.6102 | 19.1667 | 0.0458, 0.2613, 0.2318 |
@@ -102,30 +130,40 @@ For complete mappings, feature shifts compare recomputed official-pool values wi
 
 Rows not included in the issue 185 sample remain unclassified; they are not called high confidence. Any group without at least 20 team-seasons over three seasons is reported as descriptive only.
 
-| Coverage group | Model | Team-seasons | Seasons | ΔNLL vs Context | 95% interval | Status |
-|:--|:--|--:|--:|--:|:--|:--|
-| all_primary_evaluation_rows | context_plus_ol_individual_experience | 528 | 4 | 0.0026 | [-0.0002, 0.0059] | sample_supports_cluster_interval |
-| all_primary_evaluation_rows | context_plus_ol_shared_roster_continuity | 528 | 4 | 0.0088 | [0.0024, 0.0192] | sample_supports_cluster_interval |
-| all_primary_evaluation_rows | context_plus_both_ol_experience_and_continuity | 528 | 4 | 0.0127 | [0.0042, 0.0267] | sample_supports_cluster_interval |
-| not_in_issue185_validation_sample | context_plus_ol_individual_experience | 520 | 4 | 0.0025 | [-0.0002, 0.0054] | sample_supports_cluster_interval |
-| not_in_issue185_validation_sample | context_plus_ol_shared_roster_continuity | 520 | 4 | 0.0085 | [0.0026, 0.0181] | sample_supports_cluster_interval |
-| not_in_issue185_validation_sample | context_plus_both_ol_experience_and_continuity | 520 | 4 | 0.0126 | [0.0045, 0.0261] | sample_supports_cluster_interval |
-| official_pool_exact_set_match | context_plus_ol_individual_experience | 6 | 4 | 0.0090 | — | descriptive_only_small_or_uneven_sample |
-| official_pool_exact_set_match | context_plus_ol_shared_roster_continuity | 6 | 4 | 0.0342 | — | descriptive_only_small_or_uneven_sample |
-| official_pool_exact_set_match | context_plus_both_ol_experience_and_continuity | 6 | 4 | 0.0311 | — | descriptive_only_small_or_uneven_sample |
-| official_pool_target_mismatch | context_plus_ol_individual_experience | 2 | 1 | 0.0055 | — | descriptive_only_small_or_uneven_sample |
-| official_pool_target_mismatch | context_plus_ol_shared_roster_continuity | 2 | 1 | -0.0012 | — | descriptive_only_small_or_uneven_sample |
-| official_pool_target_mismatch | context_plus_both_ol_experience_and_continuity | 2 | 1 | -0.0032 | — | descriptive_only_small_or_uneven_sample |
+| Coverage group | Model | Analysis role | Team-seasons | Seasons | ΔNLL vs restricted reference | 95% interval | Status |
+|:--|:--|:--|--:|--:|--:|:--|:--|
+| all_primary_evaluation_rows | context_plus_ol_individual_experience | original_bundle_comparison | 528 | 4 | 0.0026 | [-0.0002, 0.0059] | sample_supports_cluster_interval |
+| all_primary_evaluation_rows | context_plus_ol_shared_roster_continuity | original_bundle_comparison | 528 | 4 | 0.0088 | [0.0024, 0.0192] | sample_supports_cluster_interval |
+| all_primary_evaluation_rows | context_plus_both_ol_experience_and_continuity | original_bundle_comparison | 528 | 4 | 0.0127 | [0.0042, 0.0267] | sample_supports_cluster_interval |
+| all_primary_evaluation_rows | posthoc_context_plus_ol_mean_shared_roster_seasons_4y | post_hoc_diagnostic | 528 | 4 | 0.0014 | [-0.0004, 0.0032] | sample_supports_cluster_interval |
+| all_primary_evaluation_rows | posthoc_context_plus_individual_experience_and_ol_mean_shared_roster_seasons_4y | post_hoc_diagnostic | 528 | 4 | 0.0050 | [0.0006, 0.0118] | sample_supports_cluster_interval |
+| not_in_issue185_validation_sample | context_plus_ol_individual_experience | original_bundle_comparison | 520 | 4 | 0.0025 | [-0.0002, 0.0054] | sample_supports_cluster_interval |
+| not_in_issue185_validation_sample | context_plus_ol_shared_roster_continuity | original_bundle_comparison | 520 | 4 | 0.0085 | [0.0026, 0.0181] | sample_supports_cluster_interval |
+| not_in_issue185_validation_sample | context_plus_both_ol_experience_and_continuity | original_bundle_comparison | 520 | 4 | 0.0126 | [0.0045, 0.0261] | sample_supports_cluster_interval |
+| not_in_issue185_validation_sample | posthoc_context_plus_ol_mean_shared_roster_seasons_4y | post_hoc_diagnostic | 520 | 4 | 0.0013 | [-0.0004, 0.0031] | sample_supports_cluster_interval |
+| not_in_issue185_validation_sample | posthoc_context_plus_individual_experience_and_ol_mean_shared_roster_seasons_4y | post_hoc_diagnostic | 520 | 4 | 0.0048 | [0.0006, 0.0112] | sample_supports_cluster_interval |
+| official_pool_exact_set_match | context_plus_ol_individual_experience | original_bundle_comparison | 6 | 4 | 0.0090 | — | descriptive_only_small_or_uneven_sample |
+| official_pool_exact_set_match | context_plus_ol_shared_roster_continuity | original_bundle_comparison | 6 | 4 | 0.0342 | — | descriptive_only_small_or_uneven_sample |
+| official_pool_exact_set_match | context_plus_both_ol_experience_and_continuity | original_bundle_comparison | 6 | 4 | 0.0311 | — | descriptive_only_small_or_uneven_sample |
+| official_pool_exact_set_match | posthoc_context_plus_ol_mean_shared_roster_seasons_4y | post_hoc_diagnostic | 6 | 4 | 0.0045 | — | descriptive_only_small_or_uneven_sample |
+| official_pool_exact_set_match | posthoc_context_plus_individual_experience_and_ol_mean_shared_roster_seasons_4y | post_hoc_diagnostic | 6 | 4 | 0.0203 | — | descriptive_only_small_or_uneven_sample |
+| official_pool_target_mismatch | context_plus_ol_individual_experience | original_bundle_comparison | 2 | 1 | 0.0055 | — | descriptive_only_small_or_uneven_sample |
+| official_pool_target_mismatch | context_plus_ol_shared_roster_continuity | original_bundle_comparison | 2 | 1 | -0.0012 | — | descriptive_only_small_or_uneven_sample |
+| official_pool_target_mismatch | context_plus_both_ol_experience_and_continuity | original_bundle_comparison | 2 | 1 | -0.0032 | — | descriptive_only_small_or_uneven_sample |
+| official_pool_target_mismatch | posthoc_context_plus_ol_mean_shared_roster_seasons_4y | post_hoc_diagnostic | 2 | 1 | 0.0042 | — | descriptive_only_small_or_uneven_sample |
+| official_pool_target_mismatch | posthoc_context_plus_individual_experience_and_ol_mean_shared_roster_seasons_4y | post_hoc_diagnostic | 2 | 1 | 0.0015 | — | descriptive_only_small_or_uneven_sample |
 
 ### Official-pool score substitution
 
 For target team-seasons in the held-out years with complete official-to-CFBD ID mapping, the already fitted models are rescored after substituting official-pool features. No coefficients are refit on validation data.
 
-| Model | Team-seasons | Seasons | CFBD-pool ΔNLL | Official-pool ΔNLL | Official minus CFBD | Status |
-|:--|--:|--:|--:|--:|--:|:--|
-| context_plus_ol_individual_experience | 8 | 4 | 0.0081 | 0.0067 | -0.0014 | descriptive_only_small_or_uneven_sample |
-| context_plus_ol_shared_roster_continuity | 8 | 4 | 0.0253 | 0.0233 | -0.0020 | descriptive_only_small_or_uneven_sample |
-| context_plus_both_ol_experience_and_continuity | 8 | 4 | 0.0225 | 0.0212 | -0.0013 | descriptive_only_small_or_uneven_sample |
+| Model | Analysis role | Team-seasons | Seasons | CFBD-pool ΔNLL vs restricted reference | Official-pool ΔNLL vs restricted reference | Official minus CFBD | Status |
+|:--|:--|--:|--:|--:|--:|--:|:--|
+| context_plus_ol_individual_experience | original_bundle_comparison | 8 | 4 | 0.0081 | 0.0067 | -0.0014 | descriptive_only_small_or_uneven_sample |
+| context_plus_ol_shared_roster_continuity | original_bundle_comparison | 8 | 4 | 0.0253 | 0.0233 | -0.0020 | descriptive_only_small_or_uneven_sample |
+| context_plus_both_ol_experience_and_continuity | original_bundle_comparison | 8 | 4 | 0.0225 | 0.0212 | -0.0013 | descriptive_only_small_or_uneven_sample |
+| posthoc_context_plus_ol_mean_shared_roster_seasons_4y | post_hoc_diagnostic | 8 | 4 | 0.0044 | 0.0034 | -0.0010 | descriptive_only_small_or_uneven_sample |
+| posthoc_context_plus_individual_experience_and_ol_mean_shared_roster_seasons_4y | post_hoc_diagnostic | 8 | 4 | 0.0156 | 0.0149 | -0.0007 | descriptive_only_small_or_uneven_sample |
 
 ## Co-start comparison
 
@@ -142,8 +180,8 @@ No production Context feature, coefficient, or ranking output was modified. The 
 The script reads the committed #183 normalized roster panel, #185 validation inputs, #181 co-start pairs, the historical Context feature tables, and the locally generated rank-distribution artifact. Large raw/reacquirable CFBD inputs remain outside Git. Local coach-tenure snapshots are also needed by the existing Context row builder.
 
 ```bash
-uv run python scripts/evaluate_offensive_line_continuity_issue_187.py --decision Reject --recommendation "Do not advance these four-season OL continuity features into production Context on the current evidence. All added-feature arms worsened held-out rank-distribution likelihood overall, and continuity was worse in each of the four evaluation seasons. Revisit only if point-in-time OL rosters or new independent evidence become available."
-uv run python scripts/evaluate_offensive_line_continuity_issue_187.py --decision Reject --recommendation "Do not advance these four-season OL continuity features into production Context on the current evidence. All added-feature arms worsened held-out rank-distribution likelihood overall, and continuity was worse in each of the four evaluation seasons. Revisit only if point-in-time OL rosters or new independent evidence become available." --check
+uv run python scripts/evaluate_offensive_line_continuity_issue_187.py --decision Reject --recommendation "Retain Reject for the currently tested OL continuity approach: the isolated mean-shared-roster feature did not improve held-out likelihood, and adding it to individual experience worsened the score. These post-hoc comparisons do not independently confirm or refute the broader continuity hypothesis; do not advance this formulation into production Context 1.4."
+uv run python scripts/evaluate_offensive_line_continuity_issue_187.py --decision Reject --recommendation "Retain Reject for the currently tested OL continuity approach: the isolated mean-shared-roster feature did not improve held-out likelihood, and adding it to individual experience worsened the score. These post-hoc comparisons do not independently confirm or refute the broader continuity hypothesis; do not advance this formulation into production Context 1.4." --check
 ```
 
 Inputs and hashes are recorded in `manifest.json`; compact team-season features, paired losses, validation changes, and co-start joins are retained beside this report.

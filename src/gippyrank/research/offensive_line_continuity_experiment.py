@@ -31,6 +31,17 @@ INDIVIDUAL_EXPERIENCE_FEATURES = (
 )
 DIAGNOSTIC_FEATURES = ("ol_prior_other_program_share_4y",)
 MODEL_FEATURES = (*INDIVIDUAL_EXPERIENCE_FEATURES, *CONTINUITY_FEATURES)
+POST_HOC_SHARED_ROSTER_FEATURE = CONTINUITY_FEATURES[0]
+POST_HOC_MODEL_ARMS = (
+    (
+        "posthoc_context_plus_ol_mean_shared_roster_seasons_4y",
+        (POST_HOC_SHARED_ROSTER_FEATURE,),
+    ),
+    (
+        "posthoc_context_plus_individual_experience_and_ol_mean_shared_roster_seasons_4y",
+        (*INDIVIDUAL_EXPERIENCE_FEATURES, POST_HOC_SHARED_ROSTER_FEATURE),
+    ),
+)
 
 
 def _as_int(value: Any, default: int = 0) -> int:

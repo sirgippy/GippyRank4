@@ -3,6 +3,7 @@
     "The CFBD target-season OL cohort is retrospective, not an archived preseason roster.",
     "The official #185 target-pool sensitivity is limited to the existing stratified manual sample and unique mappings into existing CFBD identities.",
     "The #181 co-start comparison is positive-pair-only and descriptive.",
+    "The single-continuity-feature comparisons are post-hoc diagnostics on an already inspected holdout, not independent confirmation.",
     "Held-out rank NLL is not a direct game-outcome score or proof of prospective deployability."
   ],
   "co_start_summary": {
@@ -22,6 +23,7 @@
   },
   "context13_semantic_specification_sha256": "01437795fb34318b6534ba69825323bed54fd34d287cdb87133dae1bfb93e02c",
   "decision": "Reject",
+  "decision_rule": "Refine only if the post-hoc Context-plus-mean-shared-roster feature has lower held-out NLL than the restricted Context reference; otherwise Reject the currently tested approach.",
   "evaluation_seasons": [
     2022,
     2025
@@ -677,13 +679,15 @@
   "model_arms": [
     {
       "additional_features": [],
-      "name": "current_context_1_3"
+      "analysis_role": "reference_model",
+      "name": "context_1_3_style_restricted_refit"
     },
     {
       "additional_features": [
         "ol_returning_player_share_4y",
         "ol_mean_prior_same_program_seasons_4y"
       ],
+      "analysis_role": "original_bundle_comparison",
       "name": "context_plus_ol_individual_experience"
     },
     {
@@ -692,6 +696,7 @@
         "ol_shared_pair_share_4y",
         "ol_returning_group_share_4y"
       ],
+      "analysis_role": "original_bundle_comparison",
       "name": "context_plus_ol_shared_roster_continuity"
     },
     {
@@ -702,17 +707,47 @@
         "ol_shared_pair_share_4y",
         "ol_returning_group_share_4y"
       ],
+      "analysis_role": "original_bundle_comparison",
       "name": "context_plus_both_ol_experience_and_continuity"
+    },
+    {
+      "additional_features": [
+        "ol_mean_shared_roster_seasons_4y"
+      ],
+      "analysis_role": "post_hoc_diagnostic",
+      "name": "posthoc_context_plus_ol_mean_shared_roster_seasons_4y"
+    },
+    {
+      "additional_features": [
+        "ol_returning_player_share_4y",
+        "ol_mean_prior_same_program_seasons_4y",
+        "ol_mean_shared_roster_seasons_4y"
+      ],
+      "analysis_role": "post_hoc_diagnostic",
+      "name": "posthoc_context_plus_individual_experience_and_ol_mean_shared_roster_seasons_4y"
     }
   ],
+  "post_hoc_diagnostic_disclosure": "The two single-feature diagnostics were added after inspection of the 2022-2025 holdout; they are exploratory and are not independent confirmation.",
   "primary_target_seasons": [
     2013,
     2025
   ],
-  "recommendation": "Do not advance these four-season OL continuity features into production Context on the current evidence. All added-feature arms worsened held-out rank-distribution likelihood overall, and continuity was worse in each of the four evaluation seasons. Revisit only if point-in-time OL rosters or new independent evidence become available.",
+  "recommendation": "Retain Reject for the currently tested OL continuity approach: the isolated mean-shared-roster feature did not improve held-out likelihood, and adding it to individual experience worsened the score. These post-hoc comparisons do not independently confirm or refute the broader continuity hypothesis; do not advance this formulation into production Context 1.4.",
   "results": {
     "baseline_nll": 4.517008554114654,
     "bootstrap_by_model": {
+      "context_1_3_style_restricted_refit": {
+        "central_95_interval": [
+          0.0,
+          0.0
+        ],
+        "fraction_bootstrap_better": 0.0,
+        "mean_delta": 0.0,
+        "n_resamples": 0,
+        "n_season_clusters": 4,
+        "n_team_seasons": 528,
+        "resampling": "reference arm"
+      },
       "context_plus_both_ol_experience_and_continuity": {
         "central_95_interval": [
           0.004244163961775036,
@@ -749,20 +784,35 @@
         "n_team_seasons": 528,
         "resampling": "exhaustive ordered season bootstrap: 4^4"
       },
-      "current_context_1_3": {
+      "posthoc_context_plus_individual_experience_and_ol_mean_shared_roster_seasons_4y": {
         "central_95_interval": [
-          0.0,
-          0.0
+          0.0005763349439319474,
+          0.011756551769520304
         ],
-        "fraction_bootstrap_better": 0.0,
-        "mean_delta": 0.0,
-        "n_resamples": 0,
+        "fraction_bootstrap_better": 0.00390625,
+        "mean_delta": 0.004985309210383237,
+        "n_resamples": 256,
         "n_season_clusters": 4,
         "n_team_seasons": 528,
-        "resampling": "reference arm"
+        "resampling": "exhaustive ordered season bootstrap: 4^4"
+      },
+      "posthoc_context_plus_ol_mean_shared_roster_seasons_4y": {
+        "central_95_interval": [
+          -0.0003808072831809471,
+          0.0032362993308683004
+        ],
+        "fraction_bootstrap_better": 0.07421875,
+        "mean_delta": 0.001394791450578442,
+        "n_resamples": 256,
+        "n_season_clusters": 4,
+        "n_team_seasons": 528,
+        "resampling": "exhaustive ordered season bootstrap: 4^4"
       }
     },
     "combined_nll": 4.529734208169269,
+    "continuity_2025_share_of_total_heldout_nll_deterioration": 0.6994733298360771,
+    "continuity_total_heldout_nll_deterioration": 4.63100590291097,
+    "decision_rule_for_currently_tested_approach": "Reject",
     "evaluation_seasons": [
       2022,
       2025
@@ -783,6 +833,8 @@
         "resampling": "exhaustive ordered season bootstrap: 4^4"
       }
     },
+    "post_hoc_single_feature_arm": "posthoc_context_plus_ol_mean_shared_roster_seasons_4y",
+    "post_hoc_single_feature_delta_nll_vs_context": 0.0013947914505783032,
     "same_keys_all_arms": true,
     "training_seasons": [
       2013,
@@ -791,8 +843,8 @@
     "training_team_seasons": 1140
   },
   "source_code_sha256": {
-    "analysis_script": "c9dadd9236dfa7f38881bdd470fd6165e0a61f777405736da216eb73ba33928a",
-    "feature_module": "2f30eb911891f3adef85b634c0e2249515e66a0ad0af229c1af1f5b4bca0ebee"
+    "analysis_script": "744a17ef76acd06db02b5aa019a842940400ae16a34b053aa9bd498816ec5b02",
+    "feature_module": "473c32517b2d87bf79f54754481b324a62ff1e1ff17291930feb8489436570cb"
   },
   "training_seasons": [
     2013,

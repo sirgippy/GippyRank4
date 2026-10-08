@@ -44,6 +44,8 @@ from gippyrank.research.offensive_line_continuity_experiment import (
     INDIVIDUAL_EXPERIENCE_FEATURES,
     LOOKBACK_SEASONS,
     MODEL_FEATURES,
+    POST_HOC_MODEL_ARMS,
+    POST_HOC_SHARED_ROSTER_FEATURE,
     PRIMARY_END_SEASON,
     PRIMARY_START_SEASON,
     build_official_pool_sensitivity,
@@ -62,7 +64,7 @@ COSTART_PANEL = ROOT / "data/processed/offensive_line_co_start_pilot_issue_181"
 OUTPUT = ROOT / "data/research/offensive_line_continuity_experiment_issue_187/results"
 RANK_DISTRIBUTIONS = ROOT / "data/processed/modeling/team_season_rank_distributions.csv"
 
-BASELINE = "current_context_1_3"
+BASELINE = "context_1_3_style_restricted_refit"
 INDIVIDUAL = "context_plus_ol_individual_experience"
 CONTINUITY = "context_plus_ol_shared_roster_continuity"
 COMBINED = "context_plus_both_ol_experience_and_continuity"
@@ -71,7 +73,16 @@ MODEL_ARMS: tuple[tuple[str, tuple[str, ...]], ...] = (
     (INDIVIDUAL, INDIVIDUAL_EXPERIENCE_FEATURES),
     (CONTINUITY, CONTINUITY_FEATURES),
     (COMBINED, MODEL_FEATURES),
-)
+) + POST_HOC_MODEL_ARMS
+POST_HOC_ARM_NAMES = frozenset(name for name, _features in POST_HOC_MODEL_ARMS)
+
+
+def _analysis_role(model_name: str) -> str:
+    if model_name == BASELINE:
+        return "reference_model"
+    if model_name in POST_HOC_ARM_NAMES:
+        return "post_hoc_diagnostic"
+    return "original_bundle_comparison"
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
@@ -560,15 +571,16 @@ def _evaluation_outputs(
         score_rows.append(
             {
                 "model": name,
+                "analysis_role": _analysis_role(name),
                 "additional_features": ";".join(_features),
                 "training_team_seasons": len(training_rows),
                 "evaluation_team_seasons": len(predictions[name]),
                 "evaluation_seasons": "2022;2023;2024;2025",
                 "nll": float(score["nll"]),
-                "delta_nll_vs_current_context": float(score["nll"])
+                "delta_nll_vs_context_reference": float(score["nll"])
                 - float(prior_builder.score_predictions(predictions[BASELINE])["nll"]),
                 "crps": float(score["crps"]),
-                "delta_crps_vs_current_context": float(score["crps"])
+                "delta_crps_vs_context_reference": float(score["crps"])
                 - float(prior_builder.score_predictions(predictions[BASELINE])["crps"]),
                 "expected_rank_mae": float(score["expected_rank_mae"]),
                 "median_rank_mae": float(score["median_rank_mae"]),
@@ -594,13 +606,14 @@ def _evaluation_outputs(
                 {
                     "season": season,
                     "model": name,
+                    "analysis_role": _analysis_role(name),
                     "team_seasons": len(seasonal_predictions[name]),
                     "nll": float(seasonal_scores[name]["nll"]),
-                    "delta_nll_vs_current_context": float(
+                    "delta_nll_vs_context_reference": float(
                         seasonal_scores[name]["nll"] - seasonal_scores[BASELINE]["nll"]
                     ),
                     "crps": float(seasonal_scores[name]["crps"]),
-                    "delta_crps_vs_current_context": float(
+                    "delta_crps_vs_context_reference": float(
                         seasonal_scores[name]["crps"]
                         - seasonal_scores[BASELINE]["crps"]
                     ),
@@ -612,6 +625,16 @@ def _evaluation_outputs(
 
     combined_vs_individual = _loss_deltas(losses[INDIVIDUAL], losses[COMBINED])
     combined_ci = paired_season_bootstrap(_deltas_by_season(combined_vs_individual))
+    continuity_deltas_by_season = _deltas_by_season(pairwise_deltas[CONTINUITY])
+    continuity_total_deterioration = math.fsum(
+        math.fsum(values) for values in continuity_deltas_by_season.values()
+    )
+    continuity_2025_deterioration_share = (
+        math.fsum(continuity_deltas_by_season.get(2025, []))
+        / continuity_total_deterioration
+        if continuity_total_deterioration > 0
+        else None
+    )
     base_score = prior_builder.score_predictions(predictions[BASELINE])
     combined_score = prior_builder.score_predictions(predictions[COMBINED])
     individual_score = prior_builder.score_predictions(predictions[INDIVIDUAL])
@@ -635,7 +658,9 @@ def _evaluation_outputs(
         for name, _features in MODEL_ARMS:
             output[f"nll_{name}"] = losses[name][key][0]
             output[f"crps_{name}"] = losses[name][key][1]
-        for name in (INDIVIDUAL, CONTINUITY, COMBINED):
+        for name, _features in MODEL_ARMS:
+            if name == BASELINE:
+                continue
             output[f"delta_nll_{name}_vs_context"] = pairwise_deltas[name][key][0]
         output["delta_nll_combined_vs_individual"] = combined_vs_individual[key][0]
         team_loss_rows.append(output)
@@ -657,6 +682,26 @@ def _evaluation_outputs(
             for index in range(len(predictions[BASELINE]))
         ),
         "incremental_continuity_beyond_individual_experience": incremental,
+        "continuity_total_heldout_nll_deterioration": continuity_total_deterioration,
+        "continuity_2025_share_of_total_heldout_nll_deterioration": (
+            continuity_2025_deterioration_share
+        ),
+        "post_hoc_single_feature_arm": POST_HOC_MODEL_ARMS[0][0],
+        "post_hoc_single_feature_delta_nll_vs_context": next(
+            row["delta_nll_vs_context_reference"]
+            for row in score_rows
+            if row["model"] == POST_HOC_MODEL_ARMS[0][0]
+        ),
+        "decision_rule_for_currently_tested_approach": (
+            "Refine"
+            if next(
+                row["delta_nll_vs_context_reference"]
+                for row in score_rows
+                if row["model"] == POST_HOC_MODEL_ARMS[0][0]
+            )
+            < 0
+            else "Reject"
+        ),
         "baseline_nll": float(base_score["nll"]),
         "combined_nll": float(combined_score["nll"]),
         "bootstrap_by_model": bootstrap_summary,
@@ -680,7 +725,11 @@ def _feature_diagnostics(
     models: dict[str, DirectRankModel],
     evaluation_rows: list[TeamSeason],
     losses: dict[str, dict[tuple[int, str, str], tuple[float, float]]],
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+) -> tuple[
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+]:
     panel_by_key = {(int(row["season"]), str(row["team_id"])): row for row in panel}
     team_rows = {(row.season, row.subdivision, row.team_id): row for row in model_rows}
     feature_rows: list[dict[str, Any]] = []
@@ -715,6 +764,31 @@ def _feature_diagnostics(
                 "interpretation": "descriptive; lower final-rank fraction is better",
             }
         )
+
+    collinearity_pair = (
+        INDIVIDUAL_EXPERIENCE_FEATURES[0],
+        "ol_returning_group_share_4y",
+    )
+    collinearity_values = [
+        (float(row.features[left]), float(row.features[right]))
+        for row in all_primary
+        for left, right in [collinearity_pair]
+        if row.features.get(left) is not None and row.features.get(right) is not None
+    ]
+    feature_collinearity_rows = [
+        {
+            "feature_a": collinearity_pair[0],
+            "feature_b": collinearity_pair[1],
+            "team_seasons": len(collinearity_values),
+            "pearson_r": (
+                float(np.corrcoef(np.asarray(collinearity_values).T)[0, 1])
+                if len(collinearity_values) > 1
+                else None
+            ),
+            "analysis_scope": "primary 2013-2025 common analysis cohort",
+            "interpretation": "post-hoc multicollinearity diagnostic; not an effect estimate",
+        }
+    ]
 
     eval_panel = [
         panel_by_key[(row.season, row.team_id)]
@@ -813,7 +887,9 @@ def _feature_diagnostics(
         segment_rows.append(output)
 
     coefficient_rows: list[dict[str, Any]] = []
-    for arm in (INDIVIDUAL, CONTINUITY, COMBINED):
+    for arm, _features in MODEL_ARMS:
+        if arm == BASELINE:
+            continue
         model = models[arm]
         extras = dict(MODEL_ARMS)[arm]
         n_features = len(model.feature_names)
@@ -844,7 +920,7 @@ def _feature_diagnostics(
                     "coefficient_note": "structural model term, not a causal effect",
                 }
             )
-    return feature_rows + coefficient_rows, segment_rows
+    return feature_rows + coefficient_rows, segment_rows, feature_collinearity_rows
 
 
 def _number(value: Any) -> float:
@@ -881,7 +957,9 @@ def _coverage_sensitivity(
 
     output: list[dict[str, Any]] = []
     for group, keys in sorted(groups.items()):
-        for arm in (INDIVIDUAL, CONTINUITY, COMBINED):
+        for arm, _features in MODEL_ARMS:
+            if arm == BASELINE:
+                continue
             deltas = [losses[arm][key][0] - losses[BASELINE][key][0] for key in keys]
             years: dict[int, list[float]] = defaultdict(list)
             for key, value in zip(keys, deltas, strict=True):
@@ -900,6 +978,7 @@ def _coverage_sensitivity(
                 {
                     "coverage_group": group,
                     "model": arm,
+                    "analysis_role": _analysis_role(arm),
                     "team_seasons": len(deltas),
                     "seasons": len(years),
                     "mean_delta_nll_vs_context": float(np.mean(deltas))
@@ -987,6 +1066,7 @@ def _official_prediction_sensitivity(
         return [
             {
                 "model": arm,
+                "analysis_role": _analysis_role(arm),
                 "team_seasons": 0,
                 "seasons": 0,
                 "cfbd_delta_nll_vs_context": None,
@@ -994,7 +1074,8 @@ def _official_prediction_sensitivity(
                 "official_minus_cfbd_delta_nll": None,
                 "interpretation_status": "no_complete_official_pool_rows_in_2022_2025",
             }
-            for arm in (INDIVIDUAL, CONTINUITY, COMBINED)
+            for arm, _features in MODEL_ARMS
+            if arm != BASELINE
         ]
 
     base_keys = {(row.season, row.subdivision, row.team_id) for row in official_eval}
@@ -1003,7 +1084,9 @@ def _official_prediction_sensitivity(
         key: baseline_loss_map[key] for key in base_keys if key in baseline_loss_map
     }
     output: list[dict[str, Any]] = []
-    for arm in (INDIVIDUAL, CONTINUITY, COMBINED):
+    for arm, _features in MODEL_ARMS:
+        if arm == BASELINE:
+            continue
         current_loss_map = history_builder.prediction_losses(current_predictions[arm])
         current_by_key = {
             key: current_loss_map[key] for key in base_keys if key in current_loss_map
@@ -1021,6 +1104,7 @@ def _official_prediction_sensitivity(
         output.append(
             {
                 "model": arm,
+                "analysis_role": _analysis_role(arm),
                 "team_seasons": len(official_eval),
                 "seasons": len({row.season for row in official_eval}),
                 "cfbd_delta_nll_vs_context": float(np.mean(delta_cfbd)),
@@ -1053,6 +1137,7 @@ def _render_report(
     scores: list[dict[str, Any]],
     annual: list[dict[str, Any]],
     feature_behavior: list[dict[str, Any]],
+    feature_collinearity: list[dict[str, Any]],
     feature_coefficients: list[dict[str, Any]],
     segments: list[dict[str, Any]],
     coverage_sensitivity: list[dict[str, Any]],
@@ -1081,6 +1166,24 @@ def _render_report(
         for row in official_rows
         if PRIMARY_START_SEASON <= int(row["season"]) <= PRIMARY_END_SEASON
     )
+    combined_coefficients = {
+        row["feature"]: float(row["standardized_location_coefficient"])
+        for row in feature_coefficients
+        if row["model"] == COMBINED
+    }
+    individual_coefficients = {
+        row["feature"]: float(row["standardized_location_coefficient"])
+        for row in feature_coefficients
+        if row["model"] == INDIVIDUAL
+    }
+    returning_player = INDIVIDUAL_EXPERIENCE_FEATURES[0]
+    returning_group = "ol_returning_group_share_4y"
+    collinearity = feature_collinearity[0]
+    post_hoc_scores = {
+        row["model"]: row for row in scores if row["model"] in POST_HOC_ARM_NAMES
+    }
+    single_feature_score = post_hoc_scores[POST_HOC_MODEL_ARMS[0][0]]
+    experience_plus_single_score = post_hoc_scores[POST_HOC_MODEL_ARMS[1][0]]
     lines = [
         "# Issue 187: offensive-line shared-roster continuity experiment",
         "",
@@ -1096,35 +1199,45 @@ def _render_report(
         "",
         "## Controlled evaluation",
         "",
-        "Current Context is Context 1.3's direct rank-distribution model and its existing rank-history, recruiting, talent, returning-production, coaching, and transfer inputs. The research adapter holds that feature set, normal likelihood, training-only imputation/standardization, missingness indicators, location-only Context placement, optimizer, and 0.25 regularization fixed. New coefficients are fitted only on 2013–2021; the identical 2022–2025 FBS team-seasons are scored in every arm. Feature scaling and imputation use training data only. The reported score is the repository's empirical rank-distribution negative log-likelihood (nats per team-season), not a game-level score.",
+        "The reference is a Context 1.3-style direct rank-distribution model refitted on the restricted 2013–2021 training cohort, with Context 1.3's rank-history, recruiting, talent, returning-production, coaching, and transfer inputs. It is not the currently active production Context 1.4 model. The research adapter holds that feature set, likelihood, training-only imputation and standardization, missingness indicators, location-only Context placement, optimizer, and 0.25 regularization fixed. New coefficients are fitted only on 2013–2021; the identical 2022–2025 FBS team-seasons are scored in every arm. The reported score is the repository's empirical rank-distribution negative log-likelihood (nats per team-season), not a game-level score.",
+        "",
+        "The two single-feature comparisons are post-hoc diagnostics added after the original holdout was inspected. They use the same train/test cohorts, model settings, target population, and score as the original arms; they are exploratory and do not count as independent confirmation.",
         "",
         "## Held-out predictive results",
         "",
         "Negative ΔNLL favors the added-feature model. The interval resamples held-out seasons as clusters and is descriptive with four evaluation seasons.",
         "",
-        "| Model | Team-seasons | NLL | ΔNLL vs Context | 95% season-bootstrap interval | Seasons better | Team-seasons improved | Top 10 share of gross gains |",
-        "|:--|--:|--:|--:|:--|--:|--:|--:|",
+        "| Model | Analysis role | Team-seasons | NLL | ΔNLL vs restricted reference | 95% season-bootstrap interval | Seasons better | Team-seasons improved | Top 10 share of gross gains |",
+        "|:--|:--|--:|--:|--:|:--|--:|--:|--:|",
     ]
     for row in scores:
         ci = f"[{_format(row.get('delta_nll_bootstrap_95_low'))}, {_format(row.get('delta_nll_bootstrap_95_high'))}]"
         lines.append(
-            f"| {row['model']} | {row['evaluation_team_seasons']} | {_format(row['nll'])} | {_format(row['delta_nll_vs_current_context'])} | {ci} | {row['seasons_with_lower_nll']} / 4 | {row['team_seasons_better']} ({_format(row['team_season_fraction_better'] * 100, 1)}%) | {_format(row['top_10_share_of_gross_nll_improvements'] * 100, 1)}% |"
+            f"| {row['model']} | {row['analysis_role']} | {row['evaluation_team_seasons']} | {_format(row['nll'])} | {_format(row['delta_nll_vs_context_reference'])} | {ci} | {row['seasons_with_lower_nll']} / 4 | {row['team_seasons_better']} ({_format(row['team_season_fraction_better'] * 100, 1)}%) | {_format(row['top_10_share_of_gross_nll_improvements'] * 100, 1)}% |"
         )
     lines.extend(
         [
+            "",
+            f"Post-hoc single-feature results: Context plus `{POST_HOC_SHARED_ROSTER_FEATURE}` had ΔNLL {_format(single_feature_score['delta_nll_vs_context_reference'])}; adding that feature to the individual-experience arm had ΔNLL {_format(experience_plus_single_score['delta_nll_vs_context_reference'])}. Under the stated decision rule, the first comparison maps to **{metrics['decision_rule_for_currently_tested_approach']}** for the currently tested approach. These are exploratory results on the inspected holdout, not independent confirmation.",
             "",
             f"Continuity beyond individual experience: combined ΔNLL versus the individual-experience arm is {_format(metrics['incremental_continuity_beyond_individual_experience']['combined_delta_nll_vs_individual_experience'])}, with season-cluster interval {_format(metrics['incremental_continuity_beyond_individual_experience']['paired_season_bootstrap']['central_95_interval'][0])} to {_format(metrics['incremental_continuity_beyond_individual_experience']['paired_season_bootstrap']['central_95_interval'][1])}.",
             "",
             "### By season",
             "",
-            "| Season | Model | Team-seasons | NLL | ΔNLL vs Context | ΔCRPS vs Context |",
-            "|--:|:--|--:|--:|--:|--:|",
+            "| Season | Model | Analysis role | Team-seasons | NLL | ΔNLL vs restricted reference | ΔCRPS vs restricted reference |",
+            "|--:|:--|:--|--:|--:|--:|--:|",
         ]
     )
     for row in annual:
         lines.append(
-            f"| {row['season']} | {row['model']} | {row['team_seasons']} | {_format(row['nll'])} | {_format(row['delta_nll_vs_current_context'])} | {_format(row['delta_crps_vs_current_context'])} |"
+            f"| {row['season']} | {row['model']} | {row['analysis_role']} | {row['team_seasons']} | {_format(row['nll'])} | {_format(row['delta_nll_vs_context_reference'])} | {_format(row['delta_crps_vs_context_reference'])} |"
         )
+    lines.extend(
+        [
+            "",
+            f"The three-feature continuity arm deteriorated in all four evaluation years. 2025 accounts for {_format(float(metrics['continuity_2025_share_of_total_heldout_nll_deterioration']) * 100, 1)}% of its total held-out NLL deterioration when summed over team-seasons.",
+        ]
+    )
     lines.extend(
         [
             "",
@@ -1143,6 +1256,14 @@ def _render_report(
     lines.extend(
         [
             "",
+            "### Collinearity and coefficient instability",
+            "",
+            "| Feature A | Feature B | Team-seasons | Pearson r | Scope |",
+            "|:--|:--|--:|--:|:--|",
+            f"| {collinearity['feature_a']} | {collinearity['feature_b']} | {collinearity['team_seasons']} | {_format(collinearity['pearson_r'], 3)} | {collinearity['analysis_scope']} |",
+            "",
+            f"Returning-player share and returning-group share correlate at approximately {_format(collinearity['pearson_r'], 3)}. In the combined bundle, their standardized coefficients are {_format(combined_coefficients[returning_player], 3)} and {_format(combined_coefficients[returning_group], 3)}, respectively, with opposing signs. The returning-player coefficient is {_format(individual_coefficients[returning_player], 3)} in the individual-experience-only bundle. This shift is consistent with unstable allocation across nearly redundant predictors; the bundle coefficients do not identify separate effects.",
+            "",
             "| Model | Feature | Standardized location coefficient | Missingness coefficient | Mean held-out location contribution |",
             "|:--|:--|--:|--:|--:|",
         ]
@@ -1156,7 +1277,7 @@ def _render_report(
             "",
             "### Held-out room profiles",
             "",
-            "| Profile | Team-seasons | Seasons | Mean final-rank fraction | Mean OL pool size | ΔNLL vs Context (individual / continuity / both) |",
+            "| Profile | Team-seasons | Seasons | Mean final-rank fraction | Mean OL pool size | ΔNLL vs restricted reference (individual / continuity / both) |",
             "|:--|--:|--:|--:|--:|:--|",
         ]
     )
@@ -1192,8 +1313,8 @@ def _render_report(
             "",
             "Rows not included in the issue 185 sample remain unclassified; they are not called high confidence. Any group without at least 20 team-seasons over three seasons is reported as descriptive only.",
             "",
-            "| Coverage group | Model | Team-seasons | Seasons | ΔNLL vs Context | 95% interval | Status |",
-            "|:--|:--|--:|--:|--:|:--|:--|",
+            "| Coverage group | Model | Analysis role | Team-seasons | Seasons | ΔNLL vs restricted reference | 95% interval | Status |",
+            "|:--|:--|:--|--:|--:|--:|:--|:--|",
         ]
     )
     for row in coverage_sensitivity:
@@ -1203,7 +1324,7 @@ def _render_report(
             else "—"
         )
         lines.append(
-            f"| {row['coverage_group']} | {row['model']} | {row['team_seasons']} | {row['seasons']} | {_format(row['mean_delta_nll_vs_context'])} | {ci} | {row['interpretation_status']} |"
+            f"| {row['coverage_group']} | {row['model']} | {row['analysis_role']} | {row['team_seasons']} | {row['seasons']} | {_format(row['mean_delta_nll_vs_context'])} | {ci} | {row['interpretation_status']} |"
         )
     lines.extend(
         [
@@ -1212,13 +1333,13 @@ def _render_report(
             "",
             "For target team-seasons in the held-out years with complete official-to-CFBD ID mapping, the already fitted models are rescored after substituting official-pool features. No coefficients are refit on validation data.",
             "",
-            "| Model | Team-seasons | Seasons | CFBD-pool ΔNLL | Official-pool ΔNLL | Official minus CFBD | Status |",
-            "|:--|--:|--:|--:|--:|--:|:--|",
+            "| Model | Analysis role | Team-seasons | Seasons | CFBD-pool ΔNLL vs restricted reference | Official-pool ΔNLL vs restricted reference | Official minus CFBD | Status |",
+            "|:--|:--|--:|--:|--:|--:|--:|:--|",
         ]
     )
     for row in official_prediction_sensitivity:
         lines.append(
-            f"| {row['model']} | {row['team_seasons']} | {row['seasons']} | {_format(row.get('cfbd_delta_nll_vs_context'))} | {_format(row.get('official_pool_delta_nll_vs_context'))} | {_format(row.get('official_minus_cfbd_delta_nll'))} | {row['interpretation_status']} |"
+            f"| {row['model']} | {row['analysis_role']} | {row['team_seasons']} | {row['seasons']} | {_format(row.get('cfbd_delta_nll_vs_context'))} | {_format(row.get('official_pool_delta_nll_vs_context'))} | {_format(row.get('official_minus_cfbd_delta_nll'))} | {row['interpretation_status']} |"
         )
     lines.extend(
         [
@@ -1316,13 +1437,20 @@ def _run(
         predictions,
         losses,
     ) = _evaluation_outputs(analysis_rows)
+    if decision and decision != metrics["decision_rule_for_currently_tested_approach"]:
+        raise ValueError(
+            "decision must follow the post-hoc Context-plus-single-continuity result: "
+            f"expected {metrics['decision_rule_for_currently_tested_approach']}"
+        )
     evaluation_rows = [row for row in analysis_rows if 2022 <= row.season <= 2025]
-    feature_diagnostic_rows, segment_rows = _feature_diagnostics(
-        panel=panel,
-        model_rows=analysis_rows,
-        models=models,
-        evaluation_rows=evaluation_rows,
-        losses=losses,
+    feature_diagnostic_rows, segment_rows, feature_collinearity_rows = (
+        _feature_diagnostics(
+            panel=panel,
+            model_rows=analysis_rows,
+            models=models,
+            evaluation_rows=evaluation_rows,
+            losses=losses,
+        )
     )
     feature_behavior = [
         row
@@ -1352,6 +1480,7 @@ def _run(
         "evaluation_by_season.csv": annual_rows,
         "evaluation_team_losses.csv": team_loss_rows,
         "feature_behavior.csv": feature_behavior,
+        "feature_collinearity.csv": feature_collinearity_rows,
         "feature_coefficients.csv": feature_coefficients,
         "heldout_room_profiles.csv": segment_rows,
         "coverage_sensitivity.csv": coverage_rows,
@@ -1396,9 +1525,19 @@ def _run(
         "recommendation": recommendation,
         "context13_semantic_specification_sha256": context13_semantic_specification_sha256(),
         "model_arms": [
-            {"name": name, "additional_features": list(features)}
+            {
+                "name": name,
+                "analysis_role": _analysis_role(name),
+                "additional_features": list(features),
+            }
             for name, features in MODEL_ARMS
         ],
+        "post_hoc_diagnostic_disclosure": (
+            "The two single-feature diagnostics were added after inspection of the 2022-2025 holdout; they are exploratory and are not independent confirmation."
+        ),
+        "decision_rule": (
+            "Refine only if the post-hoc Context-plus-mean-shared-roster feature has lower held-out NLL than the restricted Context reference; otherwise Reject the currently tested approach."
+        ),
         "feature_definitions": {
             CONTINUITY_FEATURES[
                 0
@@ -1448,6 +1587,7 @@ def _run(
             "The CFBD target-season OL cohort is retrospective, not an archived preseason roster.",
             "The official #185 target-pool sensitivity is limited to the existing stratified manual sample and unique mappings into existing CFBD identities.",
             "The #181 co-start comparison is positive-pair-only and descriptive.",
+            "The single-continuity-feature comparisons are post-hoc diagnostics on an already inspected holdout, not independent confirmation.",
             "Held-out rank NLL is not a direct game-outcome score or proof of prospective deployability.",
         ],
     }
@@ -1458,6 +1598,7 @@ def _run(
         scores=score_rows,
         annual=annual_rows,
         feature_behavior=feature_behavior,
+        feature_collinearity=feature_collinearity_rows,
         feature_coefficients=feature_coefficients,
         segments=segment_rows,
         coverage_sensitivity=coverage_rows,
