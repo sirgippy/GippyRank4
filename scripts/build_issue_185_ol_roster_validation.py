@@ -1,8 +1,9 @@
 """Build issue 185's offline CFBD-to-official OL roster comparison.
 
-The sample was frozen before official roster inspection. This builder reads the
-frozen rows, cached CFBD roster data, the official-source inventory, and a small
-manual delta/crosswalk table. It does not download or mutate raw source data.
+The 40 official OL pools are transcribed independently from the linked official
+sources. The builder compares those pools with the cached CFBD candidates; it
+does not construct the official pool from CFBD names. It reads local inputs
+only and does not download or mutate raw source data.
 """
 from __future__ import annotations
 
@@ -22,7 +23,8 @@ PANEL = ROOT / "data/processed/offensive_line_shared_roster_issue_183"
 OUTPUT = RESEARCH / "results"
 SAMPLE_PATH = RESEARCH / "frozen_sample.csv"
 OFFICIAL_SOURCES_PATH = RESEARCH / "official_source_inventory.csv"
-DELTAS_PATH = RESEARCH / "manual_roster_deltas.csv"
+OFFICIAL_ROSTERS_PATH = RESEARCH / "official_ol_rosters.csv"
+REVIEWS_PATH = RESEARCH / "cfbd_candidate_reviews.csv"
 CROSSWALK_PATH = RESEARCH / "identity_crosswalk.csv"
 CFBD_PATH = PANEL / "normalized_roster_player_seasons.csv.gz"
 
@@ -53,40 +55,67 @@ def pair_count(size: int) -> int:
     return math.comb(size, 2) if size >= 2 else 0
 
 
-def load_cfbd() -> dict[str, dict[str, str]]:
-    by_key: dict[str, dict[str, str]] = defaultdict(dict)
+def load_cfbd() -> tuple[dict[str, dict[str, str]], dict[str, dict[str, list[dict[str, str]]]]]:
+    ol_by_key: dict[str, dict[str, str]] = defaultdict(dict)
+    roster_by_key: dict[str, dict[str, list[dict[str, str]]]] = defaultdict(lambda: defaultdict(list))
     with gzip.open(CFBD_PATH, "rt", newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
-            if row["source_classification"] != "fbs" or row["normalized_ol_status"] != "offensive_line":
+            if row["source_classification"] != "fbs":
                 continue
             key = f"{row['season']}|{row['team_id']}"
             name_key = normalize(row["player_name"])
             if name_key:
-                by_key[key].setdefault(name_key, row["player_name"])
-    return by_key
+                roster_by_key[key][name_key].append(row)
+                if row["normalized_ol_status"] == "offensive_line":
+                    ol_by_key[key].setdefault(name_key, row["player_name"])
+    return ol_by_key, roster_by_key
 
 
 def build(raw_root: Path, *, check: bool = False) -> None:
     sample = read_csv(SAMPLE_PATH)
     sources = {row["sample_id"]: row for row in read_csv(OFFICIAL_SOURCES_PATH)}
-    deltas = read_csv(DELTAS_PATH)
+    official_rosters = read_csv(OFFICIAL_ROSTERS_PATH)
+    reviews = read_csv(REVIEWS_PATH)
     aliases = read_csv(CROSSWALK_PATH)
-    cfbd = load_cfbd()
+    cfbd, cfbd_roster = load_cfbd()
     sample_by_id = {row["sample_id"]: row for row in sample}
     if len(sample) != 40 or set(sources) != set(sample_by_id):
         raise SystemExit("Expected 40 frozen sample rows and one official source per sample")
 
-    deltas_by_id: dict[str, list[dict[str, str]]] = defaultdict(list)
+    official_by_id: dict[str, dict[str, dict[str, str]]] = defaultdict(dict)
+    for row in official_rosters:
+        sample_id = row["sample_id"]
+        if sample_id not in sample_by_id:
+            raise SystemExit(f"Official roster row references an unknown sample: {sample_id}")
+        if row["official_position_class"] != "offensive_line":
+            raise SystemExit(f"Non-OL row in independent official pool: {sample_id}/{row['official_player_name']}")
+        if row["source_url"] != sources[sample_id]["source_url"]:
+            raise SystemExit(f"Official roster source URL mismatch for {sample_id}")
+        name_key = normalize(row["official_player_name"])
+        if not name_key or name_key in official_by_id[sample_id]:
+            raise SystemExit(f"Blank or duplicate official player for {sample_id}: {row['official_player_name']}")
+        official_by_id[sample_id][name_key] = row
+
+    reviews_by_id: dict[str, dict[str, dict[str, str]]] = defaultdict(dict)
     aliases_by_id: dict[str, list[dict[str, str]]] = defaultdict(list)
-    for row in deltas:
-        deltas_by_id[row["sample_id"]].append(row)
+    for row in reviews:
+        name_key = normalize(row["cfbd_player_name"])
+        if row["sample_id"] not in sample_by_id or name_key in reviews_by_id[row["sample_id"]]:
+            raise SystemExit(f"Unknown or duplicate CFBD candidate review: {row['sample_id']}/{row['cfbd_player_name']}")
+        if row["decision"] not in {"cfbd_only", "unresolved"}:
+            raise SystemExit(f"Unknown CFBD candidate review decision: {row['decision']}")
+        reviews_by_id[row["sample_id"]][name_key] = row
     for row in aliases:
         aliases_by_id[row["sample_id"]].append(row)
+
+    if set(official_by_id) != set(sample_by_id):
+        missing = sorted(set(sample_by_id) - set(official_by_id))
+        raise SystemExit(f"Independent official OL pool missing sample rows: {missing}")
 
     player_rows: list[dict[str, object]] = []
     team_rows: list[dict[str, object]] = []
     source_rows: list[dict[str, object]] = []
-    mismatch_counter: Counter[tuple[str, str]] = Counter()
+    mismatch_counter: Counter[tuple[str, str, str]] = Counter()
     era_acc: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
 
     for sample_row in sample:
@@ -99,10 +128,8 @@ def build(raw_root: Path, *, check: bool = False) -> None:
                 f"CFBD pool count changed for {sample_id}: cache={len(cfbd_names)} frozen={frozen_count}"
             )
         candidate_name_by_key = dict(cfbd_names)
-        unresolved: set[str] = set()
-        candidate_category: dict[str, str] = {}
-        candidate_note: dict[str, str] = {}
-        official_name_by_key: dict[str, str] = dict(cfbd_names)
+        official_records = official_by_id[sample_id]
+        review_records = reviews_by_id[sample_id]
 
         for alias in aliases_by_id[sample_id]:
             cfbd_name = alias["cfbd_player_name"]
@@ -113,56 +140,60 @@ def build(raw_root: Path, *, check: bool = False) -> None:
             if okey in candidate_name_by_key and okey != ckey:
                 raise SystemExit(f"Crosswalk target collides with a candidate for {sample_id}: {official_name}")
             candidate_name_by_key[okey] = candidate_name_by_key.pop(ckey)
-            official_name_by_key.pop(ckey, None)
-            official_name_by_key[okey] = official_name
 
-        for delta in deltas_by_id[sample_id]:
-            name_key = normalize(delta["player_name"])
-            if delta["decision"] == "add":
-                official_name_by_key[name_key] = delta["player_name"]
-            elif delta["decision"] == "remove":
-                if name_key not in candidate_name_by_key:
-                    raise SystemExit(f"Removed candidate missing for {sample_id}: {delta['player_name']}")
-                official_name_by_key.pop(name_key, None)
-                candidate_category[name_key] = delta["category"]
-                candidate_note[name_key] = delta["review_note"]
-                if delta["category"] == "official_roster_membership_unresolved":
-                    unresolved.add(name_key)
-            else:
-                raise SystemExit(f"Unknown manual delta decision: {delta['decision']}")
+        for review_key, review in review_records.items():
+            if review_key not in candidate_name_by_key:
+                raise SystemExit(f"Reviewed CFBD candidate missing for {sample_id}: {review['cfbd_player_name']}")
+            if review_key in official_records:
+                raise SystemExit(f"Reviewed non-match is in official OL pool: {sample_id}/{review['cfbd_player_name']}")
 
         cfbd_keys = set(candidate_name_by_key)
-        official_keys = set(official_name_by_key)
+        official_keys = set(official_records)
         overlap = cfbd_keys & official_keys
         only_cfbd = cfbd_keys - official_keys
         only_official = official_keys - cfbd_keys
+        unresolved_keys = {key for key, review in review_records.items() if review["decision"] == "unresolved"}
+        if only_cfbd != set(review_records):
+            unreviewed = sorted(only_cfbd - set(review_records))
+            unexpected = sorted(set(review_records) - only_cfbd)
+            raise SystemExit(f"CFBD-only roster decisions incomplete for {sample_id}: unreviewed={unreviewed}, unexpected={unexpected}")
         if not overlap and only_cfbd and only_official and sample_id != "S03":
             raise SystemExit(f"Unexpectedly empty player overlap for {sample_id}")
 
         for name_key in sorted(cfbd_keys | official_keys):
             in_cfbd, in_official = name_key in cfbd_keys, name_key in official_keys
             cfbd_name = candidate_name_by_key.get(name_key, "")
-            official_name = official_name_by_key.get(name_key, "")
+            official_record = official_records.get(name_key, {})
+            official_name = official_record.get("official_player_name", "")
+            roster_hits = cfbd_roster.get(cfbd_key, {}).get(name_key, [])
+            roster_position = roster_hits[0]["position_original"] if roster_hits else ""
+            if in_cfbd:
+                roster_presence = "present_as_cfbd_ol"
+            elif not roster_hits:
+                roster_presence = "absent_from_roster"
+            elif all(
+                not hit["position_original"].strip() or hit["normalized_ol_status"] == "unknown"
+                for hit in roster_hits
+            ):
+                roster_presence = "present_with_unknown_or_blank_position"
+            else:
+                roster_presence = "present_at_another_position"
             if in_cfbd and in_official:
                 status = "matched"
                 category = "exact_or_crosswalk_name_match"
                 note = ""
-            elif in_cfbd and name_key in unresolved:
+            elif in_cfbd and review_records[name_key]["decision"] == "unresolved":
                 status = "unresolved"
-                category = candidate_category[name_key]
-                note = candidate_note[name_key]
+                category = review_records[name_key]["mismatch_category"]
+                note = review_records[name_key]["review_note"]
             elif in_cfbd:
                 status = "cfbd_only"
-                category = candidate_category.get(name_key, "cfbd_only_requires_taxonomy")
-                note = candidate_note.get(name_key, "")
+                category = review_records[name_key]["mismatch_category"]
+                note = review_records[name_key]["review_note"]
             else:
                 status = "official_only"
-                matching_delta = next(
-                    (d for d in deltas_by_id[sample_id] if d["decision"] == "add" and normalize(d["player_name"]) == name_key),
-                    None,
-                )
-                category = matching_delta["category"] if matching_delta else "official_ol_omitted_by_cfbd"
-                note = matching_delta["review_note"] if matching_delta else "Added from official source roster"
+                category = "official_ol_missing_from_cfbd_ol_pool"
+                note = f"Independent official OL transcription; CFBD roster: {roster_presence}"
             player_rows.append(
                 {
                     "sample_id": sample_id,
@@ -174,20 +205,23 @@ def build(raw_root: Path, *, check: bool = False) -> None:
                     "official_ol": str(in_official).lower(),
                     "comparison_status": status,
                     "mismatch_category": category,
+                    "cfbd_roster_presence": roster_presence,
+                    "cfbd_roster_player_name": roster_hits[0]["player_name"] if roster_hits else "",
+                    "cfbd_roster_position_original": roster_position,
                     "review_note": note,
                     "source_url": sources[sample_id]["source_url"],
                 }
             )
             if status in {"cfbd_only", "official_only", "unresolved"}:
-                mismatch_counter[(status, category)] += 1
+                mismatch_counter[(status, category, roster_presence)] += 1
 
         tp = len(overlap)
-        fp = len(only_cfbd - unresolved)
+        fp = len(only_cfbd - unresolved_keys)
         fn = len(only_official)
         resolved_predicted = tp + fp
         precision = tp / resolved_predicted if resolved_predicted else None
         recall = tp / len(official_keys) if official_keys else None
-        exact_player_set = not fp and not fn and not unresolved
+        exact_player_set = not fp and not fn and not unresolved_keys
         cfbd_pair_pool = pair_count(resolved_predicted)
         official_pair_pool = pair_count(len(official_keys))
         shared_pairs = pair_count(tp)
@@ -202,7 +236,8 @@ def build(raw_root: Path, *, check: bool = False) -> None:
             "true_positive_names": tp,
             "cfbd_only_false_positive_names": fp,
             "official_only_false_negative_names": fn,
-            "unresolved_cfbd_names": len(unresolved),
+            "unresolved_cfbd_names": len(unresolved_keys),
+            "player_mismatch_count": fp + fn + len(unresolved_keys),
             "precision_resolved": f"{precision:.6f}" if precision is not None else "",
             "recall_resolved": f"{recall:.6f}" if recall is not None else "",
             "absolute_count_difference": abs(len(cfbd_keys) - len(official_keys)),
@@ -223,7 +258,7 @@ def build(raw_root: Path, *, check: bool = False) -> None:
                 "team_name": sample_row["team_name"],
                 "cfbd_ol_count": len(cfbd_keys),
                 "official_ol_count": len(official_keys),
-                "official_count_basis": "Manual roster reconciliation; see manual_roster_deltas.csv and identity_crosswalk.csv",
+                "official_count_basis": "Independent official roster transcription; see official_ol_rosters.csv",
             }
         )
         era = sample_row["era"]
@@ -234,9 +269,12 @@ def build(raw_root: Path, *, check: bool = False) -> None:
             "tp": tp,
             "fp": fp,
             "fn": fn,
-            "unresolved": len(unresolved),
+            "unresolved": len(unresolved_keys),
             "exact_count": int(len(cfbd_keys) == len(official_keys)),
             "exact_set": int(exact_player_set),
+            "mismatched_team_season": int(fp + fn + len(unresolved_keys) > 0),
+            "one_player_mismatch_team_season": int(fp + fn + len(unresolved_keys) == 1),
+            "multiple_player_mismatch_team_season": int(fp + fn + len(unresolved_keys) > 1),
             "absolute_count_difference": abs(len(cfbd_keys) - len(official_keys)),
             "candidate_pairs": cfbd_pair_pool,
             "official_pairs": official_pair_pool,
@@ -259,6 +297,10 @@ def build(raw_root: Path, *, check: bool = False) -> None:
                 "cfbd_only_false_positives": values["fp"],
                 "official_only_false_negatives": values["fn"],
                 "unresolved_cfbd_players": values["unresolved"],
+                "team_seasons_with_mismatch": values["mismatched_team_season"],
+                "team_season_mismatch_rate": f"{values['mismatched_team_season'] / values['samples']:.6f}",
+                "team_seasons_with_one_player_mismatch": values["one_player_mismatch_team_season"],
+                "team_seasons_with_multiple_player_mismatches": values["multiple_player_mismatch_team_season"],
                 "micro_precision_resolved": f"{precision:.6f}" if precision is not None else "",
                 "micro_recall_resolved": f"{recall:.6f}" if recall is not None else "",
                 "exact_count_match_team_seasons": values["exact_count"],
@@ -273,12 +315,24 @@ def build(raw_root: Path, *, check: bool = False) -> None:
         )
 
     taxonomy_rows = [
-        {"comparison_status": status, "mismatch_category": category, "player_rows": count}
-        for (status, category), count in sorted(mismatch_counter.items())
+        {
+            "comparison_status": status,
+            "mismatch_category": category,
+            "cfbd_roster_presence": roster_presence,
+            "player_rows": count,
+        }
+        for (status, category, roster_presence), count in sorted(mismatch_counter.items())
     ]
     input_hashes = {
         str(path.relative_to(ROOT)): sha256(path)
-        for path in (SAMPLE_PATH, OFFICIAL_SOURCES_PATH, DELTAS_PATH, CROSSWALK_PATH, CFBD_PATH)
+        for path in (
+            SAMPLE_PATH,
+            OFFICIAL_SOURCES_PATH,
+            OFFICIAL_ROSTERS_PATH,
+            REVIEWS_PATH,
+            CROSSWALK_PATH,
+            CFBD_PATH,
+        )
     }
     report_path = OUTPUT / "report.md"
     report = render_report(team_rows, era_rows, taxonomy_rows, input_hashes)
@@ -304,11 +358,11 @@ def build(raw_root: Path, *, check: bool = False) -> None:
         "sample_id", "season", "team_name", "player_name", "position_original", "position_normalized",
     ])
     write_csv(OUTPUT / "player_comparison.csv", player_rows, [
-        "sample_id", "season", "team_name", "cfbd_player_name", "official_player_name", "cfbd_ol", "official_ol", "comparison_status", "mismatch_category", "review_note", "source_url",
+        "sample_id", "season", "team_name", "cfbd_player_name", "official_player_name", "cfbd_ol", "official_ol", "comparison_status", "mismatch_category", "cfbd_roster_presence", "cfbd_roster_player_name", "cfbd_roster_position_original", "review_note", "source_url",
     ])
     write_csv(OUTPUT / "team_season_summary.csv", team_rows, list(team_rows[0]))
     write_csv(OUTPUT / "era_metrics.csv", era_rows, list(era_rows[0]))
-    write_csv(OUTPUT / "mismatch_taxonomy.csv", taxonomy_rows, ["comparison_status", "mismatch_category", "player_rows"])
+    write_csv(OUTPUT / "mismatch_taxonomy.csv", taxonomy_rows, ["comparison_status", "mismatch_category", "cfbd_roster_presence", "player_rows"])
     write_csv(OUTPUT / "source_inventory.csv", source_rows, list(source_rows[0]))
     (OUTPUT / "build_manifest.json").write_text(
         json.dumps({"input_sha256": input_hashes}, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -349,69 +403,96 @@ def serialize_candidate_rows(sample: list[dict[str, str]], cfbd: dict[str, dict[
     return serialize_table(candidate_rows(sample, cfbd))
 
 
-def render_report(team_rows: list[dict[str, object]], era_rows: list[dict[str, object]], taxonomy_rows: list[dict[str, object]], hashes: dict[str, str]) -> str:
-    resolved_tp = sum(int(row["true_positive_names"]) for row in team_rows)
-    resolved_fp = sum(int(row["cfbd_only_false_positive_names"]) for row in team_rows)
-    resolved_fn = sum(int(row["official_only_false_negative_names"]) for row in team_rows)
+def render_report(
+    team_rows: list[dict[str, object]],
+    era_rows: list[dict[str, object]],
+    taxonomy_rows: list[dict[str, object]],
+    hashes: dict[str, str],
+) -> str:
+    matched = sum(int(row["true_positive_names"]) for row in team_rows)
+    false_positive = sum(int(row["cfbd_only_false_positive_names"]) for row in team_rows)
+    false_negative = sum(int(row["official_only_false_negative_names"]) for row in team_rows)
     unresolved = sum(int(row["unresolved_cfbd_names"]) for row in team_rows)
-    predicted = resolved_tp + resolved_fp
-    gold = sum(int(row["official_ol_count"]) for row in team_rows)
-    precision = resolved_tp / predicted if predicted else 0
-    recall = resolved_tp / gold if gold else 0
+    cfbd_total = sum(int(row["cfbd_ol_count"]) for row in team_rows)
+    official_total = sum(int(row["official_ol_count"]) for row in team_rows)
+    precision = matched / (matched + false_positive) if matched + false_positive else 0
+    recall = matched / official_total if official_total else 0
     exact_count = sum(row["exact_count_match"] == "true" for row in team_rows)
     exact_sets = sum(row["exact_player_set_match"] == "true" for row in team_rows)
+    one_mismatch = sum(int(row["player_mismatch_count"]) == 1 for row in team_rows)
+    multiple_mismatches = sum(int(row["player_mismatch_count"]) > 1 for row in team_rows)
+    mismatched_teams = one_mismatch + multiple_mismatches
+    absolute_differences = Counter(int(row["absolute_count_difference"]) for row in team_rows)
+    candidate_pairs = sum(int(row["candidate_pair_pool_resolved"]) for row in team_rows)
+    official_pairs = sum(int(row["official_pair_pool"]) for row in team_rows)
+    shared_pairs = sum(int(row["shared_pairs_if_any_two_pool_players_cooccur"]) for row in team_rows)
+    unsupported_pairs = candidate_pairs - shared_pairs
+    missed_pairs = official_pairs - shared_pairs
+    official_only_presence = Counter()
+    for row in taxonomy_rows:
+        if row["comparison_status"] == "official_only":
+            official_only_presence[row["cfbd_roster_presence"]] += int(row["player_rows"])
+    difference_summary = ", ".join(
+        f"{difference}: {count}" for difference, count in sorted(absolute_differences.items())
+    )
+    presence_summary = ", ".join(
+        f"{category}: {count}"
+        for category, count in sorted(official_only_presence.items())
+    )
     report = [
         "# Issue 185: CFBD offensive-line target-pool validation",
         "",
         "## Scope and frozen sample",
         "",
-        "The study compares CFBD's target-season offensive-line (OL) labels with season-specific official athletics roster positions for 40 preselected FBS team-seasons. The frozen sample covers 2009–2012, 2013–2016, 2017–2020, and 2021–2026, with ten team-seasons in each window. It includes a 2011 Idaho team-season with zero CFBD OL labels and 2025 Army with 36, to expose both tails of the observed pool size.",
+        "This bounded study compares the target-season offensive-line (OL) pools for the same 40 frozen FBS team-seasons. The sample remains ten team-seasons in each of four windows: 2009–2012, 2013–2016, 2017–2020, and 2021–2026. The frozen draw includes 2011 Idaho with zero CFBD OL labels and 2025 Army with 36 candidates to expose both observed tails. No new team-seasons were added.",
         "",
-        "The draw was frozen on 2026-10-07 from the issue 183 CFBD season summary and team-conference metadata before official roster pages were inspected. Its sample, protocol, and input hashes are in `data/research/offensive_line_target_pool_validation_issue_185/`. The draw uses 3 lower-quartile, 4 middle-half, and 3 upper-quartile OL-count rows per window, balances roster-size quartiles, and includes at least eight conference labels per window. No official availability informed selection.",
+        "The sample and protocol were frozen on 2026-10-07 before official roster inspection. The draw uses 3 lower-quartile, 4 middle-half, and 3 upper-quartile CFBD-count rows per window, balances roster-size quartiles, and includes at least eight conference labels per window. The sample and freeze metadata remain unchanged.",
         "",
-        "## Source protocol and limitations",
+        "## Independent source comparison",
         "",
-        "The source inventory records one official athletics roster or season-specific roster guide per sampled season. Most sources are retrospective season archive pages viewed on 2026-10-07; several pages are hosted later than the season. A current archive page does not prove the date its content was first captured, so roster backfills and seasonal cutoffs cannot always be separated. The Central Michigan 2009 roster PDF provides a stronger contemporaneous roster-guide view; Northwestern 2016 and Florida State 2019 use postseason/media-guide material. South Carolina 2019 is supported by its season-specific official archive page with OL labels.",
+        "`official_ol_rosters.csv` records the OL names transcribed from the single official season roster or roster guide linked for each sample row. That set is read independently by the builder; CFBD names do not initialize it. The two pools are reconciled only after both are loaded. `cfbd_candidate_reviews.csv` records CFBD candidates explicitly excluded by the official source or retained as unresolved, and `identity_crosswalk.csv` documents the Miami Feliciano name variation. `player_comparison.csv` includes each player's official membership, CFBD OL membership, source URL, and underlying CFBD roster position/status.",
         "",
-        "No raw CFBD responses or official roster downloads are copied into the repository. The builder reads the existing shared issue 183 CFBD cache offline and leaves that source corpus unchanged. The official comparison set is represented as the CFBD candidate pool plus reviewer-recorded official additions/removals; the crosswalk resolves the one documented name variation. Each unlisted CFBD candidate was reviewed as an exact official OL match against the linked source. This is a single-review reconciliation, not an independently double-coded audit, and source pages are not archived in the repository. The delta/crosswalk inputs and row-level result files make the decision trail inspectable.",
+        "Most official sources are retrospective season archive pages; the source inventory records timing and limitations. Their current contents do not always establish the exact date of the roster snapshot. Central Michigan 2009 has a roster-guide PDF; Northwestern 2016 and Florida State 2019 use postseason or media-guide material. This remains a single-review manual study, not a generalized roster scraper or a double-coded audit. No source corpus, CFBD raw response, production model, or Context data was changed.",
         "",
-        "## Aggregate comparison",
+        "## Player and team-season results",
         "",
-        f"Across the 40 rows, the current reconciliation contains {gold} official OL names, {resolved_tp} matched names, {resolved_fp} resolved CFBD-only names, {resolved_fn} official-only names, and {unresolved} unresolved CFBD names. Resolved micro-precision is {precision:.1%}; resolved micro-recall is {recall:.1%}. Counts match exactly in {exact_count}/40 team-seasons; complete player sets match in {exact_sets}/40. Unresolved names are excluded from precision and exact-set success, but not hidden.",
+        f"The 40 official pools contain {official_total} players; CFBD supplies {cfbd_total} OL candidates. The reconciliation finds {matched} matched players, {false_positive} resolved CFBD-only players, {false_negative} official-only players, and {unresolved} unresolved CFBD candidates. Resolved micro-precision is {precision:.1%}; micro-recall against the independent official pools is {recall:.1%}. Exact roster counts match in {exact_count}/40 team-seasons, and exact player sets match in {exact_sets}/40. {mismatched_teams}/40 team-seasons have at least one player discrepancy: {one_mismatch} with one and {multiple_mismatches} with multiple. The four unresolved cases are excluded from precision and counted as mismatches for exact-set and team-season reporting.",
+        "",
+        f"Absolute roster-count differences (difference: team-seasons) are {difference_summary}.",
         "",
         "### Era metrics",
         "",
-        "| Era | Teams | CFBD OL | Official OL | Matched | CFBD-only | Official-only | Unresolved | Precision | Recall | Exact counts | Exact sets |",
-        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| Era | Teams | CFBD OL | Official OL | Matched | CFBD-only | Official-only | Unresolved | Precision | Recall | Mismatched teams | Mismatch rate | Exact counts | Exact sets |",
+        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for row in era_rows:
         report.append(
-            f"| {row['era']} | {row['sampled_team_seasons']} | {row['cfbd_ol_players']} | {row['official_ol_players']} | {row['matched_players']} | {row['cfbd_only_false_positives']} | {row['official_only_false_negatives']} | {row['unresolved_cfbd_players']} | {float(row['micro_precision_resolved']):.1%} | {float(row['micro_recall_resolved']):.1%} | {row['exact_count_match_team_seasons']} | {row['exact_player_set_match_team_seasons']} |"
+            f"| {row['era']} | {row['sampled_team_seasons']} | {row['cfbd_ol_players']} | {row['official_ol_players']} | {row['matched_players']} | {row['cfbd_only_false_positives']} | {row['official_only_false_negatives']} | {row['unresolved_cfbd_players']} | {float(row['micro_precision_resolved']):.1%} | {float(row['micro_recall_resolved']):.1%} | {row['team_seasons_with_mismatch']} | {float(row['team_season_mismatch_rate']):.1%} | {row['exact_count_match_team_seasons']} | {row['exact_player_set_match_team_seasons']} |"
         )
     report.extend(
         [
             "",
-            "## Player-level mismatch findings",
+            "## Official-only omission mechanisms",
             "",
-            "The mismatch taxonomy is in `mismatch_taxonomy.csv`; `player_comparison.csv` preserves the name-level comparison, source link, and review note. The directly documented cases include:",
+            f"The {false_negative} official-only names classify against the underlying same-team, same-season FBS CFBD roster as follows: {presence_summary}. A player present at another position is distinct from a player with a blank/unknown position, and both differ from a name absent from the CFBD roster entirely. These counts are in the player table and mismatch taxonomy.",
             "",
-            "- **Idaho, 2011:** CFBD has no identifiable OL labels; the official roster identifies 15 offensive linemen. This is a severe target-pool omission and changes 105 potential within-pool player pairs (15 choose 2).",
-            "- **Central Michigan, 2009:** CFBD labels three players as OL whom the official guide labels defensive line (Aaron Kaczmarski, Aaron McCord, Cody Pettit), while it omits three listed OL (Allen Ollenburger, Anthony Quinn, Rocky Weaver). The total headcount remains 17, but six player identities differ; the CFBD pool adds 45 unsupported possible pairs and misses 45 official possible pairs.",
-            "- **Miami, 2010:** The official roster's Jon Feliciano is the same player as CFBD's Jonathan Feliciano (manual name crosswalk). Jeremy Lewis is listed as defensive line. Shane McDermott is not on the retrieved 2010 roster page and remains an unresolved season-membership/backfill case. The official list also includes Cory White, omitted by CFBD.",
-            "- **East Carolina, 2009:** Robert Jones is labeled defensive line on the official roster but appears in CFBD's OL pool. The official archive also makes clear why position-vocabulary handling must include OL/TE compound roles rather than exact-match one label.",
-            "- **Other omissions:** the review records official OL omitted by CFBD at UAB 2009, Texas Tech 2014, Toledo 2015, Wake Forest 2014, Georgia 2016, Illinois 2017, Texas 2018, Tulane 2018, and Oklahoma State 2020. Details and official position labels are attached to each player row.",
-            "- **Old Dominion, 2025:** CFBD includes Cameron Hill, who is absent from the linked official season roster. Because the source does not establish his official position or season membership, the case remains unresolved.",
-            "- **San José State, 2025:** CFBD includes 24 OL candidates while the official roster lists 19 OL. Four CFBD candidates (Gafa Faga, Mata Hola, Quincy Likio, Tangata Tuitupou) are explicitly labeled defensive line by the official source; Reggie Jones Jr. is absent and remains unresolved. The four resolved position-label errors alone yield 82 unsupported possible pairs in the resolved pool.",
+            "The clearest coverage failure is Idaho 2011: the independent official pool has 14 OL players while the CFBD OL pool is empty. Thirteen official players are absent from the CFBD roster entirely and Matt Cleveland is present with a blank/unknown position. The corrected official pair pool is 91 (14 choose 2), all missed by the empty CFBD pool. The source lists Spencer Beale at TE; he is not counted as an official OL.",
             "",
-            "The main mismatch mechanisms observed are position-label disagreement, official OL missing from the CFBD pool, roster-season membership ambiguity, and name formatting. The sample is not a census and should not be interpreted as season-level prevalence without weighting; its stratification intentionally oversamples both extremes.",
+            "South Carolina 2019 has 19 official OL players and 17 CFBD OL candidates. Will Rogers and M.J. Webb are both official OL but appear in the CFBD roster at DL, so they are official-only with `present_at_another_position`; the former 17/17 set match was incorrect. The official pool has 171 possible pairs, of which the 17 matched players cover 136, leaving 35 missed pairs. Iowa State 2009 also changes despite an unchanged count: Carter Bykowski is listed at TE, while official OL Mike Knapp is absent from the CFBD roster.",
+            "",
+            "Other confirmed CFBD candidates at non-OL positions include UConn's Andreas Knappe (DL) and Minnesota's Ernie Heifort (TE); CFBD candidates Rennick Bryan (UConn) and Chris Freeman (Missouri) are not listed in their linked official roster sources. These cases show why a candidate-seeded gold set cannot detect omissions or false inclusions by itself.",
             "",
             "## Descriptive pair-pool implications",
             "",
-            "The pair columns in the team and era summaries apply combinations n choose 2 to the resolved roster pools. They describe how many possible pairs would be admitted or omitted if any two players in a target-season pool could be considered together. They do not estimate actual shared snaps, starts, continuity, or a model effect. The biggest observed case is Idaho 2011: all 105 official pairs are absent from CFBD's zero-player OL pool. Central Michigan 2009 keeps the same pool size but its three false labels and three omissions replace six of the 17 official player identities, adding 45 unsupported and missing 45 official possible pairs.",
+            f"Summed over the 40 team-seasons, the resolved CFBD candidate pools imply {candidate_pairs} possible within-pool pairs, the official pools imply {official_pairs}, and the matched names imply {shared_pairs} shared pairs. This leaves {unsupported_pairs} candidate-only pairs and {missed_pairs} missed official pairs. These sums are descriptive n-choose-2 pool counts; they do not measure actual co-occurrence, starts, or playing continuity. Team-level pair changes are available in `team_season_summary.csv`.",
             "",
-            "## Recommendation",
+            "## Decision: Stop",
             "",
-            "Treat the CFBD OL target-season roster as a useful candidate pool, not an authoritative roster. Preserve its raw response; normalize explicit OL position labels separately; add source-season and position-label coverage checks; and keep official roster evidence in a reviewable validation layer. Flag empty or unusually large team-season pools, and do not interpret player-pair counts as playing continuity without separate participation evidence. Resolve the four unresolved player-season cases (Miami's Shane McDermott, Toledo's Jordan Fair, Old Dominion's Cameron Hill, and San José State's Reggie Jones Jr.) before using this study to justify any production change. This research does not alter inference, resume projection, model code, or production data.",
+            f"Stop using the existing CFBD roster corpus alone to define the target OL cohort for the full shared-roster continuity experiment. Overall player recall is {recall:.1%}, but {false_negative} official OL are absent from the CFBD OL candidate pools, including {official_only_presence['absent_from_roster']} whose names are absent from the underlying CFBD roster, and {mismatched_teams} of 40 sampled team-seasons have at least one discrepancy. Count guards can catch an empty pool such as Idaho, but they cannot identify partial player omissions in otherwise ordinary-sized pools. The frozen sample is stratified rather than prevalence-weighted, so these rates are descriptive; the observed failure modes still establish that a CFBD-only cohort is not complete enough for the full experiment.",
+            "",
+            "No scalable, narrowly defined CFBD-only repair is supported for the absent-player cases. A position normalizer cannot restore player rows that are absent from the corpus, and promoting DL/TE rows based on a manual list would not generalize. For exploratory work, coverage guards should mark empty or unavailable team-season pools as uncovered and keep unknown-position rows distinct from absent players. Those checks are useful but insufficient for a full experiment because they will not detect partial omissions in otherwise ordinary-sized pools. A future full experiment needs an independently sourced roster-coverage layer or a demonstrated source-specific import repair before cohort construction.",
+            "",
+            "The four pre-existing ambiguous cases—Miami's Shane McDermott, Toledo's Jordan Fair, Old Dominion's Cameron Hill, and San José State's Reggie Jones Jr.—remain unresolved and are not prerequisites for continuing exploratory research. They are excluded from resolved precision/recall and are not used to justify the Stop recommendation. This study makes no production model, Context, or data-panel changes.",
             "",
             "## Reproducibility",
             "",
@@ -422,7 +503,7 @@ def render_report(team_rows: list[dict[str, object]], era_rows: list[dict[str, o
             "uv run python scripts/build_issue_185_ol_roster_validation.py --raw-root ~/.cache/gippyrank/research-data/raw/cfbd/offensive_line_shared_roster_issue_183 --check",
             "```",
             "",
-            "The build manifest stores SHA-256 hashes for the frozen sample/protocol inputs, manual roster review inputs, and normalized CFBD source file. The raw cache is outside the repository.",
+            "The build manifest hashes the frozen sample, official source inventory, independent official OL transcriptions, candidate review decisions, identity crosswalk, and normalized CFBD cache. The raw cache remains outside the repository.",
             "",
             "## Build input hashes",
             "",

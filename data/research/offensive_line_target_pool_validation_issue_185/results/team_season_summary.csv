@@ -1,41 +1,41 @@
-sample_id,era,season,team_name,conference,cfbd_ol_count,official_ol_count,true_positive_names,cfbd_only_false_positive_names,official_only_false_negative_names,unresolved_cfbd_names,precision_resolved,recall_resolved,absolute_count_difference,exact_count_match,exact_player_set_match,candidate_pair_pool_resolved,official_pair_pool,shared_pairs_if_any_two_pool_players_cooccur,cfbd_only_pairs_if_any_two_pool_players_cooccur,missed_official_pairs_if_any_two_pool_players_cooccur,source_url
-S01,2009-2012,2009,Iowa State,Big 12,16,16,16,0,0,0,1.000000,1.000000,0,true,true,120,120,120,0,0,https://cyclones.com/sports/football/roster/2009
-S02,2009-2012,2009,UAB,Conference USA,16,18,16,0,2,0,1.000000,0.888889,2,false,false,120,153,120,0,33,https://uabsports.com/sports/football/roster/2009
-S03,2009-2012,2011,Idaho,Western Athletic,0,15,0,0,15,0,,0.000000,15,false,false,0,105,0,0,105,https://govandals.com/sports/football/roster/2011
-S04,2009-2012,2009,Central Michigan,Mid-American,17,17,14,3,3,0,0.823529,0.823529,0,true,false,136,136,91,45,45,https://cmuchippewas.com/documents/download/2026/3/19/2009_Football_Roster.pdf
-S05,2009-2012,2010,Miami,ACC,16,15,14,1,1,1,0.933333,0.933333,1,false,false,105,105,91,14,14,https://miamihurricanes.com/sports/football/roster/season/2010-11
-S06,2009-2012,2011,North Texas,Sun Belt,17,17,17,0,0,0,1.000000,1.000000,0,true,true,136,136,136,0,0,https://meangreensports.com/sports/football/roster/2011
-S07,2009-2012,2012,UConn,Big East,17,17,17,0,0,0,1.000000,1.000000,0,true,true,136,136,136,0,0,https://uconnhuskies.com/sports/football/roster/2012
-S08,2009-2012,2009,East Carolina,Conference USA,21,20,20,1,0,0,0.952381,1.000000,1,false,false,210,190,190,20,0,https://ecupirates.com/sports/2016/7/7/_m_footbl_archive_m_footbl_mtt_09_html
-S09,2009-2012,2009,Missouri,Big 12,23,23,23,0,0,0,1.000000,1.000000,0,true,true,253,253,253,0,0,https://mutigers.com/sports/football/roster/season/2009
-S10,2009-2012,2011,Minnesota,Big Ten,20,20,20,0,0,0,1.000000,1.000000,0,true,true,190,190,190,0,0,https://gophersports.com/sports/football/roster/2011
-S11,2013-2016,2014,Texas Tech,Big 12,15,16,15,0,1,0,1.000000,0.937500,1,false,false,105,120,105,0,15,https://texastech.com/sports/football/roster/2014
-S12,2013-2016,2015,Toledo,Mid-American,15,17,14,0,3,1,1.000000,0.823529,2,false,false,91,136,91,0,45,https://utrockets.com/sports/football/roster/2015
-S13,2013-2016,2016,Northwestern,Big Ten,13,13,13,0,0,0,1.000000,1.000000,0,true,true,78,78,78,0,0,https://nusports.com/documents/download/2016/12/25/Penn_State_122716.pdf
-S14,2013-2016,2014,UNLV,Mountain West,17,17,17,0,0,0,1.000000,1.000000,0,true,true,136,136,136,0,0,https://unlvrebels.com/sports/football/roster/2014
-S15,2013-2016,2014,Wake Forest,ACC,18,20,18,0,2,0,1.000000,0.900000,2,false,false,153,190,153,0,37,https://godeacs.com/sports/football/roster/2014
-S16,2013-2016,2016,Georgia,SEC,20,22,20,0,2,0,1.000000,0.909091,2,false,false,190,231,190,0,41,https://georgiadogs.com/sports/football/roster/2016
-S17,2013-2016,2016,Troy,Sun Belt,20,20,20,0,0,0,1.000000,1.000000,0,true,true,190,190,190,0,0,https://troytrojans.com/sports/football/roster/2016
-S18,2013-2016,2014,Cincinnati,American Athletic,21,21,21,0,0,0,1.000000,1.000000,0,true,true,210,210,210,0,0,https://gobearcats.com/sports/football/roster/season/2014
-S19,2013-2016,2014,Houston,American Athletic,21,21,21,0,0,0,1.000000,1.000000,0,true,true,210,210,210,0,0,https://uhcougars.com/sports/football/roster/2014
-S20,2013-2016,2014,TCU,Big 12,22,22,22,0,0,0,1.000000,1.000000,0,true,true,231,231,231,0,0,https://gofrogs.com/sports/football/roster/2014
-S21,2017-2020,2017,Illinois,Big Ten,14,15,14,0,1,0,1.000000,0.933333,1,false,false,91,105,91,0,14,https://fightingillini.com/sports/football/roster/2017
-S22,2017-2020,2018,Texas,Big 12,15,19,15,0,4,0,1.000000,0.789474,4,false,false,105,171,105,0,66,https://texaslonghorns.com/sports/football/roster/2018
-S23,2017-2020,2018,Tulane,American Athletic,15,16,15,0,1,0,1.000000,0.937500,1,false,false,105,120,105,0,15,https://tulanegreenwave.com/sports/football/roster/2018
-S24,2017-2020,2019,Arkansas State,Sun Belt,19,19,19,0,0,0,1.000000,1.000000,0,true,true,171,171,171,0,0,https://astateredwolves.com/sports/football/roster/2019
-S25,2017-2020,2019,South Carolina,SEC,17,17,17,0,0,0,1.000000,1.000000,0,true,true,136,136,136,0,0,https://gamecocksonline.com/sports/football/roster/season/2019
-S26,2017-2020,2020,Florida Atlantic,Conference USA,20,20,20,0,0,0,1.000000,1.000000,0,true,true,190,190,190,0,0,https://fausports.com/sports/football/roster/2020
-S27,2017-2020,2020,Liberty,FBS Independents,18,18,18,0,0,0,1.000000,1.000000,0,true,true,153,153,153,0,0,https://libertyflames.com/sports/football/roster/2020
-S28,2017-2020,2019,Florida State,ACC,21,21,21,0,0,0,1.000000,1.000000,0,true,true,210,210,210,0,0,https://seminoles.com/documents/2023/6/25/2019-Media-Guide.pdf
-S29,2017-2020,2020,Ohio,Mid-American,22,22,22,0,0,0,1.000000,1.000000,0,true,true,231,231,231,0,0,https://ohiobobcats.com/sports/football/roster/2020
-S30,2017-2020,2020,Oklahoma State,Big 12,24,25,24,0,1,0,1.000000,0.960000,1,false,false,276,300,276,0,24,https://okstate.com/sports/football/roster/2020
-S31,2021-2026,2021,Marshall,Conference USA,16,16,16,0,0,0,1.000000,1.000000,0,true,true,120,120,120,0,0,https://herdzone.com/sports/football/roster/2021
-S32,2021-2026,2022,Western Kentucky,Conference USA,17,17,17,0,0,0,1.000000,1.000000,0,true,true,136,136,136,0,0,https://wkusports.com/sports/football/roster/2022
-S33,2021-2026,2025,Kent State,Mid-American,15,15,15,0,0,0,1.000000,1.000000,0,true,true,105,105,105,0,0,https://kentstatesports.com/sports/football/roster/2025
-S34,2021-2026,2021,UTEP,Conference USA,20,20,20,0,0,0,1.000000,1.000000,0,true,true,190,190,190,0,0,https://utepminers.com/sports/football/roster/2021
-S35,2021-2026,2023,USC,Pac-12,18,18,18,0,0,0,1.000000,1.000000,0,true,true,153,153,153,0,0,https://usctrojans.com/sports/football/roster/2023
-S36,2021-2026,2025,Ohio State,Big Ten,19,19,19,0,0,0,1.000000,1.000000,0,true,true,171,171,171,0,0,https://ohiostatebuckeyes.com/sports/football/roster/2025
-S37,2021-2026,2025,Old Dominion,Sun Belt,19,18,18,0,0,1,1.000000,1.000000,1,false,false,153,153,153,0,0,https://odusports.com/sports/football/roster/season/2025
-S38,2021-2026,2024,Pittsburgh,ACC,21,21,21,0,0,0,1.000000,1.000000,0,true,true,210,210,210,0,0,https://pittsburghpanthers.com/sports/football/roster/2024
-S39,2021-2026,2025,Army,American Athletic,36,36,36,0,0,0,1.000000,1.000000,0,true,true,630,630,630,0,0,https://goarmywestpoint.com/sports/football/roster/2025
-S40,2021-2026,2025,San José State,Mountain West,24,19,19,4,0,1,0.826087,1.000000,5,false,false,253,171,171,82,0,https://sjsuspartans.com/sports/football/roster/season/2025?view=table
+sample_id,era,season,team_name,conference,cfbd_ol_count,official_ol_count,true_positive_names,cfbd_only_false_positive_names,official_only_false_negative_names,unresolved_cfbd_names,player_mismatch_count,precision_resolved,recall_resolved,absolute_count_difference,exact_count_match,exact_player_set_match,candidate_pair_pool_resolved,official_pair_pool,shared_pairs_if_any_two_pool_players_cooccur,cfbd_only_pairs_if_any_two_pool_players_cooccur,missed_official_pairs_if_any_two_pool_players_cooccur,source_url
+S01,2009-2012,2009,Iowa State,Big 12,16,16,15,1,1,0,2,0.937500,0.937500,0,true,false,120,120,105,15,15,https://cyclones.com/sports/football/roster/2009
+S02,2009-2012,2009,UAB,Conference USA,16,18,16,0,2,0,2,1.000000,0.888889,2,false,false,120,153,120,0,33,https://uabsports.com/sports/football/roster/2009
+S03,2009-2012,2011,Idaho,Western Athletic,0,14,0,0,14,0,14,,0.000000,14,false,false,0,91,0,0,91,https://govandals.com/sports/football/roster/2011
+S04,2009-2012,2009,Central Michigan,Mid-American,17,17,14,3,3,0,6,0.823529,0.823529,0,true,false,136,136,91,45,45,https://cmuchippewas.com/documents/download/2026/3/19/2009_Football_Roster.pdf
+S05,2009-2012,2010,Miami,ACC,16,15,14,1,1,1,3,0.933333,0.933333,1,false,false,105,105,91,14,14,https://miamihurricanes.com/sports/football/roster/season/2010-11
+S06,2009-2012,2011,North Texas,Sun Belt,17,17,17,0,0,0,0,1.000000,1.000000,0,true,true,136,136,136,0,0,https://meangreensports.com/sports/football/roster/2011
+S07,2009-2012,2012,UConn,Big East,17,15,15,2,0,0,2,0.882353,1.000000,2,false,false,136,105,105,31,0,https://uconnhuskies.com/sports/football/roster/2012
+S08,2009-2012,2009,East Carolina,Conference USA,21,20,20,1,0,0,1,0.952381,1.000000,1,false,false,210,190,190,20,0,https://ecupirates.com/sports/2016/7/7/_m_footbl_archive_m_footbl_mtt_09_html
+S09,2009-2012,2009,Missouri,Big 12,23,22,22,1,0,0,1,0.956522,1.000000,1,false,false,253,231,231,22,0,https://mutigers.com/sports/football/roster/season/2009
+S10,2009-2012,2011,Minnesota,Big Ten,20,19,19,1,0,0,1,0.950000,1.000000,1,false,false,190,171,171,19,0,https://gophersports.com/sports/football/roster/2011
+S11,2013-2016,2014,Texas Tech,Big 12,15,16,15,0,1,0,1,1.000000,0.937500,1,false,false,105,120,105,0,15,https://texastech.com/sports/football/roster/2014
+S12,2013-2016,2015,Toledo,Mid-American,15,17,14,0,3,1,4,1.000000,0.823529,2,false,false,91,136,91,0,45,https://utrockets.com/sports/football/roster/2015
+S13,2013-2016,2016,Northwestern,Big Ten,13,13,13,0,0,0,0,1.000000,1.000000,0,true,true,78,78,78,0,0,https://nusports.com/documents/download/2016/12/25/Penn_State_122716.pdf
+S14,2013-2016,2014,UNLV,Mountain West,17,17,17,0,0,0,0,1.000000,1.000000,0,true,true,136,136,136,0,0,https://unlvrebels.com/sports/football/roster/2014
+S15,2013-2016,2014,Wake Forest,ACC,18,20,18,0,2,0,2,1.000000,0.900000,2,false,false,153,190,153,0,37,https://godeacs.com/sports/football/roster/2014
+S16,2013-2016,2016,Georgia,SEC,20,22,20,0,2,0,2,1.000000,0.909091,2,false,false,190,231,190,0,41,https://georgiadogs.com/sports/football/roster/2016
+S17,2013-2016,2016,Troy,Sun Belt,20,20,20,0,0,0,0,1.000000,1.000000,0,true,true,190,190,190,0,0,https://troytrojans.com/sports/football/roster/2016
+S18,2013-2016,2014,Cincinnati,American Athletic,21,21,21,0,0,0,0,1.000000,1.000000,0,true,true,210,210,210,0,0,https://gobearcats.com/sports/football/roster/season/2014
+S19,2013-2016,2014,Houston,American Athletic,21,21,21,0,0,0,0,1.000000,1.000000,0,true,true,210,210,210,0,0,https://uhcougars.com/sports/football/roster/2014
+S20,2013-2016,2014,TCU,Big 12,22,22,22,0,0,0,0,1.000000,1.000000,0,true,true,231,231,231,0,0,https://gofrogs.com/sports/football/roster/2014
+S21,2017-2020,2017,Illinois,Big Ten,14,15,14,0,1,0,1,1.000000,0.933333,1,false,false,91,105,91,0,14,https://fightingillini.com/sports/football/roster/2017
+S22,2017-2020,2018,Texas,Big 12,15,19,15,0,4,0,4,1.000000,0.789474,4,false,false,105,171,105,0,66,https://texaslonghorns.com/sports/football/roster/2018
+S23,2017-2020,2018,Tulane,American Athletic,15,16,15,0,1,0,1,1.000000,0.937500,1,false,false,105,120,105,0,15,https://tulanegreenwave.com/sports/football/roster/2018
+S24,2017-2020,2019,Arkansas State,Sun Belt,19,19,19,0,0,0,0,1.000000,1.000000,0,true,true,171,171,171,0,0,https://astateredwolves.com/sports/football/roster/2019
+S25,2017-2020,2019,South Carolina,SEC,17,19,17,0,2,0,2,1.000000,0.894737,2,false,false,136,171,136,0,35,https://gamecocksonline.com/sports/football/roster/season/2019
+S26,2017-2020,2020,Florida Atlantic,Conference USA,20,20,20,0,0,0,0,1.000000,1.000000,0,true,true,190,190,190,0,0,https://fausports.com/sports/football/roster/2020
+S27,2017-2020,2020,Liberty,FBS Independents,18,18,18,0,0,0,0,1.000000,1.000000,0,true,true,153,153,153,0,0,https://libertyflames.com/sports/football/roster/2020
+S28,2017-2020,2019,Florida State,ACC,21,21,21,0,0,0,0,1.000000,1.000000,0,true,true,210,210,210,0,0,https://seminoles.com/documents/2023/6/25/2019-Media-Guide.pdf
+S29,2017-2020,2020,Ohio,Mid-American,22,22,22,0,0,0,0,1.000000,1.000000,0,true,true,231,231,231,0,0,https://ohiobobcats.com/sports/football/roster/2020
+S30,2017-2020,2020,Oklahoma State,Big 12,24,25,24,0,1,0,1,1.000000,0.960000,1,false,false,276,300,276,0,24,https://okstate.com/sports/football/roster/2020
+S31,2021-2026,2021,Marshall,Conference USA,16,16,16,0,0,0,0,1.000000,1.000000,0,true,true,120,120,120,0,0,https://herdzone.com/sports/football/roster/2021
+S32,2021-2026,2022,Western Kentucky,Conference USA,17,17,17,0,0,0,0,1.000000,1.000000,0,true,true,136,136,136,0,0,https://wkusports.com/sports/football/roster/2022
+S33,2021-2026,2025,Kent State,Mid-American,15,15,15,0,0,0,0,1.000000,1.000000,0,true,true,105,105,105,0,0,https://kentstatesports.com/sports/football/roster/2025
+S34,2021-2026,2021,UTEP,Conference USA,20,20,20,0,0,0,0,1.000000,1.000000,0,true,true,190,190,190,0,0,https://utepminers.com/sports/football/roster/2021
+S35,2021-2026,2023,USC,Pac-12,18,18,18,0,0,0,0,1.000000,1.000000,0,true,true,153,153,153,0,0,https://usctrojans.com/sports/football/roster/2023
+S36,2021-2026,2025,Ohio State,Big Ten,19,19,19,0,0,0,0,1.000000,1.000000,0,true,true,171,171,171,0,0,https://ohiostatebuckeyes.com/sports/football/roster/2025
+S37,2021-2026,2025,Old Dominion,Sun Belt,19,18,18,0,0,1,1,1.000000,1.000000,1,false,false,153,153,153,0,0,https://odusports.com/sports/football/roster/season/2025
+S38,2021-2026,2024,Pittsburgh,ACC,21,21,21,0,0,0,0,1.000000,1.000000,0,true,true,210,210,210,0,0,https://pittsburghpanthers.com/sports/football/roster/2024
+S39,2021-2026,2025,Army,American Athletic,36,36,36,0,0,0,0,1.000000,1.000000,0,true,true,630,630,630,0,0,https://goarmywestpoint.com/sports/football/roster/2025
+S40,2021-2026,2025,San José State,Mountain West,24,19,19,4,0,1,5,0.826087,1.000000,5,false,false,253,171,171,82,0,https://sjsuspartans.com/sports/football/roster/season/2025?view=table
