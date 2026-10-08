@@ -1,0 +1,108 @@
+{
+  "issue": 185,
+  "frozen_on": "2026-10-07",
+  "sample_size": 40,
+  "seed": 185,
+  "windows": [
+    "2009-2012",
+    "2013-2016",
+    "2017-2020",
+    "2021-2026"
+  ],
+  "allocations_per_window": {
+    "low_quartile": 3,
+    "middle_half": 4,
+    "upper_quartile": 3
+  },
+  "position_count_strata": "Within each era, rank team-seasons by identifiable CFBD OL count; tie-break with SHA-256(issue-185-ol|season|team_id); the bottom quartile is low, the top quartile high, and the middle two quartiles ordinary. Sample 3 low, 4 middle, 3 high.",
+  "roster_size_strata": "Within each era, rank by CFBD roster player rows with a separate SHA-256 tie-break; each roster-size quartile must contribute at least two sampled rows.",
+  "selection_constraints": [
+    "Ten distinct team names per era, with no program repeated across the 40 team-seasons.",
+    "At least eight distinct CFBD conference labels per era.",
+    "At least two sampled team-seasons in each CFBD roster-size quartile per era.",
+    "Include at least one 2009-2012 team-season with 0-1 CFBD OL labels and one 2021-2026 team-season with at least 30 CFBD OL labels.",
+    "No official roster availability or content was consulted for sample selection."
+  ],
+  "known_case_exclusions": [
+    "Vanderbilt 2017-2020 was excluded because it contains the already-known Drew Birchmeier position-history case from issue 183.",
+    "Iowa 2008 is outside the study window and is not counted."
+  ],
+  "input_summary_path": "data/processed/offensive_line_shared_roster_issue_183/team_season_summaries.csv",
+  "input_summary_sha256": "5c6dd0d9b533e95900e81d626ae36a32fd05a7a2f9ab091fdcc9b0abd04d5ed3",
+  "conference_metadata": "CFBD /teams/fbs payloads under the shared issue 183 raw cache; only team ID and conference were used.",
+  "conference_metadata_inputs": [
+    {
+      "path": "teams_fbs/2009.json",
+      "sha256": "3718c921f6c24046693dd3f6c50ffa0e0ac2180c9e902bbe18dd9e1927ce699b"
+    },
+    {
+      "path": "teams_fbs/2010.json",
+      "sha256": "3718c921f6c24046693dd3f6c50ffa0e0ac2180c9e902bbe18dd9e1927ce699b"
+    },
+    {
+      "path": "teams_fbs/2011.json",
+      "sha256": "cbba6bd95d170fc4eceb5ad3ebd6192936654e77b6659f11f627fcb0bf6e2f19"
+    },
+    {
+      "path": "teams_fbs/2012.json",
+      "sha256": "de62db829b060f71fb027c7bda21b3ac4dcefd1eeb41e7bcf28af0871c531174"
+    },
+    {
+      "path": "teams_fbs/2013.json",
+      "sha256": "bc0bf4a8d63545a15b9d41c5c754f7803fc75ac950d35049a38b08b79d006b84"
+    },
+    {
+      "path": "teams_fbs/2014.json",
+      "sha256": "ad6395245c6b57844c689d2ac7a0f6f53034653feff2d4496e1d48c20e492e86"
+    },
+    {
+      "path": "teams_fbs/2015.json",
+      "sha256": "b1f847d662902d34c5ae94d5c8ec71dc997f957d807b5c84b8e4f66f05d8d36b"
+    },
+    {
+      "path": "teams_fbs/2016.json",
+      "sha256": "ff5c173528399998dfbc00505d64c49820a23ec76a27acc6dc29a8ab42ea3a7d"
+    },
+    {
+      "path": "teams_fbs/2017.json",
+      "sha256": "660254633f0976a9819e09ee9bbf8315aefec0500668f8e57e1e2fde35d3d67a"
+    },
+    {
+      "path": "teams_fbs/2018.json",
+      "sha256": "8d62b0b20eda8ebe2fc9c84c3e13f2756cec8199deeceda8c0ced7549c8febe7"
+    },
+    {
+      "path": "teams_fbs/2019.json",
+      "sha256": "8d62b0b20eda8ebe2fc9c84c3e13f2756cec8199deeceda8c0ced7549c8febe7"
+    },
+    {
+      "path": "teams_fbs/2020.json",
+      "sha256": "a3603bcdb35056b9fc6c715f89a310f3f369ef91fbe80e434c53521c10ff7d6e"
+    },
+    {
+      "path": "teams_fbs/2021.json",
+      "sha256": "06e0d939376a28480790fa63ab67e45517821571b455d92a512ad8d6e78d0c56"
+    },
+    {
+      "path": "teams_fbs/2022.json",
+      "sha256": "4532ab5ca19a618923d71cc944b0846673a09d8cf12dc0191e9b83946793358f"
+    },
+    {
+      "path": "teams_fbs/2023.json",
+      "sha256": "a151e6d8809104c82bc8a9881bf7f0d5aaf1594c0e45a6cf24028295ad1e9a23"
+    },
+    {
+      "path": "teams_fbs/2024.json",
+      "sha256": "edf95b175f64557ed6108762fa9d4877e2dc621898ffd91fbaa5a69eff27683b"
+    },
+    {
+      "path": "teams_fbs/2025.json",
+      "sha256": "d3cf6f4c2b82bad3b3dd7198aab64524b71eeea7800fec4a828038dcb60767ce"
+    },
+    {
+      "path": "teams_fbs/2026.json",
+      "sha256": "15611e4d36965423f96b01f58fbe1ea9de04f88c2909a490ddbfcab4511ea2c2"
+    }
+  ],
+  "source_root": "<research-data-root>/raw/cfbd/offensive_line_shared_roster_issue_183"
+}
