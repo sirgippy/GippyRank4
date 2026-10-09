@@ -1,0 +1,742 @@
+{
+  "cohort_exclusions": {
+    "target_pool_unusable_or_too_small": 5
+  },
+  "context13_semantic_specification_sha256": "01437795fb34318b6534ba69825323bed54fd34d287cdb87133dae1bfb93e02c",
+  "context_features": [
+    "lag2_z_mean",
+    "lag3_z_mean",
+    "long_run_z_mean",
+    "coach_tenure_seasons",
+    "recruiting_class_rank",
+    "recruiting_class_points",
+    "recruiting_points_2y_mean",
+    "recruiting_points_3y_mean",
+    "recruiting_points_4y_mean",
+    "recruiting_points_trend",
+    "talent_composite",
+    "returning_pct_ppa",
+    "transfer_in_prior_usage_sum",
+    "transfer_in_prior_defensive_impact_db_sum",
+    "transfer_in_prior_defensive_impact_db_available"
+  ],
+  "core_size": 5,
+  "coverage": {
+    "boundary_tie_fraction": 0.7295373665480427,
+    "boundary_tie_team_seasons": 1230,
+    "core_feature_status_counts": {
+      "observed": 1686,
+      "prior_panel_unavailable": 5
+    },
+    "core_individual_shared_pearson_r": 0.2934763451958746,
+    "max_realizations": 15504,
+    "median_realizations": 4.0,
+    "observed_core_team_seasons": 1686,
+    "previous_returning_player_group_pearson_r_on_same_cohort": 0.9990024007014139,
+    "primary_panel_team_seasons": 1691,
+    "realization_count_distribution": {
+      "1": 456,
+      "2": 98,
+      "3": 211,
+      "4": 178,
+      "5": 111,
+      "6": 199,
+      "7": 25,
+      "8": 10,
+      "9": 9,
+      "10": 142,
+      "11": 2,
+      "12": 2,
+      "14": 1,
+      "15": 46,
+      "18": 1,
+      "20": 36,
+      "21": 42,
+      "28": 10,
+      "35": 31,
+      "36": 8,
+      "45": 4,
+      "55": 2,
+      "56": 19,
+      "70": 7,
+      "84": 5,
+      "120": 2,
+      "126": 2,
+      "136": 1,
+      "165": 2,
+      "210": 3,
+      "220": 2,
+      "252": 2,
+      "330": 1,
+      "455": 1,
+      "462": 2,
+      "715": 1,
+      "792": 3,
+      "1287": 1,
+      "1820": 1,
+      "2002": 1,
+      "2380": 1,
+      "3060": 1,
+      "4368": 1,
+      "11628": 1,
+      "14950": 1,
+      "15504": 1
+    },
+    "target_ambiguous_position_rows": 0,
+    "target_identity_missing_team_seasons": 0,
+    "target_roster_player_count_p10_p50_p90": [
+      15.0,
+      19.0,
+      22.0
+    ],
+    "target_roster_temporal_status": "retrospective CFBD target-season OL roster; not archived preseason membership",
+    "target_unknown_position_rows": 2353
+  },
+  "decision": "Reject",
+  "decision_screen": "Refine only for negative incremental held-out NLL, at least three seasons improved, and season-cluster 95% interval entirely below zero; otherwise Reject.",
+  "evaluation": {
+    "comparisons": {
+      "context_plus_core_individual_and_shared_experience": {
+        "vs_previous": {
+          "fraction_team_seasons_improved": 0.4678030303030303,
+          "gross_nll_gain": 17.014775484301868,
+          "gross_nll_loss": 21.789353640615555,
+          "largest_gain": [
+            {
+              "delta_nll": -0.40862635971173056,
+              "season": 2024,
+              "team": "Florida State"
+            },
+            {
+              "delta_nll": -0.3687226728301196,
+              "season": 2023,
+              "team": "Kent State"
+            },
+            {
+              "delta_nll": -0.3599938785753567,
+              "season": 2025,
+              "team": "Massachusetts"
+            },
+            {
+              "delta_nll": -0.3591867091830423,
+              "season": 2025,
+              "team": "Sam Houston"
+            },
+            {
+              "delta_nll": -0.3505306263477497,
+              "season": 2024,
+              "team": "Kent State"
+            }
+          ],
+          "largest_loss": [
+            {
+              "delta_nll": 0.4963802473868597,
+              "season": 2025,
+              "team": "Kennesaw State"
+            },
+            {
+              "delta_nll": 0.473731906881909,
+              "season": 2025,
+              "team": "North Texas"
+            },
+            {
+              "delta_nll": 0.4204222008405516,
+              "season": 2025,
+              "team": "Texas Tech"
+            },
+            {
+              "delta_nll": 0.41447798814660075,
+              "season": 2025,
+              "team": "South Florida"
+            },
+            {
+              "delta_nll": 0.38749279420313076,
+              "season": 2025,
+              "team": "Virginia"
+            }
+          ],
+          "mean_delta_nll": 0.00904276165968501,
+          "season_cluster_bootstrap": {
+            "central_95_interval": [
+              -0.0018624630413169529,
+              0.022760217925717075
+            ],
+            "fraction_bootstrap_better": 0.05859375,
+            "mean_delta": 0.00904276165968501,
+            "n_resamples": 256,
+            "n_season_clusters": 4,
+            "n_team_seasons": 528,
+            "resampling": "exhaustive ordered season bootstrap: 4^4"
+          },
+          "season_sum_delta_nll": {
+            "2022": 0.5893882041932825,
+            "2023": 1.0118137679854953,
+            "2024": -0.6663063932944935,
+            "2025": 3.8396825774294006
+          },
+          "seasons_improved": 1,
+          "team_seasons_improved": 247,
+          "team_seasons_worsened": 281,
+          "top_10_share_of_gross_gain": 0.20262291159443965,
+          "top_10_share_of_gross_loss": 0.178166085579909
+        },
+        "vs_reference": {
+          "fraction_team_seasons_improved": 0.45075757575757575,
+          "gross_nll_gain": 14.947391206807794,
+          "gross_nll_loss": 19.679777564449196,
+          "largest_gain": [
+            {
+              "delta_nll": -0.34479651052459026,
+              "season": 2023,
+              "team": "Kent State"
+            },
+            {
+              "delta_nll": -0.318876957525676,
+              "season": 2024,
+              "team": "Southern Miss"
+            },
+            {
+              "delta_nll": -0.30680516020687243,
+              "season": 2024,
+              "team": "Tulsa"
+            },
+            {
+              "delta_nll": -0.30149214566551263,
+              "season": 2025,
+              "team": "Massachusetts"
+            },
+            {
+              "delta_nll": -0.2950058972090335,
+              "season": 2024,
+              "team": "Kent State"
+            }
+          ],
+          "largest_loss": [
+            {
+              "delta_nll": 0.39408493814317413,
+              "season": 2025,
+              "team": "North Texas"
+            },
+            {
+              "delta_nll": 0.3810484340528202,
+              "season": 2025,
+              "team": "Texas Tech"
+            },
+            {
+              "delta_nll": 0.31334672264265606,
+              "season": 2025,
+              "team": "Virginia"
+            },
+            {
+              "delta_nll": 0.3001517453282734,
+              "season": 2025,
+              "team": "Kennesaw State"
+            },
+            {
+              "delta_nll": 0.29943466140124464,
+              "season": 2025,
+              "team": "South Florida"
+            }
+          ],
+          "mean_delta_nll": 0.00896285295007841,
+          "season_cluster_bootstrap": {
+            "central_95_interval": [
+              0.0005234317229397691,
+              0.019958308745168386
+            ],
+            "fraction_bootstrap_better": 0.01953125,
+            "mean_delta": 0.00896285295007841,
+            "n_resamples": 256,
+            "n_season_clusters": 4,
+            "n_team_seasons": 528,
+            "resampling": "exhaustive ordered season bootstrap: 4^4"
+          },
+          "season_sum_delta_nll": {
+            "2022": 0.3292078908493934,
+            "2023": 1.1651863606481794,
+            "2024": -0.1915453477162341,
+            "2025": 3.4295374538600627
+          },
+          "seasons_improved": 1,
+          "team_seasons_improved": 238,
+          "team_seasons_worsened": 290,
+          "top_10_share_of_gross_gain": 0.19719416554655278,
+          "top_10_share_of_gross_loss": 0.15648991418386002
+        }
+      },
+      "context_plus_core_individual_experience": {
+        "vs_previous": {
+          "fraction_team_seasons_improved": 0.49242424242424243,
+          "gross_nll_gain": 5.116906303528126,
+          "gross_nll_loss": 5.074714504855843,
+          "largest_gain": [
+            {
+              "delta_nll": -0.19622850205858633,
+              "season": 2025,
+              "team": "Kennesaw State"
+            },
+            {
+              "delta_nll": -0.11504332674535611,
+              "season": 2025,
+              "team": "South Florida"
+            },
+            {
+              "delta_nll": -0.10780659325483688,
+              "season": 2023,
+              "team": "Michigan"
+            },
+            {
+              "delta_nll": -0.10069034693698775,
+              "season": 2023,
+              "team": "Missouri"
+            },
+            {
+              "delta_nll": -0.09330970183396037,
+              "season": 2024,
+              "team": "UConn"
+            }
+          ],
+          "largest_loss": [
+            {
+              "delta_nll": 0.18157676655373045,
+              "season": 2024,
+              "team": "Navy"
+            },
+            {
+              "delta_nll": 0.1506884952612566,
+              "season": 2024,
+              "team": "Florida State"
+            },
+            {
+              "delta_nll": 0.08872537942339598,
+              "season": 2025,
+              "team": "Sam Houston"
+            },
+            {
+              "delta_nll": 0.08497164602377705,
+              "season": 2024,
+              "team": "Oklahoma State"
+            },
+            {
+              "delta_nll": 0.08403897989014908,
+              "season": 2023,
+              "team": "UConn"
+            }
+          ],
+          "mean_delta_nll": -7.990870960659756e-05,
+          "season_cluster_bootstrap": {
+            "central_95_interval": [
+              -0.0025391115034591933,
+              0.002379294084245998
+            ],
+            "fraction_bootstrap_better": 0.546875,
+            "mean_delta": -7.990870960659756e-05,
+            "n_resamples": 256,
+            "n_season_clusters": 4,
+            "n_team_seasons": 528,
+            "resampling": "exhaustive ordered season bootstrap: 4^4"
+          },
+          "season_sum_delta_nll": {
+            "2022": -0.26018031334388914,
+            "2023": 0.1533725926626841,
+            "2024": 0.4747610455782594,
+            "2025": -0.41014512356933785
+          },
+          "seasons_improved": 2,
+          "team_seasons_improved": 260,
+          "team_seasons_worsened": 268,
+          "top_10_share_of_gross_gain": 0.1975155796401824,
+          "top_10_share_of_gross_loss": 0.18184001029623353
+        },
+        "vs_reference": {
+          "fraction_team_seasons_improved": 0.49242424242424243,
+          "gross_nll_gain": 5.116906303528126,
+          "gross_nll_loss": 5.074714504855843,
+          "largest_gain": [
+            {
+              "delta_nll": -0.19622850205858633,
+              "season": 2025,
+              "team": "Kennesaw State"
+            },
+            {
+              "delta_nll": -0.11504332674535611,
+              "season": 2025,
+              "team": "South Florida"
+            },
+            {
+              "delta_nll": -0.10780659325483688,
+              "season": 2023,
+              "team": "Michigan"
+            },
+            {
+              "delta_nll": -0.10069034693698775,
+              "season": 2023,
+              "team": "Missouri"
+            },
+            {
+              "delta_nll": -0.09330970183396037,
+              "season": 2024,
+              "team": "UConn"
+            }
+          ],
+          "largest_loss": [
+            {
+              "delta_nll": 0.18157676655373045,
+              "season": 2024,
+              "team": "Navy"
+            },
+            {
+              "delta_nll": 0.1506884952612566,
+              "season": 2024,
+              "team": "Florida State"
+            },
+            {
+              "delta_nll": 0.08872537942339598,
+              "season": 2025,
+              "team": "Sam Houston"
+            },
+            {
+              "delta_nll": 0.08497164602377705,
+              "season": 2024,
+              "team": "Oklahoma State"
+            },
+            {
+              "delta_nll": 0.08403897989014908,
+              "season": 2023,
+              "team": "UConn"
+            }
+          ],
+          "mean_delta_nll": -7.990870960659756e-05,
+          "season_cluster_bootstrap": {
+            "central_95_interval": [
+              -0.0025391115034591933,
+              0.002379294084245998
+            ],
+            "fraction_bootstrap_better": 0.546875,
+            "mean_delta": -7.990870960659756e-05,
+            "n_resamples": 256,
+            "n_season_clusters": 4,
+            "n_team_seasons": 528,
+            "resampling": "exhaustive ordered season bootstrap: 4^4"
+          },
+          "season_sum_delta_nll": {
+            "2022": -0.26018031334388914,
+            "2023": 0.1533725926626841,
+            "2024": 0.4747610455782594,
+            "2025": -0.41014512356933785
+          },
+          "seasons_improved": 2,
+          "team_seasons_improved": 260,
+          "team_seasons_worsened": 268,
+          "top_10_share_of_gross_gain": 0.1975155796401824,
+          "top_10_share_of_gross_loss": 0.18184001029623353
+        }
+      },
+      "context_plus_core_individual_shared_and_talent_interaction": {
+        "vs_previous": {
+          "fraction_team_seasons_improved": 0.48295454545454547,
+          "gross_nll_gain": 0.7690428670763316,
+          "gross_nll_loss": 0.7899000015874256,
+          "largest_gain": [
+            {
+              "delta_nll": -0.032826845749921674,
+              "season": 2023,
+              "team": "James Madison"
+            },
+            {
+              "delta_nll": -0.025567474466213547,
+              "season": 2024,
+              "team": "Oklahoma"
+            },
+            {
+              "delta_nll": -0.02274167455726772,
+              "season": 2025,
+              "team": "LSU"
+            },
+            {
+              "delta_nll": -0.022045856235363814,
+              "season": 2025,
+              "team": "Kennesaw State"
+            },
+            {
+              "delta_nll": -0.021903644143274725,
+              "season": 2022,
+              "team": "Texas A&M"
+            }
+          ],
+          "largest_loss": [
+            {
+              "delta_nll": 0.02133501873516197,
+              "season": 2023,
+              "team": "Kent State"
+            },
+            {
+              "delta_nll": 0.018786040301037588,
+              "season": 2025,
+              "team": "Texas Tech"
+            },
+            {
+              "delta_nll": 0.016193331055211146,
+              "season": 2024,
+              "team": "Arizona State"
+            },
+            {
+              "delta_nll": 0.015868904523116623,
+              "season": 2025,
+              "team": "Oregon"
+            },
+            {
+              "delta_nll": 0.01564058030819604,
+              "season": 2024,
+              "team": "Ohio State"
+            }
+          ],
+          "mean_delta_nll": 3.950214869525368e-05,
+          "season_cluster_bootstrap": {
+            "central_95_interval": [
+              -0.00022456624319201686,
+              0.00029763641941651817
+            ],
+            "fraction_bootstrap_better": 0.4140625,
+            "mean_delta": 3.950214869525368e-05,
+            "n_resamples": 256,
+            "n_season_clusters": 4,
+            "n_team_seasons": 528,
+            "resampling": "exhaustive ordered season bootstrap: 4^4"
+          },
+          "season_sum_delta_nll": {
+            "2022": -0.042678988007483376,
+            "2023": -0.01593280146563303,
+            "2024": 0.05501170056233251,
+            "2025": 0.02445722342187784
+          },
+          "seasons_improved": 2,
+          "team_seasons_improved": 255,
+          "team_seasons_worsened": 273,
+          "top_10_share_of_gross_gain": 0.26754903120866336,
+          "top_10_share_of_gross_loss": 0.19945579193607532
+        },
+        "vs_reference": {
+          "fraction_team_seasons_improved": 0.44507575757575757,
+          "gross_nll_gain": 15.239037380557901,
+          "gross_nll_loss": 19.992280872710396,
+          "largest_gain": [
+            {
+              "delta_nll": -0.3234614917894283,
+              "season": 2023,
+              "team": "Kent State"
+            },
+            {
+              "delta_nll": -0.3233696487980757,
+              "season": 2024,
+              "team": "Southern Miss"
+            },
+            {
+              "delta_nll": -0.31623427402079063,
+              "season": 2024,
+              "team": "Oklahoma"
+            },
+            {
+              "delta_nll": -0.3100514527257143,
+              "season": 2024,
+              "team": "Tulsa"
+            },
+            {
+              "delta_nll": -0.2964916372285691,
+              "season": 2025,
+              "team": "Massachusetts"
+            }
+          ],
+          "largest_loss": [
+            {
+              "delta_nll": 0.39983447435385777,
+              "season": 2025,
+              "team": "Texas Tech"
+            },
+            {
+              "delta_nll": 0.39229600032270007,
+              "season": 2025,
+              "team": "North Texas"
+            },
+            {
+              "delta_nll": 0.321504671846478,
+              "season": 2025,
+              "team": "Virginia"
+            },
+            {
+              "delta_nll": 0.30510414514716633,
+              "season": 2025,
+              "team": "South Florida"
+            },
+            {
+              "delta_nll": 0.30206812497482805,
+              "season": 2025,
+              "team": "San Diego State"
+            }
+          ],
+          "mean_delta_nll": 0.009002355098773665,
+          "season_cluster_bootstrap": {
+            "central_95_interval": [
+              0.0005703241661141004,
+              0.020016001756931828
+            ],
+            "fraction_bootstrap_better": 0.01953125,
+            "mean_delta": 0.009002355098773665,
+            "n_resamples": 256,
+            "n_season_clusters": 4,
+            "n_team_seasons": 528,
+            "resampling": "exhaustive ordered season bootstrap: 4^4"
+          },
+          "season_sum_delta_nll": {
+            "2022": 0.28652890284191,
+            "2023": 1.1492535591825463,
+            "2024": -0.1365336471539016,
+            "2025": 3.4539946772819405
+          },
+          "seasons_improved": 1,
+          "team_seasons_improved": 235,
+          "team_seasons_worsened": 293,
+          "top_10_share_of_gross_gain": 0.1939667486613931,
+          "top_10_share_of_gross_loss": 0.15742526249022074
+        }
+      }
+    },
+    "evaluation_team_seasons": 528,
+    "optimizer_diagnostics": {
+      "context_1_3_style_restricted_refit": {
+        "function_evaluations": 181,
+        "iterations": 170,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "objective": 1.6357617028028497,
+        "status": 0,
+        "success": true
+      },
+      "context_plus_core_individual_and_shared_experience": {
+        "function_evaluations": 178,
+        "iterations": 172,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "objective": 1.634898392516131,
+        "status": 0,
+        "success": true
+      },
+      "context_plus_core_individual_experience": {
+        "function_evaluations": 170,
+        "iterations": 164,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "objective": 1.635447104684672,
+        "status": 0,
+        "success": true
+      },
+      "context_plus_core_individual_shared_and_talent_interaction": {
+        "function_evaluations": 167,
+        "iterations": 160,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "objective": 1.6348908174112107,
+        "status": 0,
+        "success": true
+      }
+    },
+    "same_keys_all_arms": true,
+    "training_team_seasons": 1140
+  },
+  "evaluation_seasons": [
+    2022,
+    2025
+  ],
+  "implementation_hashes": {
+    "core_module": "b6139750eb98f9323b68445c83dfddf825cd5e2b57eb878416d23bacaf71b9a6",
+    "script": "b9765ee7d265215d6615e55c84a4a084bbd0aa8636d73a39bac9c3782743923a"
+  },
+  "interaction_definition": "ol_core_mean_shared_same_program_seasons_4y \u00d7 talent_composite, with both main effects",
+  "issue": 189,
+  "limitations": [
+    "Target-season CFBD OL membership is retrospective rather than a preseason snapshot.",
+    "JUCO, lower-division, or other college history missing from the existing roster corpus remains unobserved.",
+    "Player identities and historical roster records inherit issues 183, 185, and 187 limitations.",
+    "Only four already-inspected held-out seasons support cluster uncertainty summaries."
+  ],
+  "lookback_seasons": 4,
+  "model_arms": [
+    {
+      "extra_features": [],
+      "name": "context_1_3_style_restricted_refit"
+    },
+    {
+      "extra_features": [
+        "ol_core_mean_prior_college_seasons_4y"
+      ],
+      "name": "context_plus_core_individual_experience"
+    },
+    {
+      "extra_features": [
+        "ol_core_mean_prior_college_seasons_4y",
+        "ol_core_mean_shared_same_program_seasons_4y"
+      ],
+      "name": "context_plus_core_individual_and_shared_experience"
+    },
+    {
+      "extra_features": [
+        "ol_core_mean_prior_college_seasons_4y",
+        "ol_core_mean_shared_same_program_seasons_4y",
+        "ol_core_shared_same_program_seasons_4y_x_talent_composite"
+      ],
+      "name": "context_plus_core_individual_shared_and_talent_interaction"
+    }
+  ],
+  "post_hoc": true,
+  "reference_reproducibility_audit": {
+    "current_reference_nll": 4.519107770754583,
+    "difference": 0.002099216644582569,
+    "issue187_published_reference_nll": 4.51700855411,
+    "issue187_recheck": "Feature panel reproduces; model-score artifacts differ in current environment.",
+    "same_heldout_team_keys_as_issue187": true
+  },
+  "regularization_penalty": 0.25,
+  "runtime": {
+    "numpy": "2.5.2",
+    "python": "3.13.15",
+    "scipy": "1.18.1"
+  },
+  "source_hashes": {
+    "context_features": {
+      "path": "data/processed/preseason/team_season_features.csv",
+      "sha256": "fd6f171131e38b852b94619338c5580e5f4e8c19f45c74e8135b11b20b1a2019"
+    },
+    "context_transfer_features": {
+      "path": "data/processed/preseason/context_v1_3_candidate/historical_transfer_features.csv",
+      "sha256": "3b3680cf63806033cf6d67813a1359ada455e8e7528bf310a27b37d5cda7a726"
+    },
+    "normalized_roster_seasons": {
+      "path": "data/processed/offensive_line_shared_roster_issue_183/normalized_roster_player_seasons.csv.gz",
+      "sha256": "5d3a09ba9ee979db095086ce1eaca852807efe6d6289f6fe66cdb32f50772a6a"
+    },
+    "normalized_target_ol": {
+      "path": "data/processed/offensive_line_shared_roster_issue_183/normalized_ol_player_seasons.csv.gz",
+      "sha256": "8577754a6a392378ec1cb63ba3cf13e521cf38c584b900ae44b4dab2de2cec4a"
+    },
+    "prior_evaluation_aggregate": {
+      "path": "data/research/offensive_line_continuity_experiment_issue_187/results/evaluation_aggregate.csv",
+      "sha256": "3297ae0a54719288dcdcb2309d2348966497960a0928c18fde31c57a4d7862f5"
+    },
+    "prior_evaluation_team_losses": {
+      "path": "data/research/offensive_line_continuity_experiment_issue_187/results/evaluation_team_losses.csv",
+      "sha256": "e93ef8221ee5072bb722e6142d13e6e864612c83b4326bf9d4b446c5b3600b68"
+    },
+    "prior_feature_panel": {
+      "path": "data/research/offensive_line_continuity_experiment_issue_187/results/feature_panel.csv",
+      "sha256": "ea7294cd01a6f60bba408fd71d842b07c10639a4b369cf09968de316d2275d03"
+    },
+    "prior_manifest": {
+      "path": "data/research/offensive_line_continuity_experiment_issue_187/results/manifest.json",
+      "sha256": "638b1f11d4b43686220dcff50f463235755c0362a79078f50c705a49ae235d69"
+    },
+    "rank_distributions": {
+      "path": "data/processed/modeling/team_season_rank_distributions.csv",
+      "sha256": "03e4e372017aedb45392ff7d790cea25f461db9b6dc846514c762ff46e2cab00"
+    }
+  },
+  "training_seasons": [
+    2013,
+    2021
+  ]
+}
