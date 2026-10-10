@@ -84,6 +84,19 @@ def test_crossed_arms_and_retained_evidence_parity() -> None:
         )
 
 
+def test_crossed_arms_reject_unequal_prior_support_without_games() -> None:
+    context_prior = np.asarray([1.0, 0.0])
+    history_prior = np.asarray([0.5, 0.5])
+
+    with pytest.raises(ValueError, match="different positive support"):
+        cross_message_arms(
+            context_prior,
+            history_prior,
+            context_prior,
+            history_prior,
+        )
+
+
 def test_zero_probe_is_history_identity() -> None:
     heldout = example(2024, "1", feature=7.0)
     preprocessor = FeaturePreprocessor.fit([{"x": 0.0}, {"x": 2.0}], ["x"])

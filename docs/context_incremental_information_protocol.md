@@ -30,6 +30,8 @@ For each fitted team, extract the model-specific log message as `log(posterior) 
 
 Require HH and CC to reconstruct their original posteriors within `1e-10`. Do not add epsilon or smooth zero support. A posterior with mass outside its own prior support is an error. These are frozen-message sensitivity analyses, not new converged joint posteriors or causal opponent attributions.
 
+Crossing also requires Context and History priors to have identical positive support. A model's incoming message is unidentifiable where its own prior is zero; applying that unknown entry to a position supported only by the other prior would silently impose a hard exclusion. Reject such team/checkpoint rows before calculating crossed arms.
+
 ## Residual probes
 
 At each checkpoint, evaluate outer folds separately: train on 2022/evaluate on 2023; train on 2022–2023/evaluate on 2024; train on 2022–2024/evaluate on 2025. No evaluated-season target, preprocessing statistic, or model-selection result enters that fold's fit. Every checkpoint is reported independently; do not pool repeated checkpoints as independent team-seasons.

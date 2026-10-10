@@ -116,7 +116,21 @@ def cross_message_arms(
     context_posterior: Sequence[float] | np.ndarray,
     history_posterior: Sequence[float] | np.ndarray,
 ) -> tuple[dict[str, np.ndarray], dict[str, float]]:
-    """Cross each own-team prior with each model's exact frozen message."""
+    """Cross each own-team prior with each model's exact frozen message.
+
+    The Context and History priors must have identical support. A message is
+    not identifiable where its own prior is zero, so crossing it onto a prior
+    that assigns mass there would invent a hard exclusion.
+    """
+    context_q = normalized_pmf(context_prior, name="Context prior")
+    history_q = normalized_pmf(history_prior, name="History prior")
+    if context_q.shape != history_q.shape:
+        raise ValueError("Context and History priors have different rank supports")
+    if not np.array_equal(
+        context_q > ZERO_SUPPORT_TOLERANCE,
+        history_q > ZERO_SUPPORT_TOLERANCE,
+    ):
+        raise ValueError("Context and History priors have different positive support")
     context_message, context_error = extract_log_message(
         context_prior, context_posterior
     )
