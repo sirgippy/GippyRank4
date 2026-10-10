@@ -1,0 +1,1408 @@
+model,checkpoint,evaluation_season,training_seasons,selected_lambda,coefficient,value
+existing_context_signal,1,2023,[2022],0.1,a,0.0014978671517781096
+existing_context_signal,1,2023,[2022],0.1,b0,0.016071822267588902
+existing_context_signal,1,2023,[2022],0.1,b::mean_lag1_z,0.01857257820531975
+existing_context_signal,1,2023,[2022],0.1,b::lag2_z_mean,-0.06222686236017524
+existing_context_signal,1,2023,[2022],0.1,b::lag3_z_mean,0.11949556202335464
+existing_context_signal,1,2023,[2022],0.1,b::long_run_z_mean,0.12900185770682532
+existing_context_signal,1,2023,[2022],0.1,b::history_posterior_expected_rank_percentile,-0.149437223222878
+existing_context_signal,1,2023,[2022],0.1,b::history_posterior_rank_sd_ratio,-0.025768148543820833
+existing_context_signal,1,2023,[2022],0.1,b::mean_lag1_z__missing,-0.027749118181061395
+existing_context_signal,1,2023,[2022],0.1,b::lag2_z_mean__missing,-0.17505176580350618
+existing_context_signal,1,2023,[2022],0.1,b::lag3_z_mean__missing,-0.027749118181061395
+existing_context_signal,1,2023,[2022],0.1,b::long_run_z_mean__missing,-0.027749118181061395
+existing_context_signal,1,2023,[2022],0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+existing_context_signal,1,2023,[2022],0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+existing_context_signal,1,2023,[2022],0.1,w,0.5813348284461393
+existing_context_signal,1,2024,"[2022, 2023]",0.1,a,0.06657939049242642
+existing_context_signal,1,2024,"[2022, 2023]",0.1,b0,0.019361550880352907
+existing_context_signal,1,2024,"[2022, 2023]",0.1,b::mean_lag1_z,0.0151225370717476
+existing_context_signal,1,2024,"[2022, 2023]",0.1,b::lag2_z_mean,-0.08132555871354408
+existing_context_signal,1,2024,"[2022, 2023]",0.1,b::lag3_z_mean,0.013194070971249403
+existing_context_signal,1,2024,"[2022, 2023]",0.1,b::long_run_z_mean,0.1010833573304041
+existing_context_signal,1,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile,-0.030317205523375402
+existing_context_signal,1,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio,0.011727237434795496
+existing_context_signal,1,2024,"[2022, 2023]",0.1,b::mean_lag1_z__missing,-0.006612585422674815
+existing_context_signal,1,2024,"[2022, 2023]",0.1,b::lag2_z_mean__missing,-0.1334464343973955
+existing_context_signal,1,2024,"[2022, 2023]",0.1,b::lag3_z_mean__missing,-0.07715890093217233
+existing_context_signal,1,2024,"[2022, 2023]",0.1,b::long_run_z_mean__missing,-0.006612585422674815
+existing_context_signal,1,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+existing_context_signal,1,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+existing_context_signal,1,2024,"[2022, 2023]",0.1,w,0.46206591318169704
+existing_context_signal,1,2025,"[2022, 2023, 2024]",0.1,a,0.00824057282213457
+existing_context_signal,1,2025,"[2022, 2023, 2024]",0.1,b0,0.01819864885561116
+existing_context_signal,1,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z,-0.014569623946556165
+existing_context_signal,1,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean,-0.03337231886540013
+existing_context_signal,1,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean,-0.011862601359165219
+existing_context_signal,1,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean,0.0754985664263411
+existing_context_signal,1,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile,-0.015734204716861374
+existing_context_signal,1,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio,0.0011989597478389818
+existing_context_signal,1,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z__missing,0.02443767806572606
+existing_context_signal,1,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean__missing,-0.09960863092489486
+existing_context_signal,1,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean__missing,-0.06572471857751523
+existing_context_signal,1,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean__missing,0.02443767806572606
+existing_context_signal,1,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+existing_context_signal,1,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+existing_context_signal,1,2025,"[2022, 2023, 2024]",0.1,w,0.4798293562045709
+history_calibration,1,2023,[2022],0.1,a,0.023915368035882123
+history_calibration,1,2023,[2022],0.1,b0,0.010772125539000489
+history_calibration,1,2023,[2022],0.1,b::mean_lag1_z,0.01866353289589521
+history_calibration,1,2023,[2022],0.1,b::lag2_z_mean,-0.08185458894885102
+history_calibration,1,2023,[2022],0.1,b::lag3_z_mean,0.1114565666048568
+history_calibration,1,2023,[2022],0.1,b::long_run_z_mean,0.1426914972797942
+history_calibration,1,2023,[2022],0.1,b::history_posterior_expected_rank_percentile,-0.13762203700402093
+history_calibration,1,2023,[2022],0.1,b::history_posterior_rank_sd_ratio,-0.003768967666515892
+history_calibration,1,2023,[2022],0.1,b::mean_lag1_z__missing,-0.033707402399742424
+history_calibration,1,2023,[2022],0.1,b::lag2_z_mean__missing,-0.16804625835420034
+history_calibration,1,2023,[2022],0.1,b::lag3_z_mean__missing,-0.033707402399742424
+history_calibration,1,2023,[2022],0.1,b::long_run_z_mean__missing,-0.033707402399742424
+history_calibration,1,2023,[2022],0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+history_calibration,1,2023,[2022],0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+history_calibration,1,2024,"[2022, 2023]",1.0,a,0.018527505068046318
+history_calibration,1,2024,"[2022, 2023]",1.0,b0,0.0004834641470589782
+history_calibration,1,2024,"[2022, 2023]",1.0,b::mean_lag1_z,0.007592664911618238
+history_calibration,1,2024,"[2022, 2023]",1.0,b::lag2_z_mean,-0.033990702120590625
+history_calibration,1,2024,"[2022, 2023]",1.0,b::lag3_z_mean,0.010966753158205007
+history_calibration,1,2024,"[2022, 2023]",1.0,b::long_run_z_mean,0.04521250189868846
+history_calibration,1,2024,"[2022, 2023]",1.0,b::history_posterior_expected_rank_percentile,0.011536688156703579
+history_calibration,1,2024,"[2022, 2023]",1.0,b::history_posterior_rank_sd_ratio,0.018816099061110873
+history_calibration,1,2024,"[2022, 2023]",1.0,b::mean_lag1_z__missing,-0.00540547424476822
+history_calibration,1,2024,"[2022, 2023]",1.0,b::lag2_z_mean__missing,-0.015953373201380374
+history_calibration,1,2024,"[2022, 2023]",1.0,b::lag3_z_mean__missing,-0.011802101741135555
+history_calibration,1,2024,"[2022, 2023]",1.0,b::long_run_z_mean__missing,-0.00540547424476822
+history_calibration,1,2024,"[2022, 2023]",1.0,b::history_posterior_expected_rank_percentile__missing,0.0
+history_calibration,1,2024,"[2022, 2023]",1.0,b::history_posterior_rank_sd_ratio__missing,0.0
+history_calibration,1,2025,"[2022, 2023, 2024]",1.0,a,0.00680272175908746
+history_calibration,1,2025,"[2022, 2023, 2024]",1.0,b0,-0.0001367788433525476
+history_calibration,1,2025,"[2022, 2023, 2024]",1.0,b::mean_lag1_z,-0.002467106526213061
+history_calibration,1,2025,"[2022, 2023, 2024]",1.0,b::lag2_z_mean,-0.016707827097988626
+history_calibration,1,2025,"[2022, 2023, 2024]",1.0,b::lag3_z_mean,0.0005997432709483626
+history_calibration,1,2025,"[2022, 2023, 2024]",1.0,b::long_run_z_mean,0.03440040439344875
+history_calibration,1,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_expected_rank_percentile,0.007047770102969161
+history_calibration,1,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_rank_sd_ratio,0.010030068943793446
+history_calibration,1,2025,"[2022, 2023, 2024]",1.0,b::mean_lag1_z__missing,-8.187429555613748e-05
+history_calibration,1,2025,"[2022, 2023, 2024]",1.0,b::lag2_z_mean__missing,-0.011376913715662582
+history_calibration,1,2025,"[2022, 2023, 2024]",1.0,b::lag3_z_mean__missing,-0.00708574122268176
+history_calibration,1,2025,"[2022, 2023, 2024]",1.0,b::long_run_z_mean__missing,-8.187429555613748e-05
+history_calibration,1,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_expected_rank_percentile__missing,0.0
+history_calibration,1,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,1,2023,[2022],0.1,a,0.15453803370349525
+raw_context_features,1,2023,[2022],0.1,b0,-0.03177524093554825
+raw_context_features,1,2023,[2022],0.1,b::mean_lag1_z,-0.017071690422825934
+raw_context_features,1,2023,[2022],0.1,b::lag2_z_mean,-0.014032652172500886
+raw_context_features,1,2023,[2022],0.1,b::lag3_z_mean,0.0783257968532014
+raw_context_features,1,2023,[2022],0.1,b::long_run_z_mean,-0.058375035873699764
+raw_context_features,1,2023,[2022],0.1,b::history_posterior_expected_rank_percentile,-0.21933720851302874
+raw_context_features,1,2023,[2022],0.1,b::history_posterior_rank_sd_ratio,-0.06028671307817413
+raw_context_features,1,2023,[2022],0.1,b::coach_tenure_seasons,-0.015723442542512924
+raw_context_features,1,2023,[2022],0.1,b::recruiting_class_rank,0.04661952344134849
+raw_context_features,1,2023,[2022],0.1,b::recruiting_class_points,-0.01866606047518456
+raw_context_features,1,2023,[2022],0.1,b::recruiting_points_2y_mean,-0.007273336451366936
+raw_context_features,1,2023,[2022],0.1,b::recruiting_points_3y_mean,-0.03436809710270398
+raw_context_features,1,2023,[2022],0.1,b::recruiting_points_4y_mean,-0.1217629087453478
+raw_context_features,1,2023,[2022],0.1,b::recruiting_points_trend,0.09389878329511507
+raw_context_features,1,2023,[2022],0.1,b::talent_composite,-0.05445304244524043
+raw_context_features,1,2023,[2022],0.1,b::returning_pct_ppa,-0.16962993146140795
+raw_context_features,1,2023,[2022],0.1,b::transfer_in_prior_usage_sum,-0.04260879816000904
+raw_context_features,1,2023,[2022],0.1,b::observed_db_impact_sum,-0.11980759127221488
+raw_context_features,1,2023,[2022],0.1,b::db_impact_coverage_fraction,0.044028093719902475
+raw_context_features,1,2023,[2022],0.1,b::mean_lag1_z__missing,-0.025209962647788346
+raw_context_features,1,2023,[2022],0.1,b::lag2_z_mean__missing,-0.164233292955007
+raw_context_features,1,2023,[2022],0.1,b::lag3_z_mean__missing,-0.025209962647788346
+raw_context_features,1,2023,[2022],0.1,b::long_run_z_mean__missing,-0.025209962647788346
+raw_context_features,1,2023,[2022],0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+raw_context_features,1,2023,[2022],0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,1,2023,[2022],0.1,b::coach_tenure_seasons__missing,0.31674828828189167
+raw_context_features,1,2023,[2022],0.1,b::recruiting_class_rank__missing,0.036246697059282094
+raw_context_features,1,2023,[2022],0.1,b::recruiting_class_points__missing,0.036246697059282094
+raw_context_features,1,2023,[2022],0.1,b::recruiting_points_2y_mean__missing,-0.025209962647788346
+raw_context_features,1,2023,[2022],0.1,b::recruiting_points_3y_mean__missing,-0.025209962647788346
+raw_context_features,1,2023,[2022],0.1,b::recruiting_points_4y_mean__missing,-0.025209962647788346
+raw_context_features,1,2023,[2022],0.1,b::recruiting_points_trend__missing,0.009204592542163301
+raw_context_features,1,2023,[2022],0.1,b::talent_composite__missing,-0.025209962647788346
+raw_context_features,1,2023,[2022],0.1,b::returning_pct_ppa__missing,-0.025209962647788346
+raw_context_features,1,2023,[2022],0.1,b::transfer_in_prior_usage_sum__missing,-0.2116264952856881
+raw_context_features,1,2023,[2022],0.1,b::observed_db_impact_sum__missing,-0.025209962647788346
+raw_context_features,1,2023,[2022],0.1,b::db_impact_coverage_fraction__missing,-0.025209962647788346
+raw_context_features,1,2024,"[2022, 2023]",1.0,a,0.019096858647830613
+raw_context_features,1,2024,"[2022, 2023]",1.0,b0,-0.0008049508021568882
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::mean_lag1_z,-0.013485591663572173
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::lag2_z_mean,-0.030159748369507144
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::lag3_z_mean,-0.00703014232566906
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::long_run_z_mean,-0.00012378075573514442
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::history_posterior_expected_rank_percentile,-0.019195841071635023
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::history_posterior_rank_sd_ratio,0.0037211874332521134
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::coach_tenure_seasons,-0.014242581737565698
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::recruiting_class_rank,0.017406136539766606
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::recruiting_class_points,-0.012441426997311782
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::recruiting_points_2y_mean,-0.01930409211434755
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::recruiting_points_3y_mean,-0.025057443486564995
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::recruiting_points_4y_mean,-0.03090289160787926
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::recruiting_points_trend,0.031175604260914175
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::talent_composite,-0.03911938217859746
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::returning_pct_ppa,-0.12494034733105173
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::transfer_in_prior_usage_sum,-0.03697997960243958
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::observed_db_impact_sum,-0.049931198962189484
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::db_impact_coverage_fraction,0.012519057146878293
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::mean_lag1_z__missing,-0.003622802585540527
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::lag2_z_mean__missing,-0.0196651308301258
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::lag3_z_mean__missing,-0.014768792844614983
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::long_run_z_mean__missing,-0.003622802585540527
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::history_posterior_expected_rank_percentile__missing,0.0
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::coach_tenure_seasons__missing,0.012988022860727552
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::recruiting_class_rank__missing,-0.0008443614399288043
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::recruiting_class_points__missing,-0.0008443614399288043
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::recruiting_points_2y_mean__missing,-0.003622802585540527
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::recruiting_points_3y_mean__missing,-0.003622802585540527
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::recruiting_points_4y_mean__missing,-0.003622802585540527
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::recruiting_points_trend__missing,-0.011289670043631092
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::talent_composite__missing,-0.003622802585540527
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::returning_pct_ppa__missing,-0.003622802585540527
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::transfer_in_prior_usage_sum__missing,-0.021040765301913587
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::observed_db_impact_sum__missing,-0.003622802585540527
+raw_context_features,1,2024,"[2022, 2023]",1.0,b::db_impact_coverage_fraction__missing,-0.003622802585540527
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,a,0.0038541797431789334
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b0,-0.004902325825864698
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::mean_lag1_z,-0.021850107765552036
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::lag2_z_mean,-0.01979575933190117
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::lag3_z_mean,-0.020877782885479035
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::long_run_z_mean,-0.014237636327194804
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_expected_rank_percentile,-0.026354947560179434
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_rank_sd_ratio,-0.0009367388017280484
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::coach_tenure_seasons,-0.013091297157240571
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_rank,0.012182461021804017
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_points,-0.013154874123074232
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_2y_mean,-0.025644250484033394
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_3y_mean,-0.02501890496980069
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_4y_mean,-0.03572778012234033
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_trend,0.009558857595730585
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::talent_composite,-0.03156667946731671
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::returning_pct_ppa,-0.09708000853363845
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::transfer_in_prior_usage_sum,-0.05329733082036848
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::observed_db_impact_sum,-0.05281633948572346
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::db_impact_coverage_fraction,0.01429064087030805
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::mean_lag1_z__missing,7.184454373794544e-05
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::lag2_z_mean__missing,-0.01551412686529978
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::lag3_z_mean__missing,-0.013094188389586642
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::long_run_z_mean__missing,7.184454373794544e-05
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_expected_rank_percentile__missing,0.0
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::coach_tenure_seasons__missing,0.03029616888537085
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_rank__missing,0.002210411572095084
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_points__missing,0.002210411572095084
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_2y_mean__missing,7.184454373794544e-05
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_3y_mean__missing,7.184454373794544e-05
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_4y_mean__missing,7.184454373794544e-05
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_trend__missing,-0.010895546904993501
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::talent_composite__missing,7.184454373794544e-05
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::returning_pct_ppa__missing,7.184454373794544e-05
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::transfer_in_prior_usage_sum__missing,-0.011417832554815264
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::observed_db_impact_sum__missing,7.184454373794544e-05
+raw_context_features,1,2025,"[2022, 2023, 2024]",1.0,b::db_impact_coverage_fraction__missing,7.184454373794544e-05
+existing_context_signal,2,2023,[2022],0.1,a,-0.1562253242510159
+existing_context_signal,2,2023,[2022],0.1,b0,0.03571214330225036
+existing_context_signal,2,2023,[2022],0.1,b::mean_lag1_z,-0.07375530332178391
+existing_context_signal,2,2023,[2022],0.1,b::lag2_z_mean,-0.04717456277876834
+existing_context_signal,2,2023,[2022],0.1,b::lag3_z_mean,0.1176253156974152
+existing_context_signal,2,2023,[2022],0.1,b::long_run_z_mean,0.07442972727352527
+existing_context_signal,2,2023,[2022],0.1,b::history_posterior_expected_rank_percentile,-0.08602246639188255
+existing_context_signal,2,2023,[2022],0.1,b::history_posterior_rank_sd_ratio,0.06629038309548828
+existing_context_signal,2,2023,[2022],0.1,b::mean_lag1_z__missing,0.038582863774676734
+existing_context_signal,2,2023,[2022],0.1,b::lag2_z_mean__missing,-0.13617051253483287
+existing_context_signal,2,2023,[2022],0.1,b::lag3_z_mean__missing,0.038582863774676734
+existing_context_signal,2,2023,[2022],0.1,b::long_run_z_mean__missing,0.038582863774676734
+existing_context_signal,2,2023,[2022],0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+existing_context_signal,2,2023,[2022],0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+existing_context_signal,2,2023,[2022],0.1,w,0.34386269934082103
+existing_context_signal,2,2024,"[2022, 2023]",0.1,a,-0.13529249061266002
+existing_context_signal,2,2024,"[2022, 2023]",0.1,b0,0.015943526048903513
+existing_context_signal,2,2024,"[2022, 2023]",0.1,b::mean_lag1_z,0.03724605511314443
+existing_context_signal,2,2024,"[2022, 2023]",0.1,b::lag2_z_mean,-0.07622146525338061
+existing_context_signal,2,2024,"[2022, 2023]",0.1,b::lag3_z_mean,0.04373138880146327
+existing_context_signal,2,2024,"[2022, 2023]",0.1,b::long_run_z_mean,0.10653272268219512
+existing_context_signal,2,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile,-0.12652055999604073
+existing_context_signal,2,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio,0.01497261485335808
+existing_context_signal,2,2024,"[2022, 2023]",0.1,b::mean_lag1_z__missing,0.05041414196895866
+existing_context_signal,2,2024,"[2022, 2023]",0.1,b::lag2_z_mean__missing,-0.10615926755737194
+existing_context_signal,2,2024,"[2022, 2023]",0.1,b::lag3_z_mean__missing,-0.060278597600064904
+existing_context_signal,2,2024,"[2022, 2023]",0.1,b::long_run_z_mean__missing,0.05041414196895866
+existing_context_signal,2,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+existing_context_signal,2,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+existing_context_signal,2,2024,"[2022, 2023]",0.1,w,0.29197844776497944
+existing_context_signal,2,2025,"[2022, 2023, 2024]",0.1,a,-0.1574258745579197
+existing_context_signal,2,2025,"[2022, 2023, 2024]",0.1,b0,0.018364780058138637
+existing_context_signal,2,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z,0.021146659059139636
+existing_context_signal,2,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean,-0.04828532635969179
+existing_context_signal,2,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean,0.0055872853396893
+existing_context_signal,2,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean,0.06871835183131353
+existing_context_signal,2,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile,-0.07837149619021336
+existing_context_signal,2,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio,-0.006341506686331555
+existing_context_signal,2,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z__missing,0.05808963946391953
+existing_context_signal,2,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean__missing,-0.08848148717655266
+existing_context_signal,2,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean__missing,-0.06168601820861349
+existing_context_signal,2,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean__missing,0.05808963946391953
+existing_context_signal,2,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+existing_context_signal,2,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+existing_context_signal,2,2025,"[2022, 2023, 2024]",0.1,w,0.26336383553809517
+history_calibration,2,2023,[2022],0.1,a,-0.1434085697764982
+history_calibration,2,2023,[2022],0.1,b0,0.03136228844048991
+history_calibration,2,2023,[2022],0.1,b::mean_lag1_z,-0.07770965825638676
+history_calibration,2,2023,[2022],0.1,b::lag2_z_mean,-0.05533416834782107
+history_calibration,2,2023,[2022],0.1,b::lag3_z_mean,0.11033210616305354
+history_calibration,2,2023,[2022],0.1,b::long_run_z_mean,0.0815051629775743
+history_calibration,2,2023,[2022],0.1,b::history_posterior_expected_rank_percentile,-0.07298871047005884
+history_calibration,2,2023,[2022],0.1,b::history_posterior_rank_sd_ratio,0.07516552228942225
+history_calibration,2,2023,[2022],0.1,b::mean_lag1_z__missing,0.03970090034183771
+history_calibration,2,2023,[2022],0.1,b::lag2_z_mean__missing,-0.13158400786833993
+history_calibration,2,2023,[2022],0.1,b::lag3_z_mean__missing,0.03970090034183771
+history_calibration,2,2023,[2022],0.1,b::long_run_z_mean__missing,0.03970090034183771
+history_calibration,2,2023,[2022],0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+history_calibration,2,2023,[2022],0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+history_calibration,2,2024,"[2022, 2023]",1.0,a,-0.05294265435780132
+history_calibration,2,2024,"[2022, 2023]",1.0,b0,0.0015695681459195364
+history_calibration,2,2024,"[2022, 2023]",1.0,b::mean_lag1_z,-0.0073074725744239665
+history_calibration,2,2024,"[2022, 2023]",1.0,b::lag2_z_mean,-0.027717336389685487
+history_calibration,2,2024,"[2022, 2023]",1.0,b::lag3_z_mean,0.017138386938766924
+history_calibration,2,2024,"[2022, 2023]",1.0,b::long_run_z_mean,0.024382557242974924
+history_calibration,2,2024,"[2022, 2023]",1.0,b::history_posterior_expected_rank_percentile,-0.04135934786973882
+history_calibration,2,2024,"[2022, 2023]",1.0,b::history_posterior_rank_sd_ratio,0.01721185887375737
+history_calibration,2,2024,"[2022, 2023]",1.0,b::mean_lag1_z__missing,0.004235755816060673
+history_calibration,2,2024,"[2022, 2023]",1.0,b::lag2_z_mean__missing,-0.010687841415227948
+history_calibration,2,2024,"[2022, 2023]",1.0,b::lag3_z_mean__missing,-0.00810358747004351
+history_calibration,2,2024,"[2022, 2023]",1.0,b::long_run_z_mean__missing,0.004235755816060673
+history_calibration,2,2024,"[2022, 2023]",1.0,b::history_posterior_expected_rank_percentile__missing,0.0
+history_calibration,2,2024,"[2022, 2023]",1.0,b::history_posterior_rank_sd_ratio__missing,0.0
+history_calibration,2,2025,"[2022, 2023, 2024]",1.0,a,-0.057823925939933594
+history_calibration,2,2025,"[2022, 2023, 2024]",1.0,b0,0.004465001389309002
+history_calibration,2,2025,"[2022, 2023, 2024]",1.0,b::mean_lag1_z,-0.008253143988576338
+history_calibration,2,2025,"[2022, 2023, 2024]",1.0,b::lag2_z_mean,-0.02195756036831826
+history_calibration,2,2025,"[2022, 2023, 2024]",1.0,b::lag3_z_mean,-0.00020004557524767367
+history_calibration,2,2025,"[2022, 2023, 2024]",1.0,b::long_run_z_mean,0.010702583739896115
+history_calibration,2,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_expected_rank_percentile,-0.033226620687649325
+history_calibration,2,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_rank_sd_ratio,0.0032460951324543366
+history_calibration,2,2025,"[2022, 2023, 2024]",1.0,b::mean_lag1_z__missing,0.0049109221144454165
+history_calibration,2,2025,"[2022, 2023, 2024]",1.0,b::lag2_z_mean__missing,-0.00975930971716398
+history_calibration,2,2025,"[2022, 2023, 2024]",1.0,b::lag3_z_mean__missing,-0.007674440483588218
+history_calibration,2,2025,"[2022, 2023, 2024]",1.0,b::long_run_z_mean__missing,0.0049109221144454165
+history_calibration,2,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_expected_rank_percentile__missing,0.0
+history_calibration,2,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,2,2023,[2022],0.1,a,-0.0972670055005974
+raw_context_features,2,2023,[2022],0.1,b0,0.004205221972817578
+raw_context_features,2,2023,[2022],0.1,b::mean_lag1_z,-0.06531753059573497
+raw_context_features,2,2023,[2022],0.1,b::lag2_z_mean,0.027118444937752697
+raw_context_features,2,2023,[2022],0.1,b::lag3_z_mean,0.10470267326608858
+raw_context_features,2,2023,[2022],0.1,b::long_run_z_mean,0.005073823299784115
+raw_context_features,2,2023,[2022],0.1,b::history_posterior_expected_rank_percentile,-0.20044680474567025
+raw_context_features,2,2023,[2022],0.1,b::history_posterior_rank_sd_ratio,0.06120692924833923
+raw_context_features,2,2023,[2022],0.1,b::coach_tenure_seasons,0.020520751761422665
+raw_context_features,2,2023,[2022],0.1,b::recruiting_class_rank,0.11656515419524437
+raw_context_features,2,2023,[2022],0.1,b::recruiting_class_points,-0.030775002088311455
+raw_context_features,2,2023,[2022],0.1,b::recruiting_points_2y_mean,0.07091911264708471
+raw_context_features,2,2023,[2022],0.1,b::recruiting_points_3y_mean,0.009836732817535204
+raw_context_features,2,2023,[2022],0.1,b::recruiting_points_4y_mean,-0.07594170354815619
+raw_context_features,2,2023,[2022],0.1,b::recruiting_points_trend,0.11889884497299769
+raw_context_features,2,2023,[2022],0.1,b::talent_composite,0.035365671913873825
+raw_context_features,2,2023,[2022],0.1,b::returning_pct_ppa,-0.21283612241538574
+raw_context_features,2,2023,[2022],0.1,b::transfer_in_prior_usage_sum,-0.06878151649116816
+raw_context_features,2,2023,[2022],0.1,b::observed_db_impact_sum,-0.10457928861577759
+raw_context_features,2,2023,[2022],0.1,b::db_impact_coverage_fraction,0.0437302795350627
+raw_context_features,2,2023,[2022],0.1,b::mean_lag1_z__missing,0.0120218187590881
+raw_context_features,2,2023,[2022],0.1,b::lag2_z_mean__missing,-0.14701724200989577
+raw_context_features,2,2023,[2022],0.1,b::lag3_z_mean__missing,0.0120218187590881
+raw_context_features,2,2023,[2022],0.1,b::long_run_z_mean__missing,0.0120218187590881
+raw_context_features,2,2023,[2022],0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+raw_context_features,2,2023,[2022],0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,2,2023,[2022],0.1,b::coach_tenure_seasons__missing,0.2503292834799174
+raw_context_features,2,2023,[2022],0.1,b::recruiting_class_rank__missing,0.04718674643372044
+raw_context_features,2,2023,[2022],0.1,b::recruiting_class_points__missing,0.04718674643372044
+raw_context_features,2,2023,[2022],0.1,b::recruiting_points_2y_mean__missing,0.0120218187590881
+raw_context_features,2,2023,[2022],0.1,b::recruiting_points_3y_mean__missing,0.0120218187590881
+raw_context_features,2,2023,[2022],0.1,b::recruiting_points_4y_mean__missing,0.0120218187590881
+raw_context_features,2,2023,[2022],0.1,b::recruiting_points_trend__missing,0.010411582881620649
+raw_context_features,2,2023,[2022],0.1,b::talent_composite__missing,0.0120218187590881
+raw_context_features,2,2023,[2022],0.1,b::returning_pct_ppa__missing,0.0120218187590881
+raw_context_features,2,2023,[2022],0.1,b::transfer_in_prior_usage_sum__missing,-0.19381701687629804
+raw_context_features,2,2023,[2022],0.1,b::observed_db_impact_sum__missing,0.0120218187590881
+raw_context_features,2,2023,[2022],0.1,b::db_impact_coverage_fraction__missing,0.0120218187590881
+raw_context_features,2,2024,"[2022, 2023]",1.0,a,-0.05510723450917273
+raw_context_features,2,2024,"[2022, 2023]",1.0,b0,0.0017395424238848057
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::mean_lag1_z,-0.017826954869254362
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::lag2_z_mean,-0.023333624060179248
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::lag3_z_mean,0.010334013224663265
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::long_run_z_mean,0.009172807543700912
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::history_posterior_expected_rank_percentile,-0.06176514777143938
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::history_posterior_rank_sd_ratio,0.008962416532845319
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::coach_tenure_seasons,-0.015197218335082335
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::recruiting_class_rank,0.007402450839258559
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::recruiting_class_points,-0.0070666149426178715
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::recruiting_points_2y_mean,-0.006903043211452655
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::recruiting_points_3y_mean,-0.015562303805151827
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::recruiting_points_4y_mean,-0.01721471906581043
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::recruiting_points_trend,0.03663929029711117
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::talent_composite,-0.00509440607822246
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::returning_pct_ppa,-0.11863800235018564
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::transfer_in_prior_usage_sum,-0.02487822232035814
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::observed_db_impact_sum,-0.02930312596883619
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::db_impact_coverage_fraction,0.01124654730520241
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::mean_lag1_z__missing,0.003910804821168432
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::lag2_z_mean__missing,-0.01318533546569193
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::lag3_z_mean__missing,-0.009939310384625144
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::long_run_z_mean__missing,0.003910804821168432
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::history_posterior_expected_rank_percentile__missing,0.0
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::coach_tenure_seasons__missing,-0.004939128823757607
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::recruiting_class_rank__missing,0.003989288810177582
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::recruiting_class_points__missing,0.003989288810177582
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::recruiting_points_2y_mean__missing,0.003910804821168432
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::recruiting_points_3y_mean__missing,0.003910804821168432
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::recruiting_points_4y_mean__missing,0.003910804821168432
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::recruiting_points_trend__missing,-0.006229938999343053
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::talent_composite__missing,0.003910804821168432
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::returning_pct_ppa__missing,0.003910804821168432
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::transfer_in_prior_usage_sum__missing,-0.010676578291032537
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::observed_db_impact_sum__missing,0.003910804821168432
+raw_context_features,2,2024,"[2022, 2023]",1.0,b::db_impact_coverage_fraction__missing,0.003910804821168432
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,a,-0.06079755828617669
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b0,0.0013491516739052882
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::mean_lag1_z,-0.014918426737425217
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::lag2_z_mean,-0.01799107225805997
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::lag3_z_mean,-0.007151079719283974
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::long_run_z_mean,-0.001380769905898477
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_expected_rank_percentile,-0.048451864016470225
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_rank_sd_ratio,-0.0007227763563232648
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::coach_tenure_seasons,-0.005091631480372114
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_rank,-0.007144061200359724
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_points,-0.0030828593158828727
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_2y_mean,-0.007077349479342587
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_3y_mean,-0.008832819849323718
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_4y_mean,-0.013207920477145106
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_trend,0.015792395314865055
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::talent_composite,-0.012215925025742383
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::returning_pct_ppa,-0.08448454803397847
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::transfer_in_prior_usage_sum,-0.018221647883173476
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::observed_db_impact_sum,-0.027167434553074944
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::db_impact_coverage_fraction,0.01599256149651007
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::mean_lag1_z__missing,0.0041573478781454275
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::lag2_z_mean__missing,-0.011546022006627235
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::lag3_z_mean__missing,-0.010156065616281401
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::long_run_z_mean__missing,0.0041573478781454275
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_expected_rank_percentile__missing,0.0
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::coach_tenure_seasons__missing,0.02024357380532661
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_rank__missing,0.004160072192482483
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_points__missing,0.004160072192482483
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_2y_mean__missing,0.0041573478781454275
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_3y_mean__missing,0.0041573478781454275
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_4y_mean__missing,0.0041573478781454275
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_trend__missing,-0.005328238289575226
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::talent_composite__missing,0.0041573478781454275
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::returning_pct_ppa__missing,0.0041573478781454275
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::transfer_in_prior_usage_sum__missing,-0.0017129866042485712
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::observed_db_impact_sum__missing,0.0041573478781454275
+raw_context_features,2,2025,"[2022, 2023, 2024]",1.0,b::db_impact_coverage_fraction__missing,0.0041573478781454275
+existing_context_signal,7,2023,[2022],0.1,a,-0.11920286088276612
+existing_context_signal,7,2023,[2022],0.1,b0,-0.03117730315686358
+existing_context_signal,7,2023,[2022],0.1,b::mean_lag1_z,-0.1052234611364929
+existing_context_signal,7,2023,[2022],0.1,b::lag2_z_mean,-0.01213515002176733
+existing_context_signal,7,2023,[2022],0.1,b::lag3_z_mean,-0.06077221482188286
+existing_context_signal,7,2023,[2022],0.1,b::long_run_z_mean,-0.10488679049650244
+existing_context_signal,7,2023,[2022],0.1,b::history_posterior_expected_rank_percentile,0.3657565145392191
+existing_context_signal,7,2023,[2022],0.1,b::history_posterior_rank_sd_ratio,-0.04295507627701754
+existing_context_signal,7,2023,[2022],0.1,b::mean_lag1_z__missing,0.015031291011822281
+existing_context_signal,7,2023,[2022],0.1,b::lag2_z_mean__missing,-0.05386149029615583
+existing_context_signal,7,2023,[2022],0.1,b::lag3_z_mean__missing,0.015031291011822281
+existing_context_signal,7,2023,[2022],0.1,b::long_run_z_mean__missing,0.015031291011822281
+existing_context_signal,7,2023,[2022],0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+existing_context_signal,7,2023,[2022],0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+existing_context_signal,7,2023,[2022],0.1,w,0.17954542997592157
+existing_context_signal,7,2024,"[2022, 2023]",0.1,a,-0.1267914915900503
+existing_context_signal,7,2024,"[2022, 2023]",0.1,b0,-0.12653097281217257
+existing_context_signal,7,2024,"[2022, 2023]",0.1,b::mean_lag1_z,-0.11617738170903215
+existing_context_signal,7,2024,"[2022, 2023]",0.1,b::lag2_z_mean,-0.013118472191366727
+existing_context_signal,7,2024,"[2022, 2023]",0.1,b::lag3_z_mean,-0.06227492994715669
+existing_context_signal,7,2024,"[2022, 2023]",0.1,b::long_run_z_mean,-0.1011280506841642
+existing_context_signal,7,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile,0.29299505474406046
+existing_context_signal,7,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio,-0.15263157203335317
+existing_context_signal,7,2024,"[2022, 2023]",0.1,b::mean_lag1_z__missing,0.010502565453989261
+existing_context_signal,7,2024,"[2022, 2023]",0.1,b::lag2_z_mean__missing,-0.030122804875620093
+existing_context_signal,7,2024,"[2022, 2023]",0.1,b::lag3_z_mean__missing,-0.03425047804251745
+existing_context_signal,7,2024,"[2022, 2023]",0.1,b::long_run_z_mean__missing,0.010502565453989261
+existing_context_signal,7,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+existing_context_signal,7,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+existing_context_signal,7,2024,"[2022, 2023]",0.1,w,0.09213553302254512
+existing_context_signal,7,2025,"[2022, 2023, 2024]",0.1,a,-0.12439464994219908
+existing_context_signal,7,2025,"[2022, 2023, 2024]",0.1,b0,-0.05279291793602416
+existing_context_signal,7,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z,-0.09347026343504773
+existing_context_signal,7,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean,-0.00616748073711276
+existing_context_signal,7,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean,-0.06388794742430129
+existing_context_signal,7,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean,-0.12382446444235583
+existing_context_signal,7,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile,0.257253587048395
+existing_context_signal,7,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio,-0.09224945568815184
+existing_context_signal,7,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z__missing,0.0025156584757328143
+existing_context_signal,7,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean__missing,-0.0409015209392441
+existing_context_signal,7,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean__missing,-0.03683825985172662
+existing_context_signal,7,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean__missing,0.0025156584757328143
+existing_context_signal,7,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+existing_context_signal,7,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+existing_context_signal,7,2025,"[2022, 2023, 2024]",0.1,w,0.036225922814402574
+history_calibration,7,2023,[2022],0.1,a,-0.11713033067192517
+history_calibration,7,2023,[2022],0.1,b0,-0.03311126217862992
+history_calibration,7,2023,[2022],0.1,b::mean_lag1_z,-0.10577136396002557
+history_calibration,7,2023,[2022],0.1,b::lag2_z_mean,-0.016433886684913655
+history_calibration,7,2023,[2022],0.1,b::lag3_z_mean,-0.06370590742692173
+history_calibration,7,2023,[2022],0.1,b::long_run_z_mean,-0.10263173041525127
+history_calibration,7,2023,[2022],0.1,b::history_posterior_expected_rank_percentile,0.37285359863325257
+history_calibration,7,2023,[2022],0.1,b::history_posterior_rank_sd_ratio,-0.03779987110327888
+history_calibration,7,2023,[2022],0.1,b::mean_lag1_z__missing,0.014984082391127501
+history_calibration,7,2023,[2022],0.1,b::lag2_z_mean__missing,-0.052417126035431874
+history_calibration,7,2023,[2022],0.1,b::lag3_z_mean__missing,0.014984082391127501
+history_calibration,7,2023,[2022],0.1,b::long_run_z_mean__missing,0.014984082391127501
+history_calibration,7,2023,[2022],0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+history_calibration,7,2023,[2022],0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+history_calibration,7,2024,"[2022, 2023]",0.1,a,-0.1254424838442741
+history_calibration,7,2024,"[2022, 2023]",0.1,b0,-0.12940887704648135
+history_calibration,7,2024,"[2022, 2023]",0.1,b::mean_lag1_z,-0.11719706089595726
+history_calibration,7,2024,"[2022, 2023]",0.1,b::lag2_z_mean,-0.01533274697872042
+history_calibration,7,2024,"[2022, 2023]",0.1,b::lag3_z_mean,-0.06288682703008946
+history_calibration,7,2024,"[2022, 2023]",0.1,b::long_run_z_mean,-0.10017269474081154
+history_calibration,7,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile,0.2972900988569429
+history_calibration,7,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio,-0.15118182382185374
+history_calibration,7,2024,"[2022, 2023]",0.1,b::mean_lag1_z__missing,0.01058675986808319
+history_calibration,7,2024,"[2022, 2023]",0.1,b::lag2_z_mean__missing,-0.028113993543438433
+history_calibration,7,2024,"[2022, 2023]",0.1,b::lag3_z_mean__missing,-0.03277015777152175
+history_calibration,7,2024,"[2022, 2023]",0.1,b::long_run_z_mean__missing,0.01058675986808319
+history_calibration,7,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+history_calibration,7,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+history_calibration,7,2025,"[2022, 2023, 2024]",0.1,a,-0.12378204890373727
+history_calibration,7,2025,"[2022, 2023, 2024]",0.1,b0,-0.05389779120490154
+history_calibration,7,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z,-0.09348556678739073
+history_calibration,7,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean,-0.00697635059188915
+history_calibration,7,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean,-0.06381827396609849
+history_calibration,7,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean,-0.12343565315030279
+history_calibration,7,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile,0.2590370368712568
+history_calibration,7,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio,-0.09152995052758639
+history_calibration,7,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z__missing,0.002455714235980028
+history_calibration,7,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean__missing,-0.04037812689088896
+history_calibration,7,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean__missing,-0.03620108538407588
+history_calibration,7,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean__missing,0.002455714235980028
+history_calibration,7,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+history_calibration,7,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,7,2023,[2022],0.1,a,-0.09782162181138486
+raw_context_features,7,2023,[2022],0.1,b0,-0.04550454642206519
+raw_context_features,7,2023,[2022],0.1,b::mean_lag1_z,-0.12390233845727608
+raw_context_features,7,2023,[2022],0.1,b::lag2_z_mean,0.026134606592530966
+raw_context_features,7,2023,[2022],0.1,b::lag3_z_mean,-0.08470922615016664
+raw_context_features,7,2023,[2022],0.1,b::long_run_z_mean,-0.1294954780510374
+raw_context_features,7,2023,[2022],0.1,b::history_posterior_expected_rank_percentile,0.2819519924274448
+raw_context_features,7,2023,[2022],0.1,b::history_posterior_rank_sd_ratio,-0.06480544745244393
+raw_context_features,7,2023,[2022],0.1,b::coach_tenure_seasons,-0.05316182997506251
+raw_context_features,7,2023,[2022],0.1,b::recruiting_class_rank,0.07067481169606264
+raw_context_features,7,2023,[2022],0.1,b::recruiting_class_points,-0.028600828909501587
+raw_context_features,7,2023,[2022],0.1,b::recruiting_points_2y_mean,0.010298674178784098
+raw_context_features,7,2023,[2022],0.1,b::recruiting_points_3y_mean,-0.02947823165935897
+raw_context_features,7,2023,[2022],0.1,b::recruiting_points_4y_mean,-0.0377950561108944
+raw_context_features,7,2023,[2022],0.1,b::recruiting_points_trend,0.11996637291114788
+raw_context_features,7,2023,[2022],0.1,b::talent_composite,0.0518723545718258
+raw_context_features,7,2023,[2022],0.1,b::returning_pct_ppa,-0.20382167573525503
+raw_context_features,7,2023,[2022],0.1,b::transfer_in_prior_usage_sum,-0.07515986177111067
+raw_context_features,7,2023,[2022],0.1,b::observed_db_impact_sum,-0.014104274394936183
+raw_context_features,7,2023,[2022],0.1,b::db_impact_coverage_fraction,-0.012924069310649463
+raw_context_features,7,2023,[2022],0.1,b::mean_lag1_z__missing,0.013372510675438274
+raw_context_features,7,2023,[2022],0.1,b::lag2_z_mean__missing,-0.061048321090746906
+raw_context_features,7,2023,[2022],0.1,b::lag3_z_mean__missing,0.013372510675438274
+raw_context_features,7,2023,[2022],0.1,b::long_run_z_mean__missing,0.013372510675438274
+raw_context_features,7,2023,[2022],0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+raw_context_features,7,2023,[2022],0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,7,2023,[2022],0.1,b::coach_tenure_seasons__missing,0.16794457995069417
+raw_context_features,7,2023,[2022],0.1,b::recruiting_class_rank__missing,-0.020756071044108596
+raw_context_features,7,2023,[2022],0.1,b::recruiting_class_points__missing,-0.020756071044108596
+raw_context_features,7,2023,[2022],0.1,b::recruiting_points_2y_mean__missing,0.013372510675438274
+raw_context_features,7,2023,[2022],0.1,b::recruiting_points_3y_mean__missing,0.013372510675438274
+raw_context_features,7,2023,[2022],0.1,b::recruiting_points_4y_mean__missing,0.013372510675438274
+raw_context_features,7,2023,[2022],0.1,b::recruiting_points_trend__missing,-0.02648870103671279
+raw_context_features,7,2023,[2022],0.1,b::talent_composite__missing,0.013372510675438274
+raw_context_features,7,2023,[2022],0.1,b::returning_pct_ppa__missing,0.013372510675438274
+raw_context_features,7,2023,[2022],0.1,b::transfer_in_prior_usage_sum__missing,-0.1573881501096863
+raw_context_features,7,2023,[2022],0.1,b::observed_db_impact_sum__missing,0.013372510675438274
+raw_context_features,7,2023,[2022],0.1,b::db_impact_coverage_fraction__missing,0.013372510675438274
+raw_context_features,7,2024,"[2022, 2023]",0.1,a,-0.10000485987160553
+raw_context_features,7,2024,"[2022, 2023]",0.1,b0,-0.12480797687460676
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::mean_lag1_z,-0.1237798787619667
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::lag2_z_mean,0.029013278489936394
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::lag3_z_mean,-0.057486637318982486
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::long_run_z_mean,-0.042596311834975906
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile,0.2657773427882571
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio,-0.12357084292320483
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::coach_tenure_seasons,-0.12250673561133435
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::recruiting_class_rank,-0.034673816773519064
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::recruiting_class_points,0.005725634988963659
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::recruiting_points_2y_mean,0.044300873874051384
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::recruiting_points_3y_mean,0.017841154541085796
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::recruiting_points_4y_mean,0.019693404950313034
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::recruiting_points_trend,0.07814391412490153
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::talent_composite,0.04406607194736638
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::returning_pct_ppa,-0.22768854477806105
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::transfer_in_prior_usage_sum,-0.1213097509418939
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::observed_db_impact_sum,-0.023143970688122233
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::db_impact_coverage_fraction,0.013017631725285951
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::mean_lag1_z__missing,0.011867376700690024
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::lag2_z_mean__missing,-0.033998251517523316
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::lag3_z_mean__missing,-0.027730508528496747
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::long_run_z_mean__missing,0.011867376700690024
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::coach_tenure_seasons__missing,0.0024156863021608317
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::recruiting_class_rank__missing,-0.011651743450157874
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::recruiting_class_points__missing,-0.011651743450157874
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::recruiting_points_2y_mean__missing,0.011867376700690024
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::recruiting_points_3y_mean__missing,0.011867376700690024
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::recruiting_points_4y_mean__missing,0.011867376700690024
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::recruiting_points_trend__missing,-0.02481222595002109
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::talent_composite__missing,0.011867376700690024
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::returning_pct_ppa__missing,0.011867376700690024
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::transfer_in_prior_usage_sum__missing,-0.14866381256604458
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::observed_db_impact_sum__missing,0.011867376700690024
+raw_context_features,7,2024,"[2022, 2023]",0.1,b::db_impact_coverage_fraction__missing,0.011867376700690024
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,a,-0.10939967974422955
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b0,-0.054913316573260214
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z,-0.09094747383083011
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean,0.03566740239685386
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean,-0.07324619796324774
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean,-0.07439837558292893
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile,0.2583327735680928
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio,-0.06680191330091662
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::coach_tenure_seasons,-0.06798205057537841
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::recruiting_class_rank,-0.027161710827881734
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::recruiting_class_points,-0.001934788789972257
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::recruiting_points_2y_mean,0.03965443402566709
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::recruiting_points_3y_mean,0.013683631514343455
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::recruiting_points_4y_mean,0.0077237557337516
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::recruiting_points_trend,0.04996481404697646
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::talent_composite,0.07976795369796802
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::returning_pct_ppa,-0.15241944863649723
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::transfer_in_prior_usage_sum,-0.05868165118041787
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::observed_db_impact_sum,-0.006584845951245212
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::db_impact_coverage_fraction,0.020859165202043884
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z__missing,0.004614857928053875
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean__missing,-0.03428416828915312
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean__missing,-0.0317552250389069
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean__missing,0.004614857928053875
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::coach_tenure_seasons__missing,0.016447611472675757
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::recruiting_class_rank__missing,-0.009054133925844388
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::recruiting_class_points__missing,-0.009054133925844388
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::recruiting_points_2y_mean__missing,0.004614857928053875
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::recruiting_points_3y_mean__missing,0.004614857928053875
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::recruiting_points_4y_mean__missing,0.004614857928053875
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::recruiting_points_trend__missing,-0.015372393367659694
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::talent_composite__missing,0.004614857928053875
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::returning_pct_ppa__missing,0.004614857928053875
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::transfer_in_prior_usage_sum__missing,-0.09942028009067706
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::observed_db_impact_sum__missing,0.004614857928053875
+raw_context_features,7,2025,"[2022, 2023, 2024]",0.1,b::db_impact_coverage_fraction__missing,0.004614857928053875
+existing_context_signal,3,2023,[2022],0.1,a,-0.17290370075062836
+existing_context_signal,3,2023,[2022],0.1,b0,0.0637615199485073
+existing_context_signal,3,2023,[2022],0.1,b::mean_lag1_z,-0.05817976017506125
+existing_context_signal,3,2023,[2022],0.1,b::lag2_z_mean,-0.08816380170159542
+existing_context_signal,3,2023,[2022],0.1,b::lag3_z_mean,0.08186973043239301
+existing_context_signal,3,2023,[2022],0.1,b::long_run_z_mean,0.06128187219987656
+existing_context_signal,3,2023,[2022],0.1,b::history_posterior_expected_rank_percentile,0.0342809880009098
+existing_context_signal,3,2023,[2022],0.1,b::history_posterior_rank_sd_ratio,0.09599990525817105
+existing_context_signal,3,2023,[2022],0.1,b::mean_lag1_z__missing,0.0630783515017156
+existing_context_signal,3,2023,[2022],0.1,b::lag2_z_mean__missing,-0.13666042122892938
+existing_context_signal,3,2023,[2022],0.1,b::lag3_z_mean__missing,0.0630783515017156
+existing_context_signal,3,2023,[2022],0.1,b::long_run_z_mean__missing,0.0630783515017156
+existing_context_signal,3,2023,[2022],0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+existing_context_signal,3,2023,[2022],0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+existing_context_signal,3,2023,[2022],0.1,w,0.2710038227676433
+existing_context_signal,3,2024,"[2022, 2023]",1.0,a,-0.08490247877556734
+existing_context_signal,3,2024,"[2022, 2023]",1.0,b0,0.004471819313456815
+existing_context_signal,3,2024,"[2022, 2023]",1.0,b::mean_lag1_z,-0.005463943975422647
+existing_context_signal,3,2024,"[2022, 2023]",1.0,b::lag2_z_mean,-0.026708619311154046
+existing_context_signal,3,2024,"[2022, 2023]",1.0,b::lag3_z_mean,0.011404629299633727
+existing_context_signal,3,2024,"[2022, 2023]",1.0,b::long_run_z_mean,0.013828794586619118
+existing_context_signal,3,2024,"[2022, 2023]",1.0,b::history_posterior_expected_rank_percentile,-0.019966473295420405
+existing_context_signal,3,2024,"[2022, 2023]",1.0,b::history_posterior_rank_sd_ratio,0.002457983953141192
+existing_context_signal,3,2024,"[2022, 2023]",1.0,b::mean_lag1_z__missing,0.002484634099945209
+existing_context_signal,3,2024,"[2022, 2023]",1.0,b::lag2_z_mean__missing,-0.012705062452719388
+existing_context_signal,3,2024,"[2022, 2023]",1.0,b::lag3_z_mean__missing,-0.011202735935213912
+existing_context_signal,3,2024,"[2022, 2023]",1.0,b::long_run_z_mean__missing,0.002484634099945209
+existing_context_signal,3,2024,"[2022, 2023]",1.0,b::history_posterior_expected_rank_percentile__missing,0.0
+existing_context_signal,3,2024,"[2022, 2023]",1.0,b::history_posterior_rank_sd_ratio__missing,0.0
+existing_context_signal,3,2024,"[2022, 2023]",1.0,w,0.02702384877428375
+existing_context_signal,3,2025,"[2022, 2023, 2024]",0.1,a,-0.1980833083779299
+existing_context_signal,3,2025,"[2022, 2023, 2024]",0.1,b0,0.02721620408592682
+existing_context_signal,3,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z,0.004414275405171074
+existing_context_signal,3,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean,-0.06644611358567698
+existing_context_signal,3,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean,0.004837292934053851
+existing_context_signal,3,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean,0.04019648233087966
+existing_context_signal,3,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile,-0.010317369357195837
+existing_context_signal,3,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio,0.009283307226452663
+existing_context_signal,3,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z__missing,0.027810485899175674
+existing_context_signal,3,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean__missing,-0.0873228033900885
+existing_context_signal,3,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean__missing,-0.04330523659410433
+existing_context_signal,3,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean__missing,0.027810485899175674
+existing_context_signal,3,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+existing_context_signal,3,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+existing_context_signal,3,2025,"[2022, 2023, 2024]",0.1,w,0.18996162552135706
+history_calibration,3,2023,[2022],0.1,a,-0.16494700634408452
+history_calibration,3,2023,[2022],0.1,b0,0.061182830727137226
+history_calibration,3,2023,[2022],0.1,b::mean_lag1_z,-0.059331191315816025
+history_calibration,3,2023,[2022],0.1,b::lag2_z_mean,-0.09556487395681369
+history_calibration,3,2023,[2022],0.1,b::lag3_z_mean,0.07560683951955133
+history_calibration,3,2023,[2022],0.1,b::long_run_z_mean,0.06608437879943374
+history_calibration,3,2023,[2022],0.1,b::history_posterior_expected_rank_percentile,0.04612460425125017
+history_calibration,3,2023,[2022],0.1,b::history_posterior_rank_sd_ratio,0.10433909984984982
+history_calibration,3,2023,[2022],0.1,b::mean_lag1_z__missing,0.06403267880186121
+history_calibration,3,2023,[2022],0.1,b::lag2_z_mean__missing,-0.1333576909311057
+history_calibration,3,2023,[2022],0.1,b::lag3_z_mean__missing,0.06403267880186121
+history_calibration,3,2023,[2022],0.1,b::long_run_z_mean__missing,0.06403267880186121
+history_calibration,3,2023,[2022],0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+history_calibration,3,2023,[2022],0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+history_calibration,3,2024,"[2022, 2023]",1.0,a,-0.08441741693418749
+history_calibration,3,2024,"[2022, 2023]",1.0,b0,0.004072020127889105
+history_calibration,3,2024,"[2022, 2023]",1.0,b::mean_lag1_z,-0.005465339093611058
+history_calibration,3,2024,"[2022, 2023]",1.0,b::lag2_z_mean,-0.02689592280083077
+history_calibration,3,2024,"[2022, 2023]",1.0,b::lag3_z_mean,0.011436015892503008
+history_calibration,3,2024,"[2022, 2023]",1.0,b::long_run_z_mean,0.013982428821421826
+history_calibration,3,2024,"[2022, 2023]",1.0,b::history_posterior_expected_rank_percentile,-0.01951800104388086
+history_calibration,3,2024,"[2022, 2023]",1.0,b::history_posterior_rank_sd_ratio,0.002839005424792475
+history_calibration,3,2024,"[2022, 2023]",1.0,b::mean_lag1_z__missing,0.002500965640336973
+history_calibration,3,2024,"[2022, 2023]",1.0,b::lag2_z_mean__missing,-0.01260215898139875
+history_calibration,3,2024,"[2022, 2023]",1.0,b::lag3_z_mean__missing,-0.011141450964929947
+history_calibration,3,2024,"[2022, 2023]",1.0,b::long_run_z_mean__missing,0.002500965640336973
+history_calibration,3,2024,"[2022, 2023]",1.0,b::history_posterior_expected_rank_percentile__missing,0.0
+history_calibration,3,2024,"[2022, 2023]",1.0,b::history_posterior_rank_sd_ratio__missing,0.0
+history_calibration,3,2025,"[2022, 2023, 2024]",1.0,a,-0.07903336577132597
+history_calibration,3,2025,"[2022, 2023, 2024]",1.0,b0,0.009744711210955742
+history_calibration,3,2025,"[2022, 2023, 2024]",1.0,b::mean_lag1_z,-0.010580879106460307
+history_calibration,3,2025,"[2022, 2023, 2024]",1.0,b::lag2_z_mean,-0.027271128863781063
+history_calibration,3,2025,"[2022, 2023, 2024]",1.0,b::lag3_z_mean,-0.004442472839292984
+history_calibration,3,2025,"[2022, 2023, 2024]",1.0,b::long_run_z_mean,0.001028251424015647
+history_calibration,3,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_expected_rank_percentile,-0.01723273623607866
+history_calibration,3,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_rank_sd_ratio,0.008484593079695357
+history_calibration,3,2025,"[2022, 2023, 2024]",1.0,b::mean_lag1_z__missing,0.0019380021103206657
+history_calibration,3,2025,"[2022, 2023, 2024]",1.0,b::lag2_z_mean__missing,-0.009621790171850294
+history_calibration,3,2025,"[2022, 2023, 2024]",1.0,b::lag3_z_mean__missing,-0.005368240884327225
+history_calibration,3,2025,"[2022, 2023, 2024]",1.0,b::long_run_z_mean__missing,0.0019380021103206657
+history_calibration,3,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_expected_rank_percentile__missing,0.0
+history_calibration,3,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,3,2023,[2022],0.1,a,-0.12506169016038457
+raw_context_features,3,2023,[2022],0.1,b0,0.022986609686771627
+raw_context_features,3,2023,[2022],0.1,b::mean_lag1_z,-0.03499261662220747
+raw_context_features,3,2023,[2022],0.1,b::lag2_z_mean,-0.005503524205470549
+raw_context_features,3,2023,[2022],0.1,b::lag3_z_mean,0.07470874919186127
+raw_context_features,3,2023,[2022],0.1,b::long_run_z_mean,0.011830898068629888
+raw_context_features,3,2023,[2022],0.1,b::history_posterior_expected_rank_percentile,-0.058111671551167546
+raw_context_features,3,2023,[2022],0.1,b::history_posterior_rank_sd_ratio,0.10299790114915995
+raw_context_features,3,2023,[2022],0.1,b::coach_tenure_seasons,0.08333406132794331
+raw_context_features,3,2023,[2022],0.1,b::recruiting_class_rank,0.08270388244760443
+raw_context_features,3,2023,[2022],0.1,b::recruiting_class_points,0.01707585395866023
+raw_context_features,3,2023,[2022],0.1,b::recruiting_points_2y_mean,0.049706160842425365
+raw_context_features,3,2023,[2022],0.1,b::recruiting_points_3y_mean,0.015920494183005583
+raw_context_features,3,2023,[2022],0.1,b::recruiting_points_4y_mean,-0.09528291894438132
+raw_context_features,3,2023,[2022],0.1,b::recruiting_points_trend,0.10575004239969771
+raw_context_features,3,2023,[2022],0.1,b::talent_composite,0.045558321898465426
+raw_context_features,3,2023,[2022],0.1,b::returning_pct_ppa,-0.2355884330142767
+raw_context_features,3,2023,[2022],0.1,b::transfer_in_prior_usage_sum,-0.06845120788057096
+raw_context_features,3,2023,[2022],0.1,b::observed_db_impact_sum,-0.0917344225295548
+raw_context_features,3,2023,[2022],0.1,b::db_impact_coverage_fraction,0.03189530470061726
+raw_context_features,3,2023,[2022],0.1,b::mean_lag1_z__missing,0.03188471666758013
+raw_context_features,3,2023,[2022],0.1,b::lag2_z_mean__missing,-0.1475107759050472
+raw_context_features,3,2023,[2022],0.1,b::lag3_z_mean__missing,0.03188471666758013
+raw_context_features,3,2023,[2022],0.1,b::long_run_z_mean__missing,0.03188471666758013
+raw_context_features,3,2023,[2022],0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+raw_context_features,3,2023,[2022],0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,3,2023,[2022],0.1,b::coach_tenure_seasons__missing,0.304336615636389
+raw_context_features,3,2023,[2022],0.1,b::recruiting_class_rank__missing,0.04838302781862876
+raw_context_features,3,2023,[2022],0.1,b::recruiting_class_points__missing,0.04838302781862876
+raw_context_features,3,2023,[2022],0.1,b::recruiting_points_2y_mean__missing,0.03188471666758013
+raw_context_features,3,2023,[2022],0.1,b::recruiting_points_3y_mean__missing,0.03188471666758013
+raw_context_features,3,2023,[2022],0.1,b::recruiting_points_4y_mean__missing,0.03188471666758013
+raw_context_features,3,2023,[2022],0.1,b::recruiting_points_trend__missing,0.004530766748263761
+raw_context_features,3,2023,[2022],0.1,b::talent_composite__missing,0.03188471666758013
+raw_context_features,3,2023,[2022],0.1,b::returning_pct_ppa__missing,0.03188471666758013
+raw_context_features,3,2023,[2022],0.1,b::transfer_in_prior_usage_sum__missing,-0.13320808805865092
+raw_context_features,3,2023,[2022],0.1,b::observed_db_impact_sum__missing,0.03188471666758013
+raw_context_features,3,2023,[2022],0.1,b::db_impact_coverage_fraction__missing,0.03188471666758013
+raw_context_features,3,2024,"[2022, 2023]",1.0,a,-0.08581870333989354
+raw_context_features,3,2024,"[2022, 2023]",1.0,b0,0.004461829217725765
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::mean_lag1_z,-0.010872897663145363
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::lag2_z_mean,-0.02198087486248828
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::lag3_z_mean,0.009309385400944002
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::long_run_z_mean,0.009268653359519251
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::history_posterior_expected_rank_percentile,-0.03228901028695124
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::history_posterior_rank_sd_ratio,0.0015172592819012885
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::coach_tenure_seasons,-0.020367043729427613
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::recruiting_class_rank,0.0008849266829723653
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::recruiting_class_points,0.005943169366027204
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::recruiting_points_2y_mean,-0.0006256815000439478
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::recruiting_points_3y_mean,-0.003689368230451488
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::recruiting_points_4y_mean,-0.0073017152167339245
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::recruiting_points_trend,0.02509452394772839
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::talent_composite,-0.011399583956233266
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::returning_pct_ppa,-0.10502877437227133
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::transfer_in_prior_usage_sum,-0.030387099197170392
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::observed_db_impact_sum,-0.016593637436052664
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::db_impact_coverage_fraction,0.007530030772697332
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::mean_lag1_z__missing,0.002314340301721081
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::lag2_z_mean__missing,-0.01383583376208707
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::lag3_z_mean__missing,-0.01170025095049756
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::long_run_z_mean__missing,0.002314340301721081
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::history_posterior_expected_rank_percentile__missing,0.0
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::coach_tenure_seasons__missing,0.0034446838661031606
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::recruiting_class_rank__missing,0.0018541459113650988
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::recruiting_class_points__missing,0.0018541459113650988
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::recruiting_points_2y_mean__missing,0.002314340301721081
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::recruiting_points_3y_mean__missing,0.002314340301721081
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::recruiting_points_4y_mean__missing,0.002314340301721081
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::recruiting_points_trend__missing,-0.007066967008499382
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::talent_composite__missing,0.002314340301721081
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::returning_pct_ppa__missing,0.002314340301721081
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::transfer_in_prior_usage_sum__missing,-0.010295017865198397
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::observed_db_impact_sum__missing,0.002314340301721081
+raw_context_features,3,2024,"[2022, 2023]",1.0,b::db_impact_coverage_fraction__missing,0.002314340301721081
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,a,-0.08047192628407147
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b0,0.00857613602363838
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::mean_lag1_z,-0.014867087720854648
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::lag2_z_mean,-0.023083407063130792
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::lag3_z_mean,-0.008423261235917322
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::long_run_z_mean,-0.004880575017617865
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_expected_rank_percentile,-0.026835173482381403
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_rank_sd_ratio,0.008119852406006878
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::coach_tenure_seasons,-0.0042345356130976605
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_rank,-0.007632101232814149
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_points,0.007252341406981209
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_2y_mean,-0.006950753229941521
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_3y_mean,-0.004793932486917373
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_4y_mean,-0.00905936993002883
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_trend,0.011760558411461473
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::talent_composite,-0.008464494473328529
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::returning_pct_ppa,-0.08131057763976601
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::transfer_in_prior_usage_sum,-0.018038971404682344
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::observed_db_impact_sum,-0.021525143013099754
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::db_impact_coverage_fraction,0.013747673951566444
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::mean_lag1_z__missing,0.0016957097778582163
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::lag2_z_mean__missing,-0.010305094216282886
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::lag3_z_mean__missing,-0.006438795958516543
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::long_run_z_mean__missing,0.0016957097778582163
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_expected_rank_percentile__missing,0.0
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::coach_tenure_seasons__missing,0.011531706359300913
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_rank__missing,0.0015510096624699622
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_points__missing,0.0015510096624699622
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_2y_mean__missing,0.0016957097778582163
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_3y_mean__missing,0.0016957097778582163
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_4y_mean__missing,0.0016957097778582163
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_trend__missing,-0.004890513562163995
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::talent_composite__missing,0.0016957097778582163
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::returning_pct_ppa__missing,0.0016957097778582163
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::transfer_in_prior_usage_sum__missing,-0.0040775030061958204
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::observed_db_impact_sum__missing,0.0016957097778582163
+raw_context_features,3,2025,"[2022, 2023, 2024]",1.0,b::db_impact_coverage_fraction__missing,0.0016957097778582163
+existing_context_signal,4,2023,[2022],0.1,a,-0.2328271283561539
+existing_context_signal,4,2023,[2022],0.1,b0,0.004513420794973839
+existing_context_signal,4,2023,[2022],0.1,b::mean_lag1_z,-0.039859691921727225
+existing_context_signal,4,2023,[2022],0.1,b::lag2_z_mean,-0.07943448102507181
+existing_context_signal,4,2023,[2022],0.1,b::lag3_z_mean,0.05975405581755261
+existing_context_signal,4,2023,[2022],0.1,b::long_run_z_mean,-0.008481064851775206
+existing_context_signal,4,2023,[2022],0.1,b::history_posterior_expected_rank_percentile,0.12872823879875697
+existing_context_signal,4,2023,[2022],0.1,b::history_posterior_rank_sd_ratio,0.05197046775465061
+existing_context_signal,4,2023,[2022],0.1,b::mean_lag1_z__missing,0.015819567699974148
+existing_context_signal,4,2023,[2022],0.1,b::lag2_z_mean__missing,-0.11342439239454144
+existing_context_signal,4,2023,[2022],0.1,b::lag3_z_mean__missing,0.015819567699974148
+existing_context_signal,4,2023,[2022],0.1,b::long_run_z_mean__missing,0.015819567699974148
+existing_context_signal,4,2023,[2022],0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+existing_context_signal,4,2023,[2022],0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+existing_context_signal,4,2023,[2022],0.1,w,0.23899819414375606
+existing_context_signal,4,2024,"[2022, 2023]",0.1,a,-0.2070291702100768
+existing_context_signal,4,2024,"[2022, 2023]",0.1,b0,-0.03044025381700764
+existing_context_signal,4,2024,"[2022, 2023]",0.1,b::mean_lag1_z,-0.06922241393405962
+existing_context_signal,4,2024,"[2022, 2023]",0.1,b::lag2_z_mean,-0.08139431139773945
+existing_context_signal,4,2024,"[2022, 2023]",0.1,b::lag3_z_mean,0.03634468935174792
+existing_context_signal,4,2024,"[2022, 2023]",0.1,b::long_run_z_mean,0.02816031723605424
+existing_context_signal,4,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile,0.08845049823839604
+existing_context_signal,4,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio,-0.01930679981308773
+existing_context_signal,4,2024,"[2022, 2023]",0.1,b::mean_lag1_z__missing,0.0012175789748287132
+existing_context_signal,4,2024,"[2022, 2023]",0.1,b::lag2_z_mean__missing,-0.08107009305399321
+existing_context_signal,4,2024,"[2022, 2023]",0.1,b::lag3_z_mean__missing,-0.058226041195290894
+existing_context_signal,4,2024,"[2022, 2023]",0.1,b::long_run_z_mean__missing,0.0012175789748287132
+existing_context_signal,4,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+existing_context_signal,4,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+existing_context_signal,4,2024,"[2022, 2023]",0.1,w,0.19035004839193068
+existing_context_signal,4,2025,"[2022, 2023, 2024]",0.1,a,-0.20888300975961852
+existing_context_signal,4,2025,"[2022, 2023, 2024]",0.1,b0,-0.0032062112699447636
+existing_context_signal,4,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z,-0.02068019587386532
+existing_context_signal,4,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean,-0.0522408999892846
+existing_context_signal,4,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean,-0.01424608962528914
+existing_context_signal,4,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean,-0.022335055202232543
+existing_context_signal,4,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile,0.07697878801904558
+existing_context_signal,4,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio,0.0064989439520909366
+existing_context_signal,4,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z__missing,0.003175990465019624
+existing_context_signal,4,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean__missing,-0.06689744942171615
+existing_context_signal,4,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean__missing,-0.03850290382353096
+existing_context_signal,4,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean__missing,0.003175990465019624
+existing_context_signal,4,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+existing_context_signal,4,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+existing_context_signal,4,2025,"[2022, 2023, 2024]",0.1,w,0.159960724098844
+history_calibration,4,2023,[2022],0.1,a,-0.22766956752241774
+history_calibration,4,2023,[2022],0.1,b0,0.002187645187488916
+history_calibration,4,2023,[2022],0.1,b::mean_lag1_z,-0.04064212937447094
+history_calibration,4,2023,[2022],0.1,b::lag2_z_mean,-0.08579663722157546
+history_calibration,4,2023,[2022],0.1,b::lag3_z_mean,0.05568714900661629
+history_calibration,4,2023,[2022],0.1,b::long_run_z_mean,-0.005004456134064487
+history_calibration,4,2023,[2022],0.1,b::history_posterior_expected_rank_percentile,0.13885685771669012
+history_calibration,4,2023,[2022],0.1,b::history_posterior_rank_sd_ratio,0.05898786112920599
+history_calibration,4,2023,[2022],0.1,b::mean_lag1_z__missing,0.015798908093475287
+history_calibration,4,2023,[2022],0.1,b::lag2_z_mean__missing,-0.11115673736760867
+history_calibration,4,2023,[2022],0.1,b::lag3_z_mean__missing,0.015798908093475287
+history_calibration,4,2023,[2022],0.1,b::long_run_z_mean__missing,0.015798908093475287
+history_calibration,4,2023,[2022],0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+history_calibration,4,2023,[2022],0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+history_calibration,4,2024,"[2022, 2023]",0.1,a,-0.202629812545769
+history_calibration,4,2024,"[2022, 2023]",0.1,b0,-0.03693039416844276
+history_calibration,4,2024,"[2022, 2023]",0.1,b::mean_lag1_z,-0.07251174129440545
+history_calibration,4,2024,"[2022, 2023]",0.1,b::lag2_z_mean,-0.08524598175650816
+history_calibration,4,2024,"[2022, 2023]",0.1,b::lag3_z_mean,0.03629448962181663
+history_calibration,4,2024,"[2022, 2023]",0.1,b::long_run_z_mean,0.03042575510832936
+history_calibration,4,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile,0.09711730746094648
+history_calibration,4,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio,-0.01629332246382235
+history_calibration,4,2024,"[2022, 2023]",0.1,b::mean_lag1_z__missing,0.0012401246715386695
+history_calibration,4,2024,"[2022, 2023]",0.1,b::lag2_z_mean__missing,-0.0752718341031323
+history_calibration,4,2024,"[2022, 2023]",0.1,b::lag3_z_mean__missing,-0.053964913502670166
+history_calibration,4,2024,"[2022, 2023]",0.1,b::long_run_z_mean__missing,0.0012401246715386695
+history_calibration,4,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+history_calibration,4,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+history_calibration,4,2025,"[2022, 2023, 2024]",0.1,a,-0.20490582159731446
+history_calibration,4,2025,"[2022, 2023, 2024]",0.1,b0,-0.008290734483369382
+history_calibration,4,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z,-0.02081662913046152
+history_calibration,4,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean,-0.05582572795607705
+history_calibration,4,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean,-0.013373599179995534
+history_calibration,4,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean,-0.0202086668043344
+history_calibration,4,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile,0.08422318059102282
+history_calibration,4,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio,0.009576814849030174
+history_calibration,4,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z__missing,0.0026728435488098425
+history_calibration,4,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean__missing,-0.06347660796772128
+history_calibration,4,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean__missing,-0.03368291144154349
+history_calibration,4,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean__missing,0.0026728435488098425
+history_calibration,4,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+history_calibration,4,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,4,2023,[2022],0.1,a,-0.20881165271837582
+raw_context_features,4,2023,[2022],0.1,b0,-0.024590851709063683
+raw_context_features,4,2023,[2022],0.1,b::mean_lag1_z,-0.019208287695768326
+raw_context_features,4,2023,[2022],0.1,b::lag2_z_mean,-0.02289186294782647
+raw_context_features,4,2023,[2022],0.1,b::lag3_z_mean,0.028468142658367758
+raw_context_features,4,2023,[2022],0.1,b::long_run_z_mean,-0.054984635055004005
+raw_context_features,4,2023,[2022],0.1,b::history_posterior_expected_rank_percentile,0.03859859069678264
+raw_context_features,4,2023,[2022],0.1,b::history_posterior_rank_sd_ratio,0.046694016220881845
+raw_context_features,4,2023,[2022],0.1,b::coach_tenure_seasons,0.043852683392730754
+raw_context_features,4,2023,[2022],0.1,b::recruiting_class_rank,0.07129114926730704
+raw_context_features,4,2023,[2022],0.1,b::recruiting_class_points,0.0074929793572512515
+raw_context_features,4,2023,[2022],0.1,b::recruiting_points_2y_mean,-0.0025112899959022846
+raw_context_features,4,2023,[2022],0.1,b::recruiting_points_3y_mean,-0.02700684277357598
+raw_context_features,4,2023,[2022],0.1,b::recruiting_points_4y_mean,-0.07939963775164098
+raw_context_features,4,2023,[2022],0.1,b::recruiting_points_trend,0.1212877793497527
+raw_context_features,4,2023,[2022],0.1,b::talent_composite,0.07593159537432781
+raw_context_features,4,2023,[2022],0.1,b::returning_pct_ppa,-0.18722177658995967
+raw_context_features,4,2023,[2022],0.1,b::transfer_in_prior_usage_sum,-0.08667572095895382
+raw_context_features,4,2023,[2022],0.1,b::observed_db_impact_sum,-0.04847924140314767
+raw_context_features,4,2023,[2022],0.1,b::db_impact_coverage_fraction,-0.012415762117882657
+raw_context_features,4,2023,[2022],0.1,b::mean_lag1_z__missing,0.008099238607619689
+raw_context_features,4,2023,[2022],0.1,b::lag2_z_mean__missing,-0.11744894831515595
+raw_context_features,4,2023,[2022],0.1,b::lag3_z_mean__missing,0.008099238607619689
+raw_context_features,4,2023,[2022],0.1,b::long_run_z_mean__missing,0.008099238607619689
+raw_context_features,4,2023,[2022],0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+raw_context_features,4,2023,[2022],0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,4,2023,[2022],0.1,b::coach_tenure_seasons__missing,0.2514418281086727
+raw_context_features,4,2023,[2022],0.1,b::recruiting_class_rank__missing,0.02288031378966068
+raw_context_features,4,2023,[2022],0.1,b::recruiting_class_points__missing,0.02288031378966068
+raw_context_features,4,2023,[2022],0.1,b::recruiting_points_2y_mean__missing,0.008099238607619689
+raw_context_features,4,2023,[2022],0.1,b::recruiting_points_3y_mean__missing,0.008099238607619689
+raw_context_features,4,2023,[2022],0.1,b::recruiting_points_4y_mean__missing,0.008099238607619689
+raw_context_features,4,2023,[2022],0.1,b::recruiting_points_trend__missing,0.02850904365693665
+raw_context_features,4,2023,[2022],0.1,b::talent_composite__missing,0.008099238607619689
+raw_context_features,4,2023,[2022],0.1,b::returning_pct_ppa__missing,0.008099238607619689
+raw_context_features,4,2023,[2022],0.1,b::transfer_in_prior_usage_sum__missing,-0.22284606553046946
+raw_context_features,4,2023,[2022],0.1,b::observed_db_impact_sum__missing,0.008099238607619689
+raw_context_features,4,2023,[2022],0.1,b::db_impact_coverage_fraction__missing,0.008099238607619689
+raw_context_features,4,2024,"[2022, 2023]",1.0,a,-0.08547084608302945
+raw_context_features,4,2024,"[2022, 2023]",1.0,b0,-0.018329350414327983
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::mean_lag1_z,-0.026728488423201364
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::lag2_z_mean,-0.02731988435232995
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::lag3_z_mean,0.002849612518552561
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::long_run_z_mean,-0.0017421518981403288
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::history_posterior_expected_rank_percentile,0.0016354529657557752
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::history_posterior_rank_sd_ratio,-0.0050482524835365715
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::coach_tenure_seasons,-0.01933242465123156
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::recruiting_class_rank,-0.0014078748989841143
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::recruiting_class_points,0.00525107208006055
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::recruiting_points_2y_mean,-0.0007642846401730207
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::recruiting_points_3y_mean,-0.0058211613278866155
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::recruiting_points_4y_mean,-0.006435112315587402
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::recruiting_points_trend,0.033782566851279665
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::talent_composite,-0.002316781447590317
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::returning_pct_ppa,-0.08267032617157365
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::transfer_in_prior_usage_sum,-0.043884811090629104
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::observed_db_impact_sum,-0.011297642091486733
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::db_impact_coverage_fraction,-0.013547311846937141
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::mean_lag1_z__missing,-0.0005725741700162762
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::lag2_z_mean__missing,-0.009539408322223155
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::lag3_z_mean__missing,-0.007573955788754641
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::long_run_z_mean__missing,-0.0005725741700162762
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::history_posterior_expected_rank_percentile__missing,0.0
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::coach_tenure_seasons__missing,0.005501451610004714
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::recruiting_class_rank__missing,-0.0006678003752497084
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::recruiting_class_points__missing,-0.0006678003752497084
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::recruiting_points_2y_mean__missing,-0.0005725741700162762
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::recruiting_points_3y_mean__missing,-0.0005725741700162762
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::recruiting_points_4y_mean__missing,-0.0005725741700162762
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::recruiting_points_trend__missing,-0.0029670671228313474
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::talent_composite__missing,-0.0005725741700162762
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::returning_pct_ppa__missing,-0.0005725741700162762
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::transfer_in_prior_usage_sum__missing,-0.023469955692189702
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::observed_db_impact_sum__missing,-0.0005725741700162762
+raw_context_features,4,2024,"[2022, 2023]",1.0,b::db_impact_coverage_fraction__missing,-0.0005725741700162762
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,a,-0.08651314582532034
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b0,-0.005995160837661113
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::mean_lag1_z,-0.015513800422175808
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::lag2_z_mean,-0.02164080667506488
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::lag3_z_mean,-0.01623403098966483
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::long_run_z_mean,-0.015493540124934065
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_expected_rank_percentile,-0.0005020925421481976
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_rank_sd_ratio,0.004616739850356017
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::coach_tenure_seasons,-0.009028235528063294
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_rank,-0.009117166136416865
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_points,0.008193541959887356
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_2y_mean,-0.003432478157539038
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_3y_mean,-0.003779920199172894
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_4y_mean,-0.0040103539029305675
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_trend,0.019455607304409796
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::talent_composite,0.002848916805542832
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::returning_pct_ppa,-0.06169310629269739
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::transfer_in_prior_usage_sum,-0.022981908013685805
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::observed_db_impact_sum,-0.01701413106677679
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::db_impact_coverage_fraction,-0.0008300589739256131
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::mean_lag1_z__missing,-0.00018407247603988776
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::lag2_z_mean__missing,-0.007736601788091074
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::lag3_z_mean__missing,-0.004962692795422158
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::long_run_z_mean__missing,-0.00018407247603988776
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_expected_rank_percentile__missing,0.0
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::coach_tenure_seasons__missing,0.007792439096368964
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_rank__missing,-0.00021905301634582127
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_points__missing,-0.00021905301634582127
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_2y_mean__missing,-0.00018407247603988776
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_3y_mean__missing,-0.00018407247603988776
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_4y_mean__missing,-0.00018407247603988776
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_trend__missing,-0.002557993490296942
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::talent_composite__missing,-0.00018407247603988776
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::returning_pct_ppa__missing,-0.00018407247603988776
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::transfer_in_prior_usage_sum__missing,-0.014542642268815872
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::observed_db_impact_sum__missing,-0.00018407247603988776
+raw_context_features,4,2025,"[2022, 2023, 2024]",1.0,b::db_impact_coverage_fraction__missing,-0.00018407247603988776
+existing_context_signal,5,2023,[2022],0.1,a,-0.22523954379998726
+existing_context_signal,5,2023,[2022],0.1,b0,-0.0063639009017707705
+existing_context_signal,5,2023,[2022],0.1,b::mean_lag1_z,-0.05875892987422564
+existing_context_signal,5,2023,[2022],0.1,b::lag2_z_mean,-0.06368618450186757
+existing_context_signal,5,2023,[2022],0.1,b::lag3_z_mean,-0.022640318015672737
+existing_context_signal,5,2023,[2022],0.1,b::long_run_z_mean,-0.01839705637773459
+existing_context_signal,5,2023,[2022],0.1,b::history_posterior_expected_rank_percentile,0.23537536230387882
+existing_context_signal,5,2023,[2022],0.1,b::history_posterior_rank_sd_ratio,0.016930374437849113
+existing_context_signal,5,2023,[2022],0.1,b::mean_lag1_z__missing,-0.009406466546056414
+existing_context_signal,5,2023,[2022],0.1,b::lag2_z_mean__missing,-0.11856989568706212
+existing_context_signal,5,2023,[2022],0.1,b::lag3_z_mean__missing,-0.009406466546056414
+existing_context_signal,5,2023,[2022],0.1,b::long_run_z_mean__missing,-0.009406466546056414
+existing_context_signal,5,2023,[2022],0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+existing_context_signal,5,2023,[2022],0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+existing_context_signal,5,2023,[2022],0.1,w,0.22498532251188177
+existing_context_signal,5,2024,"[2022, 2023]",0.1,a,-0.17003240718751744
+existing_context_signal,5,2024,"[2022, 2023]",0.1,b0,-0.05263938422664236
+existing_context_signal,5,2024,"[2022, 2023]",0.1,b::mean_lag1_z,-0.06953437820782955
+existing_context_signal,5,2024,"[2022, 2023]",0.1,b::lag2_z_mean,-0.08894024306261783
+existing_context_signal,5,2024,"[2022, 2023]",0.1,b::lag3_z_mean,-0.0300573914080032
+existing_context_signal,5,2024,"[2022, 2023]",0.1,b::long_run_z_mean,-0.005868988358620443
+existing_context_signal,5,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile,0.19948958602512395
+existing_context_signal,5,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio,-0.056018207625573906
+existing_context_signal,5,2024,"[2022, 2023]",0.1,b::mean_lag1_z__missing,-0.015652083844436733
+existing_context_signal,5,2024,"[2022, 2023]",0.1,b::lag2_z_mean__missing,-0.09557562358053572
+existing_context_signal,5,2024,"[2022, 2023]",0.1,b::lag3_z_mean__missing,-0.07111461381539665
+existing_context_signal,5,2024,"[2022, 2023]",0.1,b::long_run_z_mean__missing,-0.015652083844436733
+existing_context_signal,5,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+existing_context_signal,5,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+existing_context_signal,5,2024,"[2022, 2023]",0.1,w,0.12077874651669745
+existing_context_signal,5,2025,"[2022, 2023, 2024]",0.1,a,-0.19946619279153888
+existing_context_signal,5,2025,"[2022, 2023, 2024]",0.1,b0,-0.01873831735603312
+existing_context_signal,5,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z,-0.013621701743529705
+existing_context_signal,5,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean,-0.06432657325183377
+existing_context_signal,5,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean,-0.06670402880940896
+existing_context_signal,5,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean,-0.0363225486750809
+existing_context_signal,5,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile,0.1507814123562543
+existing_context_signal,5,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio,-0.031226944888158165
+existing_context_signal,5,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z__missing,-0.0044538035229467095
+existing_context_signal,5,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean__missing,-0.07077101517717524
+existing_context_signal,5,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean__missing,-0.039424139857636646
+existing_context_signal,5,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean__missing,-0.0044538035229467095
+existing_context_signal,5,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+existing_context_signal,5,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+existing_context_signal,5,2025,"[2022, 2023, 2024]",0.1,w,0.07761434947399264
+history_calibration,5,2023,[2022],0.1,a,-0.22133808456588658
+history_calibration,5,2023,[2022],0.1,b0,-0.008127092219605399
+history_calibration,5,2023,[2022],0.1,b::mean_lag1_z,-0.05979648484150183
+history_calibration,5,2023,[2022],0.1,b::lag2_z_mean,-0.06937379811133275
+history_calibration,5,2023,[2022],0.1,b::lag3_z_mean,-0.026609727516895172
+history_calibration,5,2023,[2022],0.1,b::long_run_z_mean,-0.015048982546354644
+history_calibration,5,2023,[2022],0.1,b::history_posterior_expected_rank_percentile,0.24477993343159363
+history_calibration,5,2023,[2022],0.1,b::history_posterior_rank_sd_ratio,0.0224441011992758
+history_calibration,5,2023,[2022],0.1,b::mean_lag1_z__missing,-0.009582753757767832
+history_calibration,5,2023,[2022],0.1,b::lag2_z_mean__missing,-0.11653019811849923
+history_calibration,5,2023,[2022],0.1,b::lag3_z_mean__missing,-0.009582753757767832
+history_calibration,5,2023,[2022],0.1,b::long_run_z_mean__missing,-0.009582753757767832
+history_calibration,5,2023,[2022],0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+history_calibration,5,2023,[2022],0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+history_calibration,5,2024,"[2022, 2023]",0.1,a,-0.16758938712294424
+history_calibration,5,2024,"[2022, 2023]",0.1,b0,-0.056352734405471144
+history_calibration,5,2024,"[2022, 2023]",0.1,b::mean_lag1_z,-0.07147323603790535
+history_calibration,5,2024,"[2022, 2023]",0.1,b::lag2_z_mean,-0.09177763808925724
+history_calibration,5,2024,"[2022, 2023]",0.1,b::lag3_z_mean,-0.03047940898693961
+history_calibration,5,2024,"[2022, 2023]",0.1,b::long_run_z_mean,-0.004650415174145382
+history_calibration,5,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile,0.20578525385314378
+history_calibration,5,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio,-0.054255110097477875
+history_calibration,5,2024,"[2022, 2023]",0.1,b::mean_lag1_z__missing,-0.015652645103616192
+history_calibration,5,2024,"[2022, 2023]",0.1,b::lag2_z_mean__missing,-0.09243483853513255
+history_calibration,5,2024,"[2022, 2023]",0.1,b::lag3_z_mean__missing,-0.06883180974979342
+history_calibration,5,2024,"[2022, 2023]",0.1,b::long_run_z_mean__missing,-0.015652645103616192
+history_calibration,5,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+history_calibration,5,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+history_calibration,5,2025,"[2022, 2023, 2024]",0.1,a,-0.19768343445936173
+history_calibration,5,2025,"[2022, 2023, 2024]",0.1,b0,-0.02099721944776476
+history_calibration,5,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z,-0.013732835334455549
+history_calibration,5,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean,-0.06623046229313041
+history_calibration,5,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean,-0.06648381164174709
+history_calibration,5,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean,-0.03548374309530164
+history_calibration,5,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile,0.1548528871275723
+history_calibration,5,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio,-0.029807831048484973
+history_calibration,5,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z__missing,-0.004740255958931631
+history_calibration,5,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean__missing,-0.06939446650869466
+history_calibration,5,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean__missing,-0.037339842588084975
+history_calibration,5,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean__missing,-0.004740255958931631
+history_calibration,5,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+history_calibration,5,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,5,2023,[2022],0.1,a,-0.19905829417445497
+raw_context_features,5,2023,[2022],0.1,b0,-0.031991512511719444
+raw_context_features,5,2023,[2022],0.1,b::mean_lag1_z,-0.07464648165622363
+raw_context_features,5,2023,[2022],0.1,b::lag2_z_mean,-0.013488588205942236
+raw_context_features,5,2023,[2022],0.1,b::lag3_z_mean,-0.049735879355015555
+raw_context_features,5,2023,[2022],0.1,b::long_run_z_mean,-0.03949545661983784
+raw_context_features,5,2023,[2022],0.1,b::history_posterior_expected_rank_percentile,0.15324248806638793
+raw_context_features,5,2023,[2022],0.1,b::history_posterior_rank_sd_ratio,0.011601514875190217
+raw_context_features,5,2023,[2022],0.1,b::coach_tenure_seasons,-0.05311541252986644
+raw_context_features,5,2023,[2022],0.1,b::recruiting_class_rank,0.0924825763501938
+raw_context_features,5,2023,[2022],0.1,b::recruiting_class_points,-0.020344499094437037
+raw_context_features,5,2023,[2022],0.1,b::recruiting_points_2y_mean,0.06220824113098437
+raw_context_features,5,2023,[2022],0.1,b::recruiting_points_3y_mean,0.005858709764564958
+raw_context_features,5,2023,[2022],0.1,b::recruiting_points_4y_mean,-0.0749474412862885
+raw_context_features,5,2023,[2022],0.1,b::recruiting_points_trend,0.13880860423422273
+raw_context_features,5,2023,[2022],0.1,b::talent_composite,0.02265142802131794
+raw_context_features,5,2023,[2022],0.1,b::returning_pct_ppa,-0.1987073989019687
+raw_context_features,5,2023,[2022],0.1,b::transfer_in_prior_usage_sum,-0.07681515476608716
+raw_context_features,5,2023,[2022],0.1,b::observed_db_impact_sum,0.0049362400098598574
+raw_context_features,5,2023,[2022],0.1,b::db_impact_coverage_fraction,0.0067917931302723085
+raw_context_features,5,2023,[2022],0.1,b::mean_lag1_z__missing,-0.00967299294407366
+raw_context_features,5,2023,[2022],0.1,b::lag2_z_mean__missing,-0.12586775567655326
+raw_context_features,5,2023,[2022],0.1,b::lag3_z_mean__missing,-0.00967299294407366
+raw_context_features,5,2023,[2022],0.1,b::long_run_z_mean__missing,-0.00967299294407366
+raw_context_features,5,2023,[2022],0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+raw_context_features,5,2023,[2022],0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,5,2023,[2022],0.1,b::coach_tenure_seasons__missing,0.22428906979083202
+raw_context_features,5,2023,[2022],0.1,b::recruiting_class_rank__missing,-0.0029814460035097923
+raw_context_features,5,2023,[2022],0.1,b::recruiting_class_points__missing,-0.0029814460035097923
+raw_context_features,5,2023,[2022],0.1,b::recruiting_points_2y_mean__missing,-0.00967299294407366
+raw_context_features,5,2023,[2022],0.1,b::recruiting_points_3y_mean__missing,-0.00967299294407366
+raw_context_features,5,2023,[2022],0.1,b::recruiting_points_4y_mean__missing,-0.00967299294407366
+raw_context_features,5,2023,[2022],0.1,b::recruiting_points_trend__missing,0.010164993846511624
+raw_context_features,5,2023,[2022],0.1,b::talent_composite__missing,-0.00967299294407366
+raw_context_features,5,2023,[2022],0.1,b::returning_pct_ppa__missing,-0.00967299294407366
+raw_context_features,5,2023,[2022],0.1,b::transfer_in_prior_usage_sum__missing,-0.16770868225195584
+raw_context_features,5,2023,[2022],0.1,b::observed_db_impact_sum__missing,-0.00967299294407366
+raw_context_features,5,2023,[2022],0.1,b::db_impact_coverage_fraction__missing,-0.00967299294407366
+raw_context_features,5,2024,"[2022, 2023]",1.0,a,-0.06703553898959007
+raw_context_features,5,2024,"[2022, 2023]",1.0,b0,-0.02266661803013183
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::mean_lag1_z,-0.018159121364841106
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::lag2_z_mean,-0.027178076671235143
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::lag3_z_mean,-0.012545321919621369
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::long_run_z_mean,-0.00213253436578206
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::history_posterior_expected_rank_percentile,0.03511702155127578
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::history_posterior_rank_sd_ratio,-0.023111141443675206
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::coach_tenure_seasons,-0.041898046944494616
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::recruiting_class_rank,-0.005111280685202426
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::recruiting_class_points,0.005923935186084009
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::recruiting_points_2y_mean,0.009133194367916505
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::recruiting_points_3y_mean,0.0032103074476553047
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::recruiting_points_4y_mean,-0.0005666774546381649
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::recruiting_points_trend,0.025756184828810327
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::talent_composite,-0.0007825735226992246
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::returning_pct_ppa,-0.09733546226067667
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::transfer_in_prior_usage_sum,-0.008074443606328576
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::observed_db_impact_sum,-0.0014569405466813108
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::db_impact_coverage_fraction,-0.005274242661113048
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::mean_lag1_z__missing,-0.0019720697645207665
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::lag2_z_mean__missing,-0.010811858078106747
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::lag3_z_mean__missing,-0.008368063424651132
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::long_run_z_mean__missing,-0.0019720697645207665
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::history_posterior_expected_rank_percentile__missing,0.0
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::coach_tenure_seasons__missing,-0.0019309755608450455
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::recruiting_class_rank__missing,-0.002295799218814948
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::recruiting_class_points__missing,-0.002295799218814948
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::recruiting_points_2y_mean__missing,-0.0019720697645207665
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::recruiting_points_3y_mean__missing,-0.0019720697645207665
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::recruiting_points_4y_mean__missing,-0.0019720697645207665
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::recruiting_points_trend__missing,-0.004963792921579712
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::talent_composite__missing,-0.0019720697645207665
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::returning_pct_ppa__missing,-0.0019720697645207665
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::transfer_in_prior_usage_sum__missing,-0.02244605617265398
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::observed_db_impact_sum__missing,-0.0019720697645207665
+raw_context_features,5,2024,"[2022, 2023]",1.0,b::db_impact_coverage_fraction__missing,-0.0019720697645207665
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,a,-0.08108612833827313
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b0,-0.009302621638876992
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::mean_lag1_z,-0.005941455938901798
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::lag2_z_mean,-0.02120071911898989
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::lag3_z_mean,-0.027159660843748528
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::long_run_z_mean,-0.011322676432136494
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_expected_rank_percentile,0.02648759288823201
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_rank_sd_ratio,-0.013963519642576371
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::coach_tenure_seasons,-0.02247672333261907
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_rank,-0.01601476502703581
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_points,0.011478466220409126
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_2y_mean,0.006092436981539209
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_3y_mean,0.0034923147619968283
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_4y_mean,0.0009895827736226233
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_trend,0.021193826946292536
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::talent_composite,0.008847334558183045
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::returning_pct_ppa,-0.06533793626775351
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::transfer_in_prior_usage_sum,0.008509393322338367
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::observed_db_impact_sum,-0.004930161252074771
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::db_impact_coverage_fraction,0.010018902708887879
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::mean_lag1_z__missing,-0.00048631515222564547
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::lag2_z_mean__missing,-0.007554195100312796
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::lag3_z_mean__missing,-0.004664063613717449
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::long_run_z_mean__missing,-0.00048631515222564547
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_expected_rank_percentile__missing,0.0
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::coach_tenure_seasons__missing,0.005602649048396354
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_rank__missing,-0.0006145935243961317
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_points__missing,-0.0006145935243961317
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_2y_mean__missing,-0.00048631515222564547
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_3y_mean__missing,-0.00048631515222564547
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_4y_mean__missing,-0.00048631515222564547
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_trend__missing,-0.0027783896143213404
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::talent_composite__missing,-0.00048631515222564547
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::returning_pct_ppa__missing,-0.00048631515222564547
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::transfer_in_prior_usage_sum__missing,-0.014980775846032916
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::observed_db_impact_sum__missing,-0.00048631515222564547
+raw_context_features,5,2025,"[2022, 2023, 2024]",1.0,b::db_impact_coverage_fraction__missing,-0.00048631515222564547
+existing_context_signal,6,2023,[2022],0.1,a,-0.1428229996411736
+existing_context_signal,6,2023,[2022],0.1,b0,-0.009282607582377249
+existing_context_signal,6,2023,[2022],0.1,b::mean_lag1_z,-0.08246632350051082
+existing_context_signal,6,2023,[2022],0.1,b::lag2_z_mean,-0.020246476427213746
+existing_context_signal,6,2023,[2022],0.1,b::lag3_z_mean,-0.08740068437063132
+existing_context_signal,6,2023,[2022],0.1,b::long_run_z_mean,-0.13193336470528033
+existing_context_signal,6,2023,[2022],0.1,b::history_posterior_expected_rank_percentile,0.3605208333718401
+existing_context_signal,6,2023,[2022],0.1,b::history_posterior_rank_sd_ratio,-0.0006751915667652979
+existing_context_signal,6,2023,[2022],0.1,b::mean_lag1_z__missing,-0.0022062424277536218
+existing_context_signal,6,2023,[2022],0.1,b::lag2_z_mean__missing,-0.11865265272366456
+existing_context_signal,6,2023,[2022],0.1,b::lag3_z_mean__missing,-0.0022062424277536218
+existing_context_signal,6,2023,[2022],0.1,b::long_run_z_mean__missing,-0.0022062424277536218
+existing_context_signal,6,2023,[2022],0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+existing_context_signal,6,2023,[2022],0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+existing_context_signal,6,2023,[2022],0.1,w,0.1700827885309196
+existing_context_signal,6,2024,"[2022, 2023]",0.1,a,-0.14156295114167106
+existing_context_signal,6,2024,"[2022, 2023]",0.1,b0,-0.09487090128913933
+existing_context_signal,6,2024,"[2022, 2023]",0.1,b::mean_lag1_z,-0.09392753341993065
+existing_context_signal,6,2024,"[2022, 2023]",0.1,b::lag2_z_mean,-0.04483978167024258
+existing_context_signal,6,2024,"[2022, 2023]",0.1,b::lag3_z_mean,-0.05761097375561733
+existing_context_signal,6,2024,"[2022, 2023]",0.1,b::long_run_z_mean,-0.09691454433798115
+existing_context_signal,6,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile,0.2682271794569224
+existing_context_signal,6,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio,-0.11255998476322655
+existing_context_signal,6,2024,"[2022, 2023]",0.1,b::mean_lag1_z__missing,-0.015365892494542432
+existing_context_signal,6,2024,"[2022, 2023]",0.1,b::lag2_z_mean__missing,-0.08829849661149493
+existing_context_signal,6,2024,"[2022, 2023]",0.1,b::lag3_z_mean__missing,-0.07887710496624509
+existing_context_signal,6,2024,"[2022, 2023]",0.1,b::long_run_z_mean__missing,-0.015365892494542432
+existing_context_signal,6,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+existing_context_signal,6,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+existing_context_signal,6,2024,"[2022, 2023]",0.1,w,0.08420486704628155
+existing_context_signal,6,2025,"[2022, 2023, 2024]",0.1,a,-0.16263066472580212
+existing_context_signal,6,2025,"[2022, 2023, 2024]",0.1,b0,-0.052123594989906305
+existing_context_signal,6,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z,-0.06156446188952877
+existing_context_signal,6,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean,-0.023803665794354712
+existing_context_signal,6,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean,-0.07186794219248703
+existing_context_signal,6,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean,-0.10456788850372488
+existing_context_signal,6,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile,0.21609806532892206
+existing_context_signal,6,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio,-0.07364603959774679
+existing_context_signal,6,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z__missing,-0.0068165639489709785
+existing_context_signal,6,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean__missing,-0.07708246197393148
+existing_context_signal,6,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean__missing,-0.05429486611240527
+existing_context_signal,6,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean__missing,-0.0068165639489709785
+existing_context_signal,6,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+existing_context_signal,6,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+existing_context_signal,6,2025,"[2022, 2023, 2024]",0.1,w,0.04040519749064817
+history_calibration,6,2023,[2022],0.1,a,-0.14047744874605814
+history_calibration,6,2023,[2022],0.1,b0,-0.01081876439022142
+history_calibration,6,2023,[2022],0.1,b::mean_lag1_z,-0.08292161345068537
+history_calibration,6,2023,[2022],0.1,b::lag2_z_mean,-0.024573501365537372
+history_calibration,6,2023,[2022],0.1,b::lag3_z_mean,-0.09031534532879859
+history_calibration,6,2023,[2022],0.1,b::long_run_z_mean,-0.13010935758377393
+history_calibration,6,2023,[2022],0.1,b::history_posterior_expected_rank_percentile,0.36798210132181103
+history_calibration,6,2023,[2022],0.1,b::history_posterior_rank_sd_ratio,0.003542570305762588
+history_calibration,6,2023,[2022],0.1,b::mean_lag1_z__missing,-0.0022745264323993392
+history_calibration,6,2023,[2022],0.1,b::lag2_z_mean__missing,-0.11728209475235615
+history_calibration,6,2023,[2022],0.1,b::lag3_z_mean__missing,-0.0022745264323993392
+history_calibration,6,2023,[2022],0.1,b::long_run_z_mean__missing,-0.0022745264323993392
+history_calibration,6,2023,[2022],0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+history_calibration,6,2023,[2022],0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+history_calibration,6,2024,"[2022, 2023]",0.1,a,-0.1400938796128351
+history_calibration,6,2024,"[2022, 2023]",0.1,b0,-0.09750428864644257
+history_calibration,6,2024,"[2022, 2023]",0.1,b::mean_lag1_z,-0.09504685995570888
+history_calibration,6,2024,"[2022, 2023]",0.1,b::lag2_z_mean,-0.04689561520605142
+history_calibration,6,2024,"[2022, 2023]",0.1,b::lag3_z_mean,-0.057990875194841265
+history_calibration,6,2024,"[2022, 2023]",0.1,b::long_run_z_mean,-0.09624497265835852
+history_calibration,6,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile,0.2725987932950037
+history_calibration,6,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio,-0.11143089005940239
+history_calibration,6,2024,"[2022, 2023]",0.1,b::mean_lag1_z__missing,-0.015316640949399388
+history_calibration,6,2024,"[2022, 2023]",0.1,b::lag2_z_mean__missing,-0.08627128795483595
+history_calibration,6,2024,"[2022, 2023]",0.1,b::lag3_z_mean__missing,-0.07746452339156626
+history_calibration,6,2024,"[2022, 2023]",0.1,b::long_run_z_mean__missing,-0.015316640949399388
+history_calibration,6,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+history_calibration,6,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+history_calibration,6,2025,"[2022, 2023, 2024]",0.1,a,-0.16180563034048048
+history_calibration,6,2025,"[2022, 2023, 2024]",0.1,b0,-0.053348616439269726
+history_calibration,6,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z,-0.061624093878621895
+history_calibration,6,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean,-0.0247584475381834
+history_calibration,6,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean,-0.07177057712587576
+history_calibration,6,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean,-0.10417625137462687
+history_calibration,6,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile,0.21822819361753704
+history_calibration,6,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio,-0.07289978032518564
+history_calibration,6,2025,"[2022, 2023, 2024]",0.1,b::mean_lag1_z__missing,-0.0069222499151735725
+history_calibration,6,2025,"[2022, 2023, 2024]",0.1,b::lag2_z_mean__missing,-0.07644263234383802
+history_calibration,6,2025,"[2022, 2023, 2024]",0.1,b::lag3_z_mean__missing,-0.05341889234035005
+history_calibration,6,2025,"[2022, 2023, 2024]",0.1,b::long_run_z_mean__missing,-0.0069222499151735725
+history_calibration,6,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+history_calibration,6,2025,"[2022, 2023, 2024]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,6,2023,[2022],0.1,a,-0.12265115348245116
+raw_context_features,6,2023,[2022],0.1,b0,-0.028595423228589194
+raw_context_features,6,2023,[2022],0.1,b::mean_lag1_z,-0.0926307667275298
+raw_context_features,6,2023,[2022],0.1,b::lag2_z_mean,0.020398577749775878
+raw_context_features,6,2023,[2022],0.1,b::lag3_z_mean,-0.11419576552406939
+raw_context_features,6,2023,[2022],0.1,b::long_run_z_mean,-0.1598506771094153
+raw_context_features,6,2023,[2022],0.1,b::history_posterior_expected_rank_percentile,0.2774333539986379
+raw_context_features,6,2023,[2022],0.1,b::history_posterior_rank_sd_ratio,-0.023513704938061344
+raw_context_features,6,2023,[2022],0.1,b::coach_tenure_seasons,-0.05161810549570972
+raw_context_features,6,2023,[2022],0.1,b::recruiting_class_rank,0.04139440607464766
+raw_context_features,6,2023,[2022],0.1,b::recruiting_class_points,-0.01687422573216457
+raw_context_features,6,2023,[2022],0.1,b::recruiting_points_2y_mean,0.023020756592665757
+raw_context_features,6,2023,[2022],0.1,b::recruiting_points_3y_mean,-0.023461063542079056
+raw_context_features,6,2023,[2022],0.1,b::recruiting_points_4y_mean,-0.07017783792380212
+raw_context_features,6,2023,[2022],0.1,b::recruiting_points_trend,0.15906963598855917
+raw_context_features,6,2023,[2022],0.1,b::talent_composite,0.014351443069981948
+raw_context_features,6,2023,[2022],0.1,b::returning_pct_ppa,-0.1600389202469402
+raw_context_features,6,2023,[2022],0.1,b::transfer_in_prior_usage_sum,-0.06171040800019117
+raw_context_features,6,2023,[2022],0.1,b::observed_db_impact_sum,-0.012403193300232285
+raw_context_features,6,2023,[2022],0.1,b::db_impact_coverage_fraction,0.022307259616116636
+raw_context_features,6,2023,[2022],0.1,b::mean_lag1_z__missing,-0.0009549059137076557
+raw_context_features,6,2023,[2022],0.1,b::lag2_z_mean__missing,-0.12406872913949611
+raw_context_features,6,2023,[2022],0.1,b::lag3_z_mean__missing,-0.0009549059137076557
+raw_context_features,6,2023,[2022],0.1,b::long_run_z_mean__missing,-0.0009549059137076557
+raw_context_features,6,2023,[2022],0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+raw_context_features,6,2023,[2022],0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,6,2023,[2022],0.1,b::coach_tenure_seasons__missing,0.21126115460444986
+raw_context_features,6,2023,[2022],0.1,b::recruiting_class_rank__missing,-0.03525136882856972
+raw_context_features,6,2023,[2022],0.1,b::recruiting_class_points__missing,-0.03525136882856972
+raw_context_features,6,2023,[2022],0.1,b::recruiting_points_2y_mean__missing,-0.0009549059137076557
+raw_context_features,6,2023,[2022],0.1,b::recruiting_points_3y_mean__missing,-0.0009549059137076557
+raw_context_features,6,2023,[2022],0.1,b::recruiting_points_4y_mean__missing,-0.0009549059137076557
+raw_context_features,6,2023,[2022],0.1,b::recruiting_points_trend__missing,-0.037216802027656495
+raw_context_features,6,2023,[2022],0.1,b::talent_composite__missing,-0.0009549059137076557
+raw_context_features,6,2023,[2022],0.1,b::returning_pct_ppa__missing,-0.0009549059137076557
+raw_context_features,6,2023,[2022],0.1,b::transfer_in_prior_usage_sum__missing,-0.17544779043833192
+raw_context_features,6,2023,[2022],0.1,b::observed_db_impact_sum__missing,-0.0009549059137076557
+raw_context_features,6,2023,[2022],0.1,b::db_impact_coverage_fraction__missing,-0.0009549059137076557
+raw_context_features,6,2024,"[2022, 2023]",0.1,a,-0.11061227150142518
+raw_context_features,6,2024,"[2022, 2023]",0.1,b0,-0.0911889469440786
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::mean_lag1_z,-0.10791430982174254
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::lag2_z_mean,-0.00320473308655423
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::lag3_z_mean,-0.06173066429631731
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::long_run_z_mean,-0.050565201377443254
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile,0.23754659130817388
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio,-0.09834327849957762
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::coach_tenure_seasons,-0.11615874091591678
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::recruiting_class_rank,-0.06002134237571135
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::recruiting_class_points,-0.013266924471951578
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::recruiting_points_2y_mean,0.03237737241688627
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::recruiting_points_3y_mean,-0.0016422429124939328
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::recruiting_points_4y_mean,-0.006453731580318251
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::recruiting_points_trend,0.09810344006826889
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::talent_composite,0.03881064321631754
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::returning_pct_ppa,-0.23709172786423607
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::transfer_in_prior_usage_sum,-0.09889240342571491
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::observed_db_impact_sum,0.007505461794406454
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::db_impact_coverage_fraction,0.020164418283807693
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::mean_lag1_z__missing,-0.004900366182577272
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::lag2_z_mean__missing,-0.08604614546261063
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::lag3_z_mean__missing,-0.06558043398323628
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::long_run_z_mean__missing,-0.004900366182577272
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::history_posterior_expected_rank_percentile__missing,0.0
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::coach_tenure_seasons__missing,-0.010400401395674825
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::recruiting_class_rank__missing,-0.028167055662137074
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::recruiting_class_points__missing,-0.028167055662137074
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::recruiting_points_2y_mean__missing,-0.004900366182577272
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::recruiting_points_3y_mean__missing,-0.004900366182577272
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::recruiting_points_4y_mean__missing,-0.004900366182577272
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::recruiting_points_trend__missing,-0.04415359015360583
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::talent_composite__missing,-0.004900366182577272
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::returning_pct_ppa__missing,-0.004900366182577272
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::transfer_in_prior_usage_sum__missing,-0.13524575369546488
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::observed_db_impact_sum__missing,-0.004900366182577272
+raw_context_features,6,2024,"[2022, 2023]",0.1,b::db_impact_coverage_fraction__missing,-0.004900366182577272
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,a,-0.06636058982386521
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b0,-0.018715198630518726
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::mean_lag1_z,-0.011613520575505893
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::lag2_z_mean,-0.012505548999809792
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::lag3_z_mean,-0.02607965575946153
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::long_run_z_mean,-0.02026265590339831
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_expected_rank_percentile,0.040472029114319935
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_rank_sd_ratio,-0.028978409629607637
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::coach_tenure_seasons,-0.022589742854163607
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_rank,-0.017611564272128823
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_points,0.013597253872007645
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_2y_mean,0.013360302934067198
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_3y_mean,0.008964068958993748
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_4y_mean,0.0074240204593198685
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_trend,0.023529807088601168
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::talent_composite,0.01702882326495493
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::returning_pct_ppa,-0.055714141285933716
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::transfer_in_prior_usage_sum,-0.006046304711638385
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::observed_db_impact_sum,-0.0038792680296740423
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::db_impact_coverage_fraction,0.012552230349949305
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::mean_lag1_z__missing,-0.00039573954897409333
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::lag2_z_mean__missing,-0.008149300227448454
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::lag3_z_mean__missing,-0.005745979800580283
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::long_run_z_mean__missing,-0.00039573954897409333
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_expected_rank_percentile__missing,0.0
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::history_posterior_rank_sd_ratio__missing,0.0
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::coach_tenure_seasons__missing,0.00030977915861326124
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_rank__missing,-0.0017646681017119956
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::recruiting_class_points__missing,-0.0017646681017119956
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_2y_mean__missing,-0.00039573954897409333
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_3y_mean__missing,-0.00039573954897409333
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_4y_mean__missing,-0.00039573954897409333
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::recruiting_points_trend__missing,-0.004302544220739709
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::talent_composite__missing,-0.00039573954897409333
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::returning_pct_ppa__missing,-0.00039573954897409333
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::transfer_in_prior_usage_sum__missing,-0.011832652894787295
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::observed_db_impact_sum__missing,-0.00039573954897409333
+raw_context_features,6,2025,"[2022, 2023, 2024]",1.0,b::db_impact_coverage_fraction__missing,-0.00039573954897409333
