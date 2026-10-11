@@ -9,6 +9,7 @@ import unicodedata
 from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass
+from itertools import zip_longest
 from pathlib import Path
 from typing import Any
 
@@ -166,7 +167,10 @@ def read_kaggle_observations(
 
 
 def iter_kaggle_observations(
-    path: Path, matches: dict[str, CFBDTeam]
+    path: Path,
+    matches: dict[str, CFBDTeam],
+    *,
+    source_file: str | None = None,
 ) -> Iterable[MasseyObservation]:
     with path.open(newline="", encoding="utf-8") as handle:
         for fields in csv.reader(handle):
@@ -186,13 +190,17 @@ def iter_kaggle_observations(
                 ordinal_rank=int(rank.strip()),
                 is_composite=code.strip() == "CMP",
                 source="massey_kaggle",
-                source_file=_source_file(path),
+                source_file=source_file or _source_file(path),
             )
 
 
 def read_export_observations(
     path: Path,
     matches: dict[str, CFBDTeam] | None = None,
+    *,
+    ranking_date: str | None = None,
+    source: str = "massey_composite_export",
+    source_file: str | None = None,
 ) -> tuple[list[MasseyObservation], list[str]]:
     """Convert one wide final export to long observations without inventing metadata."""
     season_match = re.search(r"(\d{4})", path.name)
@@ -209,11 +217,13 @@ def read_export_observations(
         for row in reader:
             if not row:
                 continue
+            if len(row) > len(header):
+                raise ValueError(f"Unexpected extra fields in {path}")
             team_name = row[0].strip()
             team = matches.get(team_name) if matches is not None else None
             if matches is not None and team is None:
                 unmapped.add(team_name)
-            for code, value in zip(header[4:], row[4:]):
+            for code, value in zip_longest(header[4:], row[4:], fillvalue=""):
                 if code == "Sort" or value.strip() in {"", "--"}:
                     continue
                 observations.append(
@@ -225,11 +235,11 @@ def read_export_observations(
                         team_name=team_name,
                         system_code=code,
                         system_name=None,
-                        ranking_date=None,
+                        ranking_date=ranking_date,
                         ordinal_rank=int(value.strip()),
                         is_composite=code == "CMP",
-                        source="massey_composite_export",
-                        source_file=_source_file(path),
+                        source=source,
+                        source_file=source_file or _source_file(path),
                     )
                 )
     return observations, sorted(unmapped)
