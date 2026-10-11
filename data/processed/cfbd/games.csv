@@ -55,13 +55,13 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401856709,2026,5,regular,2026-10-03T20:15:00.000Z,False,True,False,True,2579,South Carolina,fbs,SEC,34,96,Kentucky,fbs,SEC,35
 401856710,2026,5,regular,2026-10-03T19:30:00.000Z,False,True,False,True,2633,Tennessee,fbs,SEC,24,2,Auburn,fbs,SEC,14
 401856711,2026,5,regular,2026-10-03T23:00:00.000Z,False,True,False,True,245,Texas A&M,fbs,SEC,34,8,Arkansas,fbs,SEC,7
-401856712,2026,6,regular,2026-10-10T23:30:00.000Z,False,False,False,True,333,Alabama,fbs,SEC,,61,Georgia,fbs,SEC,
-401856713,2026,6,regular,2026-10-10T20:15:00.000Z,False,False,False,True,8,Arkansas,fbs,SEC,,2633,Tennessee,fbs,SEC,
-401856714,2026,6,regular,2026-10-10T16:45:00.000Z,False,False,False,True,57,Florida,fbs,SEC,,2579,South Carolina,fbs,SEC,
-401856715,2026,6,regular,2026-10-10T23:00:00.000Z,False,False,False,True,96,Kentucky,fbs,SEC,,99,LSU,fbs,SEC,
-401856716,2026,6,regular,2026-10-10T16:00:00.000Z,False,False,False,True,142,Missouri,fbs,SEC,,245,Texas A&M,fbs,SEC,
-401856717,2026,6,regular,2026-10-10T19:30:00.000Z,False,False,True,True,201,Oklahoma,fbs,SEC,,251,Texas,fbs,SEC,
-401856718,2026,6,regular,2026-10-10T19:30:00.000Z,False,False,False,True,238,Vanderbilt,fbs,SEC,,145,Ole Miss,fbs,SEC,
+401856712,2026,6,regular,2026-10-10T23:30:00.000Z,False,True,False,True,333,Alabama,fbs,SEC,17,61,Georgia,fbs,SEC,20
+401856713,2026,6,regular,2026-10-10T20:15:00.000Z,False,True,False,True,8,Arkansas,fbs,SEC,17,2633,Tennessee,fbs,SEC,24
+401856714,2026,6,regular,2026-10-10T16:45:00.000Z,False,True,False,True,57,Florida,fbs,SEC,19,2579,South Carolina,fbs,SEC,38
+401856715,2026,6,regular,2026-10-10T23:00:00.000Z,False,True,False,True,96,Kentucky,fbs,SEC,35,99,LSU,fbs,SEC,34
+401856716,2026,6,regular,2026-10-10T16:00:00.000Z,False,True,False,True,142,Missouri,fbs,SEC,27,245,Texas A&M,fbs,SEC,6
+401856717,2026,6,regular,2026-10-10T19:30:00.000Z,False,True,True,True,201,Oklahoma,fbs,SEC,27,251,Texas,fbs,SEC,24
+401856718,2026,6,regular,2026-10-10T19:30:00.000Z,False,True,False,True,238,Vanderbilt,fbs,SEC,17,145,Ole Miss,fbs,SEC,52
 401856719,2026,7,regular,2026-10-17T19:30:00.000Z,False,False,False,True,61,Georgia,fbs,SEC,,2,Auburn,fbs,SEC,
 401856720,2026,7,regular,2026-10-17T16:00:00.000Z,False,False,False,True,99,LSU,fbs,SEC,,344,Mississippi State,fbs,SEC,
 401856721,2026,7,regular,2026-10-17T19:30:00.000Z,False,False,False,True,145,Ole Miss,fbs,SEC,,142,Missouri,fbs,SEC,
@@ -150,7 +150,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401856805,2026,4,regular,2026-09-26T16:00:00.000Z,False,True,False,False,2641,Texas Tech,fbs,Big 12,49,2534,Sam Houston,fbs,Conference USA,14
 401856806,2026,4,regular,2026-09-26T20:00:00.000Z,False,True,False,False,290,Georgia Southern,fbs,Sun Belt,28,248,Houston,fbs,Big 12,42
 401856807,2026,5,regular,2026-10-03T16:00:00.000Z,False,True,False,False,2305,Kansas,fbs,Big 12,55,2393,Middle Tennessee,fbs,Conference USA,0
-401856808,2026,6,regular,2026-10-11T02:30:00.000Z,False,False,False,False,9,Arizona State,fbs,Big 12,,62,Hawai'i,fbs,Mountain West,
+401856808,2026,6,regular,2026-10-11T02:30:00.000Z,False,True,False,False,9,Arizona State,fbs,Big 12,30,62,Hawai'i,fbs,Mountain West,12
 401856809,2026,7,regular,2026-10-17T23:30:00.000Z,False,False,False,False,252,BYU,fbs,Big 12,,87,Notre Dame,fbs,FBS Independents,
 401856810,2026,2,regular,2026-09-12T19:30:00.000Z,False,True,False,True,252,BYU,fbs,Big 12,28,12,Arizona,fbs,Big 12,17
 401856811,2026,3,regular,2026-09-19T00:00:00.000Z,False,True,False,True,2641,Texas Tech,fbs,Big 12,28,248,Houston,fbs,Big 12,26
@@ -165,17 +165,17 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401856820,2026,5,regular,2026-10-04T03:00:00.000Z,False,True,False,True,12,Arizona,fbs,Big 12,34,2132,Cincinnati,fbs,Big 12,7
 401856821,2026,5,regular,2026-10-03T23:30:00.000Z,False,True,False,True,38,Colorado,fbs,Big 12,7,2641,Texas Tech,fbs,Big 12,29
 401856822,2026,5,regular,2026-10-03T16:00:00.000Z,False,True,False,True,66,Iowa State,fbs,Big 12,45,277,West Virginia,fbs,Big 12,42
-401856823,2026,6,regular,2026-10-10T16:00:00.000Z,False,False,False,True,277,West Virginia,fbs,Big 12,,12,Arizona,fbs,Big 12,
-401856824,2026,6,regular,2026-10-10T16:00:00.000Z,False,False,False,True,197,Oklahoma State,fbs,Big 12,,2116,UCF,fbs,Big 12,
-401856825,2026,6,regular,2026-10-10T19:30:00.000Z,False,False,False,True,2306,Kansas State,fbs,Big 12,,248,Houston,fbs,Big 12,
+401856823,2026,6,regular,2026-10-10T16:00:00.000Z,False,True,False,True,277,West Virginia,fbs,Big 12,31,12,Arizona,fbs,Big 12,52
+401856824,2026,6,regular,2026-10-10T16:00:00.000Z,False,True,False,True,197,Oklahoma State,fbs,Big 12,42,2116,UCF,fbs,Big 12,28
+401856825,2026,6,regular,2026-10-10T19:30:00.000Z,False,True,False,True,2306,Kansas State,fbs,Big 12,16,248,Houston,fbs,Big 12,35
 401856826,2026,6,regular,2026-10-10T02:15:00.000Z,False,True,False,True,252,BYU,fbs,Big 12,24,66,Iowa State,fbs,Big 12,10
-401856827,2026,6,regular,2026-10-11T00:00:00.000Z,False,False,False,True,254,Utah,fbs,Big 12,,2305,Kansas,fbs,Big 12,
+401856827,2026,6,regular,2026-10-11T00:00:00.000Z,False,True,False,True,254,Utah,fbs,Big 12,41,2305,Kansas,fbs,Big 12,24
 401856828,2026,7,regular,2026-10-17T19:30:00.000Z,False,False,False,True,2641,Texas Tech,fbs,Big 12,,9,Arizona State,fbs,Big 12,
 401856829,2026,7,regular,2026-10-17T16:00:00.000Z,False,False,False,True,277,West Virginia,fbs,Big 12,,2132,Cincinnati,fbs,Big 12,
 401856830,2026,7,regular,2026-10-17T16:00:00.000Z,False,False,False,True,2306,Kansas State,fbs,Big 12,,2305,Kansas,fbs,Big 12,
 401856831,2026,7,regular,2026-10-17T23:30:00.000Z,False,False,False,True,248,Houston,fbs,Big 12,,197,Oklahoma State,fbs,Big 12,
 401856832,2026,7,regular,2026-10-17T23:00:00.000Z,False,False,False,True,239,Baylor,fbs,Big 12,,2628,TCU,fbs,Big 12,
-401856833,2026,7,regular,2026-10-17T04:00:00.000Z,True,False,False,True,38,Colorado,fbs,Big 12,,254,Utah,fbs,Big 12,
+401856833,2026,7,regular,2026-10-18T02:15:00.000Z,False,False,False,True,38,Colorado,fbs,Big 12,,254,Utah,fbs,Big 12,
 401856834,2026,8,regular,2026-10-24T04:00:00.000Z,True,False,False,True,2305,Kansas,fbs,Big 12,,239,Baylor,fbs,Big 12,
 401856835,2026,8,regular,2026-10-24T04:00:00.000Z,True,False,False,True,2116,UCF,fbs,Big 12,,252,BYU,fbs,Big 12,
 401856836,2026,8,regular,2026-10-24T04:00:00.000Z,True,False,False,True,197,Oklahoma State,fbs,Big 12,,38,Colorado,fbs,Big 12,
@@ -283,12 +283,12 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401858252,2026,5,regular,2026-10-03T16:00:00.000Z,False,True,False,False,41,UConn,fbs,FBS Independents,41,183,Syracuse,fbs,ACC,42
 401858253,2026,5,regular,2026-10-03T19:30:00.000Z,False,True,False,True,52,Florida State,fbs,ACC,38,258,Virginia,fbs,ACC,7
 401858254,2026,6,regular,2026-10-09T23:00:00.000Z,False,True,False,True,97,Louisville,fbs,ACC,44,52,Florida State,fbs,ACC,20
-401858255,2026,6,regular,2026-10-10T19:30:00.000Z,False,False,False,True,59,Georgia Tech,fbs,ACC,,150,Duke,fbs,ACC,
-401858256,2026,6,regular,2026-10-10T16:00:00.000Z,False,False,False,True,221,Pittsburgh,fbs,ACC,,153,North Carolina,fbs,ACC,
-401858257,2026,6,regular,2026-10-10T19:30:00.000Z,False,False,False,False,87,Notre Dame,fbs,FBS Independents,,24,Stanford,fbs,ACC,
-401858258,2026,6,regular,2026-10-10T23:30:00.000Z,False,False,False,True,258,Virginia,fbs,ACC,,183,Syracuse,fbs,ACC,
-401858259,2026,6,regular,2026-10-10T19:30:00.000Z,False,False,False,True,25,California,fbs,ACC,,259,Virginia Tech,fbs,ACC,
-401858260,2026,6,regular,2026-10-10T16:00:00.000Z,False,False,False,True,152,NC State,fbs,ACC,,154,Wake Forest,fbs,ACC,
+401858255,2026,6,regular,2026-10-10T19:30:00.000Z,False,True,False,True,59,Georgia Tech,fbs,ACC,28,150,Duke,fbs,ACC,25
+401858256,2026,6,regular,2026-10-10T16:00:00.000Z,False,True,False,True,221,Pittsburgh,fbs,ACC,17,153,North Carolina,fbs,ACC,21
+401858257,2026,6,regular,2026-10-10T19:30:00.000Z,False,True,False,False,87,Notre Dame,fbs,FBS Independents,58,24,Stanford,fbs,ACC,7
+401858258,2026,6,regular,2026-10-10T23:30:00.000Z,False,True,False,True,258,Virginia,fbs,ACC,28,183,Syracuse,fbs,ACC,25
+401858259,2026,6,regular,2026-10-10T19:30:00.000Z,False,True,False,True,25,California,fbs,ACC,25,259,Virginia Tech,fbs,ACC,20
+401858260,2026,6,regular,2026-10-10T16:00:00.000Z,False,True,False,True,152,NC State,fbs,ACC,14,154,Wake Forest,fbs,ACC,38
 401858261,2026,7,regular,2026-10-17T16:00:00.000Z,False,False,False,False,228,Clemson,fbs,ACC,,2127,Charleston Southern,fcs,OVC,
 401858262,2026,7,regular,2026-10-17T23:30:00.000Z,False,False,False,False,24,Stanford,fbs,ACC,,2210,Elon,fcs,Coastal Athletic,
 401858263,2026,7,regular,2026-10-17T23:00:00.000Z,False,False,False,True,2390,Miami,fbs,ACC,,52,Florida State,fbs,ACC,
@@ -297,7 +297,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401858266,2026,7,regular,2026-10-17T19:30:00.000Z,False,False,False,True,150,Duke,fbs,ACC,,153,North Carolina,fbs,ACC,
 401858267,2026,7,regular,2026-10-17T16:00:00.000Z,False,False,False,True,103,Boston College,fbs,ACC,,221,Pittsburgh,fbs,ACC,
 401858268,2026,7,regular,2026-10-17T16:00:00.000Z,False,False,False,True,2567,SMU,fbs,ACC,,258,Virginia,fbs,ACC,
-401858269,2026,7,regular,2026-10-17T04:00:00.000Z,True,False,False,True,25,California,fbs,ACC,,154,Wake Forest,fbs,ACC,
+401858269,2026,7,regular,2026-10-18T02:30:00.000Z,False,False,False,True,25,California,fbs,ACC,,154,Wake Forest,fbs,ACC,
 401858270,2026,8,regular,2026-10-24T04:00:00.000Z,True,False,False,True,2567,SMU,fbs,ACC,,25,California,fbs,ACC,
 401858271,2026,8,regular,2026-10-23T23:00:00.000Z,False,False,False,True,258,Virginia,fbs,ACC,,150,Duke,fbs,ACC,
 401858272,2026,8,regular,2026-10-24T02:30:00.000Z,False,False,False,True,24,Stanford,fbs,ACC,,152,NC State,fbs,ACC,
@@ -404,17 +404,17 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401858477,2026,5,regular,2026-10-04T00:00:00.000Z,False,True,False,True,164,Rutgers,fbs,Big Ten,15,84,Indiana,fbs,Big Ten,47
 401858478,2026,5,regular,2026-10-03T23:30:00.000Z,False,True,False,True,30,USC,fbs,Big Ten,25,264,Washington,fbs,Big Ten,21
 401858479,2026,5,regular,2026-10-03T16:30:00.000Z,False,True,False,True,275,Wisconsin,fbs,Big Ten,31,127,Michigan State,fbs,Big Ten,3
-401858480,2026,6,regular,2026-10-10T19:30:00.000Z,False,False,False,True,127,Michigan State,fbs,Big Ten,,356,Illinois,fbs,Big Ten,
-401858481,2026,6,regular,2026-10-10T16:00:00.000Z,False,False,False,True,158,Nebraska,fbs,Big Ten,,84,Indiana,fbs,Big Ten,
-401858482,2026,6,regular,2026-10-10T16:30:00.000Z,False,False,False,False,77,Northwestern,fbs,Big Ten,,2050,Ball State,fbs,Mid-American,
-401858483,2026,6,regular,2026-10-10T20:15:00.000Z,False,False,False,True,194,Ohio State,fbs,Big Ten,,120,Maryland,fbs,Big Ten,
-401858484,2026,6,regular,2026-10-10T19:30:00.000Z,False,False,False,True,2483,Oregon,fbs,Big Ten,,26,UCLA,fbs,Big Ten,
-401858485,2026,6,regular,2026-10-10T23:30:00.000Z,False,False,False,True,213,Penn State,fbs,Big Ten,,30,USC,fbs,Big Ten,
-401858486,2026,6,regular,2026-10-11T00:00:00.000Z,False,False,False,True,2509,Purdue,fbs,Big Ten,,135,Minnesota,fbs,Big Ten,
+401858480,2026,6,regular,2026-10-10T19:30:00.000Z,False,True,False,True,127,Michigan State,fbs,Big Ten,37,356,Illinois,fbs,Big Ten,38
+401858481,2026,6,regular,2026-10-10T16:00:00.000Z,False,True,False,True,158,Nebraska,fbs,Big Ten,17,84,Indiana,fbs,Big Ten,20
+401858482,2026,6,regular,2026-10-10T16:30:00.000Z,False,True,False,False,77,Northwestern,fbs,Big Ten,45,2050,Ball State,fbs,Mid-American,14
+401858483,2026,6,regular,2026-10-10T20:15:00.000Z,False,True,False,True,194,Ohio State,fbs,Big Ten,45,120,Maryland,fbs,Big Ten,16
+401858484,2026,6,regular,2026-10-10T19:30:00.000Z,False,True,False,True,2483,Oregon,fbs,Big Ten,15,26,UCLA,fbs,Big Ten,17
+401858485,2026,6,regular,2026-10-10T23:30:00.000Z,False,True,False,True,213,Penn State,fbs,Big Ten,23,30,USC,fbs,Big Ten,31
+401858486,2026,6,regular,2026-10-11T00:00:00.000Z,False,True,False,True,2509,Purdue,fbs,Big Ten,41,135,Minnesota,fbs,Big Ten,13
 401858487,2026,6,regular,2026-10-10T01:00:00.000Z,False,True,False,True,264,Washington,fbs,Big Ten,24,2294,Iowa,fbs,Big Ten,41
 401858488,2026,7,regular,2026-10-17T16:00:00.000Z,False,False,False,True,84,Indiana,fbs,Big Ten,,194,Ohio State,fbs,Big Ten,
 401858489,2026,7,regular,2026-10-17T16:30:00.000Z,False,False,False,True,120,Maryland,fbs,Big Ten,,164,Rutgers,fbs,Big Ten,
-401858490,2026,7,regular,2026-10-17T04:00:00.000Z,True,False,False,True,130,Michigan,fbs,Big Ten,,213,Penn State,fbs,Big Ten,
+401858490,2026,7,regular,2026-10-17T19:30:00.000Z,False,False,False,True,130,Michigan,fbs,Big Ten,,213,Penn State,fbs,Big Ten,
 401858491,2026,7,regular,2026-10-17T16:00:00.000Z,False,False,False,True,127,Michigan State,fbs,Big Ten,,77,Northwestern,fbs,Big Ten,
 401858492,2026,7,regular,2026-10-17T04:00:00.000Z,True,False,False,True,2483,Oregon,fbs,Big Ten,,158,Nebraska,fbs,Big Ten,
 401858493,2026,7,regular,2026-10-17T00:00:00.000Z,False,False,False,True,2509,Purdue,fbs,Big Ten,,264,Washington,fbs,Big Ten,
@@ -494,8 +494,8 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401860898,2026,5,regular,2026-10-03T23:30:00.000Z,False,True,False,True,68,Boise State,fbs,Pac-12,37,328,Utah State,fbs,Pac-12,18
 401860899,2026,5,regular,2026-10-03T22:00:00.000Z,False,True,False,True,36,Colorado State,fbs,Pac-12,26,204,Oregon State,fbs,Pac-12,56
 401860900,2026,5,regular,2026-10-04T02:30:00.000Z,False,True,False,True,21,San Diego State,fbs,Pac-12,31,326,Texas State,fbs,Pac-12,29
-401860901,2026,6,regular,2026-10-11T02:30:00.000Z,False,False,False,True,278,Fresno State,fbs,Pac-12,,68,Boise State,fbs,Pac-12,
-401860902,2026,6,regular,2026-10-10T22:00:00.000Z,False,False,False,True,204,Oregon State,fbs,Pac-12,,21,San Diego State,fbs,Pac-12,
+401860901,2026,6,regular,2026-10-11T02:30:00.000Z,False,True,False,True,278,Fresno State,fbs,Pac-12,31,68,Boise State,fbs,Pac-12,38
+401860902,2026,6,regular,2026-10-10T22:00:00.000Z,False,True,False,True,204,Oregon State,fbs,Pac-12,66,21,San Diego State,fbs,Pac-12,14
 401860903,2026,7,regular,2026-10-17T22:00:00.000Z,False,False,False,True,204,Oregon State,fbs,Pac-12,,265,Washington State,fbs,Pac-12,
 401860904,2026,7,regular,2026-10-18T02:30:00.000Z,False,False,False,True,21,San Diego State,fbs,Pac-12,,278,Fresno State,fbs,Pac-12,
 401860905,2026,8,regular,2026-10-24T22:30:00.000Z,False,False,False,True,36,Colorado State,fbs,Pac-12,,21,San Diego State,fbs,Pac-12,
@@ -521,7 +521,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401860925,2026,12,regular,2026-11-22T02:30:00.000Z,False,False,False,True,68,Boise State,fbs,Pac-12,,21,San Diego State,fbs,Pac-12,
 401861962,2026,1,regular,2026-09-05T16:00:00.000Z,False,True,False,False,41,UConn,fbs,FBS Independents,56,322,Lafayette,fcs,Patriot,7
 401861963,2026,3,regular,2026-09-19T23:00:00.000Z,False,True,False,False,2572,Southern Miss,fbs,Sun Belt,20,41,UConn,fbs,FBS Independents,48
-401861964,2026,6,regular,2026-10-10T19:45:00.000Z,False,False,False,False,218,Temple,fbs,American Athletic,,41,UConn,fbs,FBS Independents,
+401861964,2026,6,regular,2026-10-10T19:45:00.000Z,False,True,False,False,218,Temple,fbs,American Athletic,20,41,UConn,fbs,FBS Independents,34
 401861965,2026,8,regular,2026-10-23T23:00:00.000Z,False,False,False,False,41,UConn,fbs,FBS Independents,,113,Massachusetts,fbs,Mid-American,
 401861966,2026,9,regular,2026-10-31T19:00:00.000Z,False,False,False,False,2005,Air Force,fbs,Mountain West,,41,UConn,fbs,FBS Independents,
 401861967,2026,11,regular,2026-11-14T17:00:00.000Z,False,False,False,False,41,UConn,fbs,FBS Independents,,256,James Madison,fbs,Sun Belt,
@@ -566,11 +566,11 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401862792,2026,5,regular,2026-10-03T23:30:00.000Z,False,True,False,True,58,South Florida,fbs,American Athletic,13,218,Temple,fbs,American Athletic,17
 401862793,2026,5,regular,2026-10-03T19:30:00.000Z,False,True,False,False,5,UAB,fbs,American Athletic,33,2535,Samford,fcs,Southern,14
 401862794,2026,6,regular,2026-10-08T23:30:00.000Z,False,True,False,True,2636,UTSA,fbs,American Athletic,31,58,South Florida,fbs,American Athletic,24
-401862795,2026,6,regular,2026-10-10T16:00:00.000Z,False,False,False,True,349,Army,fbs,American Athletic,,2655,Tulane,fbs,American Athletic,
-401862796,2026,6,regular,2026-10-10T19:30:00.000Z,False,False,False,True,249,North Texas,fbs,American Athletic,,2429,Charlotte,fbs,American Athletic,
-401862797,2026,6,regular,2026-10-10T17:00:00.000Z,False,False,False,True,151,East Carolina,fbs,American Athletic,,242,Rice,fbs,American Athletic,
-401862798,2026,6,regular,2026-10-10T23:00:00.000Z,False,False,False,True,235,Memphis,fbs,American Athletic,,5,UAB,fbs,American Athletic,
-401862799,2026,6,regular,2026-10-10T19:30:00.000Z,False,False,False,True,2426,Navy,fbs,American Athletic,,202,Tulsa,fbs,American Athletic,
+401862795,2026,6,regular,2026-10-10T16:00:00.000Z,False,True,False,True,349,Army,fbs,American Athletic,20,2655,Tulane,fbs,American Athletic,17
+401862796,2026,6,regular,2026-10-10T19:30:00.000Z,False,True,False,True,249,North Texas,fbs,American Athletic,50,2429,Charlotte,fbs,American Athletic,10
+401862797,2026,6,regular,2026-10-10T17:00:00.000Z,False,True,False,True,151,East Carolina,fbs,American Athletic,28,242,Rice,fbs,American Athletic,12
+401862798,2026,6,regular,2026-10-10T23:00:00.000Z,False,True,False,True,235,Memphis,fbs,American Athletic,38,5,UAB,fbs,American Athletic,13
+401862799,2026,6,regular,2026-10-10T19:30:00.000Z,False,True,False,True,2426,Navy,fbs,American Athletic,34,202,Tulsa,fbs,American Athletic,26
 401862800,2026,7,regular,2026-10-15T23:30:00.000Z,False,False,False,True,5,UAB,fbs,American Athletic,,151,East Carolina,fbs,American Athletic,
 401862801,2026,7,regular,2026-10-16T23:30:00.000Z,False,False,False,True,2655,Tulane,fbs,American Athletic,,235,Memphis,fbs,American Athletic,
 401862802,2026,7,regular,2026-10-17T16:00:00.000Z,False,False,False,True,349,Army,fbs,American Athletic,,2226,Florida Atlantic,fbs,American Athletic,
@@ -641,9 +641,9 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401864513,2026,5,regular,2026-10-04T03:59:00.000Z,False,True,False,True,62,Hawai'i,fbs,Mountain West,16,23,San José State,fbs,Mountain West,20
 401864514,2026,5,regular,2026-10-03T20:00:00.000Z,False,True,False,True,167,New Mexico,fbs,Mountain West,61,2638,UTEP,fbs,Mountain West,7
 401864515,2026,5,regular,2026-10-03T19:30:00.000Z,False,True,False,True,2449,North Dakota State,fbs,Mountain West,28,2751,Wyoming,fbs,Mountain West,0
-401864516,2026,6,regular,2026-10-10T23:30:00.000Z,False,False,False,True,2459,Northern Illinois,fbs,Mountain West,,2005,Air Force,fbs,Mountain West,
-401864517,2026,6,regular,2026-10-10T23:00:00.000Z,False,False,False,True,2638,UTEP,fbs,Mountain West,,2440,Nevada,fbs,Mountain West,
-401864518,2026,6,regular,2026-10-10T23:00:00.000Z,False,False,False,True,2439,UNLV,fbs,Mountain West,,2449,North Dakota State,fbs,Mountain West,
+401864516,2026,6,regular,2026-10-10T23:30:00.000Z,False,True,False,True,2459,Northern Illinois,fbs,Mountain West,7,2005,Air Force,fbs,Mountain West,28
+401864517,2026,6,regular,2026-10-10T23:00:00.000Z,False,True,False,True,2638,UTEP,fbs,Mountain West,13,2440,Nevada,fbs,Mountain West,30
+401864518,2026,6,regular,2026-10-10T23:00:00.000Z,False,True,False,True,2439,UNLV,fbs,Mountain West,13,2449,North Dakota State,fbs,Mountain West,7
 401864519,2026,6,regular,2026-10-10T01:00:00.000Z,False,True,False,True,23,San José State,fbs,Mountain West,13,2751,Wyoming,fbs,Mountain West,16
 401864520,2026,7,regular,2026-10-17T23:00:00.000Z,False,False,False,True,2449,North Dakota State,fbs,Mountain West,,2440,Nevada,fbs,Mountain West,
 401864521,2026,7,regular,2026-10-18T02:30:00.000Z,False,False,False,True,62,Hawai'i,fbs,Mountain West,,167,New Mexico,fbs,Mountain West,
@@ -713,12 +713,12 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401866432,2026,5,regular,2026-10-03T17:00:00.000Z,False,True,False,True,2084,Buffalo,fbs,Mid-American,17,2711,Western Michigan,fbs,Mid-American,20
 401866433,2026,5,regular,2026-10-03T19:30:00.000Z,False,True,False,True,113,Massachusetts,fbs,Mid-American,14,2199,Eastern Michigan,fbs,Mid-American,38
 401866434,2026,5,regular,2026-10-03T19:30:00.000Z,False,True,False,True,2309,Kent State,fbs,Mid-American,10,195,Ohio,fbs,Mid-American,13
-401866435,2026,6,regular,2026-10-10T19:30:00.000Z,False,False,False,True,2006,Akron,fbs,Mid-American,,2199,Eastern Michigan,fbs,Mid-American,
-401866436,2026,6,regular,2026-10-10T16:00:00.000Z,False,False,False,True,189,Bowling Green,fbs,Mid-American,,16,Sacramento State,fbs,Mid-American,
-401866437,2026,6,regular,2026-10-10T19:30:00.000Z,False,False,False,True,2649,Toledo,fbs,Mid-American,,2084,Buffalo,fbs,Mid-American,
-401866438,2026,6,regular,2026-10-10T19:30:00.000Z,False,False,False,True,195,Ohio,fbs,Mid-American,,2117,Central Michigan,fbs,Mid-American,
-401866439,2026,6,regular,2026-10-10T19:30:00.000Z,False,False,False,True,2711,Western Michigan,fbs,Mid-American,,2309,Kent State,fbs,Mid-American,
-401866440,2026,6,regular,2026-10-10T18:00:00.000Z,False,False,False,True,113,Massachusetts,fbs,Mid-American,,193,Miami (OH),fbs,Mid-American,
+401866435,2026,6,regular,2026-10-10T19:30:00.000Z,False,True,False,True,2006,Akron,fbs,Mid-American,23,2199,Eastern Michigan,fbs,Mid-American,25
+401866436,2026,6,regular,2026-10-10T16:00:00.000Z,False,True,False,True,189,Bowling Green,fbs,Mid-American,38,16,Sacramento State,fbs,Mid-American,10
+401866437,2026,6,regular,2026-10-10T19:30:00.000Z,False,True,False,True,2649,Toledo,fbs,Mid-American,8,2084,Buffalo,fbs,Mid-American,23
+401866438,2026,6,regular,2026-10-10T19:30:00.000Z,False,True,False,True,195,Ohio,fbs,Mid-American,31,2117,Central Michigan,fbs,Mid-American,14
+401866439,2026,6,regular,2026-10-10T19:30:00.000Z,False,True,False,True,2711,Western Michigan,fbs,Mid-American,38,2309,Kent State,fbs,Mid-American,7
+401866440,2026,6,regular,2026-10-10T18:00:00.000Z,False,True,False,True,113,Massachusetts,fbs,Mid-American,19,193,Miami (OH),fbs,Mid-American,20
 401866441,2026,7,regular,2026-10-17T16:00:00.000Z,False,False,False,True,189,Bowling Green,fbs,Mid-American,,2050,Ball State,fbs,Mid-American,
 401866442,2026,7,regular,2026-10-17T17:00:00.000Z,False,False,False,True,2084,Buffalo,fbs,Mid-American,,113,Massachusetts,fbs,Mid-American,
 401866443,2026,7,regular,2026-10-17T17:30:00.000Z,False,False,False,True,2117,Central Michigan,fbs,Mid-American,,2711,Western Michigan,fbs,Mid-American,
@@ -802,11 +802,11 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401866655,2026,5,regular,2026-10-03T19:30:00.000Z,False,True,False,False,399,UAlbany,fcs,Coastal Athletic,28,2169,Delaware State,fcs,MEAC,3
 401866656,2026,5,regular,2026-10-03T19:00:00.000Z,False,True,True,False,2261,Hampton,fcs,Coastal Athletic,13,47,Howard,fcs,MEAC,27
 401866657,2026,5,regular,2026-10-03T22:00:00.000Z,False,True,False,False,2428,North Carolina Central,fcs,MEAC,31,2097,Campbell,fcs,Coastal Athletic,38
-401866658,2026,6,regular,2026-10-10T16:00:00.000Z,False,False,False,True,2448,North Carolina A&T,fcs,Coastal Athletic,,160,New Hampshire,fcs,Coastal Athletic,
-401866659,2026,6,regular,2026-10-10T20:00:00.000Z,False,False,False,True,119,Towson,fcs,Coastal Athletic,,2619,Stony Brook,fcs,Coastal Athletic,
-401866660,2026,6,regular,2026-10-10T16:00:00.000Z,False,False,False,False,2529,Sacred Heart,fcs,Coastal Athletic,,284,Stonehill,fcs,NEC,
-401866661,2026,6,regular,2026-10-10T18:00:00.000Z,False,False,False,False,2210,Elon,fcs,Coastal Athletic,,2747,Wofford,fcs,Southern,
-401866662,2026,6,regular,2026-10-10T16:00:00.000Z,False,False,False,False,225,Brown,fcs,Ivy,,2803,Bryant,fcs,Coastal Athletic,
+401866658,2026,6,regular,2026-10-10T16:00:00.000Z,False,True,False,True,2448,North Carolina A&T,fcs,Coastal Athletic,30,160,New Hampshire,fcs,Coastal Athletic,27
+401866659,2026,6,regular,2026-10-10T20:00:00.000Z,False,True,False,True,119,Towson,fcs,Coastal Athletic,24,2619,Stony Brook,fcs,Coastal Athletic,31
+401866660,2026,6,regular,2026-10-10T16:00:00.000Z,False,True,False,False,2529,Sacred Heart,fcs,Coastal Athletic,7,284,Stonehill,fcs,NEC,28
+401866661,2026,6,regular,2026-10-10T18:00:00.000Z,False,True,False,False,2210,Elon,fcs,Coastal Athletic,0,2747,Wofford,fcs,Southern,16
+401866662,2026,6,regular,2026-10-10T16:00:00.000Z,False,True,False,False,225,Brown,fcs,Ivy,28,2803,Bryant,fcs,Coastal Athletic,13
 401866663,2026,7,regular,2026-10-17T16:00:00.000Z,False,False,False,True,2529,Sacred Heart,fcs,Coastal Athletic,,2261,Hampton,fcs,Coastal Athletic,
 401866664,2026,7,regular,2026-10-17T17:00:00.000Z,False,False,False,True,311,Maine,fcs,Coastal Athletic,,2803,Bryant,fcs,Coastal Athletic,
 401866665,2026,7,regular,2026-10-17T17:00:00.000Z,False,False,False,True,160,New Hampshire,fcs,Coastal Athletic,,2405,Monmouth,fcs,Coastal Athletic,
@@ -874,14 +874,14 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401867826,2026,3,regular,2026-09-19T17:00:00.000Z,False,True,False,False,2142,Colgate,fcs,Patriot,20,172,Cornell,fcs,Ivy,7
 401867827,2026,4,regular,2026-09-26T17:00:00.000Z,False,True,False,True,172,Cornell,fcs,Ivy,38,43,Yale,fcs,Ivy,25
 401867828,2026,5,regular,2026-10-03T16:30:00.000Z,False,True,False,False,46,Georgetown,fcs,Patriot,14,172,Cornell,fcs,Ivy,35
-401867829,2026,6,regular,2026-10-10T17:00:00.000Z,False,False,False,True,172,Cornell,fcs,Ivy,,108,Harvard,fcs,Ivy,
+401867829,2026,6,regular,2026-10-10T17:00:00.000Z,False,True,False,True,172,Cornell,fcs,Ivy,29,108,Harvard,fcs,Ivy,41
 401867830,2026,7,regular,2026-10-17T18:00:00.000Z,False,False,False,False,172,Cornell,fcs,Ivy,,2329,Lehigh,fcs,Patriot,
 401867831,2026,9,regular,2026-10-31T16:00:00.000Z,False,False,False,True,163,Princeton,fcs,Ivy,,172,Cornell,fcs,Ivy,
 401867832,2026,10,regular,2026-11-07T18:00:00.000Z,False,False,False,True,172,Cornell,fcs,Ivy,,219,Pennsylvania,fcs,Ivy,
 401867833,2026,11,regular,2026-11-14T18:00:00.000Z,False,False,False,True,172,Cornell,fcs,Ivy,,159,Dartmouth,fcs,Ivy,
 401867834,2026,3,regular,2026-09-19T16:00:00.000Z,False,True,False,False,2329,Lehigh,fcs,Patriot,24,159,Dartmouth,fcs,Ivy,20
 401867835,2026,5,regular,2026-10-03T17:30:00.000Z,False,True,False,True,159,Dartmouth,fcs,Ivy,14,219,Pennsylvania,fcs,Ivy,10
-401867836,2026,6,regular,2026-10-10T16:00:00.000Z,False,False,False,True,43,Yale,fcs,Ivy,,159,Dartmouth,fcs,Ivy,
+401867836,2026,6,regular,2026-10-10T16:00:00.000Z,False,True,False,True,43,Yale,fcs,Ivy,28,159,Dartmouth,fcs,Ivy,7
 401867837,2026,7,regular,2026-10-17T17:00:00.000Z,False,False,False,False,159,Dartmouth,fcs,Ivy,,2771,Merrimack,fcs,FCS Independents,
 401867838,2026,9,regular,2026-10-30T23:00:00.000Z,False,False,False,True,159,Dartmouth,fcs,Ivy,,108,Harvard,fcs,Ivy,
 401867839,2026,10,regular,2026-11-07T17:00:00.000Z,False,False,False,True,163,Princeton,fcs,Ivy,,159,Dartmouth,fcs,Ivy,
@@ -905,7 +905,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401867857,2026,3,regular,2026-09-19T17:00:00.000Z,False,True,False,False,282,Indiana State,fcs,MVFC,39,2674,Valparaiso,fcs,Pioneer,16
 401867858,2026,4,regular,2026-09-26T17:00:00.000Z,False,True,False,True,282,Indiana State,fcs,MVFC,35,155,North Dakota,fcs,MVFC,42
 401867859,2026,5,regular,2026-10-03T19:00:00.000Z,False,True,False,True,233,South Dakota,fcs,MVFC,44,282,Indiana State,fcs,MVFC,14
-401867860,2026,6,regular,2026-10-10T17:00:00.000Z,False,False,False,True,282,Indiana State,fcs,MVFC,,2754,Youngstown State,fcs,MVFC,
+401867860,2026,6,regular,2026-10-10T17:00:00.000Z,False,True,False,True,282,Indiana State,fcs,MVFC,24,2754,Youngstown State,fcs,MVFC,57
 401867861,2026,9,regular,2026-10-31T18:00:00.000Z,False,False,False,True,2460,Northern Iowa,fcs,MVFC,,282,Indiana State,fcs,MVFC,
 401867862,2026,10,regular,2026-11-07T23:00:00.000Z,False,False,False,True,282,Indiana State,fcs,MVFC,,79,Southern Illinois,fcs,MVFC,
 401867863,2026,11,regular,2026-11-14T18:00:00.000Z,False,False,False,True,282,Indiana State,fcs,MVFC,,93,Murray State,fcs,MVFC,
@@ -922,7 +922,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401867874,2026,1,regular,2026-08-28T00:00:00.000Z,False,True,False,False,155,North Dakota,fcs,MVFC,42,2341,Long Island University,fcs,NEC,21
 401867875,2026,1,regular,2026-09-05T20:00:00.000Z,False,True,False,False,155,North Dakota,fcs,MVFC,62,2900,St. Thomas (MN),fcs,Pioneer,26
 401867876,2026,2,regular,2026-09-13T02:00:00.000Z,False,True,False,False,2502,Portland State,fcs,Big Sky,23,155,North Dakota,fcs,MVFC,47
-401867877,2026,6,regular,2026-10-10T21:00:00.000Z,False,False,False,True,2460,Northern Iowa,fcs,MVFC,,155,North Dakota,fcs,MVFC,
+401867877,2026,6,regular,2026-10-10T21:00:00.000Z,False,True,False,True,2460,Northern Iowa,fcs,MVFC,24,155,North Dakota,fcs,MVFC,17
 401867878,2026,7,regular,2026-10-17T18:00:00.000Z,False,False,False,True,155,North Dakota,fcs,MVFC,,2571,South Dakota State,fcs,MVFC,
 401867879,2026,8,regular,2026-10-24T18:00:00.000Z,False,False,False,True,233,South Dakota,fcs,MVFC,,155,North Dakota,fcs,MVFC,
 401867880,2026,9,regular,2026-10-31T16:00:00.000Z,False,False,False,True,2754,Youngstown State,fcs,MVFC,,155,North Dakota,fcs,MVFC,
@@ -931,7 +931,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401867883,2026,1,regular,2026-09-06T00:00:00.000Z,False,True,False,False,2458,Northern Colorado,fcs,Big Sky,23,233,South Dakota,fcs,MVFC,38
 401867884,2026,2,regular,2026-09-12T18:00:00.000Z,False,True,False,False,233,South Dakota,fcs,MVFC,41,331,Eastern Washington,fcs,Big Sky,23
 401867885,2026,4,regular,2026-09-26T18:00:00.000Z,False,True,False,True,2754,Youngstown State,fcs,MVFC,47,233,South Dakota,fcs,MVFC,28
-401867886,2026,6,regular,2026-10-10T18:00:00.000Z,False,False,False,True,233,South Dakota,fcs,MVFC,,79,Southern Illinois,fcs,MVFC,
+401867886,2026,6,regular,2026-10-10T18:00:00.000Z,False,True,False,True,233,South Dakota,fcs,MVFC,31,79,Southern Illinois,fcs,MVFC,10
 401867887,2026,9,regular,2026-10-31T04:00:00.000Z,True,False,False,True,2571,South Dakota State,fcs,MVFC,,233,South Dakota,fcs,MVFC,
 401867888,2026,11,regular,2026-11-14T19:00:00.000Z,False,False,False,True,233,South Dakota,fcs,MVFC,,2460,Northern Iowa,fcs,MVFC,
 401867889,2026,1,regular,2026-09-03T23:00:00.000Z,False,True,False,False,2535,Samford,fcs,Southern,18,79,Southern Illinois,fcs,MVFC,22
@@ -951,11 +951,11 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401867904,2026,10,regular,2026-11-07T18:00:00.000Z,False,False,False,True,284,Stonehill,fcs,NEC,,2115,Central Connecticut,fcs,NEC,
 401867905,2026,11,regular,2026-11-14T05:00:00.000Z,True,False,False,True,2341,Long Island University,fcs,NEC,,2115,Central Connecticut,fcs,NEC,
 401867906,2026,12,regular,2026-11-21T17:00:00.000Z,False,False,False,True,2115,Central Connecticut,fcs,NEC,,2184,Duquesne,fcs,NEC,
-401867907,2026,6,regular,2026-10-10T17:00:00.000Z,False,False,False,False,2115,Central Connecticut,fcs,NEC,,2022,American International,ii,Northeast 10,
+401867907,2026,6,regular,2026-10-10T17:00:00.000Z,False,True,False,False,2115,Central Connecticut,fcs,NEC,51,2022,American International,ii,Northeast 10,14
 401867908,2026,3,regular,2026-09-19T16:00:00.000Z,False,True,False,False,2341,Long Island University,fcs,NEC,16,222,Villanova,fcs,Patriot,20
 401867909,2026,4,regular,2026-09-26T22:00:00.000Z,False,True,False,False,2229,Florida International,fbs,Conference USA,20,2341,Long Island University,fcs,NEC,3
 401867910,2026,5,regular,2026-10-03T16:00:00.000Z,False,True,False,True,2341,Long Island University,fcs,NEC,27,2385,Mercyhurst,fcs,NEC,24
-401867911,2026,6,regular,2026-10-10T17:00:00.000Z,False,False,False,True,2184,Duquesne,fcs,NEC,,2341,Long Island University,fcs,NEC,
+401867911,2026,6,regular,2026-10-10T17:00:00.000Z,False,True,False,True,2184,Duquesne,fcs,NEC,14,2341,Long Island University,fcs,NEC,17
 401867912,2026,7,regular,2026-10-17T04:00:00.000Z,True,False,False,True,2681,Wagner,fcs,NEC,,2341,Long Island University,fcs,NEC,
 401867913,2026,8,regular,2026-10-24T04:00:00.000Z,True,False,False,True,2341,Long Island University,fcs,NEC,,284,Stonehill,fcs,NEC,
 401867914,2026,10,regular,2026-11-07T17:00:00.000Z,False,False,False,True,2441,New Haven,fcs,NEC,,2341,Long Island University,fcs,NEC,
@@ -963,7 +963,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401867916,2026,1,regular,2026-08-29T16:00:00.000Z,False,True,False,True,2681,Wagner,fcs,NEC,7,2523,Robert Morris,fcs,NEC,28
 401867917,2026,1,regular,2026-09-05T22:00:00.000Z,False,True,False,False,2523,Robert Morris,fcs,NEC,29,2707,West Virginia State,ii,Mountain East,9
 401867918,2026,5,regular,2026-10-03T18:00:00.000Z,False,True,False,False,2523,Robert Morris,fcs,NEC,33,2450,Norfolk State,fcs,MEAC,31
-401867919,2026,6,regular,2026-10-10T16:00:00.000Z,False,False,False,False,2415,Morgan State,fcs,MEAC,,2523,Robert Morris,fcs,NEC,
+401867919,2026,6,regular,2026-10-10T16:00:00.000Z,False,True,False,False,2415,Morgan State,fcs,MEAC,28,2523,Robert Morris,fcs,NEC,27
 401867920,2026,7,regular,2026-10-17T16:00:00.000Z,False,False,False,True,2523,Robert Morris,fcs,NEC,,2441,New Haven,fcs,NEC,
 401867921,2026,8,regular,2026-10-24T18:00:00.000Z,False,False,False,True,2523,Robert Morris,fcs,NEC,,2385,Mercyhurst,fcs,NEC,
 401867922,2026,10,regular,2026-11-07T17:00:00.000Z,False,False,False,True,2184,Duquesne,fcs,NEC,,2523,Robert Morris,fcs,NEC,
@@ -974,7 +974,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401867927,2026,12,regular,2026-11-21T17:00:00.000Z,False,False,False,True,284,Stonehill,fcs,NEC,,2681,Wagner,fcs,NEC,
 401867928,2026,1,regular,2026-09-05T16:00:00.000Z,False,True,False,False,2681,Wagner,fcs,NEC,31,2583,Southern Connecticut State,ii,Northeast 10,7
 401867929,2026,2,regular,2026-09-12T16:00:00.000Z,False,True,False,False,256,James Madison,fbs,Sun Belt,87,2681,Wagner,fcs,NEC,3
-401867930,2026,6,regular,2026-10-10T16:00:00.000Z,False,False,False,False,2681,Wagner,fcs,NEC,,163,Princeton,fcs,Ivy,
+401867930,2026,6,regular,2026-10-10T16:00:00.000Z,False,True,False,False,2681,Wagner,fcs,NEC,13,163,Princeton,fcs,Ivy,28
 401867931,2026,8,regular,2026-10-24T16:00:00.000Z,False,False,False,True,2184,Duquesne,fcs,NEC,,2681,Wagner,fcs,NEC,
 401867932,2026,9,regular,2026-10-31T16:00:00.000Z,False,False,False,False,2771,Merrimack,fcs,FCS Independents,,2681,Wagner,fcs,NEC,
 401867933,2026,10,regular,2026-11-07T05:00:00.000Z,True,False,False,True,2385,Mercyhurst,fcs,NEC,,2681,Wagner,fcs,NEC,
@@ -982,13 +982,13 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401867935,2026,1,regular,2026-08-29T23:30:00.000Z,False,True,True,False,47,Howard,fcs,MEAC,31,2010,Alabama A&M,fcs,SWAC,24
 401867939,2026,1,regular,2026-09-06T19:00:00.000Z,False,True,True,False,50,Florida A&M,fcs,SWAC,13,2569,South Carolina State,fcs,MEAC,31
 401867953,2026,2,regular,2026-09-12T19:00:00.000Z,False,True,False,False,2169,Delaware State,fcs,MEAC,21,2075,Bowie State,ii,CIAA,6
-401867954,2026,6,regular,2026-10-10T17:00:00.000Z,False,False,False,False,2169,Delaware State,fcs,MEAC,,112334,Franklin Pierce,ii,Northeast 10,
+401867954,2026,6,regular,2026-10-10T17:00:00.000Z,False,True,False,False,2169,Delaware State,fcs,MEAC,34,112334,Franklin Pierce,ii,Northeast 10,0
 401867955,2026,8,regular,2026-10-23T21:00:00.000Z,False,False,False,True,2169,Delaware State,fcs,MEAC,,2428,North Carolina Central,fcs,MEAC,
 401867956,2026,9,regular,2026-10-31T18:00:00.000Z,False,False,False,True,2450,Norfolk State,fcs,MEAC,,2169,Delaware State,fcs,MEAC,
 401867957,2026,10,regular,2026-11-07T18:00:00.000Z,False,False,False,True,2169,Delaware State,fcs,MEAC,,2415,Morgan State,fcs,MEAC,
 401867958,2026,11,regular,2026-11-14T18:00:00.000Z,False,False,False,True,47,Howard,fcs,MEAC,,2169,Delaware State,fcs,MEAC,
 401867959,2026,12,regular,2026-11-21T18:30:00.000Z,False,False,False,True,2569,South Carolina State,fcs,MEAC,,2169,Delaware State,fcs,MEAC,
-401867960,2026,6,regular,2026-10-10T17:00:00.000Z,False,False,False,False,219,Pennsylvania,fcs,Ivy,,47,Howard,fcs,MEAC,
+401867960,2026,6,regular,2026-10-10T17:00:00.000Z,False,True,False,False,219,Pennsylvania,fcs,Ivy,24,47,Howard,fcs,MEAC,20
 401867961,2026,7,regular,2026-10-17T19:30:00.000Z,False,False,False,False,47,Howard,fcs,MEAC,,60,Morehouse,ii,SIAC,
 401867962,2026,8,regular,2026-10-24T19:00:00.000Z,False,False,False,True,2415,Morgan State,fcs,MEAC,,47,Howard,fcs,MEAC,
 401867963,2026,9,regular,2026-10-31T18:00:00.000Z,False,False,False,True,2428,North Carolina Central,fcs,MEAC,,47,Howard,fcs,MEAC,
@@ -1002,25 +1002,25 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401867971,2026,12,regular,2026-11-21T19:00:00.000Z,False,False,False,True,2428,North Carolina Central,fcs,MEAC,,2415,Morgan State,fcs,MEAC,
 401867972,2026,1,regular,2026-08-29T22:00:00.000Z,False,True,False,False,2450,Norfolk State,fcs,MEAC,56,2736,Winston-Salem State,ii,CIAA,0
 401867973,2026,1,regular,2026-09-05T22:00:00.000Z,False,True,False,False,295,Old Dominion,fbs,Sun Belt,31,2450,Norfolk State,fcs,MEAC,10
-401867974,2026,6,regular,2026-10-10T18:00:00.000Z,False,False,False,False,2450,Norfolk State,fcs,MEAC,,2355,Virginia Lynchburg,,,
+401867974,2026,6,regular,2026-10-10T18:00:00.000Z,False,True,False,False,2450,Norfolk State,fcs,MEAC,62,2355,Virginia Lynchburg,,,0
 401867975,2026,8,regular,2026-10-24T17:30:00.000Z,False,False,False,True,2569,South Carolina State,fcs,MEAC,,2450,Norfolk State,fcs,MEAC,
 401867976,2026,10,regular,2026-11-07T17:00:00.000Z,False,False,False,True,2450,Norfolk State,fcs,MEAC,,2428,North Carolina Central,fcs,MEAC,
 401867977,2026,1,regular,2026-08-29T23:00:00.000Z,False,True,False,False,2640,Texas Southern,fcs,SWAC,42,2428,North Carolina Central,fcs,MEAC,30
 401867978,2026,1,regular,2026-09-05T22:00:00.000Z,False,True,False,False,2428,North Carolina Central,fcs,MEAC,27,2207,Elizabeth City State,ii,CIAA,6
 401867979,2026,3,regular,2026-09-19T22:00:00.000Z,False,True,False,False,2241,Gardner-Webb,fcs,OVC,44,2428,North Carolina Central,fcs,MEAC,20
-401867980,2026,6,regular,2026-10-10T17:00:00.000Z,False,False,False,False,2428,North Carolina Central,fcs,MEAC,,2729,William & Mary,fcs,Patriot,
+401867980,2026,6,regular,2026-10-10T17:00:00.000Z,False,True,False,False,2428,North Carolina Central,fcs,MEAC,14,2729,William & Mary,fcs,Patriot,17
 401867981,2026,11,regular,2026-11-14T18:30:00.000Z,False,False,False,True,2569,South Carolina State,fcs,MEAC,,2428,North Carolina Central,fcs,MEAC,
 401867982,2026,1,regular,2026-08-29T22:00:00.000Z,False,True,False,False,2569,South Carolina State,fcs,MEAC,87,2542,Savannah State,ii,SIAC,0
 401867983,2026,2,regular,2026-09-12T22:00:00.000Z,False,True,False,False,2569,South Carolina State,fcs,MEAC,66,330,Virginia State,ii,CIAA,0
 401867984,2026,3,regular,2026-09-19T23:00:00.000Z,False,True,False,False,231,Furman,fcs,Southern,17,2569,South Carolina State,fcs,MEAC,20
 401867985,2026,4,regular,2026-09-26T23:00:00.000Z,False,True,False,False,2065,Bethune-Cookman,fcs,SWAC,21,2569,South Carolina State,fcs,MEAC,31
 401867986,2026,5,regular,2026-10-03T18:00:00.000Z,False,True,False,False,2569,South Carolina State,fcs,MEAC,31,2643,The Citadel,fcs,Southern,34
-401867987,2026,6,regular,2026-10-10T16:00:00.000Z,False,False,False,False,2127,Charleston Southern,fcs,OVC,,2569,South Carolina State,fcs,MEAC,
+401867987,2026,6,regular,2026-10-10T16:00:00.000Z,False,True,False,False,2127,Charleston Southern,fcs,OVC,49,2569,South Carolina State,fcs,MEAC,39
 401867988,2026,1,regular,2026-08-29T22:00:00.000Z,False,True,False,True,257,Richmond,fcs,Patriot,35,2083,Bucknell,fcs,Patriot,14
 401867989,2026,1,regular,2026-09-05T22:00:00.000Z,False,True,False,True,2083,Bucknell,fcs,Patriot,16,222,Villanova,fcs,Patriot,17
 401867990,2026,2,regular,2026-09-12T17:30:00.000Z,False,True,False,False,2678,VMI,fcs,Southern,3,2083,Bucknell,fcs,Patriot,14
 401867991,2026,3,regular,2026-09-19T19:00:00.000Z,False,True,False,False,2083,Bucknell,fcs,Patriot,7,219,Pennsylvania,fcs,Ivy,20
-401867992,2026,6,regular,2026-10-10T16:30:00.000Z,False,False,False,True,46,Georgetown,fcs,Patriot,,2083,Bucknell,fcs,Patriot,
+401867992,2026,6,regular,2026-10-10T16:30:00.000Z,False,True,False,True,46,Georgetown,fcs,Patriot,21,2083,Bucknell,fcs,Patriot,14
 401867993,2026,7,regular,2026-10-17T19:00:00.000Z,False,False,False,True,2083,Bucknell,fcs,Patriot,,322,Lafayette,fcs,Patriot,
 401867994,2026,8,regular,2026-10-24T17:00:00.000Z,False,False,False,True,107,Holy Cross,fcs,Patriot,,2083,Bucknell,fcs,Patriot,
 401867995,2026,9,regular,2026-10-31T16:00:00.000Z,False,False,False,True,2329,Lehigh,fcs,Patriot,,2083,Bucknell,fcs,Patriot,
@@ -1038,7 +1038,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401868008,2026,2,regular,2026-09-12T23:30:00.000Z,False,True,False,False,324,Coastal Carolina,fbs,Sun Belt,45,2230,Fordham,fcs,Patriot,7
 401868009,2026,3,regular,2026-09-19T22:00:00.000Z,False,True,False,True,2729,William & Mary,fcs,Patriot,27,2230,Fordham,fcs,Patriot,52
 401868010,2026,5,regular,2026-10-03T16:00:00.000Z,False,True,False,True,2329,Lehigh,fcs,Patriot,34,2230,Fordham,fcs,Patriot,0
-401868011,2026,6,regular,2026-10-10T19:30:00.000Z,False,False,False,True,2230,Fordham,fcs,Patriot,,257,Richmond,fcs,Patriot,
+401868011,2026,6,regular,2026-10-10T19:30:00.000Z,False,True,False,True,2230,Fordham,fcs,Patriot,20,257,Richmond,fcs,Patriot,14
 401868012,2026,7,regular,2026-10-17T19:30:00.000Z,False,False,False,True,2230,Fordham,fcs,Patriot,,222,Villanova,fcs,Patriot,
 401868013,2026,8,regular,2026-10-24T17:00:00.000Z,False,False,False,True,2230,Fordham,fcs,Patriot,,322,Lafayette,fcs,Patriot,
 401868014,2026,11,regular,2026-11-14T17:00:00.000Z,False,False,False,True,2230,Fordham,fcs,Patriot,,46,Georgetown,fcs,Patriot,
@@ -1072,7 +1072,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401868051,2026,3,regular,2026-09-19T20:00:00.000Z,False,True,False,False,70,Idaho,fcs,Big Sky,39,2000,Abilene Christian,fcs,UAC,41
 401868052,2026,4,regular,2026-09-27T00:00:00.000Z,False,True,False,False,2000,Abilene Christian,fcs,UAC,17,2382,Mercer,fcs,Southern,34
 401868053,2026,5,regular,2026-10-04T00:00:00.000Z,False,True,False,True,2000,Abilene Christian,fcs,UAC,35,110242,West Florida,fcs,UAC,7
-401868054,2026,6,regular,2026-10-11T00:00:00.000Z,False,False,False,True,2000,Abilene Christian,fcs,UAC,,2110,Central Arkansas,fcs,UAC,
+401868054,2026,6,regular,2026-10-11T00:00:00.000Z,False,True,False,True,2000,Abilene Christian,fcs,UAC,20,2110,Central Arkansas,fcs,UAC,14
 401868055,2026,7,regular,2026-10-17T23:00:00.000Z,False,False,False,True,2453,North Alabama,fcs,UAC,,2000,Abilene Christian,fcs,UAC,
 401868056,2026,9,regular,2026-10-31T20:00:00.000Z,False,False,False,True,2000,Abilene Christian,fcs,UAC,,2698,West Georgia,fcs,UAC,
 401868057,2026,10,regular,2026-11-08T00:00:00.000Z,False,False,False,True,2627,Tarleton State,fcs,UAC,,2000,Abilene Christian,fcs,UAC,
@@ -1083,7 +1083,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401868062,2026,3,regular,2026-09-19T23:00:00.000Z,False,True,False,True,110242,West Florida,fcs,UAC,16,2046,Austin Peay,fcs,UAC,38
 401868063,2026,4,regular,2026-09-26T18:00:00.000Z,False,True,False,False,2046,Austin Peay,fcs,UAC,35,2630,UT Martin,fcs,OVC,12
 401868064,2026,5,regular,2026-10-03T21:00:00.000Z,False,True,False,False,2046,Austin Peay,fcs,UAC,42,2441,New Haven,fcs,NEC,17
-401868065,2026,6,regular,2026-10-10T23:00:00.000Z,False,False,False,True,2046,Austin Peay,fcs,UAC,,2627,Tarleton State,fcs,UAC,
+401868065,2026,6,regular,2026-10-10T23:00:00.000Z,False,True,False,True,2046,Austin Peay,fcs,UAC,32,2627,Tarleton State,fcs,UAC,40
 401868066,2026,7,regular,2026-10-17T18:00:00.000Z,False,False,False,True,2698,West Georgia,fcs,UAC,,2046,Austin Peay,fcs,UAC,
 401868067,2026,8,regular,2026-10-24T23:00:00.000Z,False,False,False,True,2453,North Alabama,fcs,UAC,,2046,Austin Peay,fcs,UAC,
 401868068,2026,10,regular,2026-11-07T22:00:00.000Z,False,False,False,True,2046,Austin Peay,fcs,UAC,,2198,Eastern Kentucky,fcs,UAC,
@@ -1096,7 +1096,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401868075,2026,3,regular,2026-09-20T00:00:00.000Z,False,True,False,False,13,Cal Poly,fcs,Big Sky,35,301,San Diego,fcs,Pioneer,38
 401868076,2026,4,regular,2026-09-26T23:00:00.000Z,False,True,False,True,331,Eastern Washington,fcs,Big Sky,27,13,Cal Poly,fcs,Big Sky,31
 401868077,2026,5,regular,2026-10-04T00:00:00.000Z,False,True,False,True,13,Cal Poly,fcs,Big Sky,34,2692,Weber State,fcs,Big Sky,42
-401868078,2026,6,regular,2026-10-10T22:00:00.000Z,False,False,False,True,304,Idaho State,fcs,Big Sky,,13,Cal Poly,fcs,Big Sky,
+401868078,2026,6,regular,2026-10-10T22:00:00.000Z,False,True,False,True,304,Idaho State,fcs,Big Sky,24,13,Cal Poly,fcs,Big Sky,25
 401868079,2026,7,regular,2026-10-18T00:00:00.000Z,False,False,False,True,2458,Northern Colorado,fcs,Big Sky,,13,Cal Poly,fcs,Big Sky,
 401868080,2026,8,regular,2026-10-24T21:00:00.000Z,False,False,False,True,13,Cal Poly,fcs,Big Sky,,3101,Utah Tech,fcs,Big Sky,
 401868081,2026,9,regular,2026-10-31T19:00:00.000Z,False,False,False,True,147,Montana State,fcs,Big Sky,,13,Cal Poly,fcs,Big Sky,
@@ -1105,7 +1105,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401868084,2026,1,regular,2026-08-29T21:00:00.000Z,False,True,False,True,2464,Northern Arizona,fcs,Big Sky,34,331,Eastern Washington,fcs,Big Sky,27
 401868085,2026,1,regular,2026-09-05T23:00:00.000Z,False,True,False,False,331,Eastern Washington,fcs,Big Sky,34,2460,Northern Iowa,fcs,MVFC,24
 401868086,2026,5,regular,2026-10-04T02:30:00.000Z,False,True,False,True,302,UC Davis,fcs,Big Sky,49,331,Eastern Washington,fcs,Big Sky,38
-401868087,2026,6,regular,2026-10-10T23:00:00.000Z,False,False,False,True,331,Eastern Washington,fcs,Big Sky,,2458,Northern Colorado,fcs,Big Sky,
+401868087,2026,6,regular,2026-10-10T23:00:00.000Z,False,True,False,True,331,Eastern Washington,fcs,Big Sky,31,2458,Northern Colorado,fcs,Big Sky,22
 401868088,2026,7,regular,2026-10-17T23:00:00.000Z,False,False,False,True,331,Eastern Washington,fcs,Big Sky,,147,Montana State,fcs,Big Sky,
 401868089,2026,9,regular,2026-10-31T20:00:00.000Z,False,False,False,True,331,Eastern Washington,fcs,Big Sky,,149,Montana,fcs,Big Sky,
 401868090,2026,10,regular,2026-11-07T22:00:00.000Z,False,False,False,True,70,Idaho,fcs,Big Sky,,331,Eastern Washington,fcs,Big Sky,
@@ -1113,7 +1113,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401868092,2026,12,regular,2026-11-21T21:00:00.000Z,False,False,False,True,331,Eastern Washington,fcs,Big Sky,,2502,Portland State,fcs,Big Sky,
 401868093,2026,2,regular,2026-09-12T20:00:00.000Z,False,True,False,False,70,Idaho,fcs,Big Sky,17,2320,Lamar,fcs,Southland,23
 401868094,2026,5,regular,2026-10-03T02:30:00.000Z,False,True,False,True,70,Idaho,fcs,Big Sky,35,147,Montana State,fcs,Big Sky,34
-401868095,2026,6,regular,2026-10-10T19:00:00.000Z,False,False,False,True,2692,Weber State,fcs,Big Sky,,70,Idaho,fcs,Big Sky,
+401868095,2026,6,regular,2026-10-10T19:00:00.000Z,False,True,False,True,2692,Weber State,fcs,Big Sky,38,70,Idaho,fcs,Big Sky,27
 401868096,2026,7,regular,2026-10-17T19:00:00.000Z,False,False,False,True,149,Montana,fcs,Big Sky,,70,Idaho,fcs,Big Sky,
 401868097,2026,8,regular,2026-10-24T21:00:00.000Z,False,False,False,True,70,Idaho,fcs,Big Sky,,253,Southern Utah,fcs,Big Sky,
 401868098,2026,9,regular,2026-10-31T20:00:00.000Z,False,False,False,True,2502,Portland State,fcs,Big Sky,,70,Idaho,fcs,Big Sky,
@@ -1133,7 +1133,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401868112,2026,2,regular,2026-09-12T19:00:00.000Z,False,True,False,True,149,Montana,fcs,Big Sky,35,3101,Utah Tech,fcs,Big Sky,14
 401868113,2026,4,regular,2026-09-27T02:00:00.000Z,False,True,False,True,302,UC Davis,fcs,Big Sky,22,149,Montana,fcs,Big Sky,62
 401868114,2026,5,regular,2026-10-03T20:00:00.000Z,False,True,False,True,149,Montana,fcs,Big Sky,36,2458,Northern Colorado,fcs,Big Sky,14
-401868115,2026,6,regular,2026-10-10T21:00:00.000Z,False,False,False,True,2464,Northern Arizona,fcs,Big Sky,,149,Montana,fcs,Big Sky,
+401868115,2026,6,regular,2026-10-10T21:00:00.000Z,False,True,False,True,2464,Northern Arizona,fcs,Big Sky,49,149,Montana,fcs,Big Sky,44
 401868116,2026,10,regular,2026-11-07T20:00:00.000Z,False,False,False,True,149,Montana,fcs,Big Sky,,2502,Portland State,fcs,Big Sky,
 401868117,2026,12,regular,2026-11-21T19:00:00.000Z,False,False,False,True,147,Montana State,fcs,Big Sky,,149,Montana,fcs,Big Sky,
 401868118,2026,1,regular,2026-08-30T02:00:00.000Z,False,True,False,True,3101,Utah Tech,fcs,Big Sky,0,147,Montana State,fcs,Big Sky,54
@@ -1162,7 +1162,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401868141,2026,2,regular,2026-09-12T22:00:00.000Z,False,True,False,False,2198,Eastern Kentucky,fcs,UAC,22,236,Chattanooga,fcs,Southern,17
 401868142,2026,3,regular,2026-09-19T22:00:00.000Z,False,True,False,False,2198,Eastern Kentucky,fcs,UAC,14,2168,Dayton,fcs,Pioneer,17
 401868143,2026,5,regular,2026-10-03T22:00:00.000Z,False,True,False,True,2198,Eastern Kentucky,fcs,UAC,16,2453,North Alabama,fcs,UAC,20
-401868144,2026,6,regular,2026-10-10T22:00:00.000Z,False,False,False,True,2198,Eastern Kentucky,fcs,UAC,,2698,West Georgia,fcs,UAC,
+401868144,2026,6,regular,2026-10-10T22:00:00.000Z,False,True,False,True,2198,Eastern Kentucky,fcs,UAC,30,2698,West Georgia,fcs,UAC,20
 401868145,2026,7,regular,2026-10-17T18:30:00.000Z,False,False,False,False,2635,Tennessee Tech,fcs,Southern,,2198,Eastern Kentucky,fcs,UAC,
 401868146,2026,8,regular,2026-10-24T19:00:00.000Z,False,False,False,True,2198,Eastern Kentucky,fcs,UAC,,110242,West Florida,fcs,UAC,
 401868147,2026,9,regular,2026-10-31T23:00:00.000Z,False,False,False,True,2627,Tarleton State,fcs,UAC,,2198,Eastern Kentucky,fcs,UAC,
@@ -1173,7 +1173,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401868153,2026,10,regular,2026-11-07T20:00:00.000Z,False,False,False,True,253,Southern Utah,fcs,Big Sky,,2458,Northern Colorado,fcs,Big Sky,
 401868154,2026,1,regular,2026-08-29T19:00:00.000Z,False,True,False,True,2502,Portland State,fcs,Big Sky,24,302,UC Davis,fcs,Big Sky,31
 401868155,2026,4,regular,2026-09-27T00:00:00.000Z,False,True,False,True,2692,Weber State,fcs,Big Sky,41,2502,Portland State,fcs,Big Sky,44
-401868156,2026,6,regular,2026-10-10T20:00:00.000Z,False,False,False,True,2502,Portland State,fcs,Big Sky,,3101,Utah Tech,fcs,Big Sky,
+401868156,2026,6,regular,2026-10-10T20:00:00.000Z,False,True,False,True,2502,Portland State,fcs,Big Sky,30,3101,Utah Tech,fcs,Big Sky,14
 401868157,2026,11,regular,2026-11-14T03:00:00.000Z,False,False,False,True,2502,Portland State,fcs,Big Sky,,253,Southern Utah,fcs,Big Sky,
 401868158,2026,1,regular,2026-09-06T00:00:00.000Z,False,True,False,True,253,Southern Utah,fcs,Big Sky,47,2692,Weber State,fcs,Big Sky,42
 401868159,2026,3,regular,2026-09-19T18:00:00.000Z,False,True,False,False,2900,St. Thomas (MN),fcs,Pioneer,28,253,Southern Utah,fcs,Big Sky,26
@@ -1196,7 +1196,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401868177,2026,11,regular,2026-11-14T19:00:00.000Z,False,False,False,True,2127,Charleston Southern,fcs,OVC,,2546,Southeast Missouri State,fcs,OVC,
 401868178,2026,12,regular,2026-11-21T18:00:00.000Z,False,False,False,True,2197,Eastern Illinois,fcs,OVC,,2127,Charleston Southern,fcs,OVC,
 401868179,2026,4,regular,2026-09-26T23:00:00.000Z,False,True,False,False,2571,South Dakota State,fcs,MVFC,42,2197,Eastern Illinois,fcs,OVC,7
-401868180,2026,6,regular,2026-10-10T19:30:00.000Z,False,False,False,True,2241,Gardner-Webb,fcs,OVC,,2197,Eastern Illinois,fcs,OVC,
+401868180,2026,6,regular,2026-10-10T19:30:00.000Z,False,True,False,True,2241,Gardner-Webb,fcs,OVC,7,2197,Eastern Illinois,fcs,OVC,21
 401868181,2026,7,regular,2026-10-17T19:00:00.000Z,False,False,False,True,2197,Eastern Illinois,fcs,OVC,,2815,Lindenwood,fcs,OVC,
 401868182,2026,8,regular,2026-10-24T19:00:00.000Z,False,False,False,True,2197,Eastern Illinois,fcs,OVC,,2546,Southeast Missouri State,fcs,OVC,
 401868183,2026,9,regular,2026-10-31T19:00:00.000Z,False,False,False,True,2630,UT Martin,fcs,OVC,,2197,Eastern Illinois,fcs,OVC,
@@ -1214,7 +1214,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401868195,2026,2,regular,2026-09-12T23:00:00.000Z,False,True,False,False,2010,Alabama A&M,fcs,SWAC,30,2634,Tennessee State,fcs,OVC,3
 401868196,2026,3,regular,2026-09-19T23:00:00.000Z,False,True,False,False,50,Florida A&M,fcs,SWAC,26,2634,Tennessee State,fcs,OVC,29
 401868197,2026,5,regular,2026-10-03T20:00:00.000Z,False,True,False,True,2710,Western Illinois,fcs,OVC,28,2634,Tennessee State,fcs,OVC,21
-401868198,2026,6,regular,2026-10-10T19:30:00.000Z,False,False,False,True,2634,Tennessee State,fcs,OVC,,2630,UT Martin,fcs,OVC,
+401868198,2026,6,regular,2026-10-10T19:30:00.000Z,False,True,False,True,2634,Tennessee State,fcs,OVC,28,2630,UT Martin,fcs,OVC,42
 401868199,2026,9,regular,2026-10-31T18:00:00.000Z,False,False,False,True,2815,Lindenwood,fcs,OVC,,2634,Tennessee State,fcs,OVC,
 401868200,2026,10,regular,2026-11-07T20:30:00.000Z,False,False,False,True,2634,Tennessee State,fcs,OVC,,2546,Southeast Missouri State,fcs,OVC,
 401868201,2026,8,regular,2026-10-24T20:00:00.000Z,False,False,False,True,2710,Western Illinois,fcs,OVC,,2630,UT Martin,fcs,OVC,
@@ -1228,7 +1228,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401868209,2026,1,regular,2026-08-29T17:00:00.000Z,False,True,False,False,2086,Butler,fcs,Pioneer,27,2245,Georgetown College Kentucky,,,23
 401868210,2026,2,regular,2026-09-12T22:00:00.000Z,False,True,False,False,2086,Butler,fcs,Pioneer,52,2233,Franklin,iii,Heartland,0
 401868211,2026,4,regular,2026-09-26T18:00:00.000Z,False,True,False,True,2674,Valparaiso,fcs,Pioneer,28,2086,Butler,fcs,Pioneer,33
-401868212,2026,6,regular,2026-10-10T17:00:00.000Z,False,False,False,True,2086,Butler,fcs,Pioneer,,301,San Diego,fcs,Pioneer,
+401868212,2026,6,regular,2026-10-10T17:00:00.000Z,False,True,False,True,2086,Butler,fcs,Pioneer,41,301,San Diego,fcs,Pioneer,10
 401868213,2026,7,regular,2026-10-17T17:00:00.000Z,False,False,False,True,2086,Butler,fcs,Pioneer,,2168,Dayton,fcs,Pioneer,
 401868214,2026,8,regular,2026-10-24T17:00:00.000Z,False,False,False,True,2181,Drake,fcs,Pioneer,,2086,Butler,fcs,Pioneer,
 401868215,2026,9,regular,2026-10-31T17:00:00.000Z,False,False,False,True,2506,Presbyterian,fcs,Pioneer,,2086,Butler,fcs,Pioneer,
@@ -1237,7 +1237,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401868218,2026,12,regular,2026-11-21T18:00:00.000Z,False,False,False,True,2086,Butler,fcs,Pioneer,,2413,Morehead State,fcs,Pioneer,
 401868219,2026,4,regular,2026-09-26T17:00:00.000Z,False,True,False,True,2166,Davidson,fcs,Pioneer,32,2181,Drake,fcs,Pioneer,51
 401868220,2026,5,regular,2026-10-03T20:00:00.000Z,False,True,False,True,301,San Diego,fcs,Pioneer,63,2166,Davidson,fcs,Pioneer,14
-401868221,2026,6,regular,2026-10-10T16:00:00.000Z,False,False,False,True,2506,Presbyterian,fcs,Pioneer,,2166,Davidson,fcs,Pioneer,
+401868221,2026,6,regular,2026-10-10T16:00:00.000Z,False,True,False,True,2506,Presbyterian,fcs,Pioneer,38,2166,Davidson,fcs,Pioneer,21
 401868222,2026,7,regular,2026-10-17T17:00:00.000Z,False,False,False,True,2166,Davidson,fcs,Pioneer,,2413,Morehead State,fcs,Pioneer,
 401868223,2026,9,regular,2026-10-31T18:00:00.000Z,False,False,False,True,2900,St. Thomas (MN),fcs,Pioneer,,2166,Davidson,fcs,Pioneer,
 401868224,2026,10,regular,2026-11-07T18:00:00.000Z,False,False,False,True,2166,Davidson,fcs,Pioneer,,56,Stetson,fcs,Pioneer,
@@ -1245,7 +1245,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401868226,2026,12,regular,2026-11-21T18:00:00.000Z,False,False,False,True,2166,Davidson,fcs,Pioneer,,2368,Marist,fcs,Pioneer,
 401868227,2026,2,regular,2026-09-12T16:00:00.000Z,False,True,False,False,2168,Dayton,fcs,Pioneer,30,2646,Thomas More,ii,Great Midwest Athletic,7
 401868228,2026,5,regular,2026-10-03T17:00:00.000Z,False,True,False,True,2181,Drake,fcs,Pioneer,30,2168,Dayton,fcs,Pioneer,22
-401868229,2026,6,regular,2026-10-10T16:00:00.000Z,False,False,False,True,2168,Dayton,fcs,Pioneer,,2413,Morehead State,fcs,Pioneer,
+401868229,2026,6,regular,2026-10-10T16:00:00.000Z,False,True,False,True,2168,Dayton,fcs,Pioneer,56,2413,Morehead State,fcs,Pioneer,28
 401868230,2026,8,regular,2026-10-24T16:00:00.000Z,False,False,False,True,2168,Dayton,fcs,Pioneer,,301,San Diego,fcs,Pioneer,
 401868231,2026,9,regular,2026-10-31T17:00:00.000Z,False,False,False,True,56,Stetson,fcs,Pioneer,,2168,Dayton,fcs,Pioneer,
 401868232,2026,10,regular,2026-11-07T17:00:00.000Z,False,False,False,True,2168,Dayton,fcs,Pioneer,,2674,Valparaiso,fcs,Pioneer,
@@ -1265,14 +1265,14 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401868246,2026,2,regular,2026-09-12T23:00:00.000Z,False,True,False,True,2447,Nicholls,fcs,Southland,31,292,UT Rio Grande Valley,fcs,Southland,28
 401868247,2026,3,regular,2026-09-20T00:00:00.000Z,False,True,False,True,292,UT Rio Grande Valley,fcs,Southland,27,2377,McNeese,fcs,Southland,10
 401868248,2026,5,regular,2026-10-03T23:00:00.000Z,False,True,False,True,2837,East Texas A&M,fcs,Southland,20,292,UT Rio Grande Valley,fcs,Southland,17
-401868249,2026,6,regular,2026-10-11T00:00:00.000Z,False,False,False,True,292,UT Rio Grande Valley,fcs,Southland,,2545,SE Louisiana,fcs,Southland,
+401868249,2026,6,regular,2026-10-11T00:00:00.000Z,False,True,False,True,292,UT Rio Grande Valley,fcs,Southland,13,2545,SE Louisiana,fcs,Southland,3
 401868250,2026,7,regular,2026-10-17T23:00:00.000Z,False,False,False,True,2916,Incarnate Word,fcs,Southland,,292,UT Rio Grande Valley,fcs,Southland,
 401868251,2026,9,regular,2026-11-01T00:00:00.000Z,False,False,False,True,292,UT Rio Grande Valley,fcs,Southland,,2320,Lamar,fcs,Southland,
 401868252,2026,10,regular,2026-11-07T19:00:00.000Z,False,False,False,True,2466,Northwestern State,fcs,Southland,,292,UT Rio Grande Valley,fcs,Southland,
 401868253,2026,12,regular,2026-11-21T18:00:00.000Z,False,False,False,True,2506,Presbyterian,fcs,Pioneer,,2168,Dayton,fcs,Pioneer,
 401868254,2026,1,regular,2026-08-27T23:30:00.000Z,False,True,False,False,2181,Drake,fcs,Pioneer,35,613,South Dakota Mines,ii,Rocky Mountain,38
 401868255,2026,2,regular,2026-09-12T18:00:00.000Z,False,True,False,False,2460,Northern Iowa,fcs,MVFC,56,2181,Drake,fcs,Pioneer,14
-401868256,2026,6,regular,2026-10-10T18:00:00.000Z,False,False,False,True,2674,Valparaiso,fcs,Pioneer,,2181,Drake,fcs,Pioneer,
+401868256,2026,6,regular,2026-10-10T18:00:00.000Z,False,True,False,True,2674,Valparaiso,fcs,Pioneer,21,2181,Drake,fcs,Pioneer,13
 401868257,2026,7,regular,2026-10-17T17:00:00.000Z,False,False,False,True,2181,Drake,fcs,Pioneer,,2368,Marist,fcs,Pioneer,
 401868258,2026,9,regular,2026-10-31T17:00:00.000Z,False,False,False,True,2413,Morehead State,fcs,Pioneer,,2181,Drake,fcs,Pioneer,
 401868259,2026,10,regular,2026-11-07T18:00:00.000Z,False,False,False,True,2181,Drake,fcs,Pioneer,,301,San Diego,fcs,Pioneer,
@@ -1298,7 +1298,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401868279,2026,1,regular,2026-08-27T23:00:00.000Z,False,True,False,False,2900,St. Thomas (MN),fcs,Pioneer,15,2851,Winona State,ii,Northern Sun,9
 401868280,2026,2,regular,2026-09-12T18:00:00.000Z,False,True,False,False,2900,St. Thomas (MN),fcs,Pioneer,56,128,Northern Michigan,ii,GLIAC,14
 401868281,2026,4,regular,2026-09-26T18:00:00.000Z,False,True,False,True,2900,St. Thomas (MN),fcs,Pioneer,50,301,San Diego,fcs,Pioneer,17
-401868282,2026,6,regular,2026-10-10T18:00:00.000Z,False,False,False,True,2900,St. Thomas (MN),fcs,Pioneer,,56,Stetson,fcs,Pioneer,
+401868282,2026,6,regular,2026-10-10T18:00:00.000Z,False,True,False,True,2900,St. Thomas (MN),fcs,Pioneer,64,56,Stetson,fcs,Pioneer,21
 401868283,2026,12,regular,2026-11-21T19:00:00.000Z,False,False,False,True,2674,Valparaiso,fcs,Pioneer,,2900,St. Thomas (MN),fcs,Pioneer,
 401868284,2026,1,regular,2026-09-05T15:00:00.000Z,False,True,False,False,56,Stetson,fcs,Pioneer,45,2691,Webber International,,,10
 401868285,2026,2,regular,2026-09-12T20:00:00.000Z,False,True,False,False,2065,Bethune-Cookman,fcs,SWAC,43,56,Stetson,fcs,Pioneer,18
@@ -1313,7 +1313,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401868297,2026,1,regular,2026-09-05T23:00:00.000Z,False,True,False,False,2010,Alabama A&M,fcs,SWAC,38,2396,Miles,ii,SIAC,23
 401868298,2026,3,regular,2026-09-19T23:00:00.000Z,False,True,False,False,2010,Alabama A&M,fcs,SWAC,45,2075,Bowie State,ii,CIAA,3
 401868299,2026,4,regular,2026-09-26T23:00:00.000Z,False,True,False,True,50,Florida A&M,fcs,SWAC,21,2010,Alabama A&M,fcs,SWAC,40
-401868300,2026,6,regular,2026-10-10T17:00:00.000Z,False,False,False,True,2010,Alabama A&M,fcs,SWAC,,2065,Bethune-Cookman,fcs,SWAC,
+401868300,2026,6,regular,2026-10-10T17:00:00.000Z,False,True,False,True,2010,Alabama A&M,fcs,SWAC,55,2065,Bethune-Cookman,fcs,SWAC,17
 401868301,2026,7,regular,2026-10-17T19:00:00.000Z,False,False,False,True,2010,Alabama A&M,fcs,SWAC,,2755,Grambling,fcs,SWAC,
 401868302,2026,10,regular,2026-11-07T20:00:00.000Z,False,False,False,True,2504,Prairie View A&M,fcs,SWAC,,2010,Alabama A&M,fcs,SWAC,
 401868303,2026,11,regular,2026-11-14T20:00:00.000Z,False,False,False,True,2010,Alabama A&M,fcs,SWAC,,2640,Texas Southern,fcs,SWAC,
@@ -1350,14 +1350,14 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401868337,2026,3,regular,2026-09-19T22:00:00.000Z,False,True,False,True,236,Chattanooga,fcs,Southern,41,2747,Wofford,fcs,Southern,7
 401868338,2026,4,regular,2026-09-26T18:00:00.000Z,False,True,False,True,2643,The Citadel,fcs,Southern,8,236,Chattanooga,fcs,Southern,27
 401868339,2026,5,regular,2026-10-03T19:30:00.000Z,False,True,False,True,2193,East Tennessee State,fcs,Southern,14,236,Chattanooga,fcs,Southern,3
-401868340,2026,6,regular,2026-10-10T17:00:00.000Z,False,False,False,True,236,Chattanooga,fcs,Southern,,2535,Samford,fcs,Southern,
+401868340,2026,6,regular,2026-10-10T17:00:00.000Z,False,True,False,True,236,Chattanooga,fcs,Southern,19,2535,Samford,fcs,Southern,3
 401868341,2026,8,regular,2026-10-24T18:30:00.000Z,False,False,False,True,2717,Western Carolina,fcs,Southern,,236,Chattanooga,fcs,Southern,
 401868342,2026,9,regular,2026-10-31T17:00:00.000Z,False,False,False,True,236,Chattanooga,fcs,Southern,,2678,VMI,fcs,Southern,
 401868343,2026,10,regular,2026-11-07T18:00:00.000Z,False,False,False,True,236,Chattanooga,fcs,Southern,,2382,Mercer,fcs,Southern,
 401868344,2026,11,regular,2026-11-14T18:00:00.000Z,False,False,False,True,231,Furman,fcs,Southern,,236,Chattanooga,fcs,Southern,
 401868345,2026,1,regular,2026-09-05T21:30:00.000Z,False,True,False,False,2193,East Tennessee State,fcs,Southern,48,2839,Tusculum,ii,South Atlantic,14
 401868346,2026,4,regular,2026-09-26T19:30:00.000Z,False,True,False,True,2193,East Tennessee State,fcs,Southern,58,2717,Western Carolina,fcs,Southern,31
-401868347,2026,6,regular,2026-10-10T16:00:00.000Z,False,False,False,True,2643,The Citadel,fcs,Southern,,2193,East Tennessee State,fcs,Southern,
+401868347,2026,6,regular,2026-10-10T16:00:00.000Z,False,True,False,True,2643,The Citadel,fcs,Southern,16,2193,East Tennessee State,fcs,Southern,34
 401868348,2026,8,regular,2026-10-24T17:30:00.000Z,False,False,False,True,2678,VMI,fcs,Southern,,2193,East Tennessee State,fcs,Southern,
 401868349,2026,9,regular,2026-10-31T19:30:00.000Z,False,False,False,True,2193,East Tennessee State,fcs,Southern,,2635,Tennessee Tech,fcs,Southern,
 401868350,2026,10,regular,2026-11-07T18:00:00.000Z,False,False,False,True,2193,East Tennessee State,fcs,Southern,,2535,Samford,fcs,Southern,
@@ -1369,7 +1369,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401868356,2026,1,regular,2026-09-05T21:00:00.000Z,False,True,False,False,2572,Southern Miss,fbs,Sun Belt,49,2016,Alcorn State,fcs,SWAC,3
 401868358,2026,4,regular,2026-09-26T20:00:00.000Z,False,True,False,True,2016,Alcorn State,fcs,SWAC,43,2640,Texas Southern,fcs,SWAC,40
 401868359,2026,5,regular,2026-10-03T19:00:00.000Z,False,True,False,True,2755,Grambling,fcs,SWAC,63,2016,Alcorn State,fcs,SWAC,59
-401868360,2026,6,regular,2026-10-10T19:00:00.000Z,False,False,False,False,2016,Alcorn State,fcs,SWAC,,124386,Arkansas Baptist,,,
+401868360,2026,6,regular,2026-10-10T19:00:00.000Z,False,True,False,False,2016,Alcorn State,fcs,SWAC,63,124386,Arkansas Baptist,,,7
 401868361,2026,7,regular,2026-10-17T19:00:00.000Z,False,False,False,True,2504,Prairie View A&M,fcs,SWAC,,2016,Alcorn State,fcs,SWAC,
 401868362,2026,9,regular,2026-10-31T19:00:00.000Z,False,False,False,True,2400,Mississippi Valley State,fcs,SWAC,,2016,Alcorn State,fcs,SWAC,
 401868363,2026,10,regular,2026-11-07T20:00:00.000Z,False,False,False,True,2016,Alcorn State,fcs,SWAC,,50,Florida A&M,fcs,SWAC,
@@ -1378,13 +1378,13 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401868373,2026,1,regular,2026-08-27T23:00:00.000Z,False,True,False,False,231,Furman,fcs,Southern,20,129469,Anderson (SC),ii,South Atlantic,3
 401868374,2026,2,regular,2026-09-12T22:00:00.000Z,False,True,False,True,2382,Mercer,fcs,Southern,13,231,Furman,fcs,Southern,20
 401868375,2026,5,regular,2026-10-03T18:00:00.000Z,False,True,False,True,231,Furman,fcs,Southern,25,2747,Wofford,fcs,Southern,32
-401868376,2026,6,regular,2026-10-10T19:30:00.000Z,False,False,False,True,2635,Tennessee Tech,fcs,Southern,,231,Furman,fcs,Southern,
+401868376,2026,6,regular,2026-10-10T19:30:00.000Z,False,True,False,True,2635,Tennessee Tech,fcs,Southern,20,231,Furman,fcs,Southern,15
 401868377,2026,8,regular,2026-10-24T18:00:00.000Z,False,False,False,True,231,Furman,fcs,Southern,,2535,Samford,fcs,Southern,
 401868378,2026,9,regular,2026-10-31T18:00:00.000Z,False,False,False,True,231,Furman,fcs,Southern,,2717,Western Carolina,fcs,Southern,
 401868379,2026,10,regular,2026-11-07T19:00:00.000Z,False,False,False,True,2643,The Citadel,fcs,Southern,,231,Furman,fcs,Southern,
 401868380,2026,12,regular,2026-11-21T17:00:00.000Z,False,False,False,True,2678,VMI,fcs,Southern,,231,Furman,fcs,Southern,
 401868381,2026,5,regular,2026-10-03T17:30:00.000Z,False,True,False,True,2678,VMI,fcs,Southern,3,2382,Mercer,fcs,Southern,54
-401868382,2026,6,regular,2026-10-10T19:00:00.000Z,False,False,False,True,2382,Mercer,fcs,Southern,,2717,Western Carolina,fcs,Southern,
+401868382,2026,6,regular,2026-10-10T19:00:00.000Z,False,True,False,True,2382,Mercer,fcs,Southern,17,2717,Western Carolina,fcs,Southern,14
 401868383,2026,7,regular,2026-10-17T23:00:00.000Z,False,False,False,True,2535,Samford,fcs,Southern,,2382,Mercer,fcs,Southern,
 401868384,2026,9,regular,2026-10-31T19:00:00.000Z,False,False,False,True,2382,Mercer,fcs,Southern,,2643,The Citadel,fcs,Southern,
 401868385,2026,11,regular,2026-11-14T19:30:00.000Z,False,False,False,True,2635,Tennessee Tech,fcs,Southern,,2382,Mercer,fcs,Southern,
@@ -1424,7 +1424,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401868952,2026,1,regular,2026-08-29T23:00:00.000Z,False,True,False,False,2755,Grambling,fcs,SWAC,49,2805,Clark Atlanta,ii,SIAC,7
 401868953,2026,1,regular,2026-09-05T23:00:00.000Z,False,True,False,False,2755,Grambling,fcs,SWAC,48,2119,Central State,ii,SIAC,26
 401868954,2026,4,regular,2026-09-26T23:00:00.000Z,False,True,True,True,2755,Grambling,fcs,SWAC,14,2504,Prairie View A&M,fcs,SWAC,21
-401868955,2026,6,regular,2026-10-10T21:00:00.000Z,False,False,False,True,2755,Grambling,fcs,SWAC,,2296,Jackson State,fcs,SWAC,
+401868955,2026,6,regular,2026-10-10T21:00:00.000Z,False,True,False,True,2755,Grambling,fcs,SWAC,45,2296,Jackson State,fcs,SWAC,38
 401868956,2026,9,regular,2026-11-01T00:30:00.000Z,False,False,False,True,2640,Texas Southern,fcs,SWAC,,2755,Grambling,fcs,SWAC,
 401868957,2026,13,regular,2026-11-28T19:00:00.000Z,False,False,True,True,2582,Southern,fcs,SWAC,,2755,Grambling,fcs,SWAC,
 401868958,2026,1,regular,2026-09-05T23:00:00.000Z,False,True,False,False,2296,Jackson State,fcs,SWAC,66,2206,Edward Waters,ii,SIAC,14
@@ -1435,9 +1435,9 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401868963,2026,2,regular,2026-09-12T20:00:00.000Z,False,True,True,False,2400,Mississippi Valley State,fcs,SWAC,31,2339,Lincoln (PA),ii,CIAA,20
 401868964,2026,3,regular,2026-09-19T23:00:00.000Z,False,True,False,False,2400,Mississippi Valley State,fcs,SWAC,6,2170,Delta State,ii,Gulf South,21
 401868965,2026,5,regular,2026-10-03T19:00:00.000Z,False,True,False,True,2400,Mississippi Valley State,fcs,SWAC,28,2504,Prairie View A&M,fcs,SWAC,27
-401868966,2026,6,regular,2026-10-10T19:00:00.000Z,False,False,False,True,2640,Texas Southern,fcs,SWAC,,2400,Mississippi Valley State,fcs,SWAC,
+401868966,2026,6,regular,2026-10-10T19:00:00.000Z,False,True,False,True,2640,Texas Southern,fcs,SWAC,34,2400,Mississippi Valley State,fcs,SWAC,38
 401868967,2026,1,regular,2026-09-06T16:00:00.000Z,False,True,False,True,2504,Prairie View A&M,fcs,SWAC,52,2640,Texas Southern,fcs,SWAC,14
-401868968,2026,6,regular,2026-10-10T20:00:00.000Z,False,False,False,True,2504,Prairie View A&M,fcs,SWAC,,2582,Southern,fcs,SWAC,
+401868968,2026,6,regular,2026-10-10T20:00:00.000Z,False,True,False,True,2504,Prairie View A&M,fcs,SWAC,14,2582,Southern,fcs,SWAC,28
 401868969,2026,8,regular,2026-10-24T23:00:00.000Z,False,False,False,False,2837,East Texas A&M,fcs,Southland,,2504,Prairie View A&M,fcs,SWAC,
 401868970,2026,1,regular,2026-09-05T23:00:00.000Z,False,True,False,False,2582,Southern,fcs,SWAC,34,2310,Kentucky State,ii,SIAC,15
 401868971,2026,3,regular,2026-09-19T23:00:00.000Z,False,True,False,False,2582,Southern,fcs,SWAC,50,2347,Louisiana Christian,,,31
@@ -1459,7 +1459,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401869141,2026,12,regular,2026-11-22T00:00:00.000Z,False,False,False,True,2377,McNeese,fcs,Southland,,2320,Lamar,fcs,Southland,
 401869142,2026,1,regular,2026-09-06T00:00:00.000Z,False,True,False,False,309,Louisiana,fbs,Sun Belt,38,2320,Lamar,fcs,Southland,7
 401869143,2026,4,regular,2026-09-26T20:00:00.000Z,False,True,False,True,2447,Nicholls,fcs,Southland,18,2320,Lamar,fcs,Southland,49
-401869144,2026,6,regular,2026-10-10T20:00:00.000Z,False,False,False,True,2320,Lamar,fcs,Southland,,2916,Incarnate Word,fcs,Southland,
+401869144,2026,6,regular,2026-10-10T20:00:00.000Z,False,True,False,True,2320,Lamar,fcs,Southland,38,2916,Incarnate Word,fcs,Southland,35
 401869145,2026,8,regular,2026-10-24T20:00:00.000Z,False,False,False,True,2320,Lamar,fcs,Southland,,2277,Houston Christian,fcs,Southland,
 401869146,2026,11,regular,2026-11-14T21:00:00.000Z,False,False,False,True,2320,Lamar,fcs,Southland,,2837,East Texas A&M,fcs,Southland,
 401869147,2026,3,regular,2026-09-19T23:00:00.000Z,False,True,False,True,2916,Incarnate Word,fcs,Southland,30,2277,Houston Christian,fcs,Southland,23
@@ -1473,7 +1473,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401869155,2026,11,regular,2026-11-14T17:00:00.000Z,False,False,False,True,2184,Duquesne,fcs,NEC,,2385,Mercyhurst,fcs,NEC,
 401869156,2026,1,regular,2026-08-29T17:00:00.000Z,False,True,False,False,2130,Chicago State,fcs,FCS Independents,28,127991,Roosevelt,ii,GLIAC,44
 401869842,2026,5,regular,2026-10-03T23:30:00.000Z,False,True,False,False,2348,Louisiana Tech,fbs,Sun Belt,31,349,Army,fbs,American Athletic,29
-401869843,2026,6,regular,2026-10-10T17:00:00.000Z,False,False,False,True,2026,App State,fbs,Sun Belt,,295,Old Dominion,fbs,Sun Belt,
+401869843,2026,6,regular,2026-10-10T17:00:00.000Z,False,True,False,True,2026,App State,fbs,Sun Belt,3,295,Old Dominion,fbs,Sun Belt,10
 401869844,2026,7,regular,2026-10-17T00:00:00.000Z,False,False,False,True,324,Coastal Carolina,fbs,Sun Belt,,2026,App State,fbs,Sun Belt,
 401869845,2026,8,regular,2026-10-22T23:00:00.000Z,False,False,False,True,2026,App State,fbs,Sun Belt,,256,James Madison,fbs,Sun Belt,
 401869846,2026,9,regular,2026-10-31T04:00:00.000Z,True,False,False,True,290,Georgia Southern,fbs,Sun Belt,,2026,App State,fbs,Sun Belt,
@@ -1493,13 +1493,13 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401869940,2026,3,regular,2026-09-19T15:30:00.000Z,False,True,False,False,48,Delaware,fbs,Conference USA,22,324,Coastal Carolina,fbs,Sun Belt,14
 401869941,2026,4,regular,2026-09-24T23:30:00.000Z,False,True,False,False,324,Coastal Carolina,fbs,Sun Belt,17,2335,Liberty,fbs,Conference USA,34
 401869942,2026,5,regular,2026-10-03T23:00:00.000Z,False,True,False,True,324,Coastal Carolina,fbs,Sun Belt,24,290,Georgia Southern,fbs,Sun Belt,31
-401869943,2026,6,regular,2026-10-10T23:00:00.000Z,False,False,False,True,276,Marshall,fbs,Sun Belt,,324,Coastal Carolina,fbs,Sun Belt,
+401869943,2026,6,regular,2026-10-10T23:00:00.000Z,False,True,False,True,276,Marshall,fbs,Sun Belt,21,324,Coastal Carolina,fbs,Sun Belt,27
 401869944,2026,9,regular,2026-10-31T04:00:00.000Z,True,False,False,True,2247,Georgia State,fbs,Sun Belt,,324,Coastal Carolina,fbs,Sun Belt,
 401869945,2026,10,regular,2026-11-07T05:00:00.000Z,True,False,False,True,324,Coastal Carolina,fbs,Sun Belt,,295,Old Dominion,fbs,Sun Belt,
 401869946,2026,12,regular,2026-11-21T05:00:00.000Z,True,False,False,True,309,Louisiana,fbs,Sun Belt,,324,Coastal Carolina,fbs,Sun Belt,
 401869947,2026,13,regular,2026-11-28T05:00:00.000Z,True,False,False,True,256,James Madison,fbs,Sun Belt,,324,Coastal Carolina,fbs,Sun Belt,
 401869948,2026,3,regular,2026-09-19T23:00:00.000Z,False,True,False,False,55,Jacksonville State,fbs,Conference USA,31,290,Georgia Southern,fbs,Sun Belt,27
-401869949,2026,6,regular,2026-10-10T23:30:00.000Z,False,False,False,True,290,Georgia Southern,fbs,Sun Belt,,256,James Madison,fbs,Sun Belt,
+401869949,2026,6,regular,2026-10-10T23:30:00.000Z,False,True,False,True,290,Georgia Southern,fbs,Sun Belt,24,256,James Madison,fbs,Sun Belt,27
 401869950,2026,7,regular,2026-10-15T23:30:00.000Z,False,False,False,True,295,Old Dominion,fbs,Sun Belt,,290,Georgia Southern,fbs,Sun Belt,
 401869951,2026,10,regular,2026-11-07T05:00:00.000Z,True,False,False,True,290,Georgia Southern,fbs,Sun Belt,,276,Marshall,fbs,Sun Belt,
 401869952,2026,11,regular,2026-11-14T05:00:00.000Z,True,False,False,True,2247,Georgia State,fbs,Sun Belt,,290,Georgia Southern,fbs,Sun Belt,
@@ -1515,7 +1515,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401869962,2026,5,regular,2026-10-03T19:45:00.000Z,False,True,False,True,256,James Madison,fbs,Sun Belt,45,276,Marshall,fbs,Sun Belt,17
 401869963,2026,9,regular,2026-10-29T23:30:00.000Z,False,False,False,True,256,James Madison,fbs,Sun Belt,,2653,Troy,fbs,Sun Belt,
 401869964,2026,10,regular,2026-11-06T01:00:00.000Z,False,False,False,True,2572,Southern Miss,fbs,Sun Belt,,256,James Madison,fbs,Sun Belt,
-401869965,2026,6,regular,2026-10-10T23:30:00.000Z,False,False,False,True,2348,Louisiana Tech,fbs,Sun Belt,,309,Louisiana,fbs,Sun Belt,
+401869965,2026,6,regular,2026-10-10T23:30:00.000Z,False,True,False,True,2348,Louisiana Tech,fbs,Sun Belt,32,309,Louisiana,fbs,Sun Belt,31
 401869966,2026,7,regular,2026-10-17T21:00:00.000Z,False,False,False,True,309,Louisiana,fbs,Sun Belt,,2653,Troy,fbs,Sun Belt,
 401869967,2026,8,regular,2026-10-24T04:00:00.000Z,True,False,False,True,2572,Southern Miss,fbs,Sun Belt,,309,Louisiana,fbs,Sun Belt,
 401869968,2026,10,regular,2026-11-07T05:00:00.000Z,True,False,False,True,309,Louisiana,fbs,Sun Belt,,6,South Alabama,fbs,Sun Belt,
@@ -1588,7 +1588,7 @@ id,season,week,seasonType,startDate,startTimeTBD,completed,neutralSite,conferenc
 401871102,2026,13,regular,2026-11-28T05:00:00.000Z,True,False,False,True,2433,UL Monroe,fbs,Sun Belt,,276,Marshall,fbs,Sun Belt,
 401871103,2026,13,regular,2026-11-28T05:00:00.000Z,True,False,False,True,295,Old Dominion,fbs,Sun Belt,,2572,Southern Miss,fbs,Sun Belt,
 401871472,2026,4,regular,2026-09-26T23:00:00.000Z,False,True,False,False,2546,Southeast Missouri State,fcs,OVC,17,110242,West Florida,fcs,UAC,20
-401871473,2026,6,regular,2026-10-10T18:00:00.000Z,False,False,False,True,2815,Lindenwood,fcs,OVC,,2546,Southeast Missouri State,fcs,OVC,
+401871473,2026,6,regular,2026-10-10T18:00:00.000Z,False,True,False,True,2815,Lindenwood,fcs,OVC,27,2546,Southeast Missouri State,fcs,OVC,38
 401872615,2026,1,regular,2026-08-29T23:00:00.000Z,False,True,False,False,2571,South Dakota State,fcs,MVFC,70,56,Stetson,fcs,Pioneer,7
 401872616,2026,2,regular,2026-09-12T23:00:00.000Z,False,True,False,False,2571,South Dakota State,fcs,MVFC,57,2441,New Haven,fcs,NEC,14
 401872617,2026,10,regular,2026-11-07T19:00:00.000Z,False,False,False,True,2460,Northern Iowa,fcs,MVFC,,2571,South Dakota State,fcs,MVFC,
