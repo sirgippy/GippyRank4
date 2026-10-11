@@ -12,6 +12,7 @@ from gippyrank.data.massey import (
 from gippyrank.data.massey_prebowl import (
     APPROVED_PHASE_EXCEPTIONS,
     PreBowlWindow,
+    audit_target_rank_support,
     fcs_rows_match,
     import_raw_export,
     latest_cmp_date_in_window,
@@ -132,6 +133,37 @@ def test_2020_phase_exception_requires_exact_approval_and_snapshot_date() -> Non
     assert not snapshot_date_is_accepted(2020, snapshot_date, window)
     assert not snapshot_date_is_accepted(2020, snapshot_date, window, "approved")
     assert not snapshot_date_is_accepted(2021, snapshot_date, window, approval)
+
+
+def test_target_support_audit_reports_mass_without_changing_the_pmf() -> None:
+    row: dict[str, object] = {
+        "season": 2007,
+        "subdivision": "fbs",
+        "team_id": "70",
+        "team_name": "Idaho",
+        "team_population": 119,
+        "usable_systems": 114,
+        "pmf": '[{"rank":119,"count":69,"probability":0.6052631579},'
+        '{"rank":120,"count":45,"probability":0.3947368421}]',
+    }
+    original_pmf = row["pmf"]
+
+    anomalies = audit_target_rank_support([row])
+
+    assert anomalies == [
+        {
+            "season": 2007,
+            "subdivision": "fbs",
+            "team_id": "70",
+            "team_name": "Idaho",
+            "team_population": 119,
+            "usable_systems": 114,
+            "out_of_support_ranks": "[120]",
+            "out_of_support_observations": 45,
+            "out_of_support_probability_mass": pytest.approx(0.3947368421),
+        }
+    ]
+    assert row["pmf"] == original_pmf
 
 
 def test_raw_export_import_preserves_bytes_and_records_verified_provenance(

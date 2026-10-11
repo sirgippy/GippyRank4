@@ -618,8 +618,10 @@
       "status": "available"
     }
   ],
+  "collection_status": "complete",
   "coverage_threshold": 0.9,
-  "created_at": "2026-10-11T13:05:25.680492+00:00",
+  "created_at": "2026-10-11T18:40:27.866267+00:00",
+  "downstream_ready": false,
   "fcs_source": {
     "carried_rows": 102694,
     "ordered_fcs_rows_unchanged": true,
@@ -867,8 +869,9 @@
     "No final-season FBS observation is substituted for a missing pre-bowl snapshot.",
     "FCS rows are copied from the existing final-observation corpus without field changes.",
     "Only same-date constituent system observations are retained for each snapshot.",
-    "A non-complete status must not be used for downstream fitting without an approved exception decision.",
-    "The 2020-12-21 snapshot is included under the user's explicit approval despite overlap with the first bowl date."
+    "An incomplete collection is not ready for downstream fitting; approved phase exceptions do not change target-support audit results.",
+    "The 2020-12-21 snapshot is included under the user's explicit approval despite overlap with the first bowl date.",
+    "Collection completeness is separate from downstream readiness. Out-of-support target mass is preserved and reported, and blocks downstream readiness until the population inconsistency is resolved."
   ],
   "required_fbs_seasons": [
     2003,
@@ -896,6 +899,13 @@
     2025
   ],
   "schema_version": 1,
-  "status": "complete",
+  "status": "complete_with_target_support_warnings",
+  "target_support_validation": {
+    "anomaly_count": 20,
+    "new_anomaly_count": 1,
+    "present_in_final_corpus_count": 19,
+    "report": "data/research/massey_prebowl_issue_198/target_support_anomalies.csv",
+    "status": "anomalies_found"
+  },
   "unresolved_phase_exception_seasons": []
 }

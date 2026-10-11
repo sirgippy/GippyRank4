@@ -18,6 +18,7 @@ from gippyrank.data.massey_prebowl import (
     APPROVED_PHASE_EXCEPTIONS,
     SEASONS,
     PreBowlWindow,
+    audit_target_rank_support,
     latest_cmp_date_in_window,
     normalized_rows,
     read_dated_fbs_export,
@@ -34,6 +35,20 @@ DEFAULT_CHECKLIST = (
     ROOT / "data/research/massey_prebowl_issue_198/collection_checklist.csv"
 )
 DEFAULT_REPORT_ROOT = ROOT / "data/research/massey_prebowl_issue_198"
+TARGET_SUPPORT_FIELDS = (
+    "season",
+    "subdivision",
+    "team_id",
+    "team_name",
+    "team_population",
+    "usable_systems",
+    "out_of_support_ranks",
+    "out_of_support_observations",
+    "out_of_support_probability_mass",
+    "present_in_final_corpus",
+    "final_out_of_support_ranks",
+    "final_out_of_support_probability_mass",
+)
 
 
 def sha256(path: Path) -> str:
@@ -337,6 +352,30 @@ def build(args: argparse.Namespace) -> None:
     target_distributions, _ = build_distributions(
         combined, target_depth, args.coverage_threshold
     )
+    target_support_anomalies = audit_target_rank_support(target_distributions)
+    final_distributions, _ = build_distributions(
+        final_rows, final_depth, args.coverage_threshold
+    )
+    final_support_by_key = {
+        (row["season"], row["subdivision"], row["team_id"]): row
+        for row in audit_target_rank_support(final_distributions)
+    }
+    for anomaly in target_support_anomalies:
+        baseline = final_support_by_key.get(
+            (anomaly["season"], anomaly["subdivision"], anomaly["team_id"])
+        )
+        anomaly["present_in_final_corpus"] = baseline is not None
+        anomaly["final_out_of_support_ranks"] = (
+            baseline["out_of_support_ranks"] if baseline else "[]"
+        )
+        anomaly["final_out_of_support_probability_mass"] = (
+            baseline["out_of_support_probability_mass"] if baseline else 0.0
+        )
+    write_csv(
+        args.output_root / "target_support_anomalies.csv",
+        list(TARGET_SUPPORT_FIELDS),
+        target_support_anomalies,
+    )
     write_csv(
         args.output_root / "pre_bowl_target_distributions.csv",
         list(target_distributions[0]) if target_distributions else [],
@@ -403,12 +442,33 @@ def build(args: argparse.Namespace) -> None:
             == row["phase_exception_decision"]
         }
     )
+    collection_complete = not missing_fbs and not missing_fcs and not unresolved_exceptions
+    downstream_ready = collection_complete and not target_support_anomalies
     manifest = {
         "schema_version": 1,
         "created_at": datetime.now(UTC).isoformat(),
-        "status": "complete"
-        if not missing_fbs and not missing_fcs and not unresolved_exceptions
-        else "incomplete",
+        "status": (
+            "incomplete"
+            if not collection_complete
+            else "complete_with_target_support_warnings"
+            if target_support_anomalies
+            else "complete"
+        ),
+        "collection_status": "complete" if collection_complete else "incomplete",
+        "downstream_ready": downstream_ready,
+        "target_support_validation": {
+            "status": "anomalies_found" if target_support_anomalies else "passed",
+            "anomaly_count": len(target_support_anomalies),
+            "present_in_final_corpus_count": sum(
+                bool(row["present_in_final_corpus"])
+                for row in target_support_anomalies
+            ),
+            "new_anomaly_count": sum(
+                not bool(row["present_in_final_corpus"])
+                for row in target_support_anomalies
+            ),
+            "report": "data/research/massey_prebowl_issue_198/target_support_anomalies.csv",
+        },
         "required_fbs_seasons": list(SEASONS),
         "included_fbs_seasons": sorted(included_fbs),
         "missing_fbs_seasons": missing_fbs,
@@ -429,8 +489,9 @@ def build(args: argparse.Namespace) -> None:
             "No final-season FBS observation is substituted for a missing pre-bowl snapshot.",
             "FCS rows are copied from the existing final-observation corpus without field changes.",
             "Only same-date constituent system observations are retained for each snapshot.",
-            "A non-complete status must not be used for downstream fitting without an approved exception decision.",
+            "An incomplete collection is not ready for downstream fitting; approved phase exceptions do not change target-support audit results.",
             "The 2020-12-21 snapshot is included under the user's explicit approval despite overlap with the first bowl date.",
+            "Collection completeness is separate from downstream readiness. Out-of-support target mass is preserved and reported, and blocks downstream readiness until the population inconsistency is resolved.",
         ],
     }
     (args.output_root / "manifest.json").write_text(
@@ -504,6 +565,7 @@ def build(args: argparse.Namespace) -> None:
             for season, item in checklist.items()
         ],
         "unchanged_fcs_reference": manifest["fcs_source"],
+        "target_support_validation": manifest["target_support_validation"],
         "missing_or_unresolved_seasons": [
             {
                 "season": item["season"],
@@ -529,6 +591,11 @@ def build(args: argparse.Namespace) -> None:
     write_csv(
         args.report_root / "coverage_comparison.csv", coverage_fields, comparison_rows
     )
+    write_csv(
+        args.report_root / "target_support_anomalies.csv",
+        list(TARGET_SUPPORT_FIELDS),
+        target_support_anomalies,
+    )
     (args.report_root / "manifest.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
@@ -539,6 +606,8 @@ def build(args: argparse.Namespace) -> None:
     print(f"pre-bowl target status: {manifest['status']}")
     print(f"included FBS seasons: {len(included_fbs)}/{len(SEASONS)}")
     print(f"missing FBS seasons: {missing_fbs}")
+    print(f"target support anomalies: {len(target_support_anomalies)}")
+    print(f"downstream ready: {downstream_ready}")
     print(f"output: {args.output_root}")
 
 

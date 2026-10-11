@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-10-11T13:05:25.680492+00:00",
+  "created_at": "2026-10-11T18:40:27.866267+00:00",
   "existing_source_inventory": [
     {
       "coverage": "Dated raw rows include the latest FBS CMP date inside the accepted window.",
@@ -834,6 +834,13 @@
     }
   ],
   "schema_version": 1,
+  "target_support_validation": {
+    "anomaly_count": 20,
+    "new_anomaly_count": 1,
+    "present_in_final_corpus_count": 19,
+    "report": "data/research/massey_prebowl_issue_198/target_support_anomalies.csv",
+    "status": "anomalies_found"
+  },
   "team_mapping_sources": [
     {
       "bytes": 375579,

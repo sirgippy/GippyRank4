@@ -282,6 +282,42 @@ def normalized_rows(observations: list[MasseyObservation]) -> list[dict[str, str
     return rows
 
 
+def audit_target_rank_support(
+    distributions: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    """Report PMF mass outside each declared integer support without altering it."""
+    anomalies = []
+    for row in distributions:
+        population = int(row["team_population"])
+        out_of_support = [
+            point
+            for point in json.loads(str(row["pmf"]))
+            if not 1 <= int(point["rank"]) <= population
+        ]
+        if not out_of_support:
+            continue
+        anomalies.append(
+            {
+                "season": int(row["season"]),
+                "subdivision": str(row["subdivision"]),
+                "team_id": str(row["team_id"]),
+                "team_name": str(row["team_name"]),
+                "team_population": population,
+                "usable_systems": int(row["usable_systems"]),
+                "out_of_support_ranks": json.dumps(
+                    sorted({int(point["rank"]) for point in out_of_support})
+                ),
+                "out_of_support_observations": sum(
+                    int(point["count"]) for point in out_of_support
+                ),
+                "out_of_support_probability_mass": sum(
+                    float(point["probability"]) for point in out_of_support
+                ),
+            }
+        )
+    return anomalies
+
+
 def read_kaggle_snapshot(
     path: Path,
     matches: dict[str, CFBDTeam],
