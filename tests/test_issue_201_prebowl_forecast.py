@@ -26,6 +26,7 @@ from gippyrank.research.issue_201_prebowl_forecast import (
     mixture_margin_crps,
     paired_game_differences,
     score_rank_pmf,
+    summarize_forecast_scores,
 )
 
 
@@ -345,3 +346,55 @@ def test_paired_game_differences_include_both_aggregate_summaries() -> None:
         "pooled_equal_game",
         "equal_season_sensitivity",
     }
+
+
+def test_forecast_summaries_include_pooled_and_equal_season_interval_widths() -> None:
+    widths_by_game = (
+        (2022, (4.0, 8.0, 12.0)),
+        (2022, (8.0, 12.0, 16.0)),
+        (2023, (10.0, 14.0, 18.0)),
+    )
+    rows = []
+    for season, widths in widths_by_game:
+        rows.append(
+            {
+                "forecast_stage": "rolling",
+                "forecast_population": "fbs_fbs",
+                "model_arm": "Context_existing",
+                "season": season,
+                "phase": "pre_thanksgiving",
+                "crps": 1.0,
+                "margin_nll": 2.0,
+                "median_absolute_error": 3.0,
+                "home_win_brier": 0.1,
+                "coverage_50": 0.5,
+                "coverage_80": 0.8,
+                "coverage_95": 0.95,
+                **{
+                    field: bound
+                    for level, width in zip((50, 80, 95), widths, strict=True)
+                    for field, bound in (
+                        (f"margin_interval_{level}_low", 0.0),
+                        (f"margin_interval_{level}_high", width),
+                    )
+                },
+            }
+        )
+
+    summaries = summarize_forecast_scores(rows, stage="rolling", population="fbs_fbs")
+    by_season = {
+        row["season"]: row for row in summaries if row["phase"] == "all_phases"
+    }
+    assert by_season["2022"]["margin_interval_50_width"] == pytest.approx(6.0)
+    assert by_season["pooled_equal_game"]["margin_interval_50_width"] == pytest.approx(
+        22 / 3
+    )
+    assert by_season["equal_season_sensitivity"]["margin_interval_50_width"] == (
+        pytest.approx(8.0)
+    )
+    assert by_season["pooled_equal_game"]["margin_interval_80_width"] == pytest.approx(
+        34 / 3
+    )
+    assert by_season["equal_season_sensitivity"]["margin_interval_95_width"] == (
+        pytest.approx(16.0)
+    )

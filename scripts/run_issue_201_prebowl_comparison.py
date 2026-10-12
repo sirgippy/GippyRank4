@@ -24,6 +24,7 @@ from gippyrank.research.issue_201_prebowl_forecast import (
     canonical_json,
     run_issue_201_comparison,
     sha256_file,
+    summarize_forecast_scores,
 )
 
 DEFAULT_ISSUE204_ROOT = ROOT / "data/processed/massey_prebowl_issue_204_v1"
@@ -209,14 +210,13 @@ def _result_classification(result: dict[str, object]) -> dict[str, object]:
     else:
         classification = "inconclusive"
 
-    opposite_nll_seasons = 0
-    opposite_calibration_seasons = 0
+    worse_nll_seasons = 0
+    worse_calibration_seasons = 0
     for season in SEASONS:
         existing = get("Context_existing", str(season))
         prebowl = get("Context_pre_bowl", str(season))
-        crps_delta = float(prebowl["crps"]) - float(existing["crps"])
         nll_delta = float(prebowl["margin_nll"]) - float(existing["margin_nll"])
-        opposite_nll_seasons += crps_delta * nll_delta < 0
+        worse_nll_seasons += nll_delta > 0
         levels = (0.50, 0.80, 0.95)
         existing_error = sum(
             abs(float(existing[f"coverage_{int(level * 100)}"]) - level)
@@ -227,9 +227,9 @@ def _result_classification(result: dict[str, object]) -> dict[str, object]:
             for level in levels
         ) / len(levels)
         calibration_delta = prebowl_error - existing_error
-        opposite_calibration_seasons += crps_delta * calibration_delta < 0
+        worse_calibration_seasons += calibration_delta > 0
     if classification == "improve" and (
-        opposite_nll_seasons >= 3 or opposite_calibration_seasons >= 3
+        worse_nll_seasons >= 3 or worse_calibration_seasons >= 3
     ):
         classification = "inconclusive"
     recommendation = {
@@ -247,12 +247,49 @@ def _result_classification(result: dict[str, object]) -> dict[str, object]:
         "context_pre_bowl_season_wins": season_wins,
         "policy_interaction_equal_game": interaction_pooled,
         "policy_interaction_equal_season": interaction_equal_season,
-        "opposite_margin_nll_seasons": opposite_nll_seasons,
-        "opposite_calibration_error_seasons": opposite_calibration_seasons,
+        "worse_margin_nll_seasons": worse_nll_seasons,
+        "worse_calibration_error_seasons": worse_calibration_seasons,
     }
 
 
+def _report_context(result: dict[str, object]) -> dict[str, object]:
+    report_result = dict(result)
+    summaries = list(result["forecast_summaries"])
+    summaries.extend(result.get("preseason_summary", []))
+    report_result["forecast_summaries"] = summaries
+
+    scores = result["forecast_scores"]
+    if "crps_orders_used" not in report_result:
+        report_result["crps_orders_used"] = sorted(
+            {int(row["crps_quadrature_order"]) for row in scores}
+        )
+    if "crps_tail_multiples_used" not in report_result:
+        report_result["crps_tail_multiples_used"] = sorted(
+            {float(row["crps_tail_multiple"]) for row in scores}
+        )
+    return report_result
+
+
+def _forecast_summaries_from_scores(
+    forecast_scores: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    score_groups = sorted(
+        {
+            (str(row["forecast_stage"]), str(row["forecast_population"]))
+            for row in forecast_scores
+        }
+    )
+    return [
+        summary
+        for stage, population in score_groups
+        for summary in summarize_forecast_scores(
+            forecast_scores, stage=stage, population=population
+        )
+    ]
+
+
 def _render_report(result: dict[str, object], classification: dict[str, object]) -> str:
+    result = _report_context(result)
     summaries = result["forecast_summaries"]
 
     def summary_for(
@@ -404,9 +441,12 @@ def _render_report(result: dict[str, object], classification: dict[str, object])
             ),
             (
                 f"Context pre-bowl lowered CRPS in {classification['context_pre_bowl_season_wins']}/4 seasons, "
-                f"but did not lower it in either aggregate. Margin NLL moved opposite the CRPS direction "
-                f"in {classification['opposite_margin_nll_seasons']} seasons; the 50/80/95% coverage "
-                f"deviation moved opposite in {classification['opposite_calibration_error_seasons']} seasons."
+                f"but did not lower it in either aggregate. Margin NLL was worse in "
+                f"{classification['worse_margin_nll_seasons']} "
+                f"season{'s' if classification['worse_margin_nll_seasons'] != 1 else ''}; "
+                f"average 50/80/95% coverage deviation was worse in "
+                f"{classification['worse_calibration_error_seasons']} "
+                f"season{'s' if classification['worse_calibration_error_seasons'] != 1 else ''}."
             ),
             "",
             "### Per-season rolling CRPS",
@@ -619,11 +659,11 @@ def _render_report(result: dict[str, object], classification: dict[str, object])
 
 def write_results(result: dict[str, object], output_dir: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
+    forecast_summaries = _forecast_summaries_from_scores(result["forecast_scores"])
     table_outputs: dict[str, list[dict[str, object]]] = {
         "forecast_scores.csv": result["forecast_scores"],
         "forecast_exclusions.csv": result["forecast_exclusions"],
-        "forecast_summary.csv": result["forecast_summaries"]
-        + result["preseason_summary"],
+        "forecast_summary.csv": forecast_summaries,
         "paired_game_differences.csv": result["paired_game_differences"],
         "calendar_mismatches.csv": result["calendar_mismatches"],
         "ranking_scores.csv": result["ranking_scores"],
@@ -643,8 +683,10 @@ def write_results(result: dict[str, object], output_dir: Path) -> None:
     _write_json(output_dir / "frozen_target_parity.json", result["frozen_parity"])
     classification = _result_classification(result)
     _write_json(output_dir / "decision.json", classification)
+    report_result = {**result, "forecast_summaries": forecast_summaries}
+    report_result.pop("preseason_summary", None)
     (output_dir / "report.md").write_text(
-        _render_report(result, classification), encoding="utf-8"
+        _render_report(report_result, classification), encoding="utf-8"
     )
     output_files = sorted(
         path
@@ -697,9 +739,14 @@ def _read_output_csv(path: Path) -> list[dict[str, str]]:
 def refresh_report(args: argparse.Namespace) -> None:
     manifest_path = args.output / "manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    forecast_scores = _read_output_csv(args.output / "forecast_scores.csv")
+    forecast_summaries = _forecast_summaries_from_scores(forecast_scores)
+    summary_path = args.output / "forecast_summary.csv"
+    _write_csv(summary_path, forecast_summaries)
+    manifest["outputs"][summary_path.name] = _file_record(summary_path)
     result: dict[str, object] = {
-        "forecast_summaries": _read_output_csv(args.output / "forecast_summary.csv"),
-        "forecast_scores": _read_output_csv(args.output / "forecast_scores.csv"),
+        "forecast_summaries": forecast_summaries,
+        "forecast_scores": forecast_scores,
         "forecast_exclusions": _read_output_csv(
             args.output / "forecast_exclusions.csv"
         ),

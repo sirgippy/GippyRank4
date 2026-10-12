@@ -1932,7 +1932,34 @@ def summarize_forecast_scores(
         "coverage_50",
         "coverage_80",
         "coverage_95",
+        "margin_interval_50_width",
+        "margin_interval_80_width",
+        "margin_interval_95_width",
     )
+    interval_endpoints = {
+        "margin_interval_50_width": (
+            "margin_interval_50_low",
+            "margin_interval_50_high",
+        ),
+        "margin_interval_80_width": (
+            "margin_interval_80_low",
+            "margin_interval_80_high",
+        ),
+        "margin_interval_95_width": (
+            "margin_interval_95_low",
+            "margin_interval_95_high",
+        ),
+    }
+
+    def metric_value(row: dict[str, object], metric: str) -> float:
+        if metric in row:
+            return float(row[metric])
+        endpoints = interval_endpoints.get(metric)
+        if endpoints is not None:
+            low, high = endpoints
+            return float(row[high]) - float(row[low])
+        return float(row[metric])
+
     members_by_key: dict[tuple[str, str, str], list[dict[str, object]]] = defaultdict(
         list
     )
@@ -1945,7 +1972,7 @@ def summarize_forecast_scores(
     output: list[dict[str, object]] = []
     for (arm, season, phase), members in sorted(members_by_key.items()):
         values = {
-            metric: float(np.mean([float(row[metric]) for row in members]))
+            metric: float(np.mean([metric_value(row, metric) for row in members]))
             for metric in metric_names
         }
         output.append(
@@ -1974,7 +2001,10 @@ def summarize_forecast_scores(
                 "games": count,
                 **{
                     metric: float(
-                        sum(float(row[metric]) * int(row["games"]) for row in members)
+                        sum(
+                            metric_value(row, metric) * int(row["games"])
+                            for row in members
+                        )
                         / count
                     )
                     for metric in metric_names
@@ -2000,7 +2030,7 @@ def summarize_forecast_scores(
                     **{
                         metric: float(
                             sum(
-                                float(row[metric]) * int(row["games"])
+                                metric_value(row, metric) * int(row["games"])
                                 for row in members
                             )
                             / games
@@ -2018,7 +2048,9 @@ def summarize_forecast_scores(
                     "phase": "all_phases",
                     "games": games,
                     **{
-                        metric: float(np.mean([float(row[metric]) for row in members]))
+                        metric: float(
+                            np.mean([metric_value(row, metric) for row in members])
+                        )
                         for metric in metric_names
                     },
                 }

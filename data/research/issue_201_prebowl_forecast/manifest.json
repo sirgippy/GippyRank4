@@ -22,11 +22,11 @@
     "context_pre_bowl_crps_lower_equal_game": false,
     "context_pre_bowl_crps_lower_equal_season": false,
     "context_pre_bowl_season_wins": 3,
-    "opposite_calibration_error_seasons": 0,
-    "opposite_margin_nll_seasons": 0,
     "policy_interaction_equal_game": 0.004599070242887748,
     "policy_interaction_equal_season": 0.004664373726408044,
-    "recommendation": "revise the comparison plan before follow-up work"
+    "recommendation": "revise the comparison plan before follow-up work",
+    "worse_calibration_error_seasons": 1,
+    "worse_margin_nll_seasons": 1
   },
   "experiment": "issue-201-prebowl-forecast-comparison",
   "fit_origin_by_season_policy": {
@@ -659,8 +659,8 @@
       "sha256": "ab3946bbe98e79efc5676defdc7162f5b906fc61f675762bc07c431622ca77a5"
     },
     "decision.json": {
-      "bytes": 447,
-      "sha256": "e0b6719379e0245e8e597e70e2fc5acee0f1586ad1a7165a07bb658a718b6053"
+      "bytes": 441,
+      "sha256": "e73a4543246bb7cef54415f8da979b169b798654ae62342f19f92b4a814d7fe5"
     },
     "forecast_exclusions.csv": {
       "bytes": 910275,
@@ -671,8 +671,8 @@
       "sha256": "fbc5c51f0747d4d11c3d31d8eb032f32ad65c8abe41f0307b295415a264351bb"
     },
     "forecast_summary.csv": {
-      "bytes": 39827,
-      "sha256": "55639349b1960851e01a1a2a8417a86ad4f56453585a53db24d998b57cb116a2"
+      "bytes": 62725,
+      "sha256": "c288b5ad6f024b3fba221536e2ed311639dd57da08478a4a758670eed1580ffd"
     },
     "frozen_checkpoint_safety.csv": {
       "bytes": 4168,
@@ -719,8 +719,8 @@
       "sha256": "2bc922ba47ded55b20672b42e21924cf915c5a7599966b7b923489485171f89d"
     },
     "report.md": {
-      "bytes": 6749,
-      "sha256": "d0a361664466c3783bf44561aa6dcb6e596fd06898878200714ad46643384ab0"
+      "bytes": 6722,
+      "sha256": "d899c5f1675288b0faa9a2995de15a8f23d5525ccfc44fc1fa13233187f1435c"
     },
     "schedule_plan.json": {
       "bytes": 6139318,

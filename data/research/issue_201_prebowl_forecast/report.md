@@ -25,7 +25,7 @@ Classification: **inconclusive**. Recommendation: revise the comparison plan bef
 | Pre-bowl − existing, History | -0.003238 | -0.003245 | -0.000483 |
 
 Policy interaction, (Context pre-bowl − Context existing) − (History pre-bowl − History existing): 0.004599 equal-game and 0.004664 equal-season. Positive values mean the combined intervention shifts CRPS less favorably for Context.
-Context pre-bowl lowered CRPS in 3/4 seasons, but did not lower it in either aggregate. Margin NLL moved opposite the CRPS direction in 0 seasons; the 50/80/95% coverage deviation moved opposite in 0 seasons.
+Context pre-bowl lowered CRPS in 3/4 seasons, but did not lower it in either aggregate. Margin NLL was worse in 1 season; average 50/80/95% coverage deviation was worse in 1 season.
 
 ### Per-season rolling CRPS
 
