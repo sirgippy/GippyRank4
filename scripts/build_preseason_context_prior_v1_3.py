@@ -119,15 +119,29 @@ def _keys(rows: Iterable[object]) -> set[tuple[int, str, str]]:
 
 
 def base_context_rows(
-    *, max_season: int = max(TEST_SEASONS)
+    *,
+    max_season: int = max(TEST_SEASONS),
+    outcomes_path: Path | None = None,
+    feature_path: Path | None = None,
+    tenure_root: Path | None = None,
+    corpus_policy: v1.CorpusPolicy = "original",
 ) -> tuple[list, list, list[dict[str, object]]]:
     """Load outcome-bearing historical rows with only approved base inputs."""
-    rows, cold, _ = v1.load_rows(
-        max_season=max_season, corpus_policy="original"
-    )
+    load_options = {"max_season": max_season, "corpus_policy": corpus_policy}
+    if outcomes_path is not None:
+        load_options["outcomes_path"] = outcomes_path
+    if feature_path is not None:
+        load_options["feature_path"] = feature_path
+    rows, cold, _ = v1.load_rows(**load_options)
     fbs = [row for row in rows if row.subdivision == "fbs"]
+    index = c12.feature_index() if feature_path is None else c12.feature_index(feature_path)
+    tenures = (
+        c12.cached_tenures()
+        if tenure_root is None
+        else c12.cached_tenures(tenure_root)
+    )
     contextual, coverage = c12.attach_context(
-        fbs, c12.feature_index(), c12.cached_tenures()
+        fbs, index, tenures
     )
     stripped = [
         replace(

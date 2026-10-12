@@ -1,0 +1,75 @@
+{
+  "frozen_reference_inputs": {
+    "likelihood_sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+    "prior_panel_checkpoint": 1,
+    "prior_panel_lineage": "#192 / PR #196; original final-corpus controls retained unchanged",
+    "prior_panel_sha256": "e33e17f7de4fef7bd2dce5163925cb54f34eb453806bc40973512747c3fa2727"
+  },
+  "likelihood_comparison": {
+    "baseline_artifact_sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+    "baseline_df": 15.0,
+    "baseline_training_seasons": "2003-2021",
+    "corrected_final_df": 15.0,
+    "interpretation": "The #192 likelihood is an immutable original-corpus reference; changes here reflect #204 data repair and refitting, not the pre-bowl intervention.",
+    "max_abs_coefficient_difference": 6.308831559409214,
+    "mean_abs_coefficient_difference": 1.0914635460763027,
+    "scale_difference": -0.003034988383118886
+  },
+  "prior_comparisons": {
+    "context": {
+      "baseline_field": "context_prior_pmf",
+      "max_abs_probability_difference": 0.07413096798546985,
+      "mean_abs_probability_difference": 0.0007312837264336241,
+      "season_results": {
+        "2022": {
+          "max_abs_probability_difference": 0.05925973375598337,
+          "mean_abs_probability_difference": 0.0007386509037132903,
+          "team_season_count": 131
+        },
+        "2023": {
+          "max_abs_probability_difference": 0.07413096798546985,
+          "mean_abs_probability_difference": 0.0008016828568429034,
+          "team_season_count": 133
+        },
+        "2024": {
+          "max_abs_probability_difference": 0.02206929420737179,
+          "mean_abs_probability_difference": 0.0006517880048608162,
+          "team_season_count": 134
+        },
+        "2025": {
+          "max_abs_probability_difference": 0.03739500905266846,
+          "mean_abs_probability_difference": 0.0007342955576109187,
+          "team_season_count": 136
+        }
+      }
+    },
+    "history": {
+      "baseline_field": "history_prior_pmf",
+      "max_abs_probability_difference": 0.005908442055751639,
+      "mean_abs_probability_difference": 2.2216841518758907e-05,
+      "season_results": {
+        "2022": {
+          "max_abs_probability_difference": 0.0030017605807153847,
+          "mean_abs_probability_difference": 2.3620260591757148e-05,
+          "team_season_count": 131
+        },
+        "2023": {
+          "max_abs_probability_difference": 0.002492704535254131,
+          "mean_abs_probability_difference": 2.3483347134269997e-05,
+          "team_season_count": 133
+        },
+        "2024": {
+          "max_abs_probability_difference": 0.002690635159016158,
+          "mean_abs_probability_difference": 2.0805043463617628e-05,
+          "team_season_count": 134
+        },
+        "2025": {
+          "max_abs_probability_difference": 0.005908442055751639,
+          "mean_abs_probability_difference": 2.1074051365948484e-05,
+          "team_season_count": 136
+        }
+      }
+    }
+  },
+  "reference": "#192 / PR #196 preseason checkpoint 1; frozen original controls"
+}

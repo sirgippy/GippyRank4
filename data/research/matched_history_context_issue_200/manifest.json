@@ -1,0 +1,446 @@
+{
+  "artifact_kind": "issue_200_matched_pipeline_bundle",
+  "fbs_target_population_by_season": {
+    "2022": 131,
+    "2023": 133,
+    "2024": 134,
+    "2025": 136
+  },
+  "fcs_population_by_season": {
+    "2022": 130,
+    "2023": 128,
+    "2024": 129,
+    "2025": 129
+  },
+  "fit_spec_version": "issue-200-v1",
+  "fitted_prior_arms": [
+    "history_existing",
+    "context_existing",
+    "history_pre_bowl",
+    "context_pre_bowl"
+  ],
+  "fitting_status": "complete",
+  "inference_configuration": {
+    "damping": 0.35,
+    "max_iterations": 500,
+    "tolerance": 1e-09
+  },
+  "input_artifacts": [
+    {
+      "bytes": 43038379,
+      "logical_name": "corrected_final_observations",
+      "path": "data/processed/massey_issue_204_v1/final_observations.csv",
+      "sha256": "cd3ee420a830ca6ca1f1a9dd4accb0e844ffd5ee0b00398b4c3536dd57218d9a"
+    },
+    {
+      "bytes": 10558935,
+      "logical_name": "corrected_final_targets",
+      "path": "data/processed/massey_prebowl_issue_204_v1/final_target_distributions.csv",
+      "sha256": "cab882da17be2f79dd379fc296107e332e2768f9827d96752ea33d97dc026f28"
+    },
+    {
+      "bytes": 180002291,
+      "logical_name": "corrected_final_rank_pairs",
+      "path": "data/processed/massey_prebowl_issue_204_v1/final_constituent_rank_pairs.csv",
+      "sha256": "4dd2376a488ede05c889372089fa0e0b16d62faaf879626c50cb359d5fe4e3af"
+    },
+    {
+      "bytes": 47806722,
+      "logical_name": "corrected_pre_bowl_observations",
+      "path": "data/processed/massey_prebowl_issue_204_v1/pre_bowl_observations.csv",
+      "sha256": "c82c1cd4250f02d06e56aa6e16d00421c59a21e23bdd58d59378f937896af58e"
+    },
+    {
+      "bytes": 10982583,
+      "logical_name": "corrected_pre_bowl_targets",
+      "path": "data/processed/massey_prebowl_issue_204_v1/pre_bowl_target_distributions.csv",
+      "sha256": "6c610ea91ea60ce5da45e20baa7d636f91de52af974420f28a74eb0ec5d66e3f"
+    },
+    {
+      "bytes": 189646174,
+      "logical_name": "corrected_pre_bowl_rank_pairs",
+      "path": "data/processed/massey_prebowl_issue_204_v1/pre_bowl_constituent_rank_pairs.csv",
+      "sha256": "3193da2bb427a2022a6b7a293d39093e7b26e3cde36eaa0a3c912e2db4eaa917"
+    },
+    {
+      "bytes": 14507,
+      "logical_name": "issue_204_manifest",
+      "path": "data/research/massey_rank_population_issue_204/manifest.json",
+      "sha256": "67069c286c1fb7e5fda1c845327de86ec63d809bb6d95521dbaa3ab72c5658cb"
+    },
+    {
+      "bytes": 238,
+      "logical_name": "issue_204_support_report",
+      "path": "data/research/massey_rank_population_issue_204/target_support_anomalies.csv",
+      "sha256": "b11e17302817ec7a1bb0300d217cd4db2d8b50cd2512b6c7e6b5e8e040da5bc2"
+    },
+    {
+      "bytes": 55047,
+      "logical_name": "issue_204_raw_source_manifest",
+      "path": "data/research/massey_rank_population_issue_204/raw_source_manifest.json",
+      "sha256": "4cdf79045fba285c634e3fe7b8dc2daeb3dca328d94ec59f5a7ef65e413a049b"
+    },
+    {
+      "bytes": 35457,
+      "logical_name": "issue_198_collection_manifest",
+      "path": "data/research/massey_prebowl_issue_198/manifest.json",
+      "sha256": "21938670d2ef3621ca70cb12cec85b1855da4393375873a7a14628d21e70b9dd"
+    },
+    {
+      "bytes": 7893,
+      "logical_name": "issue_198_schedule_windows",
+      "path": "data/research/massey_prebowl_issue_198/schedule_windows.csv",
+      "sha256": "3b7b4bc951c4d47285c39da260ad860053834964afc31aeeb066e5e216638883"
+    },
+    {
+      "bytes": 3867036,
+      "logical_name": "team_season_features",
+      "path": "data/processed/preseason/team_season_features.csv",
+      "sha256": "fd6f171131e38b852b94619338c5580e5f4e8c19f45c74e8135b11b20b1a2019"
+    },
+    {
+      "bytes": 201177,
+      "logical_name": "historical_transfer_features",
+      "path": "data/processed/transfer_data_repair/historical_transfer_features.csv",
+      "sha256": "d17d174b8b49e22cc118618afb9046c399e5889cb56f43141c2e5cbfcc6e028c"
+    },
+    {
+      "bytes": 202524,
+      "logical_name": "historical_transfer_coverage",
+      "path": "data/processed/transfer_data_repair/team_seasons.csv",
+      "sha256": "7b96e7be87f484712f2d88c1beffeb5508688a4aa6e996e309852c44fa174a34"
+    },
+    {
+      "bytes": 3896349,
+      "logical_name": "historical_transfer_players",
+      "path": "data/processed/defensive_transfer_audit/transfer_player_audit.csv",
+      "sha256": "cf7b25313093c9ae0f4d21ee5865336fbb81705062e8ea92c9dc5f535aa1135d"
+    },
+    {
+      "bytes": 41053804,
+      "logical_name": "baseline_inference_panel",
+      "path": "data/processed/context_incremental_information/inference_panel.jsonl.gz",
+      "sha256": "e33e17f7de4fef7bd2dce5163925cb54f34eb453806bc40973512747c3fa2727"
+    },
+    {
+      "bytes": 1211,
+      "logical_name": "baseline_historical_likelihood",
+      "path": "data/processed/posterior/historical_likelihood_v1.json",
+      "sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153"
+    },
+    {
+      "bytes": 474038,
+      "logical_name": "cfbd_games_2003-fcs",
+      "path": "data/raw/cfbd/games/2003-fcs.json",
+      "sha256": "f8ada16ddd61392093dc795430e16ef8923fe2b86e3b736de059900478a67ef0"
+    },
+    {
+      "bytes": 572085,
+      "logical_name": "cfbd_games_2003",
+      "path": "data/raw/cfbd/games/2003.json",
+      "sha256": "ca8c58543dbba2686fab8e96d1b8c8c438e72ec4b6a73e906f02c847114757a4"
+    },
+    {
+      "bytes": 470041,
+      "logical_name": "cfbd_games_2004-fcs",
+      "path": "data/raw/cfbd/games/2004-fcs.json",
+      "sha256": "78859a4564a2d076186858dea66e0f0aa74608d8e045afd046348dfa72a80d8b"
+    },
+    {
+      "bytes": 538670,
+      "logical_name": "cfbd_games_2004",
+      "path": "data/raw/cfbd/games/2004.json",
+      "sha256": "ac6431beccd5aadbfd2bb54238322517ff44c1523ae592cfb880a348ee56e122"
+    },
+    {
+      "bytes": 491734,
+      "logical_name": "cfbd_games_2005-fcs",
+      "path": "data/raw/cfbd/games/2005-fcs.json",
+      "sha256": "6d85cfc2e23e597766c1cb7b18a858acf04b080a3005f8a213e8207cb84a1ec9"
+    },
+    {
+      "bytes": 530138,
+      "logical_name": "cfbd_games_2005",
+      "path": "data/raw/cfbd/games/2005.json",
+      "sha256": "9c888b5acd086656f65f2dcd942c90bc64317f19e69ad0da7f8650a6ac8f1347"
+    },
+    {
+      "bytes": 513104,
+      "logical_name": "cfbd_games_2006-fcs",
+      "path": "data/raw/cfbd/games/2006-fcs.json",
+      "sha256": "7379c2b17b599ac837e96939a3aeb8a49ab4605f49ff2f920f2ae2cebfbe66b3"
+    },
+    {
+      "bytes": 587509,
+      "logical_name": "cfbd_games_2006",
+      "path": "data/raw/cfbd/games/2006.json",
+      "sha256": "7b65b435576190ad446d3fd0456954fcfbe9281f630482dbaa9a47ada48fad0d"
+    },
+    {
+      "bytes": 561139,
+      "logical_name": "cfbd_games_2007-fcs",
+      "path": "data/raw/cfbd/games/2007-fcs.json",
+      "sha256": "9fc8b46192d8646b198f256e782c41d41aff8b2c50208a33de37d0f525b09923"
+    },
+    {
+      "bytes": 587726,
+      "logical_name": "cfbd_games_2007",
+      "path": "data/raw/cfbd/games/2007.json",
+      "sha256": "cc214ccaecd2a6e7287584a13b746e6d606212d7f8a77892281f87d633d6d858"
+    },
+    {
+      "bytes": 563542,
+      "logical_name": "cfbd_games_2008-fcs",
+      "path": "data/raw/cfbd/games/2008-fcs.json",
+      "sha256": "761eee118822765acb6b8ab764dc666d627b1c3770fb1a27aee297963b03a85a"
+    },
+    {
+      "bytes": 598156,
+      "logical_name": "cfbd_games_2008",
+      "path": "data/raw/cfbd/games/2008.json",
+      "sha256": "3343725c317091ab550f8e58cae8d13c0794308dbdad27539c0a12f0053ad9f7"
+    },
+    {
+      "bytes": 557951,
+      "logical_name": "cfbd_games_2009-fcs",
+      "path": "data/raw/cfbd/games/2009-fcs.json",
+      "sha256": "db0e45add74d66e0a1cf9ebcc6068a8f16c7217cf86d2c7f772eb8c801f9c3fd"
+    },
+    {
+      "bytes": 597133,
+      "logical_name": "cfbd_games_2009",
+      "path": "data/raw/cfbd/games/2009.json",
+      "sha256": "ae5eadbd4a08f6e66ddb8066abfbd6722a1dc2278b3fb77adad01f36a2411fc5"
+    },
+    {
+      "bytes": 553326,
+      "logical_name": "cfbd_games_2010-fcs",
+      "path": "data/raw/cfbd/games/2010-fcs.json",
+      "sha256": "1cff505df77cbaf417d4dc01e98f4bdacaa63542e639bc82258a05f5a1aed5a1"
+    },
+    {
+      "bytes": 620388,
+      "logical_name": "cfbd_games_2010",
+      "path": "data/raw/cfbd/games/2010.json",
+      "sha256": "e15a4400865fea9b4b210cef3a26f2e16d506cf5a7cce92c892f63b61643b2c6"
+    },
+    {
+      "bytes": 582333,
+      "logical_name": "cfbd_games_2011-fcs",
+      "path": "data/raw/cfbd/games/2011-fcs.json",
+      "sha256": "2f7f3fbd4d48368de693ede7291c80bd45cb7aa70e810d4eab2c37800cfd3e13"
+    },
+    {
+      "bytes": 623884,
+      "logical_name": "cfbd_games_2011",
+      "path": "data/raw/cfbd/games/2011.json",
+      "sha256": "698834f4b8fe89bfdc6bc40edf834f866e9a5e0a6d1f557a7e3b6b476836a867"
+    },
+    {
+      "bytes": 480436,
+      "logical_name": "cfbd_games_2012-fcs",
+      "path": "data/raw/cfbd/games/2012-fcs.json",
+      "sha256": "8bff68e1bddd2b5dbf2bb1525ed0a3af03bac3c0e98b241fc3ebd224c29da399"
+    },
+    {
+      "bytes": 648684,
+      "logical_name": "cfbd_games_2012",
+      "path": "data/raw/cfbd/games/2012.json",
+      "sha256": "dcb4f39ff0085bb209f0cc961651fbb37b3d125db6ecb7ab29490b9578776f39"
+    },
+    {
+      "bytes": 593775,
+      "logical_name": "cfbd_games_2013-fcs",
+      "path": "data/raw/cfbd/games/2013-fcs.json",
+      "sha256": "617ad26c1c997d032bb155d6642df9e4a0f40d3d70fef19c2fd505becdbaa02f"
+    },
+    {
+      "bytes": 656239,
+      "logical_name": "cfbd_games_2013",
+      "path": "data/raw/cfbd/games/2013.json",
+      "sha256": "d7c80016777cb5970c4dbff9990e54fd91ec853b142a2b1bb6a4845b4e92f8d5"
+    },
+    {
+      "bytes": 615602,
+      "logical_name": "cfbd_games_2014-fcs",
+      "path": "data/raw/cfbd/games/2014-fcs.json",
+      "sha256": "29fb22050e97684ada464362772d5d6b9ca5d73f111618252dda8a678f458839"
+    },
+    {
+      "bytes": 680430,
+      "logical_name": "cfbd_games_2014",
+      "path": "data/raw/cfbd/games/2014.json",
+      "sha256": "8dd7edd6bf714a24e2ffd9216134bedead025c56bcebcf82d66f1e3cd8453e4e"
+    },
+    {
+      "bytes": 576625,
+      "logical_name": "cfbd_games_2015-fcs",
+      "path": "data/raw/cfbd/games/2015-fcs.json",
+      "sha256": "030821185df031127c625f355307cce6b250f3ac9998d396ff11939590d374e7"
+    },
+    {
+      "bytes": 683051,
+      "logical_name": "cfbd_games_2015",
+      "path": "data/raw/cfbd/games/2015.json",
+      "sha256": "2eee7225d0146c14cd9e99fa02ed4af571980f6534f750a16234b03bb26e7715"
+    },
+    {
+      "bytes": 590357,
+      "logical_name": "cfbd_games_2016-fcs",
+      "path": "data/raw/cfbd/games/2016-fcs.json",
+      "sha256": "6dd16d4dd8db881afca0675c101315e67129ab9df2c1f3625222cab81d887e7a"
+    },
+    {
+      "bytes": 711750,
+      "logical_name": "cfbd_games_2016",
+      "path": "data/raw/cfbd/games/2016.json",
+      "sha256": "bd3644cf758a7a2c0de8b2ff5598af3a56347501ffc96bf160b6cfdce32cf739"
+    },
+    {
+      "bytes": 579377,
+      "logical_name": "cfbd_games_2017-fcs",
+      "path": "data/raw/cfbd/games/2017-fcs.json",
+      "sha256": "52f1d0fb999af5250fafb80ebc8ad4ff2371de1fe54148e8db5b933e3ded0c39"
+    },
+    {
+      "bytes": 715951,
+      "logical_name": "cfbd_games_2017",
+      "path": "data/raw/cfbd/games/2017.json",
+      "sha256": "6fe1afbea2be743a31ce1bf1a3461a5088266aca59582600cb5eeadedf5fd0a2"
+    },
+    {
+      "bytes": 588013,
+      "logical_name": "cfbd_games_2018-fcs",
+      "path": "data/raw/cfbd/games/2018-fcs.json",
+      "sha256": "123fe5f89b625ea263be9ef0407e9349781fc21bdfeb6b5587b7343e6dc9a8ea"
+    },
+    {
+      "bytes": 726690,
+      "logical_name": "cfbd_games_2018",
+      "path": "data/raw/cfbd/games/2018.json",
+      "sha256": "1a859afcc9164f9e44e651d4d071bdf0d7e7913ffc89ba15e9abbe11df2e0ff5"
+    },
+    {
+      "bytes": 637799,
+      "logical_name": "cfbd_games_2019-fcs",
+      "path": "data/raw/cfbd/games/2019-fcs.json",
+      "sha256": "58d6f6527a93f81200368833882311ca8bc037d7893bf84ce3cb776c8c0b1eed"
+    },
+    {
+      "bytes": 731343,
+      "logical_name": "cfbd_games_2019",
+      "path": "data/raw/cfbd/games/2019.json",
+      "sha256": "cb9e933c028a9519f64157210581e6533c4ca669d0474a011f75d20d39f43b2f"
+    },
+    {
+      "bytes": 239899,
+      "logical_name": "cfbd_games_2020-fcs",
+      "path": "data/raw/cfbd/games/2020-fcs.json",
+      "sha256": "7bf443877f7d4d45248dc30189624045898fca021f70a32fe40d81c354290407"
+    },
+    {
+      "bytes": 468551,
+      "logical_name": "cfbd_games_2020",
+      "path": "data/raw/cfbd/games/2020.json",
+      "sha256": "f0f5335fae7c83cea42a5f83e6ddc4a4ef24bb6c158a93ce41942059298cbf04"
+    },
+    {
+      "bytes": 599095,
+      "logical_name": "cfbd_games_2021-fcs",
+      "path": "data/raw/cfbd/games/2021-fcs.json",
+      "sha256": "498be520667d02b6a870901aa8fef78a008f3b47f5ad7101b75ffaf14a83a32b"
+    },
+    {
+      "bytes": 695051,
+      "logical_name": "cfbd_games_2021",
+      "path": "data/raw/cfbd/games/2021.json",
+      "sha256": "636cc1794e6fe6a07c4427f82f01bf01daab3b7da853b77b45dc1f63d1c46d8d"
+    }
+  ],
+  "interpretation": "2022-2025 are exploratory development seasons because prior research used them; no held-out model selection was performed.",
+  "likelihood_arms": [
+    "existing",
+    "pre_bowl"
+  ],
+  "outputs": {
+    "baseline_parity.json": {
+      "bytes": 3077,
+      "sha256": "9b810ade2f961466500fdeb0bb663ae73e18e20cd447de596217f9fd3477ffcb"
+    },
+    "data_gate.json": {
+      "bytes": 1688,
+      "sha256": "4917c84aebc50fd31562e35fb0142a699acf044d4c49c35559e5a096c43e58b2"
+    },
+    "fitted_models.json": {
+      "bytes": 96268,
+      "sha256": "c706f9aa596b2fe2e9bcf9e1be611d714bc65441af29d0e55bbcdf3401410665"
+    },
+    "historical_likelihood_existing.json": {
+      "bytes": 1800,
+      "sha256": "f75bb3e66fa732e3fc361945df0bd2e604f8c80fa98c5c34852cdcf6e096070e"
+    },
+    "historical_likelihood_pre_bowl.json": {
+      "bytes": 1801,
+      "sha256": "836e2e37f5bdd5d5659f98249c4448d4dfeaa2388d5629ead7d933dfd1dfd707"
+    },
+    "likelihood_game_manifest.csv": {
+      "bytes": 4995671,
+      "sha256": "e1389ef981f28b57d1e16db6ecb9c39f84f17c6d88b59b754b0db60187713fa2"
+    },
+    "pipeline_bundle.json": {
+      "bytes": 9899505,
+      "sha256": "86fe67367f495361946e9bac0721feff3edc340181e8117aecad30e516266387"
+    },
+    "preseason_feature_manifest.json": {
+      "bytes": 326784,
+      "sha256": "d56f8b1482556e5926330bccca2e899f5fe80a5f3e7df5661579c7c7bbcaa701"
+    },
+    "rank_pair_composition.csv": {
+      "bytes": 10746,
+      "sha256": "0818471791df993edeb7afe6d337bb7e1ed1a0853ef65e4650e0fbdfcd2241b6"
+    },
+    "report.md": {
+      "bytes": 2329,
+      "sha256": "71c1e8f3a2a1bab85be9549654da973164b9ea0f9c84fbead3a685657a879829"
+    },
+    "target_snapshot_manifest.csv": {
+      "bytes": 5743,
+      "sha256": "43d8d8b327d8c57677890a7b15e7db4f77bbc11e3a209f63ffd1531c4c9419c0"
+    },
+    "training_row_manifest.csv": {
+      "bytes": 7364616,
+      "sha256": "a96ec191b059cb0dc33268c0b840831bbfb7d3604c4617382168face653285e7"
+    }
+  },
+  "policies": {
+    "existing": "corrected final FBS targets and regular-season plus postseason games",
+    "pre_bowl": "corrected pre-bowl FBS targets, regular-season FBS games, and unchanged FCS game policy"
+  },
+  "target_seasons": [
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "training_seasons": [
+    2003,
+    2004,
+    2005,
+    2006,
+    2007,
+    2008,
+    2009,
+    2010,
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021
+  ]
+}

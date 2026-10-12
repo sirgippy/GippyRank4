@@ -158,7 +158,11 @@ def coach_change_value(
 
 
 def load_rows(
-    *, max_season: int | None = None, corpus_policy: CorpusPolicy = "corrected"
+    *,
+    max_season: int | None = None,
+    corpus_policy: CorpusPolicy = "corrected",
+    outcomes_path: Path | None = None,
+    feature_path: Path | None = None,
 ) -> tuple[
     list[TeamSeason], list[ColdStartSeason], list[dict[str, object]]
 ]:
@@ -178,13 +182,15 @@ def load_rows(
     def rank_reader(row: dict[str, str]) -> np.ndarray:
         return valid_ranks(row, corpus_policy=corpus_policy)
 
+    outcomes_path = outcomes_path or (
+        ROOT / "data/processed/modeling/team_season_rank_distributions.csv"
+    )
+    feature_path = feature_path or OUT / "team_season_features.csv"
     outcomes = {
         (int(r["season"]), r["subdivision"], r["team_id"]): r
-        for r in read_csv(
-            ROOT / "data/processed/modeling/team_season_rank_distributions.csv"
-        )
+        for r in read_csv(outcomes_path)
     }
-    features = read_csv(OUT / "team_season_features.csv")
+    features = read_csv(feature_path)
     feature_index = {
         (int(r["season"]), r["subdivision"], r["team_id"]): r for r in features
     }

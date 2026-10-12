@@ -1,0 +1,41 @@
+{
+  "collection_missing_fbs_seasons": [],
+  "collection_missing_fcs_seasons": [],
+  "collection_status": "complete",
+  "common_fbs_target_team_seasons": 2886,
+  "data_gate_ready": true,
+  "issue_198_downstream_ready_before_repair": false,
+  "issue_198_pre_repair_anomalies": 20,
+  "issue_204_checked_inputs": {
+    "corrected_final_observations": {
+      "bytes": 43038379,
+      "sha256": "cd3ee420a830ca6ca1f1a9dd4accb0e844ffd5ee0b00398b4c3536dd57218d9a"
+    },
+    "corrected_final_rank_pairs": {
+      "bytes": 180002291,
+      "sha256": "4dd2376a488ede05c889372089fa0e0b16d62faaf879626c50cb359d5fe4e3af"
+    },
+    "corrected_final_targets": {
+      "bytes": 10558935,
+      "sha256": "cab882da17be2f79dd379fc296107e332e2768f9827d96752ea33d97dc026f28"
+    },
+    "corrected_pre_bowl_observations": {
+      "bytes": 47806722,
+      "sha256": "c82c1cd4250f02d06e56aa6e16d00421c59a21e23bdd58d59378f937896af58e"
+    },
+    "corrected_pre_bowl_rank_pairs": {
+      "bytes": 189646174,
+      "sha256": "3193da2bb427a2022a6b7a293d39093e7b26e3cde36eaa0a3c912e2db4eaa917"
+    },
+    "corrected_pre_bowl_targets": {
+      "bytes": 10982583,
+      "sha256": "6c610ea91ea60ce5da45e20baa7d636f91de52af974420f28a74eb0ec5d66e3f"
+    }
+  },
+  "issue_204_corpus_version": "massey-rank-population-v1",
+  "issue_204_support_anomalies": 0,
+  "issue_204_support_status": "passed",
+  "readiness_rule": "Use #198's complete collection plus #204's hash-verified corrected final/pre-bowl observations, targets, rank pairs, and empty support audit. The #198 downstream_ready=false value is retained as its pre-repair record.",
+  "validated_final_target_rows": 5762,
+  "validated_pre_bowl_target_rows": 5762
+}

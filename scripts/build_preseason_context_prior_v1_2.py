@@ -177,10 +177,13 @@ def maybe_float(value: str | None) -> float | None:
     return None if value in (None, "") else float(value)
 
 
-def feature_index() -> dict[tuple[int, str, str], dict[str, str]]:
+def feature_index(
+    feature_path: Path | None = None,
+) -> dict[tuple[int, str, str], dict[str, str]]:
+    feature_path = feature_path or PRESEASON / "team_season_features.csv"
     return {
         (int(x["season"]), x["subdivision"], x["team_id"]): x
-        for x in read_csv(PRESEASON / "team_season_features.csv")
+        for x in read_csv(feature_path)
     }
 
 
@@ -223,9 +226,12 @@ def enrich_features(
     return result
 
 
-def cached_tenures() -> dict[str, list[dict[str, object]]]:
+def cached_tenures(
+    tenure_root: Path | None = None,
+) -> dict[str, list[dict[str, object]]]:
+    tenure_root = tenure_root or TENURES
     result: dict[str, list[dict[str, object]]] = {}
-    for path in TENURES.glob("*.json"):
+    for path in tenure_root.glob("*.json"):
         payload = json.loads(path.read_text(encoding="utf-8"))
         if not isinstance(payload, list):
             continue
@@ -465,13 +471,17 @@ def inference_rows(
     trained_through_season: int,
     index: dict[tuple[int, str, str], dict[str, str]],
     tenures: dict[str, list[dict[str, object]]],
+    *,
+    outcomes_path: Path | None = None,
+    corpus_policy: v1.CorpusPolicy = "original",
 ) -> list[InferenceRow]:
     """Use an FBS universe plus completed outcomes only; target outcomes are never read."""
     if trained_through_season != target_season - 1:
         raise ValueError("annual priors require training through the prior season")
+    outcomes_path = outcomes_path or (MODELING / "team_season_rank_distributions.csv")
     outcomes = {
         (int(x["season"]), x["subdivision"], x["team_id"]): x
-        for x in read_csv(MODELING / "team_season_rank_distributions.csv")
+        for x in read_csv(outcomes_path)
         if int(x["season"]) <= trained_through_season
     }
     universe = [
@@ -484,7 +494,7 @@ def inference_rows(
         team_id, team_name = current["team_id"], current["team_name"]
         prior = outcomes.get((trained_through_season, "fbs", team_id))
         prior_ranks = (
-            v1.valid_ranks(prior, corpus_policy="original")
+            v1.valid_ranks(prior, corpus_policy=corpus_policy)
             if prior
             else np.asarray([], dtype=int)
         )
@@ -492,7 +502,7 @@ def inference_rows(
         for lag in range(2, 4):
             old = outcomes.get((target_season - lag, "fbs", team_id))
             old_ranks = (
-                v1.valid_ranks(old, corpus_policy="original")
+                v1.valid_ranks(old, corpus_policy=corpus_policy)
                 if old
                 else np.asarray([], dtype=int)
             )
@@ -506,7 +516,7 @@ def inference_rows(
         for year in range(2002, target_season):
             old = outcomes.get((year, "fbs", team_id))
             ranks = (
-                v1.valid_ranks(old, corpus_policy="original")
+                v1.valid_ranks(old, corpus_policy=corpus_policy)
                 if old
                 else np.asarray([], dtype=int)
             )
