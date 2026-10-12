@@ -1,0 +1,2550 @@
+{
+  "context_semantics": {
+    "cold_start": "matched History 1.1 fallback",
+    "db_boundary": "repaired observed incoming DB impact sum and coverage",
+    "feature_names": [
+      "lag2_z_mean",
+      "lag3_z_mean",
+      "long_run_z_mean",
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "transfer_in_prior_usage_sum",
+      "observed_db_impact_sum",
+      "db_impact_coverage_fraction"
+    ],
+    "missing_repaired_feature_target_team_seasons": [
+      [
+        2022,
+        "256"
+      ],
+      [
+        2023,
+        "2534"
+      ],
+      [
+        2023,
+        "55"
+      ],
+      [
+        2024,
+        "338"
+      ],
+      [
+        2025,
+        "2623"
+      ],
+      [
+        2025,
+        "48"
+      ]
+    ],
+    "missing_repaired_feature_team_seasons": [
+      [
+        2008,
+        "98"
+      ]
+    ],
+    "missingness_policy": "Uncovered transfer inputs remain missing; they are not interpreted as zero transfer impact.",
+    "source": "src/gippyrank/context_db_repair.py",
+    "version": "1.4"
+  },
+  "history_semantics": {
+    "cold_start": "learned FCS-to-FBS transition, otherwise generic FBS prior",
+    "features": [
+      "lag2_z_mean",
+      "lag3_z_mean",
+      "long_run_z_mean"
+    ],
+    "source": "src/gippyrank/history_annual_v1_1.py"
+  },
+  "rolling_models": {
+    "2022": {
+      "existing": {
+        "context": {
+          "model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean",
+              "coach_tenure_seasons",
+              "recruiting_class_rank",
+              "recruiting_class_points",
+              "recruiting_points_2y_mean",
+              "recruiting_points_3y_mean",
+              "recruiting_points_4y_mean",
+              "recruiting_points_trend",
+              "talent_composite",
+              "returning_pct_ppa",
+              "transfer_in_prior_usage_sum",
+              "observed_db_impact_sum",
+              "db_impact_coverage_fraction"
+            ],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.4488249750690779,
+              -0.028806135555790143,
+              0.0011462551869204215,
+              0.05691493180701961,
+              0.16516797279734527,
+              -0.09060394265472625,
+              0.13009667179399786,
+              -0.058388259068397244,
+              0.11209402960228165,
+              -0.4588837360458112,
+              0.1305278683841823,
+              0.015815144733950622,
+              -0.010621951512179473,
+              -0.20417206113956113,
+              -0.04479254001122529,
+              -0.015860155102339152,
+              -0.03182664814887302,
+              0.28167839788197574,
+              -0.07264439431578712,
+              0.0,
+              0.46531855855281684,
+              0.3616162026223573,
+              0.3616162026223573,
+              -0.28605887185707407,
+              1.0531550106407832,
+              0.9123887122372477,
+              -0.2885636948096952,
+              -0.03974706887691214,
+              0.004283255471403896,
+              -0.027975150186563044,
+              -0.012222913172334792,
+              -0.012222913172334792
+            ],
+            "location_feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean",
+              "coach_tenure_seasons",
+              "recruiting_class_rank",
+              "recruiting_class_points",
+              "recruiting_points_2y_mean",
+              "recruiting_points_3y_mean",
+              "recruiting_points_4y_mean",
+              "recruiting_points_trend",
+              "talent_composite",
+              "returning_pct_ppa",
+              "transfer_in_prior_usage_sum",
+              "observed_db_impact_sum",
+              "db_impact_coverage_fraction"
+            ],
+            "log_scale_coefficients": [
+              0.11349344310082664,
+              -0.030543483317650746,
+              -0.020025253557963415,
+              0.05568986943733282,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.011349562664680703,
+              -0.000716629435987957,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 374,
+              "iterations": 353,
+              "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+              "objective": 1.6430452021767974,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [
+                "lag2_z_mean",
+                "lag3_z_mean",
+                "long_run_z_mean",
+                "coach_tenure_seasons",
+                "recruiting_class_rank",
+                "recruiting_class_points",
+                "recruiting_points_2y_mean",
+                "recruiting_points_3y_mean",
+                "recruiting_points_4y_mean",
+                "recruiting_points_trend",
+                "talent_composite",
+                "returning_pct_ppa",
+                "transfer_in_prior_usage_sum",
+                "observed_db_impact_sum",
+                "db_impact_coverage_fraction"
+              ],
+              "means": {
+                "coach_tenure_seasons": 4.4068561118628775,
+                "db_impact_coverage_fraction": 0.9866636596000602,
+                "lag2_z_mean": -0.011943325058552168,
+                "lag3_z_mean": -0.011396165813133496,
+                "long_run_z_mean": 0.04487854486156172,
+                "observed_db_impact_sum": 0.004834303663796432,
+                "recruiting_class_points": 166.09005412719893,
+                "recruiting_class_rank": 62.15155615696888,
+                "recruiting_points_2y_mean": 164.660451059991,
+                "recruiting_points_3y_mean": 163.11765448804692,
+                "recruiting_points_4y_mean": 161.6057382348519,
+                "recruiting_points_trend": 5.823827244023454,
+                "returning_pct_ppa": 0.6294880469102392,
+                "talent_composite": 546.1844158773116,
+                "transfer_in_prior_usage_sum": 0.1580829950383401
+              },
+              "medians": {
+                "coach_tenure_seasons": 3.0,
+                "db_impact_coverage_fraction": 1.0,
+                "lag2_z_mean": 0.0015571090667925985,
+                "lag3_z_mean": -0.0012292184526412266,
+                "long_run_z_mean": 0.06597799702484118,
+                "observed_db_impact_sum": 0.0,
+                "recruiting_class_points": 162.05,
+                "recruiting_class_rank": 62.0,
+                "recruiting_points_2y_mean": 161.39,
+                "recruiting_points_3y_mean": 160.32000000000002,
+                "recruiting_points_4y_mean": 159.42000000000002,
+                "recruiting_points_trend": 5.904999999999994,
+                "returning_pct_ppa": 0.639,
+                "talent_composite": 544.23,
+                "transfer_in_prior_usage_sum": 0.154
+              },
+              "scales": {
+                "coach_tenure_seasons": 4.344907470057879,
+                "db_impact_coverage_fraction": 0.09936807295957538,
+                "lag2_z_mean": 1.6808174070774917,
+                "lag3_z_mean": 1.6289063913431445,
+                "long_run_z_mean": 1.435126819200711,
+                "observed_db_impact_sum": 0.1881821980657968,
+                "recruiting_class_points": 59.938478095666355,
+                "recruiting_class_rank": 35.908563509312465,
+                "recruiting_points_2y_mean": 58.46349450231456,
+                "recruiting_points_3y_mean": 58.28198863017991,
+                "recruiting_points_4y_mean": 58.279352284348704,
+                "recruiting_points_trend": 30.92430442176031,
+                "returning_pct_ppa": 0.16980945294118238,
+                "talent_composite": 119.98325198129726,
+                "transfer_in_prior_usage_sum": 0.056823043256114925
+              }
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12,
+            "scale_feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean"
+            ]
+          },
+          "training_row_count": 2217,
+          "training_row_keys_sha256": "565b9c6df00ecc586f0f13673572faebf591644be07e220f45acb4408b2f3e7e"
+        },
+        "history": {
+          "cold_start_training_rows": 135,
+          "generic_prior": {
+            "location": 0.11538861377388245,
+            "scale": 1.8389604018366836
+          },
+          "model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean"
+            ],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.47487559800941076,
+              -0.01844704239666913,
+              0.011903453189264652,
+              0.10584395160931132,
+              0.4343492886694752,
+              0.06311106861633314,
+              -0.01319651648253359,
+              0.0
+            ],
+            "log_scale_coefficients": [
+              0.15990004054248524,
+              -0.026053202628261236,
+              -0.03855267499944196,
+              0.06885788081128742,
+              0.006486214539039247,
+              0.02297588182953082,
+              0.0
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 36,
+              "iterations": 33,
+              "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+              "objective": 1.6882747969613099,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [
+                "lag2_z_mean",
+                "lag3_z_mean",
+                "long_run_z_mean"
+              ],
+              "means": {
+                "lag2_z_mean": -0.011943325058552168,
+                "lag3_z_mean": -0.011396165813133496,
+                "long_run_z_mean": 0.04487854486156172
+              },
+              "medians": {
+                "lag2_z_mean": 0.0015571090667925985,
+                "lag3_z_mean": -0.0012292184526412266,
+                "long_run_z_mean": 0.06597799702484118
+              },
+              "scales": {
+                "lag2_z_mean": 1.6808174070774917,
+                "lag3_z_mean": 1.6289063913431445,
+                "long_run_z_mean": 1.435126819200711
+              }
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12
+          },
+          "training_row_count": 2217,
+          "training_row_keys_sha256": "565b9c6df00ecc586f0f13673572faebf591644be07e220f45acb4408b2f3e7e",
+          "transition_model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.283990552411459,
+              1.9225608000104841
+            ],
+            "log_scale_coefficients": [
+              0.39419613004883847
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 13,
+              "iterations": 12,
+              "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+              "objective": 1.9618783126371504,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [],
+              "means": {},
+              "medians": {},
+              "scales": {}
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12
+          }
+        },
+        "trained_through_season": 2021
+      },
+      "pre_bowl": {
+        "context": {
+          "model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean",
+              "coach_tenure_seasons",
+              "recruiting_class_rank",
+              "recruiting_class_points",
+              "recruiting_points_2y_mean",
+              "recruiting_points_3y_mean",
+              "recruiting_points_4y_mean",
+              "recruiting_points_trend",
+              "talent_composite",
+              "returning_pct_ppa",
+              "transfer_in_prior_usage_sum",
+              "observed_db_impact_sum",
+              "db_impact_coverage_fraction"
+            ],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.4531522428991834,
+              -0.03172396393821701,
+              -0.00908302243392148,
+              0.05863230995712201,
+              0.16890008861535818,
+              -0.08819253309228842,
+              0.18872292495890156,
+              -0.014238729923644038,
+              0.10626408247788009,
+              -0.4172622608621558,
+              0.11537411773574922,
+              0.014691899024261663,
+              -0.01642933244267517,
+              -0.1943136849492707,
+              -0.043842900824895996,
+              -0.0016985824186114124,
+              -0.02546582889797614,
+              0.16677511523528368,
+              -0.03427268975809775,
+              0.0,
+              0.4492012903821139,
+              0.3407225951550982,
+              0.3407225951550982,
+              -0.24387230165540802,
+              0.9644629243587358,
+              0.9041218969859894,
+              -0.16706662779302675,
+              -0.020108541208035124,
+              0.0022801806361667514,
+              -0.04438042547806413,
+              -0.009822436168524781,
+              -0.009822436168524781
+            ],
+            "location_feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean",
+              "coach_tenure_seasons",
+              "recruiting_class_rank",
+              "recruiting_class_points",
+              "recruiting_points_2y_mean",
+              "recruiting_points_3y_mean",
+              "recruiting_points_4y_mean",
+              "recruiting_points_trend",
+              "talent_composite",
+              "returning_pct_ppa",
+              "transfer_in_prior_usage_sum",
+              "observed_db_impact_sum",
+              "db_impact_coverage_fraction"
+            ],
+            "log_scale_coefficients": [
+              0.11634994927833882,
+              -0.036675772522417854,
+              -0.02806235740931342,
+              0.0603257833161689,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              -0.0016328130739396774,
+              -0.000710181830327241,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 312,
+              "iterations": 294,
+              "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+              "objective": 1.6455348161169683,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [
+                "lag2_z_mean",
+                "lag3_z_mean",
+                "long_run_z_mean",
+                "coach_tenure_seasons",
+                "recruiting_class_rank",
+                "recruiting_class_points",
+                "recruiting_points_2y_mean",
+                "recruiting_points_3y_mean",
+                "recruiting_points_4y_mean",
+                "recruiting_points_trend",
+                "talent_composite",
+                "returning_pct_ppa",
+                "transfer_in_prior_usage_sum",
+                "observed_db_impact_sum",
+                "db_impact_coverage_fraction"
+              ],
+              "means": {
+                "coach_tenure_seasons": 4.4068561118628775,
+                "db_impact_coverage_fraction": 0.9866636596000602,
+                "lag2_z_mean": -0.011943325058552168,
+                "lag3_z_mean": -0.011396165813133496,
+                "long_run_z_mean": 0.04487854486156172,
+                "observed_db_impact_sum": 0.004834303663796432,
+                "recruiting_class_points": 166.09005412719893,
+                "recruiting_class_rank": 62.15155615696888,
+                "recruiting_points_2y_mean": 164.660451059991,
+                "recruiting_points_3y_mean": 163.11765448804692,
+                "recruiting_points_4y_mean": 161.6057382348519,
+                "recruiting_points_trend": 5.823827244023454,
+                "returning_pct_ppa": 0.6294880469102392,
+                "talent_composite": 546.1844158773116,
+                "transfer_in_prior_usage_sum": 0.1580829950383401
+              },
+              "medians": {
+                "coach_tenure_seasons": 3.0,
+                "db_impact_coverage_fraction": 1.0,
+                "lag2_z_mean": 0.0015571090667925985,
+                "lag3_z_mean": -0.0012292184526412266,
+                "long_run_z_mean": 0.06597799702484118,
+                "observed_db_impact_sum": 0.0,
+                "recruiting_class_points": 162.05,
+                "recruiting_class_rank": 62.0,
+                "recruiting_points_2y_mean": 161.39,
+                "recruiting_points_3y_mean": 160.32000000000002,
+                "recruiting_points_4y_mean": 159.42000000000002,
+                "recruiting_points_trend": 5.904999999999994,
+                "returning_pct_ppa": 0.639,
+                "talent_composite": 544.23,
+                "transfer_in_prior_usage_sum": 0.154
+              },
+              "scales": {
+                "coach_tenure_seasons": 4.344907470057879,
+                "db_impact_coverage_fraction": 0.09936807295957538,
+                "lag2_z_mean": 1.6808174070774917,
+                "lag3_z_mean": 1.6289063913431445,
+                "long_run_z_mean": 1.435126819200711,
+                "observed_db_impact_sum": 0.1881821980657968,
+                "recruiting_class_points": 59.938478095666355,
+                "recruiting_class_rank": 35.908563509312465,
+                "recruiting_points_2y_mean": 58.46349450231456,
+                "recruiting_points_3y_mean": 58.28198863017991,
+                "recruiting_points_4y_mean": 58.279352284348704,
+                "recruiting_points_trend": 30.92430442176031,
+                "returning_pct_ppa": 0.16980945294118238,
+                "talent_composite": 119.98325198129726,
+                "transfer_in_prior_usage_sum": 0.056823043256114925
+              }
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12,
+            "scale_feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean"
+            ]
+          },
+          "training_row_count": 2217,
+          "training_row_keys_sha256": "565b9c6df00ecc586f0f13673572faebf591644be07e220f45acb4408b2f3e7e"
+        },
+        "history": {
+          "cold_start_training_rows": 135,
+          "generic_prior": {
+            "location": 0.11391002674226099,
+            "scale": 1.8383359862370097
+          },
+          "model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean"
+            ],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.4799409351069839,
+              -0.021100570653768247,
+              0.002942240016203122,
+              0.10857808999704023,
+              0.4340642738643329,
+              0.06128139336522786,
+              0.0030234719377699466,
+              0.0
+            ],
+            "log_scale_coefficients": [
+              0.15883015688461605,
+              -0.032866999990478735,
+              -0.04347570543810909,
+              0.07443730207991865,
+              -0.002825421872916457,
+              0.02818443703750598,
+              0.0
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 45,
+              "iterations": 40,
+              "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+              "objective": 1.6882052812056547,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [
+                "lag2_z_mean",
+                "lag3_z_mean",
+                "long_run_z_mean"
+              ],
+              "means": {
+                "lag2_z_mean": -0.011943325058552168,
+                "lag3_z_mean": -0.011396165813133496,
+                "long_run_z_mean": 0.04487854486156172
+              },
+              "medians": {
+                "lag2_z_mean": 0.0015571090667925985,
+                "lag3_z_mean": -0.0012292184526412266,
+                "long_run_z_mean": 0.06597799702484118
+              },
+              "scales": {
+                "lag2_z_mean": 1.6808174070774917,
+                "lag3_z_mean": 1.6289063913431445,
+                "long_run_z_mean": 1.435126819200711
+              }
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12
+          },
+          "training_row_count": 2217,
+          "training_row_keys_sha256": "565b9c6df00ecc586f0f13673572faebf591644be07e220f45acb4408b2f3e7e",
+          "transition_model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.2818858289464601,
+              1.9505168648870632
+            ],
+            "log_scale_coefficients": [
+              0.3744300218037838
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 13,
+              "iterations": 12,
+              "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+              "objective": 1.9456500604372495,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [],
+              "means": {},
+              "medians": {},
+              "scales": {}
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12
+          }
+        },
+        "trained_through_season": 2021
+      }
+    },
+    "2023": {
+      "existing": {
+        "context": {
+          "model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean",
+              "coach_tenure_seasons",
+              "recruiting_class_rank",
+              "recruiting_class_points",
+              "recruiting_points_2y_mean",
+              "recruiting_points_3y_mean",
+              "recruiting_points_4y_mean",
+              "recruiting_points_trend",
+              "talent_composite",
+              "returning_pct_ppa",
+              "transfer_in_prior_usage_sum",
+              "observed_db_impact_sum",
+              "db_impact_coverage_fraction"
+            ],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.4438378422545979,
+              0.034105359431267,
+              -0.0024603803255023953,
+              0.06595801360855544,
+              0.1686291165501915,
+              -0.08684414484662291,
+              0.1144812593500569,
+              -0.08388940785919503,
+              0.07766579301265342,
+              -0.3686385184619925,
+              0.08934024990408715,
+              0.033463236014904224,
+              -0.017040997329393532,
+              -0.20818074590765845,
+              -0.0570430710019276,
+              -0.051981864208152546,
+              -0.006488521991209412,
+              0.15094001649985567,
+              -0.06161588576436882,
+              0.0,
+              0.47880042150555835,
+              0.3883096424971803,
+              0.3883096424971803,
+              -0.36107680239402973,
+              0.9719238524034035,
+              0.9595538937113578,
+              -0.18257908968275072,
+              -0.04218620883619129,
+              -0.009480600442055336,
+              -0.22704919652442904,
+              0.054565100703915716,
+              0.054565100703915716
+            ],
+            "location_feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean",
+              "coach_tenure_seasons",
+              "recruiting_class_rank",
+              "recruiting_class_points",
+              "recruiting_points_2y_mean",
+              "recruiting_points_3y_mean",
+              "recruiting_points_4y_mean",
+              "recruiting_points_trend",
+              "talent_composite",
+              "returning_pct_ppa",
+              "transfer_in_prior_usage_sum",
+              "observed_db_impact_sum",
+              "db_impact_coverage_fraction"
+            ],
+            "log_scale_coefficients": [
+              0.11052976974062616,
+              -0.025568833782330044,
+              -0.014101078844392679,
+              0.04741904686051092,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.010317046078251289,
+              0.005118562755604062,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 325,
+              "iterations": 306,
+              "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+              "objective": 1.6400095509711592,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [
+                "lag2_z_mean",
+                "lag3_z_mean",
+                "long_run_z_mean",
+                "coach_tenure_seasons",
+                "recruiting_class_rank",
+                "recruiting_class_points",
+                "recruiting_points_2y_mean",
+                "recruiting_points_3y_mean",
+                "recruiting_points_4y_mean",
+                "recruiting_points_trend",
+                "talent_composite",
+                "returning_pct_ppa",
+                "transfer_in_prior_usage_sum",
+                "observed_db_impact_sum",
+                "db_impact_coverage_fraction"
+              ],
+              "means": {
+                "coach_tenure_seasons": 4.397102684277802,
+                "db_impact_coverage_fraction": 0.9768853855986366,
+                "lag2_z_mean": -0.0120008362571655,
+                "lag3_z_mean": -0.010628361028026294,
+                "long_run_z_mean": 0.04516332835111413,
+                "observed_db_impact_sum": 0.02058056473347551,
+                "recruiting_class_points": 166.3442586280358,
+                "recruiting_class_rank": 62.369407754580315,
+                "recruiting_points_2y_mean": 165.06738602471242,
+                "recruiting_points_3y_mean": 163.79609785541825,
+                "recruiting_points_4y_mean": 162.46220281210057,
+                "recruiting_points_trend": 4.826974861525351,
+                "returning_pct_ppa": 0.6217673625905411,
+                "talent_composite": 550.2493097571369,
+                "transfer_in_prior_usage_sum": 0.1695867064337452
+              },
+              "medians": {
+                "coach_tenure_seasons": 3.0,
+                "db_impact_coverage_fraction": 1.0,
+                "lag2_z_mean": -0.006430512683241068,
+                "lag3_z_mean": 0.0004124088371041401,
+                "long_run_z_mean": 0.06772584582742786,
+                "observed_db_impact_sum": 0.0,
+                "recruiting_class_points": 162.275,
+                "recruiting_class_rank": 62.0,
+                "recruiting_points_2y_mean": 161.59,
+                "recruiting_points_3y_mean": 160.93333333333334,
+                "recruiting_points_4y_mean": 160.11,
+                "recruiting_points_trend": 5.0,
+                "returning_pct_ppa": 0.632,
+                "talent_composite": 548.72,
+                "transfer_in_prior_usage_sum": 0.159
+              },
+              "scales": {
+                "coach_tenure_seasons": 4.327649154963804,
+                "db_impact_coverage_fraction": 0.12993863961419952,
+                "lag2_z_mean": 1.6796037122839589,
+                "lag3_z_mean": 1.6359674309194914,
+                "long_run_z_mean": 1.4272691813086251,
+                "observed_db_impact_sum": 0.3255576482008452,
+                "recruiting_class_points": 59.943623973129625,
+                "recruiting_class_rank": 36.085319548982596,
+                "recruiting_points_2y_mean": 58.257299023683174,
+                "recruiting_points_3y_mean": 57.95441503044549,
+                "recruiting_points_4y_mean": 57.94533966877161,
+                "recruiting_points_trend": 31.38016250529565,
+                "returning_pct_ppa": 0.17356800437624037,
+                "talent_composite": 125.60515865630073,
+                "transfer_in_prior_usage_sum": 0.09047113135907513
+              }
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12,
+            "scale_feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean"
+            ]
+          },
+          "training_row_count": 2347,
+          "training_row_keys_sha256": "f68668367835a6c2d87cb0a119a8d66dea1fe64f795c43457e5ffdab602536c8"
+        },
+        "history": {
+          "cold_start_training_rows": 136,
+          "generic_prior": {
+            "location": 0.11538861377388245,
+            "scale": 1.8389604018366836
+          },
+          "model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean"
+            ],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.4717800724047347,
+              -0.017159338302613156,
+              -0.0023521555585366435,
+              0.1181655682082574,
+              0.44564324020598584,
+              0.042370175449280054,
+              -0.004455074811201518,
+              0.0
+            ],
+            "log_scale_coefficients": [
+              0.15959384862184514,
+              -0.019652390895103202,
+              -0.0351071528767685,
+              0.05981492959694576,
+              -0.0010884250109054593,
+              0.02848239950700205,
+              0.0
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 42,
+              "iterations": 37,
+              "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+              "objective": 1.6872985213082203,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [
+                "lag2_z_mean",
+                "lag3_z_mean",
+                "long_run_z_mean"
+              ],
+              "means": {
+                "lag2_z_mean": -0.0120008362571655,
+                "lag3_z_mean": -0.010628361028026294,
+                "long_run_z_mean": 0.04516332835111413
+              },
+              "medians": {
+                "lag2_z_mean": -0.006430512683241068,
+                "lag3_z_mean": 0.0004124088371041401,
+                "long_run_z_mean": 0.06772584582742786
+              },
+              "scales": {
+                "lag2_z_mean": 1.6796037122839589,
+                "lag3_z_mean": 1.6359674309194914,
+                "long_run_z_mean": 1.4272691813086251
+              }
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12
+          },
+          "training_row_count": 2347,
+          "training_row_keys_sha256": "f68668367835a6c2d87cb0a119a8d66dea1fe64f795c43457e5ffdab602536c8",
+          "transition_model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.45102665251200647,
+              1.9437561292939318
+            ],
+            "log_scale_coefficients": [
+              0.35462374329612856
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 13,
+              "iterations": 12,
+              "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+              "objective": 1.9308442581012508,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [],
+              "means": {},
+              "medians": {},
+              "scales": {}
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12
+          }
+        },
+        "trained_through_season": 2022
+      },
+      "pre_bowl": {
+        "context": {
+          "model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean",
+              "coach_tenure_seasons",
+              "recruiting_class_rank",
+              "recruiting_class_points",
+              "recruiting_points_2y_mean",
+              "recruiting_points_3y_mean",
+              "recruiting_points_4y_mean",
+              "recruiting_points_trend",
+              "talent_composite",
+              "returning_pct_ppa",
+              "transfer_in_prior_usage_sum",
+              "observed_db_impact_sum",
+              "db_impact_coverage_fraction"
+            ],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.44899290662085395,
+              0.02627044758917085,
+              -0.012305289377928349,
+              0.06727256561091184,
+              0.17145040221727484,
+              -0.08344908404633429,
+              0.17396423343149933,
+              -0.04195725179308893,
+              0.07429811264785065,
+              -0.33432211430460423,
+              0.08189743701305409,
+              0.03170903120126389,
+              -0.023306584146306257,
+              -0.19581049155778948,
+              -0.05917405123304215,
+              -0.04612151775582158,
+              -0.0022565731743600806,
+              0.06250454278092309,
+              -0.023936388855597308,
+              0.0,
+              0.4641202480486445,
+              0.37848388288177753,
+              0.37848388288177753,
+              -0.31900252219442604,
+              0.8867784236118558,
+              0.942588800834891,
+              -0.08737651826391626,
+              -0.02178450072186663,
+              -0.011207068010826802,
+              -0.20628252834270616,
+              0.04067759634533214,
+              0.04067759634533214
+            ],
+            "location_feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean",
+              "coach_tenure_seasons",
+              "recruiting_class_rank",
+              "recruiting_class_points",
+              "recruiting_points_2y_mean",
+              "recruiting_points_3y_mean",
+              "recruiting_points_4y_mean",
+              "recruiting_points_trend",
+              "talent_composite",
+              "returning_pct_ppa",
+              "transfer_in_prior_usage_sum",
+              "observed_db_impact_sum",
+              "db_impact_coverage_fraction"
+            ],
+            "log_scale_coefficients": [
+              0.11383631428102149,
+              -0.03163407746137861,
+              -0.019503943894886525,
+              0.04969313886512475,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              -0.00496850821196787,
+              0.006062458178259461,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 343,
+              "iterations": 327,
+              "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+              "objective": 1.6429525720690592,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [
+                "lag2_z_mean",
+                "lag3_z_mean",
+                "long_run_z_mean",
+                "coach_tenure_seasons",
+                "recruiting_class_rank",
+                "recruiting_class_points",
+                "recruiting_points_2y_mean",
+                "recruiting_points_3y_mean",
+                "recruiting_points_4y_mean",
+                "recruiting_points_trend",
+                "talent_composite",
+                "returning_pct_ppa",
+                "transfer_in_prior_usage_sum",
+                "observed_db_impact_sum",
+                "db_impact_coverage_fraction"
+              ],
+              "means": {
+                "coach_tenure_seasons": 4.397102684277802,
+                "db_impact_coverage_fraction": 0.9768853855986366,
+                "lag2_z_mean": -0.0120008362571655,
+                "lag3_z_mean": -0.010628361028026294,
+                "long_run_z_mean": 0.04516332835111413,
+                "observed_db_impact_sum": 0.02058056473347551,
+                "recruiting_class_points": 166.3442586280358,
+                "recruiting_class_rank": 62.369407754580315,
+                "recruiting_points_2y_mean": 165.06738602471242,
+                "recruiting_points_3y_mean": 163.79609785541825,
+                "recruiting_points_4y_mean": 162.46220281210057,
+                "recruiting_points_trend": 4.826974861525351,
+                "returning_pct_ppa": 0.6217673625905411,
+                "talent_composite": 550.2493097571369,
+                "transfer_in_prior_usage_sum": 0.1695867064337452
+              },
+              "medians": {
+                "coach_tenure_seasons": 3.0,
+                "db_impact_coverage_fraction": 1.0,
+                "lag2_z_mean": -0.006430512683241068,
+                "lag3_z_mean": 0.0004124088371041401,
+                "long_run_z_mean": 0.06772584582742786,
+                "observed_db_impact_sum": 0.0,
+                "recruiting_class_points": 162.275,
+                "recruiting_class_rank": 62.0,
+                "recruiting_points_2y_mean": 161.59,
+                "recruiting_points_3y_mean": 160.93333333333334,
+                "recruiting_points_4y_mean": 160.11,
+                "recruiting_points_trend": 5.0,
+                "returning_pct_ppa": 0.632,
+                "talent_composite": 548.72,
+                "transfer_in_prior_usage_sum": 0.159
+              },
+              "scales": {
+                "coach_tenure_seasons": 4.327649154963804,
+                "db_impact_coverage_fraction": 0.12993863961419952,
+                "lag2_z_mean": 1.6796037122839589,
+                "lag3_z_mean": 1.6359674309194914,
+                "long_run_z_mean": 1.4272691813086251,
+                "observed_db_impact_sum": 0.3255576482008452,
+                "recruiting_class_points": 59.943623973129625,
+                "recruiting_class_rank": 36.085319548982596,
+                "recruiting_points_2y_mean": 58.257299023683174,
+                "recruiting_points_3y_mean": 57.95441503044549,
+                "recruiting_points_4y_mean": 57.94533966877161,
+                "recruiting_points_trend": 31.38016250529565,
+                "returning_pct_ppa": 0.17356800437624037,
+                "talent_composite": 125.60515865630073,
+                "transfer_in_prior_usage_sum": 0.09047113135907513
+              }
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12,
+            "scale_feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean"
+            ]
+          },
+          "training_row_count": 2347,
+          "training_row_keys_sha256": "f68668367835a6c2d87cb0a119a8d66dea1fe64f795c43457e5ffdab602536c8"
+        },
+        "history": {
+          "cold_start_training_rows": 136,
+          "generic_prior": {
+            "location": 0.11391002674226099,
+            "scale": 1.8383359862370097
+          },
+          "model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean"
+            ],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.4767526757848808,
+              -0.019626115611448842,
+              -0.010487158134476211,
+              0.12011370820127687,
+              0.44565693651309174,
+              0.04159703949587465,
+              0.010796823682811752,
+              0.0
+            ],
+            "log_scale_coefficients": [
+              0.1589541953698628,
+              -0.02632214479055923,
+              -0.03730603983453102,
+              0.0632096010579613,
+              -0.011087117435943315,
+              0.03396545006765812,
+              0.0
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 44,
+              "iterations": 40,
+              "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+              "objective": 1.6875214895222446,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [
+                "lag2_z_mean",
+                "lag3_z_mean",
+                "long_run_z_mean"
+              ],
+              "means": {
+                "lag2_z_mean": -0.0120008362571655,
+                "lag3_z_mean": -0.010628361028026294,
+                "long_run_z_mean": 0.04516332835111413
+              },
+              "medians": {
+                "lag2_z_mean": -0.006430512683241068,
+                "lag3_z_mean": 0.0004124088371041401,
+                "long_run_z_mean": 0.06772584582742786
+              },
+              "scales": {
+                "lag2_z_mean": 1.6796037122839589,
+                "lag3_z_mean": 1.6359674309194914,
+                "long_run_z_mean": 1.4272691813086251
+              }
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12
+          },
+          "training_row_count": 2347,
+          "training_row_keys_sha256": "f68668367835a6c2d87cb0a119a8d66dea1fe64f795c43457e5ffdab602536c8",
+          "transition_model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.4444863532119604,
+              1.9704816104441303
+            ],
+            "log_scale_coefficients": [
+              0.337381020367324
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 13,
+              "iterations": 12,
+              "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+              "objective": 1.9166924474867935,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [],
+              "means": {},
+              "medians": {},
+              "scales": {}
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12
+          }
+        },
+        "trained_through_season": 2022
+      }
+    },
+    "2024": {
+      "existing": {
+        "context": {
+          "model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean",
+              "coach_tenure_seasons",
+              "recruiting_class_rank",
+              "recruiting_class_points",
+              "recruiting_points_2y_mean",
+              "recruiting_points_3y_mean",
+              "recruiting_points_4y_mean",
+              "recruiting_points_trend",
+              "talent_composite",
+              "returning_pct_ppa",
+              "transfer_in_prior_usage_sum",
+              "observed_db_impact_sum",
+              "db_impact_coverage_fraction"
+            ],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.4481167421975005,
+              -0.019524435635166558,
+              -0.010046003969882342,
+              0.06298389266419907,
+              0.1829352364362973,
+              -0.086328743570068,
+              0.09684960526886674,
+              -0.0872456675522302,
+              0.051981254505965344,
+              -0.3522608997532883,
+              0.09538972997322631,
+              0.036357534093865426,
+              -0.02200909297830252,
+              -0.22348466076653306,
+              -0.05917511397145683,
+              -0.05084318802601534,
+              -0.007240608013985074,
+              0.1485973076815897,
+              -0.08035844695998848,
+              0.0,
+              0.4259104127555904,
+              0.38456196556057143,
+              0.38456196556057143,
+              -0.3396163008244626,
+              0.9582108083917573,
+              0.963087090393859,
+              -0.19320520486117895,
+              -0.04732413725899819,
+              -0.011538161625342502,
+              -0.08005718420455667,
+              0.01689050742565674,
+              0.01689050742565674
+            ],
+            "location_feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean",
+              "coach_tenure_seasons",
+              "recruiting_class_rank",
+              "recruiting_class_points",
+              "recruiting_points_2y_mean",
+              "recruiting_points_3y_mean",
+              "recruiting_points_4y_mean",
+              "recruiting_points_trend",
+              "talent_composite",
+              "returning_pct_ppa",
+              "transfer_in_prior_usage_sum",
+              "observed_db_impact_sum",
+              "db_impact_coverage_fraction"
+            ],
+            "log_scale_coefficients": [
+              0.10529996168987511,
+              -0.020202803489899883,
+              -0.009124494306739802,
+              0.04227127389990572,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.034508309814445276,
+              0.012140130670702229,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 356,
+              "iterations": 337,
+              "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+              "objective": 1.6373338659025936,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [
+                "lag2_z_mean",
+                "lag3_z_mean",
+                "long_run_z_mean",
+                "coach_tenure_seasons",
+                "recruiting_class_rank",
+                "recruiting_class_points",
+                "recruiting_points_2y_mean",
+                "recruiting_points_3y_mean",
+                "recruiting_points_4y_mean",
+                "recruiting_points_trend",
+                "talent_composite",
+                "returning_pct_ppa",
+                "transfer_in_prior_usage_sum",
+                "observed_db_impact_sum",
+                "db_impact_coverage_fraction"
+              ],
+              "means": {
+                "coach_tenure_seasons": 4.382970137207425,
+                "db_impact_coverage_fraction": 0.9683341544116362,
+                "lag2_z_mean": -0.01176054490280746,
+                "lag3_z_mean": -0.011495490983447062,
+                "long_run_z_mean": 0.04505024359630245,
+                "observed_db_impact_sum": 0.0644148637613156,
+                "recruiting_class_points": 166.96598870056496,
+                "recruiting_class_rank": 62.601694915254235,
+                "recruiting_points_2y_mean": 165.52663438256658,
+                "recruiting_points_3y_mean": 164.29665186978747,
+                "recruiting_points_4y_mean": 163.13089386602098,
+                "recruiting_points_trend": 4.877171105730428,
+                "returning_pct_ppa": 0.6122941888619854,
+                "talent_composite": 557.3546368038741,
+                "transfer_in_prior_usage_sum": 0.21645359160613392
+              },
+              "medians": {
+                "coach_tenure_seasons": 3.0,
+                "db_impact_coverage_fraction": 1.0,
+                "lag2_z_mean": -0.012801867756429965,
+                "lag3_z_mean": -0.010515798356363827,
+                "long_run_z_mean": 0.06840839369058685,
+                "observed_db_impact_sum": 0.0,
+                "recruiting_class_points": 162.97,
+                "recruiting_class_rank": 62.0,
+                "recruiting_points_2y_mean": 162.16,
+                "recruiting_points_3y_mean": 161.565,
+                "recruiting_points_4y_mean": 160.9975,
+                "recruiting_points_trend": 4.989999999999995,
+                "returning_pct_ppa": 0.6234999999999999,
+                "talent_composite": 557.69,
+                "transfer_in_prior_usage_sum": 0.2005
+              },
+              "scales": {
+                "coach_tenure_seasons": 4.3069083786397915,
+                "db_impact_coverage_fraction": 0.14913162014206668,
+                "lag2_z_mean": 1.6829817260983067,
+                "lag3_z_mean": 1.6368396341736486,
+                "long_run_z_mean": 1.4198604310871148,
+                "observed_db_impact_sum": 0.5088840692508977,
+                "recruiting_class_points": 60.02106902184006,
+                "recruiting_class_rank": 36.25131915932864,
+                "recruiting_points_2y_mean": 58.28433447081394,
+                "recruiting_points_3y_mean": 57.86857170961875,
+                "recruiting_points_4y_mean": 57.77130183087238,
+                "recruiting_points_trend": 31.47221279279293,
+                "returning_pct_ppa": 0.1774139284048971,
+                "talent_composite": 130.27611040145842,
+                "transfer_in_prior_usage_sum": 0.12173558364619551
+              }
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12,
+            "scale_feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean"
+            ]
+          },
+          "training_row_count": 2478,
+          "training_row_keys_sha256": "3f96a518d19d9b650a47f1d2ae445f6bb1da4d46f8156c327c20206071a0f076"
+        },
+        "history": {
+          "cold_start_training_rows": 138,
+          "generic_prior": {
+            "location": 0.11538861377388245,
+            "scale": 1.8389604018366836
+          },
+          "model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean"
+            ],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.4769794700628458,
+              -0.016761282808328733,
+              -0.013094270699097476,
+              0.11408955441178377,
+              0.45568337360662564,
+              0.03667284302728151,
+              -0.0063645489413277825,
+              0.0
+            ],
+            "log_scale_coefficients": [
+              0.15508313823276035,
+              -0.018038358131563098,
+              -0.031165815451659976,
+              0.05889361145151025,
+              0.0013803494827204358,
+              0.03008949047563478,
+              0.0
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 42,
+              "iterations": 39,
+              "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+              "objective": 1.6836355136421906,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [
+                "lag2_z_mean",
+                "lag3_z_mean",
+                "long_run_z_mean"
+              ],
+              "means": {
+                "lag2_z_mean": -0.01176054490280746,
+                "lag3_z_mean": -0.011495490983447062,
+                "long_run_z_mean": 0.04505024359630245
+              },
+              "medians": {
+                "lag2_z_mean": -0.012801867756429965,
+                "lag3_z_mean": -0.010515798356363827,
+                "long_run_z_mean": 0.06840839369058685
+              },
+              "scales": {
+                "lag2_z_mean": 1.6829817260983067,
+                "lag3_z_mean": 1.6368396341736486,
+                "long_run_z_mean": 1.4198604310871148
+              }
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12
+          },
+          "training_row_count": 2478,
+          "training_row_keys_sha256": "3f96a518d19d9b650a47f1d2ae445f6bb1da4d46f8156c327c20206071a0f076",
+          "transition_model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.506874078986743,
+              1.9918102605713406
+            ],
+            "log_scale_coefficients": [
+              0.30757422010284524
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 13,
+              "iterations": 12,
+              "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+              "objective": 1.8850062807242007,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [],
+              "means": {},
+              "medians": {},
+              "scales": {}
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12
+          }
+        },
+        "trained_through_season": 2023
+      },
+      "pre_bowl": {
+        "context": {
+          "model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean",
+              "coach_tenure_seasons",
+              "recruiting_class_rank",
+              "recruiting_class_points",
+              "recruiting_points_2y_mean",
+              "recruiting_points_3y_mean",
+              "recruiting_points_4y_mean",
+              "recruiting_points_trend",
+              "talent_composite",
+              "returning_pct_ppa",
+              "transfer_in_prior_usage_sum",
+              "observed_db_impact_sum",
+              "db_impact_coverage_fraction"
+            ],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.4535378207525816,
+              -0.027193370056236985,
+              -0.0211244717099514,
+              0.06823499854240364,
+              0.18455491012596997,
+              -0.08368108937468066,
+              0.15400513230216029,
+              -0.044262951405607605,
+              0.043419879010054584,
+              -0.3020030094682074,
+              0.07548098646064591,
+              0.03462941344477134,
+              -0.027265087987166172,
+              -0.2119047686771451,
+              -0.058688187940503685,
+              -0.0465236940875581,
+              -0.001972540775005862,
+              0.06036736714186009,
+              -0.04604726290209322,
+              0.0,
+              0.4091694129759014,
+              0.3721992595761176,
+              0.3721992595761176,
+              -0.28429703091008224,
+              0.8543956119698743,
+              0.9519552457279132,
+              -0.09658915794072524,
+              -0.027793219229076335,
+              -0.011257088537952235,
+              -0.042393970265647465,
+              -0.005168960569110315,
+              -0.005168960569110315
+            ],
+            "location_feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean",
+              "coach_tenure_seasons",
+              "recruiting_class_rank",
+              "recruiting_class_points",
+              "recruiting_points_2y_mean",
+              "recruiting_points_3y_mean",
+              "recruiting_points_4y_mean",
+              "recruiting_points_trend",
+              "talent_composite",
+              "returning_pct_ppa",
+              "transfer_in_prior_usage_sum",
+              "observed_db_impact_sum",
+              "db_impact_coverage_fraction"
+            ],
+            "log_scale_coefficients": [
+              0.11019266050692766,
+              -0.0238957248037915,
+              -0.016887626610856545,
+              0.044532124108474916,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.019976188627831015,
+              0.015278638435153093,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 316,
+              "iterations": 298,
+              "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+              "objective": 1.6419170711894435,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [
+                "lag2_z_mean",
+                "lag3_z_mean",
+                "long_run_z_mean",
+                "coach_tenure_seasons",
+                "recruiting_class_rank",
+                "recruiting_class_points",
+                "recruiting_points_2y_mean",
+                "recruiting_points_3y_mean",
+                "recruiting_points_4y_mean",
+                "recruiting_points_trend",
+                "talent_composite",
+                "returning_pct_ppa",
+                "transfer_in_prior_usage_sum",
+                "observed_db_impact_sum",
+                "db_impact_coverage_fraction"
+              ],
+              "means": {
+                "coach_tenure_seasons": 4.382970137207425,
+                "db_impact_coverage_fraction": 0.9683341544116362,
+                "lag2_z_mean": -0.01176054490280746,
+                "lag3_z_mean": -0.011495490983447062,
+                "long_run_z_mean": 0.04505024359630245,
+                "observed_db_impact_sum": 0.0644148637613156,
+                "recruiting_class_points": 166.96598870056496,
+                "recruiting_class_rank": 62.601694915254235,
+                "recruiting_points_2y_mean": 165.52663438256658,
+                "recruiting_points_3y_mean": 164.29665186978747,
+                "recruiting_points_4y_mean": 163.13089386602098,
+                "recruiting_points_trend": 4.877171105730428,
+                "returning_pct_ppa": 0.6122941888619854,
+                "talent_composite": 557.3546368038741,
+                "transfer_in_prior_usage_sum": 0.21645359160613392
+              },
+              "medians": {
+                "coach_tenure_seasons": 3.0,
+                "db_impact_coverage_fraction": 1.0,
+                "lag2_z_mean": -0.012801867756429965,
+                "lag3_z_mean": -0.010515798356363827,
+                "long_run_z_mean": 0.06840839369058685,
+                "observed_db_impact_sum": 0.0,
+                "recruiting_class_points": 162.97,
+                "recruiting_class_rank": 62.0,
+                "recruiting_points_2y_mean": 162.16,
+                "recruiting_points_3y_mean": 161.565,
+                "recruiting_points_4y_mean": 160.9975,
+                "recruiting_points_trend": 4.989999999999995,
+                "returning_pct_ppa": 0.6234999999999999,
+                "talent_composite": 557.69,
+                "transfer_in_prior_usage_sum": 0.2005
+              },
+              "scales": {
+                "coach_tenure_seasons": 4.3069083786397915,
+                "db_impact_coverage_fraction": 0.14913162014206668,
+                "lag2_z_mean": 1.6829817260983067,
+                "lag3_z_mean": 1.6368396341736486,
+                "long_run_z_mean": 1.4198604310871148,
+                "observed_db_impact_sum": 0.5088840692508977,
+                "recruiting_class_points": 60.02106902184006,
+                "recruiting_class_rank": 36.25131915932864,
+                "recruiting_points_2y_mean": 58.28433447081394,
+                "recruiting_points_3y_mean": 57.86857170961875,
+                "recruiting_points_4y_mean": 57.77130183087238,
+                "recruiting_points_trend": 31.47221279279293,
+                "returning_pct_ppa": 0.1774139284048971,
+                "talent_composite": 130.27611040145842,
+                "transfer_in_prior_usage_sum": 0.12173558364619551
+              }
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12,
+            "scale_feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean"
+            ]
+          },
+          "training_row_count": 2478,
+          "training_row_keys_sha256": "3f96a518d19d9b650a47f1d2ae445f6bb1da4d46f8156c327c20206071a0f076"
+        },
+        "history": {
+          "cold_start_training_rows": 138,
+          "generic_prior": {
+            "location": 0.11391002674226099,
+            "scale": 1.8383359862370097
+          },
+          "model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean"
+            ],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.4820905301186868,
+              -0.018514660170560505,
+              -0.02274723496967385,
+              0.11864499643047044,
+              0.4541394252328221,
+              0.03531875161517869,
+              0.006704496574572032,
+              0.0
+            ],
+            "log_scale_coefficients": [
+              0.155833063212353,
+              -0.022236018574221823,
+              -0.0360816387197129,
+              0.0622843316300971,
+              -0.009711821937249787,
+              0.0369845147728246,
+              0.0
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 42,
+              "iterations": 38,
+              "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+              "objective": 1.685141060279938,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [
+                "lag2_z_mean",
+                "lag3_z_mean",
+                "long_run_z_mean"
+              ],
+              "means": {
+                "lag2_z_mean": -0.01176054490280746,
+                "lag3_z_mean": -0.011495490983447062,
+                "long_run_z_mean": 0.04505024359630245
+              },
+              "medians": {
+                "lag2_z_mean": -0.012801867756429965,
+                "lag3_z_mean": -0.010515798356363827,
+                "long_run_z_mean": 0.06840839369058685
+              },
+              "scales": {
+                "lag2_z_mean": 1.6829817260983067,
+                "lag3_z_mean": 1.6368396341736486,
+                "long_run_z_mean": 1.4198604310871148
+              }
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12
+          },
+          "training_row_count": 2478,
+          "training_row_keys_sha256": "3f96a518d19d9b650a47f1d2ae445f6bb1da4d46f8156c327c20206071a0f076",
+          "transition_model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.48897905747762993,
+              2.011161219315079
+            ],
+            "log_scale_coefficients": [
+              0.3130915587594588
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 13,
+              "iterations": 12,
+              "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+              "objective": 1.889435049467939,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [],
+              "means": {},
+              "medians": {},
+              "scales": {}
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12
+          }
+        },
+        "trained_through_season": 2023
+      }
+    },
+    "2025": {
+      "existing": {
+        "context": {
+          "model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean",
+              "coach_tenure_seasons",
+              "recruiting_class_rank",
+              "recruiting_class_points",
+              "recruiting_points_2y_mean",
+              "recruiting_points_3y_mean",
+              "recruiting_points_4y_mean",
+              "recruiting_points_trend",
+              "talent_composite",
+              "returning_pct_ppa",
+              "transfer_in_prior_usage_sum",
+              "observed_db_impact_sum",
+              "db_impact_coverage_fraction"
+            ],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.4406040391508798,
+              -0.03668408713720096,
+              -0.0017141760224878967,
+              0.05507891352715601,
+              0.18468701594467593,
+              -0.08321711546627661,
+              0.06821746251506587,
+              -0.09267696157670294,
+              0.02230650044081928,
+              -0.23225193978782438,
+              -0.021546642595995216,
+              0.027824437847739778,
+              -0.013877790564601577,
+              -0.21929199506795968,
+              -0.08412864537753335,
+              -0.054453016890624976,
+              0.000759500012745489,
+              0.17804121108998863,
+              -0.09618138854942633,
+              0.0,
+              0.4320564969240167,
+              0.3855439186057283,
+              0.3855439186057283,
+              -0.30687323072193,
+              0.8720326116988913,
+              1.0413991547896666,
+              -0.23872525617485138,
+              -0.05881114797487246,
+              -0.024234184480959757,
+              -0.04073730010193648,
+              0.012253443571257072,
+              0.012253443571257072
+            ],
+            "location_feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean",
+              "coach_tenure_seasons",
+              "recruiting_class_rank",
+              "recruiting_class_points",
+              "recruiting_points_2y_mean",
+              "recruiting_points_3y_mean",
+              "recruiting_points_4y_mean",
+              "recruiting_points_trend",
+              "talent_composite",
+              "returning_pct_ppa",
+              "transfer_in_prior_usage_sum",
+              "observed_db_impact_sum",
+              "db_impact_coverage_fraction"
+            ],
+            "log_scale_coefficients": [
+              0.1091356759944152,
+              -0.025595086420531776,
+              -0.007011732516913124,
+              0.0428003952239578,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.03899151045203885,
+              0.0075086245273589935,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 361,
+              "iterations": 340,
+              "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+              "objective": 1.6392095419603476,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [
+                "lag2_z_mean",
+                "lag3_z_mean",
+                "long_run_z_mean",
+                "coach_tenure_seasons",
+                "recruiting_class_rank",
+                "recruiting_class_points",
+                "recruiting_points_2y_mean",
+                "recruiting_points_3y_mean",
+                "recruiting_points_4y_mean",
+                "recruiting_points_trend",
+                "talent_composite",
+                "returning_pct_ppa",
+                "transfer_in_prior_usage_sum",
+                "observed_db_impact_sum",
+                "db_impact_coverage_fraction"
+              ],
+              "means": {
+                "coach_tenure_seasons": 4.372271160474914,
+                "db_impact_coverage_fraction": 0.9628179812017423,
+                "lag2_z_mean": -0.011250177931740291,
+                "lag3_z_mean": -0.011245293968077564,
+                "long_run_z_mean": 0.045392965793285035,
+                "observed_db_impact_sum": 0.09613089730097646,
+                "recruiting_class_points": 167.80496936039833,
+                "recruiting_class_rank": 62.88586748372271,
+                "recruiting_points_2y_mean": 166.26260340865568,
+                "recruiting_points_3y_mean": 164.89619494446572,
+                "recruiting_points_4y_mean": 163.7308416315588,
+                "recruiting_points_trend": 5.410873228648028,
+                "returning_pct_ppa": 0.5995319800842588,
+                "talent_composite": 566.7827805438529,
+                "transfer_in_prior_usage_sum": 0.28324435082343935
+              },
+              "medians": {
+                "coach_tenure_seasons": 3.0,
+                "db_impact_coverage_fraction": 1.0,
+                "lag2_z_mean": -0.013392845198297311,
+                "lag3_z_mean": -0.013247738310781243,
+                "long_run_z_mean": 0.06863828641496,
+                "observed_db_impact_sum": 0.0,
+                "recruiting_class_points": 164.095,
+                "recruiting_class_rank": 62.0,
+                "recruiting_points_2y_mean": 163.08749999999998,
+                "recruiting_points_3y_mean": 162.14333333333335,
+                "recruiting_points_4y_mean": 161.63750000000002,
+                "recruiting_points_trend": 5.390000000000015,
+                "returning_pct_ppa": 0.611,
+                "talent_composite": 567.96,
+                "transfer_in_prior_usage_sum": 0.265
+              },
+              "scales": {
+                "coach_tenure_seasons": 4.298252226989983,
+                "db_impact_coverage_fraction": 0.15465559833199002,
+                "lag2_z_mean": 1.6855241860377332,
+                "lag3_z_mean": 1.6416725860809085,
+                "long_run_z_mean": 1.4133582414643104,
+                "observed_db_impact_sum": 0.6703676156242526,
+                "recruiting_class_points": 59.90298888266602,
+                "recruiting_class_rank": 36.52813791635445,
+                "recruiting_points_2y_mean": 58.24876302397405,
+                "recruiting_points_3y_mean": 57.82056860815378,
+                "recruiting_points_4y_mean": 57.65494624750941,
+                "recruiting_points_trend": 31.915897289782787,
+                "returning_pct_ppa": 0.18191988388171576,
+                "talent_composite": 134.03798767524097,
+                "transfer_in_prior_usage_sum": 0.15015132683871468
+              }
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12,
+            "scale_feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean"
+            ]
+          },
+          "training_row_count": 2611,
+          "training_row_keys_sha256": "8172e38032c546c41e22882ecf145d8af5f2bc1f5ee521f6c6286ce28c136f60"
+        },
+        "history": {
+          "cold_start_training_rows": 139,
+          "generic_prior": {
+            "location": 0.11538861377388245,
+            "scale": 1.8389604018366836
+          },
+          "model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean"
+            ],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.4721787878461621,
+              -0.0173866602957074,
+              -0.007489247355675676,
+              0.10798576372627337,
+              0.4596697069985986,
+              0.02219144849773504,
+              -0.0007348237714894106,
+              0.0
+            ],
+            "log_scale_coefficients": [
+              0.1581832597994621,
+              -0.02508331356994648,
+              -0.02847620491419146,
+              0.06067001426683697,
+              0.0028678313025406825,
+              0.026590153004820073,
+              0.0
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 44,
+              "iterations": 39,
+              "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+              "objective": 1.6851413035020426,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [
+                "lag2_z_mean",
+                "lag3_z_mean",
+                "long_run_z_mean"
+              ],
+              "means": {
+                "lag2_z_mean": -0.011250177931740291,
+                "lag3_z_mean": -0.011245293968077564,
+                "long_run_z_mean": 0.045392965793285035
+              },
+              "medians": {
+                "lag2_z_mean": -0.013392845198297311,
+                "lag3_z_mean": -0.013247738310781243,
+                "long_run_z_mean": 0.06863828641496
+              },
+              "scales": {
+                "lag2_z_mean": 1.6855241860377332,
+                "lag3_z_mean": 1.6416725860809085,
+                "long_run_z_mean": 1.4133582414643104
+              }
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12
+          },
+          "training_row_count": 2611,
+          "training_row_keys_sha256": "8172e38032c546c41e22882ecf145d8af5f2bc1f5ee521f6c6286ce28c136f60",
+          "transition_model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.5728431934875756,
+              2.110771990750543
+            ],
+            "log_scale_coefficients": [
+              0.2918377928762929
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 13,
+              "iterations": 12,
+              "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+              "objective": 1.882152794244211,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [],
+              "means": {},
+              "medians": {},
+              "scales": {}
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12
+          }
+        },
+        "trained_through_season": 2024
+      },
+      "pre_bowl": {
+        "context": {
+          "model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean",
+              "coach_tenure_seasons",
+              "recruiting_class_rank",
+              "recruiting_class_points",
+              "recruiting_points_2y_mean",
+              "recruiting_points_3y_mean",
+              "recruiting_points_4y_mean",
+              "recruiting_points_trend",
+              "talent_composite",
+              "returning_pct_ppa",
+              "transfer_in_prior_usage_sum",
+              "observed_db_impact_sum",
+              "db_impact_coverage_fraction"
+            ],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.44750688283548407,
+              -0.046218372858067146,
+              -0.014322373085595853,
+              0.062485832125327684,
+              0.18546871156088018,
+              -0.0794683680076198,
+              0.11569199428497971,
+              -0.05852990957886943,
+              0.008272136245910304,
+              -0.1822906283044961,
+              -0.03442925673760692,
+              0.028624142826050667,
+              -0.021622133780429795,
+              -0.20980765313200583,
+              -0.08191154108470751,
+              -0.048471306142984914,
+              0.0054375832000283465,
+              0.09861606247516512,
+              -0.06408285069475764,
+              0.0,
+              0.4172309694138664,
+              0.3818905487250994,
+              0.3818905487250994,
+              -0.2524572650797029,
+              0.7689333585824528,
+              1.018209081728057,
+              -0.15357695674327224,
+              -0.04040404602748407,
+              -0.024518894204098682,
+              0.002084530824013282,
+              -0.010446429843458081,
+              -0.010446429843458081
+            ],
+            "location_feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean",
+              "coach_tenure_seasons",
+              "recruiting_class_rank",
+              "recruiting_class_points",
+              "recruiting_points_2y_mean",
+              "recruiting_points_3y_mean",
+              "recruiting_points_4y_mean",
+              "recruiting_points_trend",
+              "talent_composite",
+              "returning_pct_ppa",
+              "transfer_in_prior_usage_sum",
+              "observed_db_impact_sum",
+              "db_impact_coverage_fraction"
+            ],
+            "log_scale_coefficients": [
+              0.11323981656566505,
+              -0.029149134218331357,
+              -0.015295001421791516,
+              0.04620756502632779,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.02385087292818916,
+              0.01143085085951773,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 348,
+              "iterations": 333,
+              "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+              "objective": 1.6432840490678167,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [
+                "lag2_z_mean",
+                "lag3_z_mean",
+                "long_run_z_mean",
+                "coach_tenure_seasons",
+                "recruiting_class_rank",
+                "recruiting_class_points",
+                "recruiting_points_2y_mean",
+                "recruiting_points_3y_mean",
+                "recruiting_points_4y_mean",
+                "recruiting_points_trend",
+                "talent_composite",
+                "returning_pct_ppa",
+                "transfer_in_prior_usage_sum",
+                "observed_db_impact_sum",
+                "db_impact_coverage_fraction"
+              ],
+              "means": {
+                "coach_tenure_seasons": 4.372271160474914,
+                "db_impact_coverage_fraction": 0.9628179812017423,
+                "lag2_z_mean": -0.011250177931740291,
+                "lag3_z_mean": -0.011245293968077564,
+                "long_run_z_mean": 0.045392965793285035,
+                "observed_db_impact_sum": 0.09613089730097646,
+                "recruiting_class_points": 167.80496936039833,
+                "recruiting_class_rank": 62.88586748372271,
+                "recruiting_points_2y_mean": 166.26260340865568,
+                "recruiting_points_3y_mean": 164.89619494446572,
+                "recruiting_points_4y_mean": 163.7308416315588,
+                "recruiting_points_trend": 5.410873228648028,
+                "returning_pct_ppa": 0.5995319800842588,
+                "talent_composite": 566.7827805438529,
+                "transfer_in_prior_usage_sum": 0.28324435082343935
+              },
+              "medians": {
+                "coach_tenure_seasons": 3.0,
+                "db_impact_coverage_fraction": 1.0,
+                "lag2_z_mean": -0.013392845198297311,
+                "lag3_z_mean": -0.013247738310781243,
+                "long_run_z_mean": 0.06863828641496,
+                "observed_db_impact_sum": 0.0,
+                "recruiting_class_points": 164.095,
+                "recruiting_class_rank": 62.0,
+                "recruiting_points_2y_mean": 163.08749999999998,
+                "recruiting_points_3y_mean": 162.14333333333335,
+                "recruiting_points_4y_mean": 161.63750000000002,
+                "recruiting_points_trend": 5.390000000000015,
+                "returning_pct_ppa": 0.611,
+                "talent_composite": 567.96,
+                "transfer_in_prior_usage_sum": 0.265
+              },
+              "scales": {
+                "coach_tenure_seasons": 4.298252226989983,
+                "db_impact_coverage_fraction": 0.15465559833199002,
+                "lag2_z_mean": 1.6855241860377332,
+                "lag3_z_mean": 1.6416725860809085,
+                "long_run_z_mean": 1.4133582414643104,
+                "observed_db_impact_sum": 0.6703676156242526,
+                "recruiting_class_points": 59.90298888266602,
+                "recruiting_class_rank": 36.52813791635445,
+                "recruiting_points_2y_mean": 58.24876302397405,
+                "recruiting_points_3y_mean": 57.82056860815378,
+                "recruiting_points_4y_mean": 57.65494624750941,
+                "recruiting_points_trend": 31.915897289782787,
+                "returning_pct_ppa": 0.18191988388171576,
+                "talent_composite": 134.03798767524097,
+                "transfer_in_prior_usage_sum": 0.15015132683871468
+              }
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12,
+            "scale_feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean"
+            ]
+          },
+          "training_row_count": 2611,
+          "training_row_keys_sha256": "8172e38032c546c41e22882ecf145d8af5f2bc1f5ee521f6c6286ce28c136f60"
+        },
+        "history": {
+          "cold_start_training_rows": 139,
+          "generic_prior": {
+            "location": 0.11391002674226099,
+            "scale": 1.8383359862370097
+          },
+          "model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [
+              "lag2_z_mean",
+              "lag3_z_mean",
+              "long_run_z_mean"
+            ],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.47852928093265773,
+              -0.01898284788604226,
+              -0.018895942157017502,
+              0.11437144705556232,
+              0.45659760781918507,
+              0.020071233283931324,
+              0.012651492874498339,
+              0.0
+            ],
+            "log_scale_coefficients": [
+              0.15853867589327597,
+              -0.028887320060800005,
+              -0.03372378900034564,
+              0.06410641135475943,
+              -0.009162374144065224,
+              0.033622540749298165,
+              0.0
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 42,
+              "iterations": 36,
+              "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+              "objective": 1.6863674324803812,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [
+                "lag2_z_mean",
+                "lag3_z_mean",
+                "long_run_z_mean"
+              ],
+              "means": {
+                "lag2_z_mean": -0.011250177931740291,
+                "lag3_z_mean": -0.011245293968077564,
+                "long_run_z_mean": 0.045392965793285035
+              },
+              "medians": {
+                "lag2_z_mean": -0.013392845198297311,
+                "lag3_z_mean": -0.013247738310781243,
+                "long_run_z_mean": 0.06863828641496
+              },
+              "scales": {
+                "lag2_z_mean": 1.6855241860377332,
+                "lag3_z_mean": 1.6416725860809085,
+                "long_run_z_mean": 1.4133582414643104
+              }
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12
+          },
+          "training_row_count": 2611,
+          "training_row_keys_sha256": "8172e38032c546c41e22882ecf145d8af5f2bc1f5ee521f6c6286ce28c136f60",
+          "transition_model": {
+            "conditioning": "equal-weight deterministic quadrature over prior constituent ranks",
+            "degrees_of_freedom": null,
+            "family": "normal",
+            "feature_names": [],
+            "lag_count": 1,
+            "location_coefficients": [
+              0.5502431817266976,
+              2.1231028159695384
+            ],
+            "log_scale_coefficients": [
+              0.2952674014257959
+            ],
+            "minimum_scale": 0.1,
+            "optimizer": {
+              "function_evaluations": 14,
+              "iterations": 13,
+              "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+              "objective": 1.88313117168719,
+              "status": 0,
+              "success": true
+            },
+            "outcome_weighting": "equal team-season weight; empirical target log score averages outcomes within team-season",
+            "penalty": 0.25,
+            "preprocessing": {
+              "feature_names": [],
+              "means": {},
+              "medians": {},
+              "scales": {}
+            },
+            "quadrature_method": "sort empirical values then retain evenly spaced order statistics",
+            "quadrature_points": 12
+          }
+        },
+        "trained_through_season": 2024
+      }
+    }
+  },
+  "spec_version": "issue-200-v1"
+}

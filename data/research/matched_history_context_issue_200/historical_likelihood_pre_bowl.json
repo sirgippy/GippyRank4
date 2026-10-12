@@ -1,0 +1,69 @@
+{
+  "artifact_kind": "matched_historical_likelihood_issue_200",
+  "beta": [
+    -153.72415316118642,
+    576.8246255847891,
+    -292.76651042957457,
+    -12.390163039784357,
+    -307.9927481705723,
+    13.75027337716717,
+    32.113182197906916,
+    -193.1242329916885,
+    3.130165535600268,
+    27.258970199948802,
+    -34.59277198455872,
+    77.51708748650292,
+    -106.27179194408902,
+    -30.23347274984543,
+    15.175234818926162,
+    73.95100213342127,
+    27.231955725383827,
+    37.85333150957845,
+    14.516591735362514,
+    -36.38618253373439,
+    10.142978857312498,
+    15.918599251213562,
+    49.78617149095323,
+    -1.0059803702409884,
+    -1.9209684244965917,
+    -140.5619492596212,
+    511.76879825895907,
+    -312.2421054737916,
+    -7.826417923846252,
+    -250.79495521138858,
+    50.791316659177056,
+    -8.918162757752592,
+    -349.270031626461,
+    2.571459860655492
+  ],
+  "degrees_of_freedom": 15.0,
+  "feature_count": 34,
+  "fit_kind": "weighted_pseudo",
+  "fitting_recipe": "eight weighted-pseudo Student-t IRLS iterations; same surface, pair weights, and fit semantics as historical likelihood V1",
+  "included_game_count": 25504,
+  "included_game_ids_sha256": "91c8df8029ab10e388076f98fc721db77bf5f19d718f611ac319ab3d34b2027e",
+  "missing_rank_or_score_games": {
+    "away": 16,
+    "home": 16
+  },
+  "optimizer": {
+    "convergence_assessed": false,
+    "convergence_status": "not_assessed_fixed_iteration_recipe",
+    "iterations": 8,
+    "method": "iteratively reweighted least squares",
+    "objective": "weighted_pseudo"
+  },
+  "pairing_game_counts": {
+    "fbs-fbs": 13030,
+    "fbs-fcs": 1716,
+    "fcs-fcs": 10758
+  },
+  "pairing_method_game_counts": {
+    "same_system": 25504
+  },
+  "policy": "pre_bowl",
+  "rank_pair_pseudo_observations": 1895100,
+  "scale": 13.188732204646211,
+  "student_t_df": 15.0,
+  "training_seasons": "2003-2021"
+}

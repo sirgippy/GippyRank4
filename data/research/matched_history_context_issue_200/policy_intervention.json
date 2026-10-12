@@ -1,0 +1,400 @@
+{
+  "comparison": "pre_bowl versus existing fitted policies on corrected issue 204 inputs",
+  "data_repair_effects": "Corrected-corpus and restored coaching-source differences from frozen #192/#196 controls remain in baseline_parity.json. Both fitted policies share the same hash-bound coaching inputs, so these deltas describe the policy intervention.",
+  "fbs_target_distribution_differences": [
+    {
+      "changed_distribution_team_count": 131,
+      "different_population_support_team_count": 0,
+      "maximum_total_variation_distance": 0.6550282763707892,
+      "mean_total_variation_distance": 0.3778522721513879,
+      "target_season": 2022,
+      "team_count": 131
+    },
+    {
+      "changed_distribution_team_count": 133,
+      "different_population_support_team_count": 0,
+      "maximum_total_variation_distance": 0.8117117117117116,
+      "mean_total_variation_distance": 0.41090564248458983,
+      "target_season": 2023,
+      "team_count": 133
+    },
+    {
+      "changed_distribution_team_count": 134,
+      "different_population_support_team_count": 0,
+      "maximum_total_variation_distance": 0.7708641975308641,
+      "mean_total_variation_distance": 0.41491467213482136,
+      "target_season": 2024,
+      "team_count": 134
+    },
+    {
+      "changed_distribution_team_count": 136,
+      "different_population_support_team_count": 0,
+      "maximum_total_variation_distance": 0.7547611092549281,
+      "mean_total_variation_distance": 0.38813878776938004,
+      "target_season": 2025,
+      "team_count": 136
+    }
+  ],
+  "fitted_coefficient_differences": [
+    {
+      "coefficient_count": 15,
+      "coefficient_vectors": {
+        "location_coefficients": {
+          "coefficient_count": 8,
+          "maximum_absolute_difference": 0.016219988420303536,
+          "mean_absolute_difference": 0.004718611924001727
+        },
+        "log_scale_coefficients": {
+          "coefficient_count": 7,
+          "maximum_absolute_difference": 0.009311636411955704,
+          "mean_absolute_difference": 0.004700903478187988
+        }
+      },
+      "component": "main_prior",
+      "maximum_absolute_difference": 0.016219988420303536,
+      "mean_absolute_difference": 0.004710347982621982,
+      "model_family": "History",
+      "target_season": 2022
+    },
+    {
+      "coefficient_count": 63,
+      "coefficient_vectors": {
+        "location_coefficients": {
+          "coefficient_count": 32,
+          "maximum_absolute_difference": 0.12149706701666843,
+          "mean_absolute_difference": 0.02323897210768691
+        },
+        "log_scale_coefficients": {
+          "coefficient_count": 31,
+          "maximum_absolute_difference": 0.012982375738620381,
+          "mean_absolute_difference": 0.0011177624663466603
+        }
+      },
+      "component": "main_prior",
+      "maximum_absolute_difference": 0.12149706701666843,
+      "mean_absolute_difference": 0.012353932442900438,
+      "model_family": "Context",
+      "target_season": 2022
+    },
+    {
+      "coefficient_count": 3,
+      "coefficient_vectors": {
+        "location_coefficients": {
+          "coefficient_count": 2,
+          "maximum_absolute_difference": 0.02795606487657909,
+          "mean_absolute_difference": 0.015030394170788997
+        },
+        "log_scale_coefficients": {
+          "coefficient_count": 1,
+          "maximum_absolute_difference": 0.019766108245054648,
+          "mean_absolute_difference": 0.019766108245054648
+        }
+      },
+      "component": "transition_model",
+      "maximum_absolute_difference": 0.02795606487657909,
+      "mean_absolute_difference": 0.016608965528877546,
+      "model_family": "History",
+      "target_season": 2022
+    },
+    {
+      "coefficient_count": 15,
+      "coefficient_vectors": {
+        "location_coefficients": {
+          "coefficient_count": 8,
+          "maximum_absolute_difference": 0.015251898494013271,
+          "mean_absolute_difference": 0.004195156751558175
+        },
+        "log_scale_coefficients": {
+          "coefficient_count": 7,
+          "maximum_absolute_difference": 0.009998692425037856,
+          "mean_absolute_difference": 0.004054958364558624
+        }
+      },
+      "component": "main_prior",
+      "maximum_absolute_difference": 0.015251898494013271,
+      "mean_absolute_difference": 0.004129730837625052,
+      "model_family": "History",
+      "target_season": 2023
+    },
+    {
+      "coefficient_count": 63,
+      "coefficient_vectors": {
+        "location_coefficients": {
+          "coefficient_count": 32,
+          "maximum_absolute_difference": 0.09520257141883445,
+          "mean_absolute_difference": 0.021250781936120573
+        },
+        "log_scale_coefficients": {
+          "coefficient_count": 31,
+          "maximum_absolute_difference": 0.01528555429021916,
+          "mean_absolute_difference": 0.001073490160884714
+        }
+      },
+      "component": "main_prior",
+      "maximum_absolute_difference": 0.09520257141883445,
+      "mean_absolute_difference": 0.01132227328481404,
+      "model_family": "Context",
+      "target_season": 2023
+    },
+    {
+      "coefficient_count": 3,
+      "coefficient_vectors": {
+        "location_coefficients": {
+          "coefficient_count": 2,
+          "maximum_absolute_difference": 0.02672548115019846,
+          "mean_absolute_difference": 0.016632890225122265
+        },
+        "log_scale_coefficients": {
+          "coefficient_count": 1,
+          "maximum_absolute_difference": 0.017242722928804577,
+          "mean_absolute_difference": 0.017242722928804577
+        }
+      },
+      "component": "transition_model",
+      "maximum_absolute_difference": 0.02672548115019846,
+      "mean_absolute_difference": 0.01683616779301637,
+      "model_family": "History",
+      "target_season": 2023
+    },
+    {
+      "coefficient_count": 15,
+      "coefficient_vectors": {
+        "location_coefficients": {
+          "coefficient_count": 8,
+          "maximum_absolute_difference": 0.013069045515899814,
+          "mean_absolute_difference": 0.004629991126142751
+        },
+        "log_scale_coefficients": {
+          "coefficient_count": 7,
+          "maximum_absolute_difference": 0.011092171419970223,
+          "mean_absolute_difference": 0.004463046369435882
+        }
+      },
+      "component": "main_prior",
+      "maximum_absolute_difference": 0.013069045515899814,
+      "mean_absolute_difference": 0.0045520835730128795,
+      "model_family": "History",
+      "target_season": 2024
+    },
+    {
+      "coefficient_count": 63,
+      "coefficient_vectors": {
+        "location_coefficients": {
+          "coefficient_count": 32,
+          "maximum_absolute_difference": 0.10381519642188297,
+          "mean_absolute_difference": 0.024177365538229637
+        },
+        "log_scale_coefficients": {
+          "coefficient_count": 31,
+          "maximum_absolute_difference": 0.01453212118661426,
+          "mean_absolute_difference": 0.0011703300514417816
+        }
+      },
+      "component": "main_prior",
+      "maximum_absolute_difference": 0.10381519642188297,
+      "mean_absolute_difference": 0.012856443314572122,
+      "model_family": "Context",
+      "target_season": 2024
+    },
+    {
+      "coefficient_count": 3,
+      "coefficient_vectors": {
+        "location_coefficients": {
+          "coefficient_count": 2,
+          "maximum_absolute_difference": 0.019350958743738378,
+          "mean_absolute_difference": 0.01862299012642571
+        },
+        "log_scale_coefficients": {
+          "coefficient_count": 1,
+          "maximum_absolute_difference": 0.00551733865661358,
+          "mean_absolute_difference": 0.00551733865661358
+        }
+      },
+      "component": "transition_model",
+      "maximum_absolute_difference": 0.019350958743738378,
+      "mean_absolute_difference": 0.014254439636488333,
+      "model_family": "History",
+      "target_season": 2024
+    },
+    {
+      "coefficient_count": 15,
+      "coefficient_vectors": {
+        "location_coefficients": {
+          "coefficient_count": 8,
+          "maximum_absolute_difference": 0.01338631664598775,
+          "mean_absolute_difference": 0.005539711230833286
+        },
+        "log_scale_coefficients": {
+          "coefficient_count": 7,
+          "maximum_absolute_difference": 0.012030205446605907,
+          "mean_absolute_difference": 0.004557999564261147
+        }
+      },
+      "component": "main_prior",
+      "maximum_absolute_difference": 0.01338631664598775,
+      "mean_absolute_difference": 0.005081579119766288,
+      "model_family": "History",
+      "target_season": 2025
+    },
+    {
+      "coefficient_count": 63,
+      "coefficient_vectors": {
+        "location_coefficients": {
+          "coefficient_count": 32,
+          "maximum_absolute_difference": 0.10309925311643853,
+          "mean_absolute_difference": 0.023025337015803476
+        },
+        "log_scale_coefficients": {
+          "coefficient_count": 31,
+          "maximum_absolute_difference": 0.015140637523849691,
+          "mean_absolute_difference": 0.00123908035265504
+        }
+      },
+      "component": "main_prior",
+      "maximum_absolute_difference": 0.10309925311643853,
+      "mean_absolute_difference": 0.012305115483143137,
+      "model_family": "Context",
+      "target_season": 2025
+    },
+    {
+      "coefficient_count": 3,
+      "coefficient_vectors": {
+        "location_coefficients": {
+          "coefficient_count": 2,
+          "maximum_absolute_difference": 0.022600011760878003,
+          "mean_absolute_difference": 0.017465418489936657
+        },
+        "log_scale_coefficients": {
+          "coefficient_count": 1,
+          "maximum_absolute_difference": 0.0034296085495029716,
+          "mean_absolute_difference": 0.0034296085495029716
+        }
+      },
+      "component": "transition_model",
+      "maximum_absolute_difference": 0.022600011760878003,
+      "mean_absolute_difference": 0.012786815176458763,
+      "model_family": "History",
+      "target_season": 2025
+    }
+  ],
+  "likelihood_differences": {
+    "absolute_scale_difference": 0.041874925651343986,
+    "included_game_count_existing": 26164,
+    "included_game_count_pre_bowl": 25504,
+    "maximum_absolute_coefficient_difference": 27.313713012238367,
+    "mean_absolute_coefficient_difference": 3.498266581787622,
+    "pre_bowl_minus_existing_included_game_count": -660,
+    "pre_bowl_minus_existing_rank_pair_pseudo_observations": 7702,
+    "rank_pair_composition": [
+      {
+        "existing_game_count": 13690,
+        "existing_rank_pair_rows": 1434979,
+        "pairing": "fbs-fbs",
+        "pairing_method": "same_system",
+        "pre_bowl_game_count": 13030,
+        "pre_bowl_minus_existing_game_count": -660,
+        "pre_bowl_minus_existing_rank_pair_rows": 9367,
+        "pre_bowl_rank_pair_rows": 1444346
+      },
+      {
+        "existing_game_count": 1716,
+        "existing_rank_pair_rows": 62160,
+        "pairing": "fbs-fcs",
+        "pairing_method": "same_system",
+        "pre_bowl_game_count": 1716,
+        "pre_bowl_minus_existing_game_count": 0,
+        "pre_bowl_minus_existing_rank_pair_rows": -1665,
+        "pre_bowl_rank_pair_rows": 60495
+      },
+      {
+        "existing_game_count": 10758,
+        "existing_rank_pair_rows": 390259,
+        "pairing": "fcs-fcs",
+        "pairing_method": "same_system",
+        "pre_bowl_game_count": 10758,
+        "pre_bowl_minus_existing_game_count": 0,
+        "pre_bowl_minus_existing_rank_pair_rows": 0,
+        "pre_bowl_rank_pair_rows": 390259
+      }
+    ],
+    "rank_pair_pseudo_observations_existing": 1887398,
+    "rank_pair_pseudo_observations_pre_bowl": 1895100,
+    "scale_existing": 13.230607130297555,
+    "scale_pre_bowl": 13.188732204646211
+  },
+  "material_prior_change_threshold_total_variation": 0.01,
+  "prior_pmf_differences": [
+    {
+      "material_change_threshold_total_variation": 0.01,
+      "materially_changed_team_count": 1,
+      "maximum_total_variation_distance": 0.012300391405212083,
+      "mean_total_variation_distance": 0.003685442345015412,
+      "model_family": "History",
+      "target_season": 2022,
+      "team_count": 131
+    },
+    {
+      "material_change_threshold_total_variation": 0.01,
+      "materially_changed_team_count": 82,
+      "maximum_total_variation_distance": 0.10114007866485537,
+      "mean_total_variation_distance": 0.018448925360363317,
+      "model_family": "Context",
+      "target_season": 2022,
+      "team_count": 131
+    },
+    {
+      "material_change_threshold_total_variation": 0.01,
+      "materially_changed_team_count": 2,
+      "maximum_total_variation_distance": 0.012466197067758006,
+      "mean_total_variation_distance": 0.00313233507998832,
+      "model_family": "History",
+      "target_season": 2023,
+      "team_count": 133
+    },
+    {
+      "material_change_threshold_total_variation": 0.01,
+      "materially_changed_team_count": 55,
+      "maximum_total_variation_distance": 0.044370805113590726,
+      "mean_total_variation_distance": 0.01095321919347611,
+      "model_family": "Context",
+      "target_season": 2023,
+      "team_count": 133
+    },
+    {
+      "material_change_threshold_total_variation": 0.01,
+      "materially_changed_team_count": 1,
+      "maximum_total_variation_distance": 0.010429437560514858,
+      "mean_total_variation_distance": 0.003060723552469843,
+      "model_family": "History",
+      "target_season": 2024,
+      "team_count": 134
+    },
+    {
+      "material_change_threshold_total_variation": 0.01,
+      "materially_changed_team_count": 43,
+      "maximum_total_variation_distance": 0.031606950009720386,
+      "mean_total_variation_distance": 0.008022053465334928,
+      "model_family": "Context",
+      "target_season": 2024,
+      "team_count": 134
+    },
+    {
+      "material_change_threshold_total_variation": 0.01,
+      "materially_changed_team_count": 2,
+      "maximum_total_variation_distance": 0.019124401842174336,
+      "mean_total_variation_distance": 0.003783928856490083,
+      "model_family": "History",
+      "target_season": 2025,
+      "team_count": 136
+    },
+    {
+      "material_change_threshold_total_variation": 0.01,
+      "materially_changed_team_count": 38,
+      "maximum_total_variation_distance": 0.027595007267437466,
+      "mean_total_variation_distance": 0.007820288317584878,
+      "model_family": "Context",
+      "target_season": 2025,
+      "team_count": 136
+    }
+  ]
+}
