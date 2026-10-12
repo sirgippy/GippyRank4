@@ -423,7 +423,7 @@ def update_reporting_only() -> None:
     report = json.loads(report_path.read_text(encoding="utf-8"))
     selected = report["selection"]["selected"]
     rows, cold, _ = v1.load_rows(
-        max_season=max(TEST_SEASONS), legacy_filtering=True
+        max_season=max(TEST_SEASONS), corpus_policy="original"
     )
     reference = join_targets(read_predictions("A2_t1_t2_t3"), rows, cold)
     candidate = join_targets(read_predictions("V1_1_" + selected), rows, cold)
@@ -444,7 +444,7 @@ def main() -> None:
     # PMFs, including its six FBS transition priors.  Keeping this pass separate
     # makes the V1.1 experiment runner practical on modest local hardware.
     rows, cold, _ = v1.load_rows(
-        max_season=max(TEST_SEASONS), legacy_filtering=True
+        max_season=max(TEST_SEASONS), corpus_policy="original"
     )
     fbs = [row for row in rows if row.subdivision == "fbs"]
     train = [row for row in fbs if row.season in DEV_TRAIN]

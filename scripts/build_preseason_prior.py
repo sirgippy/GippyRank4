@@ -7,10 +7,11 @@ import json
 from dataclasses import dataclass
 from itertools import pairwise
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 
-from gippyrank.modeling import validate_rank_observations
+from gippyrank.modeling import validate_distribution_row
 from gippyrank.preseason import (
     DirectRankModel,
     GenericRankPrior,
@@ -114,13 +115,23 @@ class PriorPrediction:
         }
 
 
-def valid_ranks(row: dict[str, str]) -> np.ndarray:
-    """Return corrected constituent ranks after validating their population."""
-    return np.asarray(validate_rank_observations(row), dtype=int)
+CorpusPolicy = Literal["corrected", "original"]
+
+
+def valid_ranks(
+    row: dict[str, str], *, corpus_policy: CorpusPolicy = "corrected"
+) -> np.ndarray:
+    """Read ranks under an explicit original or corrected corpus contract."""
+    if corpus_policy == "original":
+        return legacy_valid_ranks(row)
+    if corpus_policy != "corrected":
+        raise ValueError(f"unsupported corpus policy: {corpus_policy!r}")
+    validate_distribution_row(row)
+    return rank_sample(row).astype(int)
 
 
 def legacy_valid_ranks(row: dict[str, str]) -> np.ndarray:
-    """Retain the historical filter for explicit frozen-fit reproduction only."""
+    """Filter source ranks as required by the frozen original-corpus fits."""
     population = int(row["team_population"])
     ranks = rank_sample(row).astype(int)
     return ranks[(ranks >= 1) & (ranks <= population)]
@@ -147,7 +158,7 @@ def coach_change_value(
 
 
 def load_rows(
-    *, max_season: int | None = None, legacy_filtering: bool = False
+    *, max_season: int | None = None, corpus_policy: CorpusPolicy = "corrected"
 ) -> tuple[
     list[TeamSeason], list[ColdStartSeason], list[dict[str, object]]
 ]:
@@ -157,11 +168,16 @@ def load_rows(
     useful for annual refits after new completed seasons are added; the legacy
     2022--2025 backtest passes its own fixed evaluation ceiling.
 
-    ``legacy_filtering`` is reserved for the retained V1.1 reproduction
-    orchestrator, whose archived rank-filter behavior discarded malformed
-    source observations. New fits validate the complete corrected PMF row.
+    ``corpus_policy="original"`` is reserved for frozen fits whose source
+    corpus and rank-filter behavior must remain reproducible. Corrected fits
+    validate the complete PMF row before using its rank observations.
     """
-    rank_reader = legacy_valid_ranks if legacy_filtering else valid_ranks
+    if corpus_policy not in ("corrected", "original"):
+        raise ValueError(f"unsupported corpus policy: {corpus_policy!r}")
+
+    def rank_reader(row: dict[str, str]) -> np.ndarray:
+        return valid_ranks(row, corpus_policy=corpus_policy)
+
     outcomes = {
         (int(r["season"]), r["subdivision"], r["team_id"]): r
         for r in read_csv(

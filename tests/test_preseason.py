@@ -371,6 +371,59 @@ def test_preseason_prior_rejects_out_of_population_corrected_rank() -> None:
     ):
         values["valid_ranks"](row)
     assert values["legacy_valid_ranks"](row).tolist() == [119]
+    assert values["valid_ranks"](row, corpus_policy="original").tolist() == [119]
+
+
+@pytest.mark.parametrize(
+    ("field", "invalid_value", "message"),
+    [
+        (
+            "pmf",
+            '[{"rank":1,"count":1,"probability":-1.0}]',
+            "invalid PMF count/probability",
+        ),
+        (
+            "pmf",
+            '[{"rank":1,"count":2,"probability":1.0}]',
+            "PMF rank 1 disagrees with retained observations",
+        ),
+    ],
+)
+def test_preseason_prior_loader_rejects_invalid_full_distribution_rows(
+    monkeypatch: pytest.MonkeyPatch,
+    field: str,
+    invalid_value: str,
+    message: str,
+) -> None:
+    values = runpy.run_path(
+        str(Path(__file__).parents[1] / "scripts/build_preseason_prior.py")
+    )
+    target = {
+        "season": "2007",
+        "subdivision": "fbs",
+        "team_id": "70",
+        "team_name": "Idaho",
+        "team_population": "119",
+        "usable_systems": "1",
+        "rank_observations": "[1]",
+        "pmf": '[{"rank":1,"count":1,"probability":1.0}]',
+    }
+    target[field] = invalid_value
+    features = [
+        {
+            "season": "2007",
+            "subdivision": "fbs",
+            "team_id": "70",
+            "team_name": "Idaho",
+        }
+    ]
+
+    def fake_read_csv(path: Path) -> list[dict[str, str]]:
+        return features if path.name == "team_season_features.csv" else [target]
+
+    monkeypatch.setitem(values["load_rows"].__globals__, "read_csv", fake_read_csv)
+    with pytest.raises(ValueError, match=message):
+        values["load_rows"](max_season=2007)
 
 
 def test_season_holdout_is_disjoint_from_training() -> None:

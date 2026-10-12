@@ -483,11 +483,19 @@ def inference_rows(
     for current in universe:
         team_id, team_name = current["team_id"], current["team_name"]
         prior = outcomes.get((trained_through_season, "fbs", team_id))
-        prior_ranks = v1.valid_ranks(prior) if prior else np.asarray([], dtype=int)
+        prior_ranks = (
+            v1.valid_ranks(prior, corpus_policy="original")
+            if prior
+            else np.asarray([], dtype=int)
+        )
         base, lag_zs, history = {}, [], []
         for lag in range(2, 4):
             old = outcomes.get((target_season - lag, "fbs", team_id))
-            old_ranks = v1.valid_ranks(old) if old else np.asarray([], dtype=int)
+            old_ranks = (
+                v1.valid_ranks(old, corpus_policy="original")
+                if old
+                else np.asarray([], dtype=int)
+            )
             values = (
                 rank_to_z(old_ranks, int(old["team_population"]))
                 if len(old_ranks)
@@ -497,7 +505,11 @@ def inference_rows(
             lag_zs.append(tuple(float(x) for x in values))
         for year in range(2002, target_season):
             old = outcomes.get((year, "fbs", team_id))
-            ranks = v1.valid_ranks(old) if old else np.asarray([], dtype=int)
+            ranks = (
+                v1.valid_ranks(old, corpus_policy="original")
+                if old
+                else np.asarray([], dtype=int)
+            )
             if len(ranks):
                 history.append(rank_to_z(ranks, int(old["team_population"])))
         if len(prior_ranks):
@@ -598,7 +610,10 @@ def future_predictions(
             )
         elif row.cold_start_reason == "fcs_to_fbs_transition":
             old = outcomes[(trained_through_season, "fcs", row.team_id)]
-            cross = rank_to_z(v1.valid_ranks(old), int(old["team_population"]))
+            cross = rank_to_z(
+                v1.valid_ranks(old, corpus_policy="original"),
+                int(old["team_population"]),
+            )
             pmf, location, scale, method = (
                 promotion_model.pmf({}, cross, row.population),
                 promotion_model.conditional_parameters({}, cross)[0],
@@ -725,7 +740,9 @@ def render_report(report: dict[str, object]) -> None:
 
 
 def main() -> None:
-    rows, cold, _ = v1.load_rows(max_season=max(TEST_SEASONS))
+    rows, cold, _ = v1.load_rows(
+        max_season=max(TEST_SEASONS), corpus_policy="original"
+    )
     fbs = [row for row in rows if row.subdivision == "fbs"]
     index, tenures = feature_index(), cached_tenures()
     contextual, coverage = attach_context(fbs, index, tenures)

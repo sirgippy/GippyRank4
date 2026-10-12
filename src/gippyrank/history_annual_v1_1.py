@@ -19,7 +19,7 @@ import numpy as np
 
 from gippyrank import preseason as fit_semantics
 from gippyrank.context_prior import AnnualFittedInstance
-from gippyrank.modeling import validate_rank_observations
+from gippyrank.modeling import validate_distribution_row
 from gippyrank.preseason import (
     DirectRankModel,
     GenericRankPrior,
@@ -296,10 +296,9 @@ def _load_inputs(
             raise ValueError(
                 "historical ranks have duplicate or target-season outcomes"
             )
-        # Keep _rank_values' frozen filtering semantics available for legacy
-        # reproduction, while enforcing the corrected-corpus contract at this
-        # canonical input boundary before any transform can discard a rank.
-        validate_rank_observations(row)
+        # The canonical corrected corpus must satisfy the full distribution
+        # contract before any rank transformation can discard observations.
+        validate_distribution_row(row)
         _rank_values(row)
         outcomes[key] = row
     target_features: dict[str, dict[str, str]] = {}

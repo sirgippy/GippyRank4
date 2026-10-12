@@ -122,7 +122,9 @@ def base_context_rows(
     *, max_season: int = max(TEST_SEASONS)
 ) -> tuple[list, list, list[dict[str, object]]]:
     """Load outcome-bearing historical rows with only approved base inputs."""
-    rows, cold, _ = v1.load_rows(max_season=max_season)
+    rows, cold, _ = v1.load_rows(
+        max_season=max_season, corpus_policy="original"
+    )
     fbs = [row for row in rows if row.subdivision == "fbs"]
     contextual, coverage = c12.attach_context(
         fbs, c12.feature_index(), c12.cached_tenures()

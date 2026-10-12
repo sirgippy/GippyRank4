@@ -226,7 +226,9 @@ def _rank_row(season: int, subdivision: str, team_id: str, rank: int) -> dict[st
         "team_id": team_id,
         "team_name": team_id,
         "team_population": "2",
+        "usable_systems": "1",
         "rank_observations": json.dumps([rank]),
+        "pmf": json.dumps([{"rank": rank, "count": 1, "probability": 1.0}]),
     }
 
 
@@ -250,6 +252,59 @@ def test_row_builder_ceiling_is_explicit_and_allows_completed_2026(monkeypatch) 
     rows, _, _ = legacy.load_rows(max_season=2026)
     assert {row.season for row in rows} == {2026}
     assert all(row.season != 2027 for row in rows)
+
+
+def test_context13_frozen_loader_selects_original_corpus(monkeypatch) -> None:
+    script_dir = str(ROOT / "scripts")
+    sys.path.insert(0, script_dir)
+    try:
+        values = runpy.run_path(
+            str(ROOT / "scripts/build_preseason_context_prior_v1_3.py")
+        )
+    finally:
+        sys.path.remove(script_dir)
+    calls: list[dict[str, object]] = []
+
+    def fake_load_rows(**kwargs):
+        calls.append(kwargs)
+        return [], [], []
+
+    monkeypatch.setattr(values["v1"], "load_rows", fake_load_rows)
+    monkeypatch.setattr(values["c12"], "feature_index", dict)
+    monkeypatch.setattr(values["c12"], "cached_tenures", dict)
+    monkeypatch.setattr(
+        values["c12"], "attach_context", lambda rows, _index, _tenures: (rows, [])
+    )
+    values["base_context_rows"](max_season=2021)
+    assert calls == [{"max_season": 2021, "corpus_policy": "original"}]
+
+
+def test_context12_direct_rank_reads_select_original_corpus(monkeypatch) -> None:
+    values = script_values()
+    legacy = values["v1"]
+    original_reader = legacy.valid_ranks
+    policies: list[str] = []
+
+    def recording_reader(row, *, corpus_policy="corrected"):
+        policies.append(corpus_policy)
+        return original_reader(row, corpus_policy=corpus_policy)
+
+    outcomes = [_rank_row(2026, "fbs", "a", 1)]
+    monkeypatch.setattr(legacy, "valid_ranks", recording_reader)
+    monkeypatch.setitem(
+        values["inference_rows"].__globals__, "read_csv", lambda _path: outcomes
+    )
+    index = {
+        (2027, "fbs", "a"): {
+            "season": "2027",
+            "subdivision": "fbs",
+            "team_id": "a",
+            "team_name": "a",
+        }
+    }
+    values["inference_rows"](2027, 2026, index, {})
+    assert policies
+    assert set(policies) == {"original"}
 
 
 def test_synthetic_2027_rows_use_2026_history_and_exclude_2027_outcome(monkeypatch) -> None:
