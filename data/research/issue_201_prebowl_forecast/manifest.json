@@ -1,0 +1,848 @@
+{
+  "crps_numerical_contract": {
+    "absolute_tolerance": 2e-06,
+    "max_observed_error_estimate": 1.999392119423594e-06,
+    "minimum_tail_multiple": 40,
+    "orders_used": [
+      256,
+      512
+    ],
+    "quadrature_orders": [
+      128,
+      256,
+      512
+    ],
+    "tail_bound_budget_fraction": 0.5,
+    "tail_multiples_used": [
+      40.0
+    ]
+  },
+  "decision": {
+    "classification": "inconclusive",
+    "context_pre_bowl_crps_lower_equal_game": false,
+    "context_pre_bowl_crps_lower_equal_season": false,
+    "context_pre_bowl_season_wins": 3,
+    "policy_interaction_equal_game": 0.004599070242887748,
+    "policy_interaction_equal_season": 0.004664373726408044,
+    "recommendation": "revise the comparison plan before follow-up work",
+    "worse_calibration_error_seasons": 1,
+    "worse_margin_nll_seasons": 1
+  },
+  "experiment": "issue-201-prebowl-forecast-comparison",
+  "fit_origin_by_season_policy": {
+    "2022": {
+      "existing": {
+        "forward_only": true,
+        "trained_through_season": 2021,
+        "training_seasons": [
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020,
+          2021
+        ]
+      },
+      "pre_bowl": {
+        "forward_only": true,
+        "trained_through_season": 2021,
+        "training_seasons": [
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020,
+          2021
+        ]
+      }
+    },
+    "2023": {
+      "existing": {
+        "forward_only": true,
+        "trained_through_season": 2022,
+        "training_seasons": [
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020,
+          2021
+        ]
+      },
+      "pre_bowl": {
+        "forward_only": true,
+        "trained_through_season": 2022,
+        "training_seasons": [
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020,
+          2021
+        ]
+      }
+    },
+    "2024": {
+      "existing": {
+        "forward_only": true,
+        "trained_through_season": 2023,
+        "training_seasons": [
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020,
+          2021
+        ]
+      },
+      "pre_bowl": {
+        "forward_only": true,
+        "trained_through_season": 2023,
+        "training_seasons": [
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020,
+          2021
+        ]
+      }
+    },
+    "2025": {
+      "existing": {
+        "forward_only": true,
+        "trained_through_season": 2024,
+        "training_seasons": [
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020,
+          2021
+        ]
+      },
+      "pre_bowl": {
+        "forward_only": true,
+        "trained_through_season": 2024,
+        "training_seasons": [
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020,
+          2021
+        ]
+      }
+    }
+  },
+  "frozen_target_parity": {
+    "frozen_pmf_identity_after": "3956b852b0bc2ab6bdc7a9cdf7555b9a3ec0f3934971d91b0464bc11c739a3ff",
+    "frozen_pmf_identity_before": "3956b852b0bc2ab6bdc7a9cdf7555b9a3ec0f3934971d91b0464bc11c739a3ff",
+    "frozen_pmf_identity_unchanged": true,
+    "max_absolute_metric_difference": 4.547473508864641e-13,
+    "passed": true,
+    "score_rows_compared": 76896,
+    "tolerance": 1e-08
+  },
+  "input_artifacts": {
+    "frozen_192_outputs": {
+      "evidence_sha256": "e58faa21c41042a70c740489ccaa0e9c4a1240fe0bd7fe7f2f9f59df693317e5",
+      "final_target_sha256": "68ac9e4227fc2e1918297b45f67f8170e0f6880fa3d6837e14b94df9847f2b8e",
+      "manifest_sha256": "89feed8c3ea3040648b627085bc568d8d2da70222ae1b81698e9b61584e60165",
+      "panel_sha256": "e33e17f7de4fef7bd2dce5163925cb54f34eb453806bc40973512747c3fa2727",
+      "score_sha256": "f8ee63519c5b9dbc32937756fee18221bd6f1cac596f7d51f89e5f0bdb6842ef"
+    },
+    "issue198_schedule_windows": {
+      "bytes": 7893,
+      "label": "event_phase_dates",
+      "sha256": "3b7b4bc951c4d47285c39da260ad860053834964afc31aeeb066e5e216638883"
+    },
+    "issue200_fitted_models": {
+      "bytes": 96644,
+      "label": "rolling_fit_origins",
+      "sha256": "db7442a8c4ebc495bcdf47b5f646a6ef3ca1c1ef0c4782bcd91253df223d3304"
+    },
+    "issue200_manifest": {
+      "bytes": 49089,
+      "label": "matched_pipeline_manifest",
+      "sha256": "12bb43aa49009a849b0ca3ebdf8110f92fa6c3bff6df1bcc32aa1e473c08dbe5"
+    },
+    "issue200_pipeline_bundle": {
+      "bytes": 9901447,
+      "label": "matched_four_arm_pipeline_bundle",
+      "sha256": "c5a80a6e5aa1415bacfe3cc373cfbbc6cfe02465f33be202d8ce26962cb8419c"
+    },
+    "issue200_target_snapshot_manifest": {
+      "bytes": 5743,
+      "label": "target_snapshot_dates",
+      "sha256": "43d8d8b327d8c57677890a7b15e7db4f77bbc11e3a209f63ffd1531c4c9419c0"
+    },
+    "issue204_manifest": {
+      "bytes": 45271,
+      "label": "corrected_population_and_support_manifest",
+      "sha256": "9686e56e729c97296a40711d68ed270d85da497f263d7728ae49c78e291e4241"
+    },
+    "issue204_pre_bowl_targets": {
+      "bytes": 10982583,
+      "manifest_sha256": "9686e56e729c97296a40711d68ed270d85da497f263d7728ae49c78e291e4241",
+      "path_label": "issue_204_corrected_pre_bowl_target_distributions.csv",
+      "row_count_by_season": {
+        "2022": 131,
+        "2023": 133,
+        "2024": 134,
+        "2025": 136
+      },
+      "sha256": "6c610ea91ea60ce5da45e20baa7d636f91de52af974420f28a74eb0ec5d66e3f"
+    },
+    "issue204_target_support_status": {
+      "corpus_version": "massey-rank-population-v1",
+      "downstream_ready": true,
+      "status": "complete",
+      "support_anomaly_count": 0,
+      "support_status": "passed"
+    },
+    "protocol": {
+      "bytes": 11168,
+      "label": "frozen_issue201_protocol",
+      "sha256": "ddea4e6dbf8d048c2a977d2a1f6d13f9e92c6948547afb115e0f81d54e677477"
+    },
+    "raw_game_files": {
+      "2022-fcs.json": {
+        "bytes": 638280,
+        "row_count": 822,
+        "sha256": "a20030838476f73d1f3aea63bba57ed1ecfa03f99e95cee5c2a780deeee05816"
+      },
+      "2022.json": {
+        "bytes": 702663,
+        "row_count": 896,
+        "sha256": "3b4d9d353faa8ca9312534ded0747bdaa1cdcca21e89fcff1458980ab9f00747"
+      },
+      "2023-fcs.json": {
+        "bytes": 631762,
+        "row_count": 811,
+        "sha256": "df5bb461fe8f3e302eb1d5f52896b509d7f5660364d3d43643c5c540e5476817"
+      },
+      "2023.json": {
+        "bytes": 713333,
+        "row_count": 910,
+        "sha256": "417fb8191bec11e20fb2370e5510a2ff8a85cc67f07ec4371e873a935f9af35f"
+      },
+      "2024-fcs.json": {
+        "bytes": 680618,
+        "row_count": 871,
+        "sha256": "3cb6327c61d807fd4b8dfe669f0905694afa67164770ab2e997773ea2aaa72c5"
+      },
+      "2024.json": {
+        "bytes": 723364,
+        "row_count": 920,
+        "sha256": "9aeccada4e63f4ddf22d676eb55dbded71fd9bdb3ac07202ee44ed8f47d93f93"
+      },
+      "2025-fcs.json": {
+        "bytes": 689424,
+        "row_count": 879,
+        "sha256": "38329f854c0df38d17b34d5f7841753d6638d7377592dcf743cb4e27cbd9d32f"
+      },
+      "2025.json": {
+        "bytes": 736267,
+        "row_count": 934,
+        "sha256": "6312d8406be09dee0064069668fc40879dd0736ed3e49946c6c72192e6a0e4fc"
+      }
+    },
+    "schedule_plan": {
+      "bytes": 6139318,
+      "manifest_sha256": "dc3b454cfef41a121b15e3eb9b72f0bfbf44c6bc616727caaccdb90df2db62f1",
+      "path_label": "issue_201_schedule_plan.json",
+      "sha256": "ec498d8d533b48c6e820b140be69d0310430ce50c4423c99379dc4c5d5018a93"
+    }
+  },
+  "issue200_provenance": {
+    "bundle_manifest_expected_sha256": "c5a80a6e5aa1415bacfe3cc373cfbbc6cfe02465f33be202d8ce26962cb8419c",
+    "bundle_sha256": "c5a80a6e5aa1415bacfe3cc373cfbbc6cfe02465f33be202d8ce26962cb8419c",
+    "fit_origin_by_season_policy": {
+      "2022": {
+        "existing": {
+          "forward_only": true,
+          "trained_through_season": 2021,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        },
+        "pre_bowl": {
+          "forward_only": true,
+          "trained_through_season": 2021,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        }
+      },
+      "2023": {
+        "existing": {
+          "forward_only": true,
+          "trained_through_season": 2022,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        },
+        "pre_bowl": {
+          "forward_only": true,
+          "trained_through_season": 2022,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        }
+      },
+      "2024": {
+        "existing": {
+          "forward_only": true,
+          "trained_through_season": 2023,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        },
+        "pre_bowl": {
+          "forward_only": true,
+          "trained_through_season": 2023,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        }
+      },
+      "2025": {
+        "existing": {
+          "forward_only": true,
+          "trained_through_season": 2024,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        },
+        "pre_bowl": {
+          "forward_only": true,
+          "trained_through_season": 2024,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        }
+      }
+    },
+    "fitted_models_sha256": "db7442a8c4ebc495bcdf47b5f646a6ef3ca1c1ef0c4782bcd91253df223d3304",
+    "fitted_prior_arm_count": 4,
+    "manifest_sha256": "12bb43aa49009a849b0ca3ebdf8110f92fa6c3bff6df1bcc32aa1e473c08dbe5",
+    "target_seasons": [
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "training_seasons": [
+      2003,
+      2004,
+      2005,
+      2006,
+      2007,
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021
+    ]
+  },
+  "model_arms": [
+    {
+      "likelihood_sha256": "c56520a9c8fd1c62985941d9de413edecdfa89f1ab7a3baf714e5d111154e8e1",
+      "model_arm": "History_existing",
+      "policy": "existing",
+      "prior_family": "History",
+      "prior_row_sha256_by_season": {
+        "2022": "38d57ceac2ab231c1023798f4b8f9b11c3206702f10c768700c9704075c39fc3",
+        "2023": "f8f410553adc679abe0163c49a0d300a69e8a25e41bd8551a8ea8bb2b6d1b7b5",
+        "2024": "e308ef0785b7c452c62b64392eb19dd8e9c49498b8ea2682ba36d7af155f7e3c",
+        "2025": "cd17bb826b2a1453a419c00140fe3db82a2001167d39af99e97659f0174301e9"
+      }
+    },
+    {
+      "likelihood_sha256": "c56520a9c8fd1c62985941d9de413edecdfa89f1ab7a3baf714e5d111154e8e1",
+      "model_arm": "Context_existing",
+      "policy": "existing",
+      "prior_family": "Context",
+      "prior_row_sha256_by_season": {
+        "2022": "e57d4b617b10a297ad3788f46e0949fef72f8c7112004ee160873c41b8cb35c2",
+        "2023": "fe3579b94320b5bf19e8b64d1d7d092bf2d4ec8dbc2e2ab2d8dd9f0e977b1f20",
+        "2024": "bdf6eab8a92a47dc42aa3793b12a5770d75f5d7f3ea4e6f0be4bec6f448a2eb2",
+        "2025": "a3a15dfa4ff3686c3150a1d3080a97c27eeef8ed44ffd1a9a2a5617fa07f08bf"
+      }
+    },
+    {
+      "likelihood_sha256": "6ac53be90457f23f779dc69441402acbb9497b69524234168c00f6afe0a19ca3",
+      "model_arm": "History_pre_bowl",
+      "policy": "pre_bowl",
+      "prior_family": "History",
+      "prior_row_sha256_by_season": {
+        "2022": "edf9e3bf5b7343ed9c752592bf9287258aa20eb9b913c3bfc0bc548a74b06fa5",
+        "2023": "f8455de7ffb90b539ac1cf9aa597281f7e00aad93b2d052761540e0a32e47a13",
+        "2024": "715cfd95a4502c6456f3d7f61c6fe31aba7cdab74e0dd5e64527818f040765fb",
+        "2025": "0e8a6fa53d8ea715ea0854263fe1008b9af1887e6da6f01b89b41a6bc4c8232a"
+      }
+    },
+    {
+      "likelihood_sha256": "6ac53be90457f23f779dc69441402acbb9497b69524234168c00f6afe0a19ca3",
+      "model_arm": "Context_pre_bowl",
+      "policy": "pre_bowl",
+      "prior_family": "Context",
+      "prior_row_sha256_by_season": {
+        "2022": "a0c86f16f3c31e025a7b3b8b2099a9d2ffa9fe3bac7bf71d483a9f6cff375ce9",
+        "2023": "53857e3e6d0b796cc4274c0c2f8ba9e2a5b07e0aed63fb8dbfe10c9740f9632d",
+        "2024": "01c56693f91a60f92c8a352e00d76c007026362a42bd83ea1ba448c33a9b9050",
+        "2025": "2315def54896e81d956312e764d36de57b465144ee45f7f4176a8eb1087db982"
+      }
+    }
+  ],
+  "outputs": {
+    "calendar_mismatches.csv": {
+      "bytes": 565,
+      "sha256": "ab3946bbe98e79efc5676defdc7162f5b906fc61f675762bc07c431622ca77a5"
+    },
+    "decision.json": {
+      "bytes": 441,
+      "sha256": "e73a4543246bb7cef54415f8da979b169b798654ae62342f19f92b4a814d7fe5"
+    },
+    "forecast_exclusions.csv": {
+      "bytes": 910275,
+      "sha256": "552b70c73e317a1c931544b4b2d2bcd05bf74d6b6ad82fbcad89f423ed57e8f2"
+    },
+    "forecast_scores.csv": {
+      "bytes": 21710645,
+      "sha256": "fbc5c51f0747d4d11c3d31d8eb032f32ad65c8abe41f0307b295415a264351bb"
+    },
+    "forecast_summary.csv": {
+      "bytes": 62725,
+      "sha256": "c288b5ad6f024b3fba221536e2ed311639dd57da08478a4a758670eed1580ffd"
+    },
+    "frozen_checkpoint_safety.csv": {
+      "bytes": 4168,
+      "sha256": "d3f900a7df09648aae4d621b964ef5b04ca9f8c3ad9398a6df081900b22d3a19"
+    },
+    "frozen_target_exclusions.csv": {
+      "bytes": 605,
+      "sha256": "7cfc4602f63b6ef3fc4c73dc2a91b8600ad8811b2ad723cfa94a940d151c7a44"
+    },
+    "frozen_target_paired_summary.csv": {
+      "bytes": 5556,
+      "sha256": "34be15f5160576fb161bbbeb7c9902051ed6971fcfb355a390b1f495ed63fe35"
+    },
+    "frozen_target_parity.json": {
+      "bytes": 374,
+      "sha256": "8a7e2937d5057e26a8391cf1326d4694b7296075170e6da8fd8103367965cb38"
+    },
+    "frozen_target_scores.csv": {
+      "bytes": 4984759,
+      "sha256": "a0ef9a532ba8b595daca3e79d70d5fc6337c131856eb2860d5e214aed4e175ae"
+    },
+    "frozen_target_summary.csv": {
+      "bytes": 25806,
+      "sha256": "a0ee65463ad1b535dd3d9151107b7347d39a974aa7bae19b97a13f5903aecef6"
+    },
+    "paired_game_differences.csv": {
+      "bytes": 5332,
+      "sha256": "89c6704133307c4c4446d875395a054c24f3ce7eb5e2ad4e55653f7664c8844f"
+    },
+    "ranking_exclusions.csv": {
+      "bytes": 604,
+      "sha256": "fe5634169f2e758a285b6ed4ba74d380bbc27c254dbca72f48bf879d72fff4c1"
+    },
+    "ranking_scores.csv": {
+      "bytes": 13181967,
+      "sha256": "0faedddcd226221b8403df2ff4ecf9f64150b85c56784392d94891f09165f8fa"
+    },
+    "ranking_summary.csv": {
+      "bytes": 72173,
+      "sha256": "e7311c1c9a077a238b8da386e319ebaf7d23e2d722b8ed212fe83b065271f954"
+    },
+    "replay_evidence.jsonl.gz": {
+      "bytes": 4981202,
+      "sha256": "2bc922ba47ded55b20672b42e21924cf915c5a7599966b7b923489485171f89d"
+    },
+    "report.md": {
+      "bytes": 6722,
+      "sha256": "d899c5f1675288b0faa9a2995de15a8f23d5525ccfc44fc1fa13233187f1435c"
+    },
+    "schedule_plan.json": {
+      "bytes": 6139318,
+      "sha256": "ec498d8d533b48c6e820b140be69d0310430ce50c4423c99379dc4c5d5018a93"
+    },
+    "schedule_plan.manifest.json": {
+      "bytes": 2324,
+      "sha256": "dc3b454cfef41a121b15e3eb9b72f0bfbf44c6bc616727caaccdb90df2db62f1"
+    }
+  },
+  "pre_bowl_target_provenance": {
+    "bytes": 10982583,
+    "manifest_sha256": "9686e56e729c97296a40711d68ed270d85da497f263d7728ae49c78e291e4241",
+    "path_label": "issue_204_corrected_pre_bowl_target_distributions.csv",
+    "row_count_by_season": {
+      "2022": 131,
+      "2023": 133,
+      "2024": 134,
+      "2025": 136
+    },
+    "sha256": "6c610ea91ea60ce5da45e20baa7d636f91de52af974420f28a74eb0ec5d66e3f"
+  },
+  "protocol_sha256": "ddea4e6dbf8d048c2a977d2a1f6d13f9e92c6948547afb115e0f81d54e677477",
+  "ranking_common_population": {
+    "2022": {
+      "common_team_count": 131,
+      "excluded_team_seasons": 0,
+      "fbs_prior_team_count": 131,
+      "pre_bowl_target_team_count": 131
+    },
+    "2023": {
+      "common_team_count": 133,
+      "excluded_team_seasons": 0,
+      "fbs_prior_team_count": 133,
+      "pre_bowl_target_team_count": 133
+    },
+    "2024": {
+      "common_team_count": 134,
+      "excluded_team_seasons": 0,
+      "fbs_prior_team_count": 134,
+      "pre_bowl_target_team_count": 134
+    },
+    "2025": {
+      "common_team_count": 136,
+      "excluded_team_seasons": 0,
+      "fbs_prior_team_count": 136,
+      "pre_bowl_target_team_count": 136
+    }
+  },
+  "replay_consistency": {
+    "common_game_population_by_stage": {
+      "preseason/fbs_fbs": {
+        "arm_counts": {
+          "Context_existing": 2998,
+          "Context_pre_bowl": 2998,
+          "History_existing": 2998,
+          "History_pre_bowl": 2998
+        },
+        "unique_games": 2998
+      },
+      "preseason/fbs_fcs": {
+        "arm_counts": {
+          "Context_existing": 485,
+          "Context_pre_bowl": 485,
+          "History_existing": 485,
+          "History_pre_bowl": 485
+        },
+        "unique_games": 485
+      },
+      "rolling/fbs_fbs": {
+        "arm_counts": {
+          "Context_existing": 2998,
+          "Context_pre_bowl": 2998,
+          "History_existing": 2998,
+          "History_pre_bowl": 2998
+        },
+        "unique_games": 2998
+      },
+      "rolling/fbs_fcs": {
+        "arm_counts": {
+          "Context_existing": 485,
+          "Context_pre_bowl": 485,
+          "History_existing": 485,
+          "History_pre_bowl": 485
+        },
+        "unique_games": 485
+      }
+    },
+    "forecast_id_count": 27864,
+    "forecast_row_count": 27864,
+    "unique_forecast_ids": true
+  },
+  "schedule_window_dates": {
+    "2022": {
+      "first_fbs_postseason_game_date": "2022-12-16",
+      "last_fbs_conference_championship_date": "2022-12-03"
+    },
+    "2023": {
+      "first_fbs_postseason_game_date": "2023-12-16",
+      "last_fbs_conference_championship_date": "2023-12-02"
+    },
+    "2024": {
+      "first_fbs_postseason_game_date": "2024-12-14",
+      "last_fbs_conference_championship_date": "2024-12-07"
+    },
+    "2025": {
+      "first_fbs_postseason_game_date": "2025-12-13",
+      "last_fbs_conference_championship_date": "2025-12-06"
+    }
+  },
+  "schema_version": 1,
+  "seasons": [
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "status": "complete",
+  "target_snapshot_dates": {
+    "2022": "2022-12-05",
+    "2023": "2023-12-03",
+    "2024": "2024-12-08",
+    "2025": "2025-12-07"
+  }
+}

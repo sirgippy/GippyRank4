@@ -1,0 +1,68 @@
+{
+  "experiment": "issue-201-prebowl-forecast-comparison",
+  "plan_sha256": "ec498d8d533b48c6e820b140be69d0310430ce50c4423c99379dc4c5d5018a93",
+  "protocol_sha256": "ddea4e6dbf8d048c2a977d2a1f6d13f9e92c6948547afb115e0f81d54e677477",
+  "schedule_windows_sha256": "3b7b4bc951c4d47285c39da260ad860053834964afc31aeeb066e5e216638883",
+  "schema_version": 1,
+  "season_counts": [
+    {
+      "scheduled_fbs_fbs_count": 734,
+      "scheduled_fbs_fcs_count": 120,
+      "scheduled_game_count": 854,
+      "season": 2022
+    },
+    {
+      "scheduled_fbs_fbs_count": 750,
+      "scheduled_fbs_fcs_count": 118,
+      "scheduled_game_count": 868,
+      "season": 2023
+    },
+    {
+      "scheduled_fbs_fbs_count": 753,
+      "scheduled_fbs_fcs_count": 121,
+      "scheduled_game_count": 874,
+      "season": 2024
+    },
+    {
+      "scheduled_fbs_fbs_count": 762,
+      "scheduled_fbs_fcs_count": 126,
+      "scheduled_game_count": 888,
+      "season": 2025
+    }
+  ],
+  "source_schedule_metadata": {
+    "2022-fcs.json": {
+      "row_count": 822,
+      "schedule_metadata_sha256": "4f375cb5deb39b8bc8f54159409fcbb58bc22b988bdfe350c614cbe48d210559"
+    },
+    "2022.json": {
+      "row_count": 896,
+      "schedule_metadata_sha256": "5923118bb1043d04d280c896f4b317192d649d19fcafffadac68c24ea452182d"
+    },
+    "2023-fcs.json": {
+      "row_count": 811,
+      "schedule_metadata_sha256": "0f18c68d81f4edee5279566367fd3b98f7dfe72841b4b37196f7758dfe993920"
+    },
+    "2023.json": {
+      "row_count": 910,
+      "schedule_metadata_sha256": "4134530e0a1c102d47cc27b38ce822f7eed747bb3b971971819d0b19d92d3b4f"
+    },
+    "2024-fcs.json": {
+      "row_count": 871,
+      "schedule_metadata_sha256": "313bf669b92c0c2ebad9efa9c1fbcb74ec6c2b06fb653b8c036126c9be6536f0"
+    },
+    "2024.json": {
+      "row_count": 920,
+      "schedule_metadata_sha256": "b41743ef57d839747bd1d8db8cdb7aa9678a19e0d02f2f325a8c8a3ae2e5e3d1"
+    },
+    "2025-fcs.json": {
+      "row_count": 879,
+      "schedule_metadata_sha256": "b17d42c32aed1b30e4b3285f41e0179d51ea25c5227b36fd241b80e49f78a48c"
+    },
+    "2025.json": {
+      "row_count": 934,
+      "schedule_metadata_sha256": "988bdbba88ab105c40395f6ae696e96888a354a9b9d9d3023daecd64f2669122"
+    }
+  },
+  "target_snapshot_manifest_sha256": "43d8d8b327d8c57677890a7b15e7db4f77bbc11e3a209f63ffd1531c4c9419c0"
+}
