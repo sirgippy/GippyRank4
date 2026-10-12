@@ -126,13 +126,53 @@ def file_record(logical_name: str, path: Path, root: Path) -> dict[str, object]:
     }
 
 
+def coaching_tenure_paths(source_root: Path) -> list[Path]:
+    """Return the exact coaching inputs used by Context, failing on absent data."""
+    tenure_root = source_root / "data/raw/cfbd/preseason/coach_tenures"
+    if not tenure_root.is_dir():
+        raise FileNotFoundError(
+            f"required coaching-tenure source directory is missing: {tenure_root}"
+        )
+    paths = sorted(tenure_root.glob("*.json"))
+    if not paths:
+        raise ValueError(
+            f"required coaching-tenure source directory has no JSON inputs: {tenure_root}"
+        )
+    return paths
+
+
+def load_required_coaching_tenures(
+    source_root: Path,
+) -> dict[str, list[dict[str, object]]]:
+    """Load and validate the exact coaching files consumed by this fit."""
+    result: dict[str, list[dict[str, object]]] = {}
+    for path in coaching_tenure_paths(source_root):
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(payload, list):
+            if path.name == "manifest.json" and isinstance(payload, dict):
+                # cached_tenures scans this sidecar JSON but does not treat it
+                # as a school-tenure payload; its hash still belongs in inputs.
+                continue
+            raise TypeError(f"coaching-tenure input must be a JSON list: {path}")
+        for item in payload:
+            team = (item.get("team") or {}).get("school")
+            if team:
+                result.setdefault(str(team), []).append(item)
+    if not result:
+        raise ValueError(
+            "required coaching-tenure source directory contains no team records: "
+            f"{source_root / 'data/raw/cfbd/preseason/coach_tenures'}"
+        )
+    return result
+
+
 def input_paths(
     corpus_root: Path,
     source_root: Path,
     game_root: Path,
     reference_root: Path,
 ) -> dict[str, Path]:
-    return {
+    paths = {
         "corrected_final_observations": corpus_root
         / "data/processed/massey_issue_204_v1/final_observations.csv",
         "corrected_final_targets": corpus_root
@@ -165,6 +205,13 @@ def input_paths(
         "baseline_historical_likelihood": reference_root
         / "data/processed/posterior/historical_likelihood_v1.json",
     }
+    paths.update(
+        {
+            f"coaching_tenure_file_{index:03d}": path
+            for index, path in enumerate(coaching_tenure_paths(source_root), start=1)
+        }
+    )
+    return paths
 
 
 def validate_corrected_corpus_gate(paths: dict[str, Path]) -> dict[str, object]:
@@ -438,7 +485,8 @@ def build_likelihood_policy(
         "optimizer": {
             "method": "iteratively reweighted least squares",
             "iterations": 8,
-            "converged": True,
+            "convergence_assessed": False,
+            "convergence_status": "not_assessed_fixed_iteration_recipe",
             "objective": "weighted_pseudo",
         },
         "missing_rank_or_score_games": dict(sorted(missing.items())),
@@ -511,6 +559,9 @@ def baseline_pmf_diagnostics(
     reference_field = {"history": "history_prior_pmf", "context": "context_prior_pmf"}
     diagnostics: dict[str, object] = {
         "reference": "#192 / PR #196 preseason checkpoint 1; frozen original controls",
+        "prior_comparison_interpretation": (
+            "Corrected final-control prior differences include #204 corpus repair and the restored, hash-bound coaching-tenure inputs; these are shared by both issue 200 policies and are not the pre-bowl intervention."
+        ),
         "prior_comparisons": {},
         "likelihood_comparison": {},
     }
@@ -577,6 +628,256 @@ def baseline_pmf_diagnostics(
     return diagnostics
 
 
+def total_variation(left: np.ndarray, right: np.ndarray) -> float:
+    """Total variation for rank PMFs after zero-padding to shared support."""
+    support = max(len(left), len(right))
+    left_padded = np.pad(np.asarray(left, dtype=float), (0, support - len(left)))
+    right_padded = np.pad(np.asarray(right, dtype=float), (0, support - len(right)))
+    return float(0.5 * np.abs(left_padded - right_padded).sum())
+
+
+def policy_intervention_diagnostics(
+    priors: list[dict[str, object]],
+    final_targets: dict[tuple[int, str, str], Any],
+    pre_bowl_targets: dict[tuple[int, str, str], Any],
+    fitted_models: dict[str, Any],
+    likelihoods: dict[str, dict[str, object]],
+    composition: list[dict[str, object]],
+) -> dict[str, object]:
+    """Describe fitted policy differences independently of frozen baseline parity."""
+    material_tv_threshold = 0.01
+    prior_by_arm: dict[tuple[int, str, str], dict[str, object]] = {}
+    for row in priors:
+        key = (int(row["season"]), str(row["model_family"]), str(row["team_id"]))
+        arm = str(row["policy"])
+        if arm not in POLICIES:
+            raise ValueError(f"unknown prior policy in diagnostics: {arm}")
+        arms = prior_by_arm.setdefault(key, {})
+        if arm in arms:
+            raise ValueError(f"duplicate prior policy row in diagnostics: {key}/{arm}")
+        arms[arm] = row
+
+    prior_results = []
+    for season in TARGET_SEASONS:
+        for family in ("History", "Context"):
+            values = []
+            for (row_season, row_family, _team_id), arms in sorted(
+                prior_by_arm.items(),
+                key=lambda item: (item[0][0], item[0][1], int(item[0][2])),
+            ):
+                if row_season != season or row_family != family:
+                    continue
+                if set(arms) != set(POLICIES):
+                    raise ValueError(
+                        f"{season}/{family}: intervention PMF policy arms differ"
+                    )
+                existing, pre_bowl = arms["existing"], arms["pre_bowl"]
+                values.append(
+                    total_variation(
+                        np.asarray(existing["pmf"], dtype=float),
+                        np.asarray(pre_bowl["pmf"], dtype=float),
+                    )
+                )
+            if not values:
+                raise ValueError(f"{season}/{family}: no matched intervention PMFs")
+            prior_results.append(
+                {
+                    "target_season": season,
+                    "model_family": family,
+                    "team_count": len(values),
+                    "mean_total_variation_distance": float(np.mean(values)),
+                    "maximum_total_variation_distance": max(values),
+                    "material_change_threshold_total_variation": material_tv_threshold,
+                    "materially_changed_team_count": sum(
+                        value > material_tv_threshold for value in values
+                    ),
+                }
+            )
+
+    target_results = []
+    for season in TARGET_SEASONS:
+        values = []
+        changed_support = 0
+        for key in sorted(
+            set(final_targets) & set(pre_bowl_targets),
+            key=lambda value: (value[0], value[1], int(value[2])),
+        ):
+            if key[0] != season or key[1] != "fbs":
+                continue
+            final_target, pre_target = final_targets[key], pre_bowl_targets[key]
+            final_pmf = _target_pmf(
+                {
+                    "team_population": str(final_target.population),
+                    "pmf": json.dumps(
+                        [
+                            {
+                                "rank": rank,
+                                "probability": count / len(final_target.ranks),
+                            }
+                            for rank, count in sorted(
+                                Counter(final_target.ranks).items()
+                            )
+                        ]
+                    ),
+                }
+            )
+            pre_bowl_pmf = _target_pmf(
+                {
+                    "team_population": str(pre_target.population),
+                    "pmf": json.dumps(
+                        [
+                            {
+                                "rank": rank,
+                                "probability": count / len(pre_target.ranks),
+                            }
+                            for rank, count in sorted(Counter(pre_target.ranks).items())
+                        ]
+                    ),
+                }
+            )
+            values.append(total_variation(final_pmf, pre_bowl_pmf))
+            changed_support += final_target.population != pre_target.population
+        if not values:
+            raise ValueError(f"{season}: no common FBS response distributions")
+        target_results.append(
+            {
+                "target_season": season,
+                "team_count": len(values),
+                "mean_total_variation_distance": float(np.mean(values)),
+                "maximum_total_variation_distance": max(values),
+                "changed_distribution_team_count": sum(value > 0 for value in values),
+                "different_population_support_team_count": changed_support,
+            }
+        )
+
+    rolling_models = fitted_models["rolling_models"]
+    coefficient_results = []
+    for season in TARGET_SEASONS:
+        season_fits = rolling_models[str(season)]
+        for family, fit_key, model_key in (
+            ("History", "history", "model"),
+            ("Context", "context", "model"),
+            ("History", "history", "transition_model"),
+        ):
+            existing_model = season_fits["existing"][fit_key].get(model_key)
+            pre_bowl_model = season_fits["pre_bowl"][fit_key].get(model_key)
+            component = (
+                "transition_model" if model_key == "transition_model" else "main_prior"
+            )
+            if existing_model is None or pre_bowl_model is None:
+                if existing_model is not pre_bowl_model:
+                    raise ValueError(
+                        f"{season}/{family}/{component}: fitted policy components differ"
+                    )
+                continue
+            vector_differences = {}
+            differences = []
+            for name in ("location_coefficients", "log_scale_coefficients"):
+                old = np.asarray(existing_model[name], dtype=float)
+                new = np.asarray(pre_bowl_model[name], dtype=float)
+                if old.shape != new.shape:
+                    raise ValueError(
+                        f"{season}/{family}/{component}/{name}: coefficient shapes differ"
+                    )
+                absolute = np.abs(old - new)
+                differences.extend(absolute.tolist())
+                vector_differences[name] = {
+                    "coefficient_count": int(absolute.size),
+                    "mean_absolute_difference": float(np.mean(absolute)),
+                    "maximum_absolute_difference": float(np.max(absolute)),
+                }
+            coefficient_results.append(
+                {
+                    "target_season": season,
+                    "model_family": family,
+                    "component": component,
+                    "coefficient_count": len(differences),
+                    "mean_absolute_difference": float(np.mean(differences)),
+                    "maximum_absolute_difference": max(differences),
+                    "coefficient_vectors": vector_differences,
+                }
+            )
+
+    existing_beta = np.asarray(likelihoods["existing"]["beta"], dtype=float)
+    pre_bowl_beta = np.asarray(likelihoods["pre_bowl"]["beta"], dtype=float)
+    if existing_beta.shape != pre_bowl_beta.shape:
+        raise ValueError("policy likelihood coefficient vector shapes differ")
+    likelihood_beta_difference = np.abs(existing_beta - pre_bowl_beta)
+    composition_counts: dict[tuple[str, str, str], dict[str, int]] = defaultdict(
+        lambda: {"games": 0, "rank_pair_rows": 0}
+    )
+    for row in composition:
+        arm = str(row["policy"])
+        key = (arm, str(row["pairing"]), str(row["pairing_method"]))
+        composition_counts[key]["games"] += int(row["games"])
+        composition_counts[key]["rank_pair_rows"] += int(row["rank_pair_rows"])
+    composition_differences = []
+    for pairing, method in sorted({(key[1], key[2]) for key in composition_counts}):
+        existing = composition_counts[("existing", pairing, method)]
+        pre_bowl = composition_counts[("pre_bowl", pairing, method)]
+        composition_differences.append(
+            {
+                "pairing": pairing,
+                "pairing_method": method,
+                "existing_game_count": existing["games"],
+                "pre_bowl_game_count": pre_bowl["games"],
+                "pre_bowl_minus_existing_game_count": pre_bowl["games"]
+                - existing["games"],
+                "existing_rank_pair_rows": existing["rank_pair_rows"],
+                "pre_bowl_rank_pair_rows": pre_bowl["rank_pair_rows"],
+                "pre_bowl_minus_existing_rank_pair_rows": pre_bowl["rank_pair_rows"]
+                - existing["rank_pair_rows"],
+            }
+        )
+    existing_likelihood, pre_bowl_likelihood = (
+        likelihoods["existing"],
+        likelihoods["pre_bowl"],
+    )
+    return {
+        "comparison": "pre_bowl versus existing fitted policies on corrected issue 204 inputs",
+        "data_repair_effects": "Corrected-corpus and restored coaching-source differences from frozen #192/#196 controls remain in baseline_parity.json. Both fitted policies share the same hash-bound coaching inputs, so these deltas describe the policy intervention.",
+        "material_prior_change_threshold_total_variation": material_tv_threshold,
+        "prior_pmf_differences": prior_results,
+        "fbs_target_distribution_differences": target_results,
+        "fitted_coefficient_differences": coefficient_results,
+        "likelihood_differences": {
+            "mean_absolute_coefficient_difference": float(
+                np.mean(likelihood_beta_difference)
+            ),
+            "maximum_absolute_coefficient_difference": float(
+                np.max(likelihood_beta_difference)
+            ),
+            "scale_existing": float(existing_likelihood["scale"]),
+            "scale_pre_bowl": float(pre_bowl_likelihood["scale"]),
+            "absolute_scale_difference": abs(
+                float(existing_likelihood["scale"])
+                - float(pre_bowl_likelihood["scale"])
+            ),
+            "included_game_count_existing": int(
+                existing_likelihood["included_game_count"]
+            ),
+            "included_game_count_pre_bowl": int(
+                pre_bowl_likelihood["included_game_count"]
+            ),
+            "pre_bowl_minus_existing_included_game_count": int(
+                pre_bowl_likelihood["included_game_count"]
+            )
+            - int(existing_likelihood["included_game_count"]),
+            "rank_pair_pseudo_observations_existing": int(
+                existing_likelihood["rank_pair_pseudo_observations"]
+            ),
+            "rank_pair_pseudo_observations_pre_bowl": int(
+                pre_bowl_likelihood["rank_pair_pseudo_observations"]
+            ),
+            "pre_bowl_minus_existing_rank_pair_pseudo_observations": int(
+                pre_bowl_likelihood["rank_pair_pseudo_observations"]
+            )
+            - int(existing_likelihood["rank_pair_pseudo_observations"]),
+            "rank_pair_composition": composition_differences,
+        },
+    }
+
+
 def _target_rows_by_key(
     rows: list[dict[str, str]],
 ) -> dict[tuple[int, str, str], dict[str, str]]:
@@ -612,6 +913,7 @@ def build_prior_pipelines(
     dict[int, dict[str, object]],
 ]:
     """Fit rolling prior models and emit their shared prediction input manifest."""
+    tenures = load_required_coaching_tenures(source_root)
     target_maps = {
         "existing": read_response_targets(final_targets, label="corrected final"),
         "pre_bowl": read_response_targets(pre_bowl_targets, label="corrected pre-bowl"),
@@ -632,6 +934,7 @@ def build_prior_pipelines(
         outcomes_path=final_target_path,
         feature_path=feature_path,
         tenure_root=source_root / "data/raw/cfbd/preseason/coach_tenures",
+        tenures=tenures,
         corpus_policy="corrected",
     )
     repaired_features, db_evidence = historical_repaired_features(source_root)
@@ -678,7 +981,6 @@ def build_prior_pipelines(
     }
 
     feature_index = c12.feature_index(feature_path)
-    tenures = c12.cached_tenures(source_root / "data/raw/cfbd/preseason/coach_tenures")
     inference_by_season: dict[int, dict[str, Any]] = {}
     for season in TARGET_SEASONS:
         inference = c12.inference_rows(
@@ -1240,6 +1542,14 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         "prior_panel_lineage": "#192 / PR #196; original final-corpus controls retained unchanged",
         "likelihood_sha256": sha256_file(paths["baseline_historical_likelihood"]),
     }
+    intervention = policy_intervention_diagnostics(
+        prior_rows,
+        final_response_map,
+        pre_bowl_response_map,
+        fitted_models,
+        likelihoods,
+        composition,
+    )
 
     snapshots = load_snapshot_rows(args.corpus_root)
     fbs_target_ids = {
@@ -1275,6 +1585,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         "historical_likelihood_existing.json": likelihoods["existing"],
         "historical_likelihood_pre_bowl.json": likelihoods["pre_bowl"],
         "baseline_parity.json": baseline_parity,
+        "policy_intervention.json": intervention,
     }
     for name, value in artifact_files.items():
         path = args.output_root / name
@@ -1336,6 +1647,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         manifest,
         likelihoods,
         baseline_parity,
+        intervention,
         composition,
     )
     # Include the report itself in the final output digest table.
@@ -1352,6 +1664,7 @@ def write_report(
     manifest: dict[str, object],
     likelihoods: dict[str, dict[str, object]],
     baseline_parity: dict[str, object],
+    intervention: dict[str, object],
     composition: list[dict[str, object]],
 ) -> None:
     lines = [
@@ -1377,6 +1690,12 @@ def write_report(
         lines.append(
             f"| {policy} | {fit['included_game_count']} | {fit['rank_pair_pseudo_observations']} | {float(fit['scale']):.6f} | {float(fit['degrees_of_freedom']):g} |"
         )
+    lines.extend(
+        [
+            "",
+            "Both likelihood fits retain the fixed eight-iteration weighted-pseudo IRLS recipe. No convergence criterion is evaluated; fit metadata records convergence as not assessed.",
+        ]
+    )
     composition_rows = [row for row in composition if row["pairing"] == "fbs-fcs"]
     lines.extend(
         [
@@ -1387,11 +1706,59 @@ def write_report(
             "",
             "## Baseline parity",
             "",
-            f"The frozen #192/#196 final-target references are retained by hash. The corrected final-control likelihood differs from the frozen likelihood by max absolute coefficient {baseline_parity['likelihood_comparison']['max_abs_coefficient_difference']:.6f}; see `baseline_parity.json` for the History and Context prior PMF deltas. These differences are reported separately from the target/game-policy intervention.",
+            f"The frozen #192/#196 final-target references are retained by hash. The corrected final-control likelihood differs from the frozen likelihood by max absolute coefficient {baseline_parity['likelihood_comparison']['max_abs_coefficient_difference']:.6f}; see `baseline_parity.json` for the History and Context prior PMF deltas. The prior comparison includes #204 corpus repairs and the restored coaching-tenure source; both fitted issue 200 policies use the same source inventory, so the comparisons below isolate the target/game-policy intervention.",
+            "",
+            "## Pre-bowl intervention",
+            "",
+            "The following comparisons are between the two newly fitted policies on the corrected #204 corpus. They describe the intervention only; data-repair effects remain in the separate frozen-reference section above. A materially changed prior is defined as total variation greater than 0.01.",
+            "",
+            "### Prior PMFs by target season and model family",
+            "",
+            "| Season | Family | Teams | Mean TV | Max TV | Teams above TV 0.01 |",
+            "|---:|---|---:|---:|---:|---:|",
+        ]
+    )
+    for row in intervention["prior_pmf_differences"]:
+        lines.append(
+            f"| {row['target_season']} | {row['model_family']} | {row['team_count']} | {float(row['mean_total_variation_distance']):.6f} | {float(row['maximum_total_variation_distance']):.6f} | {row['materially_changed_team_count']} |"
+        )
+    lines.extend(
+        [
+            "",
+            "### FBS target distributions by season",
+            "",
+            "| Season | Teams | Mean TV | Max TV | Changed targets | Different population support |",
+            "|---:|---:|---:|---:|---:|---:|",
+        ]
+    )
+    for row in intervention["fbs_target_distribution_differences"]:
+        lines.append(
+            f"| {row['target_season']} | {row['team_count']} | {float(row['mean_total_variation_distance']):.6f} | {float(row['maximum_total_variation_distance']):.6f} | {row['changed_distribution_team_count']} | {row['different_population_support_team_count']} |"
+        )
+    lines.extend(
+        [
+            "",
+            "### Prior fitted coefficients",
+            "",
+            "| Season | Family | Component | Coefficients | Mean absolute difference | Max absolute difference |",
+            "|---:|---|---|---:|---:|---:|",
+        ]
+    )
+    for row in intervention["fitted_coefficient_differences"]:
+        lines.append(
+            f"| {row['target_season']} | {row['model_family']} | {row['component']} | {row['coefficient_count']} | {float(row['mean_absolute_difference']):.6g} | {float(row['maximum_absolute_difference']):.6g} |"
+        )
+    likelihood_diff = intervention["likelihood_differences"]
+    lines.extend(
+        [
+            "",
+            "### Fitted likelihood differences",
+            "",
+            f"The fitted likelihood coefficient vectors have mean absolute difference {float(likelihood_diff['mean_absolute_coefficient_difference']):.6g} and maximum absolute difference {float(likelihood_diff['maximum_absolute_coefficient_difference']):.6g}. Scale changes by {float(likelihood_diff['absolute_scale_difference']):.6f} in absolute terms. Included game counts are {likelihood_diff['included_game_count_existing']} (existing) and {likelihood_diff['included_game_count_pre_bowl']} (pre-bowl); rank-pair pseudo-observation counts are {likelihood_diff['rank_pair_pseudo_observations_existing']:,} and {likelihood_diff['rank_pair_pseudo_observations_pre_bowl']:,}, respectively. Pairing and rank-pair composition deltas are in `policy_intervention.json`.",
             "",
             "## Reproduction",
             "",
-            "Run `uv run python scripts/build_matched_history_context_issue_200.py --help` and supply the corrected #204 corpus root, the retained source-feature root, the cached game root, and the #192 reference root. The command writes the same versioned bundle, fit records, game/feature/target manifests, and report.",
+            "Run `uv run python scripts/build_matched_history_context_issue_200.py --help` and supply the corrected #204 corpus root, the retained source-feature root (including its non-empty `data/raw/cfbd/preseason/coach_tenures/` directory), the cached game root, and the #192 reference root. Coaching-tenure JSON inputs are validated and recorded individually by path, size, and SHA-256. The command writes the same versioned bundle, fit records, game/feature/target manifests, and report.",
             "",
         ]
     )

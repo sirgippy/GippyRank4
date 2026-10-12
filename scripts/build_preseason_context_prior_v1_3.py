@@ -124,6 +124,7 @@ def base_context_rows(
     outcomes_path: Path | None = None,
     feature_path: Path | None = None,
     tenure_root: Path | None = None,
+    tenures: dict[str, list[dict[str, object]]] | None = None,
     corpus_policy: v1.CorpusPolicy = "original",
 ) -> tuple[list, list, list[dict[str, object]]]:
     """Load outcome-bearing historical rows with only approved base inputs."""
@@ -135,11 +136,12 @@ def base_context_rows(
     rows, cold, _ = v1.load_rows(**load_options)
     fbs = [row for row in rows if row.subdivision == "fbs"]
     index = c12.feature_index() if feature_path is None else c12.feature_index(feature_path)
-    tenures = (
-        c12.cached_tenures()
-        if tenure_root is None
-        else c12.cached_tenures(tenure_root)
-    )
+    if tenures is None:
+        tenures = (
+            c12.cached_tenures()
+            if tenure_root is None
+            else c12.cached_tenures(tenure_root)
+        )
     contextual, coverage = c12.attach_context(
         fbs, index, tenures
     )

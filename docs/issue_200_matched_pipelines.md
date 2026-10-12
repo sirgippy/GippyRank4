@@ -43,7 +43,16 @@ included in `preseason_feature_manifest.json` and `fitted_models.json`.
 The frozen #192 / PR #196 prior panel and likelihood are read only and hashed
 in `baseline_parity.json`. The report separates those original-reference
 differences, which include corrected-corpus repairs, from the pre-bowl
-intervention.
+intervention. `policy_intervention.json` compares the two newly fitted policies
+by target season and model family, including prior PMF and fitted-coefficient
+deltas, FBS target-distribution changes, and likelihood coefficient, scale,
+game-count, and rank-pair-composition differences.
+
+Context fitting requires the non-empty
+`data/raw/cfbd/preseason/coach_tenures/` source directory. Every top-level JSON
+file consumed from that directory is validated and recorded in `manifest.json`
+with its source-root-relative path, byte size, and SHA-256. Missing tenure
+records for individual teams remain missing; the build does not fill coverage.
 
 ## Rebuild
 
@@ -57,9 +66,11 @@ uv run python scripts/build_matched_history_context_issue_200.py
 ```
 
 Use `--corpus-root`, `--source-root`, `--game-root`, and `--reference-root`
-when the validated artifacts are retained in separate checkouts. The builder
-fails before fitting when a required file or gate check is missing. Its
-`manifest.json` records every input and output size/hash.
+when the validated artifacts are retained in separate checkouts. The selected
+`--source-root` must include both the retained feature files and the coaching
+tenure directory described above. The builder fails before fitting when a
+required file, source directory, or gate check is missing. Its `manifest.json`
+records every input and output size/hash.
 
 The versioned output is written to
 `data/research/matched_history_context_issue_200/` and includes:
@@ -73,7 +84,8 @@ The versioned output is written to
   `likelihood_game_manifest.csv`, and `rank_pair_composition.csv`: snapshot
   dates, shared feature inputs, postseason decisions, and same-system versus
   fallback pair coverage.
-- `baseline_parity.json`, `data_gate.json`, `report.md`, and `manifest.json`.
+- `baseline_parity.json`, `policy_intervention.json`, `data_gate.json`,
+  `report.md`, and `manifest.json`.
 
 ## Posterior replay
 
