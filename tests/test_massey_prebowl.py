@@ -1,4 +1,7 @@
+import csv
+import importlib.util
 import json
+import sys
 from datetime import date
 from pathlib import Path
 
@@ -123,6 +126,18 @@ def test_latest_cmp_date_can_filter_fcs_rows(tmp_path: Path) -> None:
     assert latest_cmp_date_in_window(source, window, matches) == date(2003, 12, 8)
 
 
+def test_latest_cmp_date_applies_historical_wku_fbs_decision(tmp_path: Path) -> None:
+    source = tmp_path / "cf2007.csv"
+    source.write_text(
+        "cf2007,98,WKU,CMP,Composite,20071210,120\n",
+        encoding="utf-8",
+    )
+    window = PreBowlWindow(2007, date(2007, 12, 6), date(2007, 12, 12))
+    matches = {"WKU": CFBDTeam(98, "Western Kentucky", "fcs")}
+
+    assert latest_cmp_date_in_window(source, window, matches) == date(2007, 12, 10)
+
+
 def test_2020_phase_exception_requires_exact_approval_and_snapshot_date() -> None:
     window = PreBowlWindow(2020, date(2020, 12, 19), date(2020, 12, 21))
     snapshot_date = date(2020, 12, 21)
@@ -164,6 +179,58 @@ def test_target_support_audit_reports_mass_without_changing_the_pmf() -> None:
         }
     ]
     assert row["pmf"] == original_pmf
+
+
+def test_history_target_loader_accepts_valid_pmf_and_rejects_bad_support(
+    tmp_path: Path,
+) -> None:
+    script = Path(__file__).parents[1] / "scripts/study_history_context_posterior.py"
+    spec = importlib.util.spec_from_file_location("history_target_loader", script)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    target = tmp_path / "targets.csv"
+    fields = [
+        "season",
+        "subdivision",
+        "team_id",
+        "team_name",
+        "team_population",
+        "usable_systems",
+        "rank_observations",
+        "pmf",
+    ]
+    row = {
+        "season": "2020",
+        "subdivision": "fbs",
+        "team_id": "1",
+        "team_name": "Example",
+        "team_population": "2",
+        "usable_systems": "2",
+        "rank_observations": "[1,2]",
+        "pmf": '[{"rank":1,"count":1,"probability":0.5},'
+        '{"rank":2,"count":1,"probability":0.5}]',
+    }
+    with target.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        writer.writerow(row)
+
+    loaded = module.load_targets(2020, target)
+    assert loaded["1"].tolist() == [0.5, 0.5]
+
+    row["rank_observations"] = "[1,3]"
+    row["pmf"] = (
+        '[{"rank":1,"count":1,"probability":0.5},'
+        '{"rank":3,"count":1,"probability":0.5}]'
+    )
+    with target.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        writer.writerow(row)
+    with pytest.raises(ValueError, match="outside 1..2"):
+        module.load_targets(2020, target)
 
 
 def test_raw_export_import_preserves_bytes_and_records_verified_provenance(

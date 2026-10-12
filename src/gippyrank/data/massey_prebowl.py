@@ -16,6 +16,7 @@ from gippyrank.data.massey import (
     NORMALIZED_FIELDS,
     CFBDTeam,
     MasseyObservation,
+    historical_subdivision,
     iter_kaggle_observations,
     read_export_observations,
 )
@@ -166,7 +167,10 @@ def latest_cmp_date_in_window(
                 continue
             if matches is not None:
                 team = matches.get(row[2].strip())
-                if team is None or team.classification != "fbs":
+                if (
+                    team is None
+                    or historical_subdivision(window.season, team) != "fbs"
+                ):
                     continue
             try:
                 candidate = date_from_ranking_date(row[5])
@@ -206,7 +210,9 @@ def read_dated_fbs_export(
             f"{expected_season}-{expected_date:%Y%m%d}"
         )
     non_fbs = sorted(
-        name for name, team in matches.items() if team.classification != "fbs"
+        name
+        for name, team in matches.items()
+        if historical_subdivision(expected_season, team) != "fbs"
     )
     if non_fbs:
         raise ValueError(f"FBS export contains non-FBS teams: {non_fbs}")

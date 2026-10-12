@@ -96,6 +96,47 @@ MASSEY_TEAM_ALIASES = {
     "W Salem St": "Winston-Salem State",
 }
 
+# Massey's ranking universe and its ranked teams, rather than CFBD's later
+# classification labels, define these historical cohort decisions. The
+# overrides are keyed by stable CFBD team id and season, never by name.
+HISTORICAL_SUBDIVISION_OVERRIDES = {
+    (2004, "50"): "fcs",  # Florida A&M was an I-AA team in 2004.
+    (2007, "98"): "fbs",  # Include WKU in the supported 2007 FBS rank universe.
+    (2020, "2627"): "fcs",  # Tarleton's 2020 FCS ranking-universe membership.
+    (2020, "3101"): "fcs",  # Dixie State's 2020 FCS ranking-universe membership.
+}
+HISTORICAL_SUBDIVISION_OVERRIDE_RATIONALES = {
+    (2004, "50"): "Florida A&M's 2004 team belongs to the Division I-AA/FCS cohort.",
+    (2007, "98"): (
+        "Issue 204 evidence identifies WKU in the 2007 FBS rank universe; "
+        "the user selected FBS inclusion for this model cohort."
+    ),
+    (2020, "2627"): (
+        "Tarleton has 2020 FCS ranking-universe observations and belongs to the "
+        "FCS model cohort."
+    ),
+    (2020, "3101"): (
+        "Dixie State has 2020 FCS ranking-universe observations and belongs to "
+        "the FCS model cohort."
+    ),
+}
+
+
+def historical_subdivision(season: int, team: CFBDTeam) -> str:
+    """Return the season's football subdivision, applying documented exceptions."""
+    return HISTORICAL_SUBDIVISION_OVERRIDES.get(
+        (season, str(team.id)), team.classification
+    )
+
+
+def historical_subdivision_for_id(
+    season: int, team_id: str | int, default_subdivision: str
+) -> str:
+    """Return the model cohort for a stable team id, with a caller fallback."""
+    return HISTORICAL_SUBDIVISION_OVERRIDES.get(
+        (season, str(team_id)), default_subdivision
+    )
+
 
 def _key(value: str) -> str:
     normalized = unicodedata.normalize("NFKD", value).encode("ascii", "ignore")
@@ -180,7 +221,7 @@ def iter_kaggle_observations(
             team = matches.get(team_name)
             yield MasseyObservation(
                 season=season,
-                subdivision=(team.classification if team else None),
+                subdivision=(historical_subdivision(season, team) if team else None),
                 team_id=str(team.id) if team else None,
                 team_source_id=team_id.strip(),
                 team_name=team_name,
