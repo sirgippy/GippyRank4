@@ -487,7 +487,9 @@ def main() -> None:
     parser.add_argument("--target-max", type=int, default=TARGET_MAX)
     args = parser.parse_args()
     target_min, target_max = args.target_min, args.target_max
-    rows, _cold, _coverage = v1.load_rows(max_season=target_max)
+    rows, _cold, _coverage = v1.load_rows(
+        max_season=target_max, corpus_policy="original"
+    )
     fbs = [row for row in rows if row.subdivision == "fbs"]
     contextual, _ = c12.attach_context(fbs, c12.feature_index(), c12.cached_tenures())
     context_by_key = {

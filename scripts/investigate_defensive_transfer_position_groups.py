@@ -1463,6 +1463,12 @@ def _source_hashes(
     return result
 
 
+def _load_frozen_prior_rows() -> tuple[list, list, list[dict[str, object]]]:
+    return prior.v1.load_rows(
+        max_season=max(TARGET_SEASONS), corpus_policy="original"
+    )
+
+
 def run(args: argparse.Namespace) -> dict[str, object]:
     source_root = args.source_root.resolve()
     transfer_root = args.transfer_root.resolve()
@@ -1472,7 +1478,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     output = args.output.resolve()
     configure_source_root(source_root)
 
-    rows, cold, _ = prior.v1.load_rows(max_season=max(TARGET_SEASONS))
+    rows, cold, _ = _load_frozen_prior_rows()
     fbs = [row for row in rows if row.subdivision == "fbs"]
     contextual, _ = c12.attach_context(fbs, c12.feature_index(), c12.cached_tenures())
     records, usage, portal_seasons, usage_seasons = prior.load_raw_transfer_data(

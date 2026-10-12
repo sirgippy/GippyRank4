@@ -798,7 +798,9 @@ def main() -> None:
         raise ValueError("--target-min must not exceed --target-max")
     source_root = args.source_root.resolve()
     configure_source_root(source_root)
-    rows, cold, _coverage = v1.load_rows(max_season=args.target_max)
+    rows, cold, _coverage = v1.load_rows(
+        max_season=args.target_max, corpus_policy="original"
+    )
     fbs = [row for row in rows if row.subdivision == "fbs"]
     fbs_cold = [row for row in cold if row.subdivision == "fbs"]
     contextual, _ = c12.attach_context(fbs, c12.feature_index(), c12.cached_tenures())

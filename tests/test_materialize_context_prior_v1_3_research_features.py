@@ -81,7 +81,25 @@ def test_materializer_applies_retained_zero_evidence_to_historical_features(
         expected_changes = list(csv.DictReader(handle))
 
     monkeypatch.setattr(materializer.transfer_research, "configure_source_root", lambda _: None)
-    monkeypatch.setattr(materializer.v1, "load_rows", lambda **_: (context_rows, None, None))
+    original_rank_row = {
+        "season": "2007",
+        "subdivision": "fbs",
+        "team_id": "70",
+        "team_name": "Idaho",
+        "team_population": "119",
+        "rank_observations": "[119,120]",
+    }
+    corpus_policies: list[str] = []
+
+    def load_original_rows(**kwargs):
+        corpus_policy = kwargs["corpus_policy"]
+        corpus_policies.append(corpus_policy)
+        assert materializer.v1.valid_ranks(
+            original_rank_row, corpus_policy=corpus_policy
+        ).tolist() == [119]
+        return context_rows, None, None
+
+    monkeypatch.setattr(materializer.v1, "load_rows", load_original_rows)
     monkeypatch.setattr(materializer.c12, "feature_index", dict)
     monkeypatch.setattr(materializer.c12, "cached_tenures", dict)
     monkeypatch.setattr(
@@ -123,6 +141,7 @@ def test_materializer_applies_retained_zero_evidence_to_historical_features(
         zero_evidence=evidence_path,
     )
 
+    assert corpus_policies == ["original"]
     assert len(observed_aggregates) == 1
     assert count == len(expected_changes) == 21
     assert len(rows) == count
