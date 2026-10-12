@@ -347,6 +347,32 @@ def test_true_t1_baseline_has_no_hidden_rank_history_features() -> None:
     assert values["SPECS"]["A2_t1_t2_t3"] == ["lag2_z_mean", "lag3_z_mean"]
 
 
+def test_preseason_prior_rejects_out_of_population_corrected_rank() -> None:
+    values = runpy.run_path(
+        str(Path(__file__).parents[1] / "scripts/build_preseason_prior.py")
+    )
+    row = {
+        "season": "2007",
+        "subdivision": "fbs",
+        "team_id": "70",
+        "team_name": "Idaho",
+        "team_population": "119",
+        "usable_systems": "2",
+        "rank_observations": "[119,120]",
+        "pmf": (
+            '[{"rank":119,"count":1,"probability":0.5},'
+            '{"rank":120,"count":1,"probability":0.5}]'
+        ),
+    }
+
+    with pytest.raises(
+        ValueError,
+        match=r"2007 fbs team 70 \(Idaho\): constituent rank 120 is outside 1\.\.119",
+    ):
+        values["valid_ranks"](row)
+    assert values["legacy_valid_ranks"](row).tolist() == [119]
+
+
 def test_season_holdout_is_disjoint_from_training() -> None:
     values = runpy.run_path(
         str(Path(__file__).parents[1] / "scripts/build_preseason_prior.py")

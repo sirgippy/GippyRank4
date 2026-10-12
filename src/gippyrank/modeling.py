@@ -65,6 +65,35 @@ def write_csv(path: Path, fields: list[str], rows: Iterable[dict[str, object]]) 
         writer.writerows(rows)
 
 
+def validate_rank_observations(row: dict[str, object]) -> list[int]:
+    """Validate source ranks against the declared population before transforms."""
+    context = (
+        f"{row.get('season')} {row.get('subdivision')} team "
+        f"{row.get('team_id')} ({row.get('team_name')})"
+    )
+    try:
+        population = int(row["team_population"])
+        ranks = json.loads(str(row["rank_observations"]))
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        raise ValueError(f"{context}: malformed rank observations: {exc}") from exc
+    if not str(row.get("team_id", "")).strip() or not str(
+        row.get("team_name", "")
+    ).strip():
+        raise ValueError(f"{context}: canonical team identity is required")
+    if population < 1:
+        raise ValueError(f"{context}: team population must be positive")
+    if not isinstance(ranks, list) or not ranks:
+        raise ValueError(f"{context}: rank observations must be a non-empty list")
+    for rank in ranks:
+        if isinstance(rank, bool) or not isinstance(rank, int):
+            raise TypeError(f"{context}: constituent rank must be an integer: {rank!r}")
+        if not 1 <= rank <= population:
+            raise ValueError(
+                f"{context}: constituent rank {rank} is outside 1..{population}"
+            )
+    return ranks
+
+
 def coverage_table(observations: list[dict[str, str]]) -> list[dict[str, object]]:
     populations: dict[tuple[int, str], set[str]] = defaultdict(set)
     groups: dict[tuple[int, str, str], list[dict[str, str]]] = defaultdict(list)

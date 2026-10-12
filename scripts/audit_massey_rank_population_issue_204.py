@@ -7,6 +7,7 @@ import csv
 import hashlib
 import json
 from collections import defaultdict
+from itertools import zip_longest
 from pathlib import Path
 
 from gippyrank.data.cfbd_games import (
@@ -379,23 +380,9 @@ def pair_accounting(
     old_pairs = legacy_pair_rows(before_games, old_by_team, old_populations)
     _, new_by_team = build_distributions(after_observations, new_depth, threshold)
     new_pairs = build_constituent_rank_pairs(after_games, new_by_team, new_depth)
-    with corrected_pair_path.open(newline="", encoding="utf-8-sig") as handle:
-        pair_reader = csv.DictReader(handle)
-        if tuple(pair_reader.fieldnames or ()) != CONSTITUENT_RANK_PAIR_FIELDS:
-            raise ValueError(f"Unexpected corrected rank-pair schema in {corrected_pair_path}")
-        corrected_pair_count = 0
-        for expected, actual in zip(new_pairs, pair_reader, strict=False):
-            if any(str(expected[field]) != actual[field] for field in CONSTITUENT_RANK_PAIR_FIELDS):
-                raise ValueError(
-                    f"Corrected pair artifact content mismatch in {corrected_pair_path} "
-                    f"at row {corrected_pair_count + 2}"
-                )
-            corrected_pair_count += 1
-    if corrected_pair_count != len(new_pairs):
-        raise ValueError(
-            f"Corrected pair artifact row count mismatch: {corrected_pair_path} "
-            f"has {corrected_pair_count}, rebuilt {len(new_pairs)}"
-        )
+    corrected_pair_count = validate_corrected_pair_artifact(
+        corrected_pair_path, new_pairs
+    )
     old_index = {(r["game_id"], r["system_code"]): r for r in old_pairs}
     new_index = {(r["game_id"], r["system_code"]): r for r in new_pairs}
     common = set(old_index) & set(new_index)
@@ -425,6 +412,43 @@ def pair_accounting(
         "corrected_pair_sha256": sha256(corrected_pair_path),
         "corrected_pair_rows_match_rebuild": True,
     }
+
+
+def validate_corrected_pair_artifact(
+    path: Path, rebuilt_pairs: list[dict[str, object]]
+) -> int:
+    """Require the serialized pair rows to match the complete rebuilt sequence."""
+    with path.open(newline="", encoding="utf-8-sig") as handle:
+        pair_reader = csv.DictReader(handle)
+        if tuple(pair_reader.fieldnames or ()) != CONSTITUENT_RANK_PAIR_FIELDS:
+            raise ValueError(f"Unexpected corrected rank-pair schema in {path}")
+        sentinel = object()
+        artifact_count = 0
+        for row_number, (expected, actual) in enumerate(
+            zip_longest(rebuilt_pairs, pair_reader, fillvalue=sentinel), start=2
+        ):
+            if expected is sentinel:
+                artifact_count += 1
+                artifact_count += sum(1 for _ in pair_reader)
+                raise ValueError(
+                    f"Corrected pair artifact row count mismatch in {path}: "
+                    f"has {artifact_count} rows, rebuilt {len(rebuilt_pairs)}"
+                )
+            if actual is sentinel:
+                raise ValueError(
+                    f"Corrected pair artifact row count mismatch in {path}: "
+                    f"has {artifact_count} rows, rebuilt {len(rebuilt_pairs)}"
+                )
+            artifact_count += 1
+            if any(
+                str(expected[field]) != actual[field]
+                for field in CONSTITUENT_RANK_PAIR_FIELDS
+            ):
+                raise ValueError(
+                    f"Corrected pair artifact content mismatch in {path} "
+                    f"at row {row_number}"
+                )
+    return artifact_count
 
 
 def source_rank_dispositions(

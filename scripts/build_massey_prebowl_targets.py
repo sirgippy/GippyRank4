@@ -6,6 +6,7 @@ import argparse
 import csv
 import hashlib
 import json
+import tempfile
 from datetime import date
 from pathlib import Path
 
@@ -64,6 +65,41 @@ def sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def invalidate_readiness(path: Path) -> None:
+    """Atomically make an existing readiness manifest unusable during rebuild."""
+    if not path.exists():
+        return
+    try:
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        manifest = {}
+    if not isinstance(manifest, dict):
+        manifest = {}
+    manifest["status"] = "rebuild_in_progress"
+    manifest["downstream_ready"] = False
+    manifest["readiness_invalidation_reason"] = (
+        "A rebuild started; readiness remains false until validated artifacts "
+        "and a replacement manifest are published."
+    )
+    temporary_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            temporary_path = Path(handle.name)
+            json.dump(manifest, handle, indent=2, sort_keys=True)
+            handle.write("\n")
+        temporary_path.replace(path)
+    finally:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
 
 
 def write_csv(
@@ -144,6 +180,8 @@ def load_checklist(path: Path) -> dict[int, dict[str, str]]:
 
 
 def build(args: argparse.Namespace) -> None:
+    invalidate_readiness(args.output_root / "manifest.json")
+    invalidate_readiness(args.report_root / "manifest.json")
     checklist = load_checklist(args.checklist)
     final_rows = read_csv(args.final_observations)
     fcs_rows = [row.copy() for row in final_rows if row["subdivision"] == "fcs"]

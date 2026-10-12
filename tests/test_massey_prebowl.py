@@ -4,6 +4,7 @@ import json
 import sys
 from datetime import date
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -231,6 +232,134 @@ def test_history_target_loader_accepts_valid_pmf_and_rejects_bad_support(
         writer.writerow(row)
     with pytest.raises(ValueError, match="outside 1..2"):
         module.load_targets(2020, target)
+
+
+def test_failed_prebowl_rebuild_invalidates_both_readiness_manifests(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    script = Path(__file__).parents[1] / "scripts/build_massey_prebowl_targets.py"
+    spec = importlib.util.spec_from_file_location("prebowl_builder_review_test", script)
+    assert spec and spec.loader
+    builder = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = builder
+    spec.loader.exec_module(builder)
+
+    def observation(
+        subdivision: str,
+        team_id: str,
+        team_name: str,
+        system_code: str,
+        rank: int,
+        *,
+        composite: bool = False,
+    ) -> dict[str, str]:
+        return {
+            "season": "2020",
+            "subdivision": subdivision,
+            "team_id": team_id,
+            "team_source_id": team_id,
+            "team_name": team_name,
+            "system_code": system_code,
+            "system_name": "Composite" if composite else "System",
+            "ranking_date": "20201220",
+            "ordinal_rank": str(rank),
+            "is_composite": str(composite),
+            "source": "massey_prebowl_export",
+            "source_file": "data/raw/massey_prebowl/fbs2020-20201220.csv",
+        }
+
+    fbs_final = [
+        observation("fbs", "fbs1", "FBS Team", "CMP", 1, composite=True),
+        observation("fbs", "fbs1", "FBS Team", "SYS", 1),
+    ]
+    fcs_final = [
+        observation("fcs", "fcs1", "FCS Team", "CMP", 1, composite=True),
+        observation("fcs", "fcs1", "FCS Team", "SYS", 1),
+    ]
+    final_rows = [*fbs_final, *fcs_final]
+    current_snapshot = {"rows": fbs_final}
+    monkeypatch.setattr(builder, "SEASONS", (2020,))
+    monkeypatch.setattr(builder, "read_csv", lambda _path: final_rows)
+    monkeypatch.setattr(
+        builder,
+        "load_checklist",
+        lambda _path: {
+            2020: {
+                "snapshot_source": "massey_prebowl_export",
+                "snapshot_date": "2020-12-20",
+                "snapshot_file": "data/raw/massey_prebowl/fbs2020-20201220.csv",
+                "source_url": "https://example.test/massey",
+                "last_fbs_conference_championship_date": "2020-12-19",
+                "first_fbs_postseason_game_date": "2020-12-21",
+                "phase_exception_decision": "",
+                "phase_exception_rationale": "",
+                "collection_status": "available",
+                "schedule_source_url": "https://example.test/schedule",
+                "schedule_raw_path": "data/raw/cfbd/games/2020.csv",
+                "schedule_source_sha256": "",
+                "schedule_retrieved_at": "",
+                "existing_source_file": "data/raw/massey_rankings/cf2020.csv",
+                "existing_source_coverage": "complete",
+                "existing_source_sha256": "",
+            }
+        },
+    )
+    monkeypatch.setattr(builder, "validate_raw_provenance", lambda *_args, **_kwargs: {})
+    monkeypatch.setattr(builder, "export_names", lambda _path: {"FBS Team"})
+    monkeypatch.setattr(builder, "load_team_matches", lambda *_args: ({}, {}, []))
+    monkeypatch.setattr(builder, "snapshot_date_is_accepted", lambda *_args: True)
+    monkeypatch.setattr(
+        builder,
+        "read_dated_fbs_export",
+        lambda *_args, **_kwargs: (current_snapshot["rows"], []),
+    )
+    monkeypatch.setattr(builder, "normalized_rows", lambda rows: rows)
+    monkeypatch.setattr(builder, "validate_snapshot", lambda *_args, **_kwargs: None)
+
+    raw_root = tmp_path / "raw"
+    input_path = raw_root / "massey_prebowl" / builder.snapshot_filename(
+        2020, date(2020, 12, 20)
+    )
+    input_path.parent.mkdir(parents=True)
+    input_path.write_text("placeholder", encoding="utf-8")
+    final_path = tmp_path / "final_observations.csv"
+    final_path.write_text("placeholder", encoding="utf-8")
+    output_root = tmp_path / "output"
+    report_root = tmp_path / "report"
+    args = SimpleNamespace(
+        checklist=tmp_path / "checklist.csv",
+        final_observations=final_path,
+        raw_root=raw_root,
+        output_root=output_root,
+        report_root=report_root,
+        coverage_threshold=0.9,
+        games=None,
+    )
+
+    builder.build(args)
+    for root in (output_root, report_root):
+        assert json.loads((root / "manifest.json").read_text(encoding="utf-8"))[
+            "downstream_ready"
+        ] is True
+
+    current_snapshot["rows"] = [
+        observation("fbs", "fbs1", "FBS Team", "CMP", 1, composite=True),
+        observation("fbs", "fbs1", "FBS Team", "SYS", 2),
+    ]
+    with pytest.raises(ValueError, match="source rank 2 is outside model population 1..1"):
+        builder.build(args)
+
+    for root in (output_root, report_root):
+        manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+        assert manifest["downstream_ready"] is False
+        assert manifest["status"] == "rebuild_in_progress"
+    written_rows = list(
+        csv.DictReader((output_root / "pre_bowl_observations.csv").open())
+    )
+    assert any(
+        row["subdivision"] == "fbs" and row["ordinal_rank"] == "2"
+        for row in written_rows
+    )
 
 
 def test_raw_export_import_preserves_bytes_and_records_verified_provenance(
