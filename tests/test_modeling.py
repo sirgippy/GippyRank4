@@ -3,14 +3,19 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from gippyrank.modeling import (
+    audit_population_coverage,
+    build_constituent_rank_pairs,
+    build_distributions,
     coverage_table,
     design_matrix,
     fit_marginalized,
     fit_robust_surface,
     game_log_scores,
     mixture_central_interval,
+    validate_distribution_row,
 )
 
 _SCRIPT_SPEC = importlib.util.spec_from_file_location(
@@ -79,6 +84,231 @@ def test_depth_excludes_composite_and_reports_coverage() -> None:
         next(row for row in table if row["system_code"] == "AP")["coverage_ratio"]
         == 0.5
     )
+
+
+@pytest.mark.parametrize(
+    ("season", "subdivision", "old_population", "new_population", "outlier_ranks"),
+    [
+        (2004, "fcs", 119, 120, (120,)),
+        (2007, "fbs", 119, 120, (120,)),
+        (2020, "fcs", 125, 127, (126, 127)),
+    ],
+)
+def test_issue_204_cohort_membership_repairs_rank_support_and_coverage(
+    season: int,
+    subdivision: str,
+    old_population: int,
+    new_population: int,
+    outlier_ranks: tuple[int, ...],
+) -> None:
+    def make_rows(population: int) -> list[dict[str, str]]:
+        rows = []
+        for team_number in range(1, population + 1):
+            team_id = str(team_number)
+            rank = team_number
+            if team_number == old_population and len(outlier_ranks) == 1:
+                rank = outlier_ranks[0]
+            if team_number == old_population - 1 and len(outlier_ranks) == 2:
+                rank = outlier_ranks[0]
+            if team_number == old_population and len(outlier_ranks) == 2:
+                rank = outlier_ranks[1]
+            if (
+                len(outlier_ranks) == 1
+                and team_number == new_population
+                and population > old_population
+            ):
+                rank = old_population
+            rows.append(
+                {
+                    "season": str(season),
+                    "subdivision": subdivision,
+                    "team_id": team_id,
+                    "team_name": f"Team {team_id}",
+                    "system_code": "CMP",
+                    "ordinal_rank": str(rank),
+                    "is_composite": "True",
+                }
+            )
+            rows.append(
+                {
+                    "season": str(season),
+                    "subdivision": subdivision,
+                    "team_id": team_id,
+                    "team_name": f"Team {team_id}",
+                    "system_code": "SYS",
+                    "ordinal_rank": str(rank),
+                    "is_composite": "False",
+                }
+            )
+        return rows
+
+    old_rows = make_rows(old_population)
+    old_depth = coverage_table(old_rows)
+    with pytest.raises(ValueError, match="outside model population"):
+        build_distributions(old_rows, old_depth, threshold=1.0)
+
+    corrected_rows = make_rows(new_population)
+    corrected_depth = coverage_table(corrected_rows)
+    distributions, _ = build_distributions(corrected_rows, corrected_depth, 1.0)
+    coverage = audit_population_coverage(
+        corrected_rows, corrected_depth, distributions, 1.0
+    )
+    assert len(distributions) == new_population
+    assert coverage[0]["teams_missing_selected_constituents"] == 0
+    assert all(int(row["team_population"]) == new_population for row in distributions)
+
+
+def test_selected_rank_observation_requires_cmp_membership() -> None:
+    rows = [
+        {
+            "season": "2020",
+            "subdivision": "fbs",
+            "team_id": "1",
+            "team_name": "CMP team",
+            "system_code": "CMP",
+            "ordinal_rank": "1",
+            "is_composite": "True",
+        },
+        {
+            "season": "2020",
+            "subdivision": "fbs",
+            "team_id": "2",
+            "team_name": "Constituent-only team",
+            "system_code": "SYS",
+            "ordinal_rank": "1",
+            "is_composite": "False",
+        },
+    ]
+    with pytest.raises(ValueError, match="no CMP population member"):
+        build_distributions(rows, coverage_table(rows), threshold=0.0)
+
+
+def test_population_coverage_gate_flags_cmp_team_without_selected_rank() -> None:
+    rows = [
+        {
+            "season": "2020",
+            "subdivision": "fbs",
+            "team_id": "1",
+            "team_name": "First",
+            "system_code": "CMP",
+            "ordinal_rank": "1",
+            "is_composite": "True",
+        },
+        {
+            "season": "2020",
+            "subdivision": "fbs",
+            "team_id": "2",
+            "team_name": "Second",
+            "system_code": "CMP",
+            "ordinal_rank": "2",
+            "is_composite": "True",
+        },
+        {
+            "season": "2020",
+            "subdivision": "fbs",
+            "team_id": "1",
+            "team_name": "First",
+            "system_code": "SYS",
+            "ordinal_rank": "1",
+            "is_composite": "False",
+        },
+    ]
+    depth = coverage_table(rows)
+    distributions, _ = build_distributions(rows, depth, threshold=0.5)
+
+    coverage = audit_population_coverage(rows, depth, distributions, threshold=0.5)
+
+    assert coverage[0]["teams_missing_selected_constituents"] == 1
+    assert coverage[0]["missing_team_ids"] == '["2"]'
+
+
+def test_constituent_rank_pairs_retain_system_identity_and_populations() -> None:
+    by_team = {
+        (2020, "fbs", "1"): [("SYS", 2)],
+        (2020, "fcs", "2"): [("SYS", 3)],
+    }
+    depth = [
+        {"season": 2020, "subdivision": "fbs", "team_population": 10},
+        {"season": 2020, "subdivision": "fcs", "team_population": 20},
+    ]
+    games = [
+        {
+            "id": "9",
+            "season": "2020",
+            "homeId": "1",
+            "homeClassification": "fbs",
+            "awayId": "2",
+            "awayClassification": "fcs",
+        }
+    ]
+
+    pairs = build_constituent_rank_pairs(games, by_team, depth)
+
+    assert len(pairs) == 1
+    assert pairs[0]["system_code"] == "SYS"
+    assert pairs[0]["home_team_population"] == 10
+    assert pairs[0]["away_team_population"] == 20
+    assert pairs[0]["home_rank_percentile"] == pytest.approx(0.15)
+    assert pairs[0]["away_rank_percentile"] == pytest.approx(0.125)
+
+
+def test_distribution_validation_requires_pmf_to_match_retained_ranks() -> None:
+    row: dict[str, object] = {
+        "season": 2020,
+        "subdivision": "fbs",
+        "team_id": "1",
+        "team_name": "Example",
+        "team_population": 2,
+        "usable_systems": 2,
+        "rank_observations": "[1,2]",
+        "pmf": '[{"rank":1,"count":1,"probability":0.5},'
+        '{"rank":2,"count":1,"probability":0.5}]',
+    }
+    validate_distribution_row(row)
+    row["pmf"] = '[{"rank":1,"count":2,"probability":1.0}]'
+    with pytest.raises(ValueError, match="support does not match"):
+        validate_distribution_row(row)
+
+
+def test_rank_population_change_leaves_unaffected_cohort_distributions_identical() -> None:
+    unaffected = [
+        {
+            "season": "2021",
+            "subdivision": "fbs",
+            "team_id": team_id,
+            "team_name": f"Team {team_id}",
+            "system_code": system,
+            "ordinal_rank": rank,
+            "is_composite": is_composite,
+        }
+        for team_id, system, rank, is_composite in (
+            ("1", "CMP", "1", "True"),
+            ("2", "CMP", "2", "True"),
+            ("1", "SYS", "1", "False"),
+            ("2", "SYS", "2", "False"),
+        )
+    ]
+    added_cohort = [
+        {
+            "season": "2020",
+            "subdivision": "fcs",
+            "team_id": str(team_number),
+            "team_name": f"Added FCS team {team_number}",
+            "system_code": system,
+            "ordinal_rank": str(team_number),
+            "is_composite": is_composite,
+        }
+        for team_number in range(1, 128)
+        for system, is_composite in (("CMP", "True"), ("SYS", "False"))
+    ]
+    before_depth = coverage_table(unaffected)
+    after_depth = coverage_table(unaffected + added_cohort)
+    before, _ = build_distributions(unaffected, before_depth, threshold=1.0)
+    after, _ = build_distributions(unaffected + added_cohort, after_depth, threshold=1.0)
+
+    before_2021 = [row for row in before if row["season"] == 2021]
+    after_2021 = [row for row in after if row["season"] == 2021]
+    assert before_2021 == after_2021
 
 
 def test_surface_has_pairing_specific_smooth_features() -> None:
@@ -205,6 +435,22 @@ def test_pseudo_data_named_fields_and_site_roles() -> None:
     assert data.fbs_home.tolist()[:2] == [1.0, 1.0]
     assert data.fbs_home.tolist()[2] == 0.0
     assert np.allclose(data.x[:2], [(1 - 0.5) / 10, (2 - 0.5) / 10])
+
+
+def test_pseudo_data_rejects_out_of_population_rank_pairs() -> None:
+    row = {
+        "rank_pairs": "[[1,11]]",
+        "home_team_population": "10",
+        "away_team_population": "10",
+        "margin": "7",
+        "pairing": "fbs-fcs",
+        "home_subdivision": "fbs",
+        "neutral_site": "False",
+        "game_id": "11",
+        "season": "2023",
+    }
+    with pytest.raises(ValueError, match="away rank 11 is outside 1..10"):
+        pseudo_data([row])
 
 
 def test_evaluate_all_pairings_has_finite_subgroup_metrics() -> None:

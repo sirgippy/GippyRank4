@@ -10,8 +10,11 @@ from pathlib import Path
 
 import numpy as np
 
+from gippyrank.data.cfbd_games import read_cfbd_game_rows
 from gippyrank.modeling import (
+    CONSTITUENT_RANK_PAIR_FIELDS,
     PAIRINGS,
+    build_constituent_rank_pairs,
     build_distributions,
     coverage_table,
     design_matrix,
@@ -128,13 +131,40 @@ class PseudoData:
 def pseudo_data(rows) -> PseudoData:
     values = [[] for _ in range(10)]
     for row in rows:
-        pairs = json.loads(row["rank_pairs"])
+        context = f"game {row.get('game_id')} season {row.get('season')}"
+        try:
+            pairs = json.loads(row["rank_pairs"])
+        except (KeyError, TypeError, json.JSONDecodeError) as exc:
+            raise ValueError(f"{context}: malformed rank_pairs JSON") from exc
+        if not isinstance(pairs, list) or not pairs:
+            raise ValueError(f"{context}: rank_pairs must be a non-empty list")
+        try:
+            home_population = int(row["home_team_population"])
+            away_population = int(row["away_team_population"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError(f"{context}: rank populations must be positive integers") from exc
+        if home_population < 1 or away_population < 1:
+            raise ValueError(f"{context}: rank populations must be positive integers")
         n = len(pairs)
         cross = row["pairing"] == "fbs-fcs"
         neutral = _as_bool(row["neutral_site"])
-        for a, b in pairs:
-            hp = (a - 0.5) / int(row["home_team_population"])
-            ap = (b - 0.5) / int(row["away_team_population"])
+        for pair in pairs:
+            if not isinstance(pair, list) or len(pair) != 2:
+                raise ValueError(f"{context}: each rank pair must contain two ranks")
+            a, b = pair
+            for rank, population, side in (
+                (a, home_population, "home"),
+                (b, away_population, "away"),
+            ):
+                if isinstance(rank, bool) or not isinstance(rank, int):
+                    raise TypeError(f"{context}: {side} rank must be an integer: {rank!r}")
+                if not 1 <= rank <= population:
+                    raise ValueError(
+                        f"{context}: {side} rank {rank} is outside "
+                        f"1..{population}"
+                    )
+            hp = (a - 0.5) / home_population
+            ap = (b - 0.5) / away_population
             if cross and row["home_subdivision"] == "fcs":
                 hp, ap = ap, hp
             vals = [
@@ -192,16 +222,32 @@ def evaluate(model, X, y, pairing, game_ids, include_interval=True):
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--threshold", type=float, default=0.90)
+    parser.add_argument(
+        "--observations",
+        type=Path,
+        default=ROOT / "data/processed/massey/final_observations.csv",
+    )
+    parser.add_argument(
+        "--games",
+        type=Path,
+        default=ROOT / "data/processed/cfbd/games.csv",
+        help="Processed game CSV or existing raw CFBD games directory.",
+    )
+    parser.add_argument(
+        "--stats", type=Path, default=ROOT / "data/processed/cfbd/team_game_stats.csv"
+    )
+    parser.add_argument("--output-root", type=Path, default=OUT)
     args = parser.parse_args()
-    observations = read_csv(ROOT / "data/processed/massey/final_observations.csv")
-    games = read_csv(ROOT / "data/processed/cfbd/games.csv")
-    stats = read_csv(ROOT / "data/processed/cfbd/team_game_stats.csv")
+    out = args.output_root
+    observations = read_csv(args.observations)
+    games, _ = read_cfbd_game_rows(args.games)
+    stats = read_csv(args.stats)
     depth = coverage_table(observations)
     distributions, by_team = build_distributions(observations, depth, args.threshold)
-    OUT.mkdir(parents=True, exist_ok=True)
-    write_csv(OUT / "system_depth.csv", list(depth[0]), depth)
+    out.mkdir(parents=True, exist_ok=True)
+    write_csv(out / "system_depth.csv", list(depth[0]), depth)
     write_csv(
-        OUT / "team_season_rank_distributions.csv",
+        out / "team_season_rank_distributions.csv",
         list(distributions[0]),
         distributions,
     )
@@ -211,21 +257,31 @@ def main() -> None:
             selected[(int(item["season"]), item["subdivision"])].add(
                 item["system_code"]
             )
-    rank_pairs = {}
-    for g in games:
-        if g["homeClassification"] not in {"fbs", "fcs"} or g[
-            "awayClassification"
-        ] not in {"fbs", "fcs"}:
-            continue
-        hk = (int(g["season"]), g["homeClassification"], g["homeId"])
-        ak = (int(g["season"]), g["awayClassification"], g["awayId"])
-        h = dict(by_team.get(hk, []))
-        a = dict(by_team.get(ak, []))
-        common = sorted(set(h) & set(a))
-        if common:
-            rank_pairs[(int(g["id"]), hk, ak)] = [(h[c], a[c]) for c in common]
+    pair_rows = build_constituent_rank_pairs(games, by_team, depth)
+    games_by_id = {int(game["id"]): game for game in games}
+    rank_pairs = defaultdict(list)
+    for pair in pair_rows:
+        game = games_by_id[int(pair["game_id"])]
+        home_key = (
+            int(pair["season"]),
+            str(pair["home_subdivision"]),
+            str(pair["home_team_id"]),
+        )
+        away_key = (
+            int(pair["season"]),
+            str(pair["away_subdivision"]),
+            str(pair["away_team_id"]),
+        )
+        rank_pairs[(int(game["id"]), home_key, away_key)].append(
+            (int(pair["home_rank"]), int(pair["away_rank"]))
+        )
     joined, missing = build_joined(games, distributions, rank_pairs, stats)
-    write_csv(OUT / "historical_modeling_games.csv", list(joined[0]), joined)
+    write_csv(out / "historical_modeling_games.csv", list(joined[0]), joined)
+    write_csv(
+        out / "constituent_rank_pairs.csv",
+        list(CONSTITUENT_RANK_PAIR_FIELDS),
+        pair_rows,
+    )
     data = pseudo_data(joined)
     seasons = {int(r["game_id"]): int(r["season"]) for r in joined}
     train = data.season < 2022
@@ -344,7 +400,7 @@ def main() -> None:
             },
         },
     }
-    (OUT / "margin_model_results.json").write_text(json.dumps(result, indent=2) + "\n")
+    (out / "margin_model_results.json").write_text(json.dumps(result, indent=2) + "\n")
     report = {
         "chosen_threshold": args.threshold,
         "systems": len(depth),
@@ -357,11 +413,11 @@ def main() -> None:
         "validation_definition": "equal-weight whole-game metrics; no season is split",
         "results_file": "margin_model_results.json",
     }
-    (OUT / "historical_modeling_report.json").write_text(
+    (out / "historical_modeling_report.json").write_text(
         json.dumps(report, indent=2) + "\n"
     )
     h = validation["modern_holdout_2022_2025"]
-    (OUT / "historical_modeling_report.md").write_text(
+    (out / "historical_modeling_report.md").write_text(
         f"# Historical modeling report\n\nThis report was regenerated with per-game scoring. CMP is excluded and MAS is treated as a constituent.\n\n- Usable games: {len(joined)}\n- Rank-pair pseudo-observations: {len(data.margin)} (descriptive, not independent games)\n- Weighted pseudo fit marginalized NLL: {h['weighted_pseudo_fit']['marginalized_nll']:.3f}\n- Direct marginalized fit NLL: {h['marginalized_fit']['marginalized_nll']:.3f}\n- Linear benchmark marginalized NLL: {h['linear_benchmark']['marginalized_nll']:.3f}\n- Pseudo fit expected conditional NLL: {h['weighted_pseudo_fit']['expected_conditional_nll']:.3f}\n- Pseudo fit MAE: {h['weighted_pseudo_fit']['mae_expected_margin']:.3f}\n- Central 80% mixture coverage: {h['weighted_pseudo_fit']['central_80pct_coverage']:.3f}\n- Basis: {X.shape[1]} pairing-block features, rank {np.linalg.matrix_rank(X[train].T @ X[train])}, condition number {np.sqrt(np.linalg.cond(X[train].T @ X[train])):.2g}\n- Student-t df sensitivity: {df_scores}; selected df={selected_df}; scale={pseudo['scale']:.3f}\n- Marginal optimizer: success={marginal['optimizer_success']}, status={marginal['optimizer_status']}, iterations={marginal['optimizer_nit']}, evaluations={marginal['optimizer_nfev']}\n\nThe rich model and simple benchmark use the same oriented coordinates and equal-game scoring. Training-era season values are in-sample diagnostics, not holdouts. See `margin_model_results.json` for pairing and season breakdowns.\n",
         encoding="utf-8",
     )

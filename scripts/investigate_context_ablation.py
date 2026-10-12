@@ -673,7 +673,9 @@ def report_interaction_lines(rows: list[dict[str, object]]) -> list[str]:
 
 
 def main() -> None:
-    rows, _cold, _coverage = v1.load_rows(max_season=TARGET_MAX)
+    rows, _cold, _coverage = v1.load_rows(
+        max_season=TARGET_MAX, corpus_policy="original"
+    )
     fbs = [row for row in rows if row.subdivision == "fbs"]
     contextual, _ = c12.attach_context(fbs, c12.feature_index(), c12.cached_tenures())
     coverage, populations = coverage_rows(contextual)

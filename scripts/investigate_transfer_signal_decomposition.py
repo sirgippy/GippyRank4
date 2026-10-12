@@ -520,7 +520,9 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     transfer_root = args.transfer_root.resolve()
     output = args.output.resolve()
     prior.configure_source_root(source_root)
-    rows, cold, _ = prior.v1.load_rows(max_season=max(TARGET_SEASONS))
+    rows, cold, _ = prior.v1.load_rows(
+        max_season=max(TARGET_SEASONS), corpus_policy="original"
+    )
     fbs = [row for row in rows if row.subdivision == "fbs"]
     contextual, _ = prior.c12.attach_context(fbs, prior.c12.feature_index(), prior.c12.cached_tenures())
     records, usage, portal_seasons, usage_seasons = prior.load_raw_transfer_data(transfer_root)

@@ -301,6 +301,7 @@ def _write_canonical_history_2027_inputs(
             else:
                 subdivision = "fbs"
             samples = [1 + ((season + team_index + offset) % 3) for offset in (0, 1, 1)]
+            rank_counts = Counter(samples)
             ranks.append(
                 {
                     "season": season,
@@ -308,7 +309,18 @@ def _write_canonical_history_2027_inputs(
                     "team_id": f"history-team-{team_index}",
                     "team_name": f"History Team {team_index}",
                     "team_population": 3,
+                    "usable_systems": len(samples),
                     "rank_observations": json.dumps(samples),
+                    "pmf": json.dumps(
+                        [
+                            {
+                                "rank": rank,
+                                "count": count,
+                                "probability": count / len(samples),
+                            }
+                            for rank, count in sorted(rank_counts.items())
+                        ]
+                    ),
                 }
             )
     ranks.append(
@@ -318,7 +330,15 @@ def _write_canonical_history_2027_inputs(
             "team_id": "history-team-2",
             "team_name": "History Team 2",
             "team_population": 3,
+            "usable_systems": 3,
             "rank_observations": "[1,2,3]",
+            "pmf": json.dumps(
+                [
+                    {"rank": 1, "count": 1, "probability": 1 / 3},
+                    {"rank": 2, "count": 1, "probability": 1 / 3},
+                    {"rank": 3, "count": 1, "probability": 1 / 3},
+                ]
+            ),
         }
     )
     with rank_path.open("w", newline="", encoding="utf-8") as handle:
@@ -400,6 +420,54 @@ def test_future_history_builder_matches_the_history_1_1_annual_procedure(
         "learned_fcs_to_fbs_transition": 1,
         "generic_fbs_cold_start": 1,
     }
+
+
+@pytest.mark.parametrize(
+    ("invalid_field", "message"),
+    [
+        ("probability", "invalid PMF count/probability"),
+        ("count", "PMF rank .* disagrees with retained observations"),
+        ("rank_support", "constituent rank 4 is outside 1\\.\\.3"),
+    ],
+)
+def test_canonical_history_loader_rejects_invalid_distribution_rows(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    invalid_field: str,
+    message: str,
+) -> None:
+    _write_canonical_history_2027_inputs(tmp_path)
+    monkeypatch.setattr(history_annual_module, "_CANONICAL_HISTORY_ROOT", tmp_path)
+    rank_path = tmp_path / "data/processed/modeling/team_season_rank_distributions.csv"
+    with rank_path.open(newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle)
+        rows = list(reader)
+        fields = reader.fieldnames
+    assert fields is not None
+    selected = next(
+        row
+        for row in rows
+        if row["season"] == "2026"
+        and row["subdivision"] == "fbs"
+        and row["team_id"] == "history-team-1"
+    )
+    if invalid_field == "probability":
+        pmf = json.loads(selected["pmf"])
+        pmf[0]["probability"] = -1.0
+        selected["pmf"] = json.dumps(pmf)
+    elif invalid_field == "count":
+        pmf = json.loads(selected["pmf"])
+        pmf[0]["count"] += 1
+        selected["pmf"] = json.dumps(pmf)
+    else:
+        selected["rank_observations"] = "[1,2,4]"
+    with rank_path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields, lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(rows)
+
+    with pytest.raises(ValueError, match=message):
+        history_annual_module.load_canonical_history_annual_build_inputs(2027)
 
 
 def _fitted_input(
@@ -1292,7 +1360,24 @@ def test_future_history_producer_and_source_identity_track_training_changes(
             ]
             assert len(selected) == 1
             assert selected[0]["rank_observations"] != changed_ranks
-            selected[0]["rank_observations"] = changed_ranks
+            samples = json.loads(changed_ranks)
+            rank_counts = Counter(samples)
+            selected[0].update(
+                {
+                    "usable_systems": str(len(samples)),
+                    "rank_observations": changed_ranks,
+                    "pmf": json.dumps(
+                        [
+                            {
+                                "rank": rank,
+                                "count": count,
+                                "probability": count / len(samples),
+                            }
+                            for rank, count in sorted(rank_counts.items())
+                        ]
+                    ),
+                }
+            )
             with path.open("w", newline="", encoding="utf-8") as handle:
                 writer = csv.DictWriter(handle, fieldnames=fields, lineterminator="\n")
                 writer.writeheader()

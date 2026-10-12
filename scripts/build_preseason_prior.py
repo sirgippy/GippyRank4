@@ -7,9 +7,11 @@ import json
 from dataclasses import dataclass
 from itertools import pairwise
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 
+from gippyrank.modeling import validate_distribution_row
 from gippyrank.preseason import (
     DirectRankModel,
     GenericRankPrior,
@@ -113,7 +115,23 @@ class PriorPrediction:
         }
 
 
-def valid_ranks(row: dict[str, str]) -> np.ndarray:
+CorpusPolicy = Literal["corrected", "original"]
+
+
+def valid_ranks(
+    row: dict[str, str], *, corpus_policy: CorpusPolicy = "corrected"
+) -> np.ndarray:
+    """Read ranks under an explicit original or corrected corpus contract."""
+    if corpus_policy == "original":
+        return legacy_valid_ranks(row)
+    if corpus_policy != "corrected":
+        raise ValueError(f"unsupported corpus policy: {corpus_policy!r}")
+    validate_distribution_row(row)
+    return rank_sample(row).astype(int)
+
+
+def legacy_valid_ranks(row: dict[str, str]) -> np.ndarray:
+    """Filter source ranks as required by the frozen original-corpus fits."""
     population = int(row["team_population"])
     ranks = rank_sample(row).astype(int)
     return ranks[(ranks >= 1) & (ranks <= population)]
@@ -140,7 +158,7 @@ def coach_change_value(
 
 
 def load_rows(
-    *, max_season: int | None = None
+    *, max_season: int | None = None, corpus_policy: CorpusPolicy = "corrected"
 ) -> tuple[
     list[TeamSeason], list[ColdStartSeason], list[dict[str, object]]
 ]:
@@ -149,7 +167,17 @@ def load_rows(
     ``max_season`` is a caller-owned historical cutoff.  Leaving it unset is
     useful for annual refits after new completed seasons are added; the legacy
     2022--2025 backtest passes its own fixed evaluation ceiling.
+
+    ``corpus_policy="original"`` is reserved for frozen fits whose source
+    corpus and rank-filter behavior must remain reproducible. Corrected fits
+    validate the complete PMF row before using its rank observations.
     """
+    if corpus_policy not in ("corrected", "original"):
+        raise ValueError(f"unsupported corpus policy: {corpus_policy!r}")
+
+    def rank_reader(row: dict[str, str]) -> np.ndarray:
+        return valid_ranks(row, corpus_policy=corpus_policy)
+
     outcomes = {
         (int(r["season"]), r["subdivision"], r["team_id"]): r
         for r in read_csv(
@@ -169,20 +197,20 @@ def load_rows(
         if max_season is not None and season > max_season:
             continue
         target_population = int(target["team_population"])
-        target_ranks = valid_ranks(target)
+        target_ranks = rank_reader(target)
         # A small number of constituent rows extend beyond the composite
         # subdivision roster. They cannot be outcomes in a PMF with support
         # 1..N, so exclude those malformed measurements rather than clip them.
         if not len(target_ranks):
             continue
         team_name = current["team_name"] if current else target["team_name"]
-        if prior is None or not len(valid_ranks(prior)):
+        if prior is None or not len(rank_reader(prior)):
             cross = (
                 outcomes.get((season - 1, "fcs", team_id))
                 if subdivision == "fbs"
                 else None
             )
-            cross_ranks = valid_ranks(cross) if cross else np.asarray([], dtype=int)
+            cross_ranks = rank_reader(cross) if cross else np.asarray([], dtype=int)
             reason = (
                 "fcs_to_fbs_transition"
                 if len(cross_ranks)
@@ -215,7 +243,7 @@ def load_rows(
             )
             continue
         prior_population = int(prior["team_population"])
-        prior_ranks = valid_ranks(prior)
+        prior_ranks = rank_reader(prior)
         lag1_z = rank_to_z(prior_ranks, prior_population)
         values: dict[str, float | None] = {}
         lag_distributions: list[np.ndarray] = []
@@ -223,7 +251,7 @@ def load_rows(
             item = outcomes.get((season - lag, subdivision, team_id))
             if item:
                 lag_population = int(item["team_population"])
-                lag_ranks = valid_ranks(item)
+                lag_ranks = rank_reader(item)
                 historical_lag_z = rank_to_z(lag_ranks, lag_population)
                 values[f"lag{lag}_z_mean"] = (
                     float(np.mean(historical_lag_z)) if len(historical_lag_z) else None
@@ -239,7 +267,7 @@ def load_rows(
             item = outcomes.get((prior_season, subdivision, team_id))
             if item is None:
                 continue
-            history_ranks = valid_ranks(item)
+            history_ranks = rank_reader(item)
             if len(history_ranks):
                 history.append(rank_to_z(history_ranks, int(item["team_population"])))
         values.update(historical_rank_features(lag1_z, tuple(history)))
@@ -644,7 +672,9 @@ def write_report(report: dict[str, object]) -> None:
 
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
-    rows, cold_starts, coverage = load_rows(max_season=max(TEST_SEASONS))
+    rows, cold_starts, coverage = load_rows(
+        max_season=max(TEST_SEASONS), corpus_policy="original"
+    )
     report: dict[str, object] = {
         "target": {
             "source": "cleaned historical Massey constituent outcomes",

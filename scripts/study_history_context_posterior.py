@@ -21,6 +21,7 @@ from pathlib import Path
 import numpy as np
 from scipy.stats import spearmanr
 
+from gippyrank.modeling import validate_distribution_row
 from gippyrank.posterior.engine import Game, Team, infer_posterior
 from gippyrank.posterior.snapshots import (
     _scheduled_future_fcs_rows,
@@ -214,9 +215,14 @@ def load_targets(season: int, target_path: Path) -> dict[str, np.ndarray]:
     for row in read_csv(target_path):
         if int(row["season"]) != season or row["subdivision"] != "fbs":
             continue
+        validate_distribution_row(row)
         pmf = np.zeros(int(row["team_population"]))
         for point in json.loads(row["pmf"]):
             pmf[int(point["rank"]) - 1] = float(point["probability"])
+        if len(pmf) != int(row["team_population"]) or not np.isclose(pmf.sum(), 1.0):
+            raise ValueError(
+                f"{season} fbs team {row['team_id']}: invalid target PMF support or mass"
+            )
         targets[row["team_id"]] = pmf
     return targets
 

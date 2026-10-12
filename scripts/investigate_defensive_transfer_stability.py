@@ -998,7 +998,9 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     output = args.output.resolve()
 
     configure_source_root(source_root)
-    rows, cold, _ = v1_1.v1.load_rows(max_season=max(TARGET_SEASONS))
+    rows, cold, _ = v1_1.v1.load_rows(
+        max_season=max(TARGET_SEASONS), corpus_policy="original"
+    )
     fbs = [row for row in rows if row.subdivision == "fbs"]
     contextual, _ = c12.attach_context(fbs, c12.feature_index(), c12.cached_tenures())
 

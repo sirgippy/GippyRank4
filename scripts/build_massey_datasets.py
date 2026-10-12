@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import csv
 import hashlib
 import json
@@ -43,12 +44,20 @@ def valid_rank(value: str) -> bool:
         return False
 
 
-def read_source() -> tuple[dict[tuple[int, str], int], Counter, int]:
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def read_source(source: Path) -> tuple[dict[tuple[int, str], int], Counter, int]:
     final_dates: dict[tuple[int, str], int] = {}
     source_counts = Counter()
     seen: set[bytes] = set()
     duplicates = 0
-    with SOURCE.open(newline="", encoding="utf-8") as handle:
+    with source.open(newline="", encoding="utf-8") as handle:
         reader = csv.DictReader(handle)
         if tuple(reader.fieldnames or ()) != FIELDS:
             raise ValueError("Normalized source schema does not match expected fields")
@@ -125,6 +134,7 @@ def validate(
                     "subdivision": subdivision,
                     "observations": len(group),
                     "distinct_teams": len({row["team_id"] for row in group}),
+                    "cmp_population": len({row["team_id"] for row in cmp_rows}),
                     "constituent_systems": len(systems),
                     "final_cmp_date": final_dates.get(key),
                 }
@@ -141,13 +151,17 @@ def validate(
     }
 
 
-def main() -> None:
-    final_dates, source_counts, all_duplicates = read_source()
-    shutil.copyfile(SOURCE, ALL)
+def main(source: Path, output_root: Path) -> None:
+    all_path = output_root / "all_observations.csv"
+    final_path = output_root / "final_observations.csv"
+    report_path = output_root / "dataset_validation_report.json"
+    output_root.mkdir(parents=True, exist_ok=True)
+    final_dates, source_counts, all_duplicates = read_source(source)
+    shutil.copyfile(source, all_path)
 
     final_rows = []
     omitted = Counter()
-    with SOURCE.open(newline="", encoding="utf-8") as handle:
+    with source.open(newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
             season = int(row["season"])
             subdivision = row["subdivision"]
@@ -162,11 +176,24 @@ def main() -> None:
             else:
                 omitted[(season, subdivision, "outside intended corpus")] += 1
 
-    write_csv(FINAL, final_rows)
+    write_csv(final_path, final_rows)
     report = validate(final_rows, final_dates)
     report.update(
         {
+            "corpus_version": "massey-rank-population-v1",
+            "rank_population_definition": (
+                "Distinct canonical CMP team identities after documented "
+                "season-specific cohort decisions. Constituent source ranks "
+                "remain unchanged."
+            ),
             "all_observations_count": sum(source_counts.values()),
+            "source_observations_sha256": sha256(source),
+            "all_observations_sha256": sha256(all_path),
+            "final_observations_sha256": sha256(final_path),
+            "final_team_populations": {
+                f"{item['season']}-{item['subdivision']}": item["cmp_population"]
+                for item in report["summary"]
+            },
             "all_observations_exact_duplicate_count": all_duplicates,
             "final_observations_count": len(final_rows),
             "source_counts": {
@@ -198,18 +225,48 @@ def main() -> None:
                 "Kaggle final observations are restricted to the authoritative final CMP date.",
                 "The 2007 FCS final CMP date is explicitly corrected to 2007-12-17; 2008-01-07 rows remain in all_observations only.",
                 "Manual 2022-2025 exports are used directly as final snapshots.",
-                "The 2020 CFBD 'ii' classification is preserved in all_observations but omitted from the intended FBS/FCS final dataset.",
+                "2020 Tarleton and Dixie State ranking observations are assigned to FCS by explicit season/team identity decisions; other unsupported classifications remain visible in all_observations and are excluded from final FBS/FCS targets.",
                 "No ranking aggregation or staleness cutoff was applied.",
             ],
         }
     )
-    REPORT.write_text(
+    report_path.write_text(
         json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
-    print(f"wrote {ALL} ({sum(source_counts.values())} rows)")
-    print(f"wrote {FINAL} ({len(final_rows)} rows)")
-    print(f"wrote {REPORT}")
+    manifest = {
+        "schema_version": 1,
+        "corpus_version": "massey-rank-population-v1",
+        "source_observations": {
+            "path": source.as_posix(),
+            "rows": sum(source_counts.values()),
+            "sha256": sha256(source),
+        },
+        "all_observations": {
+            "path": all_path.as_posix(),
+            "rows": sum(source_counts.values()),
+            "sha256": sha256(all_path),
+        },
+        "final_observations": {
+            "path": final_path.as_posix(),
+            "rows": len(final_rows),
+            "sha256": sha256(final_path),
+        },
+        "validation_report": {
+            "path": report_path.as_posix(),
+            "sha256": sha256(report_path),
+        },
+    }
+    (output_root / "manifest.json").write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    print(f"wrote {all_path} ({sum(source_counts.values())} rows)")
+    print(f"wrote {final_path} ({len(final_rows)} rows)")
+    print(f"wrote {report_path}")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--source", type=Path, default=SOURCE)
+    parser.add_argument("--output-root", type=Path, default=OUTPUT)
+    arguments = parser.parse_args()
+    main(arguments.source, arguments.output_root)

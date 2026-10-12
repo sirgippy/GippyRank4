@@ -167,7 +167,9 @@ def load_frozen_inputs(
 ) -> tuple[list[TeamSeason], list[TeamSeason], list[v1.PriorPrediction]]:
     """Load non-cold FBS context rows and the exact production H fallback panel."""
 
-    rows, cold, _coverage = v1.load_rows(max_season=max(TARGET_SEASONS))
+    rows, cold, _coverage = v1.load_rows(
+        max_season=max(TARGET_SEASONS), corpus_policy="original"
+    )
     fbs = [row for row in rows if row.subdivision == "fbs"]
     contextual, _context_coverage = c12.attach_context(
         fbs, c12.feature_index(), c12.cached_tenures()

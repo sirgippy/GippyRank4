@@ -269,6 +269,55 @@ def test_history_constituent_rank_filter_matches_frozen_contract(
         history._rank_values({"team_population": "3", "rank_observations": "[1]"})
 
 
+def test_canonical_history_loader_rejects_out_of_population_corrected_rank(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(history, "_CANONICAL_HISTORY_ROOT", tmp_path)
+    input_root = tmp_path / "data/processed/modeling"
+    input_root.mkdir(parents=True)
+    rank_path = input_root / "team_season_rank_distributions.csv"
+    fields = [
+        "season",
+        "subdivision",
+        "team_id",
+        "team_name",
+        "team_population",
+        "usable_systems",
+        "rank_observations",
+        "pmf",
+    ]
+    with rank_path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        writer.writerow(
+            {
+                "season": 2007,
+                "subdivision": "fbs",
+                "team_id": "70",
+                "team_name": "Idaho",
+                "team_population": 119,
+                "usable_systems": 2,
+                "rank_observations": "[119,120]",
+                "pmf": (
+                    '[{"rank":119,"count":1,"probability":0.5},'
+                    '{"rank":120,"count":1,"probability":0.5}]'
+                ),
+            }
+        )
+    feature_path = tmp_path / "data/processed/preseason/team_season_features.csv"
+    feature_path.parent.mkdir(parents=True)
+    feature_path.write_text(
+        "season,subdivision,team_id,team_name\n2027,fbs,1,Example\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=r"2007 fbs team 70 \(Idaho\): constituent rank 120 is outside 1\.\.119",
+    ):
+        history._load_inputs(2027)
+
+
 @pytest.mark.parametrize(("location", "scale"), [(0.3, 0.7), (0.2, 0.8)])
 def test_generic_producer_identity_binds_each_fitted_parameter(
     location: float, scale: float

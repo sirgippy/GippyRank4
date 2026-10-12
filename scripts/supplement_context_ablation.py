@@ -141,7 +141,9 @@ def interaction_comparisons(
 
 
 def main() -> None:
-    rows, _cold, _coverage = v1.load_rows(max_season=TARGET)
+    rows, _cold, _coverage = v1.load_rows(
+        max_season=TARGET, corpus_policy="original"
+    )
     fbs = [row for row in rows if row.subdivision == "fbs"]
     contextual, _ = c12.attach_context(fbs, c12.feature_index(), c12.cached_tenures())
     rtp = restrict_observed(contextual, RTP)

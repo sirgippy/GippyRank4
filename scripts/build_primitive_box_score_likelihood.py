@@ -584,7 +584,9 @@ def reconstruct_historical_priors(
     audit: list[dict[str, object]] = []
     for target_season in seasons:
         trained_through = target_season - 1
-        historical, cold, _coverage = history_prior.load_rows(max_season=trained_through)
+        historical, cold, _coverage = history_prior.load_rows(
+            max_season=trained_through, corpus_policy="original"
+        )
         fbs = [row for row in historical if row.subdivision == "fbs"]
         index, tenures = context_prior.feature_index(), context_prior.cached_tenures()
         contextual, _context_coverage = context_prior.attach_context(fbs, index, tenures)

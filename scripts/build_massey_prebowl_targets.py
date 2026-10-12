@@ -6,9 +6,11 @@ import argparse
 import csv
 import hashlib
 import json
-from datetime import UTC, date, datetime
+import tempfile
+from datetime import date
 from pathlib import Path
 
+from gippyrank.data.cfbd_games import read_cfbd_game_rows
 from gippyrank.data.massey import (
     NORMALIZED_FIELDS,
     build_team_matches,
@@ -28,7 +30,13 @@ from gippyrank.data.massey_prebowl import (
     validate_raw_provenance,
     validate_snapshot,
 )
-from gippyrank.modeling import build_distributions, coverage_table
+from gippyrank.modeling import (
+    CONSTITUENT_RANK_PAIR_FIELDS,
+    audit_population_coverage,
+    build_constituent_rank_pairs,
+    build_distributions,
+    coverage_table,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CHECKLIST = (
@@ -57,6 +65,41 @@ def sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def invalidate_readiness(path: Path) -> None:
+    """Atomically make an existing readiness manifest unusable during rebuild."""
+    if not path.exists():
+        return
+    try:
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        manifest = {}
+    if not isinstance(manifest, dict):
+        manifest = {}
+    manifest["status"] = "rebuild_in_progress"
+    manifest["downstream_ready"] = False
+    manifest["readiness_invalidation_reason"] = (
+        "A rebuild started; readiness remains false until validated artifacts "
+        "and a replacement manifest are published."
+    )
+    temporary_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            temporary_path = Path(handle.name)
+            json.dump(manifest, handle, indent=2, sort_keys=True)
+            handle.write("\n")
+        temporary_path.replace(path)
+    finally:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
 
 
 def write_csv(
@@ -137,6 +180,8 @@ def load_checklist(path: Path) -> dict[int, dict[str, str]]:
 
 
 def build(args: argparse.Namespace) -> None:
+    invalidate_readiness(args.output_root / "manifest.json")
+    invalidate_readiness(args.report_root / "manifest.json")
     checklist = load_checklist(args.checklist)
     final_rows = read_csv(args.final_observations)
     fcs_rows = [row.copy() for row in final_rows if row["subdivision"] == "fcs"]
@@ -349,12 +394,32 @@ def build(args: argparse.Namespace) -> None:
 
     target_depth = coverage_table(combined)
     final_depth = coverage_table(final_rows)
-    target_distributions, _ = build_distributions(
+    depth_fields = list(target_depth[0]) if target_depth else list(final_depth[0])
+    write_csv(
+        args.output_root / "pre_bowl_system_depth.csv", depth_fields, target_depth
+    )
+    write_csv(
+        args.output_root / "final_system_depth.csv", depth_fields, final_depth
+    )
+    target_distributions, target_by_team = build_distributions(
         combined, target_depth, args.coverage_threshold
     )
     target_support_anomalies = audit_target_rank_support(target_distributions)
-    final_distributions, _ = build_distributions(
+    final_distributions, final_by_team = build_distributions(
         final_rows, final_depth, args.coverage_threshold
+    )
+    final_support_anomalies = audit_target_rank_support(final_distributions)
+    target_population_coverage = audit_population_coverage(
+        combined,
+        target_depth,
+        target_distributions,
+        args.coverage_threshold,
+    )
+    final_population_coverage = audit_population_coverage(
+        final_rows,
+        final_depth,
+        final_distributions,
+        args.coverage_threshold,
     )
     final_support_by_key = {
         (row["season"], row["subdivision"], row["team_id"]): row
@@ -377,10 +442,83 @@ def build(args: argparse.Namespace) -> None:
         target_support_anomalies,
     )
     write_csv(
+        args.output_root / "final_target_support_anomalies.csv",
+        list(TARGET_SUPPORT_FIELDS),
+        final_support_anomalies,
+    )
+    coverage_fields = list(target_population_coverage[0]) if target_population_coverage else [
+        "season",
+        "subdivision",
+        "team_population",
+        "teams_with_selected_constituents",
+        "teams_missing_selected_constituents",
+        "coverage_ratio",
+        "selected_system_count",
+        "missing_team_ids",
+    ]
+    write_csv(
+        args.output_root / "target_population_coverage.csv",
+        coverage_fields,
+        target_population_coverage,
+    )
+    write_csv(
+        args.output_root / "final_population_coverage.csv",
+        coverage_fields,
+        final_population_coverage,
+    )
+    write_csv(
         args.output_root / "pre_bowl_target_distributions.csv",
         list(target_distributions[0]) if target_distributions else [],
         target_distributions,
     )
+    write_csv(
+        args.output_root / "final_target_distributions.csv",
+        list(final_distributions[0]) if final_distributions else [],
+        final_distributions,
+    )
+    pair_artifacts: dict[str, object] = {"status": "not_requested"}
+    if args.games is not None:
+        games, game_sources = read_cfbd_game_rows(args.games)
+        target_pairs = build_constituent_rank_pairs(
+            games, target_by_team, target_depth
+        )
+        final_pairs = build_constituent_rank_pairs(games, final_by_team, final_depth)
+        pair_fields = list(CONSTITUENT_RANK_PAIR_FIELDS)
+        write_csv(
+            args.output_root / "pre_bowl_constituent_rank_pairs.csv",
+            pair_fields,
+            target_pairs,
+        )
+        write_csv(
+            args.output_root / "final_constituent_rank_pairs.csv",
+            pair_fields,
+            final_pairs,
+        )
+        pair_artifacts = {
+            "status": "built",
+            "games_path": (
+                "data/raw/cfbd/games"
+                if args.games.is_dir()
+                else args.games.as_posix()
+            ),
+            "game_sources": [
+                {
+                    "path": (
+                        path.relative_to(args.games).as_posix()
+                        if args.games.is_dir()
+                        else path.as_posix()
+                    ),
+                    "bytes": path.stat().st_size,
+                    "sha256": sha256(path),
+                }
+                for path in game_sources
+            ],
+            "game_count": len(games),
+            "pre_bowl_pair_rows": len(target_pairs),
+            "final_pair_rows": len(final_pairs),
+            "pre_bowl_file": "pre_bowl_constituent_rank_pairs.csv",
+            "final_file": "final_constituent_rank_pairs.csv",
+        }
 
     final_lookup = {
         (row["season"], row["subdivision"], row["system_code"]): row
@@ -443,22 +581,50 @@ def build(args: argparse.Namespace) -> None:
         }
     )
     collection_complete = not missing_fbs and not missing_fcs and not unresolved_exceptions
-    downstream_ready = collection_complete and not target_support_anomalies
+    expected_cohorts = {
+        (season, subdivision)
+        for season in SEASONS
+        for subdivision in ("fbs", "fcs")
+    }
+    target_coverage_by_key = {
+        (int(row["season"]), str(row["subdivision"])): row
+        for row in target_population_coverage
+    }
+    final_coverage_by_key = {
+        (int(row["season"]), str(row["subdivision"])): row
+        for row in final_population_coverage
+    }
+    missing_target_coverage = sorted(
+        key
+        for key in expected_cohorts
+        if key not in target_coverage_by_key
+        or int(target_coverage_by_key[key]["teams_missing_selected_constituents"])
+    )
+    missing_final_coverage = sorted(
+        key
+        for key in expected_cohorts
+        if key not in final_coverage_by_key
+        or int(final_coverage_by_key[key]["teams_missing_selected_constituents"])
+    )
+    coverage_passed = not missing_target_coverage and not missing_final_coverage
+    support_passed = not target_support_anomalies and not final_support_anomalies
+    downstream_ready = collection_complete and support_passed and coverage_passed
     manifest = {
-        "schema_version": 1,
-        "created_at": datetime.now(UTC).isoformat(),
+        "schema_version": 2,
+        "corpus_version": "massey-rank-population-v1",
         "status": (
             "incomplete"
             if not collection_complete
-            else "complete_with_target_support_warnings"
-            if target_support_anomalies
+            else "complete_with_validation_warnings"
+            if not support_passed or not coverage_passed
             else "complete"
         ),
         "collection_status": "complete" if collection_complete else "incomplete",
         "downstream_ready": downstream_ready,
         "target_support_validation": {
-            "status": "anomalies_found" if target_support_anomalies else "passed",
+            "status": "passed" if support_passed else "anomalies_found",
             "anomaly_count": len(target_support_anomalies),
+            "final_anomaly_count": len(final_support_anomalies),
             "present_in_final_corpus_count": sum(
                 bool(row["present_in_final_corpus"])
                 for row in target_support_anomalies
@@ -467,7 +633,15 @@ def build(args: argparse.Namespace) -> None:
                 not bool(row["present_in_final_corpus"])
                 for row in target_support_anomalies
             ),
-            "report": "data/research/massey_prebowl_issue_198/target_support_anomalies.csv",
+            "report": "target_support_anomalies.csv",
+        },
+        "population_coverage_validation": {
+            "status": "passed" if coverage_passed else "teams_without_selected_constituents",
+            "coverage_threshold": args.coverage_threshold,
+            "missing_target_cohorts": [list(key) for key in missing_target_coverage],
+            "missing_final_cohorts": [list(key) for key in missing_final_coverage],
+            "target_report": "target_population_coverage.csv",
+            "final_report": "final_population_coverage.csv",
         },
         "required_fbs_seasons": list(SEASONS),
         "included_fbs_seasons": sorted(included_fbs),
@@ -476,7 +650,7 @@ def build(args: argparse.Namespace) -> None:
         "unresolved_phase_exception_seasons": unresolved_exceptions,
         "approved_phase_exception_seasons": approved_exceptions,
         "fcs_source": {
-            "path": "data/processed/massey/final_observations.csv",
+            "path": "data/processed/massey_issue_204_v1/final_observations.csv",
             "sha256": sha256(args.final_observations),
             "source_rows": len(final_rows),
             "carried_rows": len(fcs_rows),
@@ -485,13 +659,19 @@ def build(args: argparse.Namespace) -> None:
         "inputs": input_hashes,
         "collection": inventory,
         "coverage_threshold": args.coverage_threshold,
+        "constituent_rank_pairs": pair_artifacts,
+        "outputs": {
+            path.name: {"bytes": path.stat().st_size, "sha256": sha256(path)}
+            for path in sorted(args.output_root.glob("*.csv"))
+        },
         "notes": [
             "No final-season FBS observation is substituted for a missing pre-bowl snapshot.",
-            "FCS rows are copied from the existing final-observation corpus without field changes.",
+            "FCS rows are copied from the corrected final-observation corpus without field changes.",
             "Only same-date constituent system observations are retained for each snapshot.",
             "An incomplete collection is not ready for downstream fitting; approved phase exceptions do not change target-support audit results.",
             "The 2020-12-21 snapshot is included under the user's explicit approval despite overlap with the first bowl date.",
-            "Collection completeness is separate from downstream readiness. Out-of-support target mass is preserved and reported, and blocks downstream readiness until the population inconsistency is resolved.",
+            "Downstream readiness requires complete collection, zero unsupported final and pre-bowl target mass, and at least one selected constituent rank for every CMP population team in both corpora.",
+            "The three historical cohort corrections are identity-and-season overrides in normalized source data; source ranks are retained unchanged.",
         ],
     }
     (args.output_root / "manifest.json").write_text(
@@ -499,7 +679,6 @@ def build(args: argparse.Namespace) -> None:
     )
     raw_source_manifest = {
         "schema_version": 1,
-        "created_at": manifest["created_at"],
         "team_mapping_sources": [
             {
                 "season": season,
@@ -633,6 +812,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--report-root", type=Path, default=DEFAULT_REPORT_ROOT)
     parser.add_argument("--coverage-threshold", type=float, default=0.90)
+    parser.add_argument(
+        "--games",
+        type=Path,
+        help="Optional processed games CSV or cached raw game directory for no-fit pairs.",
+    )
     return parser.parse_args()
 
 

@@ -33,6 +33,29 @@ def test_candidate_set_is_exactly_p0_through_p4() -> None:
             assert study.POSITION_AVAILABILITY_FEATURES[group] in candidate.features
 
 
+def test_frozen_loader_uses_original_corpus_filter(monkeypatch) -> None:
+    calls = []
+    original_rank_row = {
+        "season": "2007",
+        "subdivision": "fbs",
+        "team_id": "70",
+        "team_name": "Idaho",
+        "team_population": "119",
+        "rank_observations": "[119,120]",
+    }
+
+    def load_rows(*, max_season, corpus_policy):
+        calls.append((max_season, corpus_policy))
+        assert study.prior.v1.valid_ranks(
+            original_rank_row, corpus_policy=corpus_policy
+        ).tolist() == [119]
+        return [], [], []
+
+    monkeypatch.setattr(study.prior.v1, "load_rows", load_rows)
+    assert study._load_frozen_prior_rows() == ([], [], [])
+    assert calls == [(max(study.TARGET_SEASONS), "original")]
+
+
 def test_loader_distinguishes_no_incoming_from_unresolved(tmp_path: Path) -> None:
     audit_path = tmp_path / "transfer_player_audit.csv"
     audit_fields = [

@@ -177,7 +177,9 @@ def run(
             f"required retained player-audit evidence not found: {evidence_path}"
         )
     transfer_research.configure_source_root(source_root)
-    rows, _, _ = v1.load_rows(max_season=max(TARGET_SEASONS))
+    rows, _, _ = v1.load_rows(
+        max_season=max(TARGET_SEASONS), corpus_policy="original"
+    )
     fbs = [row for row in rows if row.subdivision == "fbs"]
     contextual, _ = c12.attach_context(fbs, c12.feature_index(), c12.cached_tenures())
     if verified_transfer_data is None:

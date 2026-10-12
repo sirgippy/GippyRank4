@@ -452,7 +452,9 @@ def main(argv: list[str] | None = None) -> None:
     output_dir = args.output_dir.resolve()
     configure_data_root(data_root)
 
-    rows, cold, _ = v1.load_rows(max_season=max(TEST_SEASONS))
+    rows, cold, _ = v1.load_rows(
+        max_season=max(TEST_SEASONS), corpus_policy="original"
+    )
     fbs = [row for row in rows if row.subdivision == "fbs"]
     index = c12.feature_index()
     contextual, _coverage = c12.attach_context(fbs, index, c12.cached_tenures())
