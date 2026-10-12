@@ -16,6 +16,7 @@ import re
 import sys
 from collections import Counter, defaultdict
 from dataclasses import replace
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -534,6 +535,99 @@ def load_snapshot_rows(corpus_root: Path) -> list[dict[str, object]]:
     if {row["season"] for row in result} != set(range(2003, 2026)):
         raise ValueError("pre-bowl snapshot manifest does not cover 2003-2025")
     return result
+
+
+def load_observation_snapshot_dates(
+    path: Path,
+    *,
+    required_seasons: tuple[int, ...] = TRAINING_SEASONS,
+) -> dict[tuple[int, str], str]:
+    """Read the unique FBS and FCS observation dates used by one policy."""
+    observed_dates: dict[tuple[int, str], set[str]] = defaultdict(set)
+    with path.open(newline="", encoding="utf-8-sig") as handle:
+        for row in csv.DictReader(handle):
+            season = int(row["season"])
+            subdivision = row["subdivision"].strip().casefold()
+            if season not in required_seasons or subdivision not in {"fbs", "fcs"}:
+                continue
+            raw_date = row["ranking_date"].strip()
+            if not raw_date:
+                continue
+            try:
+                parsed_date = date.fromisoformat(raw_date)
+            except ValueError:
+                try:
+                    parsed_date = date(
+                        int(raw_date[:4]),
+                        int(raw_date[4:6]),
+                        int(raw_date[6:8]),
+                    )
+                except ValueError as exc:
+                    raise ValueError(
+                        f"invalid {subdivision.upper()} ranking date {raw_date!r} "
+                        f"for {season} in {path}"
+                    ) from exc
+            observed_dates[(season, subdivision)].add(parsed_date.isoformat())
+
+    expected_keys = {
+        (season, subdivision)
+        for season in required_seasons
+        for subdivision in ("fbs", "fcs")
+    }
+    missing = sorted(expected_keys - observed_dates.keys())
+    ambiguous = sorted(
+        (key, sorted(observed_dates[key]))
+        for key in expected_keys & observed_dates.keys()
+        if len(observed_dates[key]) != 1
+    )
+    if missing:
+        raise ValueError(f"{path} lacks FBS/FCS observation dates for {missing[:10]}")
+    if ambiguous:
+        raise ValueError(
+            f"{path} has multiple FBS/FCS observation dates: {ambiguous[:10]}"
+        )
+    return {key: next(iter(observed_dates[key])) for key in sorted(expected_keys)}
+
+
+def build_rank_pair_composition(
+    included_games_by_policy: dict[str, list[dict[str, str]]],
+    snapshot_dates_by_policy: dict[str, dict[tuple[int, str], str]],
+) -> list[dict[str, object]]:
+    """Summarize fitted pair composition with dates from each policy's inputs."""
+    composition: list[dict[str, object]] = []
+    for policy in POLICIES:
+        counts: dict[tuple[int, str, str], dict[str, int]] = defaultdict(
+            lambda: {"games": 0, "rank_pair_rows": 0}
+        )
+        for row in included_games_by_policy[policy]:
+            key = (
+                int(row["season"]),
+                str(row["pairing"]),
+                str(row["pairing_method"]),
+            )
+            counts[key]["games"] += 1
+            counts[key]["rank_pair_rows"] += len(json.loads(str(row["rank_pairs"])))
+        policy_dates = snapshot_dates_by_policy[policy]
+        for (season, pairing, method), values in sorted(counts.items()):
+            fbs_date = policy_dates[(season, "fbs")]
+            fcs_date = policy_dates[(season, "fcs")]
+            composition.append(
+                {
+                    "policy": policy,
+                    "season": season,
+                    "pairing": pairing,
+                    "pairing_method": method,
+                    "games": values["games"],
+                    "rank_pair_rows": values["rank_pair_rows"],
+                    "fbs_target_snapshot_date": fbs_date,
+                    "fcs_target_snapshot_date": fcs_date,
+                    "fcs_target_policy": "corrected final corpus unchanged",
+                    "cross_subdivision_dates_differ": (
+                        pairing == "fbs-fcs" and fbs_date != fcs_date
+                    ),
+                }
+            )
+    return composition
 
 
 def load_baseline_panel(path: Path) -> dict[tuple[int, str], dict[str, Any]]:
@@ -1438,6 +1532,14 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             final_target_rows, pre_bowl_target_rows, "pre_bowl"
         ),
     }
+    snapshot_dates_by_policy = {
+        "existing": load_observation_snapshot_dates(
+            paths["corrected_final_observations"]
+        ),
+        "pre_bowl": load_observation_snapshot_dates(
+            paths["corrected_pre_bowl_observations"]
+        ),
+    }
     pair_lookups = {
         "existing": load_rank_pair_lookup(paths["corrected_final_rank_pairs"]),
         "pre_bowl": load_rank_pair_lookup(paths["corrected_pre_bowl_rank_pairs"]),
@@ -1501,36 +1603,9 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             "regular-season likelihood game opportunities differ by target policy"
         )
 
-    composition: list[dict[str, object]] = []
-    for policy in POLICIES:
-        counts: dict[tuple[int, str, str], dict[str, int]] = defaultdict(
-            lambda: {"games": 0, "rank_pair_rows": 0}
-        )
-        for row in included_games_by_policy[policy]:
-            key = (
-                int(row["season"]),
-                str(row["pairing"]),
-                str(row["pairing_method"]),
-            )
-            counts[key]["games"] += 1
-            counts[key]["rank_pair_rows"] += len(json.loads(str(row["rank_pairs"])))
-        snapshots = {
-            int(row["season"]): row for row in load_snapshot_rows(args.corpus_root)
-        }
-        for (season, pairing, method), values in sorted(counts.items()):
-            composition.append(
-                {
-                    "policy": policy,
-                    "season": season,
-                    "pairing": pairing,
-                    "pairing_method": method,
-                    "games": values["games"],
-                    "rank_pair_rows": values["rank_pair_rows"],
-                    "fbs_target_snapshot_date": snapshots[season]["snapshot_date"],
-                    "fcs_target_policy": "corrected final corpus unchanged",
-                    "cross_subdivision_dates_differ": pairing == "fbs-fcs",
-                }
-            )
+    composition = build_rank_pair_composition(
+        included_games_by_policy, snapshot_dates_by_policy
+    )
 
     baseline_panel = load_baseline_panel(paths["baseline_inference_panel"])
     baseline_parity = baseline_pmf_diagnostics(
@@ -1700,7 +1775,7 @@ def write_report(
     lines.extend(
         [
             "",
-            "FBS postseason rows are excluded together from the pre-bowl likelihood. Regular-season games, conference championships, and Army-Navy are retained. FCS postseason games keep the existing inclusion policy. `likelihood_game_manifest.csv` records each decision; `rank_pair_composition.csv` records same-system versus fallback composition and the FBS snapshot date for cross-subdivision rows.",
+            "FBS postseason rows are excluded together from the pre-bowl likelihood. Regular-season games, conference championships, and Army-Navy are retained. FCS postseason games keep the existing inclusion policy. `likelihood_game_manifest.csv` records each decision; `rank_pair_composition.csv` records same-system versus fallback composition and the policy-specific FBS/FCS observation dates. Its cross-subdivision date flag compares those observed dates for each FBS-FCS pairing.",
             "",
             f"Cross-subdivision composition rows recorded: {len(composition_rows)}.",
             "",

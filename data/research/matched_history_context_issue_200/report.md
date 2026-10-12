@@ -19,7 +19,7 @@ All 2022-2025 results are exploratory development because prior research has inf
 
 Both likelihood fits retain the fixed eight-iteration weighted-pseudo IRLS recipe. No convergence criterion is evaluated; fit metadata records convergence as not assessed.
 
-FBS postseason rows are excluded together from the pre-bowl likelihood. Regular-season games, conference championships, and Army-Navy are retained. FCS postseason games keep the existing inclusion policy. `likelihood_game_manifest.csv` records each decision; `rank_pair_composition.csv` records same-system versus fallback composition and the FBS snapshot date for cross-subdivision rows.
+FBS postseason rows are excluded together from the pre-bowl likelihood. Regular-season games, conference championships, and Army-Navy are retained. FCS postseason games keep the existing inclusion policy. `likelihood_game_manifest.csv` records each decision; `rank_pair_composition.csv` records same-system versus fallback composition and the policy-specific FBS/FCS observation dates. Its cross-subdivision date flag compares those observed dates for each FBS-FCS pairing.
 
 Cross-subdivision composition rows recorded: 38.
 

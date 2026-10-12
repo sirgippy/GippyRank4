@@ -644,6 +644,95 @@ def test_coaching_tenures_are_loaded_from_source_root_and_manifested_per_file(
         assert record["sha256"] == builder.sha256_file(source)
 
 
+def test_rank_pair_composition_uses_each_policy_observation_dates(
+    tmp_path: Path,
+) -> None:
+    observation_rows = {
+        "existing": [
+            (2003, "fbs", "20040105"),
+            (2003, "fcs", "20031219"),
+            (2011, "fbs", "20120109"),
+            (2011, "fcs", "20120109"),
+        ],
+        "pre_bowl": [
+            (2003, "fbs", "20031208"),
+            (2003, "fcs", "20031219"),
+            (2011, "fbs", "20111205"),
+            (2011, "fcs", "20120109"),
+        ],
+    }
+    dates_by_policy = {}
+    for policy, rows in observation_rows.items():
+        source = tmp_path / f"{policy}_observations.csv"
+        source.write_text(
+            "season,subdivision,ranking_date\n"
+            + "".join(
+                f"{season},{subdivision},{ranking_date}\n"
+                for season, subdivision, ranking_date in rows
+            ),
+            encoding="utf-8",
+        )
+        dates_by_policy[policy] = builder.load_observation_snapshot_dates(
+            source, required_seasons=(2003, 2011)
+        )
+
+    included_games = {
+        "existing": [
+            {
+                "season": "2003",
+                "pairing": "fbs-fcs",
+                "pairing_method": "same_system",
+                "rank_pairs": "[1]",
+            },
+            {
+                "season": "2011",
+                "pairing": "fbs-fcs",
+                "pairing_method": "same_system",
+                "rank_pairs": "[1]",
+            },
+            {
+                "season": "2011",
+                "pairing": "fbs-fbs",
+                "pairing_method": "same_system",
+                "rank_pairs": "[1]",
+            },
+        ],
+        "pre_bowl": [
+            {
+                "season": "2003",
+                "pairing": "fbs-fcs",
+                "pairing_method": "same_system",
+                "rank_pairs": "[1]",
+            },
+            {
+                "season": "2011",
+                "pairing": "fbs-fcs",
+                "pairing_method": "same_system",
+                "rank_pairs": "[1]",
+            },
+        ],
+    }
+
+    result = builder.build_rank_pair_composition(included_games, dates_by_policy)
+    by_key = {(row["policy"], row["season"], row["pairing"]): row for row in result}
+
+    existing_2003 = by_key[("existing", 2003, "fbs-fcs")]
+    assert existing_2003["fbs_target_snapshot_date"] == "2004-01-05"
+    assert existing_2003["fcs_target_snapshot_date"] == "2003-12-19"
+    assert existing_2003["cross_subdivision_dates_differ"] is True
+    existing_2011 = by_key[("existing", 2011, "fbs-fcs")]
+    assert existing_2011["fbs_target_snapshot_date"] == "2012-01-09"
+    assert existing_2011["fcs_target_snapshot_date"] == "2012-01-09"
+    assert existing_2011["cross_subdivision_dates_differ"] is False
+    assert (
+        by_key[("existing", 2011, "fbs-fbs")]["cross_subdivision_dates_differ"] is False
+    )
+    pre_bowl_2011 = by_key[("pre_bowl", 2011, "fbs-fcs")]
+    assert pre_bowl_2011["fbs_target_snapshot_date"] == "2011-12-05"
+    assert pre_bowl_2011["fcs_target_snapshot_date"] == "2012-01-09"
+    assert pre_bowl_2011["cross_subdivision_dates_differ"] is True
+
+
 def test_policy_intervention_diagnostics_compare_fitted_arms_separately() -> None:
     final_rows = [
         _target(season, "fbs", "1", [1, 3], 4) for season in range(2022, 2026)

@@ -82,8 +82,10 @@ The versioned output is written to
   hashes.
 - `target_snapshot_manifest.csv`, `preseason_feature_manifest.json`,
   `likelihood_game_manifest.csv`, and `rank_pair_composition.csv`: snapshot
-  dates, shared feature inputs, postseason decisions, and same-system versus
-  fallback pair coverage.
+  dates from each policy's corrected FBS/FCS observations, shared feature
+  inputs, postseason decisions, and same-system versus fallback pair coverage.
+  The composition table compares the observed FBS/FCS dates for each
+  cross-subdivision pairing.
 - `baseline_parity.json`, `policy_intervention.json`, `data_gate.json`,
   `report.md`, and `manifest.json`.
 
