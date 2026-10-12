@@ -600,7 +600,9 @@ def main() -> None:
     assert_lean_specification(LEAN_CONTEXT_FEATURES)
     clean_output()
     started = time.perf_counter()
-    base_rows, _, _ = v1.load_rows(max_season=TARGET_MAX)
+    base_rows, _, _ = v1.load_rows(
+        max_season=TARGET_MAX, corpus_policy="original"
+    )
     fbs = [row for row in base_rows if row.subdivision == "fbs"]
     rows, _ = c12.attach_context(fbs, c12.feature_index(), c12.cached_tenures())
     available_years = sorted({row.season for row in rows})

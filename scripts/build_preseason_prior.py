@@ -672,7 +672,9 @@ def write_report(report: dict[str, object]) -> None:
 
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
-    rows, cold_starts, coverage = load_rows(max_season=max(TEST_SEASONS))
+    rows, cold_starts, coverage = load_rows(
+        max_season=max(TEST_SEASONS), corpus_policy="original"
+    )
     report: dict[str, object] = {
         "target": {
             "source": "cleaned historical Massey constituent outcomes",
