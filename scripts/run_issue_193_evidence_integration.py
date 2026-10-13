@@ -327,6 +327,8 @@ def _make_rank_score_row(
     evidence: dict[str, object],
     strata: dict[str, object],
 ) -> dict[str, object]:
+    if np.any((target > 0) & (prediction <= 0)):
+        raise ValueError("held-out target has positive mass outside prediction support")
     score = issue201.score_rank_pmf(prediction, target)
     return {
         "season": season,
@@ -459,36 +461,39 @@ def _corrected_team_map(
 def _season_game_counts(
     rows: list[dict[str, object]],
 ) -> list[dict[str, object]]:
-    groups: dict[tuple[int, str], list[dict[str, object]]] = defaultdict(list)
+    groups: dict[tuple[int, str], set[str]] = defaultdict(set)
     for row in rows:
         if (
             row.get("forecast_stage") == "rolling"
             and row.get("forecast_population") == "fbs_fbs"
         ):
-            groups[(int(row["season"]), str(row.get("phase") or "unknown"))].append(row)
+            groups[(int(row["season"]), str(row.get("phase") or "unknown"))].add(
+                str(row["game_id"])
+            )
     return [
-        {"season": season, "phase": phase, "games": len(members)}
-        for (season, phase), members in sorted(groups.items())
+        {"season": season, "phase": phase, "games": len(game_ids)}
+        for (season, phase), game_ids in sorted(groups.items())
     ]
 
 
 def _forecast_summaries(rows: list[dict[str, object]]) -> list[dict[str, object]]:
-    groups: dict[tuple[str, str, int, str], list[dict[str, object]]] = defaultdict(list)
+    groups: dict[tuple[str, str, str, int, str], list[dict[str, object]]] = defaultdict(list)
     for row in rows:
         groups[
             (
                 str(row["model_arm"]),
                 str(row["forecast_stage"]),
+                str(row["forecast_population"]),
                 int(row["season"]),
                 str(row.get("phase") or "unknown"),
             )
         ].append(row)
     summaries = []
-    for (model, stage, season, phase), members in sorted(groups.items()):
+    for (model, stage, population, season, phase), members in sorted(groups.items()):
         summary: dict[str, object] = {
             "model_arm": model,
             "forecast_stage": stage,
-            "forecast_population": str(members[0]["forecast_population"]),
+            "forecast_population": population,
             "season": season,
             "phase": phase,
             "games": len(members),
@@ -870,26 +875,45 @@ def _gain_concentration(
 ) -> list[dict[str, object]]:
     result = []
     sources = (
-        ("game", game_differences, "delta_crps", "comparator"),
-        ("team_season", team_differences, "delta_crps", "comparison"),
-        ("team_season", team_differences, "delta_nll", "comparison"),
+        (
+            "game",
+            game_differences,
+            "delta_crps",
+            "comparator",
+            ("forecast_stage", "forecast_population"),
+        ),
+        ("team_season", team_differences, "delta_crps", "comparison", ()),
+        ("team_season", team_differences, "delta_nll", "comparison", ()),
     )
-    for unit, rows, metric, label_field in sources:
+    for unit, rows, metric, label_field, partition_fields in sources:
         labels = sorted({str(row[label_field]) for row in rows})
         for label in labels:
-            values = np.asarray(
-                [float(row[metric]) for row in rows if str(row[label_field]) == label],
-                dtype=float,
-            )
-            if not len(values):
-                continue
-            gain = np.maximum(-values, 0.0)
-            loss = np.maximum(values, 0.0)
-            tail_count = max(1, int(np.ceil(0.1 * len(values))))
-            largest_gain = np.sort(gain)[::-1][:tail_count]
-            largest_loss = np.sort(loss)[::-1][:tail_count]
-            result.append(
+            partitions = sorted(
                 {
+                    tuple(str(row[field]) for field in partition_fields)
+                    for row in rows
+                    if str(row[label_field]) == label
+                }
+            ) or [()]
+            for partition in partitions:
+                partition_rows = [
+                    row
+                    for row in rows
+                    if str(row[label_field]) == label
+                    and tuple(str(row[field]) for field in partition_fields)
+                    == partition
+                ]
+                values = np.asarray(
+                    [float(row[metric]) for row in partition_rows], dtype=float
+                )
+                if not len(values):
+                    continue
+                gain = np.maximum(-values, 0.0)
+                loss = np.maximum(values, 0.0)
+                tail_count = max(1, int(np.ceil(0.1 * len(values))))
+                largest_gain = np.sort(gain)[::-1][:tail_count]
+                largest_loss = np.sort(loss)[::-1][:tail_count]
+                record = {
                     "unit": unit,
                     "comparison": label,
                     "metric": metric.removeprefix("delta_"),
@@ -904,7 +928,8 @@ def _gain_concentration(
                         largest_loss.sum() / loss.sum() if loss.sum() else 0.0
                     ),
                 }
-            )
+                record.update(dict(zip(partition_fields, partition, strict=True)))
+                result.append(record)
     return result
 
 

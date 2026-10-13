@@ -363,3 +363,131 @@ def test_runner_summarizes_candidate_context_weights() -> None:
 
     assert summary[0]["mean_context_weight"] == pytest.approx(-0.25)
     assert summary[0]["mean_team_evidence_games"] == pytest.approx(3)
+
+
+def _forecast_summary_row(
+    population: str,
+    game_id: str,
+    *,
+    crps: float,
+    stage: str = "rolling",
+) -> dict[str, object]:
+    row: dict[str, object] = {
+        "model_arm": "History_existing",
+        "forecast_stage": stage,
+        "forecast_population": population,
+        "season": 2023,
+        "phase": "pre_thanksgiving",
+        "game_id": game_id,
+    }
+    summary_metrics = set(issue193_runner.GAME_SUPPORT_METRICS) | {
+        "expected_home_margin",
+        "median_home_margin",
+        "home_win_probability",
+        "margin_interval_50_low",
+        "margin_interval_50_high",
+        "margin_interval_80_low",
+        "margin_interval_80_high",
+        "margin_interval_95_low",
+        "margin_interval_95_high",
+    }
+    row.update({metric: crps for metric in summary_metrics})
+    return row
+
+
+def test_runner_summarizes_forecast_populations_separately() -> None:
+    rows = [
+        _forecast_summary_row("fbs_fbs", "game-1", crps=1.0),
+        _forecast_summary_row("fbs_fcs", "game-2", crps=3.0),
+        _forecast_summary_row("fbs_fcs", "game-3", crps=5.0),
+    ]
+
+    summaries = issue193_runner._forecast_summaries(rows)
+    by_population = {row["forecast_population"]: row for row in summaries}
+
+    assert by_population["fbs_fbs"]["games"] == 1
+    assert by_population["fbs_fbs"]["mean_crps"] == pytest.approx(1.0)
+    assert by_population["fbs_fcs"]["games"] == 2
+    assert by_population["fbs_fcs"]["mean_crps"] == pytest.approx(4.0)
+
+
+def test_runner_counts_unique_games_once_across_model_arms() -> None:
+    rows = [
+        {
+            "season": 2024,
+            "phase": "regular",
+            "forecast_stage": "rolling",
+            "forecast_population": "fbs_fbs",
+            "model_arm": model,
+            "game_id": game_id,
+        }
+        for model in issue193_runner.MODEL_NAMES
+        for game_id in ("army-navy-2024", "game-2")
+    ]
+
+    assert issue193_runner._season_game_counts(rows) == [
+        {"season": 2024, "phase": "regular", "games": 2}
+    ]
+
+
+def test_runner_keeps_game_gain_concentration_cohorts_separate() -> None:
+    rows = [
+        {
+            "comparator": "History_calibrated",
+            "forecast_stage": "rolling",
+            "forecast_population": "fbs_fbs",
+            "delta_crps": -0.05,
+        },
+        {
+            "comparator": "History_calibrated",
+            "forecast_stage": "rolling",
+            "forecast_population": "fbs_fbs",
+            "delta_crps": -0.07,
+        },
+        {
+            "comparator": "History_calibrated",
+            "forecast_stage": "preseason",
+            "forecast_population": "fbs_fbs",
+            "delta_crps": 0.2,
+        },
+        {
+            "comparator": "History_calibrated",
+            "forecast_stage": "rolling",
+            "forecast_population": "fbs_fcs",
+            "delta_crps": -0.4,
+        },
+    ]
+
+    concentration = issue193_runner._gain_concentration(rows, [])
+    by_cohort = {
+        (row["forecast_stage"], row["forecast_population"]): row
+        for row in concentration
+    }
+
+    primary = by_cohort[("rolling", "fbs_fbs")]
+    assert primary["rows"] == 2
+    assert primary["mean_delta_candidate_minus_comparator"] == pytest.approx(-0.06)
+    assert by_cohort[("preseason", "fbs_fbs")]["rows"] == 1
+    assert by_cohort[("rolling", "fbs_fcs")]["rows"] == 1
+
+
+def test_runner_rejects_heldout_targets_outside_prediction_support() -> None:
+    with pytest.raises(ValueError, match="outside prediction support"):
+        issue193_runner._make_rank_score_row(
+            season=2023,
+            cutoff="2023-10-01T00:00:00Z",
+            checkpoint_index=1,
+            checkpoint_phase="regular",
+            checkpoint_has_games=True,
+            team_id="team-1",
+            team_name="Team 1",
+            model_arm="History_calibrated_plus_Context",
+            prior_family="History",
+            prediction=np.asarray([0.4, 0.6, 0.0]),
+            target=np.asarray([0.2, 0.3, 0.5]),
+            inputs=evidence_input(2023, "team-1", "checkpoint"),
+            target_row={},
+            target_observation_date="2023-12-01",
+            evidence={},
+            strata={},
+        )

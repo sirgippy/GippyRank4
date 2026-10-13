@@ -1470,62 +1470,62 @@
   ],
   "game_counts": [
     {
-      "games": 4,
+      "games": 1,
       "phase": "army_navy",
       "season": 2023
     },
     {
-      "games": 40,
+      "games": 10,
       "phase": "conference_championship_period",
       "season": 2023
     },
     {
-      "games": 2704,
+      "games": 676,
       "phase": "pre_thanksgiving",
       "season": 2023
     },
     {
-      "games": 252,
+      "games": 63,
       "phase": "rivalry_window",
       "season": 2023
     },
     {
-      "games": 4,
+      "games": 1,
       "phase": "army_navy",
       "season": 2024
     },
     {
-      "games": 36,
+      "games": 9,
       "phase": "conference_championship_period",
       "season": 2024
     },
     {
-      "games": 2708,
+      "games": 677,
       "phase": "pre_thanksgiving",
       "season": 2024
     },
     {
-      "games": 260,
+      "games": 65,
       "phase": "rivalry_window",
       "season": 2024
     },
     {
-      "games": 4,
+      "games": 1,
       "phase": "army_navy",
       "season": 2025
     },
     {
-      "games": 36,
+      "games": 9,
       "phase": "conference_championship_period",
       "season": 2025
     },
     {
-      "games": 2748,
+      "games": 687,
       "phase": "pre_thanksgiving",
       "season": 2025
     },
     {
-      "games": 260,
+      "games": 65,
       "phase": "rivalry_window",
       "season": 2025
     }
@@ -2172,24 +2172,106 @@
     "gain_concentration": [
       {
         "comparison": "Context_existing",
-        "improved_share": 0.42544693799923927,
-        "mean_delta_candidate_minus_comparator": 0.056031472170924454,
-        "median_delta_candidate_minus_comparator": 0.06763560166922211,
+        "forecast_population": "fbs_fbs",
+        "forecast_stage": "preseason",
+        "improved_share": 0.41828621908127206,
+        "mean_delta_candidate_minus_comparator": 0.06754514759954428,
+        "median_delta_candidate_minus_comparator": 0.08930565145608682,
         "metric": "crps",
-        "rows": 5258,
-        "top_decile_share_of_total_gain": 0.6067223129165672,
-        "top_decile_share_of_total_loss": 0.5188188777276157,
+        "rows": 2264,
+        "top_decile_share_of_total_gain": 0.6040973637243704,
+        "top_decile_share_of_total_loss": 0.5069113718666709,
+        "unit": "game"
+      },
+      {
+        "comparison": "Context_existing",
+        "forecast_population": "fbs_fcs",
+        "forecast_stage": "preseason",
+        "improved_share": 0.40821917808219177,
+        "mean_delta_candidate_minus_comparator": 0.09215959633278378,
+        "median_delta_candidate_minus_comparator": 0.062104411365819345,
+        "metric": "crps",
+        "rows": 365,
+        "top_decile_share_of_total_gain": 0.5762218723813674,
+        "top_decile_share_of_total_loss": 0.471182086620268,
+        "unit": "game"
+      },
+      {
+        "comparison": "Context_existing",
+        "forecast_population": "fbs_fbs",
+        "forecast_stage": "rolling",
+        "improved_share": 0.4372791519434629,
+        "mean_delta_candidate_minus_comparator": 0.03350817645329518,
+        "median_delta_candidate_minus_comparator": 0.04900775055161599,
+        "metric": "crps",
+        "rows": 2264,
+        "top_decile_share_of_total_gain": 0.6103918719345974,
+        "top_decile_share_of_total_loss": 0.538241082622867,
+        "unit": "game"
+      },
+      {
+        "comparison": "Context_existing",
+        "forecast_population": "fbs_fcs",
+        "forecast_stage": "rolling",
+        "improved_share": 0.4136986301369863,
+        "mean_delta_candidate_minus_comparator": 0.08819315714418122,
+        "median_delta_candidate_minus_comparator": 0.05743160636858491,
+        "metric": "crps",
+        "rows": 365,
+        "top_decile_share_of_total_gain": 0.5862303340443206,
+        "top_decile_share_of_total_loss": 0.4911955355042509,
         "unit": "game"
       },
       {
         "comparison": "History_calibrated",
-        "improved_share": 0.5559147965005705,
-        "mean_delta_candidate_minus_comparator": -0.13066127656156398,
-        "median_delta_candidate_minus_comparator": -0.020307783081391584,
+        "forecast_population": "fbs_fbs",
+        "forecast_stage": "preseason",
+        "improved_share": 0.5923144876325088,
+        "mean_delta_candidate_minus_comparator": -0.21051931120148618,
+        "median_delta_candidate_minus_comparator": -0.09178788671982474,
         "metric": "crps",
-        "rows": 5258,
-        "top_decile_share_of_total_gain": 0.6312788895753069,
-        "top_decile_share_of_total_loss": 0.7236274173374198,
+        "rows": 2264,
+        "top_decile_share_of_total_gain": 0.5148188009448755,
+        "top_decile_share_of_total_loss": 0.64202436028363,
+        "unit": "game"
+      },
+      {
+        "comparison": "History_calibrated",
+        "forecast_population": "fbs_fcs",
+        "forecast_stage": "preseason",
+        "improved_share": 0.5616438356164384,
+        "mean_delta_candidate_minus_comparator": -0.1424010771293055,
+        "median_delta_candidate_minus_comparator": -0.02869224612280874,
+        "metric": "crps",
+        "rows": 365,
+        "top_decile_share_of_total_gain": 0.5292461864018501,
+        "top_decile_share_of_total_loss": 0.5732731661027164,
+        "unit": "game"
+      },
+      {
+        "comparison": "History_calibrated",
+        "forecast_population": "fbs_fbs",
+        "forecast_stage": "rolling",
+        "improved_share": 0.5181095406360424,
+        "mean_delta_candidate_minus_comparator": -0.05583922267503805,
+        "median_delta_candidate_minus_comparator": -0.0028454692699568795,
+        "metric": "crps",
+        "rows": 2264,
+        "top_decile_share_of_total_gain": 0.7126661301213468,
+        "top_decile_share_of_total_loss": 0.7515719630185574,
+        "unit": "game"
+      },
+      {
+        "comparison": "History_calibrated",
+        "forecast_population": "fbs_fcs",
+        "forecast_stage": "rolling",
+        "improved_share": 0.5589041095890411,
+        "mean_delta_candidate_minus_comparator": -0.0876845981152224,
+        "median_delta_candidate_minus_comparator": -0.01244267353222206,
+        "metric": "crps",
+        "rows": 365,
+        "top_decile_share_of_total_gain": 0.5842622339912785,
+        "top_decile_share_of_total_loss": 0.6286381855732888,
         "unit": "game"
       },
       {
