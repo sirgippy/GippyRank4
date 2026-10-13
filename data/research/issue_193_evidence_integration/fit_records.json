@@ -1,0 +1,1182 @@
+[
+  {
+    "evaluation_season": 2023,
+    "fit": {
+      "coefficient_names": [
+        "a",
+        "b0",
+        "b::log1p_team_games",
+        "b::kl_history"
+      ],
+      "coefficients": [
+        -0.10519894921203175,
+        0.004169972452572699,
+        0.03757465104274447,
+        -0.07153500076378683
+      ],
+      "include_context_signal": false,
+      "optimizer": {
+        "bounds": {
+          "a": [
+            -0.75,
+            3.0
+          ],
+          "other_coefficients": "unbounded"
+        },
+        "function_evaluations": 30,
+        "gradient_inf_norm": 1.0740641671197482e-08,
+        "iterations": 10,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "method": "L-BFGS-B",
+        "objective": 4.146544226496585,
+        "options": {
+          "ftol": 1e-13,
+          "gtol": 1e-08,
+          "maxiter": 2000
+        },
+        "ridge_includes_intercept": true,
+        "status": 0,
+        "success": true
+      },
+      "regularization": 0.1,
+      "standardizer": {
+        "feature_names": [
+          "log1p_team_games",
+          "kl_history_from_prior"
+        ],
+        "means": [
+          1.6336931486222273,
+          0.40251503182071907
+        ],
+        "scale_floor": 1e-06,
+        "scales": [
+          0.8110554643981018,
+          0.3587078356953839
+        ],
+        "standard_deviation_ddof": 0,
+        "weighting": "each training team-season has total weight one across checkpoints"
+      },
+      "training_seasons": [
+        2022
+      ]
+    },
+    "model_arm": "History_calibrated",
+    "selection": {
+      "candidates": [],
+      "method": "fixed_single_training_season",
+      "selected_lambda": 0.1,
+      "training_seasons": [
+        2022
+      ]
+    },
+    "training_checkpoint_rows": 1965,
+    "training_rows_sha256": "ea7ae8ac2a039a11279ac4318ec119d28c45ce6efbbda5b21e1796a142b2fc96",
+    "training_seasons": [
+      2022
+    ],
+    "training_team_seasons": 131
+  },
+  {
+    "evaluation_season": 2023,
+    "fit": {
+      "coefficient_names": [
+        "a",
+        "b0",
+        "b::log1p_team_games",
+        "b::kl_history",
+        "w0",
+        "w::log1p_team_games",
+        "w::kl_history"
+      ],
+      "coefficients": [
+        -0.11738173317099918,
+        0.008319794579123765,
+        0.036841042147501384,
+        -0.07311615318402385,
+        0.32050715593593,
+        -0.11322871799097813,
+        -0.047525498859697146
+      ],
+      "include_context_signal": true,
+      "optimizer": {
+        "bounds": {
+          "a": [
+            -0.75,
+            3.0
+          ],
+          "other_coefficients": "unbounded"
+        },
+        "function_evaluations": 18,
+        "gradient_inf_norm": 1.2593369186223238e-07,
+        "iterations": 16,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "method": "L-BFGS-B",
+        "objective": 4.136211217481018,
+        "options": {
+          "ftol": 1e-13,
+          "gtol": 1e-08,
+          "maxiter": 2000
+        },
+        "ridge_includes_intercept": true,
+        "status": 0,
+        "success": true
+      },
+      "regularization": 0.1,
+      "standardizer": {
+        "feature_names": [
+          "log1p_team_games",
+          "kl_history_from_prior"
+        ],
+        "means": [
+          1.6336931486222273,
+          0.40251503182071907
+        ],
+        "scale_floor": 1e-06,
+        "scales": [
+          0.8110554643981018,
+          0.3587078356953839
+        ],
+        "standard_deviation_ddof": 0,
+        "weighting": "each training team-season has total weight one across checkpoints"
+      },
+      "training_seasons": [
+        2022
+      ]
+    },
+    "model_arm": "History_calibrated_plus_Context",
+    "selection": {
+      "candidates": [],
+      "method": "fixed_single_training_season",
+      "selected_lambda": 0.1,
+      "training_seasons": [
+        2022
+      ]
+    },
+    "training_checkpoint_rows": 1965,
+    "training_rows_sha256": "ea7ae8ac2a039a11279ac4318ec119d28c45ce6efbbda5b21e1796a142b2fc96",
+    "training_seasons": [
+      2022
+    ],
+    "training_team_seasons": 131
+  },
+  {
+    "evaluation_season": 2024,
+    "fit": {
+      "coefficient_names": [
+        "a",
+        "b0",
+        "b::log1p_team_games",
+        "b::kl_history"
+      ],
+      "coefficients": [
+        -0.13083127764127417,
+        -0.023913316232527553,
+        -0.020773419605594676,
+        0.005439361969544772
+      ],
+      "include_context_signal": false,
+      "optimizer": {
+        "bounds": {
+          "a": [
+            -0.75,
+            3.0
+          ],
+          "other_coefficients": "unbounded"
+        },
+        "function_evaluations": 12,
+        "gradient_inf_norm": 5.1718369534908826e-09,
+        "iterations": 11,
+        "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+        "method": "L-BFGS-B",
+        "objective": 4.163287216253335,
+        "options": {
+          "ftol": 1e-13,
+          "gtol": 1e-08,
+          "maxiter": 2000
+        },
+        "ridge_includes_intercept": true,
+        "status": 0,
+        "success": true
+      },
+      "regularization": 0.1,
+      "standardizer": {
+        "feature_names": [
+          "log1p_team_games",
+          "kl_history_from_prior"
+        ],
+        "means": [
+          1.632376502555995,
+          0.383958708903754
+        ],
+        "scale_floor": 1e-06,
+        "scales": [
+          0.8124477095757674,
+          0.3308571887000533
+        ],
+        "standard_deviation_ddof": 0,
+        "weighting": "each training team-season has total weight one across checkpoints"
+      },
+      "training_seasons": [
+        2022,
+        2023
+      ]
+    },
+    "model_arm": "History_calibrated",
+    "selection": {
+      "candidates": [
+        {
+          "folds": [
+            {
+              "checkpoint_rows": 1995,
+              "mean_team_season_nll": 4.1839678442978245,
+              "optimizer": {
+                "bounds": {
+                  "a": [
+                    -0.75,
+                    3.0
+                  ],
+                  "other_coefficients": "unbounded"
+                },
+                "function_evaluations": 11,
+                "gradient_inf_norm": 2.4534328934436105e-09,
+                "iterations": 10,
+                "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+                "method": "L-BFGS-B",
+                "objective": 4.145592234633394,
+                "options": {
+                  "ftol": 1e-13,
+                  "gtol": 1e-08,
+                  "maxiter": 2000
+                },
+                "ridge_includes_intercept": true,
+                "status": 0,
+                "success": true
+              },
+              "team_seasons": 133,
+              "training_seasons": [
+                2022
+              ],
+              "validation_season": 2023
+            }
+          ],
+          "lambda": 0.01,
+          "mean_team_season_nll": 4.1839678442978245,
+          "team_seasons": 133
+        },
+        {
+          "folds": [
+            {
+              "checkpoint_rows": 1995,
+              "mean_team_season_nll": 4.1830834297082715,
+              "optimizer": {
+                "bounds": {
+                  "a": [
+                    -0.75,
+                    3.0
+                  ],
+                  "other_coefficients": "unbounded"
+                },
+                "function_evaluations": 30,
+                "gradient_inf_norm": 1.0740641671197482e-08,
+                "iterations": 10,
+                "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+                "method": "L-BFGS-B",
+                "objective": 4.146544226496585,
+                "options": {
+                  "ftol": 1e-13,
+                  "gtol": 1e-08,
+                  "maxiter": 2000
+                },
+                "ridge_includes_intercept": true,
+                "status": 0,
+                "success": true
+              },
+              "team_seasons": 133,
+              "training_seasons": [
+                2022
+              ],
+              "validation_season": 2023
+            }
+          ],
+          "lambda": 0.1,
+          "mean_team_season_nll": 4.1830834297082715,
+          "team_seasons": 133
+        },
+        {
+          "folds": [
+            {
+              "checkpoint_rows": 1995,
+              "mean_team_season_nll": 4.183875934341974,
+              "optimizer": {
+                "bounds": {
+                  "a": [
+                    -0.75,
+                    3.0
+                  ],
+                  "other_coefficients": "unbounded"
+                },
+                "function_evaluations": 8,
+                "gradient_inf_norm": 1.2373436858448272e-09,
+                "iterations": 7,
+                "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+                "method": "L-BFGS-B",
+                "objective": 4.149587379787849,
+                "options": {
+                  "ftol": 1e-13,
+                  "gtol": 1e-08,
+                  "maxiter": 2000
+                },
+                "ridge_includes_intercept": true,
+                "status": 0,
+                "success": true
+              },
+              "team_seasons": 133,
+              "training_seasons": [
+                2022
+              ],
+              "validation_season": 2023
+            }
+          ],
+          "lambda": 1.0,
+          "mean_team_season_nll": 4.183875934341974,
+          "team_seasons": 133
+        }
+      ],
+      "method": "forward_chained_inner_validation",
+      "selected_lambda": 0.1,
+      "tie_break": "stronger regularization",
+      "tie_tolerance": 1e-12,
+      "training_seasons": [
+        2022,
+        2023
+      ],
+      "weighting": "equal total weight per validation team-season across checkpoints"
+    },
+    "training_checkpoint_rows": 3960,
+    "training_rows_sha256": "b249a38b844d3ced4d07c23546dd238c55f26b84e230771ef8d2accc8e07fd5b",
+    "training_seasons": [
+      2022,
+      2023
+    ],
+    "training_team_seasons": 264
+  },
+  {
+    "evaluation_season": 2024,
+    "fit": {
+      "coefficient_names": [
+        "a",
+        "b0",
+        "b::log1p_team_games",
+        "b::kl_history",
+        "w0",
+        "w::log1p_team_games",
+        "w::kl_history"
+      ],
+      "coefficients": [
+        -0.14112649868065694,
+        -0.016549536928718377,
+        -0.026069603157998972,
+        0.0061819314397885215,
+        0.2123620707004318,
+        -0.11165658706508737,
+        -0.04109578168488883
+      ],
+      "include_context_signal": true,
+      "optimizer": {
+        "bounds": {
+          "a": [
+            -0.75,
+            3.0
+          ],
+          "other_coefficients": "unbounded"
+        },
+        "function_evaluations": 16,
+        "gradient_inf_norm": 2.865028985812347e-07,
+        "iterations": 14,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "method": "L-BFGS-B",
+        "objective": 4.156703765278544,
+        "options": {
+          "ftol": 1e-13,
+          "gtol": 1e-08,
+          "maxiter": 2000
+        },
+        "ridge_includes_intercept": true,
+        "status": 0,
+        "success": true
+      },
+      "regularization": 0.1,
+      "standardizer": {
+        "feature_names": [
+          "log1p_team_games",
+          "kl_history_from_prior"
+        ],
+        "means": [
+          1.632376502555995,
+          0.383958708903754
+        ],
+        "scale_floor": 1e-06,
+        "scales": [
+          0.8124477095757674,
+          0.3308571887000533
+        ],
+        "standard_deviation_ddof": 0,
+        "weighting": "each training team-season has total weight one across checkpoints"
+      },
+      "training_seasons": [
+        2022,
+        2023
+      ]
+    },
+    "model_arm": "History_calibrated_plus_Context",
+    "selection": {
+      "candidates": [
+        {
+          "folds": [
+            {
+              "checkpoint_rows": 1995,
+              "mean_team_season_nll": 4.192034649778148,
+              "optimizer": {
+                "bounds": {
+                  "a": [
+                    -0.75,
+                    3.0
+                  ],
+                  "other_coefficients": "unbounded"
+                },
+                "function_evaluations": 20,
+                "gradient_inf_norm": 4.764012289629367e-08,
+                "iterations": 17,
+                "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+                "method": "L-BFGS-B",
+                "objective": 4.121614908645184,
+                "options": {
+                  "ftol": 1e-13,
+                  "gtol": 1e-08,
+                  "maxiter": 2000
+                },
+                "ridge_includes_intercept": true,
+                "status": 0,
+                "success": true
+              },
+              "team_seasons": 133,
+              "training_seasons": [
+                2022
+              ],
+              "validation_season": 2023
+            }
+          ],
+          "lambda": 0.01,
+          "mean_team_season_nll": 4.192034649778148,
+          "team_seasons": 133
+        },
+        {
+          "folds": [
+            {
+              "checkpoint_rows": 1995,
+              "mean_team_season_nll": 4.17609227773004,
+              "optimizer": {
+                "bounds": {
+                  "a": [
+                    -0.75,
+                    3.0
+                  ],
+                  "other_coefficients": "unbounded"
+                },
+                "function_evaluations": 18,
+                "gradient_inf_norm": 1.2593369186223238e-07,
+                "iterations": 16,
+                "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+                "method": "L-BFGS-B",
+                "objective": 4.136211217481018,
+                "options": {
+                  "ftol": 1e-13,
+                  "gtol": 1e-08,
+                  "maxiter": 2000
+                },
+                "ridge_includes_intercept": true,
+                "status": 0,
+                "success": true
+              },
+              "team_seasons": 133,
+              "training_seasons": [
+                2022
+              ],
+              "validation_season": 2023
+            }
+          ],
+          "lambda": 0.1,
+          "mean_team_season_nll": 4.17609227773004,
+          "team_seasons": 133
+        },
+        {
+          "folds": [
+            {
+              "checkpoint_rows": 1995,
+              "mean_team_season_nll": 4.181528188134624,
+              "optimizer": {
+                "bounds": {
+                  "a": [
+                    -0.75,
+                    3.0
+                  ],
+                  "other_coefficients": "unbounded"
+                },
+                "function_evaluations": 9,
+                "gradient_inf_norm": 8.020028276038704e-09,
+                "iterations": 8,
+                "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+                "method": "L-BFGS-B",
+                "objective": 4.147899819708987,
+                "options": {
+                  "ftol": 1e-13,
+                  "gtol": 1e-08,
+                  "maxiter": 2000
+                },
+                "ridge_includes_intercept": true,
+                "status": 0,
+                "success": true
+              },
+              "team_seasons": 133,
+              "training_seasons": [
+                2022
+              ],
+              "validation_season": 2023
+            }
+          ],
+          "lambda": 1.0,
+          "mean_team_season_nll": 4.181528188134624,
+          "team_seasons": 133
+        }
+      ],
+      "method": "forward_chained_inner_validation",
+      "selected_lambda": 0.1,
+      "tie_break": "stronger regularization",
+      "tie_tolerance": 1e-12,
+      "training_seasons": [
+        2022,
+        2023
+      ],
+      "weighting": "equal total weight per validation team-season across checkpoints"
+    },
+    "training_checkpoint_rows": 3960,
+    "training_rows_sha256": "b249a38b844d3ced4d07c23546dd238c55f26b84e230771ef8d2accc8e07fd5b",
+    "training_seasons": [
+      2022,
+      2023
+    ],
+    "training_team_seasons": 264
+  },
+  {
+    "evaluation_season": 2025,
+    "fit": {
+      "coefficient_names": [
+        "a",
+        "b0",
+        "b::log1p_team_games",
+        "b::kl_history"
+      ],
+      "coefficients": [
+        -0.1385896436779254,
+        -0.005399996900464195,
+        -0.0029931096650787745,
+        -0.006125709054260566
+      ],
+      "include_context_signal": false,
+      "optimizer": {
+        "bounds": {
+          "a": [
+            -0.75,
+            3.0
+          ],
+          "other_coefficients": "unbounded"
+        },
+        "function_evaluations": 9,
+        "gradient_inf_norm": 4.071271797793062e-08,
+        "iterations": 8,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "method": "L-BFGS-B",
+        "objective": 4.166449729239654,
+        "options": {
+          "ftol": 1e-13,
+          "gtol": 1e-08,
+          "maxiter": 2000
+        },
+        "ridge_includes_intercept": true,
+        "status": 0,
+        "success": true
+      },
+      "regularization": 0.1,
+      "standardizer": {
+        "feature_names": [
+          "log1p_team_games",
+          "kl_history_from_prior"
+        ],
+        "means": [
+          1.6350255256064061,
+          0.4019828123938698
+        ],
+        "scale_floor": 1e-06,
+        "scales": [
+          0.8096028681505527,
+          0.36509308564525683
+        ],
+        "standard_deviation_ddof": 0,
+        "weighting": "each training team-season has total weight one across checkpoints"
+      },
+      "training_seasons": [
+        2022,
+        2023,
+        2024
+      ]
+    },
+    "model_arm": "History_calibrated",
+    "selection": {
+      "candidates": [
+        {
+          "folds": [
+            {
+              "checkpoint_rows": 1995,
+              "mean_team_season_nll": 4.1839678442978245,
+              "optimizer": {
+                "bounds": {
+                  "a": [
+                    -0.75,
+                    3.0
+                  ],
+                  "other_coefficients": "unbounded"
+                },
+                "function_evaluations": 11,
+                "gradient_inf_norm": 2.4534328934436105e-09,
+                "iterations": 10,
+                "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+                "method": "L-BFGS-B",
+                "objective": 4.145592234633394,
+                "options": {
+                  "ftol": 1e-13,
+                  "gtol": 1e-08,
+                  "maxiter": 2000
+                },
+                "ridge_includes_intercept": true,
+                "status": 0,
+                "success": true
+              },
+              "team_seasons": 133,
+              "training_seasons": [
+                2022
+              ],
+              "validation_season": 2023
+            },
+            {
+              "checkpoint_rows": 2144,
+              "mean_team_season_nll": 4.172240169249396,
+              "optimizer": {
+                "bounds": {
+                  "a": [
+                    -0.75,
+                    3.0
+                  ],
+                  "other_coefficients": "unbounded"
+                },
+                "function_evaluations": 11,
+                "gradient_inf_norm": 1.4676162061674769e-08,
+                "iterations": 10,
+                "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+                "method": "L-BFGS-B",
+                "objective": 4.162350188100665,
+                "options": {
+                  "ftol": 1e-13,
+                  "gtol": 1e-08,
+                  "maxiter": 2000
+                },
+                "ridge_includes_intercept": true,
+                "status": 0,
+                "success": true
+              },
+              "team_seasons": 134,
+              "training_seasons": [
+                2022,
+                2023
+              ],
+              "validation_season": 2024
+            }
+          ],
+          "lambda": 0.01,
+          "mean_team_season_nll": 4.178082044835317,
+          "team_seasons": 267
+        },
+        {
+          "folds": [
+            {
+              "checkpoint_rows": 1995,
+              "mean_team_season_nll": 4.1830834297082715,
+              "optimizer": {
+                "bounds": {
+                  "a": [
+                    -0.75,
+                    3.0
+                  ],
+                  "other_coefficients": "unbounded"
+                },
+                "function_evaluations": 30,
+                "gradient_inf_norm": 1.0740641671197482e-08,
+                "iterations": 10,
+                "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+                "method": "L-BFGS-B",
+                "objective": 4.146544226496585,
+                "options": {
+                  "ftol": 1e-13,
+                  "gtol": 1e-08,
+                  "maxiter": 2000
+                },
+                "ridge_includes_intercept": true,
+                "status": 0,
+                "success": true
+              },
+              "team_seasons": 133,
+              "training_seasons": [
+                2022
+              ],
+              "validation_season": 2023
+            },
+            {
+              "checkpoint_rows": 2144,
+              "mean_team_season_nll": 4.172423502787066,
+              "optimizer": {
+                "bounds": {
+                  "a": [
+                    -0.75,
+                    3.0
+                  ],
+                  "other_coefficients": "unbounded"
+                },
+                "function_evaluations": 12,
+                "gradient_inf_norm": 5.1718369534908826e-09,
+                "iterations": 11,
+                "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+                "method": "L-BFGS-B",
+                "objective": 4.163287216253335,
+                "options": {
+                  "ftol": 1e-13,
+                  "gtol": 1e-08,
+                  "maxiter": 2000
+                },
+                "ridge_includes_intercept": true,
+                "status": 0,
+                "success": true
+              },
+              "team_seasons": 134,
+              "training_seasons": [
+                2022,
+                2023
+              ],
+              "validation_season": 2024
+            }
+          ],
+          "lambda": 0.1,
+          "mean_team_season_nll": 4.177733503837704,
+          "team_seasons": 267
+        },
+        {
+          "folds": [
+            {
+              "checkpoint_rows": 1995,
+              "mean_team_season_nll": 4.183875934341974,
+              "optimizer": {
+                "bounds": {
+                  "a": [
+                    -0.75,
+                    3.0
+                  ],
+                  "other_coefficients": "unbounded"
+                },
+                "function_evaluations": 8,
+                "gradient_inf_norm": 1.2373436858448272e-09,
+                "iterations": 7,
+                "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+                "method": "L-BFGS-B",
+                "objective": 4.149587379787849,
+                "options": {
+                  "ftol": 1e-13,
+                  "gtol": 1e-08,
+                  "maxiter": 2000
+                },
+                "ridge_includes_intercept": true,
+                "status": 0,
+                "success": true
+              },
+              "team_seasons": 133,
+              "training_seasons": [
+                2022
+              ],
+              "validation_season": 2023
+            },
+            {
+              "checkpoint_rows": 2144,
+              "mean_team_season_nll": 4.175544695494991,
+              "optimizer": {
+                "bounds": {
+                  "a": [
+                    -0.75,
+                    3.0
+                  ],
+                  "other_coefficients": "unbounded"
+                },
+                "function_evaluations": 8,
+                "gradient_inf_norm": 2.2426068606307137e-08,
+                "iterations": 7,
+                "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+                "method": "L-BFGS-B",
+                "objective": 4.166776644202378,
+                "options": {
+                  "ftol": 1e-13,
+                  "gtol": 1e-08,
+                  "maxiter": 2000
+                },
+                "ridge_includes_intercept": true,
+                "status": 0,
+                "success": true
+              },
+              "team_seasons": 134,
+              "training_seasons": [
+                2022,
+                2023
+              ],
+              "validation_season": 2024
+            }
+          ],
+          "lambda": 1.0,
+          "mean_team_season_nll": 4.179694713347608,
+          "team_seasons": 267
+        }
+      ],
+      "method": "forward_chained_inner_validation",
+      "selected_lambda": 0.1,
+      "tie_break": "stronger regularization",
+      "tie_tolerance": 1e-12,
+      "training_seasons": [
+        2022,
+        2023,
+        2024
+      ],
+      "weighting": "equal total weight per validation team-season across checkpoints"
+    },
+    "training_checkpoint_rows": 6104,
+    "training_rows_sha256": "eba97830809408087f1983b6abebfea885d03247956ffe4139da55e6be005f16",
+    "training_seasons": [
+      2022,
+      2023,
+      2024
+    ],
+    "training_team_seasons": 398
+  },
+  {
+    "evaluation_season": 2025,
+    "fit": {
+      "coefficient_names": [
+        "a",
+        "b0",
+        "b::log1p_team_games",
+        "b::kl_history",
+        "w0",
+        "w::log1p_team_games",
+        "w::kl_history"
+      ],
+      "coefficients": [
+        -0.15106402410400868,
+        0.0005074251005776674,
+        -0.008017783946361122,
+        -0.007423848535797704,
+        0.18911978704594673,
+        -0.13576631574988451,
+        -0.0558283958501151
+      ],
+      "include_context_signal": true,
+      "optimizer": {
+        "bounds": {
+          "a": [
+            -0.75,
+            3.0
+          ],
+          "other_coefficients": "unbounded"
+        },
+        "function_evaluations": 18,
+        "gradient_inf_norm": 1.37912560825397e-07,
+        "iterations": 15,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "method": "L-BFGS-B",
+        "objective": 4.159729068050162,
+        "options": {
+          "ftol": 1e-13,
+          "gtol": 1e-08,
+          "maxiter": 2000
+        },
+        "ridge_includes_intercept": true,
+        "status": 0,
+        "success": true
+      },
+      "regularization": 0.1,
+      "standardizer": {
+        "feature_names": [
+          "log1p_team_games",
+          "kl_history_from_prior"
+        ],
+        "means": [
+          1.6350255256064061,
+          0.4019828123938698
+        ],
+        "scale_floor": 1e-06,
+        "scales": [
+          0.8096028681505527,
+          0.36509308564525683
+        ],
+        "standard_deviation_ddof": 0,
+        "weighting": "each training team-season has total weight one across checkpoints"
+      },
+      "training_seasons": [
+        2022,
+        2023,
+        2024
+      ]
+    },
+    "model_arm": "History_calibrated_plus_Context",
+    "selection": {
+      "candidates": [
+        {
+          "folds": [
+            {
+              "checkpoint_rows": 1995,
+              "mean_team_season_nll": 4.192034649778148,
+              "optimizer": {
+                "bounds": {
+                  "a": [
+                    -0.75,
+                    3.0
+                  ],
+                  "other_coefficients": "unbounded"
+                },
+                "function_evaluations": 20,
+                "gradient_inf_norm": 4.764012289629367e-08,
+                "iterations": 17,
+                "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+                "method": "L-BFGS-B",
+                "objective": 4.121614908645184,
+                "options": {
+                  "ftol": 1e-13,
+                  "gtol": 1e-08,
+                  "maxiter": 2000
+                },
+                "ridge_includes_intercept": true,
+                "status": 0,
+                "success": true
+              },
+              "team_seasons": 133,
+              "training_seasons": [
+                2022
+              ],
+              "validation_season": 2023
+            },
+            {
+              "checkpoint_rows": 2144,
+              "mean_team_season_nll": 4.160613845881305,
+              "optimizer": {
+                "bounds": {
+                  "a": [
+                    -0.75,
+                    3.0
+                  ],
+                  "other_coefficients": "unbounded"
+                },
+                "function_evaluations": 23,
+                "gradient_inf_norm": 1.41004991700708e-07,
+                "iterations": 21,
+                "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+                "method": "L-BFGS-B",
+                "objective": 4.150323862770344,
+                "options": {
+                  "ftol": 1e-13,
+                  "gtol": 1e-08,
+                  "maxiter": 2000
+                },
+                "ridge_includes_intercept": true,
+                "status": 0,
+                "success": true
+              },
+              "team_seasons": 134,
+              "training_seasons": [
+                2022,
+                2023
+              ],
+              "validation_season": 2024
+            }
+          ],
+          "lambda": 0.01,
+          "mean_team_season_nll": 4.176265407372991,
+          "team_seasons": 267
+        },
+        {
+          "folds": [
+            {
+              "checkpoint_rows": 1995,
+              "mean_team_season_nll": 4.17609227773004,
+              "optimizer": {
+                "bounds": {
+                  "a": [
+                    -0.75,
+                    3.0
+                  ],
+                  "other_coefficients": "unbounded"
+                },
+                "function_evaluations": 18,
+                "gradient_inf_norm": 1.2593369186223238e-07,
+                "iterations": 16,
+                "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+                "method": "L-BFGS-B",
+                "objective": 4.136211217481018,
+                "options": {
+                  "ftol": 1e-13,
+                  "gtol": 1e-08,
+                  "maxiter": 2000
+                },
+                "ridge_includes_intercept": true,
+                "status": 0,
+                "success": true
+              },
+              "team_seasons": 133,
+              "training_seasons": [
+                2022
+              ],
+              "validation_season": 2023
+            },
+            {
+              "checkpoint_rows": 2144,
+              "mean_team_season_nll": 4.162807497459101,
+              "optimizer": {
+                "bounds": {
+                  "a": [
+                    -0.75,
+                    3.0
+                  ],
+                  "other_coefficients": "unbounded"
+                },
+                "function_evaluations": 16,
+                "gradient_inf_norm": 2.865028985812347e-07,
+                "iterations": 14,
+                "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+                "method": "L-BFGS-B",
+                "objective": 4.156703765278544,
+                "options": {
+                  "ftol": 1e-13,
+                  "gtol": 1e-08,
+                  "maxiter": 2000
+                },
+                "ridge_includes_intercept": true,
+                "status": 0,
+                "success": true
+              },
+              "team_seasons": 134,
+              "training_seasons": [
+                2022,
+                2023
+              ],
+              "validation_season": 2024
+            }
+          ],
+          "lambda": 0.1,
+          "mean_team_season_nll": 4.169425009728895,
+          "team_seasons": 267
+        },
+        {
+          "folds": [
+            {
+              "checkpoint_rows": 1995,
+              "mean_team_season_nll": 4.181528188134624,
+              "optimizer": {
+                "bounds": {
+                  "a": [
+                    -0.75,
+                    3.0
+                  ],
+                  "other_coefficients": "unbounded"
+                },
+                "function_evaluations": 9,
+                "gradient_inf_norm": 8.020028276038704e-09,
+                "iterations": 8,
+                "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+                "method": "L-BFGS-B",
+                "objective": 4.147899819708987,
+                "options": {
+                  "ftol": 1e-13,
+                  "gtol": 1e-08,
+                  "maxiter": 2000
+                },
+                "ridge_includes_intercept": true,
+                "status": 0,
+                "success": true
+              },
+              "team_seasons": 133,
+              "training_seasons": [
+                2022
+              ],
+              "validation_season": 2023
+            },
+            {
+              "checkpoint_rows": 2144,
+              "mean_team_season_nll": 4.173102256080425,
+              "optimizer": {
+                "bounds": {
+                  "a": [
+                    -0.75,
+                    3.0
+                  ],
+                  "other_coefficients": "unbounded"
+                },
+                "function_evaluations": 9,
+                "gradient_inf_norm": 2.235769551786615e-08,
+                "iterations": 8,
+                "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+                "method": "L-BFGS-B",
+                "objective": 4.165508445067703,
+                "options": {
+                  "ftol": 1e-13,
+                  "gtol": 1e-08,
+                  "maxiter": 2000
+                },
+                "ridge_includes_intercept": true,
+                "status": 0,
+                "success": true
+              },
+              "team_seasons": 134,
+              "training_seasons": [
+                2022,
+                2023
+              ],
+              "validation_season": 2024
+            }
+          ],
+          "lambda": 1.0,
+          "mean_team_season_nll": 4.177299443208547,
+          "team_seasons": 267
+        }
+      ],
+      "method": "forward_chained_inner_validation",
+      "selected_lambda": 0.1,
+      "tie_break": "stronger regularization",
+      "tie_tolerance": 1e-12,
+      "training_seasons": [
+        2022,
+        2023,
+        2024
+      ],
+      "weighting": "equal total weight per validation team-season across checkpoints"
+    },
+    "training_checkpoint_rows": 6104,
+    "training_rows_sha256": "eba97830809408087f1983b6abebfea885d03247956ffe4139da55e6be005f16",
+    "training_seasons": [
+      2022,
+      2023,
+      2024
+    ],
+    "training_team_seasons": 398
+  }
+]
