@@ -1,0 +1,985 @@
+{
+  "analysis_status": "complete",
+  "checkpoint_design": {
+    "excluded_final_cutoffs": [
+      {
+        "cutoff_utc": "2022-12-10T23:59:59+00:00",
+        "post_target_evidence_count": 0,
+        "reason": "post_target_evidence_or_cutoff_not_before_target",
+        "season": 2022
+      },
+      {
+        "cutoff_utc": "2023-12-09T23:59:59+00:00",
+        "post_target_evidence_count": 4,
+        "reason": "post_target_evidence_or_cutoff_not_before_target",
+        "season": 2023
+      },
+      {
+        "cutoff_utc": "2024-12-14T23:59:59+00:00",
+        "post_target_evidence_count": 4,
+        "reason": "post_target_evidence_or_cutoff_not_before_target",
+        "season": 2024
+      },
+      {
+        "cutoff_utc": "2025-12-13T23:59:59+00:00",
+        "post_target_evidence_count": 3,
+        "reason": "post_target_evidence_or_cutoff_not_before_target",
+        "season": 2025
+      }
+    ],
+    "phase_counts": {
+      "other_checkpoint": 16,
+      "pre_thanksgiving": 4,
+      "rivalry_window": 4
+    },
+    "safe_checkpoint_count": 24,
+    "safe_checkpoint_count_by_season": {
+      "2022": 6,
+      "2023": 6,
+      "2024": 6,
+      "2025": 6
+    },
+    "selection": "issue201 frozen-target safety cohort",
+    "unsafe_checkpoint_count": 4
+  },
+  "code_artifacts": {
+    "research_module": {
+      "bytes": 91106,
+      "label": "issue_194_part_a_research_module",
+      "sha256": "5cd280fee53866711a5c141e69b175b006c16f9b7140ebda2af781dc6f0cbfb7"
+    },
+    "runner_script": {
+      "bytes": 2886,
+      "label": "issue_194_part_a_runner_script",
+      "sha256": "bde8a2b0ba5721e3763804a95944091b367e16bfc9defb027dd18655e69fc50a"
+    }
+  },
+  "crossed_message_design": {
+    "arms": [
+      "HH",
+      "CH",
+      "HC",
+      "CC"
+    ],
+    "checkpoint_count": 24,
+    "checkpoint_evidence": [
+      {
+        "checkpoint": 1,
+        "checkpoint_phase": "other_checkpoint",
+        "context_converged": true,
+        "context_iterations": 0,
+        "context_max_message_delta": 0.0,
+        "cutoff_utc": "2022-08-27T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 0,
+        "history_max_message_delta": 0.0,
+        "included_game_count": 0,
+        "included_game_ids_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "issue201_common_team_count": 131,
+        "latest_included_kickoff_utc": "",
+        "scoreable_common_team_count": 131,
+        "season": 2022,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 2,
+        "checkpoint_phase": "other_checkpoint",
+        "context_converged": true,
+        "context_iterations": 32,
+        "context_max_message_delta": 6.716895234459841e-10,
+        "cutoff_utc": "2022-09-22T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 32,
+        "history_max_message_delta": 7.984097549762481e-10,
+        "included_game_count": 363,
+        "included_game_ids_sha256": "f8831916ab764c1130e587507ba93de41a3b001929d098d2747d8a7b6f38e67e",
+        "issue201_common_team_count": 131,
+        "latest_included_kickoff_utc": "2022-09-18T03:59:00+00:00",
+        "scoreable_common_team_count": 131,
+        "season": 2022,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 3,
+        "checkpoint_phase": "other_checkpoint",
+        "context_converged": true,
+        "context_iterations": 50,
+        "context_max_message_delta": 9.146391699577094e-10,
+        "cutoff_utc": "2022-10-07T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 51,
+        "history_max_message_delta": 9.174963289115823e-10,
+        "included_game_count": 597,
+        "included_game_ids_sha256": "b04f791ca86a2d34b063662f6c448d0fd099153dd6db8abb92447f948bddafd9",
+        "issue201_common_team_count": 131,
+        "latest_included_kickoff_utc": "2022-10-05T23:00:00+00:00",
+        "scoreable_common_team_count": 131,
+        "season": 2022,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 4,
+        "checkpoint_phase": "other_checkpoint",
+        "context_converged": true,
+        "context_iterations": 72,
+        "context_max_message_delta": 9.952665774859426e-10,
+        "cutoff_utc": "2022-10-27T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 74,
+        "history_max_message_delta": 8.766585513075853e-10,
+        "included_game_count": 921,
+        "included_game_ids_sha256": "8d48ee919aa2341ecaafdf6920ab48ab0d9051794dbd17d9642e5ce5824854d2",
+        "issue201_common_team_count": 131,
+        "latest_included_kickoff_utc": "2022-10-23T03:00:00+00:00",
+        "scoreable_common_team_count": 131,
+        "season": 2022,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 5,
+        "checkpoint_phase": "pre_thanksgiving",
+        "context_converged": true,
+        "context_iterations": 92,
+        "context_max_message_delta": 8.908107307359359e-10,
+        "cutoff_utc": "2022-11-09T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 93,
+        "history_max_message_delta": 9.52345868832083e-10,
+        "included_game_count": 1146,
+        "included_game_ids_sha256": "b8d84f910a27f788a84cc8d73cda9ee21da0e59a22bc40033cf0c263ba40f4cb",
+        "issue201_common_team_count": 131,
+        "latest_included_kickoff_utc": "2022-11-06T02:30:00+00:00",
+        "scoreable_common_team_count": 131,
+        "season": 2022,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 6,
+        "checkpoint_phase": "rivalry_window",
+        "context_converged": true,
+        "context_iterations": 113,
+        "context_max_message_delta": 9.130046163541294e-10,
+        "cutoff_utc": "2022-11-23T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 114,
+        "history_max_message_delta": 9.754872187794916e-10,
+        "included_game_count": 1396,
+        "included_game_ids_sha256": "4b71e5878b4e42a317549514692190f1c209794dec91f80ee7a2ae29fd39112f",
+        "issue201_common_team_count": 131,
+        "latest_included_kickoff_utc": "2022-11-20T04:00:00+00:00",
+        "scoreable_common_team_count": 131,
+        "season": 2022,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 1,
+        "checkpoint_phase": "other_checkpoint",
+        "context_converged": true,
+        "context_iterations": 0,
+        "context_max_message_delta": 0.0,
+        "cutoff_utc": "2023-08-26T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 0,
+        "history_max_message_delta": 0.0,
+        "included_game_count": 0,
+        "included_game_ids_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "issue201_common_team_count": 133,
+        "latest_included_kickoff_utc": "",
+        "scoreable_common_team_count": 133,
+        "season": 2023,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 2,
+        "checkpoint_phase": "other_checkpoint",
+        "context_converged": true,
+        "context_iterations": 28,
+        "context_max_message_delta": 7.584039091179662e-10,
+        "cutoff_utc": "2023-09-17T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 28,
+        "history_max_message_delta": 9.575727918931243e-10,
+        "included_game_count": 250,
+        "included_game_ids_sha256": "4fe87692340d8b765f3dab80a9f717ffe6e46313389f208757770d8d68a685e4",
+        "issue201_common_team_count": 133,
+        "latest_included_kickoff_utc": "2023-09-15T23:00:00+00:00",
+        "scoreable_common_team_count": 133,
+        "season": 2023,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 3,
+        "checkpoint_phase": "other_checkpoint",
+        "context_converged": true,
+        "context_iterations": 46,
+        "context_max_message_delta": 9.841631537499396e-10,
+        "cutoff_utc": "2023-10-06T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 48,
+        "history_max_message_delta": 9.132413852919186e-10,
+        "included_game_count": 594,
+        "included_game_ids_sha256": "6d45e054d7e88764bb4fef9a4ce31c2c58a0461c335cef02e72bf0826e217bf3",
+        "issue201_common_team_count": 133,
+        "latest_included_kickoff_utc": "2023-10-01T02:30:00+00:00",
+        "scoreable_common_team_count": 133,
+        "season": 2023,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 4,
+        "checkpoint_phase": "other_checkpoint",
+        "context_converged": true,
+        "context_iterations": 67,
+        "context_max_message_delta": 8.660698269657985e-10,
+        "cutoff_utc": "2023-10-21T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 69,
+        "history_max_message_delta": 9.169858553037535e-10,
+        "included_game_count": 813,
+        "included_game_ids_sha256": "5f0bec94b864c311426fa5ebd8d47889b5dc3e80f810c40135fe5d2453a1a9e4",
+        "issue201_common_team_count": 133,
+        "latest_included_kickoff_utc": "2023-10-19T23:30:00+00:00",
+        "scoreable_common_team_count": 133,
+        "season": 2023,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 5,
+        "checkpoint_phase": "pre_thanksgiving",
+        "context_converged": true,
+        "context_iterations": 92,
+        "context_max_message_delta": 9.28423581070259e-10,
+        "cutoff_utc": "2023-11-04T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 94,
+        "history_max_message_delta": 9.094937511444634e-10,
+        "included_game_count": 1035,
+        "included_game_ids_sha256": "da92fcae43b302685f7e4fa71a454bbfa4260b54ef87d7d3426b91a447ab9857",
+        "issue201_common_team_count": 133,
+        "latest_included_kickoff_utc": "2023-11-02T23:30:00+00:00",
+        "scoreable_common_team_count": 133,
+        "season": 2023,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 6,
+        "checkpoint_phase": "rivalry_window",
+        "context_converged": true,
+        "context_iterations": 129,
+        "context_max_message_delta": 9.56282775188555e-10,
+        "cutoff_utc": "2023-11-18T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 131,
+        "history_max_message_delta": 9.315360427475383e-10,
+        "included_game_count": 1280,
+        "included_game_ids_sha256": "c1df5fcb181c3b64e0e582c4b82c1b0b051ed55a7e722fe327a05d213307b52d",
+        "issue201_common_team_count": 133,
+        "latest_included_kickoff_utc": "2023-11-16T00:00:00+00:00",
+        "scoreable_common_team_count": 133,
+        "season": 2023,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 1,
+        "checkpoint_phase": "other_checkpoint",
+        "context_converged": true,
+        "context_iterations": 0,
+        "context_max_message_delta": 0.0,
+        "cutoff_utc": "2024-08-24T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 0,
+        "history_max_message_delta": 0.0,
+        "included_game_count": 0,
+        "included_game_ids_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "issue201_common_team_count": 134,
+        "latest_included_kickoff_utc": "",
+        "scoreable_common_team_count": 134,
+        "season": 2024,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 2,
+        "checkpoint_phase": "other_checkpoint",
+        "context_converged": true,
+        "context_iterations": 31,
+        "context_max_message_delta": 9.231655717645282e-10,
+        "cutoff_utc": "2024-09-19T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 32,
+        "history_max_message_delta": 8.034843207438414e-10,
+        "included_game_count": 349,
+        "included_game_ids_sha256": "2bb63aa912f3d824f1c9cc05c13b4a95e1cf7bc1b6a61350555d1fc1926d759f",
+        "issue201_common_team_count": 134,
+        "latest_included_kickoff_utc": "2024-09-15T02:30:00+00:00",
+        "scoreable_common_team_count": 134,
+        "season": 2024,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 3,
+        "checkpoint_phase": "other_checkpoint",
+        "context_converged": true,
+        "context_iterations": 43,
+        "context_max_message_delta": 9.83437914436891e-10,
+        "cutoff_utc": "2024-10-06T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 45,
+        "history_max_message_delta": 9.283258745051981e-10,
+        "included_game_count": 573,
+        "included_game_ids_sha256": "b9143b594a241bc4e63ff65ccbd694fc81333f30d8988e1adbbf82be19d487d8",
+        "issue201_common_team_count": 134,
+        "latest_included_kickoff_utc": "2024-10-04T23:30:00+00:00",
+        "scoreable_common_team_count": 134,
+        "season": 2024,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 4,
+        "checkpoint_phase": "other_checkpoint",
+        "context_converged": true,
+        "context_iterations": 65,
+        "context_max_message_delta": 9.91071918976516e-10,
+        "cutoff_utc": "2024-10-24T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 65,
+        "history_max_message_delta": 9.009659823755456e-10,
+        "included_game_count": 890,
+        "included_game_ids_sha256": "ed585afbe1f8dc32c69e9ca1acd150eb63bfe5a8c89be8be0d30866d7318a210",
+        "issue201_common_team_count": 134,
+        "latest_included_kickoff_utc": "2024-10-22T23:30:00+00:00",
+        "scoreable_common_team_count": 134,
+        "season": 2024,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 5,
+        "checkpoint_phase": "pre_thanksgiving",
+        "context_converged": true,
+        "context_iterations": 87,
+        "context_max_message_delta": 9.111218585156067e-10,
+        "cutoff_utc": "2024-11-08T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 88,
+        "history_max_message_delta": 8.715921873125865e-10,
+        "included_game_count": 1113,
+        "included_game_ids_sha256": "7e9c9051b727f9f4e493523613df08f9dc27f273299e4c77132b6253bdbfd4bf",
+        "issue201_common_team_count": 134,
+        "latest_included_kickoff_utc": "2024-11-06T01:00:00+00:00",
+        "scoreable_common_team_count": 134,
+        "season": 2024,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 6,
+        "checkpoint_phase": "rivalry_window",
+        "context_converged": true,
+        "context_iterations": 107,
+        "context_max_message_delta": 9.705281300842472e-10,
+        "cutoff_utc": "2024-11-23T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 109,
+        "history_max_message_delta": 9.027953107310083e-10,
+        "included_game_count": 1341,
+        "included_game_ids_sha256": "63796c870c73296f6f4c415b4b4b28d73b0bd0cc7469921f3556a00909200ea2",
+        "issue201_common_team_count": 134,
+        "latest_included_kickoff_utc": "2024-11-21T00:00:00+00:00",
+        "scoreable_common_team_count": 134,
+        "season": 2024,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 1,
+        "checkpoint_phase": "other_checkpoint",
+        "context_converged": true,
+        "context_iterations": 0,
+        "context_max_message_delta": 0.0,
+        "cutoff_utc": "2025-08-23T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 0,
+        "history_max_message_delta": 0.0,
+        "included_game_count": 0,
+        "included_game_ids_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "issue201_common_team_count": 136,
+        "latest_included_kickoff_utc": "",
+        "scoreable_common_team_count": 136,
+        "season": 2025,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 2,
+        "checkpoint_phase": "other_checkpoint",
+        "context_converged": true,
+        "context_iterations": 31,
+        "context_max_message_delta": 7.084337977358857e-10,
+        "cutoff_utc": "2025-09-19T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 31,
+        "history_max_message_delta": 9.385655586058306e-10,
+        "included_game_count": 357,
+        "included_game_ids_sha256": "63afc758a8daddb1433c9c2e461b1684b748949e6d757ab6e2469a37c7a6b8e4",
+        "issue201_common_team_count": 136,
+        "latest_included_kickoff_utc": "2025-09-14T03:59:00+00:00",
+        "scoreable_common_team_count": 136,
+        "season": 2025,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 3,
+        "checkpoint_phase": "other_checkpoint",
+        "context_converged": true,
+        "context_iterations": 54,
+        "context_max_message_delta": 8.669796686122666e-10,
+        "cutoff_utc": "2025-10-08T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 55,
+        "history_max_message_delta": 9.383867016765635e-10,
+        "included_game_count": 676,
+        "included_game_ids_sha256": "4897878282a9b9cfafd09f69d94a628e35e342d8609f28b54f0113b75d377eba",
+        "issue201_common_team_count": 136,
+        "latest_included_kickoff_utc": "2025-10-05T02:30:00+00:00",
+        "scoreable_common_team_count": 136,
+        "season": 2025,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 4,
+        "checkpoint_phase": "other_checkpoint",
+        "context_converged": true,
+        "context_iterations": 72,
+        "context_max_message_delta": 9.20052450892328e-10,
+        "cutoff_utc": "2025-10-24T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 73,
+        "history_max_message_delta": 9.995927557904238e-10,
+        "included_game_count": 896,
+        "included_game_ids_sha256": "e89ac1e2c340dce3517913cc13414757a176c0ecd32f643771d0f45d478c76cc",
+        "issue201_common_team_count": 136,
+        "latest_included_kickoff_utc": "2025-10-22T23:30:00+00:00",
+        "scoreable_common_team_count": 136,
+        "season": 2025,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 5,
+        "checkpoint_phase": "pre_thanksgiving",
+        "context_converged": true,
+        "context_iterations": 93,
+        "context_max_message_delta": 9.151602253787416e-10,
+        "cutoff_utc": "2025-11-09T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 95,
+        "history_max_message_delta": 8.999972711531967e-10,
+        "included_game_count": 1121,
+        "included_game_ids_sha256": "3d10cad2cbd5368e52836d076240b6cc30a4f816ba9b812af246564ee4cd62d0",
+        "issue201_common_team_count": 136,
+        "latest_included_kickoff_utc": "2025-11-07T00:30:00+00:00",
+        "scoreable_common_team_count": 136,
+        "season": 2025,
+        "support_guard_exclusion_count": 0
+      },
+      {
+        "checkpoint": 6,
+        "checkpoint_phase": "rivalry_window",
+        "context_converged": true,
+        "context_iterations": 114,
+        "context_max_message_delta": 9.605340550722374e-10,
+        "cutoff_utc": "2025-11-23T23:59:59+00:00",
+        "history_converged": true,
+        "history_iterations": 117,
+        "history_max_message_delta": 9.170451897855258e-10,
+        "included_game_count": 1359,
+        "included_game_ids_sha256": "0fdfcdae2a589c931f09576732766ce4fdca7df2aa82a74f9a7f6c08c02075b8",
+        "issue201_common_team_count": 136,
+        "latest_included_kickoff_utc": "2025-11-21T00:30:00+00:00",
+        "scoreable_common_team_count": 136,
+        "season": 2025,
+        "support_guard_exclusion_count": 0
+      }
+    ],
+    "positive_support_guard": "gippyrank.research.context_incremental_information.cross_message_arms",
+    "score_decomposition": {
+      "direct_prior": "CH - HH",
+      "interaction": "CC - CH - HC + HH",
+      "native_total": "CC - HH",
+      "transmitted": "HC - HH"
+    },
+    "team_exclusion_count": 0,
+    "team_score_row_count": 12816
+  },
+  "experiment": "issue-194-part-a-historical-shared-context-diagnostics",
+  "exploratory_development": true,
+  "input_artifacts": {
+    "frozen192_evidence": {
+      "bytes": 591591,
+      "label": "issue_201_verified_original_checkpoint_evidence_ids",
+      "sha256": "e58faa21c41042a70c740489ccaa0e9c4a1240fe0bd7fe7f2f9f59df693317e5"
+    },
+    "issue200_fitted_models": {
+      "bytes": 96644,
+      "label": "issue_200_fitted_model_origin_manifest",
+      "sha256": "db7442a8c4ebc495bcdf47b5f646a6ef3ca1c1ef0c4782bcd91253df223d3304"
+    },
+    "issue200_manifest": {
+      "bytes": 49089,
+      "label": "issue_200_matched_pipeline_manifest",
+      "sha256": "12bb43aa49009a849b0ca3ebdf8110f92fa6c3bff6df1bcc32aa1e473c08dbe5"
+    },
+    "issue200_pipeline_bundle": {
+      "bytes": 9901447,
+      "label": "issue_200_matched_pipeline_bundle",
+      "sha256": "c5a80a6e5aa1415bacfe3cc373cfbbc6cfe02465f33be202d8ce26962cb8419c"
+    },
+    "issue201_forecast_summary": {
+      "bytes": 62725,
+      "label": "issue_201_existing_policy_future_game_crps",
+      "sha256": "c288b5ad6f024b3fba221536e2ed311639dd57da08478a4a758670eed1580ffd"
+    },
+    "issue201_frozen_checkpoint_safety": {
+      "bytes": 4168,
+      "label": "issue_201_target_safe_original_checkpoint_cohort",
+      "sha256": "d3f900a7df09648aae4d621b964ef5b04ca9f8c3ad9398a6df081900b22d3a19"
+    },
+    "issue201_frozen_target_scores": {
+      "bytes": 4984759,
+      "label": "issue_201_common_team_and_phase_labels",
+      "sha256": "a0ef9a532ba8b595daca3e79d70d5fc6337c131856eb2860d5e214aed4e175ae"
+    },
+    "issue201_manifest": {
+      "bytes": 22278,
+      "label": "issue_201_replay_and_scoring_manifest",
+      "sha256": "c6103fafc8fdf0e6abc074214013bcc07f3db5afa6cdf22b03de851f2fb5653d"
+    },
+    "issue201_protocol": {
+      "bytes": 11168,
+      "label": "issue_201_frozen_protocol",
+      "sha256": "ddea4e6dbf8d048c2a977d2a1f6d13f9e92c6948547afb115e0f81d54e677477"
+    },
+    "issue201_schedule_plan": {
+      "bytes": 6139318,
+      "label": "issue_201_score_blind_schedule_plan",
+      "sha256": "ec498d8d533b48c6e820b140be69d0310430ce50c4423c99379dc4c5d5018a93"
+    },
+    "issue204_pre_bowl_targets": {
+      "bytes": 10982583,
+      "label": "issue_204_corrected_pre_bowl_target_distributions",
+      "sha256": "6c610ea91ea60ce5da45e20baa7d636f91de52af974420f28a74eb0ec5d66e3f"
+    },
+    "issue204_target_manifest": {
+      "bytes": 45271,
+      "label": "issue_204_corrected_pre_bowl_target_manifest",
+      "sha256": "9686e56e729c97296a40711d68ed270d85da497f263d7728ae49c78e291e4241"
+    },
+    "part_a_protocol": {
+      "bytes": 9364,
+      "label": "issue_194_part_a_frozen_protocol",
+      "sha256": "f7d1d649e61e90b33a8c4e30c4c8086ea571e798c34321508790f12947effd21"
+    },
+    "raw_game_files": {
+      "2022-fcs.json": {
+        "bytes": 638280,
+        "label": "cfbd_game_schedule_2022-fcs.json",
+        "row_count": 822,
+        "sha256": "a20030838476f73d1f3aea63bba57ed1ecfa03f99e95cee5c2a780deeee05816"
+      },
+      "2022.json": {
+        "bytes": 702663,
+        "label": "cfbd_game_schedule_2022.json",
+        "row_count": 896,
+        "sha256": "3b4d9d353faa8ca9312534ded0747bdaa1cdcca21e89fcff1458980ab9f00747"
+      },
+      "2023-fcs.json": {
+        "bytes": 631762,
+        "label": "cfbd_game_schedule_2023-fcs.json",
+        "row_count": 811,
+        "sha256": "df5bb461fe8f3e302eb1d5f52896b509d7f5660364d3d43643c5c540e5476817"
+      },
+      "2023.json": {
+        "bytes": 713333,
+        "label": "cfbd_game_schedule_2023.json",
+        "row_count": 910,
+        "sha256": "417fb8191bec11e20fb2370e5510a2ff8a85cc67f07ec4371e873a935f9af35f"
+      },
+      "2024-fcs.json": {
+        "bytes": 680618,
+        "label": "cfbd_game_schedule_2024-fcs.json",
+        "row_count": 871,
+        "sha256": "3cb6327c61d807fd4b8dfe669f0905694afa67164770ab2e997773ea2aaa72c5"
+      },
+      "2024.json": {
+        "bytes": 723364,
+        "label": "cfbd_game_schedule_2024.json",
+        "row_count": 920,
+        "sha256": "9aeccada4e63f4ddf22d676eb55dbded71fd9bdb3ac07202ee44ed8f47d93f93"
+      },
+      "2025-fcs.json": {
+        "bytes": 689424,
+        "label": "cfbd_game_schedule_2025-fcs.json",
+        "row_count": 879,
+        "sha256": "38329f854c0df38d17b34d5f7841753d6638d7377592dcf743cb4e27cbd9d32f"
+      },
+      "2025.json": {
+        "bytes": 736267,
+        "label": "cfbd_game_schedule_2025.json",
+        "row_count": 934,
+        "sha256": "6312d8406be09dee0064069668fc40879dd0736ed3e49946c6c72192e6a0e4fc"
+      }
+    },
+    "schedule_windows": {
+      "bytes": 7893,
+      "label": "issue_198_schedule_phase_windows",
+      "sha256": "3b7b4bc951c4d47285c39da260ad860053834964afc31aeeb066e5e216638883"
+    },
+    "target_snapshot_dates": {
+      "bytes": 5743,
+      "label": "issue_200_target_snapshot_dates",
+      "sha256": "43d8d8b327d8c57677890a7b15e7db4f77bbc11e3a209f63ffd1531c4c9419c0"
+    }
+  },
+  "issue200_provenance": {
+    "bundle_manifest_expected_sha256": "c5a80a6e5aa1415bacfe3cc373cfbbc6cfe02465f33be202d8ce26962cb8419c",
+    "bundle_sha256": "c5a80a6e5aa1415bacfe3cc373cfbbc6cfe02465f33be202d8ce26962cb8419c",
+    "fit_origin_by_season_policy": {
+      "2022": {
+        "existing": {
+          "forward_only": true,
+          "trained_through_season": 2021,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        },
+        "pre_bowl": {
+          "forward_only": true,
+          "trained_through_season": 2021,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        }
+      },
+      "2023": {
+        "existing": {
+          "forward_only": true,
+          "trained_through_season": 2022,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        },
+        "pre_bowl": {
+          "forward_only": true,
+          "trained_through_season": 2022,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        }
+      },
+      "2024": {
+        "existing": {
+          "forward_only": true,
+          "trained_through_season": 2023,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        },
+        "pre_bowl": {
+          "forward_only": true,
+          "trained_through_season": 2023,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        }
+      },
+      "2025": {
+        "existing": {
+          "forward_only": true,
+          "trained_through_season": 2024,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        },
+        "pre_bowl": {
+          "forward_only": true,
+          "trained_through_season": 2024,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        }
+      }
+    },
+    "fitted_models_sha256": "db7442a8c4ebc495bcdf47b5f646a6ef3ca1c1ef0c4782bcd91253df223d3304",
+    "fitted_prior_arm_count": 4,
+    "manifest_sha256": "12bb43aa49009a849b0ca3ebdf8110f92fa6c3bff6df1bcc32aa1e473c08dbe5",
+    "target_seasons": [
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "training_seasons": [
+      2003,
+      2004,
+      2005,
+      2006,
+      2007,
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021
+    ]
+  },
+  "issue201_protocol_sha256": "ddea4e6dbf8d048c2a977d2a1f6d13f9e92c6948547afb115e0f81d54e677477",
+  "issue204_target_provenance": {
+    "bytes": 10982583,
+    "manifest_sha256": "9686e56e729c97296a40711d68ed270d85da497f263d7728ae49c78e291e4241",
+    "path_label": "issue_204_corrected_pre_bowl_target_distributions.csv",
+    "row_count_by_season": {
+      "2022": 131,
+      "2023": 133,
+      "2024": 134,
+      "2025": 136
+    },
+    "sha256": "6c610ea91ea60ce5da45e20baa7d636f91de52af974420f28a74eb0ec5d66e3f"
+  },
+  "outputs": {
+    "checkpoint_coverage.csv": {
+      "bytes": 4613,
+      "sha256": "a613e32d40c2aaee6941cd9da8b54929e27954977b682cf86a5a49fcd8d63ffb"
+    },
+    "checkpoint_effects.csv": {
+      "bytes": 26896,
+      "sha256": "875b20af4bb41e881c109e18a2678aa5b1e0844cf2d164504b1464db69f922a1"
+    },
+    "checkpoint_evidence.csv": {
+      "bytes": 5232,
+      "sha256": "3b94c7d4d7a6c7760ac7c3b20b8c499b09330577b84086d162043fe3614324ab"
+    },
+    "checkpoint_exclusions.csv": {
+      "bytes": 6,
+      "sha256": "45fd2f9df187bc411dc80df5c4c4844ac00f4dd69bc69453f1893a5d143433d6"
+    },
+    "checkpoint_phase_summary.csv": {
+      "bytes": 14177,
+      "sha256": "f81c670c5914e5af3047ee352e5fbd7040cfe4d9a3ff338c519b37d52aa36c63"
+    },
+    "checkpoint_scores.csv": {
+      "bytes": 5819760,
+      "sha256": "dcb2a7c7418b31a4b279fabf5ab44c9ef73280828b1bdd8f207ea040496473cd"
+    },
+    "checkpoint_season_summary.csv": {
+      "bytes": 2202,
+      "sha256": "93313dadda15459a25563036eb71e9dad4dea2bb3e6bb417b50c2c4d92039ba6"
+    },
+    "future_game_crps_context.csv": {
+      "bytes": 10477,
+      "sha256": "aa57c3b31679eaefde069e16afaec76a55870d8c287eb9975d47df0e75b1cbe5"
+    },
+    "preseason_pair_comparisons.csv": {
+      "bytes": 2302988,
+      "sha256": "a7129cf482779dcc03865630342f13657df4210ed4eaf8d9dae32acb6581bf57"
+    },
+    "preseason_pair_exclusions.csv": {
+      "bytes": 6,
+      "sha256": "45fd2f9df187bc411dc80df5c4c4844ac00f4dd69bc69453f1893a5d143433d6"
+    },
+    "preseason_pair_summary.csv": {
+      "bytes": 3314,
+      "sha256": "b419ad29cdeb3277f2f1d84d3f092200a84d4406ea0510117697c8bbcde7e542"
+    },
+    "preseason_pair_universe.csv": {
+      "bytes": 5971832,
+      "sha256": "2b616623238ce80d14d85272844eb97d846cbf2b659d8e79d9ac8a1d17caf317"
+    },
+    "preseason_team_exclusions.csv": {
+      "bytes": 6,
+      "sha256": "45fd2f9df187bc411dc80df5c4c4844ac00f4dd69bc69453f1893a5d143433d6"
+    },
+    "preseason_team_scores.csv": {
+      "bytes": 108886,
+      "sha256": "99dbd8abf675bbab2bbf72dc900f8fb0b146f9455c17adc2999a2492e37ed5c8"
+    },
+    "report.md": {
+      "bytes": 12408,
+      "sha256": "d4c95e68b80571b8402e5f38ab85c5f64e4541e05e2fdadf716c2d4ad8aa22bf"
+    }
+  },
+  "part_b_status": "pending",
+  "preseason_pair_design": {
+    "features": [
+      "pair_expected_rank_level",
+      "pair_expected_rank_level_gap",
+      "pair_history_context_disagreement",
+      "pair_history_context_disagreement_gap",
+      "pair_schedule_degree_level",
+      "pair_schedule_degree_gap"
+    ],
+    "historical_co_movement_status": "unresolved",
+    "matched_pair_count_by_season": {
+      "2022": 729,
+      "2023": 747,
+      "2024": 749,
+      "2025": 755
+    },
+    "matching_method": "deterministic farthest-first greedy one-to-one nearest non-opponent pair in six standardized preseason/schedule features",
+    "pair_universe_rows": 35384,
+    "pairing_exclusion_count": 0,
+    "scheduled_opponent_pairs": 2980,
+    "season_clusters": 4,
+    "significance_tests": "none",
+    "universe_definition": "all unordered pairs in each matched issue200 existing-prior FBS population"
+  },
+  "protocol_sha256": "f7d1d649e61e90b33a8c4e30c4c8086ea571e798c34321508790f12947effd21",
+  "schema_version": 1,
+  "scope": "part_a_only"
+}
