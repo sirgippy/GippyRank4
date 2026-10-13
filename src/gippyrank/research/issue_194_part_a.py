@@ -813,40 +813,48 @@ def _match_schedule_pairs(
             pair_rows[row_index[pair]]["match_status"] = "available_not_selected"
         return
 
-    control_indices = np.asarray([row_index[pair] for pair in controls], dtype=int)
-    nearest_distance: dict[tuple[str, str], float] = {}
-    for pair in opponents:
-        vector = standardized[row_index[pair]]
-        distances = np.linalg.norm(standardized[control_indices] - vector, axis=1)
-        nearest_distance[pair] = float(distances.min())
-    assignment_order = sorted(
-        opponents,
-        key=lambda pair: (
-            -nearest_distance[pair],
-            _team_id_key(pair[0]),
-            _team_id_key(pair[1]),
-        ),
+    opponent_row_indices = np.asarray(
+        [row_index[pair] for pair in opponents], dtype=int
     )
-    used_controls: set[tuple[str, str]] = set()
-    for match_number, opponent in enumerate(assignment_order, start=1):
-        opponent_index = row_index[opponent]
-        available = [pair for pair in controls if pair not in used_controls]
-        if not available:
-            pair_rows[opponent_index]["match_status"] = "unmatched_no_unused_control"
-            continue
-        available_indices = np.asarray(
-            [row_index[pair] for pair in available], dtype=int
+    control_row_indices = np.asarray([row_index[pair] for pair in controls], dtype=int)
+    distance_matrix = np.linalg.norm(
+        standardized[opponent_row_indices, None, :]
+        - standardized[None, control_row_indices, :],
+        axis=2,
+    )
+    nearest_control_positions = np.argmin(distance_matrix, axis=1)
+    nearest_distances = distance_matrix[
+        np.arange(len(opponents)), nearest_control_positions
+    ]
+    remaining_opponents = np.ones(len(opponents), dtype=bool)
+    available_controls = np.ones(len(controls), dtype=bool)
+    match_number = 0
+    while remaining_opponents.any():
+        if not available_controls.any():
+            for opponent_index in np.flatnonzero(remaining_opponents):
+                opponent = opponents[opponent_index]
+                pair_rows[row_index[opponent]]["match_status"] = (
+                    "unmatched_no_unused_control"
+                )
+            break
+
+        opponent_index = min(
+            np.flatnonzero(remaining_opponents),
+            key=lambda index: (
+                -nearest_distances[index],
+                _team_id_key(opponents[index][0]),
+                _team_id_key(opponents[index][1]),
+            ),
         )
-        distances = np.linalg.norm(
-            standardized[available_indices] - standardized[opponent_index], axis=1
-        )
-        best_distance = float(distances.min())
-        # `available` is canonical-ID sorted, so the first exact tie is stable.
-        chosen_offset = int(np.flatnonzero(distances == best_distance)[0])
-        control = available[chosen_offset]
-        used_controls.add(control)
+        opponent = opponents[opponent_index]
+        control_index = int(nearest_control_positions[opponent_index])
+        control = controls[control_index]
+        best_distance = float(nearest_distances[opponent_index])
+        remaining_opponents[opponent_index] = False
+        available_controls[control_index] = False
+        match_number += 1
         match_id = f"match-{season}-{match_number:04d}-{opponent[0]}-{opponent[1]}"
-        opponent_row = pair_rows[opponent_index]
+        opponent_row = pair_rows[row_index[opponent]]
         control_row = pair_rows[row_index[control]]
         opponent_row.update(
             {
@@ -854,20 +862,34 @@ def _match_schedule_pairs(
                 "match_id": match_id,
                 "matched_control_pair_id": control_row["pair_id"],
                 "matched_distance": best_distance,
-                "nearest_control_distance_before_assignment": nearest_distance[
-                    opponent
-                ],
+                "nearest_control_distance_before_assignment": best_distance,
             }
         )
+
+        # Only opponents whose nearest control was consumed need new priorities.
+        affected_opponents = np.flatnonzero(
+            remaining_opponents & (nearest_control_positions == control_index)
+        )
+        if affected_opponents.size and available_controls.any():
+            remaining_control_positions = np.flatnonzero(available_controls)
+            candidate_distances = distance_matrix[
+                np.ix_(affected_opponents, remaining_control_positions)
+            ]
+            nearest_offsets = np.argmin(candidate_distances, axis=1)
+            nearest_control_positions[affected_opponents] = remaining_control_positions[
+                nearest_offsets
+            ]
+            nearest_distances[affected_opponents] = candidate_distances[
+                np.arange(len(affected_opponents)), nearest_offsets
+            ]
+
         control_row.update(
             {
                 "match_status": "selected_nonopponent_control",
                 "match_id": match_id,
                 "matched_opponent_pair_id": opponent_row["pair_id"],
                 "matched_distance": best_distance,
-                "nearest_control_distance_before_assignment": nearest_distance[
-                    opponent
-                ],
+                "nearest_control_distance_before_assignment": best_distance,
             }
         )
     for pair in controls:
@@ -938,6 +960,28 @@ def _preseason_team_scores(
                 }
             )
     return team_rows, exclusions
+
+
+def _classify_comovement(
+    context_by_season: Mapping[int, float], history_by_season: Mapping[int, float]
+) -> str:
+    if any(
+        season not in context_by_season or season not in history_by_season
+        for season in SEASONS
+    ):
+        return "unresolved"
+
+    jointly_supportive_count = sum(
+        context_by_season[season] > 0
+        and context_by_season[season] > history_by_season[season]
+        for season in SEASONS
+    )
+    jointly_unsupportive_count = len(SEASONS) - jointly_supportive_count
+    if jointly_supportive_count >= 3:
+        return "descriptively consistent"
+    if jointly_unsupportive_count >= 3:
+        return "descriptively unsupported"
+    return "unresolved"
 
 
 def _preseason_pair_results(
@@ -1194,23 +1238,7 @@ def _preseason_pair_results(
         and isinstance(row["season"], int)
         and row["opponent_minus_control_comovement"] is not None
     }
-    if len(context_by_season) != len(SEASONS) or len(history_by_season) != len(SEASONS):
-        status = "unresolved"
-    else:
-        context_positive = sum(context_by_season[s] > 0 for s in SEASONS)
-        context_greater = sum(
-            context_by_season[s] > history_by_season[s] for s in SEASONS
-        )
-        context_nonpositive = sum(context_by_season[s] <= 0 for s in SEASONS)
-        context_not_greater = sum(
-            context_by_season[s] <= history_by_season[s] for s in SEASONS
-        )
-        if context_positive >= 3 and context_greater >= 3:
-            status = "descriptively consistent"
-        elif context_nonpositive >= 3 or context_not_greater >= 3:
-            status = "descriptively unsupported"
-        else:
-            status = "unresolved"
+    status = _classify_comovement(context_by_season, history_by_season)
     return comparison_rows, group_rows, status
 
 
@@ -1366,7 +1394,7 @@ def _render_report(
             "",
             "## Preseason error co-movement",
             "",
-            f"Historical co-movement is classified as **{pair_status}** under the frozen directional rule. The table gives opponent and matched-control means with their differences; positive centered residual-product differences mean greater same-direction co-movement among scheduled opponents.",
+            f"Historical co-movement is classified as **{pair_status}** under the frozen directional rule. A season supports the rule only when Context's opponent-minus-matched-control residual co-movement is positive and greater than History's in that same season; a season failing either condition counts as non-supporting. The table gives opponent and matched-control means with their differences; positive centered residual-product differences mean greater same-direction co-movement among scheduled opponents.",
             "",
             "| Season | Model | Matched pairs | Pair measure | Opponent | Control | Opponent − control |",
             "| --- | --- | ---: | --- | ---: | ---: | ---: |",

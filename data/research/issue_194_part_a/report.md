@@ -94,50 +94,50 @@ The direct-prior contrast is `CH − HH`, transmitted is `HC − HH`, and intera
 
 ## Preseason error co-movement
 
-Historical co-movement is classified as **unresolved** under the frozen directional rule. The table gives opponent and matched-control means with their differences; positive centered residual-product differences mean greater same-direction co-movement among scheduled opponents.
+Historical co-movement is classified as **descriptively unsupported** under the frozen directional rule. A season supports the rule only when Context's opponent-minus-matched-control residual co-movement is positive and greater than History's in that same season; a season failing either condition counts as non-supporting. The table gives opponent and matched-control means with their differences; positive centered residual-product differences mean greater same-direction co-movement among scheduled opponents.
 
 | Season | Model | Matched pairs | Pair measure | Opponent | Control | Opponent − control |
 | --- | --- | ---: | --- | ---: | ---: | ---: |
-| 2022 | History_existing | 729 | full-PMF NLL | +4.515518 | +4.537724 | -0.022207 |
-| 2022 | History_existing | 729 | signed residual | +0.002235 | -0.001267 | +0.003502 |
-| 2022 | History_existing | 729 | centered residual product | +0.000710 | -0.004438 | +0.005148 |
-| 2022 | History_existing | 729 | expected-rank residual | -0.031260 | +0.062465 | -0.093724 |
-| 2022 | Context_existing | 729 | full-PMF NLL | +4.449680 | +4.464609 | -0.014928 |
-| 2022 | Context_existing | 729 | signed residual | +0.004241 | -0.001226 | +0.005466 |
-| 2022 | Context_existing | 729 | centered residual product | -0.000422 | -0.002723 | +0.002301 |
-| 2022 | Context_existing | 729 | expected-rank residual | -0.056355 | +0.043414 | -0.099769 |
-| 2023 | History_existing | 747 | full-PMF NLL | +4.492340 | +4.482663 | +0.009677 |
-| 2023 | History_existing | 747 | signed residual | -0.006445 | +0.000250 | -0.006694 |
-| 2023 | History_existing | 747 | centered residual product | -0.002247 | +0.000082 | -0.002329 |
-| 2023 | History_existing | 747 | expected-rank residual | +0.375752 | -0.299944 | +0.675696 |
-| 2023 | Context_existing | 747 | full-PMF NLL | +4.472710 | +4.455728 | +0.016981 |
-| 2023 | Context_existing | 747 | signed residual | +0.019612 | +0.025671 | -0.006059 |
-| 2023 | Context_existing | 747 | centered residual product | +0.002245 | +0.000573 | +0.001672 |
-| 2023 | Context_existing | 747 | expected-rank residual | -1.336862 | -1.902435 | +0.565573 |
-| 2024 | History_existing | 749 | full-PMF NLL | +4.575078 | +4.583489 | -0.008411 |
-| 2024 | History_existing | 749 | signed residual | -0.004682 | -0.002560 | -0.002122 |
-| 2024 | History_existing | 749 | centered residual product | -0.004653 | -0.001663 | -0.002990 |
-| 2024 | History_existing | 749 | expected-rank residual | +0.359402 | +0.135346 | +0.224057 |
-| 2024 | Context_existing | 749 | full-PMF NLL | +4.522110 | +4.524358 | -0.002249 |
-| 2024 | Context_existing | 749 | signed residual | +0.011048 | +0.012846 | -0.001798 |
-| 2024 | Context_existing | 749 | centered residual product | -0.004674 | -0.000851 | -0.003823 |
-| 2024 | Context_existing | 749 | expected-rank residual | -0.646761 | -0.933339 | +0.286578 |
-| 2025 | History_existing | 755 | full-PMF NLL | +4.559202 | +4.561001 | -0.001800 |
-| 2025 | History_existing | 755 | signed residual | +0.000714 | +0.000570 | +0.000143 |
-| 2025 | History_existing | 755 | centered residual product | -0.003277 | +0.003697 | -0.006973 |
-| 2025 | History_existing | 755 | expected-rank residual | +0.207194 | +0.021107 | +0.186087 |
-| 2025 | Context_existing | 755 | full-PMF NLL | +4.534310 | +4.531811 | +0.002499 |
-| 2025 | Context_existing | 755 | signed residual | -0.001208 | -0.004024 | +0.002817 |
-| 2025 | Context_existing | 755 | centered residual product | -0.003515 | +0.002402 | -0.005916 |
-| 2025 | Context_existing | 755 | expected-rank residual | +0.631326 | +0.640364 | -0.009038 |
-| equal_season_mean | History_existing | equal-season mean | full-PMF NLL | +4.535534 | +4.541219 | -0.005685 |
-| equal_season_mean | History_existing | equal-season mean | signed residual | -0.002044 | -0.000752 | -0.001293 |
-| equal_season_mean | History_existing | equal-season mean | centered residual product | -0.002367 | -0.000581 | -0.001786 |
-| equal_season_mean | History_existing | equal-season mean | expected-rank residual | +0.227772 | -0.020257 | +0.248029 |
-| equal_season_mean | Context_existing | equal-season mean | full-PMF NLL | +4.494702 | +4.494127 | +0.000576 |
-| equal_season_mean | Context_existing | equal-season mean | signed residual | +0.008423 | +0.008317 | +0.000107 |
-| equal_season_mean | Context_existing | equal-season mean | centered residual product | -0.001591 | -0.000150 | -0.001441 |
-| equal_season_mean | Context_existing | equal-season mean | expected-rank residual | -0.352163 | -0.537999 | +0.185836 |
+| 2022 | History_existing | 729 | full-PMF NLL | +4.515518 | +4.538781 | -0.023264 |
+| 2022 | History_existing | 729 | signed residual | +0.002235 | -0.001444 | +0.003679 |
+| 2022 | History_existing | 729 | centered residual product | +0.000710 | -0.004317 | +0.005027 |
+| 2022 | History_existing | 729 | expected-rank residual | -0.031260 | +0.076728 | -0.107988 |
+| 2022 | Context_existing | 729 | full-PMF NLL | +4.449680 | +4.465089 | -0.015408 |
+| 2022 | Context_existing | 729 | signed residual | +0.004241 | -0.001276 | +0.005517 |
+| 2022 | Context_existing | 729 | centered residual product | -0.000422 | -0.002661 | +0.002239 |
+| 2022 | Context_existing | 729 | expected-rank residual | -0.056355 | +0.043314 | -0.099669 |
+| 2023 | History_existing | 747 | full-PMF NLL | +4.492340 | +4.481801 | +0.010539 |
+| 2023 | History_existing | 747 | signed residual | -0.006445 | +0.001000 | -0.007445 |
+| 2023 | History_existing | 747 | centered residual product | -0.002247 | -0.000156 | -0.002091 |
+| 2023 | History_existing | 747 | expected-rank residual | +0.375752 | -0.379243 | +0.754995 |
+| 2023 | Context_existing | 747 | full-PMF NLL | +4.472710 | +4.454891 | +0.017818 |
+| 2023 | Context_existing | 747 | signed residual | +0.019612 | +0.026362 | -0.006750 |
+| 2023 | Context_existing | 747 | centered residual product | +0.002245 | +0.000318 | +0.001927 |
+| 2023 | Context_existing | 747 | expected-rank residual | -1.336862 | -1.974134 | +0.637272 |
+| 2024 | History_existing | 749 | full-PMF NLL | +4.575078 | +4.582631 | -0.007553 |
+| 2024 | History_existing | 749 | signed residual | -0.004682 | -0.002337 | -0.002345 |
+| 2024 | History_existing | 749 | centered residual product | -0.004653 | -0.001685 | -0.002969 |
+| 2024 | History_existing | 749 | expected-rank residual | +0.359402 | +0.105170 | +0.254233 |
+| 2024 | Context_existing | 749 | full-PMF NLL | +4.522110 | +4.522922 | -0.000813 |
+| 2024 | Context_existing | 749 | signed residual | +0.011048 | +0.013077 | -0.002030 |
+| 2024 | Context_existing | 749 | centered residual product | -0.004674 | -0.000895 | -0.003779 |
+| 2024 | Context_existing | 749 | expected-rank residual | -0.646761 | -0.971630 | +0.324869 |
+| 2025 | History_existing | 755 | full-PMF NLL | +4.559202 | +4.560157 | -0.000955 |
+| 2025 | History_existing | 755 | signed residual | +0.000714 | +0.000933 | -0.000220 |
+| 2025 | History_existing | 755 | centered residual product | -0.003277 | +0.003805 | -0.007082 |
+| 2025 | History_existing | 755 | expected-rank residual | +0.207194 | -0.023833 | +0.231028 |
+| 2025 | Context_existing | 755 | full-PMF NLL | +4.534310 | +4.530519 | +0.003791 |
+| 2025 | Context_existing | 755 | signed residual | -0.001208 | -0.003547 | +0.002339 |
+| 2025 | Context_existing | 755 | centered residual product | -0.003515 | +0.002414 | -0.005928 |
+| 2025 | Context_existing | 755 | expected-rank residual | +0.631326 | +0.587097 | +0.044229 |
+| equal_season_mean | History_existing | equal-season mean | full-PMF NLL | +4.535534 | +4.540842 | -0.005308 |
+| equal_season_mean | History_existing | equal-season mean | signed residual | -0.002044 | -0.000462 | -0.001582 |
+| equal_season_mean | History_existing | equal-season mean | centered residual product | -0.002367 | -0.000588 | -0.001779 |
+| equal_season_mean | History_existing | equal-season mean | expected-rank residual | +0.227772 | -0.055295 | +0.283067 |
+| equal_season_mean | Context_existing | equal-season mean | full-PMF NLL | +4.494702 | +4.493355 | +0.001347 |
+| equal_season_mean | Context_existing | equal-season mean | signed residual | +0.008423 | +0.008654 | -0.000231 |
+| equal_season_mean | Context_existing | equal-season mean | centered residual product | -0.001591 | -0.000206 | -0.001385 |
+| equal_season_mean | Context_existing | equal-season mean | expected-rank residual | -0.352163 | -0.578838 | +0.226675 |
 
 Four seasons are only four season clusters. The pair universe overlaps at teams, so no p-values or independent-pair uncertainty claims are reported. The matched null accounts for pair-level schedule-degree level and difference plus preseason rank-level/disagreement features; it does not enforce exact degree balance and is not randomized. Similar levels, schedule structure, shared ranking-measurement error, and common fitted coefficients remain alternative explanations.
 

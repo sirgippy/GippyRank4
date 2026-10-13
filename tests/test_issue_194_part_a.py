@@ -9,6 +9,7 @@ from gippyrank.research.context_incremental_information import cross_message_arm
 from gippyrank.research.issue_194_part_a import (
     EXPECTED_SAFE_CUTOFFS,
     PAIR_FEATURE_NAMES,
+    _classify_comovement,
     _crossed_effect_rows,
     _match_schedule_pairs,
     _mean_by_checkpoint,
@@ -120,6 +121,69 @@ def test_pair_matching_is_deterministic_and_one_to_one() -> None:
     }
     assert all(match_id.startswith("match-2024-") for match_id in match_ids)
     assert len(PAIR_FEATURE_NAMES) == feature_matrix.shape[1]
+
+
+def test_pair_matching_recomputes_priority_after_consuming_a_control() -> None:
+    pair_keys = [
+        ("1", "2"),  # control at 0
+        ("1", "3"),  # control at 10
+        ("1", "4"),  # opponent at 1
+        ("2", "3"),  # opponent at 2
+        ("3", "4"),  # opponent at 5
+    ]
+    opponents = {("1", "4"), ("2", "3"), ("3", "4")}
+    pair_rows = [
+        {
+            "season": 2024,
+            "pair_id": f"2024:{first}:{second}",
+            "team_id_1": first,
+            "team_id_2": second,
+            "is_scheduled_opponent_pair": pair in opponents,
+        }
+        for pair in pair_keys
+        for first, second in [pair]
+    ]
+    feature_matrix = np.zeros((len(pair_keys), len(PAIR_FEATURE_NAMES)))
+    feature_matrix[:, 0] = [0.0, 10.0, 1.0, 2.0, 5.0]
+
+    _match_schedule_pairs(pair_rows, pair_keys, feature_matrix, season=2024)
+
+    matched = {
+        row["pair_id"]: row
+        for row in pair_rows
+        if row["match_status"] == "matched_opponent"
+    }
+    assert matched["2024:3:4"]["match_id"].endswith("0001-3-4")
+    assert matched["2024:1:4"]["match_id"].endswith("0002-1-4")
+    assert matched["2024:3:4"]["matched_control_pair_id"] == "2024:1:2"
+    assert matched["2024:1:4"]["matched_control_pair_id"] == "2024:1:3"
+    assert matched["2024:1:4"][
+        "nearest_control_distance_before_assignment"
+    ] == pytest.approx(9.0 / np.std(feature_matrix[:, 0]))
+    unmatched = next(row for row in pair_rows if row["pair_id"] == "2024:2:3")
+    assert unmatched["match_status"] == "unmatched_no_unused_control"
+
+
+def test_comovement_classification_requires_joint_conditions_in_same_seasons() -> None:
+    history = {2022: 0.01, 2023: 0.01, 2024: 0.03, 2025: -0.03}
+    context = {2022: 0.02, 2023: 0.02, 2024: 0.02, 2025: -0.02}
+
+    assert _classify_comovement(context, history) == "unresolved"
+
+
+def test_comovement_classification_counts_joint_failures_by_season() -> None:
+    # Positivity fails in 2022–2023; superiority fails in 2024–2025.
+    context = {2022: -1.0, 2023: -2.0, 2024: 1.0, 2025: 2.0}
+    history = {2022: -2.0, 2023: -3.0, 2024: 3.0, 2025: 3.0}
+
+    assert _classify_comovement(context, history) == "descriptively unsupported"
+
+
+def test_comovement_classification_accepts_three_jointly_supportive_seasons() -> None:
+    context = {2022: 0.1, 2023: 0.1, 2024: 0.1, 2025: -0.1}
+    history = {2022: 0.0, 2023: 0.0, 2024: 0.0, 2025: -0.2}
+
+    assert _classify_comovement(context, history) == "descriptively consistent"
 
 
 def test_checkpoint_summary_weights_checkpoint_means_equally() -> None:

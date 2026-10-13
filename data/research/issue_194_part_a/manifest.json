@@ -44,9 +44,9 @@
   },
   "code_artifacts": {
     "research_module": {
-      "bytes": 91106,
+      "bytes": 92293,
       "label": "issue_194_part_a_research_module",
-      "sha256": "5cd280fee53866711a5c141e69b175b006c16f9b7140ebda2af781dc6f0cbfb7"
+      "sha256": "5b3e7d61e057fdbc23ea725fb9fbdbcfefbc08ef79c294829bcb698fcd4f255f"
     },
     "runner_script": {
       "bytes": 2886,
@@ -570,9 +570,9 @@
       "sha256": "9686e56e729c97296a40711d68ed270d85da497f263d7728ae49c78e291e4241"
     },
     "part_a_protocol": {
-      "bytes": 9364,
+      "bytes": 9515,
       "label": "issue_194_part_a_frozen_protocol",
-      "sha256": "f7d1d649e61e90b33a8c4e30c4c8086ea571e798c34321508790f12947effd21"
+      "sha256": "1eb4511e3266c18831b4ce3f15936e6ec78182e47ef65ffbe95a0a725fe7db72"
     },
     "raw_game_files": {
       "2022-fcs.json": {
@@ -926,20 +926,20 @@
       "sha256": "aa57c3b31679eaefde069e16afaec76a55870d8c287eb9975d47df0e75b1cbe5"
     },
     "preseason_pair_comparisons.csv": {
-      "bytes": 2302988,
-      "sha256": "a7129cf482779dcc03865630342f13657df4210ed4eaf8d9dae32acb6581bf57"
+      "bytes": 2302966,
+      "sha256": "d224accab6d4b6e43614efc3283304821a3a698322767acc1f68463bccd718fa"
     },
     "preseason_pair_exclusions.csv": {
       "bytes": 6,
       "sha256": "45fd2f9df187bc411dc80df5c4c4844ac00f4dd69bc69453f1893a5d143433d6"
     },
     "preseason_pair_summary.csv": {
-      "bytes": 3314,
-      "sha256": "b419ad29cdeb3277f2f1d84d3f092200a84d4406ea0510117697c8bbcde7e542"
+      "bytes": 3309,
+      "sha256": "7496ca3f56100d731e413acddba62f574e0d2bbdbe3f0df18e50ee7bef89a490"
     },
     "preseason_pair_universe.csv": {
-      "bytes": 5971832,
-      "sha256": "2b616623238ce80d14d85272844eb97d846cbf2b659d8e79d9ac8a1d17caf317"
+      "bytes": 5971687,
+      "sha256": "5a371c1546177d0ac491e25623cf155415e4da1c2901d2bd3e861b21e36fca9a"
     },
     "preseason_team_exclusions.csv": {
       "bytes": 6,
@@ -950,8 +950,8 @@
       "sha256": "99dbd8abf675bbab2bbf72dc900f8fb0b146f9455c17adc2999a2492e37ed5c8"
     },
     "report.md": {
-      "bytes": 12408,
-      "sha256": "d4c95e68b80571b8402e5f38ab85c5f64e4541e05e2fdadf716c2d4ad8aa22bf"
+      "bytes": 12642,
+      "sha256": "9059e7a02da501430b40e5a0bee6f5e969b348ed4ce8c9ec223d651517d8bd12"
     }
   },
   "part_b_status": "pending",
@@ -964,7 +964,7 @@
       "pair_schedule_degree_level",
       "pair_schedule_degree_gap"
     ],
-    "historical_co_movement_status": "unresolved",
+    "historical_co_movement_status": "descriptively unsupported",
     "matched_pair_count_by_season": {
       "2022": 729,
       "2023": 747,
@@ -979,7 +979,7 @@
     "significance_tests": "none",
     "universe_definition": "all unordered pairs in each matched issue200 existing-prior FBS population"
   },
-  "protocol_sha256": "f7d1d649e61e90b33a8c4e30c4c8086ea571e798c34321508790f12947effd21",
+  "protocol_sha256": "1eb4511e3266c18831b4ce3f15936e6ec78182e47ef65ffbe95a0a725fe7db72",
   "schema_version": 1,
   "scope": "part_a_only"
 }

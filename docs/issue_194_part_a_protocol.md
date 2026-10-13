@@ -137,7 +137,8 @@ feature zero weight). Use Euclidean distance in this six-feature space.
 Matching is deterministic and outcome-blind: prioritize opponent pairs in
 descending order of their nearest available-control distance, then canonical
 team IDs; assign the nearest remaining non-opponent pair, with canonical team
-IDs as the distance tie-break. Use no caliper. Record every pair, match,
+IDs as the distance tie-break. Recompute priorities after each assignment
+using the remaining controls. Use no caliper. Record every pair, match,
 distance, multiplicity, and exclusion in the machine-readable pairing file.
 This same matched pair set is used for History and Context. The matched
 non-opponent set is the descriptive null; matching accounts for pair-level
@@ -150,11 +151,12 @@ season/model. Give seasons equal weight in the across-season descriptive
 summary. Do not report p-values or treat overlapping pairs as independent.
 The four seasons are only four season clusters.
 
-Classify historical co-movement as **descriptively consistent** with shared
-Context errors only if Context's opponent-minus-matched-control residual
-co-movement is positive and greater than History's in at least three of four
-seasons. Classify it as **descriptively unsupported** if either condition fails
-in at least three seasons; otherwise call it **unresolved**. This is a
+Evaluate both conditions within each season. A season is supportive only when
+Context's opponent-minus-matched-control residual co-movement is positive and
+greater than History's. Classify historical co-movement as **descriptively
+consistent** with shared Context errors when at least three seasons are
+supportive; classify it as **descriptively unsupported** when at least three
+seasons fail either condition; otherwise call it **unresolved**. This is a
 directional summary, not proof of cause. Similar team levels, schedule
 structure, common ranking-measurement error, and shared fitted coefficients
 remain alternatives.
