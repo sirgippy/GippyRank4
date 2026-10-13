@@ -1,0 +1,227 @@
+{
+  "candidate_tradeoffs_vs_unmodified_context": {
+    "by_season": {
+      "2023": {
+        "games": 750,
+        "interval_calibration_error_delta": 0.0022222222222222365,
+        "margin_nll_delta": 0.00035189947010749734
+      },
+      "2024": {
+        "games": 752,
+        "interval_calibration_error_delta": -0.006648936170212746,
+        "margin_nll_delta": 0.005994349462842941
+      },
+      "2025": {
+        "games": 762,
+        "interval_calibration_error_delta": 0.005249343832021025,
+        "margin_nll_delta": 0.007228449942485504
+      }
+    },
+    "comparison": "History_calibrated_plus_Context_minus_Context_existing",
+    "interval_calibration_error_delta": 0.004711425206124885,
+    "margin_nll_delta": 0.004540527497708169,
+    "pooled_team_season_weighted_rank_nll_delta": -0.04079970141706646,
+    "primary_fbs_fbs_rolling_games": 2264,
+    "rank_nll_delta_by_season": {
+      "2023": -0.038888269001980724,
+      "2024": -0.04384649342982705,
+      "2025": -0.039666983633955155
+    }
+  },
+  "comparisons": {
+    "calibrated_history_vs_unmodified_context": {
+      "candidate": "History_calibrated",
+      "comparator": "Context_existing",
+      "minimum_practical_gain_margin": 0.05,
+      "passed": false,
+      "pooled_equal_game_crps_delta": 0.08934739912833223,
+      "pooled_equal_season_crps_delta": 0.0892744044312419,
+      "season_crps_deltas": {
+        "2023": 0.054449610011483074,
+        "2024": 0.11453815831344905,
+        "2025": 0.09883544496879182
+      },
+      "seasons_with_lower_candidate_crps": 0
+    },
+    "candidate_vs_calibrated_history": {
+      "candidate": "History_calibrated_plus_Context",
+      "comparator": "History_calibrated",
+      "minimum_practical_gain_margin": 0.05,
+      "passed": true,
+      "pooled_equal_game_crps_delta": -0.05583922267503816,
+      "pooled_equal_season_crps_delta": -0.05590505020894021,
+      "season_crps_deltas": {
+        "2023": -0.06508517002687242,
+        "2024": -0.05979226010263616,
+        "2025": -0.042837720497308496
+      },
+      "seasons_with_lower_candidate_crps": 3
+    },
+    "candidate_vs_unmodified_context": {
+      "candidate": "History_calibrated_plus_Context",
+      "comparator": "Context_existing",
+      "minimum_practical_gain_margin": 0.05,
+      "passed": false,
+      "pooled_equal_game_crps_delta": 0.03350817645329407,
+      "pooled_equal_season_crps_delta": 0.033369354222301695,
+      "season_crps_deltas": {
+        "2023": -0.010635560015389345,
+        "2024": 0.05474589821081288,
+        "2025": 0.05599772447148332
+      },
+      "seasons_with_lower_candidate_crps": 1
+    }
+  },
+  "conclusion": "Retain unmodified Context / inconclusive",
+  "early_guardrails": {
+    "calibrated_history_vs_unmodified_context": {
+      "comparator": "Context_existing",
+      "passed": false,
+      "phases": [
+        {
+          "by_season": [
+            {
+              "calibration_error_delta": -0.0008888888888888974,
+              "crps_delta": 0.22828929379635632,
+              "games": 750,
+              "passed": true,
+              "season": 2023
+            },
+            {
+              "calibration_error_delta": 0.003989361702127676,
+              "crps_delta": 0.33040783464488577,
+              "games": 752,
+              "passed": false,
+              "season": 2024
+            },
+            {
+              "calibration_error_delta": 0.00043744531933506,
+              "crps_delta": 0.27539930803846424,
+              "games": 762,
+              "passed": false,
+              "season": 2025
+            }
+          ],
+          "calibration_error_delta": 0.0011778563015311869,
+          "calibration_tolerance": 0.03,
+          "crps_delta_candidate_minus_comparator": 0.2780644588010315,
+          "crps_tolerance": 0.1,
+          "passed": false,
+          "phase": "preseason",
+          "pooled_games": 2264
+        },
+        {
+          "by_season": [
+            {
+              "calibration_error_delta": 0.0004930966469428207,
+              "crps_delta": 0.06020362476619745,
+              "games": 676,
+              "passed": true,
+              "season": 2023
+            },
+            {
+              "calibration_error_delta": -0.0020679468242245647,
+              "crps_delta": 0.13318795903619396,
+              "games": 677,
+              "passed": true,
+              "season": 2024
+            },
+            {
+              "calibration_error_delta": 0.004366812227074211,
+              "crps_delta": 0.10635783417318478,
+              "games": 687,
+              "passed": true,
+              "season": 2025
+            }
+          ],
+          "calibration_error_delta": 0.002777777777777768,
+          "calibration_tolerance": 0.03,
+          "crps_delta_candidate_minus_comparator": 0.09996751504236912,
+          "crps_tolerance": 0.1,
+          "passed": true,
+          "phase": "pre_thanksgiving",
+          "pooled_games": 2040
+        }
+      ]
+    },
+    "candidate_vs_unmodified_context": {
+      "comparator": "Context_existing",
+      "passed": true,
+      "phases": [
+        {
+          "by_season": [
+            {
+              "calibration_error_delta": 0.005777777777777812,
+              "crps_delta": 0.02478105147020848,
+              "games": 750,
+              "passed": true,
+              "season": 2023
+            },
+            {
+              "calibration_error_delta": 0.006205673758865271,
+              "crps_delta": 0.0888183182670339,
+              "games": 752,
+              "passed": true,
+              "season": 2024
+            },
+            {
+              "calibration_error_delta": 0.005249343832020956,
+              "crps_delta": 0.08864179819672025,
+              "games": 762,
+              "passed": true,
+              "season": 2025
+            }
+          ],
+          "calibration_error_delta": 0.005742049469964629,
+          "calibration_tolerance": 0.03,
+          "crps_delta_candidate_minus_comparator": 0.06754514759954588,
+          "crps_tolerance": 0.1,
+          "passed": true,
+          "phase": "preseason",
+          "pooled_games": 2264
+        },
+        {
+          "by_season": [
+            {
+              "calibration_error_delta": 0.001972386587771175,
+              "crps_delta": -0.011579334244503414,
+              "games": 676,
+              "passed": true,
+              "season": 2023
+            },
+            {
+              "calibration_error_delta": -0.0025603151157065906,
+              "crps_delta": 0.06634515238766703,
+              "games": 677,
+              "passed": true,
+              "season": 2024
+            },
+            {
+              "calibration_error_delta": 0.004852013585637992,
+              "crps_delta": 0.05783287805340365,
+              "games": 687,
+              "passed": true,
+              "season": 2025
+            }
+          ],
+          "calibration_error_delta": 0.004575163398692794,
+          "calibration_tolerance": 0.03,
+          "crps_delta_candidate_minus_comparator": 0.03765648305875402,
+          "crps_tolerance": 0.1,
+          "passed": true,
+          "phase": "pre_thanksgiving",
+          "pooled_games": 2040
+        }
+      ]
+    }
+  },
+  "independence_or_significance_claim": false,
+  "primary_measure": "future regular-season FBS\u2013FBS game-margin CRPS; lower is better",
+  "production_change_authorized": false,
+  "secondary_ranking_nll_delta_candidate_minus_context": {
+    "equal_season_team_season_weighted:pooled": -0.040800582021920384,
+    "pooled_team_season_weighted:2023": -0.038888269001980724,
+    "pooled_team_season_weighted:2024": -0.04384649342982705,
+    "pooled_team_season_weighted:2025": -0.039666983633955155
+  }
+}
