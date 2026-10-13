@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 from pathlib import Path
@@ -17,14 +18,17 @@ from gippyrank.research.issue_195_likelihood_diagnostic import (
     FitResult,
     LikelihoodData,
     LikelihoodSlice,
+    _decision,
     _group_log_mixture,
     _locations_from_fit,
+    _null_control_behavior_passes,
     _read_context_features,
     _read_issue201_games,
     _read_rank_pair_lookup,
     fit_context_preprocessor,
     identity_parameters,
     marginalized_nll_gradient,
+    run,
     run_synthetic_controls,
     score_likelihood_slice,
     sha256_json,
@@ -305,6 +309,58 @@ def test_target_season_is_excluded_from_residual_training() -> None:
     assert np.all(data.seasons[indices] < 2024)
 
 
+@pytest.mark.parametrize(
+    ("context_season_deltas", "expected_classification", "expected_negative"),
+    [
+        ([0.1, 0.1, -0.5], "inconclusive/no detectable Context association", 1),
+        ([-0.5, -0.1, 0.1], "Context association beyond calibration", 2),
+    ],
+)
+def test_decision_counts_each_held_out_season_once(
+    context_season_deltas: list[float],
+    expected_classification: str,
+    expected_negative: int,
+) -> None:
+    context_comparison = "rank_site_context_minus_rank_site_calibration"
+    calibration_comparison = "rank_site_calibration_minus_rank_only"
+    rows = [
+        {
+            "comparison": context_comparison,
+            "aggregation": "pooled_equal_game",
+            "mean_candidate_minus_reference_nll": -0.01,
+        },
+        {
+            "comparison": context_comparison,
+            "aggregation": "equal_season",
+            "mean_candidate_minus_reference_nll": -0.01,
+        },
+        {
+            "comparison": calibration_comparison,
+            "aggregation": "pooled_equal_game",
+            "mean_candidate_minus_reference_nll": 0.01,
+        },
+        {
+            "comparison": calibration_comparison,
+            "aggregation": "equal_season",
+            "mean_candidate_minus_reference_nll": 0.01,
+        },
+    ]
+    rows.extend(
+        {
+            "comparison": context_comparison,
+            "aggregation": "season",
+            "season": season,
+            "mean_candidate_minus_reference_nll": delta,
+        }
+        for season, delta in zip((2023, 2024, 2025), context_season_deltas, strict=True)
+    )
+
+    decision = _decision(rows)
+
+    assert decision["context_negative_seasons"] == expected_negative
+    assert decision["classification"] == expected_classification
+
+
 def test_context_feature_export_hashes_and_missing_values_are_preserved(
     tmp_path: Path,
 ) -> None:
@@ -429,3 +485,52 @@ def test_frozen_likelihood_synthetic_null_and_positive_controls_pass() -> None:
     assert controls["cases"]["positive_control"]["status"] == "passed"
     assert controls["cases"]["positive_control"]["fitted_context_effect_points"] > 0
     assert controls["cases"]["positive_control"]["context_minus_generic_nll"] < 0
+    null_case = controls["cases"]["null"]
+    assert abs(null_case["fitted_context_effect_points"]) <= 1.0
+    assert null_case["context_minus_generic_nll"] >= -0.01
+    assert (
+        controls["acceptance_criteria"]["null"]["minimum_context_minus_generic_nll"]
+        == -0.01
+    )
+
+
+def test_null_control_rejects_spurious_context_signal() -> None:
+    assert _null_control_behavior_passes(-0.09, 0.00058)
+    assert not _null_control_behavior_passes(-0.09, -100.0)
+    assert not _null_control_behavior_passes(100.0, 0.0)
+
+
+def test_blocked_rerun_removes_stale_success_outputs(tmp_path: Path) -> None:
+    output_root = tmp_path / "output"
+    output_root.mkdir()
+    stale_outputs = (
+        "decision.json",
+        "per_game_scores.csv",
+        "season_summary.csv",
+        "input_gate.json",
+        "manifest.json",
+        "report.md",
+    )
+    for filename in stale_outputs:
+        (output_root / filename).write_text("stale", encoding="utf-8")
+    keep_file = output_root / "keep.txt"
+    keep_file.write_text("unrelated", encoding="utf-8")
+
+    manifest = run(
+        argparse.Namespace(
+            corpus_root=tmp_path / "missing-corpus",
+            issue200_root=tmp_path / "missing-issue200",
+            issue201_root=tmp_path / "missing-issue201",
+            output_root=output_root,
+        )
+    )
+
+    assert manifest["status"] == "blocked_missing_inputs"
+    assert not (output_root / "decision.json").exists()
+    assert not (output_root / "per_game_scores.csv").exists()
+    assert not (output_root / "season_summary.csv").exists()
+    assert json.loads((output_root / "input_gate.json").read_text())["status"] == (
+        "blocked_missing_inputs"
+    )
+    assert set(manifest["outputs"]) == {"input_gate.json", "report.md"}
+    assert keep_file.read_text(encoding="utf-8") == "unrelated"

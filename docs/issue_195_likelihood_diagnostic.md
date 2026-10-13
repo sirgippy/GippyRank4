@@ -53,7 +53,7 @@ A negative result only addresses this fixed linear Context mean correction. A po
 
 ## Synthetic controls
 
-The runner simulates bounded deterministic null and positive-control datasets from the frozen #200 rank/site likelihood. Each case uses 240 training games, 96 evaluation games, and four constituent pairs per game. The positive control adds a known five-point mean effect per training standard deviation of one Context contrast. These checks validate mixture integration, gradient fitting, and the ability to recover a fixed signal; they do not tune the historical analysis or make a real-data causal claim.
+The runner simulates bounded deterministic null and positive-control datasets from the frozen #200 rank/site likelihood. Each case uses 240 training games, 96 evaluation games, and four constituent pairs per game. The positive control adds a known five-point mean effect per training standard deviation of one Context contrast. The null passes only when both optimizers converge, the absolute fitted Context effect is at most one point per training standard deviation, and the Context model's held-out NLL is no more than 0.01 nats per game better than generic calibration. The positive control requires a positive fitted effect and lower held-out NLL than generic calibration. These fixed criteria check mixture integration, gradient fitting, null behavior, and recovery of a fixed signal; they do not tune the historical analysis or make a real-data causal claim.
 
 ## Reproduction
 

@@ -2,6 +2,27 @@
   "artifact_kind": "issue_195_input_gate",
   "available_inputs": [
     {
+      "bytes": 43038379,
+      "exists": true,
+      "logical_name": "issue204_corrected_final_observations",
+      "path": "data/processed/massey_issue_204_v1/final_observations.csv",
+      "sha256": "cd3ee420a830ca6ca1f1a9dd4accb0e844ffd5ee0b00398b4c3536dd57218d9a"
+    },
+    {
+      "bytes": 10558935,
+      "exists": true,
+      "logical_name": "issue204_corrected_final_targets",
+      "path": "data/processed/massey_prebowl_issue_204_v1/final_target_distributions.csv",
+      "sha256": "cab882da17be2f79dd379fc296107e332e2768f9827d96752ea33d97dc026f28"
+    },
+    {
+      "bytes": 180002291,
+      "exists": true,
+      "logical_name": "issue204_corrected_final_rank_pairs",
+      "path": "data/processed/massey_prebowl_issue_204_v1/final_constituent_rank_pairs.csv",
+      "sha256": "4dd2376a488ede05c889372089fa0e0b16d62faaf879626c50cb359d5fe4e3af"
+    },
+    {
       "bytes": 1877,
       "exists": true,
       "logical_name": "issue200_existing_likelihood",
@@ -9,11 +30,11 @@
       "sha256": "b64d237d4abf3121355a28505f805252cf32062b3fce66db6ca620ef35887952"
     },
     {
-      "bytes": 49089,
+      "bytes": 49238,
       "exists": true,
       "logical_name": "issue200_manifest",
       "path": "manifest.json",
-      "sha256": "12bb43aa49009a849b0ca3ebdf8110f92fa6c3bff6df1bcc32aa1e473c08dbe5"
+      "sha256": "09dd40ec9e5164b923e1970fa8d3d99ffe27386d279519c79c48b16da04f6047"
     },
     {
       "bytes": 9901447,
@@ -23,11 +44,18 @@
       "sha256": "c5a80a6e5aa1415bacfe3cc373cfbbc6cfe02465f33be202d8ce26962cb8419c"
     },
     {
-      "bytes": 326784,
+      "bytes": 381252,
       "exists": true,
       "logical_name": "issue200_preseason_feature_manifest",
       "path": "preseason_feature_manifest.json",
-      "sha256": "151154319618ba6b61eb78738464e1ab76800db0bb4300d0d5d21a065d73cfd4"
+      "sha256": "0f1e327d293c441427a791d258527a5220afe03524b8a5400cfe1262251e78dd"
+    },
+    {
+      "bytes": 472851,
+      "exists": true,
+      "logical_name": "issue200_context_feature_inputs",
+      "path": "context_feature_inputs.csv",
+      "sha256": "f909d4cc4eb7d72f96d2ee107d85b2e9f4926178310342bc30b2635fd52666ef"
     },
     {
       "bytes": 22278,
@@ -44,35 +72,14 @@
       "sha256": "fbc5c51f0747d4d11c3d31d8eb032f32ad65c8abe41f0307b295415a264351bb"
     }
   ],
-  "execution": "synthetic_controls_only",
-  "missing_required_inputs": [
-    {
-      "exists": false,
-      "logical_name": "issue204_corrected_final_observations",
-      "path": "data/processed/massey_issue_204_v1/final_observations.csv"
-    },
-    {
-      "exists": false,
-      "logical_name": "issue204_corrected_final_targets",
-      "path": "data/processed/massey_prebowl_issue_204_v1/final_target_distributions.csv"
-    },
-    {
-      "exists": false,
-      "logical_name": "issue204_corrected_final_rank_pairs",
-      "path": "data/processed/massey_prebowl_issue_204_v1/final_constituent_rank_pairs.csv"
-    },
-    {
-      "exists": false,
-      "logical_name": "issue200_context_feature_inputs",
-      "path": "context_feature_inputs.csv"
-    }
-  ],
+  "execution": "historical_scoring_complete",
+  "missing_required_inputs": [],
   "root_arguments": {
-    "corpus_root": "",
-    "issue200_root": "matched_history_context_issue_200",
+    "corpus_root": "GippyRank4",
+    "issue200_root": "issue195-rebuilt-issue200",
     "issue201_root": "issue_201_prebowl_forecast"
   },
-  "scientific_conclusion": null,
-  "status": "blocked_missing_inputs",
+  "scientific_conclusion": "Context association beyond calibration",
+  "status": "ready",
   "synthetic_controls": "synthetic_controls.json"
 }

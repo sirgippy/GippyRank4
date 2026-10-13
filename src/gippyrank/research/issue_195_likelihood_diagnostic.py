@@ -43,6 +43,8 @@ MODEL_ARMS = (
 )
 REGULARIZATION_GRID = (0.01, 0.1, 1.0)
 DEFAULT_REGULARIZATION = 0.1
+NULL_CONTEXT_EFFECT_TOLERANCE_POINTS = 1.0
+NULL_CONTEXT_NLL_IMPROVEMENT_TOLERANCE = 0.01
 CONTEXT_FEATURES = tuple(
     name for name in MODEL_FEATURES if name not in HISTORY_1_1_FEATURES
 )
@@ -59,6 +61,23 @@ COMPARISONS = (
 STUDENT_T_DF = 15.0
 OPTIMIZER_OPTIONS = {"maxiter": 2000, "ftol": 1e-12, "gtol": 1e-6, "maxls": 50}
 PARAMETER_BOUNDS = ((-4.0, 4.0), (-100.0, 100.0), (-3.0, 3.0))
+RUN_OUTPUT_FILENAMES = (
+    "comparison_summary.csv",
+    "decision.json",
+    "feature_missingness.csv",
+    "fit_records.json",
+    "fitted_context_coefficients.csv",
+    "gain_concentration.csv",
+    "game_manifest.csv",
+    "input_gate.json",
+    "manifest.json",
+    "per_game_scores.csv",
+    "phase_summary.csv",
+    "report.md",
+    "results.json",
+    "season_summary.csv",
+    "synthetic_controls.json",
+)
 
 
 @dataclass(frozen=True)
@@ -1232,11 +1251,20 @@ def _decision(comparison_rows: list[dict[str, object]]) -> dict[str, object]:
         )
         for row in comparison_rows
     }
-    seasons = [
-        lookup[("rank_site_context_minus_rank_site_calibration", "season")]
+    context_season_rows = [
+        row
         for row in comparison_rows
         if row["comparison"] == "rank_site_context_minus_rank_site_calibration"
         and row["aggregation"] == "season"
+    ]
+    if len(context_season_rows) != len(TARGET_SEASONS) or {
+        int(row["season"]) for row in context_season_rows
+    } != set(TARGET_SEASONS):
+        raise ValueError(
+            "decision requires exactly one Context comparison row for each held-out season"
+        )
+    seasons = [
+        float(row["mean_candidate_minus_reference_nll"]) for row in context_season_rows
     ]
     context_pooled = lookup.get(
         ("rank_site_context_minus_rank_site_calibration", "pooled_equal_game"), math.nan
@@ -1304,6 +1332,18 @@ def _decision(comparison_rows: list[dict[str, object]]) -> dict[str, object]:
     }
 
 
+def _null_control_behavior_passes(
+    fitted_effect_points: float, context_minus_generic_nll: float
+) -> bool:
+    """Require the null fixture to stay near zero and avoid material overfit."""
+    return (
+        math.isfinite(fitted_effect_points)
+        and math.isfinite(context_minus_generic_nll)
+        and abs(fitted_effect_points) <= NULL_CONTEXT_EFFECT_TOLERANCE_POINTS
+        and context_minus_generic_nll >= -NULL_CONTEXT_NLL_IMPROVEMENT_TOLERANCE
+    )
+
+
 def _file_records(
     paths: dict[str, tuple[Path, Path]],
 ) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
@@ -1326,6 +1366,24 @@ def _file_records(
         else:
             missing.append(row)
     return records, missing
+
+
+def _clear_previous_run_outputs(output_root: Path) -> None:
+    """Remove only the known artifacts owned by this runner before each run."""
+    for filename in RUN_OUTPUT_FILENAMES:
+        (output_root / filename).unlink(missing_ok=True)
+
+
+def _current_output_records(output_root: Path) -> dict[str, dict[str, object]]:
+    """Hash only known artifacts produced by the current run."""
+    return {
+        filename: {
+            "bytes": (output_root / filename).stat().st_size,
+            "sha256": sha256_file(output_root / filename),
+        }
+        for filename in RUN_OUTPUT_FILENAMES
+        if filename != "manifest.json" and (output_root / filename).is_file()
+    }
 
 
 def _required_paths(args: argparse.Namespace) -> dict[str, tuple[Path, Path]]:
@@ -1563,6 +1621,19 @@ def run_synthetic_controls(
         "rank_pairs_per_game": rank_pairs_per_game,
         "rank_likelihood": "frozen issue-200 existing-policy rank/site Student-t",
         "known_positive_context_effect_points_per_training_standard_deviation": known_context_effect,
+        "acceptance_criteria": {
+            "null": {
+                "optimizer_convergence_required": True,
+                "absolute_fitted_context_effect_points_max": NULL_CONTEXT_EFFECT_TOLERANCE_POINTS,
+                "minimum_context_minus_generic_nll": -NULL_CONTEXT_NLL_IMPROVEMENT_TOLERANCE,
+                "interpretation": "the null fit must remain within one point per training standard deviation and may not claim more than 0.01 nats/game of held-out improvement",
+            },
+            "positive_control": {
+                "optimizer_convergence_required": True,
+                "fitted_context_effect_points": "positive",
+                "context_minus_generic_nll": "negative",
+            },
+        },
         "cases": {},
     }
     for scenario, effect, scenario_seed in (
@@ -1659,10 +1730,16 @@ def run_synthetic_controls(
             degrees_of_freedom=degrees_of_freedom,
         )
         coefficient = float(context_fit.context_coefficients[0])
+        context_minus_generic_nll = context_nll - generic_nll
+        behavior_passed = (
+            _null_control_behavior_passes(coefficient, context_minus_generic_nll)
+            if scenario == "null"
+            else coefficient > 0 and context_nll < generic_nll
+        )
         passed = (
             context_fit.optimizer_success
             and generic.optimizer_success
-            and (effect == 0.0 or (coefficient > 0 and context_nll < generic_nll))
+            and behavior_passed
         )
         results["cases"][scenario] = {
             "status": "passed" if passed else "failed",
@@ -1671,7 +1748,7 @@ def run_synthetic_controls(
             "fitted_context_effect_points": coefficient,
             "generic_calibration_held_out_nll": generic_nll,
             "context_calibration_held_out_nll": context_nll,
-            "context_minus_generic_nll": context_nll - generic_nll,
+            "context_minus_generic_nll": context_minus_generic_nll,
             "generic_optimizer": generic.metadata(())["optimizer"],
             "context_optimizer": context_fit.metadata(
                 ("synthetic_context", "missing__synthetic_context")
@@ -1708,6 +1785,7 @@ def _feature_missingness_summary(data: LikelihoodData) -> list[dict[str, object]
 def run(args: argparse.Namespace) -> dict[str, object]:
     output_root: Path = args.output_root
     output_root.mkdir(parents=True, exist_ok=True)
+    _clear_previous_run_outputs(output_root)
     paths = _required_paths(args)
     input_records, missing = _file_records(paths)
     baseline_path = paths["issue200_existing_likelihood"][0]
@@ -1734,12 +1812,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             "outputs": {},
         }
         _write_blocked_report(output_root, gate, synthetic_controls)
-        output_paths = sorted(path for path in output_root.iterdir() if path.is_file())
-        manifest["outputs"] = {
-            path.name: {"bytes": path.stat().st_size, "sha256": sha256_file(path)}
-            for path in output_paths
-            if path.name != "manifest.json"
-        }
+        manifest["outputs"] = _current_output_records(output_root)
         write_json(output_root / "manifest.json", manifest)
         return manifest
 
@@ -2204,12 +2277,11 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         "",
     ]
     (args.output_root / "report.md").write_text("\n".join(report), encoding="utf-8")
-    output_paths = sorted(path for path in args.output_root.iterdir() if path.is_file())
-    manifest["outputs"] = {
-        path.name: {"bytes": path.stat().st_size, "sha256": sha256_file(path)}
-        for path in output_paths
-        if path.name != "manifest.json"
-    }
+    gate = _input_gate_report(args, input_records, [], synthetic_controls)
+    gate["execution"] = "historical_scoring_complete"
+    gate["scientific_conclusion"] = decision["classification"]
+    write_json(args.output_root / "input_gate.json", gate)
+    manifest["outputs"] = _current_output_records(args.output_root)
     write_json(args.output_root / "manifest.json", manifest)
     return manifest
 
