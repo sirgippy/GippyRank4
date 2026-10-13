@@ -1,0 +1,134 @@
+{
+  "artifact_kind": "issue_195_synthetic_controls",
+  "cases": {
+    "null": {
+      "context_calibration_held_out_nll": 4.325279551712843,
+      "context_minus_generic_nll": 0.0005817576547828551,
+      "context_optimizer": {
+        "evaluations": 19,
+        "final_gradient_infinity_norm": 0.00011730353756078671,
+        "gradient_tolerance": 1e-06,
+        "iterations": 14,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "method": "L-BFGS-B with analytic gradient",
+        "parameter_bounds": {
+          "context_coefficients": "unbounded; L2 regularized",
+          "home_field_adjustment": [
+            -100.0,
+            100.0
+          ],
+          "log_multiplier": [
+            -4.0,
+            4.0
+          ],
+          "log_scale_correction": [
+            -3.0,
+            3.0
+          ]
+        },
+        "status": 0,
+        "success": true
+      },
+      "fitted_context_effect_points": -0.08997764285864622,
+      "generic_calibration_held_out_nll": 4.32469779405806,
+      "generic_optimizer": {
+        "evaluations": 18,
+        "final_gradient_infinity_norm": 5.8852030182521275e-05,
+        "gradient_tolerance": 1e-06,
+        "iterations": 15,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "method": "L-BFGS-B with analytic gradient",
+        "parameter_bounds": {
+          "context_coefficients": "unbounded; L2 regularized",
+          "home_field_adjustment": [
+            -100.0,
+            100.0
+          ],
+          "log_multiplier": [
+            -4.0,
+            4.0
+          ],
+          "log_scale_correction": [
+            -3.0,
+            3.0
+          ]
+        },
+        "status": 0,
+        "success": true
+      },
+      "interpretation": "implementation validation only; no historical or causal claim",
+      "known_context_effect_points": 0.0,
+      "seed": 195,
+      "selection": "fixed lambda 0.1; no simulation tuning",
+      "status": "passed"
+    },
+    "positive_control": {
+      "context_calibration_held_out_nll": 4.443100757353531,
+      "context_minus_generic_nll": -0.07177668949495253,
+      "context_optimizer": {
+        "evaluations": 25,
+        "final_gradient_infinity_norm": 5.451939816936147e-06,
+        "gradient_tolerance": 1e-06,
+        "iterations": 22,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "method": "L-BFGS-B with analytic gradient",
+        "parameter_bounds": {
+          "context_coefficients": "unbounded; L2 regularized",
+          "home_field_adjustment": [
+            -100.0,
+            100.0
+          ],
+          "log_multiplier": [
+            -4.0,
+            4.0
+          ],
+          "log_scale_correction": [
+            -3.0,
+            3.0
+          ]
+        },
+        "status": 0,
+        "success": true
+      },
+      "fitted_context_effect_points": 4.8003261637810555,
+      "generic_calibration_held_out_nll": 4.514877446848484,
+      "generic_optimizer": {
+        "evaluations": 20,
+        "final_gradient_infinity_norm": 4.270720310728393e-08,
+        "gradient_tolerance": 1e-06,
+        "iterations": 16,
+        "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+        "method": "L-BFGS-B with analytic gradient",
+        "parameter_bounds": {
+          "context_coefficients": "unbounded; L2 regularized",
+          "home_field_adjustment": [
+            -100.0,
+            100.0
+          ],
+          "log_multiplier": [
+            -4.0,
+            4.0
+          ],
+          "log_scale_correction": [
+            -3.0,
+            3.0
+          ]
+        },
+        "status": 0,
+        "success": true
+      },
+      "interpretation": "implementation validation only; no historical or causal claim",
+      "known_context_effect_points": 5.0,
+      "seed": 196,
+      "selection": "fixed lambda 0.1; no simulation tuning",
+      "status": "passed"
+    }
+  },
+  "evaluation_games_per_case": 96,
+  "known_positive_context_effect_points_per_training_standard_deviation": 5.0,
+  "rank_likelihood": "frozen issue-200 existing-policy rank/site Student-t",
+  "rank_pairs_per_game": 4,
+  "seed": 195,
+  "status": "passed",
+  "training_games_per_case": 240
+}

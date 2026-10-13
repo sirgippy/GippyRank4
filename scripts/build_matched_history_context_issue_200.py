@@ -1005,6 +1005,7 @@ def build_prior_pipelines(
     dict[str, object],
     list[dict[str, object]],
     dict[int, dict[str, object]],
+    list[dict[str, object]],
 ]:
     """Fit rolling prior models and emit their shared prediction input manifest."""
     tenures = load_required_coaching_tenures(source_root)
@@ -1113,6 +1114,7 @@ def build_prior_pipelines(
     training_manifest: list[dict[str, object]] = []
     prior_rows: list[dict[str, object]] = []
     shared_inputs: dict[str, dict[str, object]] = {}
+    context_feature_inputs: list[dict[str, object]] = []
     missing_target_repaired_feature_keys: set[tuple[int, str]] = set()
 
     for season in TARGET_SEASONS:
@@ -1270,6 +1272,7 @@ def build_prior_pipelines(
                     "target_supports_equal": final_target.population
                     == pre_target.population,
                     "predictor_input_sha256": input_sha,
+                    "context_feature_sha256": sha256_json(c_features),
                     "rank_lag_input_sha256": sha256_json(
                         {
                             "lag1_z": base_input.lag1_z,
@@ -1282,6 +1285,25 @@ def build_prior_pipelines(
                     "feature_source_class": "existing preseason features with corrected final-rank lags and repaired Context 1.4 DB transfer boundary",
                     "repaired_transfer_feature_available": repaired is not None,
                 }
+                if policy == "existing":
+                    context_feature_inputs.append(
+                        {
+                            "season": season,
+                            "subdivision": "fbs",
+                            "team_id": team_id,
+                            "team_name": base_input.team_name,
+                            "predictor_input_sha256": input_sha,
+                            "context_feature_sha256": sha256_json(c_features),
+                            "repaired_transfer_feature_available": repaired is not None,
+                            **c_features,
+                            "features_json": json.dumps(
+                                c_features,
+                                sort_keys=True,
+                                separators=(",", ":"),
+                                allow_nan=False,
+                            ),
+                        }
+                    )
                 for family, pmf, method, location, scale in (
                     ("history", h_pmf, h_method, h_location, h_scale),
                     ("context", c_pmf, c_method, c_location, c_scale),
@@ -1455,7 +1477,13 @@ def build_prior_pipelines(
         [season, team_id]
         for season, team_id in sorted(missing_target_repaired_feature_keys)
     ]
-    return prior_rows, fitted_models, training_manifest, shared_inputs
+    return (
+        prior_rows,
+        fitted_models,
+        training_manifest,
+        shared_inputs,
+        context_feature_inputs,
+    )
 
 
 def run(args: argparse.Namespace) -> dict[str, object]:
@@ -1503,7 +1531,13 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         input_records.append(file_record(logical_name, path, roots[owner]))
 
     feature_path = paths["team_season_features"]
-    prior_rows, fitted_models, training_manifest, shared_inputs = build_prior_pipelines(
+    (
+        prior_rows,
+        fitted_models,
+        training_manifest,
+        shared_inputs,
+        context_feature_inputs,
+    ) = build_prior_pipelines(
         final_targets=final_target_rows,
         pre_bowl_targets=pre_bowl_target_rows,
         final_target_path=paths["corrected_final_targets"],
@@ -1654,6 +1688,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         "target_snapshot_manifest.csv": snapshots,
         "training_row_manifest.csv": training_manifest,
         "preseason_feature_manifest.json": shared_inputs,
+        "context_feature_inputs.csv": context_feature_inputs,
         "likelihood_game_manifest.csv": game_manifests,
         "rank_pair_composition.csv": composition,
         "fitted_models.json": fitted_models,

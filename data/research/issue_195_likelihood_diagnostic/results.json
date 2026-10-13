@@ -1,0 +1,104 @@
+{
+  "comparisons": [
+    {
+      "aggregation": "season",
+      "comparison": "rank_site_calibration_minus_rank_only",
+      "interpretation": "negative favors candidate",
+      "mean_candidate_minus_reference_nll": -0.003689104314125239,
+      "n_games": 750,
+      "season": 2023
+    },
+    {
+      "aggregation": "season",
+      "comparison": "rank_site_context_minus_rank_site_calibration",
+      "interpretation": "negative favors candidate",
+      "mean_candidate_minus_reference_nll": -0.011045429702821083,
+      "n_games": 750,
+      "season": 2023
+    },
+    {
+      "aggregation": "season",
+      "comparison": "rank_site_calibration_minus_rank_only",
+      "interpretation": "negative favors candidate",
+      "mean_candidate_minus_reference_nll": -0.0010261556847805781,
+      "n_games": 752,
+      "season": 2024
+    },
+    {
+      "aggregation": "season",
+      "comparison": "rank_site_context_minus_rank_site_calibration",
+      "interpretation": "negative favors candidate",
+      "mean_candidate_minus_reference_nll": -5.725550798713654e-05,
+      "n_games": 752,
+      "season": 2024
+    },
+    {
+      "aggregation": "season",
+      "comparison": "rank_site_calibration_minus_rank_only",
+      "interpretation": "negative favors candidate",
+      "mean_candidate_minus_reference_nll": -0.004114112215406798,
+      "n_games": 762,
+      "season": 2025
+    },
+    {
+      "aggregation": "season",
+      "comparison": "rank_site_context_minus_rank_site_calibration",
+      "interpretation": "negative favors candidate",
+      "mean_candidate_minus_reference_nll": -0.002708613905895405,
+      "n_games": 762,
+      "season": 2025
+    },
+    {
+      "aggregation": "pooled_equal_game",
+      "comparison": "rank_site_calibration_minus_rank_only",
+      "interpretation": "negative favors candidate",
+      "mean_candidate_minus_reference_nll": -0.0029476372874067598,
+      "n_games": 2264,
+      "season": "all_held_out"
+    },
+    {
+      "aggregation": "equal_season",
+      "comparison": "rank_site_calibration_minus_rank_only",
+      "interpretation": "negative favors candidate",
+      "mean_candidate_minus_reference_nll": -0.0029431240714375383,
+      "n_games": 2264,
+      "season": "all_held_out"
+    },
+    {
+      "aggregation": "pooled_equal_game",
+      "comparison": "rank_site_context_minus_rank_site_calibration",
+      "interpretation": "negative favors candidate",
+      "mean_candidate_minus_reference_nll": -0.004589705042144186,
+      "n_games": 2264,
+      "season": "all_held_out"
+    },
+    {
+      "aggregation": "equal_season",
+      "comparison": "rank_site_context_minus_rank_site_calibration",
+      "interpretation": "negative favors candidate",
+      "mean_candidate_minus_reference_nll": -0.004603766372234541,
+      "n_games": 2264,
+      "season": "all_held_out"
+    }
+  ],
+  "decision": {
+    "calibration_equal_season_delta_nll": -0.0029431240714375383,
+    "calibration_pooled_equal_game_delta_nll": -0.0029476372874067598,
+    "classification": "Context association beyond calibration",
+    "context_equal_season_delta_nll": -0.004603766372234541,
+    "context_negative_seasons": 3,
+    "context_pooled_equal_game_delta_nll": -0.004589705042144186,
+    "direction_rule": "candidate-minus-reference NLL must be negative in pooled equal-game and equal-season summaries and at least two of three held-out seasons",
+    "generic_calibration_comparison": "rank_site_calibration_minus_rank_only",
+    "limitations": [
+      "This is an ex-post game-margin mechanism diagnostic, not an operational forecast.",
+      "Final ranking measurements include regular-season and postseason outcomes and may include the diagnosed game.",
+      "Rank measurements are noisy and endogenous; the result does not test conditional independence given true ranks.",
+      "2022-2025 informed prior research and remain exploratory development seasons.",
+      "Repeated teams and seasons preclude treating games as independent confirmation.",
+      "A negative result addresses only the fixed linear Context mean correction."
+    ],
+    "primary_comparison": "rank_site_context_minus_rank_site_calibration",
+    "status": "complete"
+  }
+}
