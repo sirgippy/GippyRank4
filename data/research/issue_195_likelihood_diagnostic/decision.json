@@ -1,0 +1,20 @@
+{
+  "calibration_equal_season_delta_nll": -0.0029431240714375383,
+  "calibration_pooled_equal_game_delta_nll": -0.0029476372874067598,
+  "classification": "Context association beyond calibration",
+  "context_equal_season_delta_nll": -0.004603766372234541,
+  "context_negative_seasons": 3,
+  "context_pooled_equal_game_delta_nll": -0.004589705042144186,
+  "direction_rule": "candidate-minus-reference NLL must be negative in pooled equal-game and equal-season summaries and at least two of three held-out seasons",
+  "generic_calibration_comparison": "rank_site_calibration_minus_rank_only",
+  "limitations": [
+    "This is an ex-post game-margin mechanism diagnostic, not an operational forecast.",
+    "Final ranking measurements include regular-season and postseason outcomes and may include the diagnosed game.",
+    "Rank measurements are noisy and endogenous; the result does not test conditional independence given true ranks.",
+    "2022-2025 informed prior research and remain exploratory development seasons.",
+    "Repeated teams and seasons preclude treating games as independent confirmation.",
+    "A negative result addresses only the fixed linear Context mean correction."
+  ],
+  "primary_comparison": "rank_site_context_minus_rank_site_calibration",
+  "status": "complete"
+}
