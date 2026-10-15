@@ -1700,10 +1700,12 @@ def _render_report(result: dict[str, object]) -> str:
     decision = result["decision"]
     parity = result["baseline_parity"]
     summaries = result["forecast_summaries"]
+    rank_summaries = result["rank_summaries"]
     assert (
         isinstance(decision, dict)
         and isinstance(parity, dict)
         and isinstance(summaries, list)
+        and isinstance(rank_summaries, list)
     )
     find = lambda arm, stage, season, phase="all_phases": next(
         row
@@ -1713,6 +1715,13 @@ def _render_report(result: dict[str, object]) -> str:
         and row["forecast_population"] == PRIMARY_POPULATION
         and str(row["season"]) == str(season)
         and row["phase"] == phase
+    )
+    find_rank = lambda arm, aggregation, season: next(
+        row
+        for row in rank_summaries
+        if row["model_arm"] == arm
+        and row["aggregation"] == aggregation
+        and str(row["season"]) == str(season)
     )
     lines = [
         "# Issue 212: generic likelihood recalibration",
@@ -1775,11 +1784,62 @@ def _render_report(result: dict[str, object]) -> str:
             "",
             "## Secondary rank results",
             "",
-            "Corrected pre-bowl rank scores use only checkpoints strictly before the target observation date. Each team-season contributes total weight one across its valid checkpoints. See `rank_summaries.csv` for NLL, rank CRPS, expected-rank error, 80% target mass, and interval width by season and pooled team-season.",
+            "Corrected pre-bowl rank scores use only checkpoints strictly before the target observation date. Each team-season contributes total weight one across its valid checkpoints.",
             "",
-            "## Calibration and subgroup results",
+            "| Evaluation | Rank CRPS (baseline → recalibrated) | Δ NLL | Δ expected-rank error | Δ 80% target mass | Δ 80% interval width |",
+            "|---|---:|---:|---:|---:|---:|",
+        ]
+    )
+    for aggregation, season, label in (
+        ("pooled_equal_team_season", "2023-2025", "Pooled team-season"),
+        *(
+            ("season_team_season_weight_one", str(season), str(season))
+            for season in EVALUATION_SEASONS
+        ),
+    ):
+        baseline = find_rank(BASELINE_ARM, aggregation, season)
+        candidate = find_rank(CANDIDATE_ARM, aggregation, season)
+        lines.append(
+            f"| {label} | {float(baseline['crps']):.5f} → {float(candidate['crps']):.5f} | {float(candidate['nll']) - float(baseline['nll']):+.5f} | {float(candidate['expected_rank_error']) - float(baseline['expected_rank_error']):+.4f} | {float(candidate['interval_80_target_mass']) - float(baseline['interval_80_target_mass']):+.4f} | {float(candidate['interval_80_width']) - float(baseline['interval_80_width']):+.3f} |"
+        )
+    lines.extend(
+        [
             "",
-            "`forecast_summaries.csv` reports margin NLL, win Brier, median absolute error, interval coverage and widths by season, phase, pooled game, and equal-season aggregation. FBS–FCS forecasts remain a separate population and use the unchanged conditional likelihood; their FBS rank posterior can change indirectly through FBS–FBS evidence.",
+            "The recalibrated arm worsens rank NLL, rank CRPS, expected-rank error, and target mass in the pooled summary and each season; its 80% intervals are narrower.",
+            "",
+            "## Pooled game calibration tradeoffs",
+            "",
+            "Changes are recalibrated minus baseline. The 80% coverage target is 0.80.",
+            "",
+            "| Evaluation | Δ margin NLL | Δ win Brier | Δ median absolute error | Δ 80% coverage | Δ 80% interval width |",
+            "|---|---:|---:|---:|---:|---:|",
+        ]
+    )
+    for stage, season, phase, label in (
+        ("rolling", "pooled_equal_game", "all_phases", "Rolling all phases"),
+        ("preseason", "pooled_equal_game", "all_phases", "Preseason"),
+        ("rolling", "pooled_equal_game", "pre_thanksgiving", "Pre-Thanksgiving"),
+    ):
+        try:
+            baseline = find(BASELINE_ARM, stage, season, phase)
+            candidate = find(CANDIDATE_ARM, stage, season, phase)
+        except StopIteration:
+            continue
+        metrics = (
+            "margin_nll",
+            "home_win_brier",
+            "median_absolute_error",
+            "coverage_80",
+            "margin_interval_80_width",
+        )
+        deltas = [float(candidate[key]) - float(baseline[key]) for key in metrics]
+        lines.append(
+            f"| {label} | {deltas[0]:+.4f} | {deltas[1]:+.4f} | {deltas[2]:+.4f} | {deltas[3]:+.4f} | {deltas[4]:+.3f} |"
+        )
+    lines.extend(
+        [
+            "",
+            "`forecast_summaries.csv` contains level metrics plus season-, phase-, and population-specific values. FBS–FCS forecasts remain a separate population and use the unchanged conditional likelihood; their FBS rank posterior can change indirectly through FBS–FBS evidence.",
             "",
             "## Limitations and next confirmation",
             "",

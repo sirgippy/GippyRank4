@@ -1,0 +1,76 @@
+{
+  "conclusion": "Retain unmodified Context / no useful gain established",
+  "decision_scope": "descriptive exploratory development seasons; not a significance test",
+  "early_guardrails": {
+    "pre_thanksgiving": {
+      "pass": true,
+      "per_season": {
+        "2023": {
+          "coverage_error_delta": 0.0029585798816568008,
+          "coverage_pass": true,
+          "crps_delta": 0.015980817497311506,
+          "crps_pass": true
+        },
+        "2024": {
+          "coverage_error_delta": 0.009995076317085147,
+          "coverage_pass": true,
+          "crps_delta": 0.030692855388730678,
+          "crps_pass": true
+        },
+        "2025": {
+          "coverage_error_delta": -0.010043668122270791,
+          "coverage_pass": true,
+          "crps_delta": 0.01818892024101615,
+          "crps_pass": true
+        }
+      },
+      "pooled_coverage_error_delta": 0.0006535947712418468,
+      "pooled_coverage_pass": true,
+      "pooled_crps_delta": 0.021606805848987776,
+      "pooled_crps_pass": true
+    },
+    "preseason": {
+      "pass": true,
+      "per_season": {
+        "2023": {
+          "coverage_error_delta": -0.019111111111111075,
+          "coverage_pass": true,
+          "crps_delta": -0.012832332391385037,
+          "crps_pass": true
+        },
+        "2024": {
+          "coverage_error_delta": -0.015425531914893523,
+          "coverage_pass": true,
+          "crps_delta": -0.0017701422933882327,
+          "crps_pass": true
+        },
+        "2025": {
+          "coverage_error_delta": -0.011023622047244126,
+          "coverage_pass": true,
+          "crps_delta": -0.00213313535815729,
+          "crps_pass": true
+        }
+      },
+      "pooled_coverage_error_delta": -0.01590106007067138,
+      "pooled_coverage_pass": true,
+      "pooled_crps_delta": -0.005556910530513548,
+      "pooled_crps_pass": true
+    }
+  },
+  "early_guardrails_pass": true,
+  "primary_rule": {
+    "equal_season_crps_delta": 0.0155190906467908,
+    "equal_season_threshold": -0.05,
+    "minimum_season_wins": 2,
+    "pass": false,
+    "pooled_equal_game_crps_delta": 0.015511533156622903,
+    "pooled_equal_game_threshold": -0.05,
+    "season_crps_delta": {
+      "2023": 0.011280095622566932,
+      "2024": 0.022316900449824928,
+      "2025": 0.012960275867984095
+    },
+    "seasons_won": 0
+  },
+  "recommend_independent_confirmation": false
+}

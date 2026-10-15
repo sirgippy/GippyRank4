@@ -1,0 +1,24 @@
+{
+  "baseline_pmfs": "Reconstructed from the verified #200 Context priors and #201 replay API; #201 did not persist per-cutoff posterior PMF files. PMFs are included in this run's lossless compressed PMF artifact.",
+  "cutoff_game_keys_sha256": "e805d40668237c0ea18f3adcb3d51d312576aa72b708708f90e06a9c283e81e2",
+  "forecast_rows_compared": 2264,
+  "max_absolute_metric_difference": 0.0,
+  "metrics_compared_per_row": [
+    "crps",
+    "margin_nll",
+    "median_absolute_error",
+    "home_win_brier",
+    "expected_home_margin",
+    "median_home_margin",
+    "home_win_probability",
+    "away_win_probability",
+    "margin_interval_50_low",
+    "margin_interval_50_high",
+    "margin_interval_80_low",
+    "margin_interval_80_high",
+    "margin_interval_95_low",
+    "margin_interval_95_high"
+  ],
+  "passed": true,
+  "tolerance": 1e-08
+}

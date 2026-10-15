@@ -1,0 +1,109 @@
+{
+  "fit_record_by_season": {
+    "2023": {
+      "additional_non_neutral_home_field_points": -0.6731796660585783,
+      "common_log_scale_correction": -0.061714257883296215,
+      "optimizer": {
+        "evaluations": 15,
+        "final_gradient_infinity_norm": 0.00022920433808870655,
+        "gradient_tolerance": 1e-06,
+        "iterations": 13,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "method": "L-BFGS-B with analytic gradient",
+        "parameter_bounds": {
+          "context_coefficients": "unbounded; L2 regularized",
+          "home_field_adjustment": [
+            -100.0,
+            100.0
+          ],
+          "log_multiplier": [
+            -4.0,
+            4.0
+          ],
+          "log_scale_correction": [
+            -3.0,
+            3.0
+          ]
+        },
+        "status": 0,
+        "success": true
+      },
+      "overall_mean_multiplier": 0.9701893205429778,
+      "training_seasons": [
+        2022
+      ]
+    },
+    "2024": {
+      "additional_non_neutral_home_field_points": -0.5155243356297814,
+      "common_log_scale_correction": -0.06311586296341012,
+      "optimizer": {
+        "evaluations": 15,
+        "final_gradient_infinity_norm": 0.001141301853849086,
+        "gradient_tolerance": 1e-06,
+        "iterations": 13,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "method": "L-BFGS-B with analytic gradient",
+        "parameter_bounds": {
+          "context_coefficients": "unbounded; L2 regularized",
+          "home_field_adjustment": [
+            -100.0,
+            100.0
+          ],
+          "log_multiplier": [
+            -4.0,
+            4.0
+          ],
+          "log_scale_correction": [
+            -3.0,
+            3.0
+          ]
+        },
+        "status": 0,
+        "success": true
+      },
+      "overall_mean_multiplier": 0.9733203518268143,
+      "training_seasons": [
+        2022,
+        2023
+      ]
+    },
+    "2025": {
+      "additional_non_neutral_home_field_points": -0.36573157800760664,
+      "common_log_scale_correction": -0.06485054367928102,
+      "optimizer": {
+        "evaluations": 16,
+        "final_gradient_infinity_norm": 0.00041725410358495196,
+        "gradient_tolerance": 1e-06,
+        "iterations": 13,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "method": "L-BFGS-B with analytic gradient",
+        "parameter_bounds": {
+          "context_coefficients": "unbounded; L2 regularized",
+          "home_field_adjustment": [
+            -100.0,
+            100.0
+          ],
+          "log_multiplier": [
+            -4.0,
+            4.0
+          ],
+          "log_scale_correction": [
+            -3.0,
+            3.0
+          ]
+        },
+        "status": 0,
+        "success": true
+      },
+      "overall_mean_multiplier": 0.9900246508149303,
+      "training_seasons": [
+        2022,
+        2023,
+        2024
+      ]
+    }
+  },
+  "fit_records_commit": "2b0cfc2 (required source commit recorded by issue 212)",
+  "fit_records_sha256": "a6bb5229c6991c5dd1661bc138f6c322b071c7591c0d7b4c75315b3966e59530",
+  "manifest_sha256": "df089c7287007e447acea9197d92f45487f98e41dba3a1cf98e69193f0a5f817"
+}
