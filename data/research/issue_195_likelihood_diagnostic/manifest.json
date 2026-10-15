@@ -1,0 +1,343 @@
+{
+  "artifact_kind": "issue_195_likelihood_diagnostic_manifest",
+  "baseline": {
+    "artifact": "issue-200 existing-policy likelihood",
+    "artifact_sha256": "b64d237d4abf3121355a28505f805252cf32062b3fce66db6ca620ef35887952",
+    "degrees_of_freedom": 15.0,
+    "historical_v1_reference": "retained by #200 provenance only; not scored in the primary comparisons",
+    "policy": "existing",
+    "scale": 13.230607130297555,
+    "training_seasons": "2003-2021"
+  },
+  "features": {
+    "feature_names": [
+      "coach_tenure_seasons",
+      "recruiting_class_rank",
+      "recruiting_class_points",
+      "recruiting_points_2y_mean",
+      "recruiting_points_3y_mean",
+      "recruiting_points_4y_mean",
+      "recruiting_points_trend",
+      "talent_composite",
+      "returning_pct_ppa",
+      "transfer_in_prior_usage_sum",
+      "observed_db_impact_sum",
+      "db_impact_coverage_fraction"
+    ],
+    "missingness_indicator_names": [
+      "missing__coach_tenure_seasons",
+      "missing__recruiting_class_rank",
+      "missing__recruiting_class_points",
+      "missing__recruiting_points_2y_mean",
+      "missing__recruiting_points_3y_mean",
+      "missing__recruiting_points_4y_mean",
+      "missing__recruiting_points_trend",
+      "missing__talent_composite",
+      "missing__returning_pct_ppa",
+      "missing__transfer_in_prior_usage_sum",
+      "missing__observed_db_impact_sum",
+      "missing__db_impact_coverage_fraction"
+    ],
+    "missingness_summary": [
+      {
+        "any_side_missing_game_count": 1180,
+        "away_missing_count": 694,
+        "feature": "coach_tenure_seasons",
+        "home_missing_count": 653,
+        "included_games": 2998,
+        "missingness_indicator": "missing__coach_tenure_seasons"
+      },
+      {
+        "any_side_missing_game_count": 11,
+        "away_missing_count": 6,
+        "feature": "recruiting_class_rank",
+        "home_missing_count": 5,
+        "included_games": 2998,
+        "missingness_indicator": "missing__recruiting_class_rank"
+      },
+      {
+        "any_side_missing_game_count": 11,
+        "away_missing_count": 6,
+        "feature": "recruiting_class_points",
+        "home_missing_count": 5,
+        "included_games": 2998,
+        "missingness_indicator": "missing__recruiting_class_points"
+      },
+      {
+        "any_side_missing_game_count": 0,
+        "away_missing_count": 0,
+        "feature": "recruiting_points_2y_mean",
+        "home_missing_count": 0,
+        "included_games": 2998,
+        "missingness_indicator": "missing__recruiting_points_2y_mean"
+      },
+      {
+        "any_side_missing_game_count": 0,
+        "away_missing_count": 0,
+        "feature": "recruiting_points_3y_mean",
+        "home_missing_count": 0,
+        "included_games": 2998,
+        "missingness_indicator": "missing__recruiting_points_3y_mean"
+      },
+      {
+        "any_side_missing_game_count": 0,
+        "away_missing_count": 0,
+        "feature": "recruiting_points_4y_mean",
+        "home_missing_count": 0,
+        "included_games": 2998,
+        "missingness_indicator": "missing__recruiting_points_4y_mean"
+      },
+      {
+        "any_side_missing_game_count": 148,
+        "away_missing_count": 84,
+        "feature": "recruiting_points_trend",
+        "home_missing_count": 74,
+        "included_games": 2998,
+        "missingness_indicator": "missing__recruiting_points_trend"
+      },
+      {
+        "any_side_missing_game_count": 21,
+        "away_missing_count": 11,
+        "feature": "talent_composite",
+        "home_missing_count": 11,
+        "included_games": 2998,
+        "missingness_indicator": "missing__talent_composite"
+      },
+      {
+        "any_side_missing_game_count": 64,
+        "away_missing_count": 35,
+        "feature": "returning_pct_ppa",
+        "home_missing_count": 30,
+        "included_games": 2998,
+        "missingness_indicator": "missing__returning_pct_ppa"
+      },
+      {
+        "any_side_missing_game_count": 356,
+        "away_missing_count": 188,
+        "feature": "transfer_in_prior_usage_sum",
+        "home_missing_count": 181,
+        "included_games": 2998,
+        "missingness_indicator": "missing__transfer_in_prior_usage_sum"
+      },
+      {
+        "any_side_missing_game_count": 64,
+        "away_missing_count": 35,
+        "feature": "observed_db_impact_sum",
+        "home_missing_count": 30,
+        "included_games": 2998,
+        "missingness_indicator": "missing__observed_db_impact_sum"
+      },
+      {
+        "any_side_missing_game_count": 64,
+        "away_missing_count": 35,
+        "feature": "db_impact_coverage_fraction",
+        "home_missing_count": 30,
+        "included_games": 2998,
+        "missingness_indicator": "missing__db_impact_coverage_fraction"
+      }
+    ],
+    "preprocessing": "fit location/scale and missingness rates on both sides of earlier training games; impute missing values to training means; score home-minus-away standardized differences",
+    "preseason_feature_manifest_sha256": "0f1e327d293c441427a791d258527a5220afe03524b8a5400cfe1262251e78dd",
+    "raw_input_feature_file_sha256": "f909d4cc4eb7d72f96d2ee107d85b2e9f4926178310342bc30b2635fd52666ef",
+    "source": "issue-200 repaired Context 1.4 predictor inputs"
+  },
+  "historical_modeling_builder_sha256": "ca9939797a68a2daa60f0cd2dcb07121e27839f99e73048bd45c84419c249396",
+  "input_records": [
+    {
+      "bytes": 43038379,
+      "exists": true,
+      "logical_name": "issue204_corrected_final_observations",
+      "path": "data/processed/massey_issue_204_v1/final_observations.csv",
+      "sha256": "cd3ee420a830ca6ca1f1a9dd4accb0e844ffd5ee0b00398b4c3536dd57218d9a"
+    },
+    {
+      "bytes": 10558935,
+      "exists": true,
+      "logical_name": "issue204_corrected_final_targets",
+      "path": "data/processed/massey_prebowl_issue_204_v1/final_target_distributions.csv",
+      "sha256": "cab882da17be2f79dd379fc296107e332e2768f9827d96752ea33d97dc026f28"
+    },
+    {
+      "bytes": 180002291,
+      "exists": true,
+      "logical_name": "issue204_corrected_final_rank_pairs",
+      "path": "data/processed/massey_prebowl_issue_204_v1/final_constituent_rank_pairs.csv",
+      "sha256": "4dd2376a488ede05c889372089fa0e0b16d62faaf879626c50cb359d5fe4e3af"
+    },
+    {
+      "bytes": 1877,
+      "exists": true,
+      "logical_name": "issue200_existing_likelihood",
+      "path": "historical_likelihood_existing.json",
+      "sha256": "b64d237d4abf3121355a28505f805252cf32062b3fce66db6ca620ef35887952"
+    },
+    {
+      "bytes": 49238,
+      "exists": true,
+      "logical_name": "issue200_manifest",
+      "path": "manifest.json",
+      "sha256": "09dd40ec9e5164b923e1970fa8d3d99ffe27386d279519c79c48b16da04f6047"
+    },
+    {
+      "bytes": 9901447,
+      "exists": true,
+      "logical_name": "issue200_pipeline_bundle",
+      "path": "pipeline_bundle.json",
+      "sha256": "c5a80a6e5aa1415bacfe3cc373cfbbc6cfe02465f33be202d8ce26962cb8419c"
+    },
+    {
+      "bytes": 381252,
+      "exists": true,
+      "logical_name": "issue200_preseason_feature_manifest",
+      "path": "preseason_feature_manifest.json",
+      "sha256": "0f1e327d293c441427a791d258527a5220afe03524b8a5400cfe1262251e78dd"
+    },
+    {
+      "bytes": 472851,
+      "exists": true,
+      "logical_name": "issue200_context_feature_inputs",
+      "path": "context_feature_inputs.csv",
+      "sha256": "f909d4cc4eb7d72f96d2ee107d85b2e9f4926178310342bc30b2635fd52666ef"
+    },
+    {
+      "bytes": 22278,
+      "exists": true,
+      "logical_name": "issue201_manifest",
+      "path": "manifest.json",
+      "sha256": "c6103fafc8fdf0e6abc074214013bcc07f3db5afa6cdf22b03de851f2fb5653d"
+    },
+    {
+      "bytes": 21710645,
+      "exists": true,
+      "logical_name": "issue201_forecast_scores",
+      "path": "forecast_scores.csv",
+      "sha256": "fbc5c51f0747d4d11c3d31d8eb032f32ad65c8abe41f0307b295415a264351bb"
+    }
+  ],
+  "interpretation": "exploratory ex-post likelihood mechanism diagnostic",
+  "issue200_manifest_sha256": "09dd40ec9e5164b923e1970fa8d3d99ffe27386d279519c79c48b16da04f6047",
+  "issue201_manifest_sha256": "c6103fafc8fdf0e6abc074214013bcc07f3db5afa6cdf22b03de851f2fb5653d",
+  "likelihood": {
+    "convergence_checks": "analytic gradients, L-BFGS-B termination state, gradient infinity norm, finite positive scale, and finite output scores are recorded",
+    "decision": {
+      "calibration_equal_season_delta_nll": -0.0029431240714375383,
+      "calibration_pooled_equal_game_delta_nll": -0.0029476372874067598,
+      "classification": "Context association beyond calibration",
+      "context_equal_season_delta_nll": -0.004603766372234541,
+      "context_negative_seasons": 3,
+      "context_pooled_equal_game_delta_nll": -0.004589705042144186,
+      "direction_rule": "candidate-minus-reference NLL must be negative in pooled equal-game and equal-season summaries and at least two of three held-out seasons",
+      "generic_calibration_comparison": "rank_site_calibration_minus_rank_only",
+      "limitations": [
+        "This is an ex-post game-margin mechanism diagnostic, not an operational forecast.",
+        "Final ranking measurements include regular-season and postseason outcomes and may include the diagnosed game.",
+        "Rank measurements are noisy and endogenous; the result does not test conditional independence given true ranks.",
+        "2022-2025 informed prior research and remain exploratory development seasons.",
+        "Repeated teams and seasons preclude treating games as independent confirmation.",
+        "A negative result addresses only the fixed linear Context mean correction."
+      ],
+      "primary_comparison": "rank_site_context_minus_rank_site_calibration",
+      "status": "complete"
+    },
+    "mean_term": "positive overall multiplier on frozen conditional mean plus home term and Context home-minus-away correction",
+    "objective": "sum of marginalized per-game mixture NLL plus half-lambda L2 Context coefficient norm",
+    "rank_pair_weighting": "each game contributes one log-mean-density regardless of constituent pair count",
+    "scale_term": "one common exp(log_scale_correction) multiplier",
+    "selection_grid": [
+      0.01,
+      0.1,
+      1.0
+    ],
+    "site_term": "additional home term multiplied by 1-neutral; zero on neutral sites",
+    "student_t_df": 15.0
+  },
+  "original_v1_baseline_reference_sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+  "outputs": {
+    "comparison_summary.csv": {
+      "bytes": 1222,
+      "sha256": "5baa8b1a3d6a8afefb47a547038e5a17b14139c4f18b18721620fc9f740feaf7"
+    },
+    "decision.json": {
+      "bytes": 1291,
+      "sha256": "3aeda8410747fdf142febf2321f58130f680c82e273587d5061572ea75e5ab1a"
+    },
+    "feature_missingness.csv": {
+      "bytes": 948,
+      "sha256": "e4d0b53d5043d6e548daa5156325e7aa1c3a269e7275ea80d92d75a3c56f215c"
+    },
+    "fit_records.json": {
+      "bytes": 30185,
+      "sha256": "a6bb5229c6991c5dd1661bc138f6c322b071c7591c0d7b4c75315b3966e59530"
+    },
+    "fitted_context_coefficients.csv": {
+      "bytes": 5717,
+      "sha256": "9bc2c131b8b6d97aa6594e713b7b8e6c0100215b81732a71d36f4e60a67b348a"
+    },
+    "gain_concentration.csv": {
+      "bytes": 1004,
+      "sha256": "668faba0bc46910b2a373f3be368b52f2e33191efc7aad67db0baf9ce1f05aaf"
+    },
+    "game_manifest.csv": {
+      "bytes": 380890,
+      "sha256": "64acca8f8437a396bc5bf9f021daf5529ec7099e83d1b04047f6f78a0ec7e230"
+    },
+    "input_gate.json": {
+      "bytes": 2952,
+      "sha256": "9b7a4a8ad557f07d09e4814231d6c7c7a6f4408660e4a2b6af33c41aacd38b9b"
+    },
+    "per_game_scores.csv": {
+      "bytes": 2626510,
+      "sha256": "84d955ebf6acf70b23aea57ab993e1a4148fa3649bf1c0012c3813a0c100bb63"
+    },
+    "phase_summary.csv": {
+      "bytes": 2963,
+      "sha256": "83c95b20af96bb868e416e2e4cb30df815fe00a45dc0bb2c7e62071f63044419"
+    },
+    "report.md": {
+      "bytes": 2405,
+      "sha256": "e892de69213c3f4465a02735f2f88cc6e31c1390929edf0c638d0e67729364dc"
+    },
+    "results.json": {
+      "bytes": 4172,
+      "sha256": "17f7131ae32ba2fdef98ddeb613a7e79f2213f8d254806e40f66360bd55fa75b"
+    },
+    "season_summary.csv": {
+      "bytes": 2069,
+      "sha256": "c52ea988a3b36360f62f64474caaff3fc2f9140960a4b270ef6dd9a531f5cb46"
+    },
+    "synthetic_controls.json": {
+      "bytes": 4767,
+      "sha256": "ac1fc7778d013ac539671054e0f9cf52a5a3ad3fd036a5d986272130c80d6377"
+    }
+  },
+  "population": {
+    "2022_role": "residual training only, not held-out evaluation",
+    "additional_exclusions": 0,
+    "arms_use_identical_game_ids": true,
+    "army_navy_game_count": 4,
+    "candidate_common_issue201_games": 2998,
+    "evaluation_seasons": [
+      2023,
+      2024,
+      2025
+    ],
+    "game_id_sha256": "0a08dae7ed46dc949c76cbff8e9da35432e9c67c0d0e1e4b31751280240629a1",
+    "included_games": 2998,
+    "issue201_phase_values": [
+      "army_navy",
+      "conference_championship_period",
+      "pre_thanksgiving",
+      "rivalry_window"
+    ],
+    "pairing_method_counts": {
+      "same_system": 2998
+    },
+    "seasons": [
+      2022,
+      2023,
+      2024,
+      2025
+    ]
+  },
+  "status": "complete"
+}
