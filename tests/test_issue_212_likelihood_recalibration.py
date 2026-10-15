@@ -38,6 +38,7 @@ from gippyrank.research.issue_212_likelihood_recalibration import (
     _deduplicate_games,
     _rank_summary,
     _validate_target_exclusion,
+    _verify_baseline_parity,
 )
 
 
@@ -236,6 +237,50 @@ def test_target_game_must_be_absent_and_cutoff_precedes_kickoff() -> None:
         _validate_target_exclusion(
             game_id="target", cutoff=cutoff, kickoff=cutoff, evidence_ids=set()
         )
+
+
+def test_baseline_parity_ignores_candidate_arm_for_same_forecast_key(
+    tmp_path,
+) -> None:
+    metrics = (
+        "crps",
+        "margin_nll",
+        "median_absolute_error",
+        "home_win_brier",
+        "expected_home_margin",
+        "median_home_margin",
+        "home_win_probability",
+        "away_win_probability",
+        "margin_interval_50_low",
+        "margin_interval_50_high",
+        "margin_interval_80_low",
+        "margin_interval_80_high",
+        "margin_interval_95_low",
+        "margin_interval_95_high",
+    )
+    baseline = {
+        "season": 2023,
+        "game_id": "401520145",
+        "cutoff_utc": "2023-08-22T00:00:00+00:00",
+        "model_arm": BASELINE_ARM,
+        "forecast_stage": "rolling",
+        "forecast_population": PRIMARY_POPULATION,
+        "home_id": "55",
+        "away_id": "2638",
+        "evidence_ids_sha256": "ids",
+        "evidence_rows_sha256": "rows",
+        **{metric: 0.0 for metric in metrics},
+    }
+    candidate = {**baseline, "model_arm": CANDIDATE_ARM, "crps": 1.0}
+    reference_path = tmp_path / "issue201.csv"
+    from gippyrank.research.issue_212_likelihood_recalibration import write_csv
+
+    write_csv(reference_path, [baseline])
+
+    parity = _verify_baseline_parity([baseline, candidate], reference_path)
+
+    assert parity["passed"] is True
+    assert parity["forecast_rows_compared"] == 1
 
 
 def test_rank_aggregate_weights_each_team_season_equally_across_checkpoints() -> None:

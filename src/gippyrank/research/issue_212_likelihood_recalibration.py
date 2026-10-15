@@ -1031,7 +1031,8 @@ def _verify_baseline_parity(
     actual = {
         (int(row["season"]), str(row["game_id"]), str(row["cutoff_utc"])): row
         for row in baseline_rows
-        if row["forecast_stage"] == "rolling"
+        if row["model_arm"] == BASELINE_ARM
+        and row["forecast_stage"] == "rolling"
         and row["forecast_population"] == PRIMARY_POPULATION
         and int(row["season"]) in EVALUATION_SEASONS
     }
