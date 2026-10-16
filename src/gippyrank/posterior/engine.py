@@ -8,6 +8,7 @@ opponent alter the interpretation of an earlier result.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Hashable
 from dataclasses import dataclass
 from typing import Literal
 
@@ -114,16 +115,16 @@ class BeliefPropagationState:
     cavity_beliefs: dict[tuple[int, str], np.ndarray]
     pair_indices: dict[tuple[str, str], int]
 
-    def pair_cavity(
-        self, first_id: str, second_id: str, team_id: str
-    ) -> np.ndarray:
+    def pair_cavity(self, first_id: str, second_id: str, team_id: str) -> np.ndarray:
         """Return the normalized cavity belief for a grouped team pair."""
         key = tuple(sorted((first_id, second_id)))
         try:
             index = self.pair_indices[key]
             return self.cavity_beliefs[index, team_id].copy()
         except KeyError as error:
-            raise KeyError(f"No cavity belief for pair {key} and team {team_id}") from error
+            raise KeyError(
+                f"No cavity belief for pair {key} and team {team_id}"
+            ) from error
 
 
 def _student_t_logpdf(
@@ -279,6 +280,8 @@ def infer_posterior(
     likelihood: LikelihoodV1,
     *,
     factor_weights: dict[str, float] | None = None,
+    factor_builder: Callable[[Game, Team, Team], np.ndarray] | None = None,
+    factor_cache_key: Hashable | None = None,
     max_iterations: int = 500,
     tolerance: float = 1e-9,
     damping: float = 0.35,
@@ -295,12 +298,17 @@ def infer_posterior(
     if factor_weights is not None:
         unknown = set(factor_weights) - {game.game_id for game in games}
         if unknown:
-            raise ValueError(f"factor weights reference unknown games: {sorted(unknown)}")
+            raise ValueError(
+                f"factor weights reference unknown games: {sorted(unknown)}"
+            )
         if any(
-            not np.isfinite(weight) or weight <= 0
-            for weight in factor_weights.values()
+            not np.isfinite(weight) or weight <= 0 for weight in factor_weights.values()
         ):
             raise ValueError("factor weights must be finite and strictly positive")
+    if factor_builder is None and factor_cache_key is not None:
+        raise ValueError("factor_cache_key requires a custom factor_builder")
+    if factor_builder is not None and factor_cache_key is None:
+        raise ValueError("custom factor_builder requires a distinct factor_cache_key")
     grouped: dict[tuple[str, str], tuple[np.ndarray, list[str]]] = {}
     # Canonical orientation means rematches do not introduce a trivial
     # two-variable cycle. Individual IDs remain available for provenance.
@@ -312,7 +320,10 @@ def infer_posterior(
         key = tuple(sorted((game.home_id, game.away_id)))
         home, away = by_id[game.home_id], by_id[game.away_id]
         cache_key = (
-            likelihood.beta.tobytes(),
+            ("custom", factor_cache_key)
+            if factor_builder is not None
+            else (likelihood.beta.tobytes(),)
+        ) + (
             likelihood.scale,
             likelihood.degrees_of_freedom,
             home.subdivision,
@@ -325,7 +336,20 @@ def infer_posterior(
         )
         values = _GAME_FACTOR_CACHE.get(cache_key)
         if values is None:
-            values = game_factor(game, home, away, likelihood)
+            values = (
+                game_factor(game, home, away, likelihood)
+                if factor_builder is None
+                else np.asarray(factor_builder(game, home, away), dtype=float)
+            )
+            if (
+                values.shape != (len(home.prior), len(away.prior))
+                or not np.isfinite(values).all()
+                or np.any(values < 0)
+                or not np.any(values > 0)
+            ):
+                raise ValueError(
+                    f"{game.game_id}: factor builder returned invalid values"
+                )
             _GAME_FACTOR_CACHE[cache_key] = values
         if (game.home_id, game.away_id) != key:
             values = values.T
@@ -456,10 +480,14 @@ def game_evidence_pmf(
     key = tuple(sorted((game.home_id, game.away_id)))
     factor_index = state.pair_indices.get(key)
     if factor_index is None:
-        raise ValueError(f"game {game.game_id} is absent from the posterior pair factors")
+        raise ValueError(
+            f"game {game.game_id} is absent from the posterior pair factors"
+        )
     factor = state.factors[factor_index]
     if game.game_id not in factor.game_ids:
-        raise ValueError(f"game {game.game_id} is absent from its posterior pair factor")
+        raise ValueError(
+            f"game {game.game_id} is absent from its posterior pair factor"
+        )
     opponent_id = game.away_id if focal_team_id == game.home_id else game.home_id
     opponent_cavity = state.cavity_beliefs[factor_index, opponent_id]
     values = game_factor(game, by_id[game.home_id], by_id[game.away_id], likelihood)

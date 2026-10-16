@@ -1,0 +1,859 @@
+{
+  "arms": [
+    "Context_existing",
+    "Context_generic_recalibrated"
+  ],
+  "baseline_parity": {
+    "baseline_pmfs": "Reconstructed from the verified #200 Context priors and #201 replay API; #201 did not persist per-cutoff posterior PMF files. PMFs are included in this run's lossless compressed PMF artifact.",
+    "cutoff_game_keys_sha256": "e805d40668237c0ea18f3adcb3d51d312576aa72b708708f90e06a9c283e81e2",
+    "forecast_rows_compared": 2264,
+    "max_absolute_metric_difference": 0.0,
+    "metrics_compared_per_row": [
+      "crps",
+      "margin_nll",
+      "median_absolute_error",
+      "home_win_brier",
+      "expected_home_margin",
+      "median_home_margin",
+      "home_win_probability",
+      "away_win_probability",
+      "margin_interval_50_low",
+      "margin_interval_50_high",
+      "margin_interval_80_low",
+      "margin_interval_80_high",
+      "margin_interval_95_low",
+      "margin_interval_95_high"
+    ],
+    "passed": true,
+    "tolerance": 1e-08
+  },
+  "common_cohorts": {
+    "preseason/fbs_fbs": {
+      "common_cohort": true,
+      "forecast_rows": 4528,
+      "game_count_per_arm": 2264
+    },
+    "preseason/fbs_fcs": {
+      "common_cohort": true,
+      "forecast_rows": 730,
+      "game_count_per_arm": 365
+    },
+    "rolling/fbs_fbs": {
+      "common_cohort": true,
+      "forecast_rows": 4528,
+      "game_count_per_arm": 2264
+    },
+    "rolling/fbs_fcs": {
+      "common_cohort": true,
+      "forecast_rows": 730,
+      "game_count_per_arm": 365
+    }
+  },
+  "conclusion": "Retain unmodified Context / no useful gain established",
+  "corrected_target_provenance": {
+    "bytes": 10982583,
+    "manifest_sha256": "9686e56e729c97296a40711d68ed270d85da497f263d7728ae49c78e291e4241",
+    "path_label": "issue_204_corrected_pre_bowl_target_distributions.csv",
+    "row_count_by_season": {
+      "2022": 131,
+      "2023": 133,
+      "2024": 134,
+      "2025": 136
+    },
+    "sha256": "6c610ea91ea60ce5da45e20baa7d636f91de52af974420f28a74eb0ec5d66e3f"
+  },
+  "decision": {
+    "conclusion": "Retain unmodified Context / no useful gain established",
+    "decision_scope": "descriptive exploratory development seasons; not a significance test",
+    "early_guardrails": {
+      "pre_thanksgiving": {
+        "pass": true,
+        "per_season": {
+          "2023": {
+            "coverage_error_delta": 0.0029585798816568008,
+            "coverage_pass": true,
+            "crps_delta": 0.015980817497311506,
+            "crps_pass": true
+          },
+          "2024": {
+            "coverage_error_delta": 0.009995076317085147,
+            "coverage_pass": true,
+            "crps_delta": 0.030692855388730678,
+            "crps_pass": true
+          },
+          "2025": {
+            "coverage_error_delta": -0.010043668122270791,
+            "coverage_pass": true,
+            "crps_delta": 0.01818892024101615,
+            "crps_pass": true
+          }
+        },
+        "pooled_coverage_error_delta": 0.0006535947712418468,
+        "pooled_coverage_pass": true,
+        "pooled_crps_delta": 0.021606805848987776,
+        "pooled_crps_pass": true
+      },
+      "preseason": {
+        "pass": true,
+        "per_season": {
+          "2023": {
+            "coverage_error_delta": -0.019111111111111075,
+            "coverage_pass": true,
+            "crps_delta": -0.012832332391385037,
+            "crps_pass": true
+          },
+          "2024": {
+            "coverage_error_delta": -0.015425531914893523,
+            "coverage_pass": true,
+            "crps_delta": -0.0017701422933882327,
+            "crps_pass": true
+          },
+          "2025": {
+            "coverage_error_delta": -0.011023622047244126,
+            "coverage_pass": true,
+            "crps_delta": -0.00213313535815729,
+            "crps_pass": true
+          }
+        },
+        "pooled_coverage_error_delta": -0.01590106007067138,
+        "pooled_coverage_pass": true,
+        "pooled_crps_delta": -0.005556910530513548,
+        "pooled_crps_pass": true
+      }
+    },
+    "early_guardrails_pass": true,
+    "primary_rule": {
+      "equal_season_crps_delta": 0.0155190906467908,
+      "equal_season_threshold": -0.05,
+      "minimum_season_wins": 2,
+      "pass": false,
+      "pooled_equal_game_crps_delta": 0.015511533156622903,
+      "pooled_equal_game_threshold": -0.05,
+      "season_crps_delta": {
+        "2023": 0.011280095622566932,
+        "2024": 0.022316900449824928,
+        "2025": 0.012960275867984095
+      },
+      "seasons_won": 0
+    },
+    "recommend_independent_confirmation": false
+  },
+  "experiment": "issue-212-generic-likelihood-recalibration",
+  "input_hashes": {
+    "issue195_fit_records": {
+      "bytes": 30185,
+      "path_label": "issue195_fit_records",
+      "sha256": "a6bb5229c6991c5dd1661bc138f6c322b071c7591c0d7b4c75315b3966e59530"
+    },
+    "issue195_manifest": {
+      "bytes": 13110,
+      "path_label": "issue195_manifest",
+      "sha256": "df089c7287007e447acea9197d92f45487f98e41dba3a1cf98e69193f0a5f817"
+    },
+    "issue198_schedule_windows": {
+      "bytes": 7893,
+      "path_label": "issue198_schedule_windows",
+      "sha256": "3b7b4bc951c4d47285c39da260ad860053834964afc31aeeb066e5e216638883"
+    },
+    "issue200_fitted_models": {
+      "bytes": 96644,
+      "path_label": "issue200_fitted_models",
+      "sha256": "db7442a8c4ebc495bcdf47b5f646a6ef3ca1c1ef0c4782bcd91253df223d3304"
+    },
+    "issue200_manifest": {
+      "bytes": 49238,
+      "path_label": "issue200_manifest",
+      "sha256": "09dd40ec9e5164b923e1970fa8d3d99ffe27386d279519c79c48b16da04f6047"
+    },
+    "issue200_pipeline_bundle": {
+      "bytes": 9901447,
+      "path_label": "issue200_pipeline_bundle",
+      "sha256": "c5a80a6e5aa1415bacfe3cc373cfbbc6cfe02465f33be202d8ce26962cb8419c"
+    },
+    "issue200_target_snapshot_manifest": {
+      "bytes": 5743,
+      "path_label": "issue200_target_snapshot_manifest",
+      "sha256": "43d8d8b327d8c57677890a7b15e7db4f77bbc11e3a209f63ffd1531c4c9419c0"
+    },
+    "issue201_forecast_scores": {
+      "bytes": 21710645,
+      "path_label": "issue201_forecast_scores",
+      "sha256": "fbc5c51f0747d4d11c3d31d8eb032f32ad65c8abe41f0307b295415a264351bb"
+    },
+    "issue201_manifest": {
+      "bytes": 22278,
+      "path_label": "issue201_manifest",
+      "sha256": "c6103fafc8fdf0e6abc074214013bcc07f3db5afa6cdf22b03de851f2fb5653d"
+    },
+    "issue201_schedule_plan": {
+      "bytes": 6139318,
+      "path_label": "issue201_schedule_plan",
+      "sha256": "ec498d8d533b48c6e820b140be69d0310430ce50c4423c99379dc4c5d5018a93"
+    },
+    "issue201_schedule_plan_manifest": {
+      "bytes": 2324,
+      "path_label": "issue201_schedule_plan_manifest",
+      "sha256": "dc3b454cfef41a121b15e3eb9b72f0bfbf44c6bc616727caaccdb90df2db62f1"
+    },
+    "issue204_manifest": {
+      "bytes": 45271,
+      "path_label": "issue204_manifest",
+      "sha256": "9686e56e729c97296a40711d68ed270d85da497f263d7728ae49c78e291e4241"
+    },
+    "issue204_target_file": {
+      "bytes": 10982583,
+      "path_label": "issue204_target_file",
+      "sha256": "6c610ea91ea60ce5da45e20baa7d636f91de52af974420f28a74eb0ec5d66e3f"
+    },
+    "protocol": {
+      "bytes": 6579,
+      "path_label": "protocol",
+      "sha256": "42f1c70eaf8fe802a2f5ab471d49322451f9c03acf6595e863a7c06375c62716"
+    }
+  },
+  "issue195_fit_provenance": {
+    "fit_record_by_season": {
+      "2023": {
+        "additional_non_neutral_home_field_points": -0.6731796660585783,
+        "common_log_scale_correction": -0.061714257883296215,
+        "optimizer": {
+          "evaluations": 15,
+          "final_gradient_infinity_norm": 0.00022920433808870655,
+          "gradient_tolerance": 1e-06,
+          "iterations": 13,
+          "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+          "method": "L-BFGS-B with analytic gradient",
+          "parameter_bounds": {
+            "context_coefficients": "unbounded; L2 regularized",
+            "home_field_adjustment": [
+              -100.0,
+              100.0
+            ],
+            "log_multiplier": [
+              -4.0,
+              4.0
+            ],
+            "log_scale_correction": [
+              -3.0,
+              3.0
+            ]
+          },
+          "status": 0,
+          "success": true
+        },
+        "overall_mean_multiplier": 0.9701893205429778,
+        "training_seasons": [
+          2022
+        ]
+      },
+      "2024": {
+        "additional_non_neutral_home_field_points": -0.5155243356297814,
+        "common_log_scale_correction": -0.06311586296341012,
+        "optimizer": {
+          "evaluations": 15,
+          "final_gradient_infinity_norm": 0.001141301853849086,
+          "gradient_tolerance": 1e-06,
+          "iterations": 13,
+          "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+          "method": "L-BFGS-B with analytic gradient",
+          "parameter_bounds": {
+            "context_coefficients": "unbounded; L2 regularized",
+            "home_field_adjustment": [
+              -100.0,
+              100.0
+            ],
+            "log_multiplier": [
+              -4.0,
+              4.0
+            ],
+            "log_scale_correction": [
+              -3.0,
+              3.0
+            ]
+          },
+          "status": 0,
+          "success": true
+        },
+        "overall_mean_multiplier": 0.9733203518268143,
+        "training_seasons": [
+          2022,
+          2023
+        ]
+      },
+      "2025": {
+        "additional_non_neutral_home_field_points": -0.36573157800760664,
+        "common_log_scale_correction": -0.06485054367928102,
+        "optimizer": {
+          "evaluations": 16,
+          "final_gradient_infinity_norm": 0.00041725410358495196,
+          "gradient_tolerance": 1e-06,
+          "iterations": 13,
+          "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+          "method": "L-BFGS-B with analytic gradient",
+          "parameter_bounds": {
+            "context_coefficients": "unbounded; L2 regularized",
+            "home_field_adjustment": [
+              -100.0,
+              100.0
+            ],
+            "log_multiplier": [
+              -4.0,
+              4.0
+            ],
+            "log_scale_correction": [
+              -3.0,
+              3.0
+            ]
+          },
+          "status": 0,
+          "success": true
+        },
+        "overall_mean_multiplier": 0.9900246508149303,
+        "training_seasons": [
+          2022,
+          2023,
+          2024
+        ]
+      }
+    },
+    "fit_records_commit": "2b0cfc2 (required source commit recorded by issue 212)",
+    "fit_records_sha256": "a6bb5229c6991c5dd1661bc138f6c322b071c7591c0d7b4c75315b3966e59530",
+    "manifest_sha256": "df089c7287007e447acea9197d92f45487f98e41dba3a1cf98e69193f0a5f817"
+  },
+  "issue195_verified_inputs": {
+    "issue200_context_feature_inputs": {
+      "bytes": 472851,
+      "path_label": "issue200_context_feature_inputs",
+      "sha256": "f909d4cc4eb7d72f96d2ee107d85b2e9f4926178310342bc30b2635fd52666ef"
+    },
+    "issue200_existing_likelihood": {
+      "bytes": 1877,
+      "path_label": "issue200_existing_likelihood",
+      "sha256": "b64d237d4abf3121355a28505f805252cf32062b3fce66db6ca620ef35887952"
+    },
+    "issue200_manifest": {
+      "bytes": 49238,
+      "path_label": "issue200_manifest",
+      "sha256": "09dd40ec9e5164b923e1970fa8d3d99ffe27386d279519c79c48b16da04f6047"
+    },
+    "issue200_pipeline_bundle": {
+      "bytes": 9901447,
+      "path_label": "issue200_pipeline_bundle",
+      "sha256": "c5a80a6e5aa1415bacfe3cc373cfbbc6cfe02465f33be202d8ce26962cb8419c"
+    },
+    "issue200_preseason_feature_manifest": {
+      "bytes": 381252,
+      "path_label": "issue200_preseason_feature_manifest",
+      "sha256": "0f1e327d293c441427a791d258527a5220afe03524b8a5400cfe1262251e78dd"
+    },
+    "issue201_forecast_scores": {
+      "bytes": 21710645,
+      "path_label": "issue201_forecast_scores",
+      "sha256": "fbc5c51f0747d4d11c3d31d8eb032f32ad65c8abe41f0307b295415a264351bb"
+    },
+    "issue201_manifest": {
+      "bytes": 22278,
+      "path_label": "issue201_manifest",
+      "sha256": "c6103fafc8fdf0e6abc074214013bcc07f3db5afa6cdf22b03de851f2fb5653d"
+    },
+    "issue204_corrected_final_observations": {
+      "bytes": 43038379,
+      "path_label": "issue204_corrected_final_observations",
+      "sha256": "cd3ee420a830ca6ca1f1a9dd4accb0e844ffd5ee0b00398b4c3536dd57218d9a"
+    },
+    "issue204_corrected_final_rank_pairs": {
+      "bytes": 180002291,
+      "path_label": "issue204_corrected_final_rank_pairs",
+      "sha256": "4dd2376a488ede05c889372089fa0e0b16d62faaf879626c50cb359d5fe4e3af"
+    },
+    "issue204_corrected_final_targets": {
+      "bytes": 10558935,
+      "path_label": "issue204_corrected_final_targets",
+      "sha256": "cab882da17be2f79dd379fc296107e332e2768f9827d96752ea33d97dc026f28"
+    }
+  },
+  "issue200_provenance": {
+    "bundle_manifest_expected_sha256": "c5a80a6e5aa1415bacfe3cc373cfbbc6cfe02465f33be202d8ce26962cb8419c",
+    "bundle_sha256": "c5a80a6e5aa1415bacfe3cc373cfbbc6cfe02465f33be202d8ce26962cb8419c",
+    "fit_origin_by_season_policy": {
+      "2022": {
+        "existing": {
+          "forward_only": true,
+          "trained_through_season": 2021,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        },
+        "pre_bowl": {
+          "forward_only": true,
+          "trained_through_season": 2021,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        }
+      },
+      "2023": {
+        "existing": {
+          "forward_only": true,
+          "trained_through_season": 2022,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        },
+        "pre_bowl": {
+          "forward_only": true,
+          "trained_through_season": 2022,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        }
+      },
+      "2024": {
+        "existing": {
+          "forward_only": true,
+          "trained_through_season": 2023,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        },
+        "pre_bowl": {
+          "forward_only": true,
+          "trained_through_season": 2023,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        }
+      },
+      "2025": {
+        "existing": {
+          "forward_only": true,
+          "trained_through_season": 2024,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        },
+        "pre_bowl": {
+          "forward_only": true,
+          "trained_through_season": 2024,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        }
+      }
+    },
+    "fitted_models_sha256": "db7442a8c4ebc495bcdf47b5f646a6ef3ca1c1ef0c4782bcd91253df223d3304",
+    "fitted_prior_arm_count": 4,
+    "manifest_sha256": "09dd40ec9e5164b923e1970fa8d3d99ffe27386d279519c79c48b16da04f6047",
+    "target_seasons": [
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "training_seasons": [
+      2003,
+      2004,
+      2005,
+      2006,
+      2007,
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021
+    ]
+  },
+  "issue204_support_status": {
+    "downstream_ready": true,
+    "status": "complete",
+    "support_validation": {
+      "anomaly_count": 0,
+      "final_anomaly_count": 0,
+      "new_anomaly_count": 0,
+      "present_in_final_corpus_count": 0,
+      "report": "target_support_anomalies.csv",
+      "status": "passed"
+    }
+  },
+  "outputs": {
+    "baseline_parity.json": {
+      "bytes": 839,
+      "sha256": "f5ef7885b86d5f3dbce398b3f5434a6822f074d5ef105f013c648ecf5c639f20"
+    },
+    "convergence_diagnostics.csv": {
+      "bytes": 12073,
+      "sha256": "32e5648af926c0bd8c2ba2cde87bf307d802668eda14a34093106cd457d898cc"
+    },
+    "decision.json": {
+      "bytes": 2371,
+      "sha256": "297da6c0b315e1b3a58677632277394aca28f9d69f97b9e54354ecd823c2fc8d"
+    },
+    "evidence.jsonl.gz": {
+      "bytes": 1907151,
+      "sha256": "03a5811fe421e8cf965eb9d98f85d8fc7ebe89bec5024dee351ff3fd95283523"
+    },
+    "fit_provenance.json": {
+      "bytes": 3223,
+      "sha256": "34951786d45d08ad0147d2eb835d0554968b82f4563b5d72040eb4f4f5a434d3"
+    },
+    "forecast_exclusions.csv": {
+      "bytes": 695,
+      "sha256": "09fb4d1b129ca89964d39cdc5efa1b45dbc50ba5915861e4f1735c25bc71deb2"
+    },
+    "forecast_scores.csv": {
+      "bytes": 9823519,
+      "sha256": "08f0f47e3082ff8e1df9b8d0a4883102a7765bf567d5541721de91be0f2f987f"
+    },
+    "forecast_summaries.csv": {
+      "bytes": 25229,
+      "sha256": "f1f6e08877635039369141a048c3617c42b8387199539bd8f7a385475bb38f7a"
+    },
+    "gain_concentration.csv": {
+      "bytes": 61907,
+      "sha256": "d02811431b4a68dda3c8fa8e87ac0919807f4499ed05764b4bad3cd93f45f103"
+    },
+    "input_hashes.json": {
+      "bytes": 2507,
+      "sha256": "f9045fa309c1e20e2e9b811c53469ef0965af58792030ee267728486812b3600"
+    },
+    "paired_game_differences.csv": {
+      "bytes": 4187030,
+      "sha256": "ac4ebf5d3dcb68ea21bfd58e503948f1cc7c14e9c387769c78f048fd87089dec"
+    },
+    "posterior_pmfs.jsonl.gz": {
+      "bytes": 52453266,
+      "sha256": "1420e854e99b6a1b9dbcd8c106500f2ccce47ee4dbd81f256810766fc05584f9"
+    },
+    "rank_exclusions.csv": {
+      "bytes": 6,
+      "sha256": "45fd2f9df187bc411dc80df5c4c4844ac00f4dd69bc69453f1893a5d143433d6"
+    },
+    "rank_scores.csv": {
+      "bytes": 6058318,
+      "sha256": "1c9876efcc26a0df8ede661207e2c82b7ce932e44c433fa110cd0ed1f857d2f4"
+    },
+    "rank_summaries.csv": {
+      "bytes": 2878,
+      "sha256": "c5918a61304e71008c3a12a825487b3e82c60f43f39e42c5231dddc150dcae53"
+    },
+    "report.md": {
+      "bytes": 4534,
+      "sha256": "42a2ab47183c464856d03cd112d6835d348cdaa900b63c751a79a04b2815579a"
+    }
+  },
+  "posterior_pmf_hashes": {
+    "baseline": {
+      "2023/2023-08-22T00:00:00+00:00": "b8434f9c4e954e3160892577532b154ac8b0d094f9f5f5ee9dc8b278fa64177a",
+      "2023/2023-08-29T00:00:00+00:00": "c6242a69a94def43c8ceba797447e9509e3d8c099b992c435d3ee9f5650ef7d2",
+      "2023/2023-09-05T00:00:00+00:00": "866da480adbc822153c789e174e1ac9d72f9d1e4469dbb6d1e3d1887430c3012",
+      "2023/2023-09-12T00:00:00+00:00": "6c886e8fd6ba803e627191e1210d9b14637f389f94897f9ef527986f60a7f834",
+      "2023/2023-09-19T00:00:00+00:00": "b55fd0362ee34c2135a05d472eabe9a1376a7fdc0d095e58b929a706c04ad19a",
+      "2023/2023-09-26T00:00:00+00:00": "e92ef8937fe62004023ff40765f3129ef76e913550c6cbcd7baba388ff773cb5",
+      "2023/2023-10-03T00:00:00+00:00": "3c35219039ed435c58b14d23411246639e835039b929cfcd7c98fe7e17c38dd3",
+      "2023/2023-10-10T00:00:00+00:00": "66e6dd46984db54bb26032723fb3fb455a2a60b954efedbd609807757c5e2eeb",
+      "2023/2023-10-17T00:00:00+00:00": "ad993b86788233c094f6a61eba2d7ce8beb431c7fe6112474d4d24a73a85f723",
+      "2023/2023-10-24T00:00:00+00:00": "84e43cf15ad22054ee47ce551b41ba9cc4f10753c5aa0ce2915055441ffbc8a3",
+      "2023/2023-10-31T00:00:00+00:00": "b47730890a60c80fedc72e10ec9e44a93ac0c6e41fcc360dc2a0292a8e12fc8e",
+      "2023/2023-11-07T00:00:00+00:00": "8b3b8ed5c06241bc40ef6832d07ebb7c7a7053a9a7cfc976cfb5b91d18a24ece",
+      "2023/2023-11-14T00:00:00+00:00": "159db7095c3950cfc1781929bbd7a594652e7a2b6a4c09abe3a65ca131dee60b",
+      "2023/2023-11-21T00:00:00+00:00": "2f5432503e3c50d4d817706a4f215b02f7ca6f6175499a1417a7b236ee23e0d8",
+      "2023/2023-11-28T00:00:00+00:00": "6250fdc9f02750b0d432b4ceb6032446f9ddd844759b6ab05e768bd1ff11b8e9",
+      "2023/2023-12-05T00:00:00+00:00": "99edcbcc4f2de9ac0bb91697aed1acb777bbc9b0c746d8854d1f5cbf2b6649d3",
+      "2023/preseason_no_evidence": "b8434f9c4e954e3160892577532b154ac8b0d094f9f5f5ee9dc8b278fa64177a",
+      "2024/2024-08-20T00:00:00+00:00": "5dda9d7d642e404e95a7ee8d7e316800a32cc18e8695fe94278b818358c74e44",
+      "2024/2024-08-27T00:00:00+00:00": "e4c97b89a26aba21acc6bf0cd1cfffdec9e194c6c74fc74a4ecd3bd96adfe122",
+      "2024/2024-09-03T00:00:00+00:00": "9f126605c62f5857354edc724fd21588aebccab303f59273bee2c015c1061104",
+      "2024/2024-09-10T00:00:00+00:00": "0846fe2ea72061f4900d2e0a48604cddfc46c96ebeddb7fc130813eee3101953",
+      "2024/2024-09-17T00:00:00+00:00": "b29989c2313ed0b0549bcd2d0b92004774369d7966c8d7f9a3c58166db398dc5",
+      "2024/2024-09-24T00:00:00+00:00": "916af8d28ff818625b4ed7f7a663f29c5199d669e5a9e0fb4469ee6fdbcbb4da",
+      "2024/2024-10-01T00:00:00+00:00": "0f58058be37276b19bd05fcbb79db3191787ba9dbfa855750552d64c751b0a45",
+      "2024/2024-10-08T00:00:00+00:00": "8b4943ff9ff13b46a42b53e2033eda998095a686a6f8da30798196856b04ddaf",
+      "2024/2024-10-15T00:00:00+00:00": "3b1c6730eb50aaac2fc17c5dc8e5cbfa5eb82451f61fd50b76703a97f000b920",
+      "2024/2024-10-22T00:00:00+00:00": "5d3a0a88316fbd82ecccc4e2b84012a3f95f69f2f2c3f3323dbfd33e3c3f400d",
+      "2024/2024-10-29T00:00:00+00:00": "00778b9454f42d0e3dbf7ad7c107d77dea3993835b93b5fe63a656cf10f92ce7",
+      "2024/2024-11-05T00:00:00+00:00": "abf09654bda1ec73617550d6ac2ec7cf6befa24c29086cad1cd13b641209b622",
+      "2024/2024-11-12T00:00:00+00:00": "d363984b8b9c2d8981c255b77c3d80012da6c984e22b8d034f35a93b5816b29f",
+      "2024/2024-11-19T00:00:00+00:00": "1d0b6abc59b658bcd1312b3540165cd39f4283c6eb69397acfa369438e3895e8",
+      "2024/2024-11-26T00:00:00+00:00": "179bc4e0b7df5198154427b6ab8aa13aed0a210612e6c95999b4378866adcb92",
+      "2024/2024-12-03T00:00:00+00:00": "adb2056e26e8280466ee5f197e7635593f30e136ee8e78e3ce67dc669c18ff22",
+      "2024/2024-12-10T00:00:00+00:00": "945157ded23363d06b718a0b7731af5c445e49d7da9ecdcb9d01ce9e13aa71af",
+      "2024/preseason_no_evidence": "5dda9d7d642e404e95a7ee8d7e316800a32cc18e8695fe94278b818358c74e44",
+      "2025/2025-08-19T00:00:00+00:00": "e638693c330d70fb68285cf15221b6cbf22367b747a2819b720945164c7b801a",
+      "2025/2025-08-26T00:00:00+00:00": "2bd88d8c19c49b1d34e764a9725d3e4cd5ee1066e788ab86402d9fa8744b1c70",
+      "2025/2025-09-02T00:00:00+00:00": "fe5b9b84c599443cf39ca5432338dba2381a517b3e7b8331b1f51fa828bf9b82",
+      "2025/2025-09-09T00:00:00+00:00": "bb18a8e82f9a96e2eb4a783140d129db8694045af80dbc285604d9495f83654d",
+      "2025/2025-09-16T00:00:00+00:00": "1264e7243a1d0d94f8f0e38503b7cee7e340aeba64575a624b7bc456ee0656ce",
+      "2025/2025-09-23T00:00:00+00:00": "a192de1cc827b17e1bb0042036656618a16015ab939d28cf6fccd8b969b31296",
+      "2025/2025-09-30T00:00:00+00:00": "84630c81e4565a233ba0fc1d159dd56876cb3d6be440d0480762ebfd211d405f",
+      "2025/2025-10-07T00:00:00+00:00": "c714a50f90017b11ff4f7c95344f6e7c558268feb4ddc9da3a93ce5433838886",
+      "2025/2025-10-14T00:00:00+00:00": "2e8884f6040ca8c8b31c6da07781473d7edbdbf0287e0dca051bc4b2875b296b",
+      "2025/2025-10-21T00:00:00+00:00": "7888266535ad18c4fe53ce8d5e0d4c2d478b5922a850ba657c044e1d5cc1c02d",
+      "2025/2025-10-28T00:00:00+00:00": "421957ef23dbadd25caa4155574819844cdda1ef40fc184a70763a230c48a187",
+      "2025/2025-11-04T00:00:00+00:00": "ab6fd96a71a0c9a56eabd0b2f351f7520c5656fda5f4ab7f1a073246fc781f6c",
+      "2025/2025-11-11T00:00:00+00:00": "a2f81067dfe44b9a67644a001db43f520c9e74696bb887c81d766b204e9b903e",
+      "2025/2025-11-18T00:00:00+00:00": "fd22396f3667d18a8c0f885cadfc05795916c95a164a4890b6bbce61f3d59df0",
+      "2025/2025-11-25T00:00:00+00:00": "542b7cba9006665ef3b7ce100e8465a8380d366d79ce394304c306e3f6fb4827",
+      "2025/2025-12-02T00:00:00+00:00": "84a21a08bb86326d5ec89967887e8cdeb49f0636a492bdde3dd8ea8f31d82e1e",
+      "2025/2025-12-09T00:00:00+00:00": "9292b43b33ef37f8692630b95f2af2aafee9af5b8ecd9b2dfb21d0dda437ccf4",
+      "2025/preseason_no_evidence": "e638693c330d70fb68285cf15221b6cbf22367b747a2819b720945164c7b801a"
+    },
+    "candidate": {
+      "2023/2023-08-22T00:00:00+00:00": "b8434f9c4e954e3160892577532b154ac8b0d094f9f5f5ee9dc8b278fa64177a",
+      "2023/2023-08-29T00:00:00+00:00": "cb7e0355f402673240c8f3b7921e9fbd5e56643fc3f453e055e16c02f4fe2f52",
+      "2023/2023-09-05T00:00:00+00:00": "97b799ed64d19556dc53f6bf2246cf5820e595feb9c11154b6fe2ed9cdf80477",
+      "2023/2023-09-12T00:00:00+00:00": "33234914eeef5bcbc7a5d8593e8e75865174d2185ab5ced09820fafe1ed81be6",
+      "2023/2023-09-19T00:00:00+00:00": "73d1dff4b6116c2d5f865eafc83edbd0cbc42d1ea54e8c960297b61d5ec24530",
+      "2023/2023-09-26T00:00:00+00:00": "c5b6dc355f7a3ad8584e03afe0e7ea1cfff3f3214840f7899fd4e22a4b67f8d5",
+      "2023/2023-10-03T00:00:00+00:00": "b1d228781cda2f0a7b73c330027a7e73676614886d4d7d3f5c1dc2e8ae768684",
+      "2023/2023-10-10T00:00:00+00:00": "17fbcf0d0d3572678298e5c5df3f487a7446145b55f7260a785fc8c595bb0589",
+      "2023/2023-10-17T00:00:00+00:00": "b1848eeef2fbfd951102fd66723b7d0df1f625534d5100159e18b973d03e0dc0",
+      "2023/2023-10-24T00:00:00+00:00": "84e55ae672db99f2e9616b3365184350d2415aefd878cb9d2446344bf5d255fc",
+      "2023/2023-10-31T00:00:00+00:00": "3b59efb14a4afdae9a47b9a2d3a2b9996b70e172f073765c7761defb23220085",
+      "2023/2023-11-07T00:00:00+00:00": "63b31b0ebb5ebd1811f8a68642fbde565c0475b616f074a6f7c9a306c5af1e91",
+      "2023/2023-11-14T00:00:00+00:00": "fd88c33ba04fe11725de5908fbb9364e920a258accd59409c64eea193b3f3dbe",
+      "2023/2023-11-21T00:00:00+00:00": "4c5fc69d346065b55ae0d67b701d76194ee6897d8282823858070335e43716ca",
+      "2023/2023-11-28T00:00:00+00:00": "65eeb02c07417c50f23d0c81b73bd38991899cfd5e01046e3c945e0417ef4c58",
+      "2023/2023-12-05T00:00:00+00:00": "d32df62e685c6711269351683fac360a1252fb2d282c18bb6ac004b017c72873",
+      "2023/preseason_no_evidence": "b8434f9c4e954e3160892577532b154ac8b0d094f9f5f5ee9dc8b278fa64177a",
+      "2024/2024-08-20T00:00:00+00:00": "5dda9d7d642e404e95a7ee8d7e316800a32cc18e8695fe94278b818358c74e44",
+      "2024/2024-08-27T00:00:00+00:00": "dccbd030f0fb9df63992a0291120b2dd86da2f7cec56dda9bd4daf038eb74708",
+      "2024/2024-09-03T00:00:00+00:00": "c7694118645762cb4e1e69fa3ca2e1db4541896e01071631d1c0460916de2d38",
+      "2024/2024-09-10T00:00:00+00:00": "64f366a239a49b68eb9b183d0da0e21d556a3f811593660de1b3d63e66f8e8ec",
+      "2024/2024-09-17T00:00:00+00:00": "f34ff99dd298bae9ba42d0943c095d7dcb4696113dcf297458060c463b3c5cac",
+      "2024/2024-09-24T00:00:00+00:00": "f25e3daaec39599de3e81e7fd24dc1879223c4ab3bb19ff9f7436ef96faa3b40",
+      "2024/2024-10-01T00:00:00+00:00": "ddf48f7f7e0fea88716e6975f75c44f1534b4a9a1c64a3fed6bcafe748c28709",
+      "2024/2024-10-08T00:00:00+00:00": "dc42fe020fd909a64b99afc0ee9669326e3235274f960ab0d668e22e221a8aee",
+      "2024/2024-10-15T00:00:00+00:00": "a9a0f21da0cda5c13751845ee026df2bc12ee3765653f60a0f7801e4f4ecbc8f",
+      "2024/2024-10-22T00:00:00+00:00": "1cfa695716f64084e6a5ed9fb31aad22b6ad48f5986043837f38b12f07e9eaed",
+      "2024/2024-10-29T00:00:00+00:00": "6437eb0e5debaf6264ef26818f3cb261024c454b88d03c3791ec700211370c23",
+      "2024/2024-11-05T00:00:00+00:00": "8d1806a6bd6b8f8432844730f401adf0632b5a27f34e53fb7546bad92dd7d1c8",
+      "2024/2024-11-12T00:00:00+00:00": "f0ec5ca4d733d9028fec9adbfe92093407b552b6512b36f2292356b6609d85c1",
+      "2024/2024-11-19T00:00:00+00:00": "6902eb7339cf95c9d84ecc81e5228f4cfd0c60972e2a467bd7fd3b2d5ffcb8e0",
+      "2024/2024-11-26T00:00:00+00:00": "283951195df04da4abc035589564eed7f16c26d0691fc0fa8587981f0542a524",
+      "2024/2024-12-03T00:00:00+00:00": "5ec9b036a90318c991ec0a98b8d316a3709528be0bd9a530626bab7d1a1026af",
+      "2024/2024-12-10T00:00:00+00:00": "9f881bff8b6d47dd7864bc6033c04b15993335492fa562987b5e13abe7fa1125",
+      "2024/preseason_no_evidence": "5dda9d7d642e404e95a7ee8d7e316800a32cc18e8695fe94278b818358c74e44",
+      "2025/2025-08-19T00:00:00+00:00": "e638693c330d70fb68285cf15221b6cbf22367b747a2819b720945164c7b801a",
+      "2025/2025-08-26T00:00:00+00:00": "96716e3189bc4c4f81cce02171f99bd7935cbfc629b923b21be65bd947e0f116",
+      "2025/2025-09-02T00:00:00+00:00": "90a6fda655154a6eb900324f308537bea8da5dd54e76be0e192c894986764f83",
+      "2025/2025-09-09T00:00:00+00:00": "05b4fee76d8b931cdfdc2e18ba4e5effe81d0cc22645a8e5eeb3170b3ccc5a0d",
+      "2025/2025-09-16T00:00:00+00:00": "4e6144e16cb781b263bd44d6ce3f62070d9645b409b5bf6574469547528ed8ba",
+      "2025/2025-09-23T00:00:00+00:00": "fe66c16ab0305a27c3cddf1fc9e46b5557815201fb2bb99bae49850b19cb689b",
+      "2025/2025-09-30T00:00:00+00:00": "bf704ba1ed8106397a0e3d7702934cd7d012f69c307f949204e67312940ea2be",
+      "2025/2025-10-07T00:00:00+00:00": "23530a7a34c9f037e4bfd0aca8e2dd6e9fbe24212a87005e4cb22be3ce014cba",
+      "2025/2025-10-14T00:00:00+00:00": "1d8f436dfb0c4c35f77b924934024e91c9402ce39c205c03940d20f53a527f6e",
+      "2025/2025-10-21T00:00:00+00:00": "4f00a004ac7c20b03dc5c784f1d5e79ca6473b063d6bcf9080c1836e50255c3f",
+      "2025/2025-10-28T00:00:00+00:00": "bbfc287039f4816e00d43cef9127c94fbbdf59f00512778d6b34ca9df02d5805",
+      "2025/2025-11-04T00:00:00+00:00": "3fde2fe58243f39cee93a1902b7ae0a1f593fa287540cf01a77bb258f026fa3a",
+      "2025/2025-11-11T00:00:00+00:00": "41a0002663d54edb44b335cc725ea842007aa8b744eea9813b70377af95c42f5",
+      "2025/2025-11-18T00:00:00+00:00": "09907a27e2d409e48f74aae2c2b98722f00a3da6321d9c7514e3d1936bbd102e",
+      "2025/2025-11-25T00:00:00+00:00": "ceca4b56533e9f71949843192fd3bc9cf2813e03ea816a51eab62972f6b7d2ce",
+      "2025/2025-12-02T00:00:00+00:00": "ff545491349f4a3130d731b5f502f352d955b0d41f4d1713e5842fe2472061b6",
+      "2025/2025-12-09T00:00:00+00:00": "971c1e3fa8e3ec3068094ec04c30ba00e7eb9e4fc1bd1eeae915b96feb298355",
+      "2025/preseason_no_evidence": "e638693c330d70fb68285cf15221b6cbf22367b747a2819b720945164c7b801a"
+    }
+  },
+  "protocol_sha256": "42f1c70eaf8fe802a2f5ab471d49322451f9c03acf6595e863a7c06375c62716",
+  "raw_game_files": {
+    "2022-fcs.json": {
+      "bytes": 638280,
+      "row_count": 822,
+      "sha256": "a20030838476f73d1f3aea63bba57ed1ecfa03f99e95cee5c2a780deeee05816"
+    },
+    "2022.json": {
+      "bytes": 702663,
+      "row_count": 896,
+      "sha256": "3b4d9d353faa8ca9312534ded0747bdaa1cdcca21e89fcff1458980ab9f00747"
+    },
+    "2023-fcs.json": {
+      "bytes": 631762,
+      "row_count": 811,
+      "sha256": "df5bb461fe8f3e302eb1d5f52896b509d7f5660364d3d43643c5c540e5476817"
+    },
+    "2023.json": {
+      "bytes": 713333,
+      "row_count": 910,
+      "sha256": "417fb8191bec11e20fb2370e5510a2ff8a85cc67f07ec4371e873a935f9af35f"
+    },
+    "2024-fcs.json": {
+      "bytes": 680618,
+      "row_count": 871,
+      "sha256": "3cb6327c61d807fd4b8dfe669f0905694afa67164770ab2e997773ea2aaa72c5"
+    },
+    "2024.json": {
+      "bytes": 723364,
+      "row_count": 920,
+      "sha256": "9aeccada4e63f4ddf22d676eb55dbded71fd9bdb3ac07202ee44ed8f47d93f93"
+    },
+    "2025-fcs.json": {
+      "bytes": 689424,
+      "row_count": 879,
+      "sha256": "38329f854c0df38d17b34d5f7841753d6638d7377592dcf743cb4e27cbd9d32f"
+    },
+    "2025.json": {
+      "bytes": 736267,
+      "row_count": 934,
+      "sha256": "6312d8406be09dee0064069668fc40879dd0736ed3e49946c6c72192e6a0e4fc"
+    }
+  },
+  "schema_version": 1,
+  "seasons": [
+    2023,
+    2024,
+    2025
+  ],
+  "status": "complete"
+}
