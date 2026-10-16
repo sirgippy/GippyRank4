@@ -1,0 +1,10 @@
+{
+  "baseline_pmf_team_game_checks": 9056,
+  "baseline_pmfs": "Fresh #200 Context_existing replay PMFs were checked for all baseline forecast team-game references, normalized, and serialized with per-team hashes in posterior_pmfs.jsonl.gz. #201 did not retain the PMF arrays or their hashes, so direct cross-artifact PMF hash comparison is unavailable.",
+  "baseline_score_source": "Hash-verified #201 Context_existing per-game forecast_scores.csv; exact row keys, cutoffs, evidence IDs/hashes, and all numeric metrics are retained.",
+  "forecast_rows_compared": 4528,
+  "max_absolute_metric_difference": 0.0,
+  "numeric_values_compared": 81504,
+  "passed": true,
+  "tolerance": 1e-08
+}

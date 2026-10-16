@@ -1,0 +1,531 @@
+{
+  "arms": {
+    "Context_context_recalibrated": "#200 Context_existing prior plus #195 rank_site_context_fit",
+    "Context_existing": "#200 Context_existing prior and existing likelihood",
+    "Context_generic_recalibrated": "#200 Context_existing prior plus #195 rank_site_calibration_fit"
+  },
+  "artifact_kind": "issue_213_context_likelihood_forecast",
+  "base_likelihood_sha256": "b64d237d4abf3121355a28505f805252cf32062b3fce66db6ca620ef35887952",
+  "context_feature_provenance": {
+    "feature_input": {
+      "bytes": 472851,
+      "label": "exact_issue200_context_feature_rows",
+      "sha256": "f909d4cc4eb7d72f96d2ee107d85b2e9f4926178310342bc30b2635fd52666ef"
+    },
+    "feature_manifest": {
+      "bytes": 381252,
+      "label": "exact_issue200_context_feature_lineage",
+      "sha256": "0f1e327d293c441427a791d258527a5220afe03524b8a5400cfe1262251e78dd"
+    },
+    "indexed_fbs_rows": 534,
+    "target_seasons": [
+      2022,
+      2023,
+      2024,
+      2025
+    ]
+  },
+  "evaluation_seasons": [
+    2023,
+    2024,
+    2025
+  ],
+  "input_artifacts": {
+    "corpus_inputs": {
+      "issue200_context_feature_inputs": {
+        "bytes": 472851,
+        "sha256": "f909d4cc4eb7d72f96d2ee107d85b2e9f4926178310342bc30b2635fd52666ef"
+      },
+      "issue200_existing_likelihood": {
+        "bytes": 1877,
+        "sha256": "b64d237d4abf3121355a28505f805252cf32062b3fce66db6ca620ef35887952"
+      },
+      "issue200_manifest": {
+        "bytes": 49238,
+        "sha256": "09dd40ec9e5164b923e1970fa8d3d99ffe27386d279519c79c48b16da04f6047"
+      },
+      "issue200_pipeline_bundle": {
+        "bytes": 9901447,
+        "sha256": "c5a80a6e5aa1415bacfe3cc373cfbbc6cfe02465f33be202d8ce26962cb8419c"
+      },
+      "issue200_preseason_feature_manifest": {
+        "bytes": 381252,
+        "sha256": "0f1e327d293c441427a791d258527a5220afe03524b8a5400cfe1262251e78dd"
+      },
+      "issue201_forecast_scores": {
+        "bytes": 21710645,
+        "sha256": "fbc5c51f0747d4d11c3d31d8eb032f32ad65c8abe41f0307b295415a264351bb"
+      },
+      "issue201_manifest": {
+        "bytes": 22278,
+        "sha256": "c6103fafc8fdf0e6abc074214013bcc07f3db5afa6cdf22b03de851f2fb5653d"
+      },
+      "issue204_corrected_final_observations": {
+        "bytes": 43038379,
+        "sha256": "cd3ee420a830ca6ca1f1a9dd4accb0e844ffd5ee0b00398b4c3536dd57218d9a"
+      },
+      "issue204_corrected_final_rank_pairs": {
+        "bytes": 180002291,
+        "sha256": "4dd2376a488ede05c889372089fa0e0b16d62faaf879626c50cb359d5fe4e3af"
+      },
+      "issue204_corrected_final_targets": {
+        "bytes": 10558935,
+        "sha256": "cab882da17be2f79dd379fc296107e332e2768f9827d96752ea33d97dc026f28"
+      }
+    },
+    "issue195_fit_records": {
+      "bytes": 30185,
+      "label": "frozen_forward_fits",
+      "sha256": "a6bb5229c6991c5dd1661bc138f6c322b071c7591c0d7b4c75315b3966e59530"
+    },
+    "issue195_manifest": {
+      "bytes": 13110,
+      "label": "issue195_manifest",
+      "sha256": "df089c7287007e447acea9197d92f45487f98e41dba3a1cf98e69193f0a5f817"
+    },
+    "issue200_bundle": {
+      "bytes": 9901447,
+      "label": "matched_context_prior_and_likelihood_bundle",
+      "sha256": "c5a80a6e5aa1415bacfe3cc373cfbbc6cfe02465f33be202d8ce26962cb8419c"
+    },
+    "issue200_context_feature_inputs": {
+      "bytes": 472851,
+      "label": "exact_context_predictor_rows",
+      "sha256": "f909d4cc4eb7d72f96d2ee107d85b2e9f4926178310342bc30b2635fd52666ef"
+    },
+    "issue200_feature_manifest": {
+      "bytes": 381252,
+      "label": "exact_context_feature_lineage",
+      "sha256": "0f1e327d293c441427a791d258527a5220afe03524b8a5400cfe1262251e78dd"
+    },
+    "issue200_fitted_models": {
+      "bytes": 96644,
+      "label": "forward_prior_fit_origins",
+      "sha256": "db7442a8c4ebc495bcdf47b5f646a6ef3ca1c1ef0c4782bcd91253df223d3304"
+    },
+    "issue200_manifest": {
+      "bytes": 49238,
+      "label": "issue200_rebuilt_manifest",
+      "sha256": "09dd40ec9e5164b923e1970fa8d3d99ffe27386d279519c79c48b16da04f6047"
+    },
+    "issue201_forecast_scores": {
+      "bytes": 21710645,
+      "label": "baseline_per_game_scores",
+      "sha256": "fbc5c51f0747d4d11c3d31d8eb032f32ad65c8abe41f0307b295415a264351bb"
+    },
+    "issue201_manifest": {
+      "bytes": 22278,
+      "label": "frozen_forecast_reference",
+      "sha256": "c6103fafc8fdf0e6abc074214013bcc07f3db5afa6cdf22b03de851f2fb5653d"
+    },
+    "issue201_protocol": {
+      "bytes": 11168,
+      "label": "fixed_weekly_cutoff_contract",
+      "sha256": "ddea4e6dbf8d048c2a977d2a1f6d13f9e92c6948547afb115e0f81d54e677477"
+    },
+    "issue201_schedule_plan": {
+      "bytes": 6139318,
+      "label": "score_blind_schedule_assignments",
+      "manifest_sha256": "dc3b454cfef41a121b15e3eb9b72f0bfbf44c6bc616727caaccdb90df2db62f1",
+      "sha256": "ec498d8d533b48c6e820b140be69d0310430ce50c4423c99379dc4c5d5018a93"
+    },
+    "issue204_pre_bowl_targets": {
+      "bytes": 10982583,
+      "manifest_sha256": "9686e56e729c97296a40711d68ed270d85da497f263d7728ae49c78e291e4241",
+      "path_label": "issue_204_corrected_pre_bowl_target_distributions.csv",
+      "row_count_by_season": {
+        "2022": 131,
+        "2023": 133,
+        "2024": 134,
+        "2025": 136
+      },
+      "sha256": "6c610ea91ea60ce5da45e20baa7d636f91de52af974420f28a74eb0ec5d66e3f"
+    },
+    "issue213_protocol": {
+      "bytes": 7806,
+      "label": "frozen_experiment_protocol",
+      "sha256": "139c220cddb8ea07a5af997aafbe152a77b3c1f9d3af8ed701d3e29d9b7c37fb"
+    },
+    "raw_game_files": {
+      "2022-fcs.json": {
+        "bytes": 638280,
+        "row_count": 822,
+        "sha256": "a20030838476f73d1f3aea63bba57ed1ecfa03f99e95cee5c2a780deeee05816"
+      },
+      "2022.json": {
+        "bytes": 702663,
+        "row_count": 896,
+        "sha256": "3b4d9d353faa8ca9312534ded0747bdaa1cdcca21e89fcff1458980ab9f00747"
+      },
+      "2023-fcs.json": {
+        "bytes": 631762,
+        "row_count": 811,
+        "sha256": "df5bb461fe8f3e302eb1d5f52896b509d7f5660364d3d43643c5c540e5476817"
+      },
+      "2023.json": {
+        "bytes": 713333,
+        "row_count": 910,
+        "sha256": "417fb8191bec11e20fb2370e5510a2ff8a85cc67f07ec4371e873a935f9af35f"
+      },
+      "2024-fcs.json": {
+        "bytes": 680618,
+        "row_count": 871,
+        "sha256": "3cb6327c61d807fd4b8dfe669f0905694afa67164770ab2e997773ea2aaa72c5"
+      },
+      "2024.json": {
+        "bytes": 723364,
+        "row_count": 920,
+        "sha256": "9aeccada4e63f4ddf22d676eb55dbded71fd9bdb3ac07202ee44ed8f47d93f93"
+      },
+      "2025-fcs.json": {
+        "bytes": 689424,
+        "row_count": 879,
+        "sha256": "38329f854c0df38d17b34d5f7841753d6638d7377592dcf743cb4e27cbd9d32f"
+      },
+      "2025.json": {
+        "bytes": 736267,
+        "row_count": 934,
+        "sha256": "6312d8406be09dee0064069668fc40879dd0736ed3e49946c6c72192e6a0e4fc"
+      }
+    }
+  },
+  "issue195_feature_input_sha256": "f909d4cc4eb7d72f96d2ee107d85b2e9f4926178310342bc30b2635fd52666ef",
+  "issue195_fit_records_sha256": "a6bb5229c6991c5dd1661bc138f6c322b071c7591c0d7b4c75315b3966e59530",
+  "issue200_bundle_sha256": "c5a80a6e5aa1415bacfe3cc373cfbbc6cfe02465f33be202d8ce26962cb8419c",
+  "issue200_provenance": {
+    "bundle_manifest_expected_sha256": "c5a80a6e5aa1415bacfe3cc373cfbbc6cfe02465f33be202d8ce26962cb8419c",
+    "bundle_sha256": "c5a80a6e5aa1415bacfe3cc373cfbbc6cfe02465f33be202d8ce26962cb8419c",
+    "fit_origin_by_season_policy": {
+      "2022": {
+        "existing": {
+          "forward_only": true,
+          "trained_through_season": 2021,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        },
+        "pre_bowl": {
+          "forward_only": true,
+          "trained_through_season": 2021,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        }
+      },
+      "2023": {
+        "existing": {
+          "forward_only": true,
+          "trained_through_season": 2022,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        },
+        "pre_bowl": {
+          "forward_only": true,
+          "trained_through_season": 2022,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        }
+      },
+      "2024": {
+        "existing": {
+          "forward_only": true,
+          "trained_through_season": 2023,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        },
+        "pre_bowl": {
+          "forward_only": true,
+          "trained_through_season": 2023,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        }
+      },
+      "2025": {
+        "existing": {
+          "forward_only": true,
+          "trained_through_season": 2024,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        },
+        "pre_bowl": {
+          "forward_only": true,
+          "trained_through_season": 2024,
+          "training_seasons": [
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010,
+            2011,
+            2012,
+            2013,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ]
+        }
+      }
+    },
+    "fitted_models_sha256": "db7442a8c4ebc495bcdf47b5f646a6ef3ca1c1ef0c4782bcd91253df223d3304",
+    "fitted_prior_arm_count": 4,
+    "manifest_sha256": "09dd40ec9e5164b923e1970fa8d3d99ffe27386d279519c79c48b16da04f6047",
+    "target_seasons": [
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "training_seasons": [
+      2003,
+      2004,
+      2005,
+      2006,
+      2007,
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021
+    ]
+  },
+  "outputs": {
+    "baseline_parity.json": {
+      "bytes": 687,
+      "sha256": "2b8e82c33e9f9bc467215549240fd6ca42719560b0ab41ce4868b545143c44e5"
+    },
+    "decision.json": {
+      "bytes": 5713,
+      "sha256": "ab81a3cc93849e9a242f2aa1c9775db893115330c19dc9e259d9fffed6431d6d"
+    },
+    "fit_provenance.json": {
+      "bytes": 18127,
+      "sha256": "174e4f8737917867b129537a87df4ec0bf87114c43aab1ca3c35b2fbc6509958"
+    },
+    "forecast_exclusions.csv": {
+      "bytes": 691339,
+      "sha256": "59c654e7854a794b333aa5d415137de134886858a555b6e0331836cc7be743b2"
+    },
+    "forecast_scores.csv": {
+      "bytes": 12770987,
+      "sha256": "7f2d0bb1da0107b8151d3834782a19b17f0fc8951d8fef0adf86deafb619e66a"
+    },
+    "forecast_summary.csv": {
+      "bytes": 37588,
+      "sha256": "61fd6d448ce28b12adc430aa243eddd97c8d2b5e7fe546e9ae0a752d788a919e"
+    },
+    "gain_concentration.csv": {
+      "bytes": 173153,
+      "sha256": "ff2abd8a885812b031d5bd0c062dda1179a69d18a2e777cb4e2eafa33696318d"
+    },
+    "paired_game_scores.csv": {
+      "bytes": 6915260,
+      "sha256": "e28fe90e8a6f7cea77fe2d306ccc18b652360d40b9d1dabe4afab0f5138791f0"
+    },
+    "posterior_pmfs.jsonl.gz": {
+      "bytes": 74905096,
+      "sha256": "5cb22bc23b48155f7ec653336dd34b71aed77182e207f8b1acf387b84e3a5f48"
+    },
+    "predictive_mixtures.jsonl.gz": {
+      "bytes": 2245115,
+      "sha256": "a4df9138daedbbb74701b0b8d2927f7a63e9ce1d14a81ba25ea79c58434e58fc"
+    },
+    "predictive_model_parameters.json": {
+      "bytes": 35548,
+      "sha256": "537ae713655f2ba88cb1dd5f45175fc737db3fec9b285f5f5e1d21f54c23d165"
+    },
+    "ranking_exclusions.csv": {
+      "bytes": 464,
+      "sha256": "36878ad1702b1a5487f75f34115e85209a68e0062d4e4c5565bffb412382b74f"
+    },
+    "ranking_pmf_concentration.csv": {
+      "bytes": 27078,
+      "sha256": "779c7b80d72f02d35ecb0f8be299c95839155e77dafb495c5aa7dc98db727a7f"
+    },
+    "ranking_scores.csv": {
+      "bytes": 11677036,
+      "sha256": "d478078dabfee1486756ce080e8fe2495bf09b599e7540a6958eb284c1282552"
+    },
+    "ranking_summary.csv": {
+      "bytes": 4255,
+      "sha256": "a82628f2185a5d023e5d2c05912803a628d89577f7d54f67fe081db61939e3e6"
+    },
+    "replay_evidence.jsonl.gz": {
+      "bytes": 39016,
+      "sha256": "14587c1366d514b6924f4f022801dfc831fc04e240a3256ea6924976ea44bbb6"
+    },
+    "report.md": {
+      "bytes": 2635,
+      "sha256": "496bd92821054692f6ed8a01741ef37adbfb7b59326680a8af653ee9ff4d3f7a"
+    }
+  },
+  "prior_pmf_sha256_by_season": {
+    "2023": "193d7e40ade82c3d36b9c8c0ffe6e6eeaa55aeb4d4578f130c4773ca144440ea",
+    "2024": "5dcd1e159485b18a37d032b4f8e21a8e56b01aa93b6c8b69a115a5afe9e252cf",
+    "2025": "09c6931dad17c2a876901a8b2a23a3c9482f5ae08a3cfecd5ca032d8ba9eb211"
+  },
+  "protocol_sha256": "139c220cddb8ea07a5af997aafbe152a77b3c1f9d3af8ed701d3e29d9b7c37fb",
+  "residual_training_seasons_by_target": {
+    "2023": [
+      2022
+    ],
+    "2024": [
+      2022,
+      2023
+    ],
+    "2025": [
+      2022,
+      2023,
+      2024
+    ]
+  },
+  "schema_version": 1,
+  "status": "complete"
+}

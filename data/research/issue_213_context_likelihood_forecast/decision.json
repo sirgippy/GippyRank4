@@ -1,0 +1,139 @@
+{
+  "comparisons": {
+    "context_correction_vs_generic": {
+      "candidate_arm": "Context_context_recalibrated",
+      "equal_season_crps_delta": -0.04204098282723123,
+      "pooled_equal_game_crps_delta": -0.04195811306468222,
+      "practical_gain_pass": false,
+      "reference_arm": "Context_generic_recalibrated",
+      "rule": "pooled and equal-season CRPS each at least 0.05 lower; lower CRPS in at least two of three seasons",
+      "season_crps_delta": {
+        "2023": -0.06671344850656169,
+        "2024": -0.0311957382531709,
+        "2025": -0.028213761721966435
+      },
+      "seasons_with_lower_crps": 3
+    },
+    "context_correction_vs_unmodified_context": {
+      "candidate_arm": "Context_context_recalibrated",
+      "equal_season_crps_delta": -0.026521892180442208,
+      "pooled_equal_game_crps_delta": -0.026446579908061096,
+      "practical_gain_pass": false,
+      "reference_arm": "Context_existing",
+      "rule": "pooled and equal-season CRPS each at least 0.05 lower; lower CRPS in at least two of three seasons",
+      "season_crps_delta": {
+        "2023": -0.05543335288400009,
+        "2024": -0.008878837803351303,
+        "2025": -0.015253485853977011
+      },
+      "seasons_with_lower_crps": 3
+    },
+    "generic_vs_unmodified_context": {
+      "candidate_arm": "Context_generic_recalibrated",
+      "equal_season_crps_delta": 0.015519090646789024,
+      "pooled_equal_game_crps_delta": 0.015511533156621127,
+      "practical_gain_pass": false,
+      "reference_arm": "Context_existing",
+      "rule": "pooled and equal-season CRPS each at least 0.05 lower; lower CRPS in at least two of three seasons",
+      "season_crps_delta": {
+        "2023": 0.011280095622561603,
+        "2024": 0.0223169004498196,
+        "2025": 0.012960275867989424
+      },
+      "seasons_with_lower_crps": 0
+    }
+  },
+  "conclusion": "Retain unmodified Context / no useful replacement established",
+  "confirmation_plan": "If a candidate is promising, freeze its inputs, parameters, and weekly predictions before the next season's outcomes are available; then score the untouched season against the same unmodified Context and generic controls under a separately preregistered protocol.",
+  "early_guardrails_against_unmodified_context": {
+    "Context_context_recalibrated": {
+      "by_phase": {
+        "pre_thanksgiving": {
+          "passed": true,
+          "pooled_coverage_error_limit": 0.03,
+          "pooled_crps_deterioration": -0.03284210159793233,
+          "pooled_crps_limit": 0.1,
+          "pooled_mean_absolute_coverage_error_increase": 0.0039215686274509855,
+          "season_coverage_error_limit": 0.05,
+          "season_crps_deterioration": {
+            "2023": -0.05980955620669626,
+            "2024": -0.017482188387369035,
+            "2025": -0.021442773982247587
+          },
+          "season_crps_limit": 0.25,
+          "season_mean_absolute_coverage_error_increase": {
+            "2023": 0.010650887573964521,
+            "2024": 0.010487444608567173,
+            "2025": -0.012857836001940829
+          }
+        },
+        "preseason": {
+          "passed": true,
+          "pooled_coverage_error_limit": 0.03,
+          "pooled_crps_deterioration": -0.02403873707442905,
+          "pooled_crps_limit": 0.1,
+          "pooled_mean_absolute_coverage_error_increase": -0.024057714958775102,
+          "season_coverage_error_limit": 0.05,
+          "season_crps_deterioration": {
+            "2023": -0.07635621790412905,
+            "2024": 0.007189289974260049,
+            "2025": -0.0033633640013803756
+          },
+          "season_crps_limit": 0.25,
+          "season_mean_absolute_coverage_error_increase": {
+            "2023": -0.031111111111111086,
+            "2024": -0.006648936170212708,
+            "2025": -0.018022747156605453
+          }
+        }
+      },
+      "candidate_arm": "Context_context_recalibrated",
+      "passed": true
+    },
+    "Context_generic_recalibrated": {
+      "by_phase": {
+        "pre_thanksgiving": {
+          "passed": true,
+          "pooled_coverage_error_limit": 0.03,
+          "pooled_crps_deterioration": 0.021606805848982447,
+          "pooled_crps_limit": 0.1,
+          "pooled_mean_absolute_coverage_error_increase": 0.0006535947712418468,
+          "season_coverage_error_limit": 0.05,
+          "season_crps_deterioration": {
+            "2023": 0.0159808174973044,
+            "2024": 0.03069285538872535,
+            "2025": 0.0181889202410197
+          },
+          "season_crps_limit": 0.25,
+          "season_mean_absolute_coverage_error_increase": {
+            "2023": 0.0029585798816568008,
+            "2024": 0.009995076317085147,
+            "2025": -0.010043668122270791
+          }
+        },
+        "preseason": {
+          "passed": true,
+          "pooled_coverage_error_limit": 0.03,
+          "pooled_crps_deterioration": -0.005556910530515324,
+          "pooled_crps_limit": 0.1,
+          "pooled_mean_absolute_coverage_error_increase": -0.01590106007067138,
+          "season_coverage_error_limit": 0.05,
+          "season_crps_deterioration": {
+            "2023": -0.012832332391385037,
+            "2024": -0.0017701422933935618,
+            "2025": -0.0021331353581555135
+          },
+          "season_crps_limit": 0.25,
+          "season_mean_absolute_coverage_error_increase": {
+            "2023": -0.019111111111111075,
+            "2024": -0.015425531914893523,
+            "2025": -0.011023622047244126
+          }
+        }
+      },
+      "candidate_arm": "Context_generic_recalibrated",
+      "passed": true
+    }
+  },
+  "interpretation": "descriptive exploratory development results; repeated games, teams, and checkpoints are not independent confirmation"
+}
