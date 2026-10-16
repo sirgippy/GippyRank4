@@ -36,9 +36,11 @@ from gippyrank.research.issue_212_likelihood_recalibration import (
     _add_phase_pooled_summaries,
     _decision,
     _deduplicate_games,
+    _pmf_rows,
     _rank_summary,
     _validate_target_exclusion,
     _verify_baseline_parity,
+    sha256_json,
 )
 
 
@@ -294,6 +296,24 @@ def test_rank_aggregate_weights_each_team_season_equally_across_checkpoints() ->
             {
                 "season": 2024,
                 "cutoff_utc": cutoff,
+                "checkpoint_phase": "in_season",
+                "evidence_game_count": 1,
+                "model_arm": BASELINE_ARM,
+                "team_id": team_id,
+                "nll": nll,
+                "crps": nll,
+                "expected_rank_error": nll,
+                "interval_80_width": nll,
+                "interval_80_target_mass": nll,
+            }
+        )
+    for team_id, nll in (("a", 100.0), ("b", 200.0)):
+        rows.append(
+            {
+                "season": 2024,
+                "cutoff_utc": "preseason",
+                "checkpoint_phase": "other_checkpoint",
+                "evidence_game_count": 0,
                 "model_arm": BASELINE_ARM,
                 "team_id": team_id,
                 "nll": nll,
@@ -304,9 +324,47 @@ def test_rank_aggregate_weights_each_team_season_equally_across_checkpoints() ->
             }
         )
     summary = _rank_summary(rows)
-    season = next(row for row in summary if row["aggregation"].startswith("season_"))
+    season = next(
+        row for row in summary if row["aggregation"] == "season_team_season_weight_one"
+    )
     assert season["team_seasons"] == 2
+    assert season["checkpoints"] == 3
     assert season["nll"] == pytest.approx(3.0)
+    preseason = next(
+        row for row in summary if row["aggregation"] == "season_preseason_team_season"
+    )
+    assert preseason["team_seasons"] == 2
+    assert preseason["checkpoints"] == 2
+    assert preseason["nll"] == pytest.approx(150.0)
+
+
+def test_pmf_rows_preserve_fixed_priors_after_posterior_teams_are_built() -> None:
+    prior = np.asarray([0.2, 0.3, 0.5])
+    posterior = np.asarray([0.1, 0.2, 0.7])
+    arms = {
+        arm: (
+            {"1": Team("1", "Team", "fbs", posterior.copy())},
+            {"1": posterior.copy()},
+        )
+        for arm in (BASELINE_ARM, CANDIDATE_ARM)
+    }
+    rows = _pmf_rows(
+        season=2024,
+        cutoff="2024-10-01T00:00:00+00:00",
+        phase="pre_thanksgiving",
+        arms=arms,
+        prior_pmfs={"1": prior},
+        evidence={
+            "included_game_count": 1,
+            "included_game_ids_sha256": "ids",
+            "included_game_rows_sha256": "rows",
+        },
+    )
+
+    assert len(rows) == 2
+    assert all(row["prior_pmf"] == prior.tolist() for row in rows)
+    assert all(row["prior_pmf_sha256"] == sha256_json(prior.tolist()) for row in rows)
+    assert all(row["posterior_pmf"] == posterior.tolist() for row in rows)
 
 
 def _forecast(

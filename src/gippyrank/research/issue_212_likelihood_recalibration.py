@@ -559,6 +559,7 @@ def _pmf_rows(
     cutoff: str,
     phase: str,
     arms: dict[str, tuple[dict[str, Team], dict[str, np.ndarray]]],
+    prior_pmfs: dict[str, np.ndarray],
     evidence: dict[str, object],
     targets: dict[str, dict[str, object]] | None = None,
 ) -> list[dict[str, object]]:
@@ -568,7 +569,13 @@ def _pmf_rows(
             teams.items(), key=lambda item: _game_id_key(item[0])
         ):
             posterior = np.asarray(pmfs[team_id], dtype=np.float64)
+            prior = np.asarray(prior_pmfs[team_id], dtype=np.float64)
             _validate_pmf(posterior, context=f"{season}/{cutoff}/{arm}/{team_id}")
+            _validate_pmf(prior, context=f"{season}/{cutoff}/prior/{team_id}")
+            if posterior.shape != prior.shape:
+                raise ValueError(
+                    f"{season}/{cutoff}/{arm}/{team_id}: prior/posterior support differs"
+                )
             target = None if targets is None else targets.get(team_id)
             target_pmf = (
                 None if target is None else np.asarray(target["pmf"], dtype=float)
@@ -582,7 +589,8 @@ def _pmf_rows(
                     "team_id": team_id,
                     "team_name": team.name,
                     "subdivision": team.subdivision,
-                    "prior_pmf": np.asarray(team.prior, dtype=float).tolist(),
+                    "prior_pmf": prior.tolist(),
+                    "prior_pmf_sha256": sha256_json(prior.tolist()),
                     "posterior_pmf": posterior.tolist(),
                     "target_pmf": None if target_pmf is None else target_pmf.tolist(),
                     "posterior_pmf_sha256": sha256_json(posterior.tolist()),
@@ -598,64 +606,103 @@ def _pmf_rows(
 
 
 def _rank_summary(rows: list[dict[str, object]]) -> list[dict[str, object]]:
-    """Aggregate checkpoints within each team-season before averaging teams."""
-    by_team: dict[tuple[int, str, str], list[dict[str, object]]] = defaultdict(list)
-    for row in rows:
-        by_team[
-            (int(row["season"]), str(row["model_arm"]), str(row["team_id"]))
-        ].append(row)
-    team_rows = [
-        {
-            "season": season,
-            "model_arm": arm,
-            "team_id": team_id,
-            "checkpoints": len(members),
-            **{
-                f"mean_{metric}": float(
-                    np.mean([float(member[metric]) for member in members])
-                )
-                for metric in RANK_METRICS
-            },
-        }
-        for (season, arm, team_id), members in sorted(by_team.items())
-    ]
-    grouped: dict[tuple[str, str], list[dict[str, object]]] = defaultdict(list)
-    for row in team_rows:
-        grouped[(str(row["season"]), str(row["model_arm"]))].append(row)
-    result = []
-    for (season, arm), members in sorted(grouped.items()):
-        result.append(
+    """Aggregate in-season checkpoints and preseason separately by team-season."""
+
+    def is_preseason(row: dict[str, object]) -> bool:
+        return (
+            row.get("checkpoint_phase") == "preseason"
+            or int(row.get("evidence_game_count", 1)) == 0
+        )
+
+    result: list[dict[str, object]] = []
+    for stage, stage_rows in (
+        (
+            "in_season",
+            [row for row in rows if not is_preseason(row)],
+        ),
+        (
+            "preseason",
+            [row for row in rows if is_preseason(row)],
+        ),
+    ):
+        if not stage_rows:
+            continue
+        by_team: dict[tuple[int, str, str], list[dict[str, object]]] = defaultdict(list)
+        for row in stage_rows:
+            by_team[
+                (int(row["season"]), str(row["model_arm"]), str(row["team_id"]))
+            ].append(row)
+        team_rows = [
             {
-                "aggregation": "season_team_season_weight_one",
                 "season": season,
                 "model_arm": arm,
-                "team_seasons": len(members),
-                "checkpoints": sum(int(member["checkpoints"]) for member in members),
+                "team_id": team_id,
+                "checkpoints": len(members),
                 **{
-                    metric: float(
-                        np.mean([float(member[f"mean_{metric}"]) for member in members])
+                    f"mean_{metric}": float(
+                        np.mean([float(member[metric]) for member in members])
                     )
                     for metric in RANK_METRICS
                 },
             }
+            for (season, arm, team_id), members in sorted(by_team.items())
+        ]
+        grouped: dict[tuple[str, str], list[dict[str, object]]] = defaultdict(list)
+        for row in team_rows:
+            grouped[(str(row["season"]), str(row["model_arm"]))].append(row)
+        season_aggregation = (
+            "season_team_season_weight_one"
+            if stage == "in_season"
+            else "season_preseason_team_season"
         )
-    for arm in sorted({str(row["model_arm"]) for row in team_rows}):
-        members = [row for row in team_rows if row["model_arm"] == arm]
-        result.append(
-            {
-                "aggregation": "pooled_equal_team_season",
-                "season": "2023-2025",
-                "model_arm": arm,
-                "team_seasons": len(members),
-                "checkpoints": sum(int(member["checkpoints"]) for member in members),
-                **{
-                    metric: float(
-                        np.mean([float(member[f"mean_{metric}"]) for member in members])
-                    )
-                    for metric in RANK_METRICS
-                },
-            }
+        pooled_aggregation = (
+            "pooled_equal_team_season"
+            if stage == "in_season"
+            else "pooled_preseason_equal_team_season"
         )
+        for (season, arm), members in sorted(grouped.items()):
+            result.append(
+                {
+                    "aggregation": season_aggregation,
+                    "checkpoint_stage": stage,
+                    "season": season,
+                    "model_arm": arm,
+                    "team_seasons": len(members),
+                    "checkpoints": sum(
+                        int(member["checkpoints"]) for member in members
+                    ),
+                    **{
+                        metric: float(
+                            np.mean(
+                                [float(member[f"mean_{metric}"]) for member in members]
+                            )
+                        )
+                        for metric in RANK_METRICS
+                    },
+                }
+            )
+        for arm in sorted({str(row["model_arm"]) for row in team_rows}):
+            members = [row for row in team_rows if row["model_arm"] == arm]
+            result.append(
+                {
+                    "aggregation": pooled_aggregation,
+                    "checkpoint_stage": stage,
+                    "season": "2023-2025",
+                    "model_arm": arm,
+                    "team_seasons": len(members),
+                    "checkpoints": sum(
+                        int(member["checkpoints"]) for member in members
+                    ),
+                    **{
+                        metric: float(
+                            np.mean(
+                                [float(member[f"mean_{metric}"]) for member in members]
+                            )
+                        )
+                        for metric in RANK_METRICS
+                    },
+                }
+            )
     return result
 
 
@@ -1235,6 +1282,10 @@ def run_issue_212_replay(
         pre_key = f"{season}/preseason_no_evidence"
         baseline_pre_hash = _pmf_digest(empty_replay.pmfs)
         candidate_pre_hash = _pmf_digest(empty_candidate.pmfs)
+        if baseline_pre_hash != candidate_pre_hash:
+            raise ValueError(
+                f"{season}: baseline and candidate preseason priors differ"
+            )
         baseline_pmf_hashes[pre_key] = baseline_pre_hash
         candidate_pmf_hashes[pre_key] = candidate_pre_hash
         pre_arms = {
@@ -1247,6 +1298,7 @@ def run_issue_212_replay(
                 cutoff="preseason_no_evidence",
                 phase="preseason",
                 arms=pre_arms,
+                prior_pmfs=empty_replay.pmfs,
                 evidence=pre_evidence,
             )
         )
@@ -1433,6 +1485,7 @@ def run_issue_212_replay(
                     cutoff=str(cutoff_text),
                     phase=cutoff_phases[str(cutoff_text)],
                     arms=arms,
+                    prior_pmfs=empty_replay.pmfs,
                     evidence=evidence,
                     targets=rank_targets,
                 )
@@ -1791,9 +1844,18 @@ def _render_report(result: dict[str, object]) -> str:
         ]
     )
     for aggregation, season, label in (
-        ("pooled_equal_team_season", "2023-2025", "Pooled team-season"),
+        ("pooled_equal_team_season", "2023-2025", "In-season pooled"),
         *(
             ("season_team_season_weight_one", str(season), str(season))
+            for season in EVALUATION_SEASONS
+        ),
+        (
+            "pooled_preseason_equal_team_season",
+            "2023-2025",
+            "Preseason pooled",
+        ),
+        *(
+            ("season_preseason_team_season", str(season), f"{season} preseason")
             for season in EVALUATION_SEASONS
         ),
     ):
@@ -1805,7 +1867,7 @@ def _render_report(result: dict[str, object]) -> str:
     lines.extend(
         [
             "",
-            "The recalibrated arm worsens rank NLL, rank CRPS, expected-rank error, and target mass in the pooled summary and each season; its 80% intervals are narrower.",
+            "In-season aggregates exclude preseason checkpoints; preseason scores are shown separately. Each aggregate gives every team-season equal weight after averaging that team's valid checkpoints.",
             "",
             "## Pooled game calibration tradeoffs",
             "",

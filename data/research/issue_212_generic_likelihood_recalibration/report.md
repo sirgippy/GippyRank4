@@ -39,12 +39,16 @@ Corrected pre-bowl rank scores use only checkpoints strictly before the target o
 
 | Evaluation | Rank CRPS (baseline → recalibrated) | Δ NLL | Δ expected-rank error | Δ 80% target mass | Δ 80% interval width |
 |---|---:|---:|---:|---:|---:|
-| Pooled team-season | 0.04455 → 0.04501 | +0.01051 | +0.0622 | -0.0101 | -0.878 |
-| 2023 | 0.04447 → 0.04494 | +0.00995 | +0.0701 | -0.0096 | -0.789 |
-| 2024 | 0.04589 → 0.04624 | +0.00985 | +0.0220 | -0.0086 | -0.775 |
-| 2025 | 0.04330 → 0.04387 | +0.01170 | +0.0939 | -0.0119 | -1.065 |
+| In-season pooled | 0.04267 → 0.04316 | +0.01122 | +0.0664 | -0.0108 | -0.937 |
+| 2023 | 0.04277 → 0.04327 | +0.01066 | +0.0751 | -0.0103 | -0.846 |
+| 2024 | 0.04384 → 0.04422 | +0.01050 | +0.0235 | -0.0092 | -0.827 |
+| 2025 | 0.04141 → 0.04201 | +0.01248 | +0.1002 | -0.0127 | -1.136 |
+| Preseason pooled | 0.07219 → 0.07219 | +0.00000 | +0.0000 | +0.0000 | +0.000 |
+| 2023 preseason | 0.06823 → 0.06823 | +0.00000 | +0.0000 | +0.0000 | +0.000 |
+| 2024 preseason | 0.07661 → 0.07661 | +0.00000 | +0.0000 | +0.0000 | +0.000 |
+| 2025 preseason | 0.07170 → 0.07170 | +0.00000 | +0.0000 | +0.0000 | +0.000 |
 
-The recalibrated arm worsens rank NLL, rank CRPS, expected-rank error, and target mass in the pooled summary and each season; its 80% intervals are narrower.
+In-season aggregates exclude preseason checkpoints; preseason scores are shown separately. Each aggregate gives every team-season equal weight after averaging that team's valid checkpoints.
 
 ## Pooled game calibration tradeoffs
 
