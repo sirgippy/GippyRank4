@@ -1,0 +1,523 @@
+{
+  "base_likelihood_sha256": "b64d237d4abf3121355a28505f805252cf32062b3fce66db6ca620ef35887952",
+  "fit_record_by_season": {
+    "2023": {
+      "context_preprocessor": {
+        "feature_names": [
+          "coach_tenure_seasons",
+          "recruiting_class_rank",
+          "recruiting_class_points",
+          "recruiting_points_2y_mean",
+          "recruiting_points_3y_mean",
+          "recruiting_points_4y_mean",
+          "recruiting_points_trend",
+          "talent_composite",
+          "returning_pct_ppa",
+          "transfer_in_prior_usage_sum",
+          "observed_db_impact_sum",
+          "db_impact_coverage_fraction"
+        ],
+        "fit_population": "both team sides of training games only",
+        "missingness_means": [
+          0.19005449591280654,
+          0.007493188010899182,
+          0.007493188010899182,
+          0.0,
+          0.0,
+          0.0,
+          0.02997275204359673,
+          0.0,
+          0.006811989100817439,
+          0.09264305177111716,
+          0.006811989100817439,
+          0.006811989100817439
+        ],
+        "missingness_scales": [
+          0.39234396197231775,
+          0.08623827540212352,
+          0.08623827540212352,
+          1.0,
+          1.0,
+          1.0,
+          0.17051212912438166,
+          1.0,
+          0.08225318173364347,
+          0.2899315724953929,
+          0.08225318173364347,
+          0.08225318173364347
+        ],
+        "value_means": [
+          4.502943650126157,
+          66.36787920384351,
+          170.34685655456417,
+          171.62232288828338,
+          174.93200045413263,
+          176.62912976839235,
+          -11.453483146067416,
+          573.8271049046322,
+          0.5561454046639231,
+          0.29617192192192193,
+          0.3000132487544379,
+          0.8098879743941474
+        ],
+        "value_scales": [
+          4.412426036779074,
+          39.623492410707215,
+          61.45530602681121,
+          55.79350585377916,
+          52.481975885531696,
+          51.5440259755927,
+          34.73210981893319,
+          200.09307578944356,
+          0.21965477211377266,
+          0.29284503485093744,
+          1.1157245094515855,
+          0.3265454894226439
+        ]
+      },
+      "rank_site_calibration_fit": {
+        "additional_non_neutral_home_field_points": -0.6731796660585783,
+        "common_log_scale_correction": -0.061714257883296215,
+        "context_coefficients": {},
+        "context_ridge_penalty": 0.0,
+        "objective_sum_game_nll_plus_half_ridge_norm": 2965.9883617024207,
+        "optimizer": {
+          "evaluations": 15,
+          "final_gradient_infinity_norm": 0.00022920433808870655,
+          "gradient_tolerance": 1e-06,
+          "iterations": 13,
+          "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+          "method": "L-BFGS-B with analytic gradient",
+          "parameter_bounds": {
+            "context_coefficients": "unbounded; L2 regularized",
+            "home_field_adjustment": [
+              -100.0,
+              100.0
+            ],
+            "log_multiplier": [
+              -4.0,
+              4.0
+            ],
+            "log_scale_correction": [
+              -3.0,
+              3.0
+            ]
+          },
+          "status": 0,
+          "success": true
+        },
+        "overall_mean_multiplier": 0.9701893205429778,
+        "scale": 12.438774997764241
+      },
+      "rank_site_context_fit": {
+        "additional_non_neutral_home_field_points": -0.6479291124134349,
+        "common_log_scale_correction": -0.06833156748616705,
+        "context_coefficients": {
+          "coach_tenure_seasons": -0.03480488620472417,
+          "db_impact_coverage_fraction": -0.41329817716375405,
+          "missing__coach_tenure_seasons": -0.09635895962241531,
+          "missing__db_impact_coverage_fraction": 0.2087920800675596,
+          "missing__observed_db_impact_sum": 0.2087920800675596,
+          "missing__recruiting_class_points": -0.3104921850835369,
+          "missing__recruiting_class_rank": -0.3104921850835369,
+          "missing__recruiting_points_2y_mean": 0.0,
+          "missing__recruiting_points_3y_mean": 0.0,
+          "missing__recruiting_points_4y_mean": 0.0,
+          "missing__recruiting_points_trend": -0.11542868305555579,
+          "missing__returning_pct_ppa": 0.2087920800675596,
+          "missing__talent_composite": 0.0,
+          "missing__transfer_in_prior_usage_sum": -0.2912596041324632,
+          "observed_db_impact_sum": 0.39460520880349403,
+          "recruiting_class_points": 0.3443344934566188,
+          "recruiting_class_rank": 0.6612868999163413,
+          "recruiting_points_2y_mean": -0.003138734514710262,
+          "recruiting_points_3y_mean": 0.10798300227728841,
+          "recruiting_points_4y_mean": 1.8906371960828503,
+          "recruiting_points_trend": 0.20296682083758755,
+          "returning_pct_ppa": -0.3052244842909721,
+          "talent_composite": 0.29855504313105696,
+          "transfer_in_prior_usage_sum": -0.21167794633960477
+        },
+        "context_ridge_penalty": 0.1,
+        "objective_sum_game_nll_plus_half_ridge_norm": 2957.720442489351,
+        "optimizer": {
+          "evaluations": 209,
+          "final_gradient_infinity_norm": 0.0009038677638457671,
+          "gradient_tolerance": 1e-06,
+          "iterations": 191,
+          "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+          "method": "L-BFGS-B with analytic gradient",
+          "parameter_bounds": {
+            "context_coefficients": "unbounded; L2 regularized",
+            "home_field_adjustment": [
+              -100.0,
+              100.0
+            ],
+            "log_multiplier": [
+              -4.0,
+              4.0
+            ],
+            "log_scale_correction": [
+              -3.0,
+              3.0
+            ]
+          },
+          "status": 0,
+          "success": true
+        },
+        "overall_mean_multiplier": 0.9017642447068042,
+        "scale": 12.356735512228552
+      },
+      "training_seasons": [
+        2022
+      ]
+    },
+    "2024": {
+      "context_preprocessor": {
+        "feature_names": [
+          "coach_tenure_seasons",
+          "recruiting_class_rank",
+          "recruiting_class_points",
+          "recruiting_points_2y_mean",
+          "recruiting_points_3y_mean",
+          "recruiting_points_4y_mean",
+          "recruiting_points_trend",
+          "talent_composite",
+          "returning_pct_ppa",
+          "transfer_in_prior_usage_sum",
+          "observed_db_impact_sum",
+          "db_impact_coverage_fraction"
+        ],
+        "fit_population": "both team sides of training games only",
+        "missingness_means": [
+          0.2011455525606469,
+          0.003706199460916442,
+          0.003706199460916442,
+          0.0,
+          0.0,
+          0.0,
+          0.025943396226415096,
+          0.0,
+          0.01078167115902965,
+          0.08692722371967655,
+          0.01078167115902965,
+          0.01078167115902965
+        ],
+        "missingness_scales": [
+          0.40085660683805496,
+          0.06076564445862764,
+          0.06076564445862764,
+          1.0,
+          1.0,
+          1.0,
+          0.15896646318847987,
+          1.0,
+          0.1032735528876982,
+          0.2817283824822516,
+          0.1032735528876982,
+          0.1032735528876982
+        ],
+        "value_means": [
+          4.447068747363981,
+          66.83970240108218,
+          173.81835306053432,
+          172.2755441374663,
+          173.67547675202155,
+          175.41941458894877,
+          -2.6921065375302664,
+          582.5216846361186,
+          0.5386246594005449,
+          0.3473690036900369,
+          0.5839015040390207,
+          0.8115547996508486
+        ],
+        "value_scales": [
+          4.4119439862238305,
+          39.60893558017464,
+          61.71173676107416,
+          57.693546566140775,
+          54.81508025155291,
+          53.19399803670771,
+          35.0206767074806,
+          197.82378837071792,
+          0.22014852428170534,
+          0.32639600548591635,
+          1.369653393825558,
+          0.31741666227818655
+        ]
+      },
+      "rank_site_calibration_fit": {
+        "additional_non_neutral_home_field_points": -0.5155243356297814,
+        "common_log_scale_correction": -0.06311586296341012,
+        "context_coefficients": {},
+        "context_ridge_penalty": 0.0,
+        "objective_sum_game_nll_plus_half_ridge_norm": 5987.941215698029,
+        "optimizer": {
+          "evaluations": 15,
+          "final_gradient_infinity_norm": 0.001141301853849086,
+          "gradient_tolerance": 1e-06,
+          "iterations": 13,
+          "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+          "method": "L-BFGS-B with analytic gradient",
+          "parameter_bounds": {
+            "context_coefficients": "unbounded; L2 regularized",
+            "home_field_adjustment": [
+              -100.0,
+              100.0
+            ],
+            "log_multiplier": [
+              -4.0,
+              4.0
+            ],
+            "log_scale_correction": [
+              -3.0,
+              3.0
+            ]
+          },
+          "status": 0,
+          "success": true
+        },
+        "overall_mean_multiplier": 0.9733203518268143,
+        "scale": 12.42135295979757
+      },
+      "rank_site_context_fit": {
+        "additional_non_neutral_home_field_points": -0.509050857673342,
+        "common_log_scale_correction": -0.0726389361239807,
+        "context_coefficients": {
+          "coach_tenure_seasons": -0.3430585090011728,
+          "db_impact_coverage_fraction": -0.05923572099918453,
+          "missing__coach_tenure_seasons": 0.07267284797225838,
+          "missing__db_impact_coverage_fraction": 0.17392083484066834,
+          "missing__observed_db_impact_sum": 0.17392083484066834,
+          "missing__recruiting_class_points": -0.265348924278701,
+          "missing__recruiting_class_rank": -0.265348924278701,
+          "missing__recruiting_points_2y_mean": 0.0,
+          "missing__recruiting_points_3y_mean": 0.0,
+          "missing__recruiting_points_4y_mean": 0.0,
+          "missing__recruiting_points_trend": 0.16349256341968643,
+          "missing__returning_pct_ppa": 0.17392083484066834,
+          "missing__talent_composite": 0.0,
+          "missing__transfer_in_prior_usage_sum": -0.37472298528489406,
+          "observed_db_impact_sum": 0.05082683763035927,
+          "recruiting_class_points": 0.33664617645059486,
+          "recruiting_class_rank": -0.002664220179752587,
+          "recruiting_points_2y_mean": 0.3428893096625229,
+          "recruiting_points_3y_mean": 0.34883027667155725,
+          "recruiting_points_4y_mean": 0.8430530529803236,
+          "recruiting_points_trend": 0.043805124178253434,
+          "returning_pct_ppa": -0.12886389993893263,
+          "talent_composite": 0.4428535911814089,
+          "transfer_in_prior_usage_sum": -0.2352260472077053
+        },
+        "context_ridge_penalty": 1.0,
+        "objective_sum_game_nll_plus_half_ridge_norm": 5969.335433561994,
+        "optimizer": {
+          "evaluations": 120,
+          "final_gradient_infinity_norm": 0.001711127758229125,
+          "gradient_tolerance": 1e-06,
+          "iterations": 107,
+          "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+          "method": "L-BFGS-B with analytic gradient",
+          "parameter_bounds": {
+            "context_coefficients": "unbounded; L2 regularized",
+            "home_field_adjustment": [
+              -100.0,
+              100.0
+            ],
+            "log_multiplier": [
+              -4.0,
+              4.0
+            ],
+            "log_scale_correction": [
+              -3.0,
+              3.0
+            ]
+          },
+          "status": 0,
+          "success": true
+        },
+        "overall_mean_multiplier": 0.9100641165748569,
+        "scale": 12.303624962690318
+      },
+      "training_seasons": [
+        2022,
+        2023
+      ]
+    },
+    "2025": {
+      "context_preprocessor": {
+        "feature_names": [
+          "coach_tenure_seasons",
+          "recruiting_class_rank",
+          "recruiting_class_points",
+          "recruiting_points_2y_mean",
+          "recruiting_points_3y_mean",
+          "recruiting_points_4y_mean",
+          "recruiting_points_trend",
+          "talent_composite",
+          "returning_pct_ppa",
+          "transfer_in_prior_usage_sum",
+          "observed_db_impact_sum",
+          "db_impact_coverage_fraction"
+        ],
+        "fit_population": "both team sides of training games only",
+        "missingness_means": [
+          0.21601073345259392,
+          0.0024597495527728087,
+          0.0024597495527728087,
+          0.0,
+          0.0,
+          0.0,
+          0.027728085867620753,
+          0.0,
+          0.009615384615384616,
+          0.07021466905187836,
+          0.009615384615384616,
+          0.009615384615384616
+        ],
+        "missingness_scales": [
+          0.4115216841016599,
+          0.049534827999201156,
+          0.049534827999201156,
+          1.0,
+          1.0,
+          1.0,
+          0.16419268900209474,
+          1.0,
+          0.09758549581819442,
+          0.2555084525056139,
+          0.09758549581819442,
+          0.09758549581819442
+        ],
+        "value_means": [
+          4.487735310895608,
+          67.3898229096615,
+          176.88617574534857,
+          174.720156529517,
+          174.35490384615386,
+          175.1325307468694,
+          3.261925022999081,
+          601.4814490161002,
+          0.5169379092345902,
+          0.4003621933621934,
+          0.6211422378751559,
+          0.8279451206579226
+        ],
+        "value_scales": [
+          4.498398416214455,
+          40.198568714434415,
+          60.07255380111535,
+          57.47484430605674,
+          55.425699598759444,
+          53.82695983056541,
+          37.14102528157751,
+          192.9777263714501,
+          0.22201648365992327,
+          0.3546542634647808,
+          1.5712818879071835,
+          0.2868514803658855
+        ]
+      },
+      "rank_site_calibration_fit": {
+        "additional_non_neutral_home_field_points": -0.36573157800760664,
+        "common_log_scale_correction": -0.06485054367928102,
+        "context_coefficients": {},
+        "context_ridge_penalty": 0.0,
+        "objective_sum_game_nll_plus_half_ridge_norm": 9021.313486036086,
+        "optimizer": {
+          "evaluations": 16,
+          "final_gradient_infinity_norm": 0.00041725410358495196,
+          "gradient_tolerance": 1e-06,
+          "iterations": 13,
+          "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+          "method": "L-BFGS-B with analytic gradient",
+          "parameter_bounds": {
+            "context_coefficients": "unbounded; L2 regularized",
+            "home_field_adjustment": [
+              -100.0,
+              100.0
+            ],
+            "log_multiplier": [
+              -4.0,
+              4.0
+            ],
+            "log_scale_correction": [
+              -3.0,
+              3.0
+            ]
+          },
+          "status": 0,
+          "success": true
+        },
+        "overall_mean_multiplier": 0.9900246508149303,
+        "scale": 12.399824556204917
+      },
+      "rank_site_context_fit": {
+        "additional_non_neutral_home_field_points": -0.3775747485125149,
+        "common_log_scale_correction": -0.07200844490377067,
+        "context_coefficients": {
+          "coach_tenure_seasons": -0.23829152032134723,
+          "db_impact_coverage_fraction": -0.08483186786224134,
+          "missing__coach_tenure_seasons": -0.07840047789627824,
+          "missing__db_impact_coverage_fraction": 0.14372589529289642,
+          "missing__observed_db_impact_sum": 0.14372589529289642,
+          "missing__recruiting_class_points": -0.21997759310494525,
+          "missing__recruiting_class_rank": -0.21997759310494525,
+          "missing__recruiting_points_2y_mean": 0.0,
+          "missing__recruiting_points_3y_mean": 0.0,
+          "missing__recruiting_points_4y_mean": 0.0,
+          "missing__recruiting_points_trend": 0.19361693444140873,
+          "missing__returning_pct_ppa": 0.14372589529289642,
+          "missing__talent_composite": 0.0,
+          "missing__transfer_in_prior_usage_sum": -0.31348794741176134,
+          "observed_db_impact_sum": 0.11135727205800704,
+          "recruiting_class_points": 1.0428204131806973,
+          "recruiting_class_rank": 0.5364365544466154,
+          "recruiting_points_2y_mean": 2.2222626255834124,
+          "recruiting_points_3y_mean": -5.2055915852598815,
+          "recruiting_points_4y_mean": 4.184981799369887,
+          "recruiting_points_trend": -0.19499232649817205,
+          "returning_pct_ppa": -0.1420609937309265,
+          "talent_composite": 0.42049974968862397,
+          "transfer_in_prior_usage_sum": 0.05986801401201638
+        },
+        "context_ridge_penalty": 0.01,
+        "objective_sum_game_nll_plus_half_ridge_norm": 8997.537750247682,
+        "optimizer": {
+          "evaluations": 549,
+          "final_gradient_infinity_norm": 0.004275118552449442,
+          "gradient_tolerance": 1e-06,
+          "iterations": 489,
+          "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+          "method": "L-BFGS-B with analytic gradient",
+          "parameter_bounds": {
+            "context_coefficients": "unbounded; L2 regularized",
+            "home_field_adjustment": [
+              -100.0,
+              100.0
+            ],
+            "log_multiplier": [
+              -4.0,
+              4.0
+            ],
+            "log_scale_correction": [
+              -3.0,
+              3.0
+            ]
+          },
+          "status": 0,
+          "success": true
+        },
+        "overall_mean_multiplier": 0.9289244602230576,
+        "scale": 12.311384736183525
+      },
+      "training_seasons": [
+        2022,
+        2023,
+        2024
+      ]
+    }
+  },
+  "fit_records_sha256": "a6bb5229c6991c5dd1661bc138f6c322b071c7591c0d7b4c75315b3966e59530",
+  "manifest_sha256": "df089c7287007e447acea9197d92f45487f98e41dba3a1cf98e69193f0a5f817"
+}
