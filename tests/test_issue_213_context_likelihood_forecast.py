@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 from scipy.stats import t as student_t
 
+from gippyrank.posterior import engine as posterior_engine
 from gippyrank.posterior.engine import (
     Game,
     LikelihoodV1,
@@ -37,7 +38,9 @@ from gippyrank.research.issue_213_context_likelihood_forecast import (
     FrozenFit,
     _add_phase_aggregates,
     _deduplicate_games,
+    _gain_concentration,
     _guardrail,
+    _paired_forecasts,
     _posterior_rows,
     _predictive_mixture_rows,
     _predictive_model_parameters,
@@ -45,6 +48,8 @@ from gippyrank.research.issue_213_context_likelihood_forecast import (
     _rank_pmf_concentration,
     _validate_target_exclusion,
     _verify_baseline_checkpoint,
+    _verify_baseline_parity,
+    _write_csv,
 )
 
 
@@ -585,6 +590,58 @@ def test_candidate_inference_is_invariant_to_game_order() -> None:
         assert np.array_equal(forward.pmfs[team_id], reverse.pmfs[team_id])
 
 
+def test_context_factor_cache_uses_each_games_context_correction() -> None:
+    coefficients = np.zeros(len(CONTEXT_FEATURES) * 2)
+    coefficients[0] = 1.0
+    adapter = ContextLikelihoodAdapter(
+        _base_likelihood(),
+        _fit(context_coefficients=coefficients),
+        CONTEXT_ARM,
+        {
+            (2023, team_id): _feature_row(
+                team_id,
+                [feature_value, *([0.0] * (len(CONTEXT_FEATURES) - 1))],
+                f"{team_id}-features",
+            )
+            for team_id, feature_value in (
+                ("a", 4.0),
+                ("b", 0.0),
+                ("c", 0.0),
+                ("d", 0.0),
+            )
+        },
+    )
+    teams = [
+        Team(team_id, team_id, "fbs", np.full(5, 0.2))
+        for team_id in ("a", "b", "c", "d")
+    ]
+    games = [
+        Game("g-ab", "a", "b", "fbs", "fbs", 28, 21),
+        Game("g-cd", "c", "d", "fbs", "fbs", 28, 21),
+    ]
+    assert adapter.context_delta(games[0])[0] != adapter.context_delta(games[1])[0]
+    assert not np.array_equal(
+        adapter.factor(games[0], teams[0], teams[1]),
+        adapter.factor(games[1], teams[2], teams[3]),
+    )
+
+    def infer_in_order(ordered_games: list[Game]) -> PosteriorResult:
+        posterior_engine._GAME_FACTOR_CACHE.clear()
+        return infer_posterior(
+            teams,
+            ordered_games,
+            _base_likelihood(),
+            factor_builder=adapter.factor,
+            factor_cache_key=adapter.factor_cache_key,
+        )
+
+    forward = infer_in_order(games)
+    reverse = infer_in_order(list(reversed(games)))
+    assert forward.converged and reverse.converged
+    for team_id in forward.pmfs:
+        assert np.array_equal(forward.pmfs[team_id], reverse.pmfs[team_id])
+
+
 def test_duplicate_evidence_is_deduplicated_but_conflicts_fail() -> None:
     game = _game()
     assert _deduplicate_games([game, game]) == [game]
@@ -742,6 +799,54 @@ def test_rank_pmf_concentration_is_reported_per_checkpoint_and_arm() -> None:
     assert all(row["mean_effective_rank_count"] == pytest.approx(2) for row in result)
 
 
+def test_gain_concentration_keeps_reference_arms_separate() -> None:
+    metric_values = {
+        "crps": 1.0,
+        "margin_nll": 1.0,
+        "home_win_brier": 1.0,
+        "median_absolute_error": 1.0,
+        "coverage_50": 1.0,
+        "coverage_80": 1.0,
+        "coverage_95": 1.0,
+    }
+    rows = []
+    for arm, crps in (
+        (BASELINE_ARM, 1.0),
+        (GENERIC_ARM, 0.8),
+        (CONTEXT_ARM, 0.6),
+    ):
+        rows.append(
+            {
+                "forecast_stage": "rolling",
+                "season": 2023,
+                "game_id": "army-navy-2023",
+                "cutoff_utc": "2023-12-09T00:00:00+00:00",
+                "phase": "army_navy",
+                "home_id": "army",
+                "away_id": "navy",
+                "evidence_ids_sha256": "ids",
+                "evidence_rows_sha256": "rows",
+                "model_arm": arm,
+                **metric_values,
+                "crps": crps,
+            }
+        )
+
+    paired = _paired_forecasts(rows)
+    concentration = _gain_concentration(paired)
+    army_context = {
+        row["reference_arm"]: row
+        for row in concentration
+        if row["candidate_arm"] == CONTEXT_ARM and row["team_id"] == "army"
+    }
+
+    assert set(army_context) == {BASELINE_ARM, GENERIC_ARM}
+    assert army_context[BASELINE_ARM]["game_appearances"] == 1
+    assert army_context[BASELINE_ARM]["mean_crps_delta"] == pytest.approx(-0.4)
+    assert army_context[GENERIC_ARM]["game_appearances"] == 1
+    assert army_context[GENERIC_ARM]["mean_crps_delta"] == pytest.approx(-0.2)
+
+
 def test_baseline_checkpoint_binds_targets_to_cutoff_evidence_and_valid_pmfs() -> None:
     teams = {
         team_id: Team(team_id, team_id, "fbs", np.array([0.4, 0.6]))
@@ -785,3 +890,53 @@ def test_baseline_checkpoint_binds_targets_to_cutoff_evidence_and_valid_pmfs() -
             evidence=evidence,
             reference_by_key=reference,
         )
+
+
+def test_baseline_parity_fails_when_fresh_score_is_perturbed(tmp_path) -> None:
+    numeric_fields = (
+        "expected_home_margin",
+        "median_home_margin",
+        "home_win_probability",
+        "away_win_probability",
+        "tie_probability",
+        "margin_interval_50_low",
+        "margin_interval_50_high",
+        "margin_interval_80_low",
+        "margin_interval_80_high",
+        "margin_interval_95_low",
+        "margin_interval_95_high",
+        "crps",
+        "crps_numerical_error_estimate",
+        "crps_quadrature_order",
+        "crps_tail_multiple",
+        "margin_nll",
+        "median_absolute_error",
+        "home_win_brier",
+        "coverage_50",
+        "coverage_80",
+        "coverage_95",
+    )
+    reference = {
+        "forecast_stage": "rolling",
+        "season": 2023,
+        "game_id": "game-1",
+        "model_arm": BASELINE_ARM,
+        "forecast_population": "fbs_fbs",
+        "cutoff_utc": "2023-09-01T00:00:00+00:00",
+        "phase": "regular_season",
+        "home_id": "a",
+        "away_id": "b",
+        "actual_home_points": 28,
+        "actual_away_points": 21,
+        "evidence_ids_sha256": "ids",
+        "evidence_rows_sha256": "rows",
+        **{field: 1.0 for field in numeric_fields},
+    }
+    _write_csv(tmp_path / "forecast_scores.csv", [reference])
+
+    parity = _verify_baseline_parity([reference], tmp_path, baseline_pmf_checks=2)
+    assert parity["passed"] is True
+
+    perturbed = {**reference, "crps": 1.1}
+    with pytest.raises(ValueError, match="baseline parity failed.*crps"):
+        _verify_baseline_parity([perturbed], tmp_path, baseline_pmf_checks=2)

@@ -995,6 +995,44 @@ def _paired_forecasts(rows: list[dict[str, object]]) -> list[dict[str, object]]:
     return output
 
 
+def _gain_concentration(paired: list[dict[str, object]]) -> list[dict[str, object]]:
+    gain_by_team: dict[tuple[str, str, int, str, str], list[float]] = defaultdict(list)
+    for row in paired:
+        if row["forecast_stage"] != "rolling":
+            continue
+        for team_id in (str(row["home_id"]), str(row["away_id"])):
+            gain_by_team[
+                (
+                    str(row["candidate_arm"]),
+                    str(row["reference_arm"]),
+                    int(row["season"]),
+                    str(row["phase"]),
+                    team_id,
+                )
+            ].append(float(row["crps_delta"]))
+    return [
+        {
+            "candidate_arm": candidate_arm,
+            "reference_arm": reference_arm,
+            "season": season,
+            "phase": phase,
+            "team_id": team_id,
+            "game_appearances": len(values),
+            "mean_crps_delta": float(np.mean(values)),
+            "sum_crps_delta": float(np.sum(values)),
+            "candidate_better_games": sum(value < 0 for value in values),
+            "candidate_worse_games": sum(value > 0 for value in values),
+        }
+        for (
+            candidate_arm,
+            reference_arm,
+            season,
+            phase,
+            team_id,
+        ), values in sorted(gain_by_team.items())
+    ]
+
+
 def _rank_summary(rows: list[dict[str, object]]) -> list[dict[str, object]]:
     metrics = ("nll", "crps", "expected_rank_error", "interval_80_width", "interval_80_target_mass")
     by_team: dict[tuple[str, str, int, str], list[dict[str, object]]] = defaultdict(list)
@@ -1215,16 +1253,19 @@ def _verify_baseline_parity(
         extra = sorted(set(current_by_key) - set(reference_by_key))[:10]
         raise ValueError(f"#201 baseline cohort mismatch; missing={missing}, extra={extra}")
     numeric = (
-        "expected_home_margin", "median_home_margin", "home_win_probability", "away_win_probability",
+        "expected_home_margin", "median_home_margin", "home_win_probability", "away_win_probability", "tie_probability",
         "margin_interval_50_low", "margin_interval_50_high", "margin_interval_80_low", "margin_interval_80_high",
         "margin_interval_95_low", "margin_interval_95_high", "crps", "crps_numerical_error_estimate",
-        "margin_nll", "median_absolute_error", "home_win_brier", "coverage_50", "coverage_80", "coverage_95",
+        "crps_quadrature_order", "crps_tail_multiple", "margin_nll", "median_absolute_error", "home_win_brier", "coverage_50", "coverage_80", "coverage_95",
     )
     max_difference = 0.0
     checks = 0
     for identity, row in current_by_key.items():
         reference = reference_by_key[identity]
-        for field in ("cutoff_utc", "phase", "home_id", "away_id", "evidence_ids_sha256", "evidence_rows_sha256"):
+        for field in (
+            "cutoff_utc", "phase", "home_id", "away_id", "forecast_population",
+            "actual_home_points", "actual_away_points", "evidence_ids_sha256", "evidence_rows_sha256",
+        ):
             if str(row[field]) != str(reference[field]):
                 raise ValueError(f"#201 baseline {identity}/{field} mismatch")
         for field in numeric:
@@ -1241,7 +1282,7 @@ def _verify_baseline_parity(
         "tolerance": IDENTITY_TOLERANCE,
         "baseline_pmf_team_game_checks": baseline_pmf_checks,
         "baseline_pmfs": "Fresh #200 Context_existing replay PMFs were checked for all baseline forecast team-game references, normalized, and serialized with per-team hashes in posterior_pmfs.jsonl.gz. #201 did not retain the PMF arrays or their hashes, so direct cross-artifact PMF hash comparison is unavailable.",
-        "baseline_score_source": "Hash-verified #201 Context_existing per-game forecast_scores.csv; exact row keys, cutoffs, evidence IDs/hashes, and all numeric metrics are retained.",
+        "baseline_score_source": "Freshly replayed Context_existing posterior states were scored through the issue 213 prediction path and compared with the hash-verified #201 per-game forecast_scores.csv under the frozen tolerance.",
     }
 
 
@@ -1783,7 +1824,7 @@ def run_issue_213_replay(args: Any) -> dict[str, object]:
             row for row in preseason_posterior_rows if row["subdivision"] == "fbs"
         )
         preseason_jobs: list[dict[str, object]] = []
-        for arm in (GENERIC_ARM, CONTEXT_ARM):
+        for arm in MODEL_ARMS:
             teams, _result, _diag = preseason_states[arm]
             for metadata, outcome in primary_games.values():
                 preseason_jobs.append(
@@ -1881,7 +1922,7 @@ def run_issue_213_replay(args: Any) -> dict[str, object]:
                     ).astimezone(UTC),
                     evidence_ids=included_ids,
                 )
-                for arm in (GENERIC_ARM, CONTEXT_ARM):
+                for arm in MODEL_ARMS:
                     jobs.append(
                         {
                             "metadata": metadata,
@@ -1897,7 +1938,6 @@ def run_issue_213_replay(args: Any) -> dict[str, object]:
                     )
             forecasts.extend(_parallel_forecasts(jobs))
 
-    forecasts.extend(baseline_reference_rows)
     baseline_parity = _verify_baseline_parity(
         forecasts,
         args.issue201_root,
@@ -1930,26 +1970,7 @@ def run_issue_213_replay(args: Any) -> dict[str, object]:
     paired = _paired_forecasts(forecasts)
     decision = _decision(summaries)
     rank_summaries = _rank_summary(rank_rows)
-    gain_by_team: dict[tuple[str, int, str, str], list[float]] = defaultdict(list)
-    for row in paired:
-        if row["forecast_stage"] != "rolling":
-            continue
-        for team_id in (str(row["home_id"]), str(row["away_id"])):
-            gain_by_team[(str(row["candidate_arm"]), int(row["season"]), str(row["phase"]), team_id)].append(float(row["crps_delta"]))
-    gain_concentration = [
-        {
-            "candidate_arm": arm,
-            "season": season,
-            "phase": phase,
-            "team_id": team_id,
-            "game_appearances": len(values),
-            "mean_crps_delta": float(np.mean(values)),
-            "sum_crps_delta": float(np.sum(values)),
-            "candidate_better_games": sum(value < 0 for value in values),
-            "candidate_worse_games": sum(value > 0 for value in values),
-        }
-        for (arm, season, phase, team_id), values in sorted(gain_by_team.items())
-    ]
+    gain_concentration = _gain_concentration(paired)
 
     outputs: dict[str, object] = {
         "forecast_scores.csv": forecasts,
