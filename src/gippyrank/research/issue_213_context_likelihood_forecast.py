@@ -1037,6 +1037,9 @@ def _rank_summary(rows: list[dict[str, object]]) -> list[dict[str, object]]:
     metrics = ("nll", "crps", "expected_rank_error", "interval_80_width", "interval_80_target_mass")
     by_team: dict[tuple[str, str, int, str], list[dict[str, object]]] = defaultdict(list)
     for row in rows:
+        # Keep the first zero-evidence weekly cutoff out of rolling aggregates; it is preseason.
+        if str(row["forecast_stage"]) == "rolling" and int(row["evidence_game_count"]) == 0:
+            continue
         by_team[(str(row["forecast_stage"]), str(row["model_arm"]), int(row["season"]), str(row["team_id"]))].append(row)
     team_seasons = []
     for (stage, arm, season, team_id), members in sorted(by_team.items()):

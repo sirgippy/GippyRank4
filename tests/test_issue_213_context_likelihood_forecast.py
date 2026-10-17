@@ -46,6 +46,7 @@ from gippyrank.research.issue_213_context_likelihood_forecast import (
     _predictive_model_parameters,
     _predictive_summary_with_shift,
     _rank_pmf_concentration,
+    _rank_summary,
     _validate_target_exclusion,
     _verify_baseline_checkpoint,
     _verify_baseline_parity,
@@ -775,6 +776,54 @@ def test_predictive_mixtures_reconstruct_from_frozen_parameters_and_pmf_referenc
     baseline_row = next(row for row in mixtures if row["model_arm"] == BASELINE_ARM)
     assert baseline_row["neutral_site"] is False
     assert baseline_row["student_t_scale"] == base.scale
+
+
+def test_rank_summary_excludes_zero_evidence_rolling_checkpoints() -> None:
+    def make_row(stage: str, team_id: str, evidence_game_count: int, nll: float) -> dict[str, object]:
+        return {
+            "forecast_stage": stage,
+            "model_arm": BASELINE_ARM,
+            "season": 2024,
+            "team_id": team_id,
+            "evidence_game_count": evidence_game_count,
+            "nll": nll,
+            "crps": nll,
+            "expected_rank_error": nll,
+            "interval_80_width": nll,
+            "interval_80_target_mass": nll,
+        }
+
+    summary = _rank_summary(
+        [
+            make_row("preseason", "a", 0, 100.0),
+            make_row("preseason", "b", 0, 200.0),
+            make_row("rolling", "a", 0, 100.0),
+            make_row("rolling", "a", 1, 2.0),
+            make_row("rolling", "b", 1, 4.0),
+        ]
+    )
+
+    rolling = next(
+        row
+        for row in summary
+        if row["aggregation"] == "season_team_season_weight_one"
+        and row["forecast_stage"] == "rolling"
+        and row["season"] == 2024
+    )
+    assert rolling["team_seasons"] == 2
+    assert rolling["checkpoints"] == 2
+    assert rolling["nll"] == pytest.approx(3.0)
+
+    preseason = next(
+        row
+        for row in summary
+        if row["aggregation"] == "season_team_season_weight_one"
+        and row["forecast_stage"] == "preseason"
+        and row["season"] == 2024
+    )
+    assert preseason["team_seasons"] == 2
+    assert preseason["checkpoints"] == 2
+    assert preseason["nll"] == pytest.approx(150.0)
 
 
 def test_rank_pmf_concentration_is_reported_per_checkpoint_and_arm() -> None:
