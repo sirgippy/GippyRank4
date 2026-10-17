@@ -281,7 +281,9 @@ def infer_posterior(
     *,
     factor_weights: dict[str, float] | None = None,
     factor_builder: Callable[[Game, Team, Team], np.ndarray] | None = None,
-    factor_cache_key: Hashable | None = None,
+    factor_cache_key: Hashable
+    | Callable[[Game, Team, Team], Hashable]
+    | None = None,
     max_iterations: int = 500,
     tolerance: float = 1e-9,
     damping: float = 0.35,
@@ -319,8 +321,13 @@ def infer_posterior(
             raise ValueError("a game cannot have the same team twice")
         key = tuple(sorted((game.home_id, game.away_id)))
         home, away = by_id[game.home_id], by_id[game.away_id]
+        game_factor_cache_key = (
+            factor_cache_key(game, home, away)
+            if callable(factor_cache_key)
+            else factor_cache_key
+        )
         cache_key = (
-            ("custom", factor_cache_key)
+            ("custom", game_factor_cache_key)
             if factor_builder is not None
             else (likelihood.beta.tobytes(),)
         ) + (

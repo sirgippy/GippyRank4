@@ -41,6 +41,7 @@ DEFAULT_INNER_ROLLOUT_COUNT = 0
 DEFAULT_SEASON_SIMULATION_SEED = 49_049
 SEASON_WIN_THRESHOLDS = (6, 8, 10, 11, 12)
 _PMF_TOLERANCE = 1.0e-8
+_THRESHOLD_ROUNDOFF_TOLERANCE = 32 * np.finfo(float).eps
 
 
 @dataclass(frozen=True)
@@ -409,6 +410,20 @@ def _vectorized_poisson_binomial(probabilities: np.ndarray) -> np.ndarray:
     return pmfs / totals[:, None]
 
 
+def _bounded_threshold_probability(value: float, *, team_id: str, name: str) -> float:
+    """Correct only double-precision roundoff at a probability boundary."""
+    if 0.0 <= value <= 1.0:
+        return value
+    if -_THRESHOLD_ROUNDOFF_TOLERANCE <= value < 0.0:
+        return 0.0
+    if 1.0 < value <= 1.0 + _THRESHOLD_ROUNDOFF_TOLERANCE:
+        return 1.0
+    raise FloatingPointError(
+        f"season threshold probability for team {team_id} {name} is {value!r}, "
+        "outside [0, 1] beyond floating-point roundoff"
+    )
+
+
 def _pmf_quantile(pmf: np.ndarray, probability: float, offset: int = 0) -> int:
     index = int(np.searchsorted(np.cumsum(pmf), probability, side="left"))
     return offset + min(index, len(pmf) - 1)
@@ -671,10 +686,21 @@ def _team_summary(
     thresholds: dict[str, float] = {}
     for threshold in SEASON_WIN_THRESHOLDS:
         if threshold <= max_wins:
-            index = max(0, threshold - record.wins)
-            thresholds[f"wins_{threshold}_plus"] = float(final_pmf[index:].sum())
-    win_out = float(final_pmf[-1])
-    lose_out = float(final_pmf[0])
+            name = f"wins_{threshold}_plus"
+            probability = (
+                1.0
+                if threshold <= record.wins
+                else float(final_pmf[threshold - record.wins :].sum())
+            )
+            thresholds[name] = _bounded_threshold_probability(
+                probability, team_id=team.team_id, name=name
+            )
+    win_out = _bounded_threshold_probability(
+        float(final_pmf[-1]), team_id=team.team_id, name="win_out"
+    )
+    lose_out = _bounded_threshold_probability(
+        float(final_pmf[0]), team_id=team.team_id, name="lose_out"
+    )
     thresholds.update({"win_out": win_out, "lose_out": lose_out})
     events: dict[str, dict[str, Any]] = {}
     for threshold in SEASON_WIN_THRESHOLDS:
