@@ -3,42 +3,42 @@
     "context_correction_vs_generic": {
       "candidate_arm": "Context_context_recalibrated",
       "equal_season_crps_delta": -0.04204098282723123,
-      "pooled_equal_game_crps_delta": -0.04195811306468222,
+      "pooled_equal_game_crps_delta": -0.04195811306468045,
       "practical_gain_pass": false,
       "reference_arm": "Context_generic_recalibrated",
       "rule": "pooled and equal-season CRPS each at least 0.05 lower; lower CRPS in at least two of three seasons",
       "season_crps_delta": {
-        "2023": -0.06671344850656169,
-        "2024": -0.0311957382531709,
-        "2025": -0.028213761721966435
+        "2023": -0.06671344850655991,
+        "2024": -0.031195738253169125,
+        "2025": -0.02821376172196466
       },
       "seasons_with_lower_crps": 3
     },
     "context_correction_vs_unmodified_context": {
       "candidate_arm": "Context_context_recalibrated",
-      "equal_season_crps_delta": -0.026521892180442208,
-      "pooled_equal_game_crps_delta": -0.026446579908061096,
+      "equal_season_crps_delta": -0.02652189218044043,
+      "pooled_equal_game_crps_delta": -0.026446579908057544,
       "practical_gain_pass": false,
       "reference_arm": "Context_existing",
       "rule": "pooled and equal-season CRPS each at least 0.05 lower; lower CRPS in at least two of three seasons",
       "season_crps_delta": {
-        "2023": -0.05543335288400009,
-        "2024": -0.008878837803351303,
-        "2025": -0.015253485853977011
+        "2023": -0.05543335288399476,
+        "2024": -0.008878837803349526,
+        "2025": -0.015253485853973459
       },
       "seasons_with_lower_crps": 3
     },
     "generic_vs_unmodified_context": {
       "candidate_arm": "Context_generic_recalibrated",
-      "equal_season_crps_delta": 0.015519090646789024,
-      "pooled_equal_game_crps_delta": 0.015511533156621127,
+      "equal_season_crps_delta": 0.0155190906467908,
+      "pooled_equal_game_crps_delta": 0.015511533156622903,
       "practical_gain_pass": false,
       "reference_arm": "Context_existing",
       "rule": "pooled and equal-season CRPS each at least 0.05 lower; lower CRPS in at least two of three seasons",
       "season_crps_delta": {
-        "2023": 0.011280095622561603,
+        "2023": 0.011280095622565156,
         "2024": 0.0223169004498196,
-        "2025": 0.012960275867989424
+        "2025": 0.0129602758679912
       },
       "seasons_with_lower_crps": 0
     }
@@ -51,14 +51,14 @@
         "pre_thanksgiving": {
           "passed": true,
           "pooled_coverage_error_limit": 0.03,
-          "pooled_crps_deterioration": -0.03284210159793233,
+          "pooled_crps_deterioration": -0.032842101597928774,
           "pooled_crps_limit": 0.1,
           "pooled_mean_absolute_coverage_error_increase": 0.0039215686274509855,
           "season_coverage_error_limit": 0.05,
           "season_crps_deterioration": {
-            "2023": -0.05980955620669626,
-            "2024": -0.017482188387369035,
-            "2025": -0.021442773982247587
+            "2023": -0.059809556206692704,
+            "2024": -0.01748218838736726,
+            "2025": -0.02144277398224581
           },
           "season_crps_limit": 0.25,
           "season_mean_absolute_coverage_error_increase": {
@@ -70,14 +70,14 @@
         "preseason": {
           "passed": true,
           "pooled_coverage_error_limit": 0.03,
-          "pooled_crps_deterioration": -0.02403873707442905,
+          "pooled_crps_deterioration": -0.024038737074427274,
           "pooled_crps_limit": 0.1,
           "pooled_mean_absolute_coverage_error_increase": -0.024057714958775102,
           "season_coverage_error_limit": 0.05,
           "season_crps_deterioration": {
             "2023": -0.07635621790412905,
             "2024": 0.007189289974260049,
-            "2025": -0.0033633640013803756
+            "2025": -0.0033633640013785993
           },
           "season_crps_limit": 0.25,
           "season_mean_absolute_coverage_error_increase": {
@@ -95,14 +95,14 @@
         "pre_thanksgiving": {
           "passed": true,
           "pooled_coverage_error_limit": 0.03,
-          "pooled_crps_deterioration": 0.021606805848982447,
+          "pooled_crps_deterioration": 0.021606805848984223,
           "pooled_crps_limit": 0.1,
           "pooled_mean_absolute_coverage_error_increase": 0.0006535947712418468,
           "season_coverage_error_limit": 0.05,
           "season_crps_deterioration": {
-            "2023": 0.0159808174973044,
-            "2024": 0.03069285538872535,
-            "2025": 0.0181889202410197
+            "2023": 0.01598081749730973,
+            "2024": 0.030692855388723572,
+            "2025": 0.018188920241021478
           },
           "season_crps_limit": 0.25,
           "season_mean_absolute_coverage_error_increase": {
@@ -114,14 +114,14 @@
         "preseason": {
           "passed": true,
           "pooled_coverage_error_limit": 0.03,
-          "pooled_crps_deterioration": -0.005556910530515324,
+          "pooled_crps_deterioration": -0.005556910530513548,
           "pooled_crps_limit": 0.1,
           "pooled_mean_absolute_coverage_error_increase": -0.01590106007067138,
           "season_coverage_error_limit": 0.05,
           "season_crps_deterioration": {
             "2023": -0.012832332391385037,
-            "2024": -0.0017701422933935618,
-            "2025": -0.0021331353581555135
+            "2024": -0.0017701422933917854,
+            "2025": -0.002133135358153737
           },
           "season_crps_limit": 0.25,
           "season_mean_absolute_coverage_error_increase": {
