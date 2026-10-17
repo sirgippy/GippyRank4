@@ -2361,6 +2361,72 @@ def test_unnormalized_pmf_is_refused_without_renormalizing(tmp_path: Path) -> No
         )
 
 
+BOUNDARY_WEEKLY_SOURCE = (
+    "data/processed/snapshots/2026/"
+    "2026-weekly-2026-10-16T13-19-09.273219Z-context-v1.4/predictive/context"
+)
+
+
+def _boundary_weekly_artifact(
+    tmp_path: Path,
+) -> tuple[Path, Path, dict[str, object], str]:
+    source = _copied_snapshot(tmp_path, BOUNDARY_WEEKLY_SOURCE)
+    path = source / "team_seasons.json"
+    artifact = json.loads(path.read_text(encoding="utf-8"))
+    teams = artifact["season_simulation"]["teams"]
+    team_id = next(
+        team_id
+        for team_id, summary in teams.items()
+        if summary.get("forecast_status") == "available"
+        and summary.get("completed_wins", 0) >= 6
+        and summary["threshold_probabilities"].get("wins_6_plus", 1.0) < 1.0
+    )
+    return source, path, artifact, team_id
+
+
+def test_site_export_accepts_exact_guaranteed_threshold(tmp_path: Path) -> None:
+    source, path, artifact, team_id = _boundary_weekly_artifact(tmp_path)
+    artifact["season_simulation"]["teams"][team_id]["threshold_probabilities"][
+        "wins_6_plus"
+    ] = 1.0
+    path.write_text(json.dumps(artifact), encoding="utf-8")
+
+    manifest = build_site_data(
+        root=tmp_path,
+        config_path=_config_for(source, tmp_path),
+        output_directory=tmp_path / "data",
+    )
+    exported = json.loads(
+        (tmp_path / manifest["snapshots"][0]["team_seasons_path"]).read_text(
+            encoding="utf-8"
+        )
+    )
+    assert (
+        exported["season_simulation"]["teams"][team_id]["threshold_probabilities"][
+            "wins_6_plus"
+        ]
+        == 1.0
+    )
+
+
+def test_site_export_rejects_invalid_threshold_with_context(tmp_path: Path) -> None:
+    source, path, artifact, team_id = _boundary_weekly_artifact(tmp_path)
+    artifact["season_simulation"]["teams"][team_id]["threshold_probabilities"][
+        "wins_6_plus"
+    ] = 1.01
+    path.write_text(json.dumps(artifact), encoding="utf-8")
+
+    with pytest.raises(SiteDataValidationError) as error:
+        build_site_data(
+            root=tmp_path,
+            config_path=_config_for(source, tmp_path),
+            output_directory=tmp_path / "data",
+        )
+    assert f"team {team_id}" in str(error.value)
+    assert "wins_6_plus=1.01" in str(error.value)
+    assert "must be between 0 and 1" in str(error.value)
+
+
 HASHED_WEEKLY_SOURCE = (
     "data/processed/snapshots/2026/"
     "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.3/predictive/context"

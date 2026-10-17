@@ -10,6 +10,8 @@ from gippyrank.posterior.predictive import ScheduledGame
 from gippyrank.posterior.season_simulation import (
     CompletedRecord,
     SeasonSimulationConfig,
+    _bounded_threshold_probability,
+    _team_summary,
     poisson_binomial_pmf,
     sample_latent_qualities,
     simulate_season,
@@ -146,6 +148,54 @@ def test_season_summary_shifts_final_record_from_fixed_completed_record() -> Non
         variance["team_quality"] + variance["game_randomness"]
     )
     assert variance["team_quality_fraction"] + variance["game_randomness_fraction"] == pytest.approx(1.0)
+
+
+def test_calculated_threshold_roundoff_is_bounded() -> None:
+    team = _teams([1.0], [1.0])[0]
+    games = [
+        *_games(),
+        ScheduledGame("game-3", "home", "away", "fbs", "fbs"),
+    ]
+    summary = _team_summary(
+        team=team,
+        record=CompletedRecord(wins=5),
+        candidate_games=games,
+        unsupported_games=[],
+        team_probabilities=np.array([[1.0, 0.1, 0.6]]),
+        outer_count=1,
+    )
+
+    distribution = summary["final_win_distribution"]
+    assert float(np.asarray(list(distribution.values())).sum()) > 1.0
+    assert distribution == {
+        "5": 0.0,
+        "6": pytest.approx(0.36),
+        "7": pytest.approx(0.58),
+        "8": pytest.approx(0.06),
+    }
+    assert summary["threshold_probabilities"]["wins_6_plus"] == 1.0
+    assert summary["threshold_probabilities"]["wins_8_plus"] == pytest.approx(0.06)
+
+
+def test_completed_wins_make_threshold_exactly_certain() -> None:
+    summary = _team_summary(
+        team=_teams([1.0], [1.0])[0],
+        record=CompletedRecord(wins=6),
+        candidate_games=_games(),
+        unsupported_games=[],
+        team_probabilities=np.array([[0.3, 0.4]]),
+        outer_count=1,
+    )
+
+    assert (
+        float(np.asarray(list(summary["final_win_distribution"].values())).sum()) < 1.0
+    )
+    assert summary["threshold_probabilities"]["wins_6_plus"] == 1.0
+
+
+def test_materially_invalid_threshold_probability_is_rejected() -> None:
+    with pytest.raises(FloatingPointError, match=r"home wins_6_plus is 1\.01"):
+        _bounded_threshold_probability(1.01, team_id="home", name="wins_6_plus")
 
 
 def test_single_game_outer_marginal_matches_exact_v1_mixture() -> None:

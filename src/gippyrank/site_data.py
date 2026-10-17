@@ -2778,12 +2778,15 @@ def _validate_season_simulation(
                     f"{snapshot_id}: season summary {field} is not normalized for {team_id}"
                 )
         thresholds = summary.get("threshold_probabilities")
-        if not isinstance(thresholds, dict) or any(
-            not 0 <= _probability(value, "threshold probability", snapshot_id) <= 1
-            for value in thresholds.values()
-        ):
+        if not isinstance(thresholds, dict):
             raise SiteDataValidationError(
                 f"{snapshot_id}: invalid season thresholds for {team_id}"
+            )
+        for name, value in thresholds.items():
+            _probability(
+                value,
+                f"threshold probability for team {team_id} {name}={value!r}",
+                snapshot_id,
             )
         variance = summary.get("variance_decomposition")
         if not isinstance(variance, dict):
