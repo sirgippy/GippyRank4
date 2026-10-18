@@ -32,7 +32,7 @@ jobs:
 
       - name: Run retained test suite
         # The validator performs many small matrix-vector products. OpenBLAS
-        # thread startup costs more than the work at these dimensions.
+        # thread coordination costs more than parallel work at these sizes.
         env:
           OPENBLAS_NUM_THREADS: "1"
         run: uv run pytest -q
@@ -50,7 +50,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v6
@@ -102,15 +102,7 @@ jobs:
         env:
           DIFF_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
           DIFF_HEAD: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
-        run: |
-          # A shallow checkout has all current files. Fetch only a missing
-          # endpoint so the committed diff is still checked in full.
-          for endpoint in "$DIFF_BASE" "$DIFF_HEAD"; do
-            if ! git cat-file -e "${endpoint}^{commit}" 2>/dev/null; then
-              git fetch --no-tags --depth=1 origin "$endpoint"
-            fi
-          done
-          git diff --check "$DIFF_BASE" "$DIFF_HEAD"
+        run: git diff --check "$DIFF_BASE" "$DIFF_HEAD"
 
       - name: Check validation side effects
         run: git diff --exit-code
