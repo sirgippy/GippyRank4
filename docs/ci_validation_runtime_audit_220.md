@@ -9,7 +9,7 @@ The fourth replay was interleaved with exploratory PR runs on October 18,
 2026 to check day-to-day runner differences. A later rankings publication
 advanced main to `d4a734be9e3f55eef7a866f8c0d703d8c03726b0` and added
 three publications; the final matched comparison uses that new main SHA
-and its PR merge checkout. The retained optimization
+and its PR merge checkout. The first measured optimization
 changes only the `OPENBLAS_NUM_THREADS` environment of the full pytest step.
 The test collection, application code, numeric settings, and site checks are
 unchanged. Three same-revision optimized attempts are reported below.
@@ -127,9 +127,10 @@ npm cache and 0.61 seconds when repeated warm. These are local cold-path
 checks, not a controlled Actions cold-cache benchmark. We added no cache and
 do not reuse generated site artifacts or test results across revisions.
 
-Pytest process sharding was not adopted: the expensive validator and site
-fixtures would be reconstructed in each process, and the one-thread change
-targets the measured critical path without changing test isolation.
+Separate-job pytest sharding was initially deferred because an extra checkout
+would increase runner work. A subsequent experiment overlaps two disjoint
+pytest processes within the existing Python job; its measurements and
+isolation checks are recorded below.
 Chromium remains after the freshly generated static API in the same job;
 browser workers and retry policy are unchanged. Superseded-run cancellation
 was also left unchanged because it would alter workflow behavior without a
@@ -148,7 +149,7 @@ classifications. The browser failure step still uploads `test-results/` and
 code. The local whitespace-failure fixture reported the offending file and
 line. We did not inject an intentional failing Actions run.
 
-## Final-code CI comparison
+## First optimization: one OpenBLAS thread
 
 The comparable current main revision is
 `d4a734be9e3f55eef7a866f8c0d703d8c03726b0`, after the October 18
@@ -211,10 +212,107 @@ observed. The final documentation-only commit is checked separately below
 because adding this audit changes the Git SHA without changing the measured
 validation commands or inputs.
 
-## Final documentation revision
+## Prior documentation revision
 
 The required checks attached to [PR 221](https://github.com/sirgippy/GippyRank4/pull/221)
-validate this documentation-only revision from a fresh checkout. Its run is
-excluded from the controlled timing medians because its SHA differs from the
-three optimized replays; the validation commands and publication inputs
-remain unchanged. The PR description records the final run and conclusion.
+validated the documentation-only revision at `33dae617` from a fresh checkout
+in [Actions run 39141831934](https://github.com/sirgippy/GippyRank4/actions/runs/39141831934).
+Its first attempt is excluded from the earlier controlled timing medians
+because its SHA differs from the three optimized replays; the validation
+commands and publication inputs remained unchanged.
+
+## Second optimization: overlap disjoint pytest processes
+
+The complete Context 1.4 validator module uses two independent full CLI runs
+and dominates the one-thread Python test step. The current workflow runs that
+module in one pytest process and all remaining retained tests in another,
+within the same checkout and Python job. Both processes keep
+`OPENBLAS_NUM_THREADS=1`. The first process selects
+`tests/test_context_v1_4_validator.py`; the second uses pytest's
+`--ignore=tests/test_context_v1_4_validator.py`. Thus the split partitions
+the original collection without narrowing assertions, fixtures, inference,
+or scenarios. Both exit codes are checked after both finish, and both logs
+are printed even if one fails. Ruff and the tracked-file side-effect check
+still follow the combined step. The required `validate` gate still depends
+on successful `python` and `site` jobs.
+
+On the same WSL checkout, two concurrent processes passed 26 validator and
+1,030 remaining tests (1,056 total, excluding the documented five API tests).
+Their wall times were 72.87 and 75.72 seconds, respectively, versus 127.30
+seconds for the prior one-thread combined suite. The CI split passed 26 and
+1,035 tests (1,061 total, including the five API tests) in its first full
+run. Simulated failures of either process produced a failing step and printed
+both logs with the corresponding exit code. No separate checkout or extra
+runner was added. Exact artifacts and the independent two-run validator
+comparison remain intact.
+
+### Matched CI measurement of the split
+
+The one-thread baseline is three attempts of
+[Actions run 39141831934](https://github.com/sirgippy/GippyRank4/actions/runs/39141831934)
+at `33dae6176bee03b57dcd8af20d585e2201e02aaf`, checked out as PR merge
+`c6c552b` into `d4a734b`. The split is three attempts of
+[Actions run 39146750789](https://github.com/sirgippy/GippyRank4/actions/runs/39146750789)
+at `8b9800363821130ad2b3fd9f865b6682e63a6894`, checked out as PR merge
+`7e36934` into the same main revision. Run order was baseline 1, split 1,
+baseline 2, split 2, baseline 3, split 3, all on October 18, 2026. These are
+the same `pull_request` event, Ubuntu image `20261012.334.1`, runner version
+`2.337.0`, locked Python/uv/Node/Playwright versions, 52 publications, and
+warm uv/npm cache keys. The Python and site jobs still start in parallel.
+The first baseline ran earlier in the day; the later attempts are closely
+interleaved. Unchanged site-job variation remains a measurement limitation.
+
+| Revision, attempt | Queue | Execution | Workflow wall | Python job | Site job | Aggregate runner |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| One thread 1 | 2 s | 234 s | 237 s | 230 s | 193 s | 425 s |
+| One thread 2 | 3 s | 242 s | 245 s | 236 s | 167 s | 406 s |
+| One thread 3 | 3 s | 241 s | 244 s | 235 s | 192 s | 430 s |
+| **Median; range** | **3 s; 2–3** | **241 s; 234–242** | **244 s; 237–245** | **235 s; 230–236** | **192 s; 167–193** | **425 s; 406–430** |
+| Split 1 | 2 s | 197 s | 200 s | 167 s | 193 s | 362 s |
+| Split 2 | 3 s | 201 s | 205 s | 171 s | 195 s | 369 s |
+| Split 3 | 3 s | 217 s | 221 s | 162 s | 211 s | 377 s |
+| **Median; range** | **3 s; 2–3** | **201 s; 197–217** | **205 s; 200–221** | **167 s; 162–171** | **195 s; 193–211** | **369 s; 362–377** |
+
+| Revision, attempt | Python checkout | Pytest step | Site checkout | Static API build | Chromium install | Browser tests |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| One thread 1 | 47 s | 173 s | 23 s | 57 s | 20 s | 79 s |
+| One thread 2 | 48 s | 177 s | 25 s | 45 s | 21 s | 62 s |
+| One thread 3 | 47 s | 179 s | 23 s | 56 s | 21 s | 79 s |
+| **Median; range** | **47 s; 47–48** | **177 s; 173–179** | **23 s; 23–25** | **56 s; 45–57** | **21 s; 20–21** | **79 s; 62–79** |
+| Split 1 | 55 s | 101 s | 24 s | 57 s | 19 s | 78 s |
+| Split 2 | 48 s | 112 s | 31 s | 50 s | 24 s | 73 s |
+| Split 3 | 46 s | 106 s | 36 s | 58 s | 20 s | 78 s |
+| **Median; range** | **48 s; 46–55** | **106 s; 101–112** | **31 s; 24–36** | **57 s; 50–58** | **20 s; 19–24** | **78 s; 73–78** |
+
+Median workflow wall time fell from **244 to 205 seconds**, saving **39
+seconds (16.0%)**. Every split attempt finished at least 16 seconds below
+the fastest one-thread attempt. Queue medians were 3 seconds in both groups.
+The Python test step fell from 177 to 106 seconds, saving **71 seconds
+(40.1%)**, and its full job fell from 235 to 167 seconds, saving **68
+seconds (28.9%)**. The split put the unchanged site job on the critical path
+in all three attempts; its 193–211 second range limits further wall-time
+savings from Python alone. Aggregate runner time fell from a 425-second
+median to 369 seconds, **56 seconds (13.2%)**, without an added runner.
+The site job varied in both groups, so its timing difference should not be
+attributed to the pytest split.
+
+For context, the exact-main three-run baseline on the same 52-publication
+revision above had a 268-second median, versus 205 seconds for the final
+split: **63 seconds (23.5%)** less workflow wall time. Its aggregate runner
+median was 451 seconds, versus 369 seconds here: **82 seconds (18.2%)** less.
+Those runs occurred earlier and used `push` rather than `pull_request`, so
+the two staged comparisons provide stronger attribution for each change.
+
+Each split attempt passed 26 validator and 1,035 remaining Python tests,
+Ruff, 17 JavaScript tests, the 52-publication production API checks, 113
+desktop/mobile browser tests with the same 9 skips, whitespace and both
+side-effect checks, and the required `validate` gate. No browser retries or
+flaky classifications were observed. No test explicitly reads pytest cache
+metadata, and the processes use separate pytest sessions and temporary test
+roots. The workflow waits for both processes and reports both logs before
+failing if either exits nonzero. The unchanged gate rejects a failed,
+cancelled, or unexpectedly skipped Python or site job. As before, the
+Actions timing samples used warm dependency caches; the earlier local
+cold/warm installation checks apply to the same locked dependency setup,
+which completes before either pytest process starts. No controlled cold-cache
+Actions replay or intentional failing Actions run was performed.
