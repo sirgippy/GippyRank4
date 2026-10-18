@@ -31,11 +31,32 @@ jobs:
         run: uv sync --locked
 
       - name: Run retained test suite
-        # The validator performs many small matrix-vector products. OpenBLAS
-        # thread coordination costs more than parallel work at these sizes.
+        # The validator's two complete CLI runs are independent of the rest
+        # of the suite. Keep one checkout and overlap the two pytest processes.
         env:
           OPENBLAS_NUM_THREADS: "1"
-        run: uv run pytest -q
+        run: |
+          uv run pytest -q tests/test_context_v1_4_validator.py > "$RUNNER_TEMP/pytest-validator.log" 2>&1 &
+          validator_pid=$!
+          uv run pytest -q --ignore=tests/test_context_v1_4_validator.py > "$RUNNER_TEMP/pytest-remainder.log" 2>&1 &
+          remainder_pid=$!
+
+          validator_status=0
+          remainder_status=0
+          wait "$validator_pid" || validator_status=$?
+          wait "$remainder_pid" || remainder_status=$?
+
+          echo "::group::Validator module"
+          cat "$RUNNER_TEMP/pytest-validator.log"
+          echo "::endgroup::"
+          echo "::group::Remaining retained tests"
+          cat "$RUNNER_TEMP/pytest-remainder.log"
+          echo "::endgroup::"
+
+          if [[ "$validator_status" -ne 0 || "$remainder_status" -ne 0 ]]; then
+            echo "::error::Retained Python suite failed: validator=$validator_status remainder=$remainder_status"
+            exit 1
+          fi
 
       - name: Run Ruff
         run: uv run ruff check .
