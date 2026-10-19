@@ -236,14 +236,19 @@ def test_weekly_update_pairs_h_c_preserves_preseason_and_is_idempotent(
         "Publication status: `Interim`" in first.candidate_paths.report_md.read_text()
     )
     entries = config["snapshots"]
-    assert len(entries) == 3 and {entry["publication_slot"] for entry in entries} == {
+    assert len(entries) == 4 and {entry["publication_slot"] for entry in entries} == {
         slot
     }
     assert {entry["source"].rsplit("/", 1)[-1] for entry in entries} == {
         "context",
         "history",
         "performance",
+        "quality_of_record",
     }
+    assert first.quality_of_record.metadata["performance_variant"] == "quality_of_record"
+    assert first.report["quality_of_record"]["converged"] is True
+    assert "## Quality of Record" in first.candidate_paths.report_md.read_text()
+    assert first.candidate_paths.quality_of_record_snapshot == first.quality_of_record.directory
     manifest = json.loads((root / "site/data/manifest.json").read_text())
     assert manifest["default_publication_slot"] == slot
     assert {
@@ -346,7 +351,7 @@ def test_same_day_interim_publications_keep_distinct_slots_and_artifacts(
         first.publication_slot,
         second.publication_slot,
     }
-    assert len(config["snapshots"]) == 6
+    assert len(config["snapshots"]) == 8
 
     manifest = json.loads((root / "site/data/manifest.json").read_text())
     assert {entry["publication_slot"] for entry in manifest["snapshots"]} == {
@@ -414,7 +419,7 @@ def test_official_status_change_is_publishable_without_ranking_changes(
     assert official.published
     config = json.loads((root / "site/publish_config.json").read_text())
     assert config["publication_slots"] == [{"id": "2026-09-12", "status": "official"}]
-    assert len(config["snapshots"]) == 3
+    assert len(config["snapshots"]) == 4
     assert {entry["publication_slot"] for entry in config["snapshots"]} == {
         "2026-09-12"
     }
@@ -634,6 +639,7 @@ def test_update_workflow_commits_only_a_published_non_dry_run_candidate() -> Non
         ("context_snapshot_path", "CONTEXT_SNAPSHOT_PATH"),
         ("history_snapshot_path", "HISTORY_SNAPSHOT_PATH"),
         ("performance_snapshot_path", "PERFORMANCE_SNAPSHOT_PATH"),
+        ("quality_of_record_snapshot_path", "QUALITY_OF_RECORD_SNAPSHOT_PATH"),
         ("report_md_path", "REPORT_MD_PATH"),
         ("report_json_path", "REPORT_JSON_PATH"),
         ("publish_config_path", "PUBLISH_CONFIG_PATH"),
@@ -663,6 +669,7 @@ def _candidate_environment() -> dict[str, str]:
         "CONTEXT_SNAPSHOT_PATH": "data/processed/snapshots/2026/actual-context/predictive/context",
         "HISTORY_SNAPSHOT_PATH": "data/processed/snapshots/2026/actual-history/predictive/history",
         "PERFORMANCE_SNAPSHOT_PATH": "data/processed/snapshots/2026/actual-performance/performance",
+        "QUALITY_OF_RECORD_SNAPSHOT_PATH": "data/processed/snapshots/2026/actual-performance/performance/quality_of_record",
         "REPORT_MD_PATH": "data/processed/weekly_updates/2026-09-12.md",
         "REPORT_JSON_PATH": "data/processed/weekly_updates/2026-09-12.json",
         "PUBLISH_CONFIG_PATH": "site/publish_config.json",
@@ -677,7 +684,7 @@ def _candidate_repo(tmp_path: Path) -> dict[str, str]:
     subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
     environment = _candidate_environment()
     for relative_path in environment.values():
-        if relative_path.endswith(("context", "history", "performance", "data")):
+        if relative_path.endswith(("context", "history", "performance", "quality_of_record", "data")):
             _write_candidate_file(tmp_path, f"{relative_path}/artifact.json")
         else:
             _write_candidate_file(tmp_path, relative_path)
@@ -716,6 +723,7 @@ def test_candidate_staging_force_adds_only_durable_ignored_publication_artifacts
         "data/processed/snapshots/2026/actual-context/predictive/context/artifact.json",
         "data/processed/snapshots/2026/actual-history/predictive/history/artifact.json",
         "data/processed/snapshots/2026/actual-performance/performance/artifact.json",
+        "data/processed/snapshots/2026/actual-performance/performance/quality_of_record/artifact.json",
         "data/processed/weekly_updates/2026-09-12.md",
         "data/processed/weekly_updates/2026-09-12.json",
         "site/publish_config.json",
@@ -867,3 +875,24 @@ def test_update_rankings_script_forwards_official_flag(
 
     assert captured["season"] == 2026
     assert captured["official"] is True
+
+
+def test_unchanged_detection_includes_quality_of_record(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    root = _root(tmp_path)
+    timestamp = datetime(2026, 9, 12, 15, tzinfo=UTC)
+    monkeypatch.setattr(weekly_update, "fetch_current_season", lambda **_: _acquisition(root, timestamp))
+    update = prepare_weekly_update(season=2026, root=root)
+    config = json.loads((root / "site/publish_config.json").read_text())
+    arguments = (root, config, update.context, update.history, update.performance, update.quality_of_record)
+    assert not weekly_update._is_publishable_change(*arguments, publication_slot=update.publication_slot, publication_status="temporary")
+    path = update.quality_of_record.directory / "rankings.csv"
+    original = path.read_bytes()
+    path.write_bytes(original + b"\n")
+    # Compare the independently retained candidate against a changed published
+    # Record artifact while Context, History, and Play remain identical.
+    import shutil
+    candidate_dir = root / "record-candidate"
+    shutil.copytree(update.quality_of_record.directory, candidate_dir)
+    (candidate_dir / "rankings.csv").write_bytes(original)
+    candidate = Snapshot(update.quality_of_record.snapshot_id, candidate_dir, update.quality_of_record.metadata)
+    assert weekly_update._is_publishable_change(*arguments[:-1], candidate, publication_slot=update.publication_slot, publication_status="temporary")

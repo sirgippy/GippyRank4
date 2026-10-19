@@ -50,6 +50,9 @@ MANUALLY_RESOLVED_ALIASES: tuple[dict[str, str], ...] = (
 ALLOWED_TEAM_NAME_ALIASES: dict[str, frozenset[str]] = {}
 
 
+from gippyrank.ranking_variants import PERFORMANCE_VARIANTS
+
+
 class TeamHandleMappingError(ValueError):
     """Raised when the checked-in handle table is not unambiguous."""
 
@@ -207,6 +210,7 @@ def build_ballot(
     site_url: str,
     rankings: Iterable[Mapping[str, object]],
     handles: Mapping[str, str],
+    performance_variant: str = "quality_of_play",
 ) -> dict[str, object]:
     """Build the r/CFB importer payload from already-published ranking rows.
 
@@ -245,14 +249,16 @@ def build_ballot(
             "Canonical r/CFB handles are unavailable for: " + ", ".join(missing)
         )
 
-    family_label = "Predictive" if ranking_family == "predictive" else "Performance"
+    if ranking_family == "performance" and performance_variant not in PERFORMANCE_VARIANTS:
+        raise BallotExportError(f"Unsupported Performance variant: {performance_variant}")
+    family_label = "Predictive" if ranking_family == "predictive" else PERFORMANCE_VARIANTS[performance_variant]
     prior_label = ""
     if ranking_family == "predictive":
         prior_label = " History" if prior_family == "history" else " Context"
     semantics = (
         "Predictive estimates current underlying team quality using preseason information plus games."
         if ranking_family == "predictive"
-        else "Performance asks what quality is implied by games played, using Context estimates to interpret opponent quality. Performance is not standings, strength of record, or postseason deservingness."
+        else f"{family_label} evaluates {'wins and losses' if performance_variant == 'quality_of_record' else 'scoring margins'} throughout the eligible Context-anchored game network, with the focal prior stripped. Quality of Record is not ESPN's Strength of Record methodology."
     )
     overall = (
         "Generated from GippyRank4, a probabilistic college-football ranking model "
@@ -271,7 +277,7 @@ def build_ballot(
         except (KeyError, TypeError, ValueError, IndexError) as error:
             raise BallotExportError("Published ranking rows are missing ballot rationale fields") from error
         prefix = (
-            "GippyRank Performance-equivalent expected rank"
+            f"GippyRank {family_label} expected rank"
             if ranking_family == "performance"
             else "GippyRank expected rank"
         )

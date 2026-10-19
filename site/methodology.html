@@ -244,11 +244,14 @@
             <p class="methodology-number">07</p>
             <h2 id="performance-title">Performance rankings</h2>
             <p>Performance is a distinct ranking family designed to answer a different question: <strong>who has performed best in the eligible games so far?</strong> It is not the same as asking who is strongest or who has the best résumé.</p>
-            <p>Production Performance <span class="version-badge" data-version-key="performance">1.0</span> is Context-anchored and uses the <code>prior_stripping</code> method. It begins with the Context posterior from the complete schedule network and removes the focal team’s Context preseason prior as a direct factor:</p>
-            <p class="equation"><code>Performanceᵢ(r) = normalize(Posterior<sub>Context,i</sub>(r) / ContextPriorᵢ(r))</code></p>
+            <p>Production Performance <span class="version-badge" data-version-key="performance">1.0</span> is Context-anchored and uses the <code>prior_stripping</code> method. Both variants infer beliefs over the complete eligible schedule network, then remove the focal team’s Context preseason prior as a direct factor:</p>
+            <p class="equation"><code>Performanceᵢ(r) = normalize(Posterior<sub>variant,i</sub>(r) / ContextPriorᵢ(r))</code></p>
+            <p><strong>Quality of Record</strong> uses only wins and losses throughout the network. Each game factor is the frozen Student-t margin model’s probability of the observed win or loss. Opponent beliefs are inferred again using only those binary factors before focal-prior stripping; a 1-point win and a 50-point win provide identical evidence.</p>
+            <p>Quality of Record is <strong>not ESPN’s Strength of Record methodology</strong>. It retains a distribution over performance rank rather than measuring a benchmark team’s chance of achieving a record.</p>
+            <p>The September 6, 7, and official Week 2 historical Quality of Record rankings temporarily exclude the malformed original Campbell–Western Carolina fixture recorded as completed at 0–0. The later 28–19 rescheduled result is used only where already present in that publication’s frozen evidence. This exception is declared in the published evidence metadata; the existing Predictive and Quality of Play results await a separate historical data repair.</p>
             <p>Opponent quality still needs to be estimated, so Context remains the anchor for the other teams in the network. Under loopy inference, cycles can leave a small indirect feedback residue; the repository audits the direct factor-removal construction against explicit focal-prior neutralization.</p>
             <ul class="methodology-list">
-              <li>Performance uses completed eligible games, their margins, sites, and current opponent beliefs.</li>
+              <li>Quality of Play is the existing margin-based Performance result. It uses the ordinary Context margin posterior.</li>
               <li>A team with no eligible game receives a neutral uniform PMF and is shown as <strong>NR</strong>.</li>
               <li>There is no win bonus, loss penalty, quality-win bonus, capped margin, or postseason selection rule.</li>
               <li>Future predictions on Performance pages use Predictive Context; completed-game ratings also remain Context-anchored.</li>

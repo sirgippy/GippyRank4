@@ -144,7 +144,7 @@ test.describe("Preseason starting point browser checks", () => {
     await loadTeam(page, performanceSnapshot);
     await expect(page.locator("#preseason-starting-point-section")).toBeHidden();
     await expect(page.locator("#season-movement-section")).toBeVisible();
-    await expect(page.locator("#season-movement")).toContainText("does not show a preseason-to-current comparison");
+    await expect(page.locator("#season-movement")).toContainText("begins after eligible games have been played");
     await expect(page.locator("#team-prior-switch")).toBeHidden();
   });
 

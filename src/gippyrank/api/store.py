@@ -19,6 +19,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
+from gippyrank.ranking_variants import performance_variant
 from gippyrank.result_provenance import known_unmodeled_result
 
 from .models import (
@@ -121,7 +122,7 @@ class PublicationStore:
                 )
 
             publications: list[LoadedPublication] = []
-            seen_slots: set[tuple[int, str, str, str | None, str | None]] = set()
+            seen_slots: set[tuple[object, ...]] = set()
             for index, entry in enumerate(entries):
                 if not isinstance(entry, dict):
                     raise PublicationDataError(
@@ -144,6 +145,7 @@ class PublicationStore:
                     metadata.publication_slot,
                     metadata.ranking_family,
                     metadata.prior_family,
+                    metadata.performance_variant,
                     (
                         metadata.model_versions.context_prior
                         if metadata.ranking_family == "predictive"
@@ -260,6 +262,7 @@ class PublicationStore:
         family: str | None = None,
         prior: str | None = None,
         status: str | None = None,
+        variant: str | None = None,
     ) -> list[LoadedPublication]:
         return [
             item
@@ -268,6 +271,7 @@ class PublicationStore:
             and (family is None or item.metadata.ranking_family == family)
             and (prior is None or item.metadata.prior_family == prior)
             and (status is None or item.metadata.publication_status == status)
+            and (variant is None or item.metadata.performance_variant == variant)
         ]
 
     def resolve(
@@ -278,12 +282,16 @@ class PublicationStore:
         family: str | None = None,
         prior: str | None = None,
         status: str | None = None,
+        variant: str | None = None,
     ) -> LoadedPublication:
         matches = self.filter(
             season=season,
             family=family,
             prior=prior,
             status=status,
+            variant=(variant or "quality_of_play")
+            if family == "performance"
+            else variant,
         )
         matches = [
             item
@@ -362,6 +370,9 @@ def _publication_metadata(
         "snapshot_type",
         "ranking_family",
         "prior_family",
+        "performance_variant",
+        "evidence_mode",
+        "quality_of_record_evidence",
         "publication_slot",
         "publication_status",
         "display_label",
@@ -387,6 +398,16 @@ def _publication_metadata(
         "publication_status": entry.get("publication_status"),
         "display_label": entry.get("display_label"),
         "ranking_family": family,
+        "performance_variant": performance_variant({**snapshot, **entry}),
+        "evidence_mode": entry.get(
+            "evidence_mode",
+            snapshot.get(
+                "evidence_mode", "margin" if family == "performance" else None
+            ),
+        ),
+        "quality_of_record_evidence": entry.get(
+            "quality_of_record_evidence", snapshot.get("quality_of_record_evidence")
+        ),
         "prior_family": entry.get("prior_family", snapshot.get("prior_family")),
         "requested_cutoff": entry.get(
             "requested_cutoff", snapshot.get("requested_cutoff")
@@ -760,7 +781,10 @@ def _validate_team_season_artifact(
                 and _known_unmodeled_score(artifact, game_date, cutoff)
             )
             if game_id not in included_ids and (
-                ((game.get("result") is not None or game.get("score") is not None) and not known_unmodeled_score)
+                (
+                    (game.get("result") is not None or game.get("score") is not None)
+                    and not known_unmodeled_score
+                )
                 or game.get("game_rating") is not None
                 or game.get("modeled") is True
             ):
@@ -945,7 +969,10 @@ def _load_weekly_artifact(
                 )
             )
             if game_id not in included_game_ids and (
-                ((game.state == "completed" or game.score is not None) and not known_unmodeled_score)
+                (
+                    (game.state == "completed" or game.score is not None)
+                    and not known_unmodeled_score
+                )
                 or game.home_performance is not None
                 or game.away_performance is not None
             ):

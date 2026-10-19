@@ -1,3 +1,4 @@
+import { variantFor, requestedVariant, performanceLabel } from "./ranking-variants.js";
 import { percentage, matchupProbability, matchupProbabilityPair } from "./probability.js";
 
 const $ = (selector) => document.querySelector(selector);
@@ -484,7 +485,7 @@ function renderSummary(entry, row) {
   $("#team-page-logo").replaceChildren(...(logo ? [logo] : []));
   $("#team-page-kind").textContent = `${entry.season} ${entry.display_label} · ${publicationStatusLabel(entry)} publication`;
   $("#team-page-title").textContent = row.team_name;
-  $("#team-page-meta").textContent = `${row.conference || "Independent"} · ${entry.snapshot_type === "preseason" ? "Before game evidence" : `Through ${formatDate(entry.effective_cutoff)}`} · ${entry.ranking_family === "performance" ? "Performance" : `Predictive ${priorLabel(entry.prior_family)}`}`;
+  $("#team-page-meta").textContent = `${row.conference || "Independent"} · ${entry.snapshot_type === "preseason" ? "Before game evidence" : `Through ${formatDate(entry.effective_cutoff)}`} · ${entry.ranking_family === "performance" ? performanceLabel(entry) : `Predictive ${priorLabel(entry.prior_family)}`}`;
   $("#prediction-source").textContent = `Completed-game expectations compare each result with what GippyRank knows at the selected snapshot, including that game. They are retrospective, not pregame forecasts. Checkpoint rows show shared published belief changes. Future matchups use ${entry.ranking_family === "performance" ? "Predictive Context" : `Predictive ${priorLabel(entry.prior_family)}`} at this snapshot.`;
 
   const summary = node("div", "team-summary-grid");
@@ -830,8 +831,8 @@ function renderSeasonMovement(entry, trajectory, row, rankCount, distribution) {
   if (entry.ranking_family === "performance") {
     renderSeasonStory(entry, [], row, rankCount, distribution);
     section.hidden = false;
-    context.textContent = "Performance is a separate view of completed-game evidence.";
-    content.replaceChildren(node("p", "season-movement-not-applicable", "Performance has no preseason starting point in the same semantic sense, so this page does not show a preseason-to-current comparison."));
+    context.textContent = `${performanceLabel(entry)} summarizes completed-game evidence.`;
+    content.replaceChildren(node("p", "season-movement-not-applicable", `${performanceLabel(entry)} begins after eligible games have been played.`));
     return;
   }
   if (!trajectory?.points?.length) {
@@ -1201,7 +1202,7 @@ function priorLabel(prior) {
 function entryFor(manifest) {
   const family = params.get("family") === "performance" ? "performance" : "predictive";
   const season = Number(params.get("season")) || manifest.seasons[0];
-  const seasonEntries = manifest.snapshots.filter((item) => item.season === season && item.ranking_family === family);
+  const seasonEntries = manifest.snapshots.filter((item) => item.season === season && item.ranking_family === family && (family !== "performance" || variantFor(item) === requestedVariant(params)));
   const snapshot = params.get("snapshot");
   const exact = seasonEntries.find((item) => item.snapshot_id === snapshot);
   if (exact) return exact;
@@ -1228,6 +1229,25 @@ function updatePriorSwitch(manifest, entry) {
   const nav = $("#team-prior-switch");
   if (!nav) return;
   const predictive = entry?.ranking_family === "predictive";
+  const performanceNav = $("#team-performance-switch");
+  performanceNav.hidden = predictive;
+  if (!predictive && entry) {
+    ["quality_of_play", "quality_of_record"].forEach((variant) => {
+      const link = performanceNav.querySelector(`[data-variant-link="${variant}"]`);
+      const counterpart = manifest.snapshots.find((candidate) => candidate.season === entry.season
+        && candidate.publication_slot === entry.publication_slot
+        && candidate.ranking_family === "performance" && variantFor(candidate) === variant);
+      link.hidden = !counterpart;
+      if (counterpart) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("snapshot", counterpart.snapshot_id);
+        url.searchParams.set("variant", variant);
+        link.href = `${url.pathname}${url.search}`;
+      }
+      if (variant === variantFor(entry)) link.setAttribute("aria-current", "page");
+      else link.removeAttribute("aria-current");
+    });
+  }
   nav.hidden = !predictive;
   if (!predictive) return;
   ["context", "history"].forEach((prior) => {
@@ -1260,6 +1280,7 @@ function updateBackLink(entry) {
   url.searchParams.set("snapshot", entry.snapshot_id);
   url.searchParams.set("family", entry.ranking_family);
   if (entry.ranking_family === "predictive") url.searchParams.set("prior", entry.prior_family);
+  else url.searchParams.set("variant", variantFor(entry));
   const rankingsPath = `${url.pathname}${url.search}`;
   $("#back-to-rankings").href = rankingsPath;
   $("#rankings-view-link").href = rankingsPath;

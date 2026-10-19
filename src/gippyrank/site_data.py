@@ -38,6 +38,11 @@ from gippyrank.methodology import (
     WEEKLY_GAME_SCHEMA_VERSION,
     production_methodology_metadata,
 )
+from gippyrank.quality_of_record_evidence import (
+    INFERENCE_GAMES_FILE,
+    validate_quality_of_record_evidence,
+)
+from gippyrank.ranking_variants import performance_variant
 from gippyrank.redditcfb import (
     TeamHandleMappingError,
     TeamHandleTable,
@@ -105,6 +110,7 @@ class PublicationComparison:
     display_label: str
     prior_model_version: str | None = None
     context_prior_model_version: str | None = None
+    performance_variant: str | None = None
 
 
 @dataclass(frozen=True)
@@ -555,7 +561,9 @@ def _movement_comparison_key(
     return (
         snapshot.season,
         snapshot.ranking_family,
-        snapshot.prior_family if snapshot.ranking_family == "predictive" else None,
+        snapshot.prior_family
+        if snapshot.ranking_family == "predictive"
+        else (snapshot.performance_variant or "quality_of_play"),
         prior_version,
     )
 
@@ -607,6 +615,7 @@ def _comparison_descriptor(snapshot: PreparedSnapshot) -> PublicationComparison:
         publication_slot=snapshot.selected.publication_slot,
         publication_status=snapshot.selected.publication_status,
         publication_order=snapshot.selected.publication_order,
+        performance_variant=performance_variant(metadata),
         snapshot_id=snapshot.snapshot_id,
         display_label=snapshot.selected.display_label,
         prior_model_version=(
@@ -1235,6 +1244,24 @@ def _validate_metadata(metadata: dict[str, Any], source: Path) -> None:
                     f"{metadata['snapshot_id']}: historical likelihood is not pinned V1"
                 )
     else:
+        try:
+            variant = performance_variant(metadata)
+        except ValueError as error:
+            raise SiteDataValidationError(str(error)) from error
+        if (
+            variant == "quality_of_play"
+            and metadata.get("evidence_mode", "margin") != "margin"
+        ):
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: invalid Quality of Play evidence identity"
+            )
+        if variant == "quality_of_record" and (
+            metadata.get("model") != "quality_of_record_v1"
+            or metadata.get("evidence_mode") != "win_loss"
+        ):
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: invalid Quality of Record evidence identity"
+            )
         performance_required = {
             "model_version",
             "method",
@@ -1374,7 +1401,9 @@ def _legacy_kickoff_fallback_allowed(
     )
 
 
-def _validate_performance_source(metadata: dict[str, Any], root: Path) -> None:
+def _validate_performance_source(
+    metadata: dict[str, Any], root: Path, performance_source: Path
+) -> None:
     source_value = metadata["source_context_path"]
     if (
         not isinstance(source_value, str)
@@ -1417,7 +1446,8 @@ def _validate_performance_source(metadata: dict[str, Any], root: Path) -> None:
         "prior_artifact_sha256",
         "prior_model_version",
     ):
-        if metadata.get(field) != source_metadata.get(field):
+        default = {} if field == "source_retrieval_times" else None
+        if metadata.get(field, default) != source_metadata.get(field, default):
             raise SiteDataValidationError(
                 f"{metadata['snapshot_id']}: Context/Performance evidence mismatch: {field}"
             )
@@ -1432,6 +1462,77 @@ def _validate_performance_source(metadata: dict[str, Any], root: Path) -> None:
         raise SiteDataValidationError(
             f"{metadata['snapshot_id']}: Context/Performance evidence mismatch: source_evidence_hashes"
         )
+    if performance_variant(metadata) == "quality_of_record":
+        with (source / "included_games.csv").open(
+            newline="", encoding="utf-8"
+        ) as handle:
+            source_rows = [
+                {field: str(row.get(field) or "") for field in INCLUDED_GAME_FIELDS}
+                for row in csv.DictReader(handle)
+            ]
+        if included_game_rows_sha256(source_rows) != metadata.get(
+            "included_game_rows_sha256"
+        ):
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: Quality of Record differs from frozen Context game rows"
+            )
+        try:
+            used_rows, declaration = validate_quality_of_record_evidence(
+                source_metadata,
+                source_rows,
+                metadata,
+                source_metadata_sha256=_file_sha256(source_metadata_path),
+            )
+            inference_path = performance_source / INFERENCE_GAMES_FILE
+            if declaration is not None:
+                with inference_path.open(newline="", encoding="utf-8") as handle:
+                    inference_rows = [
+                        {
+                            field: str(row.get(field) or "")
+                            for field in INCLUDED_GAME_FIELDS
+                        }
+                        for row in csv.DictReader(handle)
+                    ]
+                if inference_rows != used_rows:
+                    raise ValueError(
+                        "Quality of Record inference game artifact mismatch"
+                    )
+            elif inference_path.exists():
+                raise ValueError("Undeclared Quality of Record inference game artifact")
+            diagnostics = _read_json(performance_source / "diagnostics.json")
+            if diagnostics.get(
+                "quality_of_record_evidence"
+            ) != declaration or diagnostics.get("raw_game_factor_count") != len(
+                used_rows
+            ):
+                raise ValueError("Quality of Record inference diagnostics mismatch")
+        except (ValueError, OSError) as error:
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: {error}"
+            ) from error
+        for field in (
+            "historical_likelihood_version",
+            "historical_likelihood_sha256",
+            "historical_likelihood_provenance",
+            "historical_likelihood_parameters",
+            "included_game_rows_sha256",
+            "included_game_ids_sha256",
+            "prior_pmfs_sha256",
+            "posterior_inference_configuration",
+        ):
+            if field not in metadata or (
+                field in source_metadata and metadata[field] != source_metadata[field]
+            ):
+                raise SiteDataValidationError(
+                    f"{metadata['snapshot_id']}: Quality of Record source mismatch: {field}"
+                )
+        if (
+            metadata["historical_likelihood_sha256"] != HISTORICAL_LIKELIHOOD_SHA256
+            or metadata["historical_likelihood_provenance"] != "loaded_from_artifact"
+        ):
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: Quality of Record needs pinned V1"
+            )
     source_hash = metadata.get("source_context_metadata_sha256")
     if source_hash is not None and source_hash != _file_sha256(source_metadata_path):
         raise SiteDataValidationError(
@@ -3667,7 +3768,8 @@ def _validate_team_season_artifact(
                 # Context 1.3 schedule. Both have zero completed games; the
                 # full team schedules are compared before their views merge.
                 continue
-            if metadata.get(field) != anchor_metadata.get(field):
+            default = {} if field == "source_retrieval_times" else None
+            if metadata.get(field, default) != anchor_metadata.get(field, default):
                 raise SiteDataValidationError(
                     f"{snapshot_id}: Context/team-season evidence mismatch: {field}"
                 )
@@ -4545,7 +4647,7 @@ def build_site_data(
     manifest_entries: list[dict[str, Any]] = []
     prepared_snapshots: list[PreparedSnapshot] = []
     seen_ids: set[str] = set()
-    seen_publications: set[tuple[int, str, str | None, str, str | None]] = set()
+    seen_publications: set[tuple[object, ...]] = set()
     published_fbs_identities: set[tuple[str, str]] = set()
     rendered_team_identities: set[tuple[str, str]] = set()
     schedule_path = root / "data/processed/cfbd/games.csv"
@@ -4579,10 +4681,13 @@ def build_site_data(
         source = selected_snapshot.source
         metadata = metadata_by_source[source]
         _validate_metadata(metadata, source)
-        if metadata["ranking_family"] == "predictive":
+        if (
+            metadata["ranking_family"] == "predictive"
+            or performance_variant(metadata) == "quality_of_record"
+        ):
             _validate_included_game_hashes(source, metadata)
         if metadata["ranking_family"] == "performance":
-            _validate_performance_source(metadata, root)
+            _validate_performance_source(metadata, root, source)
         snapshot_id = str(metadata["snapshot_id"])
         if snapshot_id in seen_ids:
             raise SiteDataValidationError(
@@ -4590,6 +4695,7 @@ def build_site_data(
             )
         seen_ids.add(snapshot_id)
         publication = (
+            performance_variant(metadata),
             metadata["season"],
             metadata["ranking_family"],
             metadata.get("prior_family", metadata.get("anchor_family")),
@@ -4781,6 +4887,8 @@ def build_site_data(
             consumer_snapshot.update(
                 {
                     "model_version": metadata["model_version"],
+                    "performance_variant": performance_variant(metadata),
+                    "evidence_mode": metadata.get("evidence_mode", "margin"),
                     "method": metadata["method"],
                     "anchor_family": metadata["anchor_family"],
                     "source_context_snapshot_id": metadata[
@@ -4799,6 +4907,10 @@ def build_site_data(
                     "source_evidence_hash": metadata.get("source_evidence_hash"),
                 }
             )
+        if "quality_of_record_evidence" in metadata:
+            consumer_snapshot["quality_of_record_evidence"] = metadata[
+                "quality_of_record_evidence"
+            ]
         _write_json(
             output_directory / "snapshots" / f"{snapshot_id}.json", consumer_snapshot
         )
@@ -5031,6 +5143,8 @@ def build_site_data(
             manifest_entry.update(
                 {
                     "model_version": metadata["model_version"],
+                    "performance_variant": performance_variant(metadata),
+                    "evidence_mode": metadata.get("evidence_mode", "margin"),
                     "method": metadata["method"],
                     "anchor_family": metadata["anchor_family"],
                 }
@@ -5046,6 +5160,10 @@ def build_site_data(
             }
             consumer_snapshot.update(backfill_fields)
             manifest_entry.update(backfill_fields)
+        if "quality_of_record_evidence" in metadata:
+            manifest_entry["quality_of_record_evidence"] = metadata[
+                "quality_of_record_evidence"
+            ]
         manifest_entries.append(manifest_entry)
     published_families = {entry["ranking_family"] for entry in manifest_entries}
     published_fbs_logo_audit = _logo_audit(published_fbs_identities)

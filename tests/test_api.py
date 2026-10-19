@@ -210,3 +210,52 @@ def test_canonical_context_is_unambiguous_and_retained_artifacts_are_readable() 
             / "predictive/context/metadata.json"
         )
         assert json.loads(retained.read_text())["prior_model_version"] == version
+
+
+def test_performance_variants_have_distinct_resources_and_legacy_selection() -> None:
+    store = PublicationStore.load(ROOT / "site/data")
+    slot = FULL_MANIFEST["default_publication_slot"]
+    legacy = store.resolve(season=2026, publication_slot=slot, family="performance")
+    record = store.resolve(season=2026, publication_slot=slot, family="performance", variant="quality_of_record")
+    assert legacy.metadata.performance_variant == "quality_of_play"
+    assert record.metadata.performance_variant == "quality_of_record"
+    assert record.metadata.snapshot_id != legacy.metadata.snapshot_id
+    assert record.metadata.evidence_mode == "win_loss"
+    assert record.metadata.source_context_snapshot_id == legacy.metadata.source_context_snapshot_id
+    assert record.predictions == legacy.predictions
+    assert record.outlooks == legacy.outlooks
+    for game_id, game in record.games.items():
+        assert game.home_performance == legacy.games[game_id].home_performance
+        assert game.away_performance == legacy.games[game_id].away_performance
+    assert record.simulation == legacy.simulation
+    assert [row.team_id for row in record.rankings] != [row.team_id for row in legacy.rankings]
+    assert len(store.filter(family="performance", variant="quality_of_record")) >= 1
+
+
+def test_official_week_2_qor_static_api_exposes_the_exact_exception(tmp_path: Path) -> None:
+    entries = [entry for entry in FULL_MANIFEST["snapshots"] if entry["publication_slot"] == "2026-09-08" and (entry.get("prior_family") == "context" or entry.get("performance_variant") == "quality_of_record")]
+    assert len(entries) == 2
+    data_dir = tmp_path / "data"
+    for entry in entries:
+        for key in ("data_path", "distribution_path", "team_seasons_path", "week_games_path"):
+            destination = tmp_path / entry[key]
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / "site" / entry[key], destination)
+    shutil.copyfile(ROOT / "site/data/methodology.json", data_dir / "methodology.json")
+    (data_dir / "manifest.json").write_text(json.dumps({**FULL_MANIFEST, "snapshots": entries}))
+    api_root = tmp_path / "api"
+    build_static_api(data_dir=data_dir, output_directory=api_root)
+    inventory = _read(api_root, "publications.json")
+    publication = next(item for item in inventory["publications"] if item.get("performance_variant") == "quality_of_record")
+    assert publication["publication_status"] == "official"
+    evidence = publication["quality_of_record_evidence"]
+    assert evidence["source_game_count"] == 172
+    assert evidence["inference_game_count"] == 171
+    assert evidence["exclusions"][0]["game_id"] == "401866625"
+    assert "401866625" not in evidence["inference_game_ids"]
+    assert "401917058" in evidence["inference_game_ids"]
+    rankings = _read(api_root, publication["links"]["rankings"])
+    assert rankings["publication"]["quality_of_record_evidence"] == evidence
+    assert len(rankings["rankings"]) == 138
+    resolved = PublicationStore.load(data_dir).resolve(season=2026, publication_slot="2026-09-08", family="performance", variant="quality_of_record")
+    assert resolved.metadata.snapshot_id == publication["snapshot_id"]

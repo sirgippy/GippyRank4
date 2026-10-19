@@ -1,6 +1,6 @@
 # Quality of Record
 
-Quality of Record is a standalone second variant of the Performance ranking
+Quality of Record is the second variant of the Performance ranking
 family. It uses the same Context preseason prior, Historical Likelihood V1 rank
 coordinates, site effects, subdivision orientation, and deterministic belief
 propagation as Quality of Play. Its game evidence is only the winner.
@@ -36,5 +36,86 @@ Context prior identity, Historical Likelihood V1 identity, and inference
 configuration. The copied game rows retain original scores for provenance;
 their magnitudes do not enter binary inference.
 
-This generator does not alter Quality of Play, Predictive snapshots, site
-publication, or weekly automation.
+## Publication and historical migration
+
+Performance now has two variants: `quality_of_play` (the original scoring-margin
+result) and `quality_of_record` (binary win/loss evidence). Older Performance
+metadata without a variant is interpreted as `quality_of_play`. Its snapshot ID,
+PMFs, ranking values, publication status, and chronology are retained. Legacy
+`family=performance` links and API selectors default to Quality of Play. New
+links add `variant=quality_of_record`; static API publication metadata includes
+`performance_variant` and `evidence_mode`. Official movement baselines stay
+within a variant.
+
+Normal weekly publication builds Predictive Context, Predictive History,
+Quality of Play, and Quality of Record for the current candidate. All four
+share cutoffs and eligible games, are validated and staged together, and enter
+unchanged-publication detection. The review includes both Performance Top 25s
+and diagnostics. Historical backfill is never invoked by weekly automation or CI.
+
+Run the one-time historical migration explicitly with:
+
+```bash
+uv run python scripts/backfill_performance_variants.py
+```
+
+It visits every configured in-season Context publication, Official and Interim,
+using that publication's Context version, hashed frozen prior, included game
+rows, pinned Historical Likelihood V1, and retained inference configuration.
+Legacy snapshots predate some semantic hashes: these are derived in memory
+from the retained artifacts. Their recorded deterministic BP engine uses its
+original defaults (500 iterations, tolerance 1e-9, damping 0.35) when explicit
+configuration is absent. No mutable schedule, fresh acquisition, or current
+Context version is substituted. Missing inputs are reported with the publication
+slot and source snapshot; the configuration is only registered after every
+candidate validates. No source snapshots are rewritten. A previously absent
+Quality of Play companion is generated once, and existing results are retained.
+
+If some publications lack binary outcomes, `--allow-blocked` registers all
+reproducible companions and records every remaining blocker in the audit
+inventory. Without that option, any blocker prevents configuration changes.
+Neither mode invents a winner or silently removes evidence. All 17 eligible
+2026 publications now have both variants, with zero blocked publications.
+
+### Temporary Campbell exception
+
+Only the frozen September 6 Context 1.2, September 7 Context 1.2, and official
+September 8 Context 1.4 DB-repair sources exclude game `401866625` from QoR
+binary inference. This is the malformed original September 5 Campbell–Western
+Carolina fixture, marked completed at 0–0. The exception pins the exact source
+snapshot IDs, prior versions, metadata hashes, and complete source-row hashes,
+and matches season, game ID, team IDs/names, completed status, and 0–0 score.
+Any source change or additional winnerless game fails closed.
+
+The legitimate rescheduled `401917058` result (Campbell 28–19 Western Carolina)
+is retained for September 7 and official Week 2. It is absent from the September
+6 frozen evidence and is not added there.
+
+`included_games.csv` and the ordinary `included_game_*` metadata retain the
+**complete frozen Context source**, including the malformed row. Affected QoR
+bundles also write `inference_games.csv` with the exact filtered input. Their
+`quality_of_record_evidence` declaration appears in metadata, diagnostics, the
+backfill audit, site snapshots/manifest, and public API publication metadata.
+It records the exclusion and its source-row hash, full source count/hashes,
+and actual inference count, ordered IDs, and row/ID hashes. Validation requires
+the exact declared exclusion, both CSVs, and the matching factor count.
+Unaffected QoR artifacts retain their original full-source evidence contract.
+
+This is a temporary QoR-only exception, not a CFBD ingestion fix. Existing
+Context, History, and Quality of Play snapshots, source CSVs, PMFs, and movement
+baselines are unchanged. Remove the exception when the separate historical
+repair regenerates the affected lineage from corrected evidence. That broader
+data-integrity repair, explicit-snapshot fallback, and publication retention
+policy remain outside PR #226.
+
+The deterministic audit inventory is
+`data/processed/quality_of_record_backfill/manifest.json`. It records cutoffs,
+Context versions, input hashes, and ranking/PMF file hashes. Repeated backfills
+validate and retain existing results byte for byte. Fresh inference repeats
+produce identical substantive metadata, ranking files, and PMFs; diagnostic
+runtime is observational.
+
+Game predictions, season simulations, and completed-game ratings on either
+Performance page continue to use its paired Predictive Context contracts.
+Quality of Record is **not ESPN's Strength of Record methodology**: it does not
+calculate the chance that a benchmark team would achieve the observed record.

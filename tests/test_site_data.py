@@ -1721,13 +1721,14 @@ def test_site_data_publishes_all_initial_h_c_preseason_and_current_snapshots(
         if entry["ranking_family"] == "performance"
         and entry["publication_slot"] == configured_default_slot
     ]
-    assert len(performance) == 1
-    assert performance[0]["publication_slot"] == configured_default_slot
-    assert "prior_family" not in performance[0]
-    assert (
-        performance[0]["rated_count"] + performance[0]["unrated_count"]
-        == performance[0]["rank_count"]
-    )
+    assert {entry["performance_variant"] for entry in performance} == {
+        "quality_of_play", "quality_of_record"
+    }
+    assert len(performance) == 2
+    for entry in performance:
+        assert entry["publication_slot"] == configured_default_slot
+        assert "prior_family" not in entry
+        assert entry["rated_count"] + entry["unrated_count"] == entry["rank_count"]
     current = [
         entry for entry in manifest["snapshots"] if entry["snapshot_type"] == "live"
     ]
@@ -1839,6 +1840,7 @@ def test_publication_status_and_official_comparison_chain(
                 candidate
                 for candidate in performance_entries
                 if expected_status_by_slot[candidate["publication_slot"]] == "official"
+                and candidate["performance_variant"] == current["performance_variant"]
                 and publication_order_by_slot[candidate["publication_slot"]]
                 < current_order
             ),
@@ -2693,3 +2695,26 @@ def test_percentage_formatter_preserves_nonzero_and_noncertainty_distinctions() 
     assert 'if (percent < 0.01) return "<0.01%";' in probability
     assert 'if (percent >= 99.95) return "<100%";' in probability
     assert "if (percent < 10 || percent >= 95)" in probability
+
+
+def test_every_historical_performance_slot_is_backfilled_or_explicitly_blocked(
+    production_site_data: tuple[Path, dict[str, object]],
+) -> None:
+    _, manifest = production_site_data
+    audit = json.loads((ROOT / "data/processed/quality_of_record_backfill/manifest.json").read_text())
+    eligible_slots = {entry["publication_slot"] for entry in manifest["snapshots"]
+                      if entry.get("prior_family") == "context" and entry["snapshot_type"] != "preseason"}
+    plays = {entry["publication_slot"] for entry in manifest["snapshots"]
+             if entry.get("performance_variant") == "quality_of_play"}
+    records = {entry["publication_slot"] for entry in manifest["snapshots"]
+               if entry.get("performance_variant") == "quality_of_record"}
+    blocked = {blocker.split(" / ", 1)[0] for blocker in audit["blockers"]}
+    assert plays == eligible_slots
+    assert records | blocked == eligible_slots
+    assert not records & blocked
+    assert len(records) == audit["publication_count"]
+    assert len(blocked) == audit["blocked_publication_count"]
+    assert len(eligible_slots) == audit["eligible_publication_count"]
+    assert audit["status"] == "complete"
+    assert not blocked
+    assert len(records) == len(eligible_slots) == 17

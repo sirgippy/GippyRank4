@@ -14,12 +14,14 @@ from typing import Any
 import numpy as np
 
 from gippyrank.artifact_hashes import (
+    INCLUDED_GAME_FIELDS,
     included_game_rows_sha256,
     posterior_pmfs_sha256,
     stable_values_sha256,
 )
 from gippyrank.likelihood_provenance import supplied_likelihood_sha256
 from gippyrank.methodology import (
+    HISTORICAL_LIKELIHOOD_SHA256,
     HISTORICAL_LIKELIHOOD_VERSION,
     PERFORMANCE_SCHEMA_VERSION,
     PERFORMANCE_VERSION,
@@ -43,12 +45,18 @@ from gippyrank.posterior.snapshots import (
     Snapshot,
     _load_frozen_evidence,
     _read_included_game_rows,
+    _source_inference_configuration,
     load_likelihood,
     load_pinned_likelihood,
     load_teams,
     sha256,
 )
 from gippyrank.quality_of_record import infer_quality_of_record
+from gippyrank.quality_of_record_evidence import (
+    INFERENCE_GAMES_FILE,
+    quality_of_record_evidence,
+    validate_quality_of_record_evidence,
+)
 
 QUALITY_OF_RECORD_VARIANT = "quality_of_record"
 QUALITY_OF_RECORD_EVIDENCE_MODE = "win_loss"
@@ -63,6 +71,8 @@ def _load_source_likelihood(metadata: dict[str, Any], root: Path) -> LikelihoodV
             "Source likelihood identity is missing"
         )
     provenance = metadata.get("historical_likelihood_provenance")
+    if provenance is None and expected == HISTORICAL_LIKELIHOOD_SHA256:
+        provenance = "loaded_from_artifact"
     if provenance == "supplied_parameters":
         parameters = metadata.get("historical_likelihood_parameters")
         if (
@@ -96,11 +106,31 @@ def _load_source_likelihood(metadata: dict[str, Any], root: Path) -> LikelihoodV
     )
 
 
+def _retained_configuration(context: Snapshot) -> dict[str, Any]:
+    if not isinstance(context.metadata.get("posterior_inference_configuration"), dict):
+        diagnostics = _read_json(context.directory / "diagnostics.json")
+        if (
+            diagnostics.get("inference") != "deterministic_damped_loopy_sum_product"
+            or diagnostics.get("converged") is not True
+        ):
+            raise PerformanceSnapshotValidationError(
+                "Legacy Context requires retained, converged BP diagnostics"
+            )
+    return _source_inference_configuration(context.directory, context.metadata)
+
+
 def validate_quality_of_record_against_context(
-    context: Snapshot, quality_of_record: Snapshot
+    context: Snapshot, quality_of_record: Snapshot, *, root: Path | None = None
 ) -> None:
     """Check the frozen source identity and binary evidence declaration."""
     validate_performance_against_context(context, quality_of_record)
+    if context.metadata != _read_json(context.directory / "metadata.json"):
+        raise PerformanceSnapshotValidationError(
+            "Context metadata differs from its frozen artifact"
+        )
+    if root is not None:
+        validate_context_source(context, root)
+        _load_source_likelihood(context.metadata, root)
     source = context.metadata
     output = quality_of_record.metadata
     required = (
@@ -113,8 +143,36 @@ def validate_quality_of_record_against_context(
         "included_game_ids_sha256",
         "posterior_inference_configuration",
     )
+    identity = dict(source)
+    rows = _read_included_game_rows(context.directory / "included_games.csv")
+    identity.setdefault("included_game_rows_sha256", included_game_rows_sha256(rows))
+    identity.setdefault(
+        "included_game_ids_sha256", stable_values_sha256([row["id"] for row in rows])
+    )
+    identity.setdefault(
+        "posterior_inference_configuration",
+        _retained_configuration(context),
+    )
+    if source.get("historical_likelihood_sha256") == HISTORICAL_LIKELIHOOD_SHA256:
+        identity.setdefault("historical_likelihood_provenance", "loaded_from_artifact")
+        identity.setdefault("historical_likelihood_parameters", None)
+    if "prior_pmfs_sha256" not in identity and root is not None:
+        validate_context_source(context, root)
+        teams, team_rows, _ = load_teams(
+            root, int(source["season"]), "context", str(source["prior_model_version"])
+        )
+        _load_frozen_evidence(
+            source=context.directory,
+            season=int(source["season"]),
+            snapshot_type=str(source["snapshot_type"]),
+            teams=teams,
+            team_rows=team_rows,
+        )
+        identity["prior_pmfs_sha256"] = posterior_pmfs_sha256(
+            {team.team_id: team.prior for team in teams}
+        )
     for field in required:
-        if field not in source or output.get(field) != source[field]:
+        if field not in identity or output.get(field) != identity[field]:
             raise PerformanceSnapshotValidationError(
                 f"Context/Quality of Record evidence mismatch: {field}"
             )
@@ -143,6 +201,35 @@ def validate_quality_of_record_against_context(
         raise PerformanceSnapshotValidationError(
             "Quality of Record game artifact mismatch"
         )
+    try:
+        used_rows, declaration = validate_quality_of_record_evidence(
+            source,
+            source_rows,
+            output,
+            source_metadata_sha256=sha256(context.directory / "metadata.json"),
+        )
+    except ValueError as error:
+        raise PerformanceSnapshotValidationError(str(error)) from error
+    inference_path = quality_of_record.directory / INFERENCE_GAMES_FILE
+    if declaration is not None:
+        if (
+            not inference_path.is_file()
+            or _read_included_game_rows(inference_path) != used_rows
+        ):
+            raise PerformanceSnapshotValidationError(
+                "Quality of Record inference game artifact mismatch"
+            )
+    elif inference_path.exists():
+        raise PerformanceSnapshotValidationError(
+            "Undeclared Quality of Record inference game artifact"
+        )
+    diagnostics = _read_json(quality_of_record.directory / "diagnostics.json")
+    if diagnostics.get("quality_of_record_evidence") != declaration or diagnostics.get(
+        "raw_game_factor_count"
+    ) != len(used_rows):
+        raise PerformanceSnapshotValidationError(
+            "Quality of Record inference diagnostics mismatch"
+        )
     pmfs = _pmfs(quality_of_record.directory / "posterior_pmfs.csv")
     if posterior_pmfs_sha256(pmfs) != output.get("posterior_pmfs_sha256"):
         raise PerformanceSnapshotValidationError(
@@ -156,6 +243,7 @@ def build_quality_of_record_snapshot(
     root: Path,
     output_root: Path | None = None,
     generation_timestamp: datetime | None = None,
+    source_context_path: Path | None = None,
 ) -> Snapshot:
     """Rerun the frozen Context network with win/loss factors only."""
     started = time.perf_counter()
@@ -171,16 +259,7 @@ def build_quality_of_record_snapshot(
         raise PerformanceSnapshotValidationError(
             "Quality of Record requires at least one eligible game"
         )
-    required = (
-        "included_game_rows_sha256",
-        "included_game_ids_sha256",
-        "prior_pmfs_sha256",
-        "posterior_inference_configuration",
-    )
-    if any(field not in source for field in required):
-        raise PerformanceSnapshotValidationError(
-            "Context source lacks frozen inference identity"
-        )
+    _retained_configuration(context)
     teams, team_rows, _ = load_teams(
         root, int(source["season"]), "context", str(source["prior_model_version"])
     )
@@ -202,6 +281,26 @@ def build_quality_of_record_snapshot(
         teams=teams,
         team_rows=team_rows,
     )
+    # Legacy publications retain the actual rows, prior hash, V1 likelihood
+    # hash, and original BP diagnostics. Derive newer identity fields from
+    # those frozen artifacts in memory; never rewrite the source snapshot.
+    source = dict(source)
+    source.setdefault("source_retrieval_times", {})
+    source.setdefault(
+        "included_game_rows_sha256", included_game_rows_sha256(included_rows)
+    )
+    source.setdefault(
+        "included_game_ids_sha256",
+        stable_values_sha256([row["id"] for row in included_rows]),
+    )
+    source.setdefault(
+        "prior_pmfs_sha256",
+        posterior_pmfs_sha256({team.team_id: team.prior for team in teams}),
+    )
+    source.setdefault("posterior_inference_configuration", configuration)
+    if source.get("historical_likelihood_sha256") == HISTORICAL_LIKELIHOOD_SHA256:
+        source.setdefault("historical_likelihood_provenance", "loaded_from_artifact")
+        source.setdefault("historical_likelihood_parameters", None)
     ids = [row["id"] for row in included_rows]
     if (
         ids != source["included_game_ids"]
@@ -223,9 +322,16 @@ def build_quality_of_record_snapshot(
     if configuration["implementation"] != "deterministic_damped_loopy_sum_product":
         raise PerformanceSnapshotValidationError("Unsupported Context inference engine")
     likelihood = _load_source_likelihood(source, root)
+    used_rows, evidence_declaration = quality_of_record_evidence(
+        source,
+        included_rows,
+        source_metadata_sha256=sha256(source_dir / "metadata.json"),
+    )
+    used_ids = {row["id"] for row in used_rows}
+    inference_games = [game for game in games if game.game_id in used_ids]
     result = infer_quality_of_record(
         teams,
-        games,
+        inference_games,
         likelihood,
         max_iterations=int(configuration["max_iterations"]),
         tolerance=float(configuration["tolerance"]),
@@ -306,7 +412,9 @@ def build_quality_of_record_snapshot(
         "method": PERFORMANCE_METHOD,
         "anchor_family": "context",
         "source_context_snapshot_id": source["snapshot_id"],
-        "source_context_path": _relative_or_absolute(source_dir, root),
+        "source_context_path": _relative_or_absolute(
+            source_context_path or source_dir, root
+        ),
         "source_context_metadata_sha256": sha256(source_dir / "metadata.json"),
         "requested_cutoff": source["requested_cutoff"],
         "effective_cutoff": source["effective_cutoff"],
@@ -355,7 +463,19 @@ def build_quality_of_record_snapshot(
         "unique_pair_factor_count": result.binary_context_posterior.unique_pair_factor_count,
         "runtime_seconds": time.perf_counter() - started,
     }
+    if evidence_declaration is not None:
+        metadata["quality_of_record_evidence"] = evidence_declaration
+        diagnostics["quality_of_record_evidence"] = evidence_declaration
     directory.mkdir(parents=True, exist_ok=True)
+    if evidence_declaration is not None:
+        with (directory / INFERENCE_GAMES_FILE).open(
+            "w", newline="", encoding="utf-8"
+        ) as handle:
+            writer = csv.DictWriter(
+                handle, fieldnames=INCLUDED_GAME_FIELDS, lineterminator="\n"
+            )
+            writer.writeheader()
+            writer.writerows(used_rows)
     (directory / "metadata.json").write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
@@ -378,5 +498,5 @@ def build_quality_of_record_snapshot(
         writer.writeheader()
         writer.writerows(pmf_rows)
     shutil.copyfile(source_dir / "included_games.csv", directory / "included_games.csv")
-    validate_quality_of_record_against_context(context, snapshot)
+    validate_quality_of_record_against_context(context, snapshot, root=root)
     return snapshot

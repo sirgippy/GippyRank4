@@ -5,7 +5,7 @@ set -euo pipefail
 required_paths=(
   FBS_SCHEDULE_PATH FBS_PROVENANCE_PATH FCS_SCHEDULE_PATH FCS_PROVENANCE_PATH
   PROCESSED_GAMES_PATH CONTEXT_SNAPSHOT_PATH HISTORY_SNAPSHOT_PATH
-  PERFORMANCE_SNAPSHOT_PATH
+  PERFORMANCE_SNAPSHOT_PATH QUALITY_OF_RECORD_SNAPSHOT_PATH
   REPORT_MD_PATH REPORT_JSON_PATH PUBLISH_CONFIG_PATH SITE_DATA_PATH
 )
 
@@ -26,6 +26,7 @@ case "$FCS_PROVENANCE_PATH" in data/raw/cfbd/games/*-fcs.json.provenance.json) ;
 case "$PROCESSED_GAMES_PATH" in data/processed/cfbd/games.csv) ;; *) exit 1 ;; esac
 case "$CONTEXT_SNAPSHOT_PATH" in data/processed/snapshots/*/predictive/context) ;; *) exit 1 ;; esac
 case "$HISTORY_SNAPSHOT_PATH" in data/processed/snapshots/*/predictive/history) ;; *) exit 1 ;; esac
+case "$QUALITY_OF_RECORD_SNAPSHOT_PATH" in "$PERFORMANCE_SNAPSHOT_PATH"/quality_of_record) ;; *) exit 1 ;; esac
 case "$PERFORMANCE_SNAPSHOT_PATH" in data/processed/snapshots/*/performance) ;; *) exit 1 ;; esac
 case "$REPORT_MD_PATH" in data/processed/weekly_updates/*.md) ;; *) exit 1 ;; esac
 case "$REPORT_JSON_PATH" in data/processed/weekly_updates/*.json) ;; *) exit 1 ;; esac
@@ -37,7 +38,7 @@ case "$SITE_DATA_PATH" in site/data) ;; *) exit 1 ;; esac
 git add -f -- \
   "$FBS_SCHEDULE_PATH" "$FBS_PROVENANCE_PATH" \
   "$FCS_SCHEDULE_PATH" "$FCS_PROVENANCE_PATH" \
-  "$PROCESSED_GAMES_PATH" "$CONTEXT_SNAPSHOT_PATH" "$HISTORY_SNAPSHOT_PATH" "$PERFORMANCE_SNAPSHOT_PATH" \
+  "$PROCESSED_GAMES_PATH" "$CONTEXT_SNAPSHOT_PATH" "$HISTORY_SNAPSHOT_PATH" "$PERFORMANCE_SNAPSHOT_PATH" "$QUALITY_OF_RECORD_SNAPSHOT_PATH" \
   "$REPORT_MD_PATH" "$REPORT_JSON_PATH"
 git add -- "$PUBLISH_CONFIG_PATH" "$SITE_DATA_PATH"
 

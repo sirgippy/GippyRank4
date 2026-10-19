@@ -1,3 +1,4 @@
+import { variantFor, requestedVariant, performanceLabel } from "./ranking-variants.js";
 import { rankingPercentage as percentage } from "./probability.js";
 
 const pageParams = new URLSearchParams(window.location.search);
@@ -7,6 +8,7 @@ const state = {
   family: pageParams.get("family") === "performance" ? "performance" : "predictive",
   season: Number.isSafeInteger(requestedSeason) && requestedSeason > 0 ? requestedSeason : null,
   slot: pageParams.get("snapshot") || pageParams.get("slot") || null,
+  variant: requestedVariant(pageParams),
   prior: pageParams.get("prior") === "history" ? "history" : "context",
   depth: 25,
   notice: "",
@@ -66,9 +68,9 @@ function svgElement(name, attributes = {}) {
 
 function publicationStatusLabel(entry) { return entry.publication_status === "official" ? "Official" : "Interim"; }
 function labelFor(entry) { return `${entry.display_label} · ${publicationStatusLabel(entry)}`; }
-function choices() { return state.manifest.snapshots.filter((entry) => entry.ranking_family === state.family && entry.season === state.season); }
+function choices() { return state.manifest.snapshots.filter((entry) => entry.ranking_family === state.family && entry.season === state.season && (state.family !== "performance" || variantFor(entry) === state.variant)); }
 function selectedEntry() { return choices().find((entry) => entry.publication_slot === state.slot && (state.family === "performance" || entry.prior_family === state.prior)); }
-function familyLabel() { return state.family === "performance" ? "Performance" : "Predictive"; }
+function familyLabel() { return state.family === "performance" ? performanceLabel({ performance_variant: state.variant }) : "Predictive"; }
 function formatDate(value) { return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }).format(new Date(value)); }
 function formatTimestamp(value) { return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC", timeZoneName: "short" }).format(new Date(value)); }
 
@@ -123,13 +125,13 @@ function selectedViewLabel(entry) {
 function overallBallotRationale(entry) {
   const semantics = state.family === "predictive"
     ? "Predictive estimates current underlying team quality using preseason information plus games."
-    : "Performance asks what quality is implied by games played, using Context estimates to interpret opponent quality. Performance is not standings, strength of record, or postseason deservingness.";
+    : `${familyLabel()} asks what quality is implied by ${state.variant === "quality_of_record" ? "wins and losses" : "scoring margins"}, with Context preseason priors anchoring the game network and the focal prior stripped. Quality of Record is not ESPN's Strength of Record methodology.`;
   return `Generated from GippyRank4, a probabilistic college-football ranking model that estimates underlying team quality from game performance and expresses uncertainty rather than treating rank as perfectly known. This ballot uses the ${selectedViewLabel(entry)} rankings. ${semantics}\n\nExplore the rankings and uncertainty at: ${state.manifest.site_url}`;
 }
 
 function teamBallotRationale(row) {
   const expectedLabel = state.family === "performance"
-    ? "GippyRank Performance-equivalent expected rank"
+    ? `GippyRank ${familyLabel()} expected rank`
     : "GippyRank expected rank";
   const probability = Number.isFinite(row.top25_probability)
     ? ` Top-25 probability: ${percentage(row.top25_probability)}.`
@@ -145,7 +147,7 @@ function ballotFilename(entry) {
       .replace(/\./g, "")
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
-  const family = state.family === "predictive" ? `predictive-${entry.prior_family}` : "performance";
+  const family = state.family === "predictive" ? `predictive-${entry.prior_family}` : `performance-${state.variant.replaceAll("_", "-")}`;
   return `gippyrank-${entry.season}-${label || "snapshot"}-${family}.json`;
 }
 
@@ -208,6 +210,8 @@ function syncUrl(entry) {
   url.searchParams.set("snapshot", entry.snapshot_id);
   if (state.family === "predictive") url.searchParams.set("prior", entry.prior_family);
   else url.searchParams.delete("prior");
+  if (state.family === "performance") url.searchParams.set("variant", state.variant);
+  else url.searchParams.delete("variant");
   window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
 }
 
@@ -246,6 +250,15 @@ function populate() {
   const performance = state.family === "performance";
   priorSelector.hidden = performance;
   priorSelector.disabled = performance;
+  $("#performance-variant-select").hidden = !performance;
+  $("#performance-variant-select").disabled = !performance;
+  document.querySelectorAll("[data-variant]").forEach((button) => {
+    const available = state.manifest.snapshots.some((item) => item.season === state.season && item.publication_slot === entry?.publication_slot && item.ranking_family === "performance" && variantFor(item) === button.dataset.variant);
+    button.disabled = !available;
+    button.title = available ? "" : "This variant is unavailable for the selected publication.";
+    button.classList.toggle("is-active", button.dataset.variant === state.variant);
+    button.setAttribute("aria-pressed", String(button.dataset.variant === state.variant));
+  });
   document.querySelectorAll("[data-prior]").forEach((button) => { button.classList.toggle("is-active", button.dataset.prior === state.prior); button.disabled = performance; });
   updatePriorExplanation();
   const scheduleLink = $("#schedule-view-link");
@@ -264,7 +277,11 @@ function updateSnapshotSummary(entry, snapshot) {
     : `No earlier official ${familyLabel()} baseline; movement is not shown.`;
   $("#snapshot-comparison").textContent = baseline;
   $("#section-context").textContent = `FBS rankings · sorted by expected rank · ${baseline}`;
-  const evidence = current ? `Effective cutoff: ${formatTimestamp(snapshot.effective_cutoff)} · ${snapshot.included_game_count} eligible games included · ${snapshot.excluded_lower_division_games ?? 0} lower-division games excluded.${state.family === "performance" ? ` ${snapshot.rated_count} rated, ${snapshot.unrated_count} NR.` : ""}` : `Snapshot generated ${formatTimestamp(snapshot.generation_timestamp)} · 0 eligible games included.`;
+  const qorEvidence = snapshot.quality_of_record_evidence;
+  const gameEvidence = qorEvidence
+    ? `${qorEvidence.source_game_count} frozen source games · ${qorEvidence.inference_game_count} games used for Quality of Record; malformed Campbell–Western Carolina 0–0 excluded`
+    : `${snapshot.included_game_count} eligible games included`;
+  const evidence = current ? `Effective cutoff: ${formatTimestamp(snapshot.effective_cutoff)} · ${gameEvidence} · ${snapshot.excluded_lower_division_games ?? 0} lower-division games excluded.${state.family === "performance" ? ` ${snapshot.rated_count} rated, ${snapshot.unrated_count} NR.` : ""}` : `Snapshot generated ${formatTimestamp(snapshot.generation_timestamp)} · 0 eligible games included.`;
   $("#snapshot-evidence").textContent = state.notice ? `${evidence} ${state.notice}` : evidence;
   updateBallotExport(entry, snapshot);
 }
@@ -296,6 +313,7 @@ function teamPageUrl(row, entry) {
   url.searchParams.set("season", String(entry.season));
   url.searchParams.set("snapshot", entry.snapshot_id);
   url.searchParams.set("family", state.family);
+  if (state.family === "performance") url.searchParams.set("variant", state.variant);
   if (state.family === "predictive") url.searchParams.set("prior", entry.prior_family);
   return `${url.pathname}${url.search}`;
 }
@@ -306,6 +324,7 @@ function schedulePageUrl(entry, week = null) {
   url.searchParams.set("season", String(entry.season));
   url.searchParams.set("snapshot", entry.snapshot_id);
   url.searchParams.set("family", state.family);
+  if (state.family === "performance") url.searchParams.set("variant", state.variant);
   if (state.family === "predictive") url.searchParams.set("prior", entry.prior_family);
   if (week !== null && week !== undefined) url.searchParams.set("week", String(week));
   return `${url.pathname}${url.search}`;
@@ -376,7 +395,7 @@ function renderRankings(snapshot) {
 
 function summaryText(row, summary) {
   const lead = state.family === "performance"
-    ? `Based on the games ${row.team_name} has played, its expected Performance-equivalent rank is ${summary.expected_rank.toFixed(1)}.`
+    ? `Based on the games ${row.team_name} has played, its expected ${familyLabel()} rank is ${summary.expected_rank.toFixed(1)}.`
     : `Expected rank: ${summary.expected_rank.toFixed(1)}.`;
   return `${lead} Median: ${ordinal(summary.median_rank)}. Most likely rank: ${ordinal(summary.modal_rank)}. The central 50% interval spans ${ordinal(summary.interval_50[0])}–${ordinal(summary.interval_50[1])}. The central 80% interval spans ${ordinal(summary.interval_80[0])}–${ordinal(summary.interval_80[1])}. The central 95% interval spans ${ordinal(summary.interval_95[0])}–${ordinal(summary.interval_95[1])}. The model gives ${row.team_name} a ${percentage(summary.top10_probability)} chance of landing in the Top 10 and a ${percentage(summary.top25_probability)} chance of landing in the Top 25.`;
 }
@@ -455,7 +474,7 @@ function renderDetail(row, entry, distribution) {
   $("#detail-team-meta").textContent = `${rankLabel} by expected rank · ${row.conference || "Independent"} · ${row.record} modeled record · ${familyLabel()}${state.family === "predictive" ? ` · ${entry.prior_family === "context" ? "Context" : "History"}` : ""}`;
   const heading = element("h3", "detail-section-title", "Rank uncertainty");
   const explainer = element("p", "detail-explainer", state.family === "performance"
-    ? `Performance uses only ${row.team_name}'s eligible games. Predictive Context estimates still help interpret opponent quality, but ${row.team_name}'s own preseason prior does not directly contribute. Performance is not a predicted final rank, résumé, standings, or postseason deservingness.`
+    ? `${familyLabel()} uses ${state.variant === "quality_of_record" ? "wins and losses throughout the eligible game network" : "scoring margins in the eligible game network"}. Context preseason priors anchor opponent beliefs; ${row.team_name}'s own prior is stripped as a direct factor. Quality of Record is not ESPN's Strength of Record methodology.`
     : `GippyRank does not assign ${row.team_name} one certain rank. It maintains a probability distribution over possible ranks. The table orders teams by expected rank; this distribution shows how uncertain that estimate is.`);
   const currentBelief = element("p", "detail-current-belief", state.family === "performance" && row.rated === false
     ? "No eligible games have been played by this team in the selected snapshot. It is shown as NR with a neutral uniform distribution."
@@ -555,6 +574,7 @@ $("#family-select").addEventListener("change", (event) => {
 $("#season-select").addEventListener("change", (event) => { state.season = Number(event.target.value); state.slot = null; state.notice = ""; prepareSnapshotChange(); void render(); });
 $("#snapshot-select").addEventListener("change", (event) => { state.slot = event.target.value; state.notice = ""; prepareSnapshotChange(); void render(); });
 document.querySelectorAll("[data-prior]").forEach((button) => button.addEventListener("click", () => { changePrior(button.dataset.prior); prepareSnapshotChange(); void render(); }));
+document.querySelectorAll("[data-variant]").forEach((button) => button.addEventListener("click", () => { state.variant = button.dataset.variant; prepareSnapshotChange(); void render(); }));
 document.querySelectorAll("[data-depth]").forEach((button) => button.addEventListener("click", () => { state.depth = button.dataset.depth === "all" ? "all" : 25; document.querySelectorAll("[data-depth]").forEach((item) => item.classList.toggle("is-active", item === button)); if (state.snapshot) renderRankings(state.snapshot); }));
 $("#download-ballot")?.addEventListener("click", downloadBallot);
 

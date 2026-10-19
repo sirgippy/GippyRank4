@@ -25,7 +25,7 @@ truth as the serializers and publication checks.
 `site/publish_config.json` is the explicit list of snapshot directories approved
 for publication. Its ordered `publication_slots` list is the publication
 chronology, and each slot must be explicitly marked `official` or `temporary`.
-All Context, History, and Performance snapshots in a slot inherit that one
+All Predictive Context, Predictive History, Quality of Play, and Quality of Record snapshots in a slot inherit that one
 status. The publisher refuses missing or incompatible metadata, copies
 display-level summaries only, and derives records solely from each snapshot's
 `included_games.csv`. Raw posterior PMFs remain research artifacts and are not
@@ -159,16 +159,21 @@ SHA-256).
 
 The normal form needs only a season. The acquisition timestamp supplies the
 requested/effective evidence boundary and a stable date publication slot; label
-and slot are optional overrides. Both Context and History are built as `weekly`
+and slot are optional overrides. Context and History are built as `weekly`
 snapshots from that exact corpus and must agree on cutoffs, source hashes, and
 eligible game IDs before any site data is prepared. An invalid or nonconverged
-snapshot fails closed.
+snapshot fails closed. Quality of Play uses the existing margin-based Performance
+result; Quality of Record re-infers the frozen network with win/loss evidence.
+Both variants strip the focal Context prior and are validated, staged, and
+reported together. Legacy Performance links select Quality of Play. See
+[Quality of Record](docs/quality_of_record.md) for the one-time historical
+backfill command and its explicit blocker reporting.
 
 The **Publish this ranking as Official** checkbox is unchecked by default. An
 unchecked run creates an Interim publication; checking it marks the generated
 publication slot Official. This Official/Interim decision is made when the
 Update GippyRank rankings workflow is run, and applies together to the Context,
-History, and Performance snapshots in that slot.
+History, Quality of Play, and Quality of Record snapshots in that slot.
 
 The Action creates or updates `automation/rankings-<publication-slot>` and its
 review PR; it never pushes to `main`, merges, or enables auto-merge. If your

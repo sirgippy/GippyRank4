@@ -39,8 +39,24 @@ and preserve the distinction between:
 
 - Predictive Context: current predictive ranking using the Context prior.
 - Predictive History: current predictive ranking using the History prior.
-- Performance: observed-game performance ranking, Context-anchored as declared
-  by the publication metadata.
+- Performance / Quality of Play: observed scoring-margin evidence, with
+  `performance_variant: quality_of_play`.
+- Performance / Quality of Record: observed wins and losses, with
+  `performance_variant: quality_of_record` and `evidence_mode: win_loss`.
+
+Both Performance variants are Context-anchored with the focal prior stripped.
+An older Performance artifact without a variant means Quality of Play; its
+snapshot ID and resources remain valid. Select the desired variant from the
+inventory and use its exact snapshot ID in resource paths. Convenience selectors
+with `family=performance` and no variant retain Quality of Play semantics.
+
+For the three frozen Campbell exception publications, optional
+`publication.quality_of_record_evidence` distinguishes complete source evidence
+from QoR inference inputs: `source_game_count` and source hashes retain the full
+Context identity; `inference_game_count`, ordered IDs/hashes, and `exclusions`
+identify the exact binary input and excluded malformed 0–0 fixture. The ordinary
+`included_game_count` remains the complete source count for compatibility. See
+[the temporary exception](quality_of_record.md#temporary-campbell-exception).
 
 Official and temporary publications are both explicit in the inventory.
 Historical snapshots remain bounded by their effective cutoff; later scores,

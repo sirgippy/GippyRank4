@@ -21,6 +21,11 @@ from gippyrank.performance_snapshot import (
     validate_performance_against_context,
 )
 from gippyrank.posterior.snapshots import Snapshot, build_snapshot
+from gippyrank.quality_of_record_snapshot import (
+    build_quality_of_record_snapshot,
+    validate_quality_of_record_against_context,
+)
+from gippyrank.ranking_variants import performance_variant
 from gippyrank.site_data import (
     PublicationComparison,
     build_site_data,
@@ -47,6 +52,7 @@ class WeeklyUpdate:
     context: Snapshot
     history: Snapshot
     performance: Snapshot
+    quality_of_record: Snapshot
     corpus: dict[str, int]
     published: bool
     report: dict[str, Any]
@@ -65,6 +71,7 @@ class PublicationCandidatePaths:
     context_snapshot: Path
     history_snapshot: Path
     performance_snapshot: Path
+    quality_of_record_snapshot: Path
     report_md: Path
     report_json: Path
     publish_config: Path
@@ -157,6 +164,10 @@ def _github_output_lines(update: WeeklyUpdate, *, root: Path) -> list[str]:
         ("context_snapshot_path", update.candidate_paths.context_snapshot),
         ("history_snapshot_path", update.candidate_paths.history_snapshot),
         ("performance_snapshot_path", update.candidate_paths.performance_snapshot),
+        (
+            "quality_of_record_snapshot_path",
+            update.candidate_paths.quality_of_record_snapshot,
+        ),
         ("report_md_path", update.candidate_paths.report_md),
         ("report_json_path", update.candidate_paths.report_json),
         ("publish_config_path", update.candidate_paths.publish_config),
@@ -211,6 +222,7 @@ def _configured_snapshot(
         "context": "/predictive/context",
         "history": "/predictive/history",
         "performance": "/performance",
+        "quality_of_record": "/performance/quality_of_record",
     }.get(family)
     if suffix is None:
         raise ValueError(f"Unsupported publication family: {family}")
@@ -228,6 +240,7 @@ def _is_publishable_change(
     context: Snapshot,
     history: Snapshot,
     performance: Snapshot,
+    quality_of_record: Snapshot,
     *,
     publication_slot: str,
     publication_status: str,
@@ -245,6 +258,7 @@ def _is_publishable_change(
         ("context", context),
         ("history", history),
         ("performance", performance),
+        ("quality_of_record", quality_of_record),
     ):
         previous = _configured_snapshot(root, config, family)
         if previous is None or not previous.is_dir():
@@ -266,6 +280,7 @@ def _upsert_publication(
     slot: str,
     label: str,
     performance: Snapshot | None = None,
+    quality_of_record: Snapshot | None = None,
     official: bool = False,
 ) -> None:
     config = _load_json(config_path)
@@ -288,6 +303,8 @@ def _upsert_publication(
     snapshots = [context, history]
     if performance is not None:
         snapshots.append(performance)
+    if quality_of_record is not None:
+        snapshots.append(quality_of_record)
     for snapshot in snapshots:
         retained.append(
             {
@@ -389,6 +406,7 @@ def _report(
     context: Snapshot,
     history: Snapshot,
     performance: Snapshot,
+    quality_of_record: Snapshot,
     *,
     slot: str,
     label: str,
@@ -421,6 +439,12 @@ def _report(
             ),
             "broadest_distributions": _broadest_performance(performance),
         },
+        "quality_of_record": {
+            **_diagnostics(quality_of_record),
+            **_performance_counts(quality_of_record),
+            "top25": _top25(quality_of_record),
+            "broadest_distributions": _broadest_performance(quality_of_record),
+        },
         "validation": "passed",
     }
 
@@ -440,6 +464,7 @@ def _publication_comparisons(
             PublicationComparison(
                 season=int(metadata["season"]),
                 ranking_family=str(metadata["ranking_family"]),
+                performance_variant=performance_variant(metadata),
                 prior_family=(
                     str(metadata["prior_family"])
                     if metadata["ranking_family"] == "predictive"
@@ -501,12 +526,21 @@ def _previous_official_comparison(
         status, order = slot_metadata[publication_slot]
     else:
         status, order = "temporary", len(slot_metadata)
-    ranking_family = "performance" if family == "performance" else "predictive"
+    ranking_family = (
+        "performance"
+        if family in {"performance", "quality_of_play", "quality_of_record"}
+        else "predictive"
+    )
     prior_family = None if ranking_family == "performance" else family
     current = PublicationComparison(
         season=season,
         ranking_family=ranking_family,
         prior_family=prior_family,
+        performance_variant=(
+            "quality_of_record" if family == "quality_of_record" else "quality_of_play"
+        )
+        if ranking_family == "performance"
+        else None,
         publication_slot=publication_slot,
         publication_status=status,
         publication_order=order,
@@ -604,24 +638,31 @@ def render_review_markdown(report: dict[str, Any]) -> str:
         + section("Context", report["context"])
         + "\n"
         + section("History", report["history"])
-        + "\n## Performance\n\n"
+        + "\n## Quality of Play\n\n"
         + f"Rated teams: `{report['performance']['rated_count']}` · unrated/NR teams: `{report['performance']['unrated_count']}` · "
         + f"transformation runtime: `{report['performance']['transformation_runtime_seconds']:.4f}s`\n\n"
         + "### Top 25\n\n"
         + report["performance"]["top25"]
         + "\n\n"
-        + "### Largest Performance / Predictive Context expected-rank differences\n\n"
+        + "### Largest Quality of Play / Predictive Context expected-rank differences\n\n"
         + "\n".join(
-            f"- {item['team']}: Performance {item['performance_expected_rank']:.1f}, Context {item['context_expected_rank']:.1f} (Δ {item['difference']:+.1f})"
+            f"- {item['team']}: Quality of Play {item['performance_expected_rank']:.1f}, Context {item['context_expected_rank']:.1f} (Δ {item['difference']:+.1f})"
             for item in report["performance"]["largest_expected_rank_differences"]
         )
-        + "\n\n### Broadest Performance distributions\n\n"
+        + "\n\n### Broadest Quality of Play distributions\n\n"
         + "\n".join(
             f"- {item['team']}: 80% interval {item['interval_80'][0]}–{item['interval_80'][1]} ({item['interval_80_width']} ranks)"
             for item in report["performance"]["broadest_distributions"]
         )
         + "\n\n### Newly rated teams\n\n"
         + newly_rated_summary
+        + (
+            "\n"
+            + section("Quality of Record", report["quality_of_record"])
+            + f"\nRated teams: `{report['quality_of_record']['rated_count']}` · unrated/NR teams: `{report['quality_of_record']['unrated_count']}`\n"
+            if "quality_of_record" in report
+            else ""
+        )
         + "\n## Review diagnostics\n\n"
         + f"### Context biggest movers (vs {report.get('context_movement_baseline') or 'no earlier official baseline'})\n\n"
         + "\n".join(
@@ -650,6 +691,7 @@ def refresh_frozen_weekly_report(
     context_snapshot: Path,
     history_snapshot: Path,
     performance_snapshot: Path,
+    quality_of_record_snapshot: Path | None = None,
 ) -> dict[str, Any]:
     """Refresh a committed report from already-materialized snapshots only.
 
@@ -746,6 +788,16 @@ def refresh_frozen_weekly_report(
             set(context.metadata["included_game_ids"]) - previous_ids
         )
 
+    if quality_of_record_snapshot is not None:
+        quality_of_record = load_snapshot(quality_of_record_snapshot)
+        validate_quality_of_record_against_context(
+            context, quality_of_record, root=root
+        )
+        report["quality_of_record"] = {
+            **_diagnostics(quality_of_record),
+            **_performance_counts(quality_of_record),
+            "top25": _top25(quality_of_record),
+        }
     report_path.write_text(
         json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
@@ -810,10 +862,21 @@ def prepare_weekly_update(
             generation_timestamp=requested,
         )
         validate_performance_against_context(context, performance)
+        quality_of_record = build_quality_of_record_snapshot(
+            context,
+            root=root,
+            output_root=temporary,
+            source_context_path=final_context_path,
+            generation_timestamp=requested,
+        )
+        validate_quality_of_record_against_context(
+            context, quality_of_record, root=root
+        )
         report = _report(
             context,
             history,
             performance,
+            quality_of_record,
             slot=slot,
             label=label,
             corpus=corpus,
@@ -860,6 +923,7 @@ def prepare_weekly_update(
             context,
             history,
             performance,
+            quality_of_record,
             publication_slot=slot,
             publication_status=publication_status,
         ):
@@ -875,6 +939,7 @@ def prepare_weekly_update(
                 context,
                 history,
                 performance,
+                quality_of_record,
                 corpus,
                 False,
                 report,
@@ -904,18 +969,28 @@ def prepare_weekly_update(
         performance_final.parent.mkdir(parents=True, exist_ok=True)
         if performance_final.exists():
             shutil.rmtree(performance_final)
+        # Both variants live below the legacy Performance directory; this
+        # single copy includes the Quality of Record child.
         shutil.copytree(performance.directory, performance_final)
+        quality_of_record_final = performance_final / "quality_of_record"
     context, history = final_snapshots
     performance = Snapshot(
         performance.snapshot_id, performance_final, performance.metadata
     )
+    quality_of_record = Snapshot(
+        quality_of_record.snapshot_id,
+        quality_of_record_final,
+        quality_of_record.metadata,
+    )
     validate_performance_against_context(context, performance)
+    validate_quality_of_record_against_context(context, quality_of_record, root=root)
     _upsert_publication(
         root=root,
         config_path=config_path,
         context=context,
         history=history,
         performance=performance,
+        quality_of_record=quality_of_record,
         slot=slot,
         label=label,
         official=official,
@@ -933,6 +1008,7 @@ def prepare_weekly_update(
         context,
         history,
         performance,
+        quality_of_record,
         slot=slot,
         label=label,
         corpus=corpus,
@@ -977,6 +1053,7 @@ def prepare_weekly_update(
         context_snapshot=context.directory,
         history_snapshot=history.directory,
         performance_snapshot=performance.directory,
+        quality_of_record_snapshot=quality_of_record.directory,
         report_md=report_dir / f"{slot}.md",
         report_json=report_dir / f"{slot}.json",
         publish_config=config_path,
@@ -991,6 +1068,7 @@ def prepare_weekly_update(
         context,
         history,
         performance,
+        quality_of_record,
         corpus,
         True,
         report,
