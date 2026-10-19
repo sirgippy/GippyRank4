@@ -1,5 +1,9 @@
 # Performance V1
 
+This document describes the original margin-based Quality of Play variant.
+The separate binary-outcome variant is documented in
+[`quality_of_record.md`](quality_of_record.md).
+
 Performance V1 is a descriptive estimate of how good a team appears to be from
 the football it has actually played. The frozen research implementation remains
 the scientific reference; the production site uses the same Context-anchored
