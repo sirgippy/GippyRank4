@@ -1,0 +1,5604 @@
+{
+  "anchor_family": "context",
+  "comparison_display_label": null,
+  "comparison_snapshot_id": null,
+  "effective_cutoff": "2026-09-08T11:43:00.275833+00:00",
+  "evidence_mode": "win_loss",
+  "excluded_lower_division_games": 0,
+  "generation_timestamp": "2026-10-04T14:28:29.851109+00:00",
+  "included_game_count": 172,
+  "method": "prior_stripping",
+  "model_version": "1.0",
+  "model_versions": {
+    "performance": "1.0"
+  },
+  "performance_variant": "quality_of_record",
+  "publication_slot": "2026-09-08",
+  "publication_status": "official",
+  "quality_of_record_evidence": {
+    "exception_id": "campbell_western_carolina_2026_frozen_qor_v1",
+    "exclusions": [
+      {
+        "game_id": "401866625",
+        "reason": "Malformed completed 0-0 original fixture; historical repair deferred",
+        "source_game_row_sha256": "421bbff99c0b9bc22ff7c7db66a4c6dd97715ae273b022106976ac585c0b746f"
+      }
+    ],
+    "inference_game_count": 171,
+    "inference_game_ids": [
+      "401856634",
+      "401856635",
+      "401856636",
+      "401856637",
+      "401856658",
+      "401856659",
+      "401856660",
+      "401856661",
+      "401856662",
+      "401856663",
+      "401856664",
+      "401856665",
+      "401856666",
+      "401856667",
+      "401856668",
+      "401856669",
+      "401856766",
+      "401856767",
+      "401856768",
+      "401856769",
+      "401856770",
+      "401856771",
+      "401856772",
+      "401856773",
+      "401856774",
+      "401856775",
+      "401856776",
+      "401856777",
+      "401856778",
+      "401856779",
+      "401856780",
+      "401858201",
+      "401858202",
+      "401858204",
+      "401858206",
+      "401858207",
+      "401858208",
+      "401858209",
+      "401858210",
+      "401858211",
+      "401858212",
+      "401858422",
+      "401858423",
+      "401858424",
+      "401858425",
+      "401858426",
+      "401858427",
+      "401858428",
+      "401858429",
+      "401858430",
+      "401858431",
+      "401858432",
+      "401858433",
+      "401858434",
+      "401858435",
+      "401858436",
+      "401858437",
+      "401858438",
+      "401860878",
+      "401860879",
+      "401860880",
+      "401861962",
+      "401862693",
+      "401862694",
+      "401862695",
+      "401862696",
+      "401862697",
+      "401862698",
+      "401862699",
+      "401862700",
+      "401862701",
+      "401864424",
+      "401864425",
+      "401864432",
+      "401864494",
+      "401864495",
+      "401864496",
+      "401864497",
+      "401864498",
+      "401864499",
+      "401864570",
+      "401864577",
+      "401866408",
+      "401866409",
+      "401866410",
+      "401866411",
+      "401866532",
+      "401866615",
+      "401866616",
+      "401866617",
+      "401866618",
+      "401866619",
+      "401866620",
+      "401866621",
+      "401866622",
+      "401866623",
+      "401866624",
+      "401866626",
+      "401866627",
+      "401867684",
+      "401867692",
+      "401867845",
+      "401867855",
+      "401867865",
+      "401867866",
+      "401867874",
+      "401867875",
+      "401867882",
+      "401867883",
+      "401867889",
+      "401867894",
+      "401867916",
+      "401867924",
+      "401867935",
+      "401867939",
+      "401867973",
+      "401867977",
+      "401867988",
+      "401867989",
+      "401868000",
+      "401868007",
+      "401868017",
+      "401868022",
+      "401868040",
+      "401868049",
+      "401868060",
+      "401868070",
+      "401868071",
+      "401868073",
+      "401868084",
+      "401868085",
+      "401868101",
+      "401868110",
+      "401868111",
+      "401868118",
+      "401868119",
+      "401868129",
+      "401868139",
+      "401868140",
+      "401868149",
+      "401868154",
+      "401868158",
+      "401868163",
+      "401868169",
+      "401868170",
+      "401868186",
+      "401868194",
+      "401868235",
+      "401868240",
+      "401868261",
+      "401868274",
+      "401868305",
+      "401868306",
+      "401868315",
+      "401868316",
+      "401868324",
+      "401868336",
+      "401868356",
+      "401868394",
+      "401868962",
+      "401868967",
+      "401869127",
+      "401869129",
+      "401869142",
+      "401869960",
+      "401870763",
+      "401870790",
+      "401872615",
+      "401874035",
+      "401874042",
+      "401917058"
+    ],
+    "inference_game_ids_sha256": "a7244ab94d8491df15e8edfd9a38c2fe89fadb819f07229fc832ec932e6507ba",
+    "inference_game_rows_sha256": "c59b39478ad7c9cab00a8856bd639272cb00d18a76cab1cc1d10035d8c14d0c5",
+    "schema_version": "1.0",
+    "source_game_count": 172,
+    "source_game_ids_sha256": "606268d6ceaa14194032e70239cbd69fc7fe046a9de0221a0e8009c4a1dc57fd",
+    "source_game_rows_sha256": "9fe5aca7aa961dde5177f9eb9266f8fe23c65f8437bcc3e389bdcaff54675082"
+  },
+  "rank_count": 138,
+  "ranking_family": "performance",
+  "rankings": [
+    {
+      "conference": "ACC",
+      "display_rank": 1,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 35.262094129757045,
+      "interval_50": [
+        11,
+        53
+      ],
+      "interval_80": [
+        4.0,
+        81.0
+      ],
+      "interval_95": [
+        1,
+        109
+      ],
+      "interval_widths": {
+        "50": 43,
+        "80": 78,
+        "95": 109
+      },
+      "median_rank": 26.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.028239085283272028,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2567",
+      "team_name": "SMU",
+      "top10_probability": 0.24600114500982995,
+      "top25_probability": 0.48829058454637697,
+      "top5_probability": 0.13307678506853055
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 2,
+      "eligible_evidence_count": 2,
+      "eligible_games": 2,
+      "expected_rank": 38.11143544400685,
+      "interval_50": [
+        14,
+        57
+      ],
+      "interval_80": [
+        5.0,
+        82.0
+      ],
+      "interval_95": [
+        2,
+        106
+      ],
+      "interval_widths": {
+        "50": 44,
+        "80": 78,
+        "95": 105
+      },
+      "median_rank": 31.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.020756300973038024,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "2-0",
+      "team_id": "235",
+      "team_name": "Memphis",
+      "top10_probability": 0.19400314026722873,
+      "top25_probability": 0.42659289462543326,
+      "top5_probability": 0.10090255568327988
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 3,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 40.99042220083279,
+      "interval_50": [
+        14,
+        62
+      ],
+      "interval_80": [
+        5.0,
+        90.0
+      ],
+      "interval_95": [
+        2,
+        115
+      ],
+      "interval_widths": {
+        "50": 49,
+        "80": 86,
+        "95": 114
+      },
+      "median_rank": 33.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.02085813212321128,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "145",
+      "team_name": "Ole Miss",
+      "top10_probability": 0.19154752143142756,
+      "top25_probability": 0.4098911604401548,
+      "top5_probability": 0.10063490884986237
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 4,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 41.61968323680963,
+      "interval_50": [
+        15,
+        63
+      ],
+      "interval_80": [
+        6.0,
+        90.0
+      ],
+      "interval_95": [
+        2,
+        115
+      ],
+      "interval_widths": {
+        "50": 49,
+        "80": 85,
+        "95": 114
+      },
+      "median_rank": 34.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.020074426710422064,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "153",
+      "team_name": "North Carolina",
+      "top10_probability": 0.18559194041918228,
+      "top25_probability": 0.40122415410325496,
+      "top5_probability": 0.0971389203645869
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 5,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 41.64446566347433,
+      "interval_50": [
+        15,
+        63
+      ],
+      "interval_80": [
+        6.0,
+        90.0
+      ],
+      "interval_95": [
+        2,
+        115
+      ],
+      "interval_widths": {
+        "50": 49,
+        "80": 85,
+        "95": 114
+      },
+      "median_rank": 34.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.01989861262364849,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "26",
+      "team_name": "UCLA",
+      "top10_probability": 0.18393672808673633,
+      "top25_probability": 0.3994622348641049,
+      "top5_probability": 0.09624873008645016
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 6,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 42.25606691087115,
+      "interval_50": [
+        15,
+        64
+      ],
+      "interval_80": [
+        6.0,
+        91.0
+      ],
+      "interval_95": [
+        2,
+        116
+      ],
+      "interval_widths": {
+        "50": 50,
+        "80": 86,
+        "95": 115
+      },
+      "median_rank": 35.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.019304800098461087,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "38",
+      "team_name": "Colorado",
+      "top10_probability": 0.1792048223591046,
+      "top25_probability": 0.3918901842063197,
+      "top5_probability": 0.09354634539119938
+    },
+    {
+      "conference": "FBS Independents",
+      "display_rank": 7,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 42.78149214561987,
+      "interval_50": [
+        15,
+        65
+      ],
+      "interval_80": [
+        6.0,
+        92.0
+      ],
+      "interval_95": [
+        2,
+        116
+      ],
+      "interval_widths": {
+        "50": 51,
+        "80": 87,
+        "95": 115
+      },
+      "median_rank": 36.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.01893406786238643,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "87",
+      "team_name": "Notre Dame",
+      "top10_probability": 0.17649047111579144,
+      "top25_probability": 0.3867856369638562,
+      "top5_probability": 0.09194306276492992
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 8,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 42.892217058588955,
+      "interval_50": [
+        15,
+        65
+      ],
+      "interval_80": [
+        6.0,
+        92.0
+      ],
+      "interval_95": [
+        2,
+        117
+      ],
+      "interval_widths": {
+        "50": 51,
+        "80": 87,
+        "95": 116
+      },
+      "median_rank": 36.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.01905057643353409,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "99",
+      "team_name": "LSU",
+      "top10_probability": 0.17752674347699396,
+      "top25_probability": 0.38729859501221275,
+      "top5_probability": 0.09252149456407353
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 9,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 43.0277981012894,
+      "interval_50": [
+        15,
+        65
+      ],
+      "interval_80": [
+        6.0,
+        92.0
+      ],
+      "interval_95": [
+        2,
+        117
+      ],
+      "interval_widths": {
+        "50": 51,
+        "80": 87,
+        "95": 116
+      },
+      "median_rank": 36.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.018961156059961626,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "258",
+      "team_name": "Virginia",
+      "top10_probability": 0.17673778646824567,
+      "top25_probability": 0.38585082202953297,
+      "top5_probability": 0.09209543025676918
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 10,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 43.33395346268362,
+      "interval_50": [
+        16,
+        66
+      ],
+      "interval_80": [
+        6.0,
+        93.0
+      ],
+      "interval_95": [
+        2,
+        117
+      ],
+      "interval_widths": {
+        "50": 51,
+        "80": 88,
+        "95": 116
+      },
+      "median_rank": 36.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.018365946990354674,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "113",
+      "team_name": "Massachusetts",
+      "top10_probability": 0.17155846698099517,
+      "top25_probability": 0.3791748366926135,
+      "top5_probability": 0.08923341072419784
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 11,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 44.934334837998684,
+      "interval_50": [
+        17,
+        68
+      ],
+      "interval_80": [
+        7.0,
+        95.0
+      ],
+      "interval_95": [
+        2,
+        118
+      ],
+      "interval_widths": {
+        "50": 52,
+        "80": 89,
+        "95": 117
+      },
+      "median_rank": 38.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.01706045777175081,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2",
+      "team_name": "Auburn",
+      "top10_probability": 0.16115129887618546,
+      "top25_probability": 0.36136986090308615,
+      "top5_probability": 0.08331149832188914
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 12,
+      "eligible_evidence_count": 2,
+      "eligible_games": 2,
+      "expected_rank": 45.07718170394598,
+      "interval_50": [
+        18,
+        68
+      ],
+      "interval_80": [
+        7.0,
+        92.0
+      ],
+      "interval_95": [
+        2,
+        114
+      ],
+      "interval_widths": {
+        "50": 51,
+        "80": 86,
+        "95": 113
+      },
+      "median_rank": 39.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.015110445811185216,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "2-0",
+      "team_id": "30",
+      "team_name": "USC",
+      "top10_probability": 0.14657781726743824,
+      "top25_probability": 0.3432003467558802,
+      "top5_probability": 0.07462835428837666
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 13,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 46.03550612944045,
+      "interval_50": [
+        17,
+        70
+      ],
+      "interval_80": [
+        7.0,
+        96.0
+      ],
+      "interval_95": [
+        2,
+        120
+      ],
+      "interval_widths": {
+        "50": 54,
+        "80": 90,
+        "95": 119
+      },
+      "median_rank": 39.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0163212150510395,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "264",
+      "team_name": "Washington",
+      "top10_probability": 0.15510554703271304,
+      "top25_probability": 0.3503029673015376,
+      "top5_probability": 0.079923614725179
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 14,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 46.77958268541619,
+      "interval_50": [
+        18,
+        71
+      ],
+      "interval_80": [
+        7.0,
+        97.0
+      ],
+      "interval_95": [
+        2,
+        119
+      ],
+      "interval_widths": {
+        "50": 54,
+        "80": 91,
+        "95": 118
+      },
+      "median_rank": 41.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.015251051630544292,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2390",
+      "team_name": "Miami",
+      "top10_probability": 0.14628397980662391,
+      "top25_probability": 0.3375714341534572,
+      "top5_probability": 0.07494373937064884
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 15,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 47.33518096762483,
+      "interval_50": [
+        18,
+        71
+      ],
+      "interval_80": [
+        7.0,
+        98.0
+      ],
+      "interval_95": [
+        2,
+        121
+      ],
+      "interval_widths": {
+        "50": 54,
+        "80": 92,
+        "95": 120
+      },
+      "median_rank": 41.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.015265038316669165,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2483",
+      "team_name": "Oregon",
+      "top10_probability": 0.1463117413273886,
+      "top25_probability": 0.33544342968835344,
+      "top5_probability": 0.07502045592118278
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 16,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 49.15807633132296,
+      "interval_50": [
+        20,
+        74
+      ],
+      "interval_80": [
+        8.0,
+        100.0
+      ],
+      "interval_95": [
+        2,
+        122
+      ],
+      "interval_widths": {
+        "50": 55,
+        "80": 93,
+        "95": 121
+      },
+      "median_rank": 43.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.01412567299742908,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "127",
+      "team_name": "Michigan State",
+      "top10_probability": 0.13637976211010125,
+      "top25_probability": 0.31713146205030296,
+      "top5_probability": 0.06962804573891132
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 17,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 50.081097008554046,
+      "interval_50": [
+        20,
+        76
+      ],
+      "interval_80": [
+        8.0,
+        102.0
+      ],
+      "interval_95": [
+        2,
+        123
+      ],
+      "interval_widths": {
+        "50": 57,
+        "80": 95,
+        "95": 122
+      },
+      "median_rank": 44.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.013647166572057355,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "84",
+      "team_name": "Indiana",
+      "top10_probability": 0.13208529425256565,
+      "top25_probability": 0.3087414596709759,
+      "top5_probability": 0.06733594610308431
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 18,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 50.64629430859872,
+      "interval_50": [
+        21,
+        76
+      ],
+      "interval_80": [
+        8.0,
+        102.0
+      ],
+      "interval_95": [
+        2,
+        123
+      ],
+      "interval_widths": {
+        "50": 56,
+        "80": 95,
+        "95": 122
+      },
+      "median_rank": 45.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.013253955193620269,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "158",
+      "team_name": "Nebraska",
+      "top10_probability": 0.12871931102216866,
+      "top25_probability": 0.30274513082746507,
+      "top5_probability": 0.06548910192391366
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 19,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 50.97136026869657,
+      "interval_50": [
+        21,
+        77
+      ],
+      "interval_80": [
+        8.0,
+        103.0
+      ],
+      "interval_95": [
+        2,
+        124
+      ],
+      "interval_widths": {
+        "50": 57,
+        "80": 96,
+        "95": 123
+      },
+      "median_rank": 46.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.01304992617873343,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "130",
+      "team_name": "Michigan",
+      "top10_probability": 0.1269443937543221,
+      "top25_probability": 0.29948061700682976,
+      "top5_probability": 0.06452437326514586
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 20,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 50.991721807200484,
+      "interval_50": [
+        21,
+        77
+      ],
+      "interval_80": [
+        8.0,
+        103.0
+      ],
+      "interval_95": [
+        2,
+        124
+      ],
+      "interval_widths": {
+        "50": 57,
+        "80": 96,
+        "95": 123
+      },
+      "median_rank": 46.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0131206075315918,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "150",
+      "team_name": "Duke",
+      "top10_probability": 0.12745839521203586,
+      "top25_probability": 0.3000350444089277,
+      "top5_probability": 0.06483620705994074
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 21,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 51.188599384012136,
+      "interval_50": [
+        21,
+        77
+      ],
+      "interval_80": [
+        8.0,
+        103.0
+      ],
+      "interval_95": [
+        2,
+        124
+      ],
+      "interval_widths": {
+        "50": 57,
+        "80": 96,
+        "95": 123
+      },
+      "median_rank": 46.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.01293981417219462,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2440",
+      "team_name": "Nevada",
+      "top10_probability": 0.12595419139478733,
+      "top25_probability": 0.29753474858306544,
+      "top5_probability": 0.06399654973261702
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 22,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 51.32482632927031,
+      "interval_50": [
+        21,
+        77
+      ],
+      "interval_80": [
+        8.0,
+        103.0
+      ],
+      "interval_95": [
+        2,
+        124
+      ],
+      "interval_widths": {
+        "50": 57,
+        "80": 96,
+        "95": 123
+      },
+      "median_rank": 46.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.012860231071014845,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "202",
+      "team_name": "Tulsa",
+      "top10_probability": 0.12526318784158597,
+      "top25_probability": 0.2962540359601231,
+      "top5_probability": 0.06362077222616884
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 23,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 51.57561201757282,
+      "interval_50": [
+        21,
+        78
+      ],
+      "interval_80": [
+        9.0,
+        103.0
+      ],
+      "interval_95": [
+        2,
+        124
+      ],
+      "interval_widths": {
+        "50": 58,
+        "80": 95,
+        "95": 123
+      },
+      "median_rank": 46.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.012719165463481506,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "333",
+      "team_name": "Alabama",
+      "top10_probability": 0.12400662044346018,
+      "top25_probability": 0.2938459068972488,
+      "top5_probability": 0.06294697879010265
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 24,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 52.52530099388076,
+      "interval_50": [
+        22,
+        79
+      ],
+      "interval_80": [
+        9.0,
+        105.0
+      ],
+      "interval_95": [
+        3,
+        125
+      ],
+      "interval_widths": {
+        "50": 58,
+        "80": 97,
+        "95": 123
+      },
+      "median_rank": 48.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.012227926536117173,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "213",
+      "team_name": "Penn State",
+      "top10_probability": 0.11960615145566067,
+      "top25_probability": 0.2852588338066809,
+      "top5_probability": 0.060596063439550915
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 25,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 53.167311056328685,
+      "interval_50": [
+        23,
+        80
+      ],
+      "interval_80": [
+        9.0,
+        105.0
+      ],
+      "interval_95": [
+        3,
+        125
+      ],
+      "interval_widths": {
+        "50": 58,
+        "80": 97,
+        "95": 123
+      },
+      "median_rank": 48.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.011929961464651771,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2132",
+      "team_name": "Cincinnati",
+      "top10_probability": 0.11689672777075054,
+      "top25_probability": 0.2798028372692655,
+      "top5_probability": 0.05916142912606437
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 26,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 53.58853481550117,
+      "interval_50": [
+        23,
+        81
+      ],
+      "interval_80": [
+        9.0,
+        106.0
+      ],
+      "interval_95": [
+        3,
+        126
+      ],
+      "interval_widths": {
+        "50": 59,
+        "80": 98,
+        "95": 124
+      },
+      "median_rank": 49.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.011768895498336502,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "251",
+      "team_name": "Texas",
+      "top10_probability": 0.1153893294649662,
+      "top25_probability": 0.27658855944498767,
+      "top5_probability": 0.05837674437453735
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 27,
+      "eligible_evidence_count": 2,
+      "eligible_games": 2,
+      "expected_rank": 53.64968634729921,
+      "interval_50": [
+        23,
+        81
+      ],
+      "interval_80": [
+        9.0,
+        105.0
+      ],
+      "interval_95": [
+        3,
+        125
+      ],
+      "interval_widths": {
+        "50": 59,
+        "80": 97,
+        "95": 123
+      },
+      "median_rank": 49.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.011471421667761241,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "2-0",
+      "team_id": "2449",
+      "team_name": "North Dakota State",
+      "top10_probability": 0.11291035024373845,
+      "top25_probability": 0.2725758375219771,
+      "top5_probability": 0.05699175381846005
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 28,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 54.05130611599742,
+      "interval_50": [
+        23,
+        81
+      ],
+      "interval_80": [
+        9.0,
+        106.0
+      ],
+      "interval_95": [
+        3,
+        126
+      ],
+      "interval_widths": {
+        "50": 59,
+        "80": 98,
+        "95": 124
+      },
+      "median_rank": 50.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.011488401647828694,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "248",
+      "team_name": "Houston",
+      "top10_probability": 0.11292136357695348,
+      "top25_probability": 0.27196519677775516,
+      "top5_probability": 0.057043924642259575
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 29,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 54.30587030027012,
+      "interval_50": [
+        24,
+        82
+      ],
+      "interval_80": [
+        9.0,
+        107.0
+      ],
+      "interval_95": [
+        3,
+        126
+      ],
+      "interval_widths": {
+        "50": 59,
+        "80": 99,
+        "95": 124
+      },
+      "median_rank": 50.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.011373294067520145,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "256",
+      "team_name": "James Madison",
+      "top10_probability": 0.11186926084123047,
+      "top25_probability": 0.26982634405054806,
+      "top5_probability": 0.05648851115146681
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 30,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 55.071711427055234,
+      "interval_50": [
+        24,
+        83
+      ],
+      "interval_80": [
+        10.0,
+        108.0
+      ],
+      "interval_95": [
+        3,
+        126
+      ],
+      "interval_widths": {
+        "50": 60,
+        "80": 99,
+        "95": 124
+      },
+      "median_rank": 51.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.01104794311900542,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "167",
+      "team_name": "New Mexico",
+      "top10_probability": 0.1088753082456041,
+      "top25_probability": 0.2636442100295264,
+      "top5_probability": 0.05491447590242903
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 31,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 55.20346570899762,
+      "interval_50": [
+        24,
+        83
+      ],
+      "interval_80": [
+        10.0,
+        108.0
+      ],
+      "interval_95": [
+        3,
+        127
+      ],
+      "interval_widths": {
+        "50": 60,
+        "80": 99,
+        "95": 125
+      },
+      "median_rank": 51.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.011016694905548166,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "221",
+      "team_name": "Pittsburgh",
+      "top10_probability": 0.10855964599731824,
+      "top25_probability": 0.26286661074571177,
+      "top5_probability": 0.05475740938953406
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 32,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 55.69507155710545,
+      "interval_50": [
+        25,
+        84
+      ],
+      "interval_80": [
+        10.0,
+        108.0
+      ],
+      "interval_95": [
+        3,
+        127
+      ],
+      "interval_widths": {
+        "50": 60,
+        "80": 99,
+        "95": 125
+      },
+      "median_rank": 52.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.010786604833367732,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "36",
+      "team_name": "Colorado State",
+      "top10_probability": 0.10646666527885096,
+      "top25_probability": 0.2586533641945838,
+      "top5_probability": 0.053649353871595404
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 33,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 55.94314969231096,
+      "interval_50": [
+        25,
+        84
+      ],
+      "interval_80": [
+        10.0,
+        109.0
+      ],
+      "interval_95": [
+        3,
+        127
+      ],
+      "interval_widths": {
+        "50": 60,
+        "80": 100,
+        "95": 125
+      },
+      "median_rank": 52.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.010778673053835501,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "245",
+      "team_name": "Texas A&M",
+      "top10_probability": 0.10628799577896157,
+      "top25_probability": 0.257807641706554,
+      "top5_probability": 0.053588871936397844
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 34,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 56.38271254019114,
+      "interval_50": [
+        25,
+        85
+      ],
+      "interval_80": [
+        10.0,
+        109.0
+      ],
+      "interval_95": [
+        3,
+        127
+      ],
+      "interval_widths": {
+        "50": 61,
+        "80": 100,
+        "95": 125
+      },
+      "median_rank": 53.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.010524413700885634,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "57",
+      "team_name": "Florida",
+      "top10_probability": 0.10402301254147057,
+      "top25_probability": 0.25346402784755423,
+      "top5_probability": 0.05237447790897298
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 35,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 56.581782322369236,
+      "interval_50": [
+        25,
+        85
+      ],
+      "interval_80": [
+        10.0,
+        109.0
+      ],
+      "interval_95": [
+        3,
+        127
+      ],
+      "interval_widths": {
+        "50": 61,
+        "80": 100,
+        "95": 125
+      },
+      "median_rank": 53.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.010458403149056023,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "277",
+      "team_name": "West Virginia",
+      "top10_probability": 0.10339824905515559,
+      "top25_probability": 0.252091217481235,
+      "top5_probability": 0.05205155990348474
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 36,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 56.705339437459045,
+      "interval_50": [
+        25,
+        85
+      ],
+      "interval_80": [
+        10.0,
+        110.0
+      ],
+      "interval_95": [
+        3,
+        128
+      ],
+      "interval_widths": {
+        "50": 61,
+        "80": 101,
+        "95": 126
+      },
+      "median_rank": 53.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.010430833747059479,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "58",
+      "team_name": "South Florida",
+      "top10_probability": 0.10311919092254189,
+      "top25_probability": 0.2513972872307619,
+      "top5_probability": 0.05191292212547769
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 37,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 56.95929522998061,
+      "interval_50": [
+        26,
+        85
+      ],
+      "interval_80": [
+        10.0,
+        110.0
+      ],
+      "interval_95": [
+        3,
+        128
+      ],
+      "interval_widths": {
+        "50": 60,
+        "80": 101,
+        "95": 126
+      },
+      "median_rank": 53.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.010308925062883464,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "356",
+      "team_name": "Illinois",
+      "top10_probability": 0.10201057874554108,
+      "top25_probability": 0.2491705610081946,
+      "top5_probability": 0.051325863140321344
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 38,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 58.291372302574935,
+      "interval_50": [
+        27,
+        87
+      ],
+      "interval_80": [
+        11.0,
+        111.0
+      ],
+      "interval_95": [
+        3,
+        129
+      ],
+      "interval_widths": {
+        "50": 61,
+        "80": 101,
+        "95": 127
+      },
+      "median_rank": 55.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.009853170912405876,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2294",
+      "team_name": "Iowa",
+      "top10_probability": 0.09771445217467134,
+      "top25_probability": 0.23981163185877188,
+      "top5_probability": 0.04909992227659996
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 39,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 59.35998483469431,
+      "interval_50": [
+        27,
+        89
+      ],
+      "interval_80": [
+        11.0,
+        113.0
+      ],
+      "interval_95": [
+        3,
+        129
+      ],
+      "interval_widths": {
+        "50": 63,
+        "80": 103,
+        "95": 127
+      },
+      "median_rank": 56.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.009511794379846414,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "154",
+      "team_name": "Wake Forest",
+      "top10_probability": 0.09447447042545376,
+      "top25_probability": 0.2326441117234616,
+      "top5_probability": 0.04742814747899239
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 40,
+      "eligible_evidence_count": 2,
+      "eligible_games": 2,
+      "expected_rank": 59.53983872574197,
+      "interval_50": [
+        31,
+        86
+      ],
+      "interval_80": [
+        16.0,
+        108.0
+      ],
+      "interval_95": [
+        5,
+        126
+      ],
+      "interval_widths": {
+        "50": 56,
+        "80": 93,
+        "95": 122
+      },
+      "median_rank": 57.0,
+      "mode_rank": 34,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.00434116219576071,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-1",
+      "team_id": "23",
+      "team_name": "San Jos\u00e9 State",
+      "top10_probability": 0.058801361402491786,
+      "top25_probability": 0.1922780417439532,
+      "top5_probability": 0.02524004394596542
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 41,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 59.89344083338224,
+      "interval_50": [
+        28,
+        90
+      ],
+      "interval_80": [
+        11.0,
+        113.0
+      ],
+      "interval_95": [
+        3,
+        129
+      ],
+      "interval_widths": {
+        "50": 63,
+        "80": 103,
+        "95": 127
+      },
+      "median_rank": 57.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.009334032750927085,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2579",
+      "team_name": "South Carolina",
+      "top10_probability": 0.09279629894368531,
+      "top25_probability": 0.22897399177660963,
+      "top5_probability": 0.046559447350286484
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 42,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 61.06533582863491,
+      "interval_50": [
+        29,
+        91
+      ],
+      "interval_80": [
+        12.0,
+        115.0
+      ],
+      "interval_95": [
+        3,
+        130
+      ],
+      "interval_widths": {
+        "50": 63,
+        "80": 104,
+        "95": 128
+      },
+      "median_rank": 59.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.008996890927558987,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "201",
+      "team_name": "Oklahoma",
+      "top10_probability": 0.08956395055797635,
+      "top25_probability": 0.22165910611876347,
+      "top5_probability": 0.0449018381441497
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 43,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 61.502325863523566,
+      "interval_50": [
+        29,
+        92
+      ],
+      "interval_80": [
+        12.0,
+        115.0
+      ],
+      "interval_95": [
+        3,
+        130
+      ],
+      "interval_widths": {
+        "50": 64,
+        "80": 104,
+        "95": 128
+      },
+      "median_rank": 59.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.008868453153827236,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "194",
+      "team_name": "Ohio State",
+      "top10_probability": 0.08833595020188348,
+      "top25_probability": 0.21889638251975826,
+      "top5_probability": 0.04427104328529634
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 44,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 61.754918547880706,
+      "interval_50": [
+        29,
+        92
+      ],
+      "interval_80": [
+        12.0,
+        115.0
+      ],
+      "interval_95": [
+        3,
+        131
+      ],
+      "interval_widths": {
+        "50": 64,
+        "80": 104,
+        "95": 129
+      },
+      "median_rank": 60.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.008802056555890298,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "344",
+      "team_name": "Mississippi State",
+      "top10_probability": 0.0876947152249705,
+      "top25_probability": 0.2174207623984388,
+      "top5_probability": 0.043943658952016615
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 45,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 62.611140926167145,
+      "interval_50": [
+        30,
+        94
+      ],
+      "interval_80": [
+        12.0,
+        116.0
+      ],
+      "interval_95": [
+        3,
+        131
+      ],
+      "interval_widths": {
+        "50": 65,
+        "80": 105,
+        "95": 129
+      },
+      "median_rank": 61.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.008585397658673407,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2653",
+      "team_name": "Troy",
+      "top10_probability": 0.08559663855409304,
+      "top25_probability": 0.21256204909059412,
+      "top5_probability": 0.04287423430013901
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 46,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 63.63149192790999,
+      "interval_50": [
+        31,
+        95
+      ],
+      "interval_80": [
+        12.0,
+        118.0
+      ],
+      "interval_95": [
+        3,
+        132
+      ],
+      "interval_widths": {
+        "50": 65,
+        "80": 107,
+        "95": 130
+      },
+      "median_rank": 62.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.008362489083906958,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "349",
+      "team_name": "Army",
+      "top10_probability": 0.08349812642802797,
+      "top25_probability": 0.20759163883308848,
+      "top5_probability": 0.04178846063854945
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 47,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 64.33913209763624,
+      "interval_50": [
+        31,
+        96
+      ],
+      "interval_80": [
+        13.0,
+        119.0
+      ],
+      "interval_95": [
+        4,
+        133
+      ],
+      "interval_widths": {
+        "50": 66,
+        "80": 107,
+        "95": 130
+      },
+      "median_rank": 63.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.008214531258690311,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "12",
+      "team_name": "Arizona",
+      "top10_probability": 0.0820394266086484,
+      "top25_probability": 0.2041314404345418,
+      "top5_probability": 0.04105263382861224
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 48,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 64.54283686197756,
+      "interval_50": [
+        31,
+        96
+      ],
+      "interval_80": [
+        13.0,
+        119.0
+      ],
+      "interval_95": [
+        4,
+        133
+      ],
+      "interval_widths": {
+        "50": 66,
+        "80": 107,
+        "95": 130
+      },
+      "median_rank": 63.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.008173211826070184,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "66",
+      "team_name": "Iowa State",
+      "top10_probability": 0.08163165764254875,
+      "top25_probability": 0.20316079129027773,
+      "top5_probability": 0.04084706538872429
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 49,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 64.5724073648864,
+      "interval_50": [
+        31,
+        96
+      ],
+      "interval_80": [
+        13.0,
+        119.0
+      ],
+      "interval_95": [
+        4,
+        133
+      ],
+      "interval_widths": {
+        "50": 66,
+        "80": 107,
+        "95": 130
+      },
+      "median_rank": 63.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.00816699494957479,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2026",
+      "team_name": "App State",
+      "top10_probability": 0.08157037789907348,
+      "top25_probability": 0.20301552610187293,
+      "top5_probability": 0.04081614975301093
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 50,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 64.57624483997003,
+      "interval_50": [
+        31,
+        96
+      ],
+      "interval_80": [
+        13.0,
+        119.0
+      ],
+      "interval_95": [
+        4,
+        133
+      ],
+      "interval_widths": {
+        "50": 66,
+        "80": 107,
+        "95": 130
+      },
+      "median_rank": 63.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.008166194397590325,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "218",
+      "team_name": "Temple",
+      "top10_probability": 0.08156248473585977,
+      "top25_probability": 0.2029967976034575,
+      "top5_probability": 0.040812168314690256
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 51,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 64.58741701251839,
+      "interval_50": [
+        31,
+        97
+      ],
+      "interval_80": [
+        13.0,
+        119.0
+      ],
+      "interval_95": [
+        4,
+        133
+      ],
+      "interval_widths": {
+        "50": 67,
+        "80": 107,
+        "95": 130
+      },
+      "median_rank": 63.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.008163847551878281,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "242",
+      "team_name": "Rice",
+      "top10_probability": 0.08153935120258886,
+      "top25_probability": 0.20294195337202495,
+      "top5_probability": 0.040800497657017314
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 52,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 64.6227889100404,
+      "interval_50": [
+        31,
+        97
+      ],
+      "interval_80": [
+        13.0,
+        119.0
+      ],
+      "interval_95": [
+        4,
+        133
+      ],
+      "interval_widths": {
+        "50": 67,
+        "80": 107,
+        "95": 130
+      },
+      "median_rank": 63.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.00815645002151719,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "9",
+      "team_name": "Arizona State",
+      "top10_probability": 0.08146642048822234,
+      "top25_probability": 0.20276895955216492,
+      "top5_probability": 0.04076370824931889
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 53,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 64.65182340912867,
+      "interval_50": [
+        31,
+        97
+      ],
+      "interval_80": [
+        13.0,
+        119.0
+      ],
+      "interval_95": [
+        4,
+        133
+      ],
+      "interval_widths": {
+        "50": 67,
+        "80": 107,
+        "95": 130
+      },
+      "median_rank": 63.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.008150390000654113,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "135",
+      "team_name": "Minnesota",
+      "top10_probability": 0.08140667188128119,
+      "top25_probability": 0.20262719998707737,
+      "top5_probability": 0.04073356975381298
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 54,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 64.81827950636257,
+      "interval_50": [
+        32,
+        97
+      ],
+      "interval_80": [
+        13.0,
+        120.0
+      ],
+      "interval_95": [
+        4,
+        133
+      ],
+      "interval_widths": {
+        "50": 66,
+        "80": 108,
+        "95": 130
+      },
+      "median_rank": 63.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.008117156557472801,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "77",
+      "team_name": "Northwestern",
+      "top10_probability": 0.08107852245121029,
+      "top25_probability": 0.2018445956467558,
+      "top5_probability": 0.040568195619232694
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 55,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 64.82363799311472,
+      "interval_50": [
+        32,
+        97
+      ],
+      "interval_80": [
+        13.0,
+        120.0
+      ],
+      "interval_95": [
+        4,
+        133
+      ],
+      "interval_widths": {
+        "50": 66,
+        "80": 108,
+        "95": 130
+      },
+      "median_rank": 63.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.008116030009540202,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "309",
+      "team_name": "Louisiana",
+      "top10_probability": 0.0810674181958196,
+      "top25_probability": 0.20181827372650366,
+      "top5_probability": 0.040562593482054494
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 56,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 64.84761608487808,
+      "interval_50": [
+        32,
+        97
+      ],
+      "interval_80": [
+        13.0,
+        120.0
+      ],
+      "interval_95": [
+        4,
+        133
+      ],
+      "interval_widths": {
+        "50": 66,
+        "80": 108,
+        "95": 130
+      },
+      "median_rank": 63.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.008111024108404167,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2084",
+      "team_name": "Buffalo",
+      "top10_probability": 0.0810180635575691,
+      "top25_probability": 0.2017011822304161,
+      "top5_probability": 0.04053769764759271
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 57,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 64.96237259000641,
+      "interval_50": [
+        32,
+        97
+      ],
+      "interval_80": [
+        13.0,
+        120.0
+      ],
+      "interval_95": [
+        4,
+        133
+      ],
+      "interval_widths": {
+        "50": 66,
+        "80": 108,
+        "95": 130
+      },
+      "median_rank": 63.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.00808732178962075,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "96",
+      "team_name": "Kentucky",
+      "top10_probability": 0.08078429000014582,
+      "top25_probability": 0.20114585682503458,
+      "top5_probability": 0.0404198025482589
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 58,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 64.96334322302138,
+      "interval_50": [
+        32,
+        97
+      ],
+      "interval_80": [
+        13.0,
+        120.0
+      ],
+      "interval_95": [
+        4,
+        133
+      ],
+      "interval_widths": {
+        "50": 66,
+        "80": 108,
+        "95": 130
+      },
+      "median_rank": 63.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.008087121993016066,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2306",
+      "team_name": "Kansas State",
+      "top10_probability": 0.08078231919447516,
+      "top25_probability": 0.20114117328427183,
+      "top5_probability": 0.0404188087173348
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 59,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 65.03310894437375,
+      "interval_50": [
+        32,
+        97
+      ],
+      "interval_80": [
+        13.0,
+        120.0
+      ],
+      "interval_95": [
+        4,
+        133
+      ],
+      "interval_widths": {
+        "50": 66,
+        "80": 108,
+        "95": 130
+      },
+      "median_rank": 64.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.008073059285208675,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "238",
+      "team_name": "Vanderbilt",
+      "top10_probability": 0.08064350803636101,
+      "top25_probability": 0.2008104955851913,
+      "top5_probability": 0.04034883942450439
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 60,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 65.13174667717428,
+      "interval_50": [
+        32,
+        97
+      ],
+      "interval_80": [
+        13.0,
+        120.0
+      ],
+      "interval_95": [
+        4,
+        133
+      ],
+      "interval_widths": {
+        "50": 66,
+        "80": 108,
+        "95": 130
+      },
+      "median_rank": 64.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.008053182558644453,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "8",
+      "team_name": "Arkansas",
+      "top10_probability": 0.08044730427522777,
+      "top25_probability": 0.20034306920838457,
+      "top5_probability": 0.0402499417578245
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 61,
+      "eligible_evidence_count": 2,
+      "eligible_games": 2,
+      "expected_rank": 65.67695590529867,
+      "interval_50": [
+        37,
+        93
+      ],
+      "interval_80": [
+        19.0,
+        114.0
+      ],
+      "interval_95": [
+        7,
+        129
+      ],
+      "interval_widths": {
+        "50": 57,
+        "80": 96,
+        "95": 123
+      },
+      "median_rank": 65.0,
+      "mode_rank": 43,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0028846614632911196,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-1",
+      "team_id": "24",
+      "team_name": "Stanford",
+      "top10_probability": 0.041853851695318134,
+      "top25_probability": 0.14998695510902835,
+      "top5_probability": 0.017299774668991224
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 62,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 66.2381753953696,
+      "interval_50": [
+        33,
+        99
+      ],
+      "interval_80": [
+        13.0,
+        121.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 67,
+        "80": 109,
+        "95": 131
+      },
+      "median_rank": 65.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.007839298137918534,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "120",
+      "team_name": "Maryland",
+      "top10_probability": 0.0783333991467281,
+      "top25_probability": 0.1952847929056273,
+      "top5_probability": 0.03918524107351097
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 63,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 66.2381753953696,
+      "interval_50": [
+        33,
+        99
+      ],
+      "interval_80": [
+        13.0,
+        121.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 67,
+        "80": 109,
+        "95": 131
+      },
+      "median_rank": 65.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.007839298137918537,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "142",
+      "team_name": "Missouri",
+      "top10_probability": 0.07833339914672811,
+      "top25_probability": 0.1952847929056273,
+      "top5_probability": 0.03918524107351098
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 64,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 66.23817539536961,
+      "interval_50": [
+        33,
+        99
+      ],
+      "interval_80": [
+        13.0,
+        121.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 67,
+        "80": 109,
+        "95": 131
+      },
+      "median_rank": 65.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.007839298137918537,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2005",
+      "team_name": "Air Force",
+      "top10_probability": 0.07833339914672811,
+      "top25_probability": 0.1952847929056273,
+      "top5_probability": 0.03918524107351099
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 65,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 66.23817539536961,
+      "interval_50": [
+        33,
+        99
+      ],
+      "interval_80": [
+        13.0,
+        121.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 67,
+        "80": 109,
+        "95": 131
+      },
+      "median_rank": 65.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.007839298137918527,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "295",
+      "team_name": "Old Dominion",
+      "top10_probability": 0.07833339914672813,
+      "top25_probability": 0.1952847929056273,
+      "top5_probability": 0.039185241073510985
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 66,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 66.23817539536961,
+      "interval_50": [
+        33,
+        99
+      ],
+      "interval_80": [
+        13.0,
+        121.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 67,
+        "80": 109,
+        "95": 131
+      },
+      "median_rank": 65.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.00783929813791854,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2572",
+      "team_name": "Southern Miss",
+      "top10_probability": 0.07833339914672813,
+      "top25_probability": 0.1952847929056273,
+      "top5_probability": 0.03918524107351099
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 67,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 66.23817539536961,
+      "interval_50": [
+        33,
+        99
+      ],
+      "interval_80": [
+        13.0,
+        121.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 67,
+        "80": 109,
+        "95": 131
+      },
+      "median_rank": 65.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.00783929813791854,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2116",
+      "team_name": "UCF",
+      "top10_probability": 0.07833339914672811,
+      "top25_probability": 0.19528479290562728,
+      "top5_probability": 0.039185241073510985
+    },
+    {
+      "conference": "FBS Independents",
+      "display_rank": 68,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 66.23817539536961,
+      "interval_50": [
+        33,
+        99
+      ],
+      "interval_80": [
+        13.0,
+        121.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 67,
+        "80": 109,
+        "95": 131
+      },
+      "median_rank": 65.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.007839298137918534,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "41",
+      "team_name": "UConn",
+      "top10_probability": 0.07833339914672809,
+      "top25_probability": 0.19528479290562728,
+      "top5_probability": 0.03918524107351096
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 69,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 66.23817539536961,
+      "interval_50": [
+        33,
+        99
+      ],
+      "interval_80": [
+        13.0,
+        121.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 67,
+        "80": 109,
+        "95": 131
+      },
+      "median_rank": 65.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.007839298137918544,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2636",
+      "team_name": "UTSA",
+      "top10_probability": 0.07833339914672813,
+      "top25_probability": 0.1952847929056273,
+      "top5_probability": 0.039185241073510985
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 70,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 66.23817539536962,
+      "interval_50": [
+        33,
+        99
+      ],
+      "interval_80": [
+        13.0,
+        121.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 67,
+        "80": 109,
+        "95": 131
+      },
+      "median_rank": 65.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.007839298137918544,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2348",
+      "team_name": "Louisiana Tech",
+      "top10_probability": 0.07833339914672811,
+      "top25_probability": 0.1952847929056273,
+      "top5_probability": 0.039185241073510985
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 71,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 66.23817539536962,
+      "interval_50": [
+        33,
+        99
+      ],
+      "interval_80": [
+        13.0,
+        121.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 67,
+        "80": 109,
+        "95": 131
+      },
+      "median_rank": 65.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.007839298137918537,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2633",
+      "team_name": "Tennessee",
+      "top10_probability": 0.07833339914672811,
+      "top25_probability": 0.1952847929056273,
+      "top5_probability": 0.03918524107351098
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 72,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 67.08056018643863,
+      "interval_50": [
+        33,
+        100
+      ],
+      "interval_80": [
+        14.0,
+        122.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 68,
+        "80": 109,
+        "95": 131
+      },
+      "median_rank": 66.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.007667504298251986,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "259",
+      "team_name": "Virginia Tech",
+      "top10_probability": 0.07663842526015126,
+      "top25_probability": 0.1912534168034003,
+      "top5_probability": 0.0383306273278144
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 73,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 67.41644405613793,
+      "interval_50": [
+        33,
+        101
+      ],
+      "interval_80": [
+        14.0,
+        122.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 69,
+        "80": 109,
+        "95": 131
+      },
+      "median_rank": 67.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.007604272402906897,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2305",
+      "team_name": "Kansas",
+      "top10_probability": 0.07601285078532315,
+      "top25_probability": 0.18975131849502472,
+      "top5_probability": 0.0380157429352027
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 74,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 67.58846854011713,
+      "interval_50": [
+        34,
+        101
+      ],
+      "interval_80": [
+        14.0,
+        123.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 68,
+        "80": 110,
+        "95": 131
+      },
+      "median_rank": 67.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0075728656836840475,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "254",
+      "team_name": "Utah",
+      "top10_probability": 0.07570184985370144,
+      "top25_probability": 0.1890021625591085,
+      "top5_probability": 0.03785928825378084
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 75,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 67.59735554273192,
+      "interval_50": [
+        34,
+        101
+      ],
+      "interval_80": [
+        14.0,
+        123.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 68,
+        "80": 110,
+        "95": 131
+      },
+      "median_rank": 67.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.007570182343404133,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "21",
+      "team_name": "San Diego State",
+      "top10_probability": 0.07567562560092135,
+      "top25_probability": 0.1889418963842599,
+      "top5_probability": 0.0378459876487722
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 76,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 67.63305141585793,
+      "interval_50": [
+        34,
+        101
+      ],
+      "interval_80": [
+        14.0,
+        123.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 68,
+        "80": 110,
+        "95": 131
+      },
+      "median_rank": 67.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0075636837362459625,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "252",
+      "team_name": "BYU",
+      "top10_probability": 0.0756112659315189,
+      "top25_probability": 0.18878679651214111,
+      "top5_probability": 0.03781361285522795
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 77,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 67.65430581652578,
+      "interval_50": [
+        34,
+        101
+      ],
+      "interval_80": [
+        14.0,
+        123.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 68,
+        "80": 110,
+        "95": 131
+      },
+      "median_rank": 67.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.007560596863830549,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2641",
+      "team_name": "Texas Tech",
+      "top10_probability": 0.07558043393062001,
+      "top25_probability": 0.18871031764532686,
+      "top5_probability": 0.03779818458583617
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 78,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 67.72793502695107,
+      "interval_50": [
+        34,
+        101
+      ],
+      "interval_80": [
+        14.0,
+        123.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 68,
+        "80": 110,
+        "95": 131
+      },
+      "median_rank": 67.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.007547009691755902,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "183",
+      "team_name": "Syracuse",
+      "top10_probability": 0.07544592999173139,
+      "top25_probability": 0.18838666652102243,
+      "top5_probability": 0.037730507088714345
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 79,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 67.79527657532448,
+      "interval_50": [
+        34,
+        101
+      ],
+      "interval_80": [
+        14.0,
+        123.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 68,
+        "80": 110,
+        "95": 131
+      },
+      "median_rank": 67.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.007534590112282307,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "61",
+      "team_name": "Georgia",
+      "top10_probability": 0.07532301312503177,
+      "top25_probability": 0.1880911129551729,
+      "top5_probability": 0.03766865089838682
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 80,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 67.81805312156384,
+      "interval_50": [
+        34,
+        101
+      ],
+      "interval_80": [
+        14.0,
+        123.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 68,
+        "80": 110,
+        "95": 131
+      },
+      "median_rank": 67.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0075304056184659456,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2509",
+      "team_name": "Purdue",
+      "top10_probability": 0.07528158325593928,
+      "top25_probability": 0.18799137034835633,
+      "top5_probability": 0.037647806814261144
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 81,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 67.82060607922942,
+      "interval_50": [
+        34,
+        101
+      ],
+      "interval_80": [
+        14.0,
+        123.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 68,
+        "80": 110,
+        "95": 131
+      },
+      "median_rank": 67.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.007529938083863518,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2247",
+      "team_name": "Georgia State",
+      "top10_probability": 0.07527695383197498,
+      "top25_probability": 0.18798022116057034,
+      "top5_probability": 0.037645477812211475
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 82,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 67.82121705229876,
+      "interval_50": [
+        34,
+        101
+      ],
+      "interval_80": [
+        14.0,
+        123.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 68,
+        "80": 110,
+        "95": 131
+      },
+      "median_rank": 67.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0075298262988305045,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2393",
+      "team_name": "Middle Tennessee",
+      "top10_probability": 0.07527584692967099,
+      "top25_probability": 0.187977555105287,
+      "top5_probability": 0.03764492095414937
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 83,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 67.87244072420886,
+      "interval_50": [
+        34,
+        101
+      ],
+      "interval_80": [
+        14.0,
+        123.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 68,
+        "80": 110,
+        "95": 131
+      },
+      "median_rank": 67.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.007520489807048476,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "2426",
+      "team_name": "Navy",
+      "top10_probability": 0.07518338580191805,
+      "top25_probability": 0.1877547660993582,
+      "top5_probability": 0.037598409108943236
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 84,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 67.89275498696577,
+      "interval_50": [
+        34,
+        102
+      ],
+      "interval_80": [
+        14.0,
+        123.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 69,
+        "80": 110,
+        "95": 131
+      },
+      "median_rank": 67.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.007516805451043064,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "48",
+      "team_name": "Delaware",
+      "top10_probability": 0.07514689345959749,
+      "top25_probability": 0.18766679032715577,
+      "top5_probability": 0.03758005361404047
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 85,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 67.91042478353879,
+      "interval_50": [
+        34,
+        102
+      ],
+      "interval_80": [
+        14.0,
+        123.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 69,
+        "80": 110,
+        "95": 131
+      },
+      "median_rank": 67.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0075136094679749315,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "6",
+      "team_name": "South Alabama",
+      "top10_probability": 0.07511523571301047,
+      "top25_probability": 0.1875904479994395,
+      "top5_probability": 0.03756413070300401
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 86,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 67.9161646878869,
+      "interval_50": [
+        34,
+        102
+      ],
+      "interval_80": [
+        14.0,
+        123.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 69,
+        "80": 110,
+        "95": 131
+      },
+      "median_rank": 67.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.007513155405680633,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "290",
+      "team_name": "Georgia Southern",
+      "top10_probability": 0.07511054225175579,
+      "top25_probability": 0.18757749828166234,
+      "top5_probability": 0.037561830898158705
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 87,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 68.05943254419644,
+      "interval_50": [
+        34,
+        102
+      ],
+      "interval_80": [
+        14.0,
+        123.0
+      ],
+      "interval_95": [
+        4,
+        134
+      ],
+      "interval_widths": {
+        "50": 69,
+        "80": 110,
+        "95": 131
+      },
+      "median_rank": 68.0,
+      "mode_rank": 1,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.007487022672889237,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-0",
+      "team_id": "338",
+      "team_name": "Kennesaw State",
+      "top10_probability": 0.07485177976531758,
+      "top25_probability": 0.1869542701444814,
+      "top5_probability": 0.037431651565838706
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 88,
+      "eligible_evidence_count": 2,
+      "eligible_games": 2,
+      "expected_rank": 70.45797417300835,
+      "interval_50": [
+        44,
+        97
+      ],
+      "interval_80": [
+        25.0,
+        116.0
+      ],
+      "interval_95": [
+        10,
+        130
+      ],
+      "interval_widths": {
+        "50": 54,
+        "80": 92,
+        "95": 121
+      },
+      "median_rank": 71.0,
+      "mode_rank": 73,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0015816804687753276,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-1",
+      "team_id": "2439",
+      "team_name": "UNLV",
+      "top10_probability": 0.02524499955336459,
+      "top25_probability": 0.10502333185081494,
+      "top5_probability": 0.009873872193374727
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 89,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 73.30778544040949,
+      "interval_50": [
+        41,
+        107
+      ],
+      "interval_80": [
+        19.0,
+        126.0
+      ],
+      "interval_95": [
+        6,
+        135
+      ],
+      "interval_widths": {
+        "50": 67,
+        "80": 108,
+        "95": 130
+      },
+      "median_rank": 74.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0036588105877306738,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "68",
+      "team_name": "Boise State",
+      "top10_probability": 0.04623482189518406,
+      "top25_probability": 0.1417709052809393,
+      "top5_probability": 0.02058438308044078
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 90,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 73.47940615659705,
+      "interval_50": [
+        41,
+        107
+      ],
+      "interval_80": [
+        20.0,
+        126.0
+      ],
+      "interval_95": [
+        7,
+        135
+      ],
+      "interval_widths": {
+        "50": 67,
+        "80": 107,
+        "95": 129
+      },
+      "median_rank": 75.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.003579478472719822,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "2050",
+      "team_name": "Ball State",
+      "top10_probability": 0.0454609943586154,
+      "top25_probability": 0.14024642437437726,
+      "top5_probability": 0.020184803166095992
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 91,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 74.91814668931255,
+      "interval_50": [
+        43,
+        108
+      ],
+      "interval_80": [
+        21.0,
+        126.0
+      ],
+      "interval_95": [
+        7,
+        135
+      ],
+      "interval_widths": {
+        "50": 66,
+        "80": 106,
+        "95": 129
+      },
+      "median_rank": 76.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0030390942728264186,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "249",
+      "team_name": "North Texas",
+      "top10_probability": 0.0398995153595407,
+      "top25_probability": 0.12842963773199106,
+      "top5_probability": 0.017396327719586883
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 92,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 75.01037918820262,
+      "interval_50": [
+        43,
+        108
+      ],
+      "interval_80": [
+        21.0,
+        126.0
+      ],
+      "interval_95": [
+        7,
+        135
+      ],
+      "interval_widths": {
+        "50": 66,
+        "80": 106,
+        "95": 129
+      },
+      "median_rank": 77.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0029874201985006315,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "326",
+      "team_name": "Texas State",
+      "top10_probability": 0.039406431799607726,
+      "top25_probability": 0.12751031412138264,
+      "top5_probability": 0.017138201829699506
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 93,
+      "eligible_evidence_count": 2,
+      "eligible_games": 2,
+      "expected_rank": 75.82719855657876,
+      "interval_50": [
+        49,
+        104
+      ],
+      "interval_80": [
+        27.0,
+        122.0
+      ],
+      "interval_95": [
+        11,
+        133
+      ],
+      "interval_widths": {
+        "50": 56,
+        "80": 96,
+        "95": 123
+      },
+      "median_rank": 78.0,
+      "mode_rank": 94,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0013932644618225305,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-1",
+      "team_id": "52",
+      "team_name": "Florida State",
+      "top10_probability": 0.022044054515568304,
+      "top25_probability": 0.09072696945674767,
+      "top5_probability": 0.008667644785149425
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 94,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 75.94834426343063,
+      "interval_50": [
+        44,
+        109
+      ],
+      "interval_80": [
+        22.0,
+        127.0
+      ],
+      "interval_95": [
+        8,
+        136
+      ],
+      "interval_widths": {
+        "50": 66,
+        "80": 106,
+        "95": 129
+      },
+      "median_rank": 78.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.002593716683240551,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "97",
+      "team_name": "Louisville",
+      "top10_probability": 0.035537001300718206,
+      "top25_probability": 0.11996821853974869,
+      "top5_probability": 0.0151462311312241
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 95,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 76.22170907126701,
+      "interval_50": [
+        45,
+        109
+      ],
+      "interval_80": [
+        23.0,
+        127.0
+      ],
+      "interval_95": [
+        8,
+        136
+      ],
+      "interval_widths": {
+        "50": 65,
+        "80": 105,
+        "95": 129
+      },
+      "median_rank": 78.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.002601977585364089,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "2711",
+      "team_name": "Western Michigan",
+      "top10_probability": 0.0352688807459885,
+      "top25_probability": 0.11818178875537641,
+      "top5_probability": 0.015111182781853071
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 96,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 76.39564489957499,
+      "interval_50": [
+        45,
+        109
+      ],
+      "interval_80": [
+        23.0,
+        127.0
+      ],
+      "interval_95": [
+        8,
+        136
+      ],
+      "interval_widths": {
+        "50": 65,
+        "80": 105,
+        "95": 129
+      },
+      "median_rank": 78.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.002542689314333416,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "228",
+      "team_name": "Clemson",
+      "top10_probability": 0.034639288645287016,
+      "top25_probability": 0.11679190434322662,
+      "top5_probability": 0.014800757219534534
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 97,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 76.85782165906663,
+      "interval_50": [
+        46,
+        109
+      ],
+      "interval_80": [
+        23.0,
+        127.0
+      ],
+      "interval_95": [
+        9,
+        136
+      ],
+      "interval_widths": {
+        "50": 64,
+        "80": 105,
+        "95": 128
+      },
+      "median_rank": 79.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.002406792464385124,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "2638",
+      "team_name": "UTEP",
+      "top10_probability": 0.03314910372690332,
+      "top25_probability": 0.11333427825703266,
+      "top5_probability": 0.014079146302412143
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 98,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 77.0768315356726,
+      "interval_50": [
+        46,
+        110
+      ],
+      "interval_80": [
+        23.0,
+        127.0
+      ],
+      "interval_95": [
+        9,
+        136
+      ],
+      "interval_widths": {
+        "50": 65,
+        "80": 105,
+        "95": 128
+      },
+      "median_rank": 79.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0023743935979761593,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "2623",
+      "team_name": "Missouri State",
+      "top10_probability": 0.032720634476468224,
+      "top25_probability": 0.11207063675230984,
+      "top5_probability": 0.013891728803272694
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 99,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 77.30865164099795,
+      "interval_50": [
+        47,
+        110
+      ],
+      "interval_80": [
+        24.0,
+        127.0
+      ],
+      "interval_95": [
+        9,
+        136
+      ],
+      "interval_widths": {
+        "50": 64,
+        "80": 104,
+        "95": 128
+      },
+      "median_rank": 80.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0022865272901546304,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "151",
+      "team_name": "East Carolina",
+      "top10_probability": 0.0317992600622646,
+      "top25_probability": 0.11009442710004266,
+      "top5_probability": 0.01343390426555766
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 100,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 77.43149567862466,
+      "interval_50": [
+        47,
+        110
+      ],
+      "interval_80": [
+        24.0,
+        127.0
+      ],
+      "interval_95": [
+        9,
+        136
+      ],
+      "interval_widths": {
+        "50": 64,
+        "80": 104,
+        "95": 128
+      },
+      "median_rank": 80.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.002247373135623912,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "278",
+      "team_name": "Fresno State",
+      "top10_probability": 0.03136921144337379,
+      "top25_probability": 0.10911054364065133,
+      "top5_probability": 0.013225581720620334
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 101,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 77.5202986367773,
+      "interval_50": [
+        47,
+        110
+      ],
+      "interval_80": [
+        24.0,
+        127.0
+      ],
+      "interval_95": [
+        9,
+        136
+      ],
+      "interval_widths": {
+        "50": 64,
+        "80": 104,
+        "95": 128
+      },
+      "median_rank": 80.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0021920155479428706,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "275",
+      "team_name": "Wisconsin",
+      "top10_probability": 0.030939218100111725,
+      "top25_probability": 0.10879503020282152,
+      "top5_probability": 0.01296986799771806
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 102,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 77.61980715383619,
+      "interval_50": [
+        47,
+        110
+      ],
+      "interval_80": [
+        24.0,
+        127.0
+      ],
+      "interval_95": [
+        9,
+        136
+      ],
+      "interval_widths": {
+        "50": 64,
+        "80": 104,
+        "95": 128
+      },
+      "median_rank": 80.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.002245322131335883,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "2459",
+      "team_name": "Northern Illinois",
+      "top10_probability": 0.031239280074093257,
+      "top25_probability": 0.10838243707279145,
+      "top5_probability": 0.013192618979989698
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 103,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 78.14086091442896,
+      "interval_50": [
+        48,
+        110
+      ],
+      "interval_80": [
+        25.0,
+        127.0
+      ],
+      "interval_95": [
+        9,
+        136
+      ],
+      "interval_widths": {
+        "50": 63,
+        "80": 103,
+        "95": 128
+      },
+      "median_rank": 81.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0021196301906001793,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "2226",
+      "team_name": "Florida Atlantic",
+      "top10_probability": 0.02979972048724746,
+      "top25_probability": 0.10481285005939442,
+      "top5_probability": 0.012512384513639074
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 104,
+      "eligible_evidence_count": 2,
+      "eligible_games": 2,
+      "expected_rank": 78.70128045535897,
+      "interval_50": [
+        50,
+        110
+      ],
+      "interval_80": [
+        27.0,
+        127.0
+      ],
+      "interval_95": [
+        10,
+        135
+      ],
+      "interval_widths": {
+        "50": 61,
+        "80": 101,
+        "95": 126
+      },
+      "median_rank": 81.0,
+      "mode_rank": 108,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0017103750996525946,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-1",
+      "team_id": "166",
+      "team_name": "New Mexico State",
+      "top10_probability": 0.025146948973524364,
+      "top25_probability": 0.09389853010035744,
+      "top5_probability": 0.010298886561995648
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 105,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 78.78878972703428,
+      "interval_50": [
+        49,
+        111
+      ],
+      "interval_80": [
+        25.0,
+        128.0
+      ],
+      "interval_95": [
+        10,
+        136
+      ],
+      "interval_widths": {
+        "50": 63,
+        "80": 104,
+        "95": 127
+      },
+      "median_rank": 82.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.001993574023090299,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "265",
+      "team_name": "Washington State",
+      "top10_probability": 0.028284600229200256,
+      "top25_probability": 0.10078037504210467,
+      "top5_probability": 0.011815553039781997
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 106,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 78.8942259177855,
+      "interval_50": [
+        49,
+        111
+      ],
+      "interval_80": [
+        25.0,
+        128.0
+      ],
+      "interval_95": [
+        10,
+        136
+      ],
+      "interval_widths": {
+        "50": 63,
+        "80": 104,
+        "95": 127
+      },
+      "median_rank": 82.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.001977094066306456,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "152",
+      "team_name": "NC State",
+      "top10_probability": 0.028075680717715643,
+      "top25_probability": 0.10018276463262049,
+      "top5_probability": 0.011722256226233458
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 107,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 78.97630681196483,
+      "interval_50": [
+        49,
+        111
+      ],
+      "interval_80": [
+        26.0,
+        128.0
+      ],
+      "interval_95": [
+        10,
+        136
+      ],
+      "interval_widths": {
+        "50": 63,
+        "80": 103,
+        "95": 127
+      },
+      "median_rank": 82.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0019696993986008174,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "276",
+      "team_name": "Marshall",
+      "top10_probability": 0.02796324089480077,
+      "top25_probability": 0.09979414299815506,
+      "top5_probability": 0.011676590754681403
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 108,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 80.18533659715551,
+      "interval_50": [
+        51,
+        112
+      ],
+      "interval_80": [
+        27.0,
+        128.0
+      ],
+      "interval_95": [
+        11,
+        136
+      ],
+      "interval_widths": {
+        "50": 62,
+        "80": 102,
+        "95": 126
+      },
+      "median_rank": 83.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0016476267253114434,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "239",
+      "team_name": "Baylor",
+      "top10_probability": 0.024393864440712322,
+      "top25_probability": 0.09164973714960507,
+      "top5_probability": 0.009956106044348415
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 109,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 80.3663245208589,
+      "interval_50": [
+        51,
+        112
+      ],
+      "interval_80": [
+        27.0,
+        128.0
+      ],
+      "interval_95": [
+        11,
+        136
+      ],
+      "interval_widths": {
+        "50": 62,
+        "80": 102,
+        "95": 126
+      },
+      "median_rank": 84.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0017226280689492085,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "2309",
+      "team_name": "Kent State",
+      "top10_probability": 0.024941675758806948,
+      "top25_probability": 0.09153287285332773,
+      "top5_probability": 0.01030056089881982
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 110,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 80.37209321666126,
+      "interval_50": [
+        51,
+        112
+      ],
+      "interval_80": [
+        27.0,
+        128.0
+      ],
+      "interval_95": [
+        11,
+        136
+      ],
+      "interval_widths": {
+        "50": 62,
+        "80": 102,
+        "95": 126
+      },
+      "median_rank": 84.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.001715902109361951,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "2229",
+      "team_name": "Florida International",
+      "top10_probability": 0.02487462922044828,
+      "top25_probability": 0.0914094383982584,
+      "top5_probability": 0.010266147631188657
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 111,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 80.84530955458199,
+      "interval_50": [
+        52,
+        113
+      ],
+      "interval_80": [
+        28.0,
+        128.0
+      ],
+      "interval_95": [
+        11,
+        136
+      ],
+      "interval_widths": {
+        "50": 62,
+        "80": 101,
+        "95": 126
+      },
+      "median_rank": 84.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0016334454223420217,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "204",
+      "team_name": "Oregon State",
+      "top10_probability": 0.02385974391684828,
+      "top25_probability": 0.08861281992255272,
+      "top5_probability": 0.009805570348067151
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 112,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 80.8502394596887,
+      "interval_50": [
+        52,
+        113
+      ],
+      "interval_80": [
+        28.0,
+        128.0
+      ],
+      "interval_95": [
+        11,
+        136
+      ],
+      "interval_widths": {
+        "50": 62,
+        "80": 101,
+        "95": 126
+      },
+      "median_rank": 84.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0016319696316101657,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "103",
+      "team_name": "Boston College",
+      "top10_probability": 0.02384127828886594,
+      "top25_probability": 0.08856399057174558,
+      "top5_probability": 0.009797226581343787
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 113,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 80.97574462829728,
+      "interval_50": [
+        52,
+        113
+      ],
+      "interval_80": [
+        28.0,
+        128.0
+      ],
+      "interval_95": [
+        11,
+        136
+      ],
+      "interval_widths": {
+        "50": 62,
+        "80": 101,
+        "95": 126
+      },
+      "median_rank": 84.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.001609448352443655,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "195",
+      "team_name": "Ohio",
+      "top10_probability": 0.02356704904448661,
+      "top25_probability": 0.08781805698198306,
+      "top5_probability": 0.00967204630276537
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 114,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 81.1924458115752,
+      "interval_50": [
+        52,
+        113
+      ],
+      "interval_80": [
+        28.0,
+        128.0
+      ],
+      "interval_95": [
+        11,
+        136
+      ],
+      "interval_widths": {
+        "50": 62,
+        "80": 101,
+        "95": 126
+      },
+      "median_rank": 85.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.001604873202336992,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "5",
+      "team_name": "UAB",
+      "top10_probability": 0.023428910670728366,
+      "top25_probability": 0.08710448038288467,
+      "top5_probability": 0.009630247550585433
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 115,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 81.9735051480157,
+      "interval_50": [
+        53,
+        113
+      ],
+      "interval_80": [
+        29.0,
+        129.0
+      ],
+      "interval_95": [
+        11,
+        136
+      ],
+      "interval_widths": {
+        "50": 61,
+        "80": 101,
+        "95": 126
+      },
+      "median_rank": 86.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0014919529249870398,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "2655",
+      "team_name": "Tulane",
+      "top10_probability": 0.021982174121558673,
+      "top25_probability": 0.08288586265850802,
+      "top5_probability": 0.008988220677557491
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 116,
+      "eligible_evidence_count": 2,
+      "eligible_games": 2,
+      "expected_rank": 81.98713956018543,
+      "interval_50": [
+        54,
+        113
+      ],
+      "interval_80": [
+        30.0,
+        128.0
+      ],
+      "interval_95": [
+        12,
+        136
+      ],
+      "interval_widths": {
+        "50": 60,
+        "80": 99,
+        "95": 125
+      },
+      "median_rank": 86.0,
+      "mode_rank": 123,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0014334050900001063,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-1",
+      "team_id": "55",
+      "team_name": "Jacksonville State",
+      "top10_probability": 0.02106020684502478,
+      "top25_probability": 0.07976836720168066,
+      "top5_probability": 0.00861875186478744
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 117,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 82.67390064677039,
+      "interval_50": [
+        54,
+        114
+      ],
+      "interval_80": [
+        30.0,
+        129.0
+      ],
+      "interval_95": [
+        12,
+        136
+      ],
+      "interval_widths": {
+        "50": 61,
+        "80": 100,
+        "95": 125
+      },
+      "median_rank": 87.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0013448568430258492,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "2032",
+      "team_name": "Arkansas State",
+      "top10_probability": 0.02020142810972935,
+      "top25_probability": 0.07814713450165994,
+      "top5_probability": 0.008171986022229518
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 118,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 83.34900469300449,
+      "interval_50": [
+        55,
+        114
+      ],
+      "interval_80": [
+        30.0,
+        129.0
+      ],
+      "interval_95": [
+        12,
+        136
+      ],
+      "interval_widths": {
+        "50": 60,
+        "80": 100,
+        "95": 125
+      },
+      "median_rank": 87.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0013068799627101988,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "193",
+      "team_name": "Miami (OH)",
+      "top10_probability": 0.019563469643662693,
+      "top25_probability": 0.07565597852181215,
+      "top5_probability": 0.007926433998531617
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 119,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 83.462166389972,
+      "interval_50": [
+        55,
+        115
+      ],
+      "interval_80": [
+        31.0,
+        129.0
+      ],
+      "interval_95": [
+        12,
+        136
+      ],
+      "interval_widths": {
+        "50": 61,
+        "80": 99,
+        "95": 125
+      },
+      "median_rank": 88.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0013021631716025608,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "2335",
+      "team_name": "Liberty",
+      "top10_probability": 0.019472622438362203,
+      "top25_probability": 0.07526605958124885,
+      "top5_probability": 0.007893643361146176
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 120,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 83.99981844008536,
+      "interval_50": [
+        56,
+        115
+      ],
+      "interval_80": [
+        31.0,
+        129.0
+      ],
+      "interval_95": [
+        13,
+        136
+      ],
+      "interval_widths": {
+        "50": 60,
+        "80": 99,
+        "95": 124
+      },
+      "median_rank": 88.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0012403105736320439,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "2433",
+      "team_name": "UL Monroe",
+      "top10_probability": 0.01863441643061,
+      "top25_probability": 0.07264078926295518,
+      "top5_probability": 0.007532914626052618
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 121,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 85.14020433686802,
+      "interval_50": [
+        58,
+        116
+      ],
+      "interval_80": [
+        33.0,
+        130.0
+      ],
+      "interval_95": [
+        14,
+        136
+      ],
+      "interval_widths": {
+        "50": 59,
+        "80": 98,
+        "95": 123
+      },
+      "median_rank": 90.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0011358958351641347,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "324",
+      "team_name": "Coastal Carolina",
+      "top10_probability": 0.01713714373491655,
+      "top25_probability": 0.0676231881850095,
+      "top5_probability": 0.006907870606400697
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 122,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 85.21720213226376,
+      "interval_50": [
+        58,
+        116
+      ],
+      "interval_80": [
+        33.0,
+        130.0
+      ],
+      "interval_95": [
+        14,
+        136
+      ],
+      "interval_widths": {
+        "50": 59,
+        "80": 98,
+        "95": 123
+      },
+      "median_rank": 90.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.001135343862301431,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "2006",
+      "team_name": "Akron",
+      "top10_probability": 0.01710861070707493,
+      "top25_probability": 0.06744418257752281,
+      "top5_probability": 0.006900574399718249
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 123,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 85.36493307128266,
+      "interval_50": [
+        58,
+        116
+      ],
+      "interval_80": [
+        33.0,
+        130.0
+      ],
+      "interval_95": [
+        14,
+        136
+      ],
+      "interval_widths": {
+        "50": 59,
+        "80": 98,
+        "95": 123
+      },
+      "median_rank": 90.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.001121239810456611,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "2649",
+      "team_name": "Toledo",
+      "top10_probability": 0.01690929459527428,
+      "top25_probability": 0.06678657633556746,
+      "top5_probability": 0.006816721571639541
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 124,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 86.40849986802002,
+      "interval_50": [
+        60,
+        117
+      ],
+      "interval_80": [
+        34.0,
+        130.0
+      ],
+      "interval_95": [
+        15,
+        136
+      ],
+      "interval_widths": {
+        "50": 58,
+        "80": 97,
+        "95": 122
+      },
+      "median_rank": 91.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0008870227740081851,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "25",
+      "team_name": "California",
+      "top10_probability": 0.014315330532071957,
+      "top25_probability": 0.06121293417537038,
+      "top5_probability": 0.005562578894485663
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 125,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 89.6146751624396,
+      "interval_50": [
+        64,
+        119
+      ],
+      "interval_80": [
+        38.0,
+        131.0
+      ],
+      "interval_95": [
+        16,
+        137
+      ],
+      "interval_widths": {
+        "50": 56,
+        "80": 94,
+        "95": 122
+      },
+      "median_rank": 96.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.00085616471936712,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "197",
+      "team_name": "Oklahoma State",
+      "top10_probability": 0.012764220968757988,
+      "top25_probability": 0.05143750598867736,
+      "top5_probability": 0.0051637153833523925
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 126,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 89.66459076993763,
+      "interval_50": [
+        64,
+        119
+      ],
+      "interval_80": [
+        38.0,
+        131.0
+      ],
+      "interval_95": [
+        16,
+        137
+      ],
+      "interval_widths": {
+        "50": 56,
+        "80": 94,
+        "95": 122
+      },
+      "median_rank": 96.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0008606019665932166,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "2534",
+      "team_name": "Sam Houston",
+      "top10_probability": 0.012818234895777573,
+      "top25_probability": 0.05155499125241523,
+      "top5_probability": 0.0051885542154587105
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 127,
+      "eligible_evidence_count": 2,
+      "eligible_games": 2,
+      "expected_rank": 89.86707978586831,
+      "interval_50": [
+        67,
+        117
+      ],
+      "interval_80": [
+        42.0,
+        129.0
+      ],
+      "interval_95": [
+        19,
+        136
+      ],
+      "interval_widths": {
+        "50": 51,
+        "80": 88,
+        "95": 118
+      },
+      "median_rank": 95.0,
+      "mode_rank": 120,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0006596515554671017,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-1",
+      "team_id": "2199",
+      "team_name": "Eastern Michigan",
+      "top10_probability": 0.009606804484139938,
+      "top25_probability": 0.04009632270750064,
+      "top5_probability": 0.003916161226415819
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 128,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 89.88909731219448,
+      "interval_50": [
+        65,
+        119
+      ],
+      "interval_80": [
+        38.0,
+        131.0
+      ],
+      "interval_95": [
+        17,
+        137
+      ],
+      "interval_widths": {
+        "50": 55,
+        "80": 94,
+        "95": 121
+      },
+      "median_rank": 96.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0007469855372748119,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "2628",
+      "team_name": "TCU",
+      "top10_probability": 0.011681795222673019,
+      "top25_probability": 0.04946761330332782,
+      "top5_probability": 0.004607040335617126
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 129,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 90.04346872068164,
+      "interval_50": [
+        65,
+        120
+      ],
+      "interval_80": [
+        38.0,
+        131.0
+      ],
+      "interval_95": [
+        16,
+        137
+      ],
+      "interval_widths": {
+        "50": 56,
+        "80": 94,
+        "95": 122
+      },
+      "median_rank": 96.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.000847577945809116,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "2117",
+      "team_name": "Central Michigan",
+      "top10_probability": 0.012591468998369736,
+      "top25_probability": 0.05059595993870444,
+      "top5_probability": 0.005103055793614211
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 130,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 90.11222392693371,
+      "interval_50": [
+        65,
+        119
+      ],
+      "interval_80": [
+        39.0,
+        131.0
+      ],
+      "interval_95": [
+        17,
+        137
+      ],
+      "interval_widths": {
+        "50": 55,
+        "80": 93,
+        "95": 121
+      },
+      "median_rank": 96.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0006677975301050622,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "59",
+      "team_name": "Georgia Tech",
+      "top10_probability": 0.010877628663830114,
+      "top25_probability": 0.04811953600848369,
+      "top5_probability": 0.004197357198438964
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 131,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 93.88643390351092,
+      "interval_50": [
+        71,
+        122
+      ],
+      "interval_80": [
+        43.0,
+        132.0
+      ],
+      "interval_95": [
+        19,
+        137
+      ],
+      "interval_widths": {
+        "50": 52,
+        "80": 90,
+        "95": 119
+      },
+      "median_rank": 101.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0006964539845166614,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "2751",
+      "team_name": "Wyoming",
+      "top10_probability": 0.01006026130854971,
+      "top25_probability": 0.04029140441157875,
+      "top5_probability": 0.004129894811025701
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 132,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 94.39488547725469,
+      "interval_50": [
+        72,
+        123
+      ],
+      "interval_80": [
+        44.0,
+        133.0
+      ],
+      "interval_95": [
+        19,
+        137
+      ],
+      "interval_widths": {
+        "50": 52,
+        "80": 90,
+        "95": 119
+      },
+      "median_rank": 102.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0006770807750607531,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "98",
+      "team_name": "Western Kentucky",
+      "top10_probability": 0.009733254334861448,
+      "top25_probability": 0.038949544955971006,
+      "top5_probability": 0.004004664993585394
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 133,
+      "eligible_evidence_count": 2,
+      "eligible_games": 2,
+      "expected_rank": 96.23728539741984,
+      "interval_50": [
+        75,
+        123
+      ],
+      "interval_80": [
+        47.0,
+        133.0
+      ],
+      "interval_95": [
+        21,
+        137
+      ],
+      "interval_widths": {
+        "50": 49,
+        "80": 87,
+        "95": 117
+      },
+      "median_rank": 104.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0006129692327097456,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "1-1",
+      "team_id": "16",
+      "team_name": "Sacramento State",
+      "top10_probability": 0.008483416185879833,
+      "top25_probability": 0.03330589090535262,
+      "top5_probability": 0.0035559602952908278
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 134,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 106.1970873675713,
+      "interval_50": [
+        91,
+        129
+      ],
+      "interval_80": [
+        63.0,
+        135.0
+      ],
+      "interval_95": [
+        30,
+        138
+      ],
+      "interval_widths": {
+        "50": 39,
+        "80": 73,
+        "95": 109
+      },
+      "median_rank": 115.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.00034392038496564763,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "189",
+      "team_name": "Bowling Green",
+      "top10_probability": 0.004199634073821792,
+      "top25_probability": 0.01743979442301086,
+      "top5_probability": 0.0018634119793378226
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 135,
+      "eligible_evidence_count": 2,
+      "eligible_games": 2,
+      "expected_rank": 106.53672649402279,
+      "interval_50": [
+        91,
+        128
+      ],
+      "interval_80": [
+        66.0,
+        135.0
+      ],
+      "interval_95": [
+        40,
+        138
+      ],
+      "interval_widths": {
+        "50": 38,
+        "80": 70,
+        "95": 99
+      },
+      "median_rank": 114.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 3.848069782624497e-05,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-2",
+      "team_id": "62",
+      "team_name": "Hawai'i",
+      "top10_probability": 0.0009516495910661761,
+      "top25_probability": 0.0075715276836152545,
+      "top5_probability": 0.0002906415965169597
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 136,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 106.69520568755097,
+      "interval_50": [
+        92,
+        129
+      ],
+      "interval_80": [
+        64.0,
+        135.0
+      ],
+      "interval_95": [
+        30,
+        138
+      ],
+      "interval_widths": {
+        "50": 38,
+        "80": 72,
+        "95": 109
+      },
+      "median_rank": 115.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.00033417946713024533,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "328",
+      "team_name": "Utah State",
+      "top10_probability": 0.0040785148028568054,
+      "top25_probability": 0.016941842806242863,
+      "top5_probability": 0.001810147636430395
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 137,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 110.16085019634411,
+      "interval_50": [
+        98,
+        131
+      ],
+      "interval_80": [
+        70.0,
+        136.0
+      ],
+      "interval_95": [
+        34,
+        138
+      ],
+      "interval_widths": {
+        "50": 34,
+        "80": 67,
+        "95": 105
+      },
+      "median_rank": 119.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.0002725313017305521,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "2429",
+      "team_name": "Charlotte",
+      "top10_probability": 0.00330476001073485,
+      "top25_probability": 0.01371152180621663,
+      "top5_probability": 0.0014716367840643945
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 138,
+      "eligible_evidence_count": 1,
+      "eligible_games": 1,
+      "expected_rank": 110.54867728692605,
+      "interval_50": [
+        97,
+        132
+      ],
+      "interval_80": [
+        68.0,
+        136.0
+      ],
+      "interval_95": [
+        35,
+        138
+      ],
+      "interval_widths": {
+        "50": 36,
+        "80": 69,
+        "95": 104
+      },
+      "median_rank": 121.0,
+      "mode_rank": 138,
+      "previous_official_rank": null,
+      "rank_1_probability": 0.000290090889574792,
+      "rank_change": null,
+      "rank_change_accessible": "No earlier official ranking baseline",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "no_comparison",
+      "rated": true,
+      "record": "0-1",
+      "team_id": "164",
+      "team_name": "Rutgers",
+      "top10_probability": 0.0038018178985752622,
+      "top25_probability": 0.014263052645364382,
+      "top5_probability": 0.0016388176984478485
+    }
+  ],
+  "rated_count": 138,
+  "requested_cutoff": "2026-09-08T11:43:00.275833+00:00",
+  "schema_version": "1.0",
+  "season": 2026,
+  "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-db-repair-performance-quality-of-record",
+  "snapshot_type": "weekly",
+  "source_context_snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-db-repair",
+  "source_retrieved_at": "2026-09-08T11:43:00.275833+00:00",
+  "team_seasons_path": "data/team-seasons/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-db-repair-performance-quality-of-record.json",
+  "unrated_count": 0
+}

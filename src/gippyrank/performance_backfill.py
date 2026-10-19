@@ -134,6 +134,10 @@ def backfill_performance_variants(
                         },
                     }
                 )
+                if "quality_of_record_evidence" in record.metadata:
+                    publications[-1]["quality_of_record_evidence"] = record.metadata[
+                        "quality_of_record_evidence"
+                    ]
                 copies.extend(candidate_copies)
                 additions.extend(candidate_additions)
             except (ValueError, KeyError, TypeError, OSError, RuntimeError) as error:

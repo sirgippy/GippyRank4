@@ -2715,3 +2715,6 @@ def test_every_historical_performance_slot_is_backfilled_or_explicitly_blocked(
     assert len(records) == audit["publication_count"]
     assert len(blocked) == audit["blocked_publication_count"]
     assert len(eligible_slots) == audit["eligible_publication_count"]
+    assert audit["status"] == "complete"
+    assert not blocked
+    assert len(records) == len(eligible_slots) == 17

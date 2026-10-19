@@ -277,7 +277,11 @@ function updateSnapshotSummary(entry, snapshot) {
     : `No earlier official ${familyLabel()} baseline; movement is not shown.`;
   $("#snapshot-comparison").textContent = baseline;
   $("#section-context").textContent = `FBS rankings · sorted by expected rank · ${baseline}`;
-  const evidence = current ? `Effective cutoff: ${formatTimestamp(snapshot.effective_cutoff)} · ${snapshot.included_game_count} eligible games included · ${snapshot.excluded_lower_division_games ?? 0} lower-division games excluded.${state.family === "performance" ? ` ${snapshot.rated_count} rated, ${snapshot.unrated_count} NR.` : ""}` : `Snapshot generated ${formatTimestamp(snapshot.generation_timestamp)} · 0 eligible games included.`;
+  const qorEvidence = snapshot.quality_of_record_evidence;
+  const gameEvidence = qorEvidence
+    ? `${qorEvidence.source_game_count} frozen source games · ${qorEvidence.inference_game_count} games used for Quality of Record; malformed Campbell–Western Carolina 0–0 excluded`
+    : `${snapshot.included_game_count} eligible games included`;
+  const evidence = current ? `Effective cutoff: ${formatTimestamp(snapshot.effective_cutoff)} · ${gameEvidence} · ${snapshot.excluded_lower_division_games ?? 0} lower-division games excluded.${state.family === "performance" ? ` ${snapshot.rated_count} rated, ${snapshot.unrated_count} NR.` : ""}` : `Snapshot generated ${formatTimestamp(snapshot.generation_timestamp)} · 0 eligible games included.`;
   $("#snapshot-evidence").textContent = state.notice ? `${evidence} ${state.notice}` : evidence;
   updateBallotExport(entry, snapshot);
 }

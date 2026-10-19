@@ -14,6 +14,7 @@ from typing import Any
 import numpy as np
 
 from gippyrank.artifact_hashes import (
+    INCLUDED_GAME_FIELDS,
     included_game_rows_sha256,
     posterior_pmfs_sha256,
     stable_values_sha256,
@@ -51,6 +52,11 @@ from gippyrank.posterior.snapshots import (
     sha256,
 )
 from gippyrank.quality_of_record import infer_quality_of_record
+from gippyrank.quality_of_record_evidence import (
+    INFERENCE_GAMES_FILE,
+    quality_of_record_evidence,
+    validate_quality_of_record_evidence,
+)
 
 QUALITY_OF_RECORD_VARIANT = "quality_of_record"
 QUALITY_OF_RECORD_EVIDENCE_MODE = "win_loss"
@@ -195,6 +201,35 @@ def validate_quality_of_record_against_context(
         raise PerformanceSnapshotValidationError(
             "Quality of Record game artifact mismatch"
         )
+    try:
+        used_rows, declaration = validate_quality_of_record_evidence(
+            source,
+            source_rows,
+            output,
+            source_metadata_sha256=sha256(context.directory / "metadata.json"),
+        )
+    except ValueError as error:
+        raise PerformanceSnapshotValidationError(str(error)) from error
+    inference_path = quality_of_record.directory / INFERENCE_GAMES_FILE
+    if declaration is not None:
+        if (
+            not inference_path.is_file()
+            or _read_included_game_rows(inference_path) != used_rows
+        ):
+            raise PerformanceSnapshotValidationError(
+                "Quality of Record inference game artifact mismatch"
+            )
+    elif inference_path.exists():
+        raise PerformanceSnapshotValidationError(
+            "Undeclared Quality of Record inference game artifact"
+        )
+    diagnostics = _read_json(quality_of_record.directory / "diagnostics.json")
+    if diagnostics.get("quality_of_record_evidence") != declaration or diagnostics.get(
+        "raw_game_factor_count"
+    ) != len(used_rows):
+        raise PerformanceSnapshotValidationError(
+            "Quality of Record inference diagnostics mismatch"
+        )
     pmfs = _pmfs(quality_of_record.directory / "posterior_pmfs.csv")
     if posterior_pmfs_sha256(pmfs) != output.get("posterior_pmfs_sha256"):
         raise PerformanceSnapshotValidationError(
@@ -287,9 +322,16 @@ def build_quality_of_record_snapshot(
     if configuration["implementation"] != "deterministic_damped_loopy_sum_product":
         raise PerformanceSnapshotValidationError("Unsupported Context inference engine")
     likelihood = _load_source_likelihood(source, root)
+    used_rows, evidence_declaration = quality_of_record_evidence(
+        source,
+        included_rows,
+        source_metadata_sha256=sha256(source_dir / "metadata.json"),
+    )
+    used_ids = {row["id"] for row in used_rows}
+    inference_games = [game for game in games if game.game_id in used_ids]
     result = infer_quality_of_record(
         teams,
-        games,
+        inference_games,
         likelihood,
         max_iterations=int(configuration["max_iterations"]),
         tolerance=float(configuration["tolerance"]),
@@ -421,7 +463,19 @@ def build_quality_of_record_snapshot(
         "unique_pair_factor_count": result.binary_context_posterior.unique_pair_factor_count,
         "runtime_seconds": time.perf_counter() - started,
     }
+    if evidence_declaration is not None:
+        metadata["quality_of_record_evidence"] = evidence_declaration
+        diagnostics["quality_of_record_evidence"] = evidence_declaration
     directory.mkdir(parents=True, exist_ok=True)
+    if evidence_declaration is not None:
+        with (directory / INFERENCE_GAMES_FILE).open(
+            "w", newline="", encoding="utf-8"
+        ) as handle:
+            writer = csv.DictWriter(
+                handle, fieldnames=INCLUDED_GAME_FIELDS, lineterminator="\n"
+            )
+            writer.writeheader()
+            writer.writerows(used_rows)
     (directory / "metadata.json").write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )

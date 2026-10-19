@@ -74,9 +74,39 @@ Quality of Play companion is generated once, and existing results are retained.
 If some publications lack binary outcomes, `--allow-blocked` registers all
 reproducible companions and records every remaining blocker in the audit
 inventory. Without that option, any blocker prevents configuration changes.
-Neither mode invents a winner or removes a game. The retained Sep. 6, 7, and 8
-publications contain game 401866625 (Campbell–Western Carolina) as completed at
-0–0 and therefore require cutoff-era winner evidence before binary replay.
+Neither mode invents a winner or silently removes evidence. All 17 eligible
+2026 publications now have both variants, with zero blocked publications.
+
+### Temporary Campbell exception
+
+Only the frozen September 6 Context 1.2, September 7 Context 1.2, and official
+September 8 Context 1.4 DB-repair sources exclude game `401866625` from QoR
+binary inference. This is the malformed original September 5 Campbell–Western
+Carolina fixture, marked completed at 0–0. The exception pins the exact source
+snapshot IDs, prior versions, metadata hashes, and complete source-row hashes,
+and matches season, game ID, team IDs/names, completed status, and 0–0 score.
+Any source change or additional winnerless game fails closed.
+
+The legitimate rescheduled `401917058` result (Campbell 28–19 Western Carolina)
+is retained for September 7 and official Week 2. It is absent from the September
+6 frozen evidence and is not added there.
+
+`included_games.csv` and the ordinary `included_game_*` metadata retain the
+**complete frozen Context source**, including the malformed row. Affected QoR
+bundles also write `inference_games.csv` with the exact filtered input. Their
+`quality_of_record_evidence` declaration appears in metadata, diagnostics, the
+backfill audit, site snapshots/manifest, and public API publication metadata.
+It records the exclusion and its source-row hash, full source count/hashes,
+and actual inference count, ordered IDs, and row/ID hashes. Validation requires
+the exact declared exclusion, both CSVs, and the matching factor count.
+Unaffected QoR artifacts retain their original full-source evidence contract.
+
+This is a temporary QoR-only exception, not a CFBD ingestion fix. Existing
+Context, History, and Quality of Play snapshots, source CSVs, PMFs, and movement
+baselines are unchanged. Remove the exception when the separate historical
+repair regenerates the affected lineage from corrected evidence. That broader
+data-integrity repair, explicit-snapshot fallback, and publication retention
+policy remain outside PR #226.
 
 The deterministic audit inventory is
 `data/processed/quality_of_record_backfill/manifest.json`. It records cutoffs,
