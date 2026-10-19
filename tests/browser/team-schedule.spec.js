@@ -58,7 +58,7 @@ test("keeps current Georgia results, checkpoint movement, and future predictions
 test("shows Context-anchored retrospective expectations on a Performance page", async ({ page }) => {
   await page.goto(`/team.html?team=61&season=2026&family=performance&snapshot=${currentPerformance}`);
   await expect(page.locator("#schedule-list .game-card").first()).toBeVisible();
-  await expect(page.locator("#team-page-meta")).toContainText("Performance");
+  await expect(page.locator("#team-page-meta")).toContainText("Quality of Play");
   const completed = page.locator('.game-card[data-game-id="401856700"]');
   await expect(completed).toContainText("W 41–13");
   await expect(completed.locator(".game-retrospective")).toContainText("Expected Georgia by 15.1");

@@ -189,7 +189,7 @@ def test_team_pages_have_snapshot_safe_preseason_movement_surfaces() -> None:
         "preseason_inputs",
         "checkpointPanel",
         "adjacent points are not attributed to one specific game",
-        "Performance has no preseason starting point",
+        "begins after eligible games have been played",
     ):
         assert phrase in team_source
     assert "build-time resolved" in distribution_docs

@@ -97,3 +97,13 @@ compressed arrays.
 The manifest's `future_prediction_bytes` includes the display representation,
 and `payload_stats.initial_rankings_page_bytes` remains the ranking snapshot
 total, so the rankings page does not load these data.
+
+## Performance variants
+
+Performance manifest and snapshot entries expose `performance_variant` as
+`quality_of_play` or `quality_of_record`, plus `evidence_mode` (`margin` or
+`win_loss`). Legacy Performance entries default to Quality of Play. The family
+remains `performance`; variant joins publication identity and official movement
+comparison keys. Predictive entries continue using `prior_family`. Rank PMF and
+summary schemas are identical for both variants. Existing Performance IDs and
+URLs remain valid; browser links may add `variant=quality_of_record`.

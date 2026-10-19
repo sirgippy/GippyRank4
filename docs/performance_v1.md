@@ -221,3 +221,11 @@ leakage and audit review; the inventory records their bytes, row counts,
 purpose, and retention role. Repeating the build with the same inputs produces
 the same substantive PMFs, rankings, validation rows, and hashes; wall-clock
 runtime is reported separately because it is hardware dependent.
+
+## Performance variants
+
+This original margin-based result is now named **Quality of Play**. Existing
+PMFs, rankings, and snapshot IDs are preserved, and legacy metadata without a
+`performance_variant` is interpreted as `quality_of_play`. The second variant,
+[Quality of Record](quality_of_record.md), re-infers the complete network with
+binary win/loss factors before applying the same focal-prior stripping.

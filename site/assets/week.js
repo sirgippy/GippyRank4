@@ -1,3 +1,4 @@
+import { variantFor, requestedVariant } from "./ranking-variants.js";
 import { percentage } from "./probability.js";
 
 const $ = (selector) => document.querySelector(selector);
@@ -7,6 +8,7 @@ const state = {
   family: params.get("family") === "performance" ? "performance" : "predictive",
   season: Number(params.get("season")) || null,
   slot: params.get("snapshot") || params.get("slot") || null,
+  variant: requestedVariant(params),
   prior: params.get("prior") === "history" ? "history" : "context",
   view: params.get("view") === "marquee" ? "marquee" : "all",
   weekKey: params.get("week") || null,
@@ -82,7 +84,7 @@ function labelFor(entry) {
 }
 
 function choices() {
-  return state.manifest.snapshots.filter((entry) => entry.season === state.season && entry.ranking_family === state.family);
+  return state.manifest.snapshots.filter((entry) => entry.season === state.season && entry.ranking_family === state.family && (state.family !== "performance" || variantFor(entry) === state.variant));
 }
 
 function matchesContext(entry) {
@@ -113,6 +115,7 @@ function contextParams(entry, week = null) {
   next.set("snapshot", entry.snapshot_id);
   next.set("family", state.family);
   if (state.family === "predictive") next.set("prior", entry.prior_family);
+  else next.set("variant", state.variant);
   if (week !== null && week !== undefined) next.set("week", String(week));
   if (state.view === "marquee") next.set("view", "marquee");
   return next;
@@ -378,6 +381,15 @@ function populateControls(entry) {
   const performance = state.family === "performance";
   $("#prior-select").hidden = performance;
   $("#prior-select").disabled = performance;
+  $("#performance-variant-select").hidden = !performance;
+  $("#performance-variant-select").disabled = !performance;
+  document.querySelectorAll("[data-variant]").forEach((button) => {
+    const available = state.manifest.snapshots.some((item) => item.season === state.season && item.publication_slot === entry?.publication_slot && item.ranking_family === "performance" && variantFor(item) === button.dataset.variant);
+    button.disabled = !available;
+    button.title = available ? "" : "This variant is unavailable for the selected publication.";
+    button.classList.toggle("is-active", button.dataset.variant === state.variant);
+    button.setAttribute("aria-pressed", String(button.dataset.variant === state.variant));
+  });
   document.querySelectorAll("[data-prior]").forEach((button) => { button.disabled = performance; button.classList.toggle("is-active", button.dataset.prior === state.prior); });
   const priorCopy = priorExplanations[state.prior] ?? priorExplanations.context;
   $("#prior-explanation").textContent = priorCopy.short;
@@ -475,3 +487,5 @@ $("#next-week").addEventListener("click", () => { const options = [...$("#week-s
 document.querySelectorAll("[data-view]").forEach((button) => button.addEventListener("click", () => { state.view = button.dataset.view; const next = new URLSearchParams(params); if (state.view === "marquee") next.set("view", "marquee"); else next.delete("view"); navigateTo(next); }));
 
 load().catch((error) => { $("#schedule-status").textContent = error.message; $("#schedule-status").className = "team-page-status team-page-error"; });
+
+document.querySelectorAll("[data-variant]").forEach((button) => button.addEventListener("click", () => { const next = new URLSearchParams(params); next.set("variant", button.dataset.variant); next.set("snapshot", selectedEntry()?.publication_slot ?? state.slot); navigateTo(next); }));

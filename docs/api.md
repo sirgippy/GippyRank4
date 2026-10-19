@@ -39,8 +39,16 @@ and preserve the distinction between:
 
 - Predictive Context: current predictive ranking using the Context prior.
 - Predictive History: current predictive ranking using the History prior.
-- Performance: observed-game performance ranking, Context-anchored as declared
-  by the publication metadata.
+- Performance / Quality of Play: observed scoring-margin evidence, with
+  `performance_variant: quality_of_play`.
+- Performance / Quality of Record: observed wins and losses, with
+  `performance_variant: quality_of_record` and `evidence_mode: win_loss`.
+
+Both Performance variants are Context-anchored with the focal prior stripped.
+An older Performance artifact without a variant means Quality of Play; its
+snapshot ID and resources remain valid. Select the desired variant from the
+inventory and use its exact snapshot ID in resource paths. Convenience selectors
+with `family=performance` and no variant retain Quality of Play semantics.
 
 Official and temporary publications are both explicit in the inventory.
 Historical snapshots remain bounded by their effective cutoff; later scores,

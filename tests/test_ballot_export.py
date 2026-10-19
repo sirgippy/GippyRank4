@@ -56,9 +56,9 @@ def test_functional_ballot_export_matches_published_ranking(family: str) -> None
         assert "2026 Week 2 Predictive Context" in ballot["overall_rationale"]
         assert all("GippyRank expected rank:" in entry["rationale"] for entry in entries)
     else:
-        assert "2026 Week 2 Performance" in ballot["overall_rationale"]
+        assert "2026 Week 2 Quality of Play" in ballot["overall_rationale"]
         assert all(
-            "GippyRank Performance-equivalent expected rank:" in entry["rationale"]
+            "GippyRank Quality of Play expected rank:" in entry["rationale"]
             for entry in entries
         )
 
@@ -104,7 +104,7 @@ def test_rankings_page_has_deterministic_r_cfb_export_without_submission_code() 
     assert "overallBallotRationale(entry)" in app
     assert "teamBallotRationale(row)" in app
     assert "Central 80% interval" in app
-    assert "GippyRank Performance-equivalent expected rank" in app
+    assert "GippyRank ${familyLabel()} expected rank" in app
     assert "state.manifest.redditcfb.team_handles" in app
     assert "JSON.stringify(ballot, null, 2)" in app
     assert "createObjectURL" in app

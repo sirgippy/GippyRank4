@@ -72,7 +72,6 @@ def validate_context_source(source_context: Snapshot, root: Path) -> Path:
             "requested_cutoff",
             "effective_cutoff",
             "source_retrieved_at",
-            "source_retrieval_times",
             "source_response_hashes",
             "game_corpus_sha256",
             "included_game_ids",
@@ -81,6 +80,13 @@ def validate_context_source(source_context: Snapshot, root: Path) -> Path:
             "prior_model_version",
         ),
     )
+    if (
+        "source_retrieval_times" not in metadata
+        and metadata.get("source_retrieved_at_contract") != "legacy_unverified_availability"
+    ):
+        raise PerformanceSnapshotValidationError(
+            "Context source is missing source_retrieval_times"
+        )
     if metadata["ranking_family"] != "predictive":
         raise PerformanceSnapshotValidationError(
             "Performance production requires a Predictive Context source"
@@ -145,7 +151,10 @@ def validate_performance_against_context(
         "prior_artifact_sha256",
         "prior_model_version",
     ):
-        if performance_metadata.get(field) != context_metadata.get(field):
+        default = {} if field == "source_retrieval_times" else None
+        if performance_metadata.get(field, default) != context_metadata.get(
+            field, default
+        ):
             raise PerformanceSnapshotValidationError(
                 f"Context/Performance evidence mismatch: {field}"
             )
@@ -418,6 +427,8 @@ def build_performance_snapshot(
         "snapshot_id": performance_snapshot_id,
         "snapshot_type": metadata["snapshot_type"],
         "ranking_family": PERFORMANCE_RANKING_FAMILY,
+        "performance_variant": "quality_of_play",
+        "evidence_mode": "margin",
         "model_version": PERFORMANCE_MODEL_VERSION,
         "method": PERFORMANCE_METHOD,
         "anchor_family": "context",
@@ -429,7 +440,7 @@ def build_performance_snapshot(
         "source_retrieved_at": metadata["source_retrieved_at"],
         "combined_source_available_at": metadata.get("combined_source_available_at"),
         "source_retrieved_at_contract": metadata.get("source_retrieved_at_contract"),
-        "source_retrieval_times": metadata["source_retrieval_times"],
+        "source_retrieval_times": metadata.get("source_retrieval_times", {}),
         "source_response_hashes": metadata["source_response_hashes"],
         "source_evidence_hashes": metadata["source_response_hashes"],
         "game_corpus_sha256": metadata["game_corpus_sha256"],

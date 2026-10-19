@@ -210,3 +210,23 @@ def test_canonical_context_is_unambiguous_and_retained_artifacts_are_readable() 
             / "predictive/context/metadata.json"
         )
         assert json.loads(retained.read_text())["prior_model_version"] == version
+
+
+def test_performance_variants_have_distinct_resources_and_legacy_selection() -> None:
+    store = PublicationStore.load(ROOT / "site/data")
+    slot = FULL_MANIFEST["default_publication_slot"]
+    legacy = store.resolve(season=2026, publication_slot=slot, family="performance")
+    record = store.resolve(season=2026, publication_slot=slot, family="performance", variant="quality_of_record")
+    assert legacy.metadata.performance_variant == "quality_of_play"
+    assert record.metadata.performance_variant == "quality_of_record"
+    assert record.metadata.snapshot_id != legacy.metadata.snapshot_id
+    assert record.metadata.evidence_mode == "win_loss"
+    assert record.metadata.source_context_snapshot_id == legacy.metadata.source_context_snapshot_id
+    assert record.predictions == legacy.predictions
+    assert record.outlooks == legacy.outlooks
+    for game_id, game in record.games.items():
+        assert game.home_performance == legacy.games[game_id].home_performance
+        assert game.away_performance == legacy.games[game_id].away_performance
+    assert record.simulation == legacy.simulation
+    assert [row.team_id for row in record.rankings] != [row.team_id for row in legacy.rankings]
+    assert len(store.filter(family="performance", variant="quality_of_record")) >= 1

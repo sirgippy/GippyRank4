@@ -65,6 +65,8 @@ class PublicationMetadata(PublicModel):
     display_label: str
     ranking_family: Literal["predictive", "performance"]
     prior_family: Literal["context", "history"] | None = None
+    performance_variant: Literal["quality_of_play", "quality_of_record"] | None = None
+    evidence_mode: Literal["margin", "win_loss"] | None = None
     requested_cutoff: datetime | None = None
     effective_cutoff: datetime | None = None
     generation_timestamp: datetime
