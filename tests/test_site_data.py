@@ -2697,24 +2697,219 @@ def test_percentage_formatter_preserves_nonzero_and_noncertainty_distinctions() 
     assert "if (percent < 10 || percent >= 95)" in probability
 
 
+def _assert_performance_backfill_coverage(
+    manifest: dict[str, object], audit: dict[str, object]
+) -> None:
+    snapshots = manifest["snapshots"]
+    eligible_slots = {
+        entry["publication_slot"]
+        for entry in snapshots
+        if entry.get("prior_family") == "context"
+        and entry["snapshot_type"] != "preseason"
+    }
+    variants = ("quality_of_play", "quality_of_record")
+    variant_snapshots: dict[str, dict[str, dict[str, object]]] = {
+        variant: {} for variant in variants
+    }
+    for entry in snapshots:
+        variant = entry.get("performance_variant")
+        if variant not in variant_snapshots:
+            continue
+        slot = entry["publication_slot"]
+        assert slot not in variant_snapshots[variant], (
+            f"duplicate {variant} snapshot for publication slot {slot}"
+        )
+        variant_snapshots[variant][slot] = entry
+
+    plays = set(variant_snapshots["quality_of_play"])
+    records = set(variant_snapshots["quality_of_record"])
+    assert plays == eligible_slots, (
+        "Quality of Play coverage must match all eligible production slots"
+    )
+    assert records == eligible_slots, (
+        "Quality of Record coverage must match all eligible production slots"
+    )
+
+    publications = audit["publications"]
+    audited_slots = {publication["publication_slot"] for publication in publications}
+    blocked = {blocker.split(" / ", 1)[0] for blocker in audit["blockers"]}
+    historical_slots = audited_slots | blocked
+    assert len(audited_slots) == len(publications), (
+        "historical backfill audit contains duplicate publication slots"
+    )
+    assert not audited_slots & blocked, (
+        "historical publication cannot be both backfilled and blocked"
+    )
+    assert historical_slots <= eligible_slots, (
+        "historical backfill audit references an ineligible publication slot"
+    )
+    assert len(historical_slots) == audit["eligible_publication_count"], (
+        "historical eligible publication count does not match audit scope"
+    )
+    assert len(audited_slots & records) == audit["publication_count"], (
+        "historical Quality of Record publication count does not match audit"
+    )
+    assert len(blocked) == audit["blocked_publication_count"], (
+        "historical blocked publication count does not match audit"
+    )
+    assert not records & blocked
+    assert audit["status"] == "complete"
+    assert not blocked
+
+    for publication in publications:
+        slot = publication["publication_slot"]
+        audited_variants = publication.get("variants", {})
+        for variant in variants:
+            assert variant in audited_variants, (
+                f"historical audit is missing {variant} artifact for {slot}"
+            )
+            audited_artifact = audited_variants[variant]
+            published_artifact = variant_snapshots[variant].get(slot)
+            assert published_artifact is not None, (
+                f"historical {variant} artifact is missing for {slot}"
+            )
+            assert published_artifact["snapshot_id"] == audited_artifact.get(
+                "snapshot_id"
+            ), f"historical {variant} artifact does not match audit for {slot}"
+            for digest_field in ("pmf_file_sha256", "rankings_sha256"):
+                digest = audited_artifact.get(digest_field)
+                assert (
+                    isinstance(digest, str)
+                    and len(digest) == 64
+                    and all(character in "0123456789abcdef" for character in digest)
+                ), (
+                    f"historical {variant} artifact has invalid {digest_field} for {slot}"
+                )
+
+
 def test_every_historical_performance_slot_is_backfilled_or_explicitly_blocked(
     production_site_data: tuple[Path, dict[str, object]],
 ) -> None:
     _, manifest = production_site_data
-    audit = json.loads((ROOT / "data/processed/quality_of_record_backfill/manifest.json").read_text())
-    eligible_slots = {entry["publication_slot"] for entry in manifest["snapshots"]
-                      if entry.get("prior_family") == "context" and entry["snapshot_type"] != "preseason"}
-    plays = {entry["publication_slot"] for entry in manifest["snapshots"]
-             if entry.get("performance_variant") == "quality_of_play"}
-    records = {entry["publication_slot"] for entry in manifest["snapshots"]
-               if entry.get("performance_variant") == "quality_of_record"}
-    blocked = {blocker.split(" / ", 1)[0] for blocker in audit["blockers"]}
-    assert plays == eligible_slots
-    assert records | blocked == eligible_slots
-    assert not records & blocked
-    assert len(records) == audit["publication_count"]
-    assert len(blocked) == audit["blocked_publication_count"]
-    assert len(eligible_slots) == audit["eligible_publication_count"]
-    assert audit["status"] == "complete"
-    assert not blocked
-    assert len(records) == len(eligible_slots) == 17
+    audit = json.loads(
+        (ROOT / "data/processed/quality_of_record_backfill/manifest.json").read_text()
+    )
+    _assert_performance_backfill_coverage(manifest, audit)
+
+
+def test_new_publication_does_not_invalidate_historical_backfill_audit(
+    production_site_data: tuple[Path, dict[str, object]],
+) -> None:
+    _, manifest = production_site_data
+    audit = json.loads(
+        (ROOT / "data/processed/quality_of_record_backfill/manifest.json").read_text()
+    )
+    eligible_snapshot = next(
+        entry
+        for entry in manifest["snapshots"]
+        if entry.get("prior_family") == "context"
+        and entry["snapshot_type"] != "preseason"
+    )
+    source_slot = eligible_snapshot["publication_slot"]
+    new_slot = "issue-228-new-publication"
+    new_snapshots = [
+        {
+            **eligible_snapshot,
+            "publication_slot": new_slot,
+            "snapshot_id": f"{eligible_snapshot['snapshot_id']}-issue-228",
+        }
+    ]
+    for variant in ("quality_of_play", "quality_of_record"):
+        source = next(
+            entry
+            for entry in manifest["snapshots"]
+            if entry.get("performance_variant") == variant
+            and entry["publication_slot"] == source_slot
+        )
+        new_snapshots.append(
+            {
+                **source,
+                "publication_slot": new_slot,
+                "snapshot_id": f"{source['snapshot_id']}-issue-228",
+            }
+        )
+    manifest_with_new_publication = {
+        **manifest,
+        "snapshots": [*manifest["snapshots"], *new_snapshots],
+    }
+
+    _assert_performance_backfill_coverage(manifest_with_new_publication, audit)
+
+
+def test_missing_quality_of_record_coverage_fails_validation(
+    production_site_data: tuple[Path, dict[str, object]],
+) -> None:
+    _, manifest = production_site_data
+    audit = json.loads(
+        (ROOT / "data/processed/quality_of_record_backfill/manifest.json").read_text()
+    )
+    missing_slot = next(
+        entry["publication_slot"]
+        for entry in manifest["snapshots"]
+        if entry.get("performance_variant") == "quality_of_record"
+    )
+    manifest_without_record = {
+        **manifest,
+        "snapshots": [
+            entry
+            for entry in manifest["snapshots"]
+            if not (
+                entry.get("performance_variant") == "quality_of_record"
+                and entry["publication_slot"] == missing_slot
+            )
+        ],
+    }
+
+    with pytest.raises(AssertionError, match="Quality of Record coverage"):
+        _assert_performance_backfill_coverage(manifest_without_record, audit)
+
+
+@pytest.mark.parametrize("failure", ["missing", "inconsistent"])
+def test_historical_backfill_artifact_must_match_audit(
+    production_site_data: tuple[Path, dict[str, object]],
+    failure: str,
+) -> None:
+    _, manifest = production_site_data
+    audit = json.loads(
+        (ROOT / "data/processed/quality_of_record_backfill/manifest.json").read_text()
+    )
+    historical_slot = audit["publications"][0]["publication_slot"]
+    if failure == "missing":
+        audit = {
+            **audit,
+            "publications": [
+                {
+                    **publication,
+                    "variants": {
+                        variant: artifact
+                        for variant, artifact in publication["variants"].items()
+                        if variant != "quality_of_record"
+                    },
+                }
+                if publication["publication_slot"] == historical_slot
+                else publication
+                for publication in audit["publications"]
+            ],
+        }
+    else:
+        audit = {
+            **audit,
+            "publications": [
+                {
+                    **publication,
+                    "variants": {
+                        **publication["variants"],
+                        "quality_of_record": {
+                            **publication["variants"]["quality_of_record"],
+                            "snapshot_id": "inconsistent-historical-artifact",
+                        },
+                    },
+                }
+                if publication["publication_slot"] == historical_slot
+                else publication
+                for publication in audit["publications"]
+            ],
+        }
+
+    with pytest.raises(AssertionError, match="historical .*quality_of_record artifact"):
+        _assert_performance_backfill_coverage(manifest, audit)
