@@ -1,0 +1,476 @@
+{
+  "context": {
+    "converged": true,
+    "inference": "deterministic_damped_loopy_sum_product",
+    "iterations": 70,
+    "max_message_delta": 8.707316118128361e-10,
+    "maximum_team_degree": 8,
+    "objective_surrogate": -928.150364771969,
+    "raw_game_likelihood_count": 878,
+    "runtime_seconds": 12.653399846,
+    "team_variable_count": 266,
+    "top25": "1. Ohio State\n2. Georgia\n3. Notre Dame\n4. Miami\n5. Indiana\n6. LSU\n7. Alabama\n8. Ole Miss\n9. Oregon\n10. Texas\n11. Texas Tech\n12. Utah\n13. Tennessee\n14. BYU\n15. Nebraska\n16. UCLA\n17. Houston\n18. Florida\n19. Northwestern\n20. Iowa\n21. Missouri\n22. Wake Forest\n23. USC\n24. Arizona\n25. Louisville",
+    "unique_pairwise_factor_count": 878,
+    "warnings": []
+  },
+  "context_movement_baseline": "Week 8",
+  "context_movers": [
+    {
+      "rank_change": -8,
+      "team": "Kennesaw State"
+    },
+    {
+      "rank_change": -7,
+      "team": "Florida International"
+    },
+    {
+      "rank_change": 7,
+      "team": "Liberty"
+    },
+    {
+      "rank_change": 6,
+      "team": "App State"
+    },
+    {
+      "rank_change": 6,
+      "team": "Delaware"
+    },
+    {
+      "rank_change": -6,
+      "team": "James Madison"
+    },
+    {
+      "rank_change": -6,
+      "team": "NC State"
+    },
+    {
+      "rank_change": 6,
+      "team": "Stanford"
+    },
+    {
+      "rank_change": 5,
+      "team": "Coastal Carolina"
+    },
+    {
+      "rank_change": 5,
+      "team": "Duke"
+    }
+  ],
+  "display_label": "Oct. 24 \u00b7 8:31 AM CT",
+  "effective_cutoff": "2026-10-24T13:31:42.760884+00:00",
+  "eligible_game_count": 878,
+  "excluded_lower_division_games": 66,
+  "fcs_fallback_count": 128,
+  "fcs_population_size": 128,
+  "h_c_disagreements": [
+    {
+      "context_rank": 37,
+      "difference": 9,
+      "history_rank": 28,
+      "team": "James Madison"
+    },
+    {
+      "context_rank": 26,
+      "difference": 7,
+      "history_rank": 33,
+      "team": "Auburn"
+    },
+    {
+      "context_rank": 72,
+      "difference": 7,
+      "history_rank": 79,
+      "team": "Colorado"
+    },
+    {
+      "context_rank": 41,
+      "difference": 7,
+      "history_rank": 48,
+      "team": "Florida State"
+    },
+    {
+      "context_rank": 56,
+      "difference": 7,
+      "history_rank": 49,
+      "team": "Liberty"
+    },
+    {
+      "context_rank": 82,
+      "difference": 7,
+      "history_rank": 89,
+      "team": "Maryland"
+    },
+    {
+      "context_rank": 98,
+      "difference": 7,
+      "history_rank": 91,
+      "team": "Navy"
+    },
+    {
+      "context_rank": 46,
+      "difference": 7,
+      "history_rank": 39,
+      "team": "New Mexico"
+    },
+    {
+      "context_rank": 63,
+      "difference": 7,
+      "history_rank": 70,
+      "team": "Syracuse"
+    },
+    {
+      "context_rank": 66,
+      "difference": 6,
+      "history_rank": 60,
+      "team": "Army"
+    }
+  ],
+  "history": {
+    "converged": true,
+    "inference": "deterministic_damped_loopy_sum_product",
+    "iterations": 70,
+    "max_message_delta": 9.919641080768926e-10,
+    "maximum_team_degree": 8,
+    "objective_surrogate": -936.6993284074763,
+    "raw_game_likelihood_count": 878,
+    "runtime_seconds": 3.733781365000027,
+    "team_variable_count": 266,
+    "top25": "1. Ohio State\n2. Notre Dame\n3. Alabama\n4. Georgia\n5. Miami\n6. Indiana\n7. LSU\n8. Oregon\n9. Texas\n10. Ole Miss\n11. Utah\n12. BYU\n13. Tennessee\n14. Texas Tech\n15. Nebraska\n16. Houston\n17. UCLA\n18. Iowa\n19. Wake Forest\n20. Northwestern\n21. Florida\n22. Missouri\n23. USC\n24. Kentucky\n25. Arizona",
+    "unique_pairwise_factor_count": 878,
+    "warnings": []
+  },
+  "history_movement_baseline": "Week 8",
+  "history_movers": [
+    {
+      "rank_change": -10,
+      "team": "Air Force"
+    },
+    {
+      "rank_change": -10,
+      "team": "Kennesaw State"
+    },
+    {
+      "rank_change": 9,
+      "team": "Liberty"
+    },
+    {
+      "rank_change": 7,
+      "team": "App State"
+    },
+    {
+      "rank_change": -7,
+      "team": "Florida International"
+    },
+    {
+      "rank_change": 6,
+      "team": "Coastal Carolina"
+    },
+    {
+      "rank_change": 6,
+      "team": "Delaware"
+    },
+    {
+      "rank_change": 6,
+      "team": "East Carolina"
+    },
+    {
+      "rank_change": -6,
+      "team": "James Madison"
+    },
+    {
+      "rank_change": -5,
+      "team": "Missouri State"
+    }
+  ],
+  "new_eligible_game_count": 7,
+  "newly_rated_teams": [],
+  "performance": {
+    "broadest_distributions": [
+      {
+        "interval_80": [
+          45,
+          108
+        ],
+        "interval_80_width": 64,
+        "team": "Rutgers",
+        "team_id": "164"
+      },
+      {
+        "interval_80": [
+          44,
+          106
+        ],
+        "interval_80_width": 63,
+        "team": "Boston College",
+        "team_id": "103"
+      },
+      {
+        "interval_80": [
+          31,
+          92
+        ],
+        "interval_80_width": 62,
+        "team": "Arkansas",
+        "team_id": "8"
+      },
+      {
+        "interval_80": [
+          41,
+          100
+        ],
+        "interval_80_width": 60,
+        "team": "Arizona State",
+        "team_id": "9"
+      },
+      {
+        "interval_80": [
+          33,
+          92
+        ],
+        "interval_80_width": 60,
+        "team": "Colorado",
+        "team_id": "38"
+      },
+      {
+        "interval_80": [
+          45,
+          104
+        ],
+        "interval_80_width": 60,
+        "team": "Maryland",
+        "team_id": "120"
+      },
+      {
+        "interval_80": [
+          31,
+          89
+        ],
+        "interval_80_width": 59,
+        "team": "Minnesota",
+        "team_id": "135"
+      },
+      {
+        "interval_80": [
+          43,
+          100
+        ],
+        "interval_80_width": 58,
+        "team": "Vanderbilt",
+        "team_id": "238"
+      },
+      {
+        "interval_80": [
+          29,
+          85
+        ],
+        "interval_80_width": 57,
+        "team": "Georgia State",
+        "team_id": "2247"
+      },
+      {
+        "interval_80": [
+          41,
+          97
+        ],
+        "interval_80_width": 57,
+        "team": "Georgia Tech",
+        "team_id": "59"
+      }
+    ],
+    "inference": "none_prior_stripping_only",
+    "largest_expected_rank_differences": [
+      {
+        "absolute_difference": 19.987555290328118,
+        "context_expected_rank": 121.63702384764315,
+        "difference": -19.987555290328118,
+        "performance_expected_rank": 101.64946855731503,
+        "team": "Massachusetts"
+      },
+      {
+        "absolute_difference": 16.33618732579032,
+        "context_expected_rank": 26.541229589571593,
+        "difference": 16.33618732579032,
+        "performance_expected_rank": 42.87741691536191,
+        "team": "Michigan"
+      },
+      {
+        "absolute_difference": 13.728420524270842,
+        "context_expected_rank": 29.337441333854077,
+        "difference": 13.728420524270842,
+        "performance_expected_rank": 43.06586185812492,
+        "team": "Florida State"
+      },
+      {
+        "absolute_difference": 13.072869449110158,
+        "context_expected_rank": 69.29135219605789,
+        "difference": -13.072869449110158,
+        "performance_expected_rank": 56.21848274694773,
+        "team": "Georgia State"
+      },
+      {
+        "absolute_difference": 12.307734099337111,
+        "context_expected_rank": 41.547216199498386,
+        "difference": 12.307734099337111,
+        "performance_expected_rank": 53.8549502988355,
+        "team": "Washington"
+      },
+      {
+        "absolute_difference": 12.022137694975441,
+        "context_expected_rank": 55.025982816939546,
+        "difference": 12.022137694975441,
+        "performance_expected_rank": 67.04812051191499,
+        "team": "NC State"
+      },
+      {
+        "absolute_difference": 11.878890048963644,
+        "context_expected_rank": 22.387870394946827,
+        "difference": 11.878890048963644,
+        "performance_expected_rank": 34.26676044391047,
+        "team": "Oklahoma"
+      },
+      {
+        "absolute_difference": 11.187013112075071,
+        "context_expected_rank": 59.47908837531259,
+        "difference": 11.187013112075071,
+        "performance_expected_rank": 70.66610148738766,
+        "team": "Arizona State"
+      },
+      {
+        "absolute_difference": 11.123734453569512,
+        "context_expected_rank": 61.62578365666096,
+        "difference": 11.123734453569512,
+        "performance_expected_rank": 72.74951811023047,
+        "team": "South Florida"
+      },
+      {
+        "absolute_difference": 11.097394974880999,
+        "context_expected_rank": 38.645139912867776,
+        "difference": 11.097394974880999,
+        "performance_expected_rank": 49.742534887748775,
+        "team": "Clemson"
+      }
+    ],
+    "method": "prior_stripping",
+    "rated_count": 138,
+    "runtime_seconds": 0.11446523500001149,
+    "source_context_runtime_seconds": 12.653399846,
+    "source_context_snapshot_id": "2026-weekly-2026-10-24T13-31-42.760884Z-context-v1.4",
+    "top25": "1. Ohio State\n2. Notre Dame\n3. LSU\n4. Alabama\n5. Miami\n6. Georgia\n7. Indiana\n8. UCLA\n9. Tennessee\n10. Nebraska\n11. Utah\n12. Texas\n13. Ole Miss\n14. Houston\n15. Wake Forest\n16. BYU\n17. Texas Tech\n18. Northwestern\n19. Oregon\n20. Florida\n21. Kentucky\n22. Oklahoma State\n23. Iowa\n24. Missouri\n25. Oregon State",
+    "transformation_runtime_seconds": 0.1144647350000696,
+    "unrated_count": 0
+  },
+  "publication_slot": "2026-10-24T13-31-42.760884Z",
+  "publication_status": "temporary",
+  "quality_of_record": {
+    "broadest_distributions": [
+      {
+        "interval_80": [
+          26,
+          106
+        ],
+        "interval_80_width": 81,
+        "team": "Florida Atlantic",
+        "team_id": "2226"
+      },
+      {
+        "interval_80": [
+          30,
+          108
+        ],
+        "interval_80_width": 79,
+        "team": "Colorado",
+        "team_id": "38"
+      },
+      {
+        "interval_80": [
+          20,
+          98
+        ],
+        "interval_80_width": 79,
+        "team": "Iowa State",
+        "team_id": "66"
+      },
+      {
+        "interval_80": [
+          20,
+          98
+        ],
+        "interval_80_width": 79,
+        "team": "South Carolina",
+        "team_id": "2579"
+      },
+      {
+        "interval_80": [
+          30,
+          107
+        ],
+        "interval_80_width": 78,
+        "team": "Florida State",
+        "team_id": "52"
+      },
+      {
+        "interval_80": [
+          30,
+          107
+        ],
+        "interval_80_width": 78,
+        "team": "Georgia State",
+        "team_id": "2247"
+      },
+      {
+        "interval_80": [
+          30,
+          106
+        ],
+        "interval_80_width": 77,
+        "team": "Arizona State",
+        "team_id": "9"
+      },
+      {
+        "interval_80": [
+          47,
+          123
+        ],
+        "interval_80_width": 77,
+        "team": "Kansas",
+        "team_id": "2305"
+      },
+      {
+        "interval_80": [
+          13,
+          88
+        ],
+        "interval_80_width": 76,
+        "team": "New Mexico",
+        "team_id": "167"
+      },
+      {
+        "interval_80": [
+          28,
+          103
+        ],
+        "interval_80_width": 76,
+        "team": "South Florida",
+        "team_id": "58"
+      }
+    ],
+    "converged": true,
+    "inference": "deterministic_damped_loopy_sum_product_binary",
+    "iterations": 48,
+    "max_message_delta": 8.125251721446958e-10,
+    "rated_count": 138,
+    "raw_game_factor_count": 878,
+    "runtime_seconds": 12.243868297999938,
+    "top25": "1. UCLA\n2. BYU\n3. Miami\n4. Kentucky\n5. Ohio State\n6. Ole Miss\n7. Texas Tech\n8. Wake Forest\n9. Notre Dame\n10. Tennessee\n11. Alabama\n12. Georgia\n13. Iowa\n14. Utah\n15. Indiana\n16. Florida\n17. Houston\n18. USC\n19. Texas\n20. LSU\n21. Boise State\n22. Mississippi State\n23. Auburn\n24. Arizona\n25. Missouri",
+    "unique_pair_factor_count": 878,
+    "unrated_count": 0
+  },
+  "requested_cutoff": "2026-10-24T13:31:42.760884+00:00",
+  "schedule_overlap_count": 127,
+  "season": 2026,
+  "source_retrieval_times": {
+    "fbs": "2026-10-24T13:31:35.031070+00:00",
+    "fcs": "2026-10-24T13:31:42.760884+00:00"
+  },
+  "source_retrieved_at": "2026-10-24T13:31:42.760884+00:00",
+  "validation": "passed"
+}
