@@ -800,7 +800,8 @@ def _validate_team_season_artifact(
                 )
             ):
                 raise PublicationDataError(
-                    f"{metadata.snapshot_id}: future prediction is not after the cutoff"
+                    f"{metadata.snapshot_id}: future prediction date is missing or "
+                    "before the cutoff's UTC calendar day"
                 )
     expected_ids = {
         str(game.get("game_id"))
