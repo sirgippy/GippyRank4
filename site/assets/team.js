@@ -1233,6 +1233,7 @@ function updatePriorSwitch(manifest, entry) {
       if (counterpart) {
         const url = new URL(window.location.href);
         url.searchParams.set("snapshot", counterpart.snapshot_id);
+        url.searchParams.delete("slot");
         url.searchParams.set("variant", variant);
         link.href = `${url.pathname}${url.search}`;
       }

@@ -370,11 +370,12 @@ function populateControls(entry) {
   const groups = [...new Map(available.map((item) => [item.publication_slot, item])).values()];
   const options = groups.map((item) => new Option(labelFor(item), item.publication_slot, item.publication_slot === state.slot, item.publication_slot === state.slot));
   const requestedIsSlot = state.manifest.snapshots.some((item) => item.season === state.season && item.publication_slot === state.slot);
-  if (!entry && state.resolution?.error && state.slot && !groups.some((item) => item.publication_slot === state.slot)) {
+  const unavailableRequest = !entry && state.resolution?.error && state.slot && !groups.some((item) => item.publication_slot === state.slot);
+  if (unavailableRequest) {
     options.unshift(new Option(`Unavailable request: ${state.slot}`, state.slot, true, true));
   }
   $("#snapshot-select").replaceChildren(...options);
-  $("#snapshot-select").value = entry?.publication_slot || (state.resolution?.error && requestedIsSlot ? state.slot : "");
+  $("#snapshot-select").value = entry?.publication_slot || (unavailableRequest || (state.resolution?.error && requestedIsSlot) ? state.slot : "");
   const performance = state.family === "performance";
   $("#prior-select").hidden = performance;
   $("#prior-select").disabled = performance;
@@ -482,7 +483,7 @@ async function load() {
 
 $("#family-select").addEventListener("change", (event) => { const next = new URLSearchParams(params); next.set("family", event.target.value); next.delete("snapshot"); next.delete("slot"); next.delete("prior"); next.delete("variant"); navigateTo(next); });
 $("#season-select").addEventListener("change", (event) => { const next = new URLSearchParams(params); next.set("season", event.target.value); next.delete("snapshot"); next.delete("slot"); navigateTo(next); });
-$("#snapshot-select").addEventListener("change", (event) => { const next = new URLSearchParams(params); next.set("snapshot", event.target.value); navigateTo(next); });
+$("#snapshot-select").addEventListener("change", (event) => { const next = new URLSearchParams(params); next.set("snapshot", event.target.value); next.delete("slot"); navigateTo(next); });
 document.querySelectorAll("[data-prior]").forEach((button) => button.addEventListener("click", () => { const next = new URLSearchParams(params); next.set("prior", button.dataset.prior); next.delete("snapshot"); next.delete("slot"); next.delete("variant"); navigateTo(next); }));
 $("#week-select").addEventListener("change", (event) => { const next = new URLSearchParams(params); next.set("week", event.target.value); navigateTo(next); });
 $("#previous-week").addEventListener("click", () => { const options = [...$("#week-select").options]; const index = options.findIndex((option) => option.selected); if (index > 0) { const next = new URLSearchParams(params); next.set("week", options[index - 1].value); navigateTo(next); } });

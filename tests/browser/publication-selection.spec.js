@@ -7,6 +7,7 @@ const historyEntry = manifest.snapshots.find((entry) => entry.season === 2026 &&
 const contextEntry = manifest.snapshots.find((entry) => entry.season === 2026 && entry.ranking_family === "predictive" && entry.prior_family === "context" && entry.publication_slot === manifest.default_publication_slot);
 const qualityOfPlayEntry = manifest.snapshots.find((entry) => entry.season === 2026 && entry.ranking_family === "performance" && (entry.performance_variant ?? "quality_of_play") === "quality_of_play" && entry.publication_slot === manifest.default_publication_slot);
 const qualityOfRecordEntry = manifest.snapshots.find((entry) => entry.season === 2026 && entry.ranking_family === "performance" && entry.performance_variant === "quality_of_record" && entry.publication_slot === manifest.default_publication_slot);
+const alternateQualityOfRecordEntry = manifest.snapshots.find((entry) => entry.season === 2026 && entry.ranking_family === "performance" && entry.performance_variant === "quality_of_record" && entry.publication_slot !== manifest.default_publication_slot);
 const missingVariantSlot = "2026-09-06";
 
 test.beforeEach(async ({ page }) => {
@@ -78,6 +79,28 @@ for (const surface of surfaces) {
     await expectResolved(page, surface, qualityOfRecordEntry, "Quality of Record");
   });
 
+  test(`${surface} resolves a legacy slot link and remains valid after reload`, async ({ page }) => {
+    expect(qualityOfRecordEntry).toBeTruthy();
+    await page.goto(urlFor(surface, {
+      season: "2026",
+      family: "performance",
+      variant: "quality_of_record",
+      slot: qualityOfRecordEntry.publication_slot,
+    }));
+    await expectResolved(page, surface, qualityOfRecordEntry, "Quality of Record");
+
+    const currentUrl = new URL(page.url());
+    if (surface === "team") {
+      expect(currentUrl.searchParams.get("slot")).toBe(qualityOfRecordEntry.publication_slot);
+    } else {
+      expect(currentUrl.searchParams.has("slot")).toBe(false);
+      expect(currentUrl.searchParams.get("snapshot")).toBe(qualityOfRecordEntry.snapshot_id);
+    }
+
+    await page.reload();
+    await expectResolved(page, surface, qualityOfRecordEntry, "Quality of Record");
+  });
+
   test(`${surface} shows an unavailable state for an unknown snapshot and keeps its URL`, async ({ page }) => {
     const requested = "issue-239-missing-snapshot";
     for (const parameter of ["snapshot", "slot"]) {
@@ -86,6 +109,10 @@ for (const surface of surfaces) {
       await expect(statusFor(page, surface)).toContainText(requested);
       await expect(rowsFor(page, surface)).toHaveCount(0);
       await expect(page).toHaveURL(new RegExp(`${parameter}=${requested}`));
+      if (surface !== "team") {
+        await expect(page.locator("#snapshot-select")).toHaveValue(requested);
+        await expect(page.locator("#snapshot-select option:checked")).toHaveText(`Unavailable request: ${requested}`);
+      }
     }
   });
 
@@ -160,3 +187,85 @@ for (const surface of surfaces) {
 function qualityOfPlayEntryForSlot(slot) {
   return manifest.snapshots.find((entry) => entry.season === 2026 && entry.publication_slot === slot && entry.ranking_family === "performance" && (entry.performance_variant ?? "quality_of_play") === "quality_of_play");
 }
+
+test("rankings clears a legacy slot while switching variants and publications", async ({ page }) => {
+  expect(qualityOfPlayEntry).toBeTruthy();
+  expect(qualityOfRecordEntry).toBeTruthy();
+  expect(alternateQualityOfRecordEntry).toBeTruthy();
+  await page.goto(urlFor("rankings", {
+    season: "2026",
+    family: "performance",
+    variant: "quality_of_play",
+    slot: qualityOfPlayEntry.publication_slot,
+  }));
+  await expectResolved(page, "rankings", qualityOfPlayEntry, "Quality of Play");
+
+  await page.getByRole("button", { name: "Quality of Record", exact: true }).click();
+  await expect(page.locator("#snapshot-title")).toContainText("Quality of Record");
+  let currentUrl = new URL(page.url());
+  expect(currentUrl.searchParams.has("slot")).toBe(false);
+  expect(currentUrl.searchParams.get("snapshot")).toBe(qualityOfRecordEntry.snapshot_id);
+
+  await page.locator("#snapshot-select").selectOption(alternateQualityOfRecordEntry.publication_slot);
+  await expect(page.locator("#snapshot-title")).toContainText("Quality of Record");
+  currentUrl = new URL(page.url());
+  expect(currentUrl.searchParams.has("slot")).toBe(false);
+  expect(currentUrl.searchParams.get("snapshot")).toBe(alternateQualityOfRecordEntry.snapshot_id);
+  await page.reload();
+  await expectResolved(page, "rankings", alternateQualityOfRecordEntry, "Quality of Record");
+});
+
+test("Schedule clears legacy slot parameters when switching publications and variants", async ({ page }) => {
+  expect(qualityOfRecordEntry).toBeTruthy();
+  expect(qualityOfPlayEntry).toBeTruthy();
+  expect(alternateQualityOfRecordEntry).toBeTruthy();
+  const legacyScheduleQuery = {
+    season: "2026",
+    family: "performance",
+    variant: "quality_of_record",
+    slot: qualityOfRecordEntry.publication_slot,
+    week: qualityOfRecordEntry.default_week,
+    view: "all",
+  };
+  await page.goto(urlFor("schedule", legacyScheduleQuery));
+  await expectResolved(page, "schedule", qualityOfRecordEntry, "Quality of Record");
+
+  await page.locator("#snapshot-select").selectOption(alternateQualityOfRecordEntry.publication_slot);
+  await expectResolved(page, "schedule", alternateQualityOfRecordEntry, "Quality of Record");
+  let currentUrl = new URL(page.url());
+  expect(currentUrl.searchParams.has("slot")).toBe(false);
+  expect(currentUrl.searchParams.get("snapshot")).toBe(alternateQualityOfRecordEntry.publication_slot);
+  await page.reload();
+  await expectResolved(page, "schedule", alternateQualityOfRecordEntry, "Quality of Record");
+
+  await page.goto(urlFor("schedule", legacyScheduleQuery));
+  await expectResolved(page, "schedule", qualityOfRecordEntry, "Quality of Record");
+  await page.locator('[data-variant="quality_of_play"]').click();
+  await expectResolved(page, "schedule", qualityOfPlayEntry, "Quality of Play");
+  currentUrl = new URL(page.url());
+  expect(currentUrl.searchParams.has("slot")).toBe(false);
+  expect(currentUrl.searchParams.get("variant")).toBe("quality_of_play");
+});
+
+test("team Performance variant links clear the legacy slot parameter", async ({ page }) => {
+  expect(qualityOfPlayEntry).toBeTruthy();
+  expect(qualityOfRecordEntry).toBeTruthy();
+  await page.goto(urlFor("team", {
+    season: "2026",
+    family: "performance",
+    variant: "quality_of_play",
+    slot: qualityOfPlayEntry.publication_slot,
+  }));
+  await expectResolved(page, "team", qualityOfPlayEntry, "Quality of Play");
+  const recordLink = page.locator('[data-variant-link="quality_of_record"]');
+  const linkUrl = new URL(await recordLink.getAttribute("href"), page.url());
+  expect(linkUrl.searchParams.has("slot")).toBe(false);
+
+  await recordLink.click();
+  await expectResolved(page, "team", qualityOfRecordEntry, "Quality of Record");
+  let currentUrl = new URL(page.url());
+  expect(currentUrl.searchParams.has("slot")).toBe(false);
+  expect(currentUrl.searchParams.get("snapshot")).toBe(qualityOfRecordEntry.snapshot_id);
+  await page.reload();
+  await expectResolved(page, "team", qualityOfRecordEntry, "Quality of Record");
+});

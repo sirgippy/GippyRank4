@@ -213,6 +213,7 @@ function syncUrl(entry) {
   url.searchParams.set("family", state.family);
   url.searchParams.set("season", String(entry.season));
   url.searchParams.set("snapshot", entry.snapshot_id);
+  url.searchParams.delete("slot");
   if (state.family === "predictive") url.searchParams.set("prior", entry.prior_family);
   else url.searchParams.delete("prior");
   if (state.family === "performance") url.searchParams.set("variant", state.variant);
@@ -304,11 +305,12 @@ function populate() {
   const snapshotGroups = [...new Map(available.map((entry) => [entry.publication_slot, entry])).values()];
   const snapshotOptions = snapshotGroups.map((item) => new Option(labelFor(item), item.publication_slot, item.publication_slot === state.slot, item.publication_slot === state.slot));
   const requestedIsSlot = state.manifest.snapshots.some((item) => item.season === state.season && item.publication_slot === state.slot);
-  if (!entry && state.selectionError && state.slot && !snapshotGroups.some((item) => item.publication_slot === state.slot)) {
+  const unavailableRequest = !entry && state.selectionError && state.slot && !snapshotGroups.some((item) => item.publication_slot === state.slot);
+  if (unavailableRequest) {
     snapshotOptions.unshift(new Option(`Unavailable request: ${state.slot}`, state.slot, true, true));
   }
   $("#snapshot-select").replaceChildren(...snapshotOptions);
-  $("#snapshot-select").value = entry?.publication_slot ?? (state.selectionError && requestedIsSlot ? state.slot : "");
+  $("#snapshot-select").value = entry?.publication_slot ?? (unavailableRequest || (state.selectionError && requestedIsSlot) ? state.slot : "");
   const priorSelector = $("#prior-select");
   const performance = state.family === "performance";
   priorSelector.hidden = performance;
