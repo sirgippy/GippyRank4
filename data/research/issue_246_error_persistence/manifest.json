@@ -1,0 +1,98 @@
+{
+  "config": {
+    "bootstrap_repetitions": 1000,
+    "bootstrap_seed": 246,
+    "cluster_bootstrap": "pigeonhole resampling of focal team IDs and both game IDs per transition",
+    "focal_team_population": "FBS only",
+    "issue201_root_label": "data/research/issue_201_prebowl_forecast",
+    "score_population": [
+      "fbs_fbs",
+      "fbs_fcs"
+    ],
+    "season_progress_bins": {
+      "early_games_2_4": [
+        2,
+        4
+      ],
+      "late_game_9_plus": [
+        9,
+        null
+      ],
+      "middle_games_5_8": [
+        5,
+        8
+      ]
+    },
+    "signed_error": "observed team margin minus expected team margin",
+    "strong_preseason_favorite_probability": 0.8
+  },
+  "counts": {
+    "candidate_transitions": 23788,
+    "eligible_transitions": 21900,
+    "excluded_transitions": 1888,
+    "issue201_parity_rows": 16,
+    "issue201_score_rows_read": 27864,
+    "oriented_fbs_team_games": 25924,
+    "rolling_forecast_rows_used": 13932,
+    "team_seasons_by_arm": 2136,
+    "unique_schedule_matchups": 3483
+  },
+  "experiment": "issue-246-sequential-game-error-persistence",
+  "input_hashes": {
+    "forecast_scores.csv": {
+      "bytes": 21710645,
+      "sha256": "fbc5c51f0747d4d11c3d31d8eb032f32ad65c8abe41f0307b295415a264351bb"
+    },
+    "forecast_summary.csv": {
+      "bytes": 62725,
+      "sha256": "c288b5ad6f024b3fba221536e2ed311639dd57da08478a4a758670eed1580ffd"
+    },
+    "manifest.json": {
+      "bytes": 22278,
+      "sha256": "c6103fafc8fdf0e6abc074214013bcc07f3db5afa6cdf22b03de851f2fb5653d"
+    },
+    "replay_evidence.jsonl.gz": {
+      "bytes": 4981202,
+      "sha256": "2bc922ba47ded55b20672b42e21924cf915c5a7599966b7b923489485171f89d"
+    }
+  },
+  "outputs": {
+    "aggregate_summary.csv": {
+      "bytes": 9319,
+      "sha256": "2dc2fdd347c55bb2ec11250060b8accf743dbbc109fdd51a681bafbc9e5c4343"
+    },
+    "contrasts.csv": {
+      "bytes": 3097,
+      "sha256": "947046f0c8b6a4628c24a95f2672b1b9d90dee1fb249647d9f896420c176aad5"
+    },
+    "lagged_error_pairs.csv": {
+      "bytes": 8545475,
+      "sha256": "407bdc37589d9aea5959c500a1573cff6209a2ba84565ce59ec59f4934ba6625"
+    },
+    "report.md": {
+      "bytes": 12423,
+      "sha256": "b914e18f9b9ec637696c4ffbd2ebe8a0d5ee3834e7235a6a6db14869ac9933a1"
+    },
+    "summary.json": {
+      "bytes": 40053,
+      "sha256": "b2f78f7817c88d2d6c698e761de33222bc64c8288e440c0370cc5bab7f31d3f1"
+    },
+    "team_game_errors.csv": {
+      "bytes": 7418568,
+      "sha256": "9f0110fdad5a4d5cfd4d84bce0b9404a7666797c581fb904e87d296e2d1f5452"
+    },
+    "transition_audit.csv": {
+      "bytes": 949,
+      "sha256": "dd471af2e88114a13db33933092791f14f8210c660675f602693e9081e85abd2"
+    }
+  },
+  "protocol_sha256": "a43a71a1bcbab524b72f33f51e4654edf33e0d7b9250c29d3cabcc7673d36575",
+  "schema_version": 1,
+  "seasons": [
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "status": "complete"
+}
