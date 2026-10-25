@@ -1,5 +1,6 @@
-import { variantFor, requestedVariant, performanceLabel } from "./ranking-variants.js";
+import { variantFor, performanceLabel } from "./ranking-variants.js";
 import { rankingPercentage as percentage } from "./probability.js";
+import { publicationParams, renderPublicationAlternatives, resolvePublication } from "./publication-selection.js";
 
 const pageParams = new URLSearchParams(window.location.search);
 const requestedSeason = pageParams.has("season") ? Number(pageParams.get("season")) : null;
@@ -8,7 +9,7 @@ const state = {
   family: pageParams.get("family") === "performance" ? "performance" : "predictive",
   season: Number.isSafeInteger(requestedSeason) && requestedSeason > 0 ? requestedSeason : null,
   slot: pageParams.get("snapshot") || pageParams.get("slot") || null,
-  variant: requestedVariant(pageParams),
+  variant: "quality_of_play",
   prior: pageParams.get("prior") === "history" ? "history" : "context",
   depth: 25,
   notice: "",
@@ -17,6 +18,10 @@ const state = {
   renderVersion: 0,
   detailVersion: 0,
   distributionCache: new Map(),
+  resolveInitialRequest: true,
+  selectionError: null,
+  alternatives: [],
+  interacted: false,
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -208,11 +213,54 @@ function syncUrl(entry) {
   url.searchParams.set("family", state.family);
   url.searchParams.set("season", String(entry.season));
   url.searchParams.set("snapshot", entry.snapshot_id);
+  url.searchParams.delete("slot");
   if (state.family === "predictive") url.searchParams.set("prior", entry.prior_family);
   else url.searchParams.delete("prior");
   if (state.family === "performance") url.searchParams.set("variant", state.variant);
   else url.searchParams.delete("variant");
   window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+}
+
+function syncUnresolvedUrl() {
+  const url = new URL(window.location.href);
+  url.searchParams.set("family", state.family);
+  url.searchParams.set("season", String(state.season));
+  if (state.slot) url.searchParams.set("snapshot", state.slot);
+  else url.searchParams.delete("snapshot");
+  url.searchParams.delete("slot");
+  if (state.family === "predictive") {
+    url.searchParams.set("prior", state.prior);
+    url.searchParams.delete("variant");
+  } else {
+    url.searchParams.delete("prior");
+    url.searchParams.set("variant", state.variant);
+  }
+  window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+}
+
+function rankingAlternativeUrl(entry) {
+  const url = new URL(window.location.href);
+  url.search = publicationParams(entry, new URLSearchParams(window.location.search)).toString();
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
+function showUnavailablePublication() {
+  closeDetail();
+  const status = $("#snapshot-status");
+  status.hidden = false;
+  status.className = "team-page-status team-page-error";
+  renderPublicationAlternatives(status, {
+    error: state.selectionError ?? { message: "No published snapshot matches this ranking view." },
+    alternatives: state.alternatives,
+  }, rankingAlternativeUrl);
+  $("#snapshot-kind").textContent = "Publication unavailable";
+  $("#snapshot-title").textContent = "No ranking data displayed";
+  $("#snapshot-freshness").textContent = "";
+  $("#snapshot-comparison").textContent = "";
+  $("#snapshot-evidence").textContent = "";
+  $("#section-context").textContent = "";
+  $("#rankings-body").replaceChildren();
+  updateBallotExport(null, null);
 }
 
 function updatePriorExplanation() {
@@ -236,16 +284,33 @@ function changePrior(prior) {
 }
 
 function populate() {
+  if (state.resolveInitialRequest) {
+    const resolution = resolvePublication(state.manifest, pageParams);
+    state.family = resolution.family;
+    state.season = resolution.season;
+    state.prior = resolution.prior;
+    state.variant = resolution.variant;
+    state.slot = resolution.entry?.publication_slot ?? resolution.requested;
+    state.selectionError = resolution.error;
+    state.alternatives = resolution.alternatives;
+    state.resolveInitialRequest = false;
+  }
   const families = state.manifest.ranking_families;
   $("#family-select").replaceChildren(...families.map((family) => new Option(family.label, family.id, family.id === state.family, family.id === state.family)));
   const seasons = state.manifest.seasons;
   if (!seasons.includes(state.season)) state.season = seasons[0];
   $("#season-select").replaceChildren(...seasons.map((season) => new Option(season, season, season === state.season, season === state.season)));
-  const entry = selectedEntry() ?? chooseDefault();
+  const entry = state.selectionError ? null : selectedEntry() ?? chooseDefault();
   const available = choices();
   const snapshotGroups = [...new Map(available.map((entry) => [entry.publication_slot, entry])).values()];
-  $("#snapshot-select").replaceChildren(...snapshotGroups.map((item) => new Option(labelFor(item), item.publication_slot, item.publication_slot === state.slot, item.publication_slot === state.slot)));
-  $("#snapshot-select").value = entry?.publication_slot ?? "";
+  const snapshotOptions = snapshotGroups.map((item) => new Option(labelFor(item), item.publication_slot, item.publication_slot === state.slot, item.publication_slot === state.slot));
+  const requestedIsSlot = state.manifest.snapshots.some((item) => item.season === state.season && item.publication_slot === state.slot);
+  const unavailableRequest = !entry && state.selectionError && state.slot && !snapshotGroups.some((item) => item.publication_slot === state.slot);
+  if (unavailableRequest) {
+    snapshotOptions.unshift(new Option(`Unavailable request: ${state.slot}`, state.slot, true, true));
+  }
+  $("#snapshot-select").replaceChildren(...snapshotOptions);
+  $("#snapshot-select").value = entry?.publication_slot ?? (unavailableRequest || (state.selectionError && requestedIsSlot) ? state.slot : "");
   const priorSelector = $("#prior-select");
   const performance = state.family === "performance";
   priorSelector.hidden = performance;
@@ -253,7 +318,8 @@ function populate() {
   $("#performance-variant-select").hidden = !performance;
   $("#performance-variant-select").disabled = !performance;
   document.querySelectorAll("[data-variant]").forEach((button) => {
-    const available = state.manifest.snapshots.some((item) => item.season === state.season && item.publication_slot === entry?.publication_slot && item.ranking_family === "performance" && variantFor(item) === button.dataset.variant);
+    const requestedSlot = entry?.publication_slot ?? (requestedIsSlot ? state.slot : null);
+    const available = state.manifest.snapshots.some((item) => item.season === state.season && item.publication_slot === requestedSlot && item.ranking_family === "performance" && variantFor(item) === button.dataset.variant);
     button.disabled = !available;
     button.title = available ? "" : "This variant is unavailable for the selected publication.";
     button.classList.toggle("is-active", button.dataset.variant === state.variant);
@@ -262,9 +328,12 @@ function populate() {
   document.querySelectorAll("[data-prior]").forEach((button) => { button.classList.toggle("is-active", button.dataset.prior === state.prior); button.disabled = performance; });
   updatePriorExplanation();
   const scheduleLink = $("#schedule-view-link");
-  if (scheduleLink) scheduleLink.href = schedulePageUrl(entry, entry?.default_week);
+  if (scheduleLink && entry) scheduleLink.href = schedulePageUrl(entry, entry.default_week);
   updateBallotExport(entry, state.snapshot);
-  syncUrl(entry);
+  if (entry) syncUrl(entry);
+  else if (state.interacted) syncUnresolvedUrl();
+  state.interacted = false;
+  return entry;
 }
 
 function updateSnapshotSummary(entry, snapshot) {
@@ -518,6 +587,10 @@ async function loadDetail(row, entry, snapshot) {
 function prepareSnapshotChange() {
   state.snapshot = null;
   state.renderVersion += 1;
+  $("#snapshot-status").hidden = true;
+  $("#snapshot-kind").textContent = "Loading publication…";
+  $("#snapshot-title").textContent = "Loading rankings…";
+  $("#rankings-body").replaceChildren();
   if (state.selectedTeamId && detailDialog.open) {
     state.detailVersion += 1;
     $("#detail-team-meta").textContent = "Updating for the selected publication…";
@@ -526,9 +599,12 @@ function prepareSnapshotChange() {
 }
 
 async function render() {
-  populate();
-  const entry = selectedEntry();
-  if (!entry) return;
+  const entry = populate();
+  if (!entry) {
+    showUnavailablePublication();
+    return;
+  }
+  $("#snapshot-status").hidden = true;
   const version = ++state.renderVersion;
   try {
     const snapshot = await fetch(`./${entry.data_path}`).then((response) => response.ok ? response.json() : Promise.reject(new Error("Could not load ranking data.")));
@@ -542,7 +618,11 @@ async function render() {
       else closeDetail();
     }
   } catch (error) {
-    if (version === state.renderVersion) $("#snapshot-title").textContent = error.message;
+    if (version === state.renderVersion) {
+      state.selectionError = { message: error.message };
+      state.alternatives = [];
+      showUnavailablePublication();
+    }
   }
 }
 
@@ -561,6 +641,9 @@ $("#family-select").addEventListener("change", (event) => {
   const previousSlot = state.slot;
   state.family = event.target.value;
   state.notice = "";
+  state.selectionError = null;
+  state.alternatives = [];
+  state.interacted = true;
   if (previousSlot && !choices().some((entry) => entry.publication_slot === previousSlot)) {
     state.slot = null;
     if (state.family === "performance") state.notice = "Performance begins after eligible games have been played; showing the nearest available Performance snapshot.";
@@ -568,10 +651,24 @@ $("#family-select").addEventListener("change", (event) => {
   prepareSnapshotChange();
   void render();
 });
-$("#season-select").addEventListener("change", (event) => { state.season = Number(event.target.value); state.slot = null; state.notice = ""; prepareSnapshotChange(); void render(); });
-$("#snapshot-select").addEventListener("change", (event) => { state.slot = event.target.value; state.notice = ""; prepareSnapshotChange(); void render(); });
-document.querySelectorAll("[data-prior]").forEach((button) => button.addEventListener("click", () => { changePrior(button.dataset.prior); prepareSnapshotChange(); void render(); }));
-document.querySelectorAll("[data-variant]").forEach((button) => button.addEventListener("click", () => { state.variant = button.dataset.variant; prepareSnapshotChange(); void render(); }));
+$("#season-select").addEventListener("change", (event) => { state.season = Number(event.target.value); state.slot = null; state.notice = ""; state.selectionError = null; state.alternatives = []; state.interacted = true; prepareSnapshotChange(); void render(); });
+$("#snapshot-select").addEventListener("change", (event) => { state.slot = event.target.value; state.notice = ""; state.selectionError = null; state.alternatives = []; state.interacted = true; prepareSnapshotChange(); void render(); });
+document.querySelectorAll("[data-prior]").forEach((button) => button.addEventListener("click", () => { changePrior(button.dataset.prior); state.selectionError = null; state.alternatives = []; state.interacted = true; prepareSnapshotChange(); void render(); }));
+document.querySelectorAll("[data-variant]").forEach((button) => button.addEventListener("click", () => {
+  state.variant = button.dataset.variant;
+  const requested = new URLSearchParams();
+  requested.set("family", "performance");
+  requested.set("season", String(state.season));
+  requested.set("variant", state.variant);
+  if (state.slot) requested.set("snapshot", state.slot);
+  const resolution = resolvePublication(state.manifest, requested);
+  state.slot = resolution.entry?.publication_slot ?? resolution.requested;
+  state.selectionError = resolution.error;
+  state.alternatives = resolution.alternatives;
+  state.interacted = true;
+  prepareSnapshotChange();
+  void render();
+}));
 document.querySelectorAll("[data-depth]").forEach((button) => button.addEventListener("click", () => { state.depth = button.dataset.depth === "all" ? "all" : 25; document.querySelectorAll("[data-depth]").forEach((item) => item.classList.toggle("is-active", item === button)); if (state.snapshot) renderRankings(state.snapshot); }));
 $("#download-ballot")?.addEventListener("click", downloadBallot);
 
