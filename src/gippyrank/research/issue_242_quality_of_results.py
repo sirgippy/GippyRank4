@@ -6,11 +6,12 @@ import argparse
 import csv
 import gzip
 import hashlib
+import io
 import itertools
 import json
 import math
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -38,6 +39,8 @@ from gippyrank.research.quality_of_results import (
 )
 
 MARGIN_WEIGHTS = (0.0, 0.25, 0.5, 0.75, 1.0)
+MARSHALL_SWEEP_WEIGHTS = (0.0, 0.05, 0.10, 0.15, 0.20, 0.25)
+OREGON_COUNTERFACTUAL_MARGIN = 28
 BAD_CAMPBELL_FIXTURE_ID = "401866625"
 REPAIRED_CAMPBELL_GAME_ID = "401917058"
 ENDPOINT_TOLERANCE = 1e-8
@@ -82,7 +85,13 @@ def _write_csv(path: Path, rows: list[dict[str, object]], fields: list[str]) -> 
 
 def _write_pmf_artifact(path: Path, per_weight: dict[float, dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with gzip.open(path, "wt", newline="", encoding="utf-8", compresslevel=9) as handle:
+    with (
+        path.open("wb") as raw_handle,
+        gzip.GzipFile(
+            filename="", fileobj=raw_handle, mode="wb", compresslevel=9, mtime=0
+        ) as compressed_handle,
+        io.TextIOWrapper(compressed_handle, encoding="utf-8", newline="") as handle,
+    ):
         writer = csv.DictWriter(
             handle,
             fieldnames=["margin_weight", "team_id", "rank", "probability"],
@@ -212,7 +221,7 @@ def _ranking_comparison(
 ) -> dict[str, int | float]:
     candidate_rank = _display_ranks(candidate)
     baseline_rank = _display_ranks(baseline)
-    common = candidate_rank.keys() & baseline_rank.keys()
+    common = sorted(candidate_rank.keys() & baseline_rank.keys())
     disagreements, disagreement_rate = _pairwise_disagreement(candidate, baseline)
     candidate_top = set(candidate[:threshold])
     baseline_top = set(baseline[:threshold])
@@ -241,7 +250,7 @@ def _ranking_comparison(
 def _mean_abs_expected_rank_change(
     left: dict[str, np.ndarray], right: dict[str, np.ndarray]
 ) -> float:
-    common = left.keys() & right.keys()
+    common = sorted(left.keys() & right.keys())
     if not common:
         return 0.0
     left_summaries = {team_id: _pmf_summaries(left[team_id]) for team_id in common}
@@ -365,7 +374,7 @@ def _select_case_studies(
             qor[team_id] - qop[team_id] if team_id in qor and team_id in qop else None
         )
 
-    rated = [team_id for team_id in fbs_ids if stats[team_id]["games"] > 0]
+    rated = sorted(team_id for team_id in fbs_ids if stats[team_id]["games"] > 0)
     selected: list[tuple[str, str]] = []
 
     strong_records = [
@@ -710,6 +719,265 @@ def _make_rank_rows(
     return rows, rated_order
 
 
+def _run_targeted_sensitivities(
+    root: Path,
+    published_inputs: list[PublishedInput],
+    all_rank_rows: list[dict[str, object]],
+    snapshot_summaries: list[dict[str, object]],
+) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
+    """Run two narrow follow-up experiments on frozen Week 5 and Week 9 inputs."""
+    by_label = {item.display_label: item for item in published_inputs}
+    if "Week 5" not in by_label or "Week 9" not in by_label:
+        return [], []
+
+    def load(published: PublishedInput) -> tuple[Any, ...]:
+        return _input_bundle(root, published)
+
+    oregon_input = load(by_label["Week 9"])
+    (
+        _,
+        _,
+        _,
+        oregon_teams,
+        _,
+        oregon_games,
+        oregon_config,
+        _,
+        oregon_fbs_teams,
+        oregon_likelihood,
+        _,
+    ) = oregon_input
+    oregon_published = by_label["Week 9"]
+    oregon = next(team for team in oregon_teams if team.name.casefold() == "oregon")
+    portland_state = next(
+        team for team in oregon_teams if team.name.casefold() == "portland state"
+    )
+    blowout_index = next(
+        index
+        for index, game in enumerate(oregon_games)
+        if {game.home_id, game.away_id} == {oregon.team_id, portland_state.team_id}
+        and (
+            game.home_points - game.away_points
+            if game.home_id == oregon.team_id
+            else game.away_points - game.home_points
+        )
+        == 84
+    )
+    original_game = oregon_games[blowout_index]
+    oregon_is_home = original_game.home_id == oregon.team_id
+    original_oregon_score = (
+        original_game.home_points if oregon_is_home else original_game.away_points
+    )
+    original_opponent_score = (
+        original_game.away_points if oregon_is_home else original_game.home_points
+    )
+    if original_oregon_score != 84 or original_opponent_score != 0:
+        raise ValueError("Week 9 Oregon–Portland State source game is not 84–0")
+    counterfactual_game = replace(
+        original_game,
+        home_points=35 if oregon_is_home else 7,
+        away_points=7 if oregon_is_home else 35,
+    )
+    counterfactual_games = list(oregon_games)
+    counterfactual_games[blowout_index] = counterfactual_game
+    _, _, original_counts = _baseline_rankings(
+        oregon_published, oregon_fbs_teams, oregon_games
+    )
+    _, _, counterfactual_counts = _baseline_rankings(
+        oregon_published, oregon_fbs_teams, counterfactual_games
+    )
+    if original_counts != counterfactual_counts:
+        raise AssertionError("Oregon counterfactual changed eligible-game counts")
+    original_rows = {
+        (
+            str(row["publication_slot"]),
+            float(row["margin_weight"]),
+            str(row["team_id"]),
+        ): row
+        for row in all_rank_rows
+    }
+    oregon_rows: list[dict[str, object]] = []
+    factor_surface_cache: dict[tuple[object, ...], dict[str, np.ndarray]] = {}
+    for weight in MARGIN_WEIGHTS:
+        inference = infer_quality_of_results(
+            oregon_teams,
+            counterfactual_games,
+            oregon_likelihood,
+            weight,
+            max_iterations=int(oregon_config["max_iterations"]),
+            tolerance=float(oregon_config["tolerance"]),
+            damping=float(oregon_config["damping"]),
+            factor_surface_cache=factor_surface_cache,
+        )
+        cf_rows, _ = _make_rank_rows(
+            oregon_teams,
+            inference.pmfs,
+            counterfactual_counts,
+            oregon_published,
+            weight,
+        )
+        original = original_rows[(oregon_published.slot_id, weight, oregon.team_id)]
+        counterfactual = next(
+            row for row in cf_rows if row["team_id"] == oregon.team_id
+        )
+        original_expected = float(original["expected_rank"])
+        counterfactual_expected = float(counterfactual["expected_rank"])
+        original_display = int(original["display_rank"])
+        counterfactual_display = int(counterfactual["display_rank"])
+        expected_change = counterfactual_expected - original_expected
+        display_change = counterfactual_display - original_display
+        if weight == 0.0 and (abs(expected_change) > 1e-10 or display_change != 0):
+            raise AssertionError(
+                "preserving Oregon's win must leave the Quality of Record baseline unchanged"
+            )
+        oregon_rows.append(
+            {
+                "experiment": "oregon_blowout_counterfactual",
+                "publication_slot": oregon_published.slot_id,
+                "display_label": oregon_published.display_label,
+                "team_id": oregon.team_id,
+                "team_name": oregon.name,
+                "game_id": original_game.game_id,
+                "original_score": f"{original_oregon_score}-{original_opponent_score}",
+                "counterfactual_score": f"35-7 (margin {OREGON_COUNTERFACTUAL_MARGIN})",
+                "margin_weight": weight,
+                "original_expected_rank": original_expected,
+                "counterfactual_expected_rank": counterfactual_expected,
+                "expected_rank_change": expected_change,
+                "original_display_rank": original_display,
+                "counterfactual_display_rank": counterfactual_display,
+                "display_rank_change": display_change,
+                "expected_rank_change_pct_of_lambda1": None,
+                "display_rank_change_pct_of_lambda1": None,
+                "converged": inference.blended_context_posterior.converged,
+                "iterations": inference.blended_context_posterior.iterations,
+                "max_message_delta": inference.blended_context_posterior.max_message_delta,
+            }
+        )
+    lambda1 = oregon_rows[-1]
+    for row in oregon_rows:
+        row["expected_rank_change_pct_of_lambda1"] = (
+            100.0
+            * abs(float(row["expected_rank_change"]))
+            / abs(float(lambda1["expected_rank_change"]))
+            if float(lambda1["expected_rank_change"]) != 0
+            else None
+        )
+        row["display_rank_change_pct_of_lambda1"] = (
+            100.0
+            * abs(int(row["display_rank_change"]))
+            / abs(int(lambda1["display_rank_change"]))
+            if int(lambda1["display_rank_change"]) != 0
+            else None
+        )
+
+    marshall_published = by_label["Week 5"]
+    (
+        _,
+        _,
+        _,
+        marshall_teams,
+        _,
+        marshall_games,
+        marshall_config,
+        _,
+        _,
+        marshall_likelihood,
+        _,
+    ) = load(marshall_published)
+    marshall = next(
+        team for team in marshall_teams if team.name.casefold() == "marshall"
+    )
+    _, _, marshall_counts = _baseline_rankings(
+        marshall_published,
+        [team for team in marshall_teams if team.subdivision == "fbs"],
+        marshall_games,
+    )
+    baseline_marshall = {
+        float(row["margin_weight"]): row
+        for row in all_rank_rows
+        if row["publication_slot"] == marshall_published.slot_id
+        and row["team_id"] == marshall.team_id
+        and float(row["margin_weight"]) in {0.0, 0.25}
+    }
+    summary_by_weight = {
+        float(row["margin_weight"]): row
+        for row in snapshot_summaries
+        if row["publication_slot"] == marshall_published.slot_id
+    }
+    marshall_rows: list[dict[str, object]] = []
+    marshall_factor_cache: dict[tuple[object, ...], dict[str, np.ndarray]] = {}
+    previous_expected: float | None = None
+    two_back_expected: float | None = None
+    for weight in MARSHALL_SWEEP_WEIGHTS:
+        if weight in baseline_marshall:
+            rank_row = baseline_marshall[weight]
+            summary = summary_by_weight[weight]
+            converged = bool(summary["converged"])
+            iterations = int(summary["iterations"])
+            max_message_delta = float(summary["max_message_delta"])
+        else:
+            inference = infer_quality_of_results(
+                marshall_teams,
+                marshall_games,
+                marshall_likelihood,
+                weight,
+                max_iterations=int(marshall_config["max_iterations"]),
+                tolerance=float(marshall_config["tolerance"]),
+                damping=float(marshall_config["damping"]),
+                factor_surface_cache=marshall_factor_cache,
+            )
+            rank_rows, _ = _make_rank_rows(
+                marshall_teams,
+                inference.pmfs,
+                marshall_counts,
+                marshall_published,
+                weight,
+            )
+            rank_row = next(
+                row for row in rank_rows if row["team_id"] == marshall.team_id
+            )
+            converged = inference.blended_context_posterior.converged
+            iterations = inference.blended_context_posterior.iterations
+            max_message_delta = inference.blended_context_posterior.max_message_delta
+        expected = float(rank_row["expected_rank"])
+        increment = (
+            expected - previous_expected if previous_expected is not None else None
+        )
+        previous_weight = (
+            MARSHALL_SWEEP_WEIGHTS[len(marshall_rows) - 1] if marshall_rows else None
+        )
+        second_difference = (
+            expected - 2 * previous_expected + two_back_expected
+            if previous_expected is not None and two_back_expected is not None
+            else None
+        )
+        marshall_rows.append(
+            {
+                "experiment": "marshall_fine_weight_sweep",
+                "publication_slot": marshall_published.slot_id,
+                "display_label": marshall_published.display_label,
+                "team_id": marshall.team_id,
+                "team_name": marshall.name,
+                "margin_weight": weight,
+                "expected_rank": expected,
+                "display_rank": rank_row["display_rank"],
+                "expected_rank_increment": increment,
+                "expected_rank_slope_per_lambda": (
+                    increment / (weight - previous_weight)
+                    if increment is not None
+                    else None
+                ),
+                "second_difference": second_difference,
+                "converged": converged,
+                "iterations": iterations,
+                "max_message_delta": max_message_delta,
+            }
+        )
+        two_back_expected, previous_expected = previous_expected, expected
+    return oregon_rows, marshall_rows
+
+
 def _snapshot_manifest(
     root: Path,
     published: PublishedInput,
@@ -863,6 +1131,8 @@ def _render_report(
     case_rows: list[dict[str, object]],
     game_rows: list[dict[str, object]],
     endpoint_parity: list[dict[str, object]],
+    oregon_sensitivity_rows: list[dict[str, object]],
+    marshall_sweep_rows: list[dict[str, object]],
 ) -> str:
     weights = sorted({float(row["margin_weight"]) for row in sensitivity_rows})
     aggregate: dict[float, dict[str, float]] = {}
@@ -1000,6 +1270,72 @@ def _render_report(
         ]
     )
     lines.extend(_format_case_report(case_rows, game_rows))
+    if oregon_sensitivity_rows:
+        lines.extend(
+            [
+                "",
+                "## Oregon blowout counterfactual",
+                "",
+                "Using the frozen Week 9 inputs, Oregon's 84–0 Portland State win was changed only for this sensitivity run to a 35–7 win (28-point margin). The matchup, Oregon win, priors, likelihood, all other games, and inference settings were held fixed. This is not a proposed score correction or a production ranking change.",
+                "",
+                "| λ | Original expected rank | Counterfactual expected rank | Change | Original display rank | Counterfactual display rank | Change | Expected-rank change as % of λ=1 | Display-rank change as % of λ=1 |",
+                "| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+            ]
+        )
+        for row in oregon_sensitivity_rows:
+            expected_pct = row["expected_rank_change_pct_of_lambda1"]
+            display_pct = row["display_rank_change_pct_of_lambda1"]
+            lines.append(
+                f"| {float(row['margin_weight']):g} | {float(row['original_expected_rank']):.2f} | "
+                f"{float(row['counterfactual_expected_rank']):.2f} | {float(row['expected_rank_change']):+.2f} | "
+                f"{row['original_display_rank']} | {row['counterfactual_display_rank']} | {int(row['display_rank_change']):+d} | "
+                f"{float(expected_pct):.1f}% | {float(display_pct):.1f}% |"
+            )
+        full_weight = oregon_sensitivity_rows[-1]
+        lines.append(
+            f"\nThe λ=0 result is unchanged because Oregon still wins; margin evidence is absent at that endpoint. Relative to the λ=1 effect, the counterfactual movement at λ=0.25 is {float(oregon_sensitivity_rows[1]['expected_rank_change_pct_of_lambda1']):.1f}% for expected rank and {float(oregon_sensitivity_rows[1]['display_rank_change_pct_of_lambda1']):.1f}% for display rank. At λ=0.50 those shares are {float(oregon_sensitivity_rows[2]['expected_rank_change_pct_of_lambda1']):.1f}% and {float(oregon_sensitivity_rows[2]['display_rank_change_pct_of_lambda1']):.1f}%; at λ=0.75 they are {float(oregon_sensitivity_rows[3]['expected_rank_change_pct_of_lambda1']):.1f}% and {float(oregon_sensitivity_rows[3]['display_rank_change_pct_of_lambda1']):.1f}%. The λ=1 expected-rank and display-rank changes are {float(full_weight['expected_rank_change']):+.2f} and {int(full_weight['display_rank_change']):+d}. Thus lower intermediate weights materially reduce this blowout's ranking effect, though λ=0.75 remains close to λ=1. These observed differences quantify this game's influence on these rankings; they do not decide how wins and margins ought to be valued."
+        )
+    if marshall_sweep_rows:
+        lines.extend(
+            [
+                "",
+                "## Marshall fine weight sweep",
+                "",
+                "Using the same frozen Week 5 evidence, the λ interval from 0 to 0.25 was sampled in 0.05 steps. The added runs leave the full-grid results untouched; the endpoints reuse their Week 5 results from the main replay.",
+                "",
+                "| λ | Expected rank | Expected-rank change from prior step | Display rank | Second difference | Converged |",
+                "| ---: | ---: | ---: | ---: | ---: | :---: |",
+            ]
+        )
+        for row in marshall_sweep_rows:
+            increment = row["expected_rank_increment"]
+            curvature = row["second_difference"]
+            increment_text = (
+                f"{float(increment):+.2f}" if increment is not None else "—"
+            )
+            curvature_text = (
+                f"{float(curvature):+.2f}" if curvature is not None else "—"
+            )
+            lines.append(
+                f"| {float(row['margin_weight']):.2f} | {float(row['expected_rank']):.2f} | "
+                f"{increment_text} | {row['display_rank']} | {curvature_text} | {row['converged']} |"
+            )
+        increments = [
+            float(row["expected_rank_increment"])
+            for row in marshall_sweep_rows
+            if row["expected_rank_increment"] is not None
+        ]
+        second_differences = [
+            abs(float(row["second_difference"]))
+            for row in marshall_sweep_rows
+            if row["second_difference"] is not None
+        ]
+        monotone = all(value >= 0 for value in increments) or all(
+            value <= 0 for value in increments
+        )
+        lines.append(
+            f"\nExpected rank is {'monotone' if monotone else 'not monotone'} across this sweep. The five 0.05-step expected-rank changes range from {min(increments):+.2f} to {max(increments):+.2f} places; the largest absolute second difference is {max(second_differences):.2f} places. These adjacent changes and curvature values assess trajectory shape separately from convergence. Marshall was 3–1: a 45-point loss at Penn State and three close wins (36–35 over Gardner-Webb, 28–26 over Middle Tennessee, 30–24 over Missouri State). The sweep shows how increasing margin weight gives that blowout loss more relative influence than the binary record does. This is an empirical response of the model; it does not determine the intended normative tradeoff."
+        )
     lines.extend(
         [
             "",
@@ -1009,11 +1345,13 @@ def _render_report(
             "",
             "The historical replay describes rank behavior; it does not establish which balance of wins and margins best represents season accomplishment. The issue explicitly makes λ a judgment about that meaning, and there is no objective target here that can select it without changing the question into poll imitation or predictive-margin optimization.",
             "",
+            "The Oregon counterfactual shows that λ=0.25 and λ=0.50 substantially temper this extreme margin's effect; the Week 5 Marshall sweep is smooth at the tested 0.05 resolution. Neither sensitivity result selects a preferred λ: the choice still depends on how the ranking should value wins against margin evidence.",
+            "",
             "**Recommendation:** retain Quality of Results as a research candidate and continue with a separate implementation/publication proposal only after the product owner chooses the intended win-versus-margin tradeoff. Treat λ=0.50 as a transparent central candidate for that discussion, not an empirically selected winner. Do not promote a third production variant from this study alone. A follow-up should preregister the interpretation and compare the documented game-level cases with that interpretation before publication.",
             "",
             "## Reproducibility",
             "",
-            "The machine-readable manifest pins each publication slot, Context metadata, included game rows, prior, likelihood, and published endpoint artifacts. `rankings.csv` preserves rank and uncertainty summaries for every FBS team and λ; `posterior_pmfs/` retains the full distributions. `case_studies.csv` and `case_study_games.csv` provide the selected team cases and underlying game rows. All candidate runs converged; see `snapshot_summary.csv` for iterations and final message deltas.",
+            "The machine-readable manifest pins each publication slot, Context metadata, included game rows, prior, likelihood, and published endpoint artifacts. `rankings.csv` preserves rank and uncertainty summaries for every FBS team and λ; `posterior_pmfs/` retains the full distributions with deterministic gzip timestamps (`mtime=0`). `case_studies.csv` and `case_study_games.csv` provide selected team cases and underlying game rows. The two targeted experiments are in `oregon_blowout_counterfactual.csv` and `marshall_fine_weight_sweep.csv`. All candidate runs converged; see `snapshot_summary.csv` and the targeted outputs for convergence details.",
             "",
         ]
     )
@@ -1255,7 +1593,7 @@ def run_experiment(
                             _pmf_summaries(previous["pmfs"][team_id])["expected_rank"]
                         )
                     )
-                    for team_id in data["pmfs"].keys() & previous["pmfs"].keys()
+                    for team_id in sorted(data["pmfs"].keys() & previous["pmfs"].keys())
                 }
                 largest_change_team = max(
                     expected_rank_changes, key=expected_rank_changes.get
@@ -1421,6 +1759,9 @@ def run_experiment(
             if game["case"] == "largest_adjacent_lambda_shift":
                 game["publication_slot"] = source_publication.slot_id
                 game["display_label"] = source_publication.display_label
+    oregon_sensitivity_rows, marshall_sweep_rows = _run_targeted_sensitivities(
+        root, published_inputs, all_rank_rows, snapshot_summaries
+    )
     _write_csv(
         output_dir / "rankings.csv",
         all_rank_rows,
@@ -1541,6 +1882,52 @@ def run_experiment(
             "game_id",
         ],
     )
+    _write_csv(
+        output_dir / "oregon_blowout_counterfactual.csv",
+        oregon_sensitivity_rows,
+        [
+            "experiment",
+            "publication_slot",
+            "display_label",
+            "team_id",
+            "team_name",
+            "game_id",
+            "original_score",
+            "counterfactual_score",
+            "margin_weight",
+            "original_expected_rank",
+            "counterfactual_expected_rank",
+            "expected_rank_change",
+            "expected_rank_change_pct_of_lambda1",
+            "original_display_rank",
+            "counterfactual_display_rank",
+            "display_rank_change",
+            "display_rank_change_pct_of_lambda1",
+            "converged",
+            "iterations",
+            "max_message_delta",
+        ],
+    )
+    _write_csv(
+        output_dir / "marshall_fine_weight_sweep.csv",
+        marshall_sweep_rows,
+        [
+            "experiment",
+            "publication_slot",
+            "display_label",
+            "team_id",
+            "team_name",
+            "margin_weight",
+            "expected_rank",
+            "display_rank",
+            "expected_rank_increment",
+            "expected_rank_slope_per_lambda",
+            "second_difference",
+            "converged",
+            "iterations",
+            "max_message_delta",
+        ],
+    )
     (output_dir / "endpoint_parity.json").write_text(
         json.dumps(endpoint_parity, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
@@ -1563,6 +1950,36 @@ def run_experiment(
         "campbell_replacement_game_id": REPAIRED_CAMPBELL_GAME_ID,
         "snapshots": input_manifest,
         "posterior_pmf_artifacts": pmf_artifacts,
+        "targeted_sensitivity_experiments": {
+            "oregon_blowout_counterfactual": {
+                "performed": bool(oregon_sensitivity_rows),
+                "publication_slot": next(
+                    (
+                        item.slot_id
+                        for item in published_inputs
+                        if item.display_label == "Week 9"
+                    ),
+                    None,
+                ),
+                "actual_score": "84-0",
+                "counterfactual_score": "35-7",
+                "preserve_win": True,
+                "margin_weights": list(MARGIN_WEIGHTS),
+            },
+            "marshall_fine_weight_sweep": {
+                "performed": bool(marshall_sweep_rows),
+                "publication_slot": next(
+                    (
+                        item.slot_id
+                        for item in published_inputs
+                        if item.display_label == "Week 5"
+                    ),
+                    None,
+                ),
+                "margin_weights": list(MARSHALL_SWEEP_WEIGHTS),
+                "step_size": 0.05,
+            },
+        },
         "output_sha256": {
             name: sha256(output_dir / name)
             for name in (
@@ -1571,6 +1988,8 @@ def run_experiment(
                 "sensitivity_summary.csv",
                 "case_studies.csv",
                 "case_study_games.csv",
+                "oregon_blowout_counterfactual.csv",
+                "marshall_fine_weight_sweep.csv",
                 "endpoint_parity.json",
             )
         },
@@ -1584,6 +2003,8 @@ def run_experiment(
         case_rows,
         game_rows,
         endpoint_parity,
+        oregon_sensitivity_rows,
+        marshall_sweep_rows,
     )
     (output_dir / "report.md").write_text(report, encoding="utf-8")
     return manifest

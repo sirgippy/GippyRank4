@@ -18,50 +18,52 @@
     "case_studies.csv": "9db23cb37b2f371ea2c9164ed9650d8f848c7ed22d09ec60e2cfdcecbd22547b",
     "case_study_games.csv": "6114f6d89017357413b0c55f3f505d85945169332cac632f5bb68033e32ac181",
     "endpoint_parity.json": "cacbbf0014a106d2eca9ce6795156cde12bb441cd74b9a956eb4af5fad13cdee",
+    "marshall_fine_weight_sweep.csv": "3fd95f86ca96138690cffb7f4eeed6cad671c358d457842427a223e266fec038",
+    "oregon_blowout_counterfactual.csv": "4efa1d00c89cb718405db9b2a238c07b2f94b9666062c67ea3eabf81d3286d81",
     "rankings.csv": "eeff34c8f4fedd3099b352522cac699ce5aa31578ff723b7a83d1228da7a6132",
-    "sensitivity_summary.csv": "b0abe84e84eb62357b02c54101ea8ff7c79159a1e7980cd27687a26647961c8d",
+    "sensitivity_summary.csv": "d4a0b3f1f62d8139e275fbb2ad1f9c944d86273d19beec4f8bcc860bdffadd66",
     "snapshot_summary.csv": "2c5fc90f254d7aa5f2a6e133d2566bfce3ce16128c9d648b7349a385779cc0b9"
   },
   "posterior_pmf_artifacts": [
     {
       "path": "posterior_pmfs/2026-09-08.csv.gz",
       "publication_slot": "2026-09-08",
-      "sha256": "f8fd6412ba1bd238847bbb36bedbcd355cae4aa51aea3c480f70f3282db56ba6"
+      "sha256": "c9c257684f9d66419d0c6e51c00c9bd28ea52fa39ba03fcdf4f6731f7ea7ef04"
     },
     {
       "path": "posterior_pmfs/2026-09-13.csv.gz",
       "publication_slot": "2026-09-13",
-      "sha256": "a41ab5a11a19939cb4141ecac0fdb8c28cda3f2088b5d823357f0f5f2b3ce730"
+      "sha256": "514ea85986f30f0b846a0104a3306006f69a8c962382b59e140555937c560b1d"
     },
     {
       "path": "posterior_pmfs/2026-09-20.csv.gz",
       "publication_slot": "2026-09-20",
-      "sha256": "86a0267ed0bc0eb69ee1f846a594dd2746264cf2419033a7786d7e191b749261"
+      "sha256": "50895ece3d6bcd715ce7ce373a9c6fa6f0db479f8b145094d0be1d0c6ee1ad85"
     },
     {
       "path": "posterior_pmfs/2026-09-27.csv.gz",
       "publication_slot": "2026-09-27",
-      "sha256": "a8d9090451aec06128f982c52ac13f42a1368ec7b883cdbf9585e19cf1c517bc"
+      "sha256": "a3090d52e5276988df736ecf28fd76473acd1a86a23605edaf8d186a53e768b4"
     },
     {
       "path": "posterior_pmfs/2026-10-04.csv.gz",
       "publication_slot": "2026-10-04",
-      "sha256": "83f0628ff01dc1ed4d8bc0a4a7cac56c1347bb6fa6f78e6b36defae8923f81f0"
+      "sha256": "661e7be566eb5d6569af0319965c03ed50ee23c15a9fc83f951ef439b8d34ca5"
     },
     {
       "path": "posterior_pmfs/2026-10-11T12-47-27.781981Z.csv.gz",
       "publication_slot": "2026-10-11T12-47-27.781981Z",
-      "sha256": "849216c75e1a2c131c836c9fda40c36c1c4197cfd0a4f616514c40e2550b2070"
+      "sha256": "74b7bad98272153cc38c0918cd3f0714294cfe7902483b44b27301ed732c6173"
     },
     {
       "path": "posterior_pmfs/2026-10-18T13-04-45.309059Z.csv.gz",
       "publication_slot": "2026-10-18T13-04-45.309059Z",
-      "sha256": "cb73807cdad6bc3bac290bfd8813814f4e297d25f4f0172adf26e4db4dc9caf6"
+      "sha256": "5269c8de33252b635b69fb7c34f1eaddb99252854954142406cc8289e8bd4670"
     },
     {
       "path": "posterior_pmfs/2026-10-25T12-59-22.246522Z.csv.gz",
       "publication_slot": "2026-10-25T12-59-22.246522Z",
-      "sha256": "62c84d87c6644da29b40ef1818275292cd81e4b09d98d739905f5dbddbd2e9ab"
+      "sha256": "37ebcf9f2650b063082d78d91e5ae7ffe21c96e15d4ab269931ba8767dfd3f0d"
     }
   ],
   "prior_method": "Performance prior stripping; uniform PMF for zero-game FBS teams",
@@ -272,5 +274,34 @@
       "quality_of_record_metadata_sha256": "418c48bf32e24a408e8d49045a91978f80d7af12fd01d2c6c88f89ba398ab33e"
     }
   ],
-  "study": "research_only_quality_of_results"
+  "study": "research_only_quality_of_results",
+  "targeted_sensitivity_experiments": {
+    "marshall_fine_weight_sweep": {
+      "margin_weights": [
+        0.0,
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.25
+      ],
+      "performed": true,
+      "publication_slot": "2026-09-27",
+      "step_size": 0.05
+    },
+    "oregon_blowout_counterfactual": {
+      "actual_score": "84-0",
+      "counterfactual_score": "35-7",
+      "margin_weights": [
+        0.0,
+        0.25,
+        0.5,
+        0.75,
+        1.0
+      ],
+      "performed": true,
+      "preserve_win": true,
+      "publication_slot": "2026-10-25T12-59-22.246522Z"
+    }
+  }
 }

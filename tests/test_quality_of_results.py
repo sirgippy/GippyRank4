@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import gzip
 import json
 from dataclasses import replace
 from pathlib import Path
@@ -11,7 +12,11 @@ import pytest
 from gippyrank.performance_v1 import infer_performance
 from gippyrank.posterior.engine import Game, LikelihoodV1, Team, game_factor
 from gippyrank.quality_of_record import binary_game_factor, infer_quality_of_record
-from gippyrank.research.issue_242_quality_of_results import _published_inputs
+from gippyrank.research.issue_242_quality_of_results import (
+    MARGIN_WEIGHTS,
+    _published_inputs,
+    _write_pmf_artifact,
+)
 from gippyrank.research.quality_of_results import (
     blended_game_factor,
     infer_quality_of_results,
@@ -143,3 +148,21 @@ def test_official_weekly_inputs_use_repaired_campbell_evidence() -> None:
             game_ids = {row["id"] for row in csv.DictReader(handle)}
         assert "401866625" not in game_ids
         assert "401917058" in game_ids
+
+
+def test_pmf_gzip_artifacts_have_deterministic_headers_and_bytes(
+    tmp_path: Path,
+) -> None:
+    pmf = np.array([0.25, 0.75])
+    per_weight = {weight: {"pmfs": {"team-a": pmf}} for weight in MARGIN_WEIGHTS}
+    first = tmp_path / "first.csv.gz"
+    second = tmp_path / "second.csv.gz"
+
+    _write_pmf_artifact(first, per_weight)
+    _write_pmf_artifact(second, per_weight)
+
+    first_bytes = first.read_bytes()
+    assert first_bytes == second.read_bytes()
+    assert first_bytes[4:8] == b"\0\0\0\0"
+    with gzip.open(first, "rt", encoding="utf-8") as handle:
+        assert handle.readline() == "margin_weight,team_id,rank,probability\n"
