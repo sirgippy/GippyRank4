@@ -1,0 +1,2184 @@
+{
+  "dry_run": false,
+  "issue": "238",
+  "lineage_suffix": "issue-238",
+  "normalized_game_corpus_sha256": "7ae60b8c44ab8b8688ff6d32a1b89ca8be99a66777164e9cc5e2a2a5341214bc",
+  "normalized_phantom_present": false,
+  "normalized_replacement_result": {
+    "away_points": "19",
+    "away_team": "Western Carolina",
+    "game_id": "401917058",
+    "home_points": "28",
+    "home_team": "Campbell"
+  },
+  "performance_backfill": {
+    "blocked_publication_count": 0,
+    "publication_count": 21,
+    "status": "complete"
+  },
+  "publications": [
+    {
+      "corrected_game_count": 164,
+      "corrected_game_ids_sha256": "f40995081df4433f693e3b77c7a86f68333ba4923a6b2f42858e989ce608c77c",
+      "corrected_game_rows_sha256": "0f6f074eeae439f1b4ffeb0e2ebaec520fb4b74790831f9d8cb1e1812ce0dab6",
+      "publication_slot": "2026-09-06",
+      "publication_status": "temporary",
+      "real_result_retained": false,
+      "source_game_count": 165,
+      "source_game_ids_sha256": "b745df27a713619c5cf033dc8551fc91d05d312bdd6a0f788d867b283221c1e0",
+      "sources": {
+        "context": {
+          "effective_cutoff": "2026-09-06T17:34:56.895103+00:00",
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-06T17-34-56.895103Z-context-v1.2-issue-238/predictive/context",
+          "prior_family": "context",
+          "prior_model_version": "1.2",
+          "requested_cutoff": "2026-09-06T17:34:56.895103+00:00",
+          "snapshot_id": "2026-weekly-2026-09-06T17-34-56.895103Z-context-v1.2-issue-238"
+        },
+        "history": {
+          "effective_cutoff": "2026-09-06T17:34:56.895103+00:00",
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-06T17-34-56.895103Z-history-issue-238/predictive/history",
+          "prior_family": "history",
+          "prior_model_version": "1.1",
+          "requested_cutoff": "2026-09-06T17:34:56.895103+00:00",
+          "snapshot_id": "2026-weekly-2026-09-06T17-34-56.895103Z-history-issue-238"
+        },
+        "quality_of_play": {
+          "effective_cutoff": "2026-09-06T17:34:56.895103+00:00",
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-06T17-34-56.895103Z-context-v1.2-issue-238/performance",
+          "prior_family": null,
+          "prior_model_version": "1.2",
+          "requested_cutoff": "2026-09-06T17:34:56.895103+00:00",
+          "snapshot_id": "2026-weekly-2026-09-06T17-34-56.895103Z-context-v1.2-issue-238-performance"
+        },
+        "quality_of_record": {
+          "effective_cutoff": "2026-09-06T17:34:56.895103+00:00",
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-06T17-34-56.895103Z-context-v1.2-issue-238/performance/quality_of_record",
+          "prior_family": null,
+          "prior_model_version": "1.2",
+          "requested_cutoff": "2026-09-06T17:34:56.895103+00:00",
+          "snapshot_id": "2026-weekly-2026-09-06T17-34-56.895103Z-context-v1.2-issue-238-performance-quality-of-record"
+        }
+      }
+    },
+    {
+      "corrected_game_count": 170,
+      "corrected_game_ids_sha256": "1482c95ccf1b6029d71c0a58a64fa2aa59d2c41ee144d3fd3f626f1bef103167",
+      "corrected_game_rows_sha256": "41ef395521d7876b2e9c36a4ab62ca1b031f2d940feec2a0b825e47d7e68877c",
+      "publication_slot": "2026-09-07",
+      "publication_status": "temporary",
+      "real_result_retained": true,
+      "source_game_count": 171,
+      "source_game_ids_sha256": "4f24dc85fa19f39d25caeb86aadb7728430e781657fd1ba5ae1d972920eeee34",
+      "sources": {
+        "context": {
+          "effective_cutoff": "2026-09-07T13:42:50.853587+00:00",
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-07T13-42-50.853587Z-context-v1.2-issue-238/predictive/context",
+          "prior_family": "context",
+          "prior_model_version": "1.2",
+          "requested_cutoff": "2026-09-07T13:42:50.853587+00:00",
+          "snapshot_id": "2026-weekly-2026-09-07T13-42-50.853587Z-context-v1.2-issue-238"
+        },
+        "history": {
+          "effective_cutoff": "2026-09-07T13:42:50.853587+00:00",
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-07T13-42-50.853587Z-history-issue-238/predictive/history",
+          "prior_family": "history",
+          "prior_model_version": "1.1",
+          "requested_cutoff": "2026-09-07T13:42:50.853587+00:00",
+          "snapshot_id": "2026-weekly-2026-09-07T13-42-50.853587Z-history-issue-238"
+        },
+        "quality_of_play": {
+          "effective_cutoff": "2026-09-07T13:42:50.853587+00:00",
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-07T13-42-50.853587Z-context-v1.2-issue-238/performance",
+          "prior_family": null,
+          "prior_model_version": "1.2",
+          "requested_cutoff": "2026-09-07T13:42:50.853587+00:00",
+          "snapshot_id": "2026-weekly-2026-09-07T13-42-50.853587Z-context-v1.2-issue-238-performance"
+        },
+        "quality_of_record": {
+          "effective_cutoff": "2026-09-07T13:42:50.853587+00:00",
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-07T13-42-50.853587Z-context-v1.2-issue-238/performance/quality_of_record",
+          "prior_family": null,
+          "prior_model_version": "1.2",
+          "requested_cutoff": "2026-09-07T13:42:50.853587+00:00",
+          "snapshot_id": "2026-weekly-2026-09-07T13-42-50.853587Z-context-v1.2-issue-238-performance-quality-of-record"
+        }
+      }
+    },
+    {
+      "corrected_game_count": 171,
+      "corrected_game_ids_sha256": "a7244ab94d8491df15e8edfd9a38c2fe89fadb819f07229fc832ec932e6507ba",
+      "corrected_game_rows_sha256": "c59b39478ad7c9cab00a8856bd639272cb00d18a76cab1cc1d10035d8c14d0c5",
+      "publication_slot": "2026-09-08",
+      "publication_status": "official",
+      "real_result_retained": true,
+      "source_game_count": 172,
+      "source_game_ids_sha256": "606268d6ceaa14194032e70239cbd69fc7fe046a9de0221a0e8009c4a1dc57fd",
+      "sources": {
+        "context": {
+          "effective_cutoff": "2026-09-08T11:43:00.275833+00:00",
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-issue-238/predictive/context",
+          "prior_family": "context",
+          "prior_model_version": "1.4",
+          "requested_cutoff": "2026-09-08T11:43:00.275833+00:00",
+          "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-issue-238"
+        },
+        "history": {
+          "effective_cutoff": "2026-09-08T11:43:00.275833+00:00",
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-history-issue-238/predictive/history",
+          "prior_family": "history",
+          "prior_model_version": "1.1",
+          "requested_cutoff": "2026-09-08T11:43:00.275833+00:00",
+          "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-history-issue-238"
+        },
+        "quality_of_play": {
+          "effective_cutoff": "2026-09-08T11:43:00.275833+00:00",
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-issue-238/performance",
+          "prior_family": null,
+          "prior_model_version": "1.4",
+          "requested_cutoff": "2026-09-08T11:43:00.275833+00:00",
+          "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-issue-238-performance"
+        },
+        "quality_of_record": {
+          "effective_cutoff": "2026-09-08T11:43:00.275833+00:00",
+          "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-issue-238/performance/quality_of_record",
+          "prior_family": null,
+          "prior_model_version": "1.4",
+          "requested_cutoff": "2026-09-08T11:43:00.275833+00:00",
+          "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-issue-238-performance-quality-of-record"
+        }
+      }
+    }
+  ],
+  "ranking_change_summaries": [
+    {
+      "largest_display_rank_change": 1,
+      "largest_expected_rank_change": 3.1482165099282184,
+      "largest_movers": [
+        {
+          "display_rank_change": 1,
+          "expected_rank_change": 0.2695504106870601,
+          "previous_display_rank": "93",
+          "previous_expected_rank": 88.37138326421898,
+          "publication_slot": "2026-09-06",
+          "ranking": "context",
+          "repaired_display_rank": "94",
+          "repaired_expected_rank": 88.64093367490604,
+          "team_id": "55",
+          "team_name": "Jacksonville State"
+        },
+        {
+          "display_rank_change": -1,
+          "expected_rank_change": 0.0,
+          "previous_display_rank": "94",
+          "previous_expected_rank": 88.44129482085079,
+          "publication_slot": "2026-09-06",
+          "ranking": "context",
+          "repaired_display_rank": "93",
+          "repaired_expected_rank": 88.44129482085079,
+          "team_id": "204",
+          "team_name": "Oregon State"
+        },
+        {
+          "display_rank_change": null,
+          "expected_rank_change": 3.1482165099282184,
+          "previous_display_rank": "",
+          "previous_expected_rank": 45.03754596287992,
+          "publication_slot": "2026-09-06",
+          "ranking": "context",
+          "repaired_display_rank": "",
+          "repaired_expected_rank": 48.185762472808136,
+          "team_id": "2717",
+          "team_name": "Western Carolina"
+        },
+        {
+          "display_rank_change": null,
+          "expected_rank_change": -0.9025591715681642,
+          "previous_display_rank": "",
+          "previous_expected_rank": 50.03304950124365,
+          "publication_slot": "2026-09-06",
+          "ranking": "context",
+          "repaired_display_rank": "",
+          "repaired_expected_rank": 49.13049032967549,
+          "team_id": "2097",
+          "team_name": "Campbell"
+        },
+        {
+          "display_rank_change": null,
+          "expected_rank_change": -0.7585287225325175,
+          "previous_display_rank": "",
+          "previous_expected_rank": 79.72770517189309,
+          "publication_slot": "2026-09-06",
+          "ranking": "context",
+          "repaired_display_rank": "",
+          "repaired_expected_rank": 78.96917644936057,
+          "team_id": "2193",
+          "team_name": "East Tennessee State"
+        }
+      ],
+      "publication_slot": "2026-09-06",
+      "ranking": "context",
+      "team_count": 251,
+      "teams_with_changed_display_rank": 2,
+      "teams_with_changed_expected_rank": 12
+    },
+    {
+      "largest_display_rank_change": 0,
+      "largest_expected_rank_change": 3.0848296466258844,
+      "largest_movers": [
+        {
+          "display_rank_change": null,
+          "expected_rank_change": 3.0848296466258844,
+          "previous_display_rank": "",
+          "previous_expected_rank": 44.817393875024656,
+          "publication_slot": "2026-09-06",
+          "ranking": "history",
+          "repaired_display_rank": "",
+          "repaired_expected_rank": 47.90222352165054,
+          "team_id": "2717",
+          "team_name": "Western Carolina"
+        },
+        {
+          "display_rank_change": null,
+          "expected_rank_change": -0.8172477336191761,
+          "previous_display_rank": "",
+          "previous_expected_rank": 49.947738063294665,
+          "publication_slot": "2026-09-06",
+          "ranking": "history",
+          "repaired_display_rank": "",
+          "repaired_expected_rank": 49.13049032967549,
+          "team_id": "2097",
+          "team_name": "Campbell"
+        },
+        {
+          "display_rank_change": null,
+          "expected_rank_change": -0.7210814859673889,
+          "previous_display_rank": "",
+          "previous_expected_rank": 79.69025793532796,
+          "publication_slot": "2026-09-06",
+          "ranking": "history",
+          "repaired_display_rank": "",
+          "repaired_expected_rank": 78.96917644936057,
+          "team_id": "2193",
+          "team_name": "East Tennessee State"
+        },
+        {
+          "display_rank_change": null,
+          "expected_rank_change": 0.6803884013268089,
+          "previous_display_rank": "",
+          "previous_expected_rank": 95.84811813306985,
+          "publication_slot": "2026-09-06",
+          "ranking": "history",
+          "repaired_display_rank": "",
+          "repaired_expected_rank": 96.52850653439666,
+          "team_id": "2198",
+          "team_name": "Eastern Kentucky"
+        },
+        {
+          "display_rank_change": 0,
+          "expected_rank_change": 0.2782595673676269,
+          "previous_display_rank": "92",
+          "previous_expected_rank": 85.98455997578026,
+          "publication_slot": "2026-09-06",
+          "ranking": "history",
+          "repaired_display_rank": "92",
+          "repaired_expected_rank": 86.26281954314788,
+          "team_id": "55",
+          "team_name": "Jacksonville State"
+        }
+      ],
+      "publication_slot": "2026-09-06",
+      "ranking": "history",
+      "team_count": 251,
+      "teams_with_changed_display_rank": 0,
+      "teams_with_changed_expected_rank": 11
+    },
+    {
+      "largest_display_rank_change": 0,
+      "largest_expected_rank_change": 0.3451842075700995,
+      "largest_movers": [
+        {
+          "display_rank_change": 0,
+          "expected_rank_change": 0.3451842075700995,
+          "previous_display_rank": "97",
+          "previous_expected_rank": 83.88104515576721,
+          "publication_slot": "2026-09-06",
+          "ranking": "quality_of_play",
+          "repaired_display_rank": "97",
+          "repaired_expected_rank": 84.22622936333731,
+          "team_id": "55",
+          "team_name": "Jacksonville State"
+        },
+        {
+          "display_rank_change": 0,
+          "expected_rank_change": 0.09543804109829068,
+          "previous_display_rank": "26",
+          "previous_expected_rank": 41.28138909647883,
+          "publication_slot": "2026-09-06",
+          "ranking": "quality_of_play",
+          "repaired_display_rank": "26",
+          "repaired_expected_rank": 41.37682713757712,
+          "team_id": "2449",
+          "team_name": "North Dakota State"
+        }
+      ],
+      "publication_slot": "2026-09-06",
+      "ranking": "quality_of_play",
+      "team_count": 138,
+      "teams_with_changed_display_rank": 0,
+      "teams_with_changed_expected_rank": 2
+    },
+    {
+      "largest_display_rank_change": 0,
+      "largest_expected_rank_change": 0.0,
+      "largest_movers": [],
+      "publication_slot": "2026-09-06",
+      "ranking": "quality_of_record",
+      "team_count": 138,
+      "teams_with_changed_display_rank": 0,
+      "teams_with_changed_expected_rank": 0
+    },
+    {
+      "largest_display_rank_change": 1,
+      "largest_expected_rank_change": 3.8039922972714777,
+      "largest_movers": [
+        {
+          "display_rank_change": 1,
+          "expected_rank_change": 0.3547179874873052,
+          "previous_display_rank": "94",
+          "previous_expected_rank": 88.80271934157699,
+          "publication_slot": "2026-09-07",
+          "ranking": "context",
+          "repaired_display_rank": "95",
+          "repaired_expected_rank": 89.1574373290643,
+          "team_id": "55",
+          "team_name": "Jacksonville State"
+        },
+        {
+          "display_rank_change": -1,
+          "expected_rank_change": 1.4210854715202004e-14,
+          "previous_display_rank": "95",
+          "previous_expected_rank": 88.89633780217979,
+          "publication_slot": "2026-09-07",
+          "ranking": "context",
+          "repaired_display_rank": "94",
+          "repaired_expected_rank": 88.8963378021798,
+          "team_id": "2005",
+          "team_name": "Air Force"
+        },
+        {
+          "display_rank_change": null,
+          "expected_rank_change": 3.8039922972714777,
+          "previous_display_rank": "",
+          "previous_expected_rank": 49.24940911868876,
+          "publication_slot": "2026-09-07",
+          "ranking": "context",
+          "repaired_display_rank": "",
+          "repaired_expected_rank": 53.05340141596024,
+          "team_id": "2717",
+          "team_name": "Western Carolina"
+        },
+        {
+          "display_rank_change": null,
+          "expected_rank_change": -3.113679629775106,
+          "previous_display_rank": "",
+          "previous_expected_rank": 45.0689190913676,
+          "publication_slot": "2026-09-07",
+          "ranking": "context",
+          "repaired_display_rank": "",
+          "repaired_expected_rank": 41.95523946159249,
+          "team_id": "2097",
+          "team_name": "Campbell"
+        },
+        {
+          "display_rank_change": null,
+          "expected_rank_change": -1.5904439400754455,
+          "previous_display_rank": "",
+          "previous_expected_rank": 77.6543554219028,
+          "publication_slot": "2026-09-07",
+          "ranking": "context",
+          "repaired_display_rank": "",
+          "repaired_expected_rank": 76.06391148182736,
+          "team_id": "2193",
+          "team_name": "East Tennessee State"
+        }
+      ],
+      "publication_slot": "2026-09-07",
+      "ranking": "context",
+      "team_count": 253,
+      "teams_with_changed_display_rank": 2,
+      "teams_with_changed_expected_rank": 12
+    },
+    {
+      "largest_display_rank_change": 0,
+      "largest_expected_rank_change": 3.7775795848457747,
+      "largest_movers": [
+        {
+          "display_rank_change": null,
+          "expected_rank_change": 3.7775795848457747,
+          "previous_display_rank": "",
+          "previous_expected_rank": 49.04586983829142,
+          "publication_slot": "2026-09-07",
+          "ranking": "history",
+          "repaired_display_rank": "",
+          "repaired_expected_rank": 52.8234494231372,
+          "team_id": "2717",
+          "team_name": "Western Carolina"
+        },
+        {
+          "display_rank_change": null,
+          "expected_rank_change": -3.080752144872662,
+          "previous_display_rank": "",
+          "previous_expected_rank": 44.95550990693573,
+          "publication_slot": "2026-09-07",
+          "ranking": "history",
+          "repaired_display_rank": "",
+          "repaired_expected_rank": 41.87475776206307,
+          "team_id": "2097",
+          "team_name": "Campbell"
+        },
+        {
+          "display_rank_change": null,
+          "expected_rank_change": -1.5765939721746207,
+          "previous_display_rank": "",
+          "previous_expected_rank": 77.60306441044307,
+          "publication_slot": "2026-09-07",
+          "ranking": "history",
+          "repaired_display_rank": "",
+          "repaired_expected_rank": 76.02647043826845,
+          "team_id": "2193",
+          "team_name": "East Tennessee State"
+        },
+        {
+          "display_rank_change": null,
+          "expected_rank_change": 1.0100191734869526,
+          "previous_display_rank": "",
+          "previous_expected_rank": 97.21250882320783,
+          "publication_slot": "2026-09-07",
+          "ranking": "history",
+          "repaired_display_rank": "",
+          "repaired_expected_rank": 98.22252799669478,
+          "team_id": "2198",
+          "team_name": "Eastern Kentucky"
+        },
+        {
+          "display_rank_change": 0,
+          "expected_rank_change": 0.3717778883731313,
+          "previous_display_rank": "93",
+          "previous_expected_rank": 86.44118789537265,
+          "publication_slot": "2026-09-07",
+          "ranking": "history",
+          "repaired_display_rank": "93",
+          "repaired_expected_rank": 86.81296578374578,
+          "team_id": "55",
+          "team_name": "Jacksonville State"
+        }
+      ],
+      "publication_slot": "2026-09-07",
+      "ranking": "history",
+      "team_count": 253,
+      "teams_with_changed_display_rank": 0,
+      "teams_with_changed_expected_rank": 11
+    },
+    {
+      "largest_display_rank_change": 2,
+      "largest_expected_rank_change": 0.46277594599587246,
+      "largest_movers": [
+        {
+          "display_rank_change": 2,
+          "expected_rank_change": 0.46277594599587246,
+          "previous_display_rank": "102",
+          "previous_expected_rank": 84.44992913892206,
+          "publication_slot": "2026-09-07",
+          "ranking": "quality_of_play",
+          "repaired_display_rank": "104",
+          "repaired_expected_rank": 84.91270508491793,
+          "team_id": "55",
+          "team_name": "Jacksonville State"
+        },
+        {
+          "display_rank_change": -1,
+          "expected_rank_change": -1.4210854715202004e-14,
+          "previous_display_rank": "103",
+          "previous_expected_rank": 84.62805027978656,
+          "publication_slot": "2026-09-07",
+          "ranking": "quality_of_play",
+          "repaired_display_rank": "102",
+          "repaired_expected_rank": 84.62805027978655,
+          "team_id": "2393",
+          "team_name": "Middle Tennessee"
+        },
+        {
+          "display_rank_change": -1,
+          "expected_rank_change": 1.4210854715202004e-14,
+          "previous_display_rank": "104",
+          "previous_expected_rank": 84.7511873117199,
+          "publication_slot": "2026-09-07",
+          "ranking": "quality_of_play",
+          "repaired_display_rank": "103",
+          "repaired_expected_rank": 84.75118731171992,
+          "team_id": "275",
+          "team_name": "Wisconsin"
+        },
+        {
+          "display_rank_change": 0,
+          "expected_rank_change": 0.12208955561381885,
+          "previous_display_rank": "27",
+          "previous_expected_rank": 41.42585096092544,
+          "publication_slot": "2026-09-07",
+          "ranking": "quality_of_play",
+          "repaired_display_rank": "27",
+          "repaired_expected_rank": 41.547940516539256,
+          "team_id": "2449",
+          "team_name": "North Dakota State"
+        }
+      ],
+      "publication_slot": "2026-09-07",
+      "ranking": "quality_of_play",
+      "team_count": 138,
+      "teams_with_changed_display_rank": 3,
+      "teams_with_changed_expected_rank": 4
+    },
+    {
+      "largest_display_rank_change": 0,
+      "largest_expected_rank_change": 0.0,
+      "largest_movers": [],
+      "publication_slot": "2026-09-07",
+      "ranking": "quality_of_record",
+      "team_count": 138,
+      "teams_with_changed_display_rank": 0,
+      "teams_with_changed_expected_rank": 0
+    },
+    {
+      "largest_display_rank_change": 0,
+      "largest_expected_rank_change": 3.8302018644649394,
+      "largest_movers": [
+        {
+          "display_rank_change": null,
+          "expected_rank_change": 3.8302018644649394,
+          "previous_display_rank": "",
+          "previous_expected_rank": 49.44169395148104,
+          "publication_slot": "2026-09-08",
+          "ranking": "context",
+          "repaired_display_rank": "",
+          "repaired_expected_rank": 53.27189581594598,
+          "team_id": "2717",
+          "team_name": "Western Carolina"
+        },
+        {
+          "display_rank_change": null,
+          "expected_rank_change": -3.1442010742420194,
+          "previous_display_rank": "",
+          "previous_expected_rank": 45.17593342058974,
+          "publication_slot": "2026-09-08",
+          "ranking": "context",
+          "repaired_display_rank": "",
+          "repaired_expected_rank": 42.031732346347724,
+          "team_id": "2097",
+          "team_name": "Campbell"
+        },
+        {
+          "display_rank_change": null,
+          "expected_rank_change": -1.6031892333930955,
+          "previous_display_rank": "",
+          "previous_expected_rank": 77.70258721925526,
+          "publication_slot": "2026-09-08",
+          "ranking": "context",
+          "repaired_display_rank": "",
+          "repaired_expected_rank": 76.09939798586217,
+          "team_id": "2193",
+          "team_name": "East Tennessee State"
+        },
+        {
+          "display_rank_change": null,
+          "expected_rank_change": 0.9967030683930744,
+          "previous_display_rank": "",
+          "previous_expected_rank": 98.25681920550738,
+          "publication_slot": "2026-09-08",
+          "ranking": "context",
+          "repaired_display_rank": "",
+          "repaired_expected_rank": 99.25352227390046,
+          "team_id": "2198",
+          "team_name": "Eastern Kentucky"
+        },
+        {
+          "display_rank_change": 0,
+          "expected_rank_change": 0.3491654108033231,
+          "previous_display_rank": "105",
+          "previous_expected_rank": 90.87340409612216,
+          "publication_slot": "2026-09-08",
+          "ranking": "context",
+          "repaired_display_rank": "105",
+          "repaired_expected_rank": 91.22256950692548,
+          "team_id": "55",
+          "team_name": "Jacksonville State"
+        }
+      ],
+      "publication_slot": "2026-09-08",
+      "ranking": "context",
+      "team_count": 253,
+      "teams_with_changed_display_rank": 0,
+      "teams_with_changed_expected_rank": 11
+    },
+    {
+      "largest_display_rank_change": 0,
+      "largest_expected_rank_change": 3.7775795848457676,
+      "largest_movers": [
+        {
+          "display_rank_change": null,
+          "expected_rank_change": 3.7775795848457676,
+          "previous_display_rank": "",
+          "previous_expected_rank": 49.04586983829143,
+          "publication_slot": "2026-09-08",
+          "ranking": "history",
+          "repaired_display_rank": "",
+          "repaired_expected_rank": 52.8234494231372,
+          "team_id": "2717",
+          "team_name": "Western Carolina"
+        },
+        {
+          "display_rank_change": null,
+          "expected_rank_change": -3.080752144872662,
+          "previous_display_rank": "",
+          "previous_expected_rank": 44.95550990693573,
+          "publication_slot": "2026-09-08",
+          "ranking": "history",
+          "repaired_display_rank": "",
+          "repaired_expected_rank": 41.87475776206307,
+          "team_id": "2097",
+          "team_name": "Campbell"
+        },
+        {
+          "display_rank_change": null,
+          "expected_rank_change": -1.5765939721746207,
+          "previous_display_rank": "",
+          "previous_expected_rank": 77.60306441044307,
+          "publication_slot": "2026-09-08",
+          "ranking": "history",
+          "repaired_display_rank": "",
+          "repaired_expected_rank": 76.02647043826845,
+          "team_id": "2193",
+          "team_name": "East Tennessee State"
+        },
+        {
+          "display_rank_change": null,
+          "expected_rank_change": 1.0100191734869526,
+          "previous_display_rank": "",
+          "previous_expected_rank": 97.21250882320783,
+          "publication_slot": "2026-09-08",
+          "ranking": "history",
+          "repaired_display_rank": "",
+          "repaired_expected_rank": 98.22252799669478,
+          "team_id": "2198",
+          "team_name": "Eastern Kentucky"
+        },
+        {
+          "display_rank_change": 0,
+          "expected_rank_change": 0.3717778883731313,
+          "previous_display_rank": "93",
+          "previous_expected_rank": 86.44118789537265,
+          "publication_slot": "2026-09-08",
+          "ranking": "history",
+          "repaired_display_rank": "93",
+          "repaired_expected_rank": 86.81296578374578,
+          "team_id": "55",
+          "team_name": "Jacksonville State"
+        }
+      ],
+      "publication_slot": "2026-09-08",
+      "ranking": "history",
+      "team_count": 253,
+      "teams_with_changed_display_rank": 0,
+      "teams_with_changed_expected_rank": 11
+    },
+    {
+      "largest_display_rank_change": 1,
+      "largest_expected_rank_change": 0.46277594599585825,
+      "largest_movers": [
+        {
+          "display_rank_change": 1,
+          "expected_rank_change": 0.46277594599585825,
+          "previous_display_rank": "106",
+          "previous_expected_rank": 84.44992913892206,
+          "publication_slot": "2026-09-08",
+          "ranking": "quality_of_play",
+          "repaired_display_rank": "107",
+          "repaired_expected_rank": 84.91270508491792,
+          "team_id": "55",
+          "team_name": "Jacksonville State"
+        },
+        {
+          "display_rank_change": -1,
+          "expected_rank_change": 0.0,
+          "previous_display_rank": "107",
+          "previous_expected_rank": 84.45179879250381,
+          "publication_slot": "2026-09-08",
+          "ranking": "quality_of_play",
+          "repaired_display_rank": "106",
+          "repaired_expected_rank": 84.45179879250381,
+          "team_id": "2393",
+          "team_name": "Middle Tennessee"
+        },
+        {
+          "display_rank_change": 0,
+          "expected_rank_change": 0.12220840880920747,
+          "previous_display_rank": "31",
+          "previous_expected_rank": 42.131288733747205,
+          "publication_slot": "2026-09-08",
+          "ranking": "quality_of_play",
+          "repaired_display_rank": "31",
+          "repaired_expected_rank": 42.25349714255641,
+          "team_id": "2449",
+          "team_name": "North Dakota State"
+        }
+      ],
+      "publication_slot": "2026-09-08",
+      "ranking": "quality_of_play",
+      "team_count": 138,
+      "teams_with_changed_display_rank": 2,
+      "teams_with_changed_expected_rank": 3
+    },
+    {
+      "largest_display_rank_change": 0,
+      "largest_expected_rank_change": 0.0,
+      "largest_movers": [],
+      "publication_slot": "2026-09-08",
+      "ranking": "quality_of_record",
+      "team_count": 138,
+      "teams_with_changed_display_rank": 0,
+      "teams_with_changed_expected_rank": 0
+    }
+  ],
+  "ranking_changes": [
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.001972441917729384,
+      "previous_display_rank": "",
+      "previous_expected_rank": 95.37938394965093,
+      "publication_slot": "2026-09-06",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 95.38135639156866,
+      "team_id": "107",
+      "team_name": "Holy Cross"
+    },
+    {
+      "display_rank_change": -1,
+      "expected_rank_change": 0.0,
+      "previous_display_rank": "94",
+      "previous_expected_rank": 88.44129482085079,
+      "publication_slot": "2026-09-06",
+      "ranking": "context",
+      "repaired_display_rank": "93",
+      "repaired_expected_rank": 88.44129482085079,
+      "team_id": "204",
+      "team_name": "Oregon State"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": -0.9025591715681642,
+      "previous_display_rank": "",
+      "previous_expected_rank": 50.03304950124365,
+      "publication_slot": "2026-09-06",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 49.13049032967549,
+      "team_id": "2097",
+      "team_name": "Campbell"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.006267987019235477,
+      "previous_display_rank": "",
+      "previous_expected_rank": 39.80672960677748,
+      "publication_slot": "2026-09-06",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 39.812997593796716,
+      "team_id": "2142",
+      "team_name": "Colgate"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": -0.7585287225325175,
+      "previous_display_rank": "",
+      "previous_expected_rank": 79.72770517189309,
+      "publication_slot": "2026-09-06",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 78.96917644936057,
+      "team_id": "2193",
+      "team_name": "East Tennessee State"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.689996309358051,
+      "previous_display_rank": "",
+      "previous_expected_rank": 96.41892938099585,
+      "publication_slot": "2026-09-06",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 97.1089256903539,
+      "team_id": "2198",
+      "team_name": "Eastern Kentucky"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.018782457836010735,
+      "previous_display_rank": "",
+      "previous_expected_rank": 70.47657432898632,
+      "publication_slot": "2026-09-06",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 70.49535678682233,
+      "team_id": "2230",
+      "team_name": "Fordham"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.0005496612106057341,
+      "previous_display_rank": "",
+      "previous_expected_rank": 26.26914009028141,
+      "publication_slot": "2026-09-06",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 26.269689751492017,
+      "team_id": "2329",
+      "team_name": "Lehigh"
+    },
+    {
+      "display_rank_change": 0,
+      "expected_rank_change": 0.07636210115291675,
+      "previous_display_rank": "29",
+      "previous_expected_rank": 37.65163651226442,
+      "publication_slot": "2026-09-06",
+      "ranking": "context",
+      "repaired_display_rank": "29",
+      "repaired_expected_rank": 37.727998613417334,
+      "team_id": "2449",
+      "team_name": "North Dakota State"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 3.1482165099282184,
+      "previous_display_rank": "",
+      "previous_expected_rank": 45.03754596287992,
+      "publication_slot": "2026-09-06",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 48.185762472808136,
+      "team_id": "2717",
+      "team_name": "Western Carolina"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.00022660247931582944,
+      "previous_display_rank": "",
+      "previous_expected_rank": 93.00827443222629,
+      "publication_slot": "2026-09-06",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 93.0085010347056,
+      "team_id": "46",
+      "team_name": "Georgetown"
+    },
+    {
+      "display_rank_change": 1,
+      "expected_rank_change": 0.2695504106870601,
+      "previous_display_rank": "93",
+      "previous_expected_rank": 88.37138326421898,
+      "publication_slot": "2026-09-06",
+      "ranking": "context",
+      "repaired_display_rank": "94",
+      "repaired_expected_rank": 88.64093367490604,
+      "team_id": "55",
+      "team_name": "Jacksonville State"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.002005990992358875,
+      "previous_display_rank": "",
+      "previous_expected_rank": 95.36388961737441,
+      "publication_slot": "2026-09-06",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 95.36589560836677,
+      "team_id": "107",
+      "team_name": "Holy Cross"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": -0.8172477336191761,
+      "previous_display_rank": "",
+      "previous_expected_rank": 49.947738063294665,
+      "publication_slot": "2026-09-06",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 49.13049032967549,
+      "team_id": "2097",
+      "team_name": "Campbell"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.006371558978777614,
+      "previous_display_rank": "",
+      "previous_expected_rank": 39.75769604015139,
+      "publication_slot": "2026-09-06",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 39.764067599130165,
+      "team_id": "2142",
+      "team_name": "Colgate"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": -0.7210814859673889,
+      "previous_display_rank": "",
+      "previous_expected_rank": 79.69025793532796,
+      "publication_slot": "2026-09-06",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 78.96917644936057,
+      "team_id": "2193",
+      "team_name": "East Tennessee State"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.6803884013268089,
+      "previous_display_rank": "",
+      "previous_expected_rank": 95.84811813306985,
+      "publication_slot": "2026-09-06",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 96.52850653439666,
+      "team_id": "2198",
+      "team_name": "Eastern Kentucky"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.019104933563895088,
+      "previous_display_rank": "",
+      "previous_expected_rank": 70.32883106937342,
+      "publication_slot": "2026-09-06",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 70.34793600293732,
+      "team_id": "2230",
+      "team_name": "Fordham"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.0005588511844116795,
+      "previous_display_rank": "",
+      "previous_expected_rank": 26.26483200915269,
+      "publication_slot": "2026-09-06",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 26.265390860337103,
+      "team_id": "2329",
+      "team_name": "Lehigh"
+    },
+    {
+      "display_rank_change": 0,
+      "expected_rank_change": 0.07747926420448437,
+      "previous_display_rank": "27",
+      "previous_expected_rank": 37.06236272541835,
+      "publication_slot": "2026-09-06",
+      "ranking": "history",
+      "repaired_display_rank": "27",
+      "repaired_expected_rank": 37.13984198962284,
+      "team_id": "2449",
+      "team_name": "North Dakota State"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 3.0848296466258844,
+      "previous_display_rank": "",
+      "previous_expected_rank": 44.817393875024656,
+      "publication_slot": "2026-09-06",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 47.90222352165054,
+      "team_id": "2717",
+      "team_name": "Western Carolina"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.00023041105704635356,
+      "previous_display_rank": "",
+      "previous_expected_rank": 93.00649566210791,
+      "publication_slot": "2026-09-06",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 93.00672607316496,
+      "team_id": "46",
+      "team_name": "Georgetown"
+    },
+    {
+      "display_rank_change": 0,
+      "expected_rank_change": 0.2782595673676269,
+      "previous_display_rank": "92",
+      "previous_expected_rank": 85.98455997578026,
+      "publication_slot": "2026-09-06",
+      "ranking": "history",
+      "repaired_display_rank": "92",
+      "repaired_expected_rank": 86.26281954314788,
+      "team_id": "55",
+      "team_name": "Jacksonville State"
+    },
+    {
+      "display_rank_change": 0,
+      "expected_rank_change": 0.09543804109829068,
+      "previous_display_rank": "26",
+      "previous_expected_rank": 41.28138909647883,
+      "publication_slot": "2026-09-06",
+      "ranking": "quality_of_play",
+      "repaired_display_rank": "26",
+      "repaired_expected_rank": 41.37682713757712,
+      "team_id": "2449",
+      "team_name": "North Dakota State"
+    },
+    {
+      "display_rank_change": 0,
+      "expected_rank_change": 0.3451842075700995,
+      "previous_display_rank": "97",
+      "previous_expected_rank": 83.88104515576721,
+      "publication_slot": "2026-09-06",
+      "ranking": "quality_of_play",
+      "repaired_display_rank": "97",
+      "repaired_expected_rank": 84.22622936333731,
+      "team_id": "55",
+      "team_name": "Jacksonville State"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.002539188062229414,
+      "previous_display_rank": "",
+      "previous_expected_rank": 95.38240208799502,
+      "publication_slot": "2026-09-07",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 95.38494127605725,
+      "team_id": "107",
+      "team_name": "Holy Cross"
+    },
+    {
+      "display_rank_change": -1,
+      "expected_rank_change": 1.4210854715202004e-14,
+      "previous_display_rank": "95",
+      "previous_expected_rank": 88.89633780217979,
+      "publication_slot": "2026-09-07",
+      "ranking": "context",
+      "repaired_display_rank": "94",
+      "repaired_expected_rank": 88.8963378021798,
+      "team_id": "2005",
+      "team_name": "Air Force"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": -3.113679629775106,
+      "previous_display_rank": "",
+      "previous_expected_rank": 45.0689190913676,
+      "publication_slot": "2026-09-07",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 41.95523946159249,
+      "team_id": "2097",
+      "team_name": "Campbell"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.008063590963850231,
+      "previous_display_rank": "",
+      "previous_expected_rank": 39.816307558836776,
+      "publication_slot": "2026-09-07",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 39.824371149800626,
+      "team_id": "2142",
+      "team_name": "Colgate"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": -1.5904439400754455,
+      "previous_display_rank": "",
+      "previous_expected_rank": 77.6543554219028,
+      "publication_slot": "2026-09-07",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 76.06391148182736,
+      "team_id": "2193",
+      "team_name": "East Tennessee State"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 1.0023844110769886,
+      "previous_display_rank": "",
+      "previous_expected_rank": 97.75566233130697,
+      "publication_slot": "2026-09-07",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 98.75804674238395,
+      "team_id": "2198",
+      "team_name": "Eastern Kentucky"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.024184060544200747,
+      "previous_display_rank": "",
+      "previous_expected_rank": 70.50532664074919,
+      "publication_slot": "2026-09-07",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 70.52951070129339,
+      "team_id": "2230",
+      "team_name": "Fordham"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.0007074037104359832,
+      "previous_display_rank": "",
+      "previous_expected_rank": 26.26998062573982,
+      "publication_slot": "2026-09-07",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 26.270688029450255,
+      "team_id": "2329",
+      "team_name": "Lehigh"
+    },
+    {
+      "display_rank_change": 0,
+      "expected_rank_change": 0.09807896826605145,
+      "previous_display_rank": "29",
+      "previous_expected_rank": 37.767936000790826,
+      "publication_slot": "2026-09-07",
+      "ranking": "context",
+      "repaired_display_rank": "29",
+      "repaired_expected_rank": 37.86601496905688,
+      "team_id": "2449",
+      "team_name": "North Dakota State"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 3.8039922972714777,
+      "previous_display_rank": "",
+      "previous_expected_rank": 49.24940911868876,
+      "publication_slot": "2026-09-07",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 53.05340141596024,
+      "team_id": "2717",
+      "team_name": "Western Carolina"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.00029179121983702316,
+      "previous_display_rank": "",
+      "previous_expected_rank": 93.0086212470092,
+      "publication_slot": "2026-09-07",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 93.00891303822904,
+      "team_id": "46",
+      "team_name": "Georgetown"
+    },
+    {
+      "display_rank_change": 1,
+      "expected_rank_change": 0.3547179874873052,
+      "previous_display_rank": "94",
+      "previous_expected_rank": 88.80271934157699,
+      "publication_slot": "2026-09-07",
+      "ranking": "context",
+      "repaired_display_rank": "95",
+      "repaired_expected_rank": 89.1574373290643,
+      "team_id": "55",
+      "team_name": "Jacksonville State"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.0026211748032807236,
+      "previous_display_rank": "",
+      "previous_expected_rank": 95.36703764854917,
+      "publication_slot": "2026-09-07",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 95.36965882335245,
+      "team_id": "107",
+      "team_name": "Holy Cross"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": -3.080752144872662,
+      "previous_display_rank": "",
+      "previous_expected_rank": 44.95550990693573,
+      "publication_slot": "2026-09-07",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 41.87475776206307,
+      "team_id": "2097",
+      "team_name": "Campbell"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.008319641288800028,
+      "previous_display_rank": "",
+      "previous_expected_rank": 39.76768079505506,
+      "publication_slot": "2026-09-07",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 39.77600043634386,
+      "team_id": "2142",
+      "team_name": "Colgate"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": -1.5765939721746207,
+      "previous_display_rank": "",
+      "previous_expected_rank": 77.60306441044307,
+      "publication_slot": "2026-09-07",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 76.02647043826845,
+      "team_id": "2193",
+      "team_name": "East Tennessee State"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 1.0100191734869526,
+      "previous_display_rank": "",
+      "previous_expected_rank": 97.21250882320783,
+      "publication_slot": "2026-09-07",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 98.22252799669478,
+      "team_id": "2198",
+      "team_name": "Eastern Kentucky"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.024969088904271075,
+      "previous_display_rank": "",
+      "previous_expected_rank": 70.3588259115354,
+      "publication_slot": "2026-09-07",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 70.38379500043968,
+      "team_id": "2230",
+      "team_name": "Fordham"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.0007300215170005231,
+      "previous_display_rank": "",
+      "previous_expected_rank": 26.265708439563404,
+      "publication_slot": "2026-09-07",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 26.266438461080405,
+      "team_id": "2329",
+      "team_name": "Lehigh"
+    },
+    {
+      "display_rank_change": 0,
+      "expected_rank_change": 0.10096943159025074,
+      "previous_display_rank": "27",
+      "previous_expected_rank": 37.18329543012643,
+      "publication_slot": "2026-09-07",
+      "ranking": "history",
+      "repaired_display_rank": "27",
+      "repaired_expected_rank": 37.28426486171668,
+      "team_id": "2449",
+      "team_name": "North Dakota State"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 3.7775795848457747,
+      "previous_display_rank": "",
+      "previous_expected_rank": 49.04586983829142,
+      "publication_slot": "2026-09-07",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 52.8234494231372,
+      "team_id": "2717",
+      "team_name": "Western Carolina"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.000301151879000372,
+      "previous_display_rank": "",
+      "previous_expected_rank": 93.00685732676254,
+      "publication_slot": "2026-09-07",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 93.00715847864154,
+      "team_id": "46",
+      "team_name": "Georgetown"
+    },
+    {
+      "display_rank_change": 0,
+      "expected_rank_change": 0.3717778883731313,
+      "previous_display_rank": "93",
+      "previous_expected_rank": 86.44118789537265,
+      "publication_slot": "2026-09-07",
+      "ranking": "history",
+      "repaired_display_rank": "93",
+      "repaired_expected_rank": 86.81296578374578,
+      "team_id": "55",
+      "team_name": "Jacksonville State"
+    },
+    {
+      "display_rank_change": -1,
+      "expected_rank_change": -1.4210854715202004e-14,
+      "previous_display_rank": "103",
+      "previous_expected_rank": 84.62805027978656,
+      "publication_slot": "2026-09-07",
+      "ranking": "quality_of_play",
+      "repaired_display_rank": "102",
+      "repaired_expected_rank": 84.62805027978655,
+      "team_id": "2393",
+      "team_name": "Middle Tennessee"
+    },
+    {
+      "display_rank_change": 0,
+      "expected_rank_change": 0.12208955561381885,
+      "previous_display_rank": "27",
+      "previous_expected_rank": 41.42585096092544,
+      "publication_slot": "2026-09-07",
+      "ranking": "quality_of_play",
+      "repaired_display_rank": "27",
+      "repaired_expected_rank": 41.547940516539256,
+      "team_id": "2449",
+      "team_name": "North Dakota State"
+    },
+    {
+      "display_rank_change": -1,
+      "expected_rank_change": 1.4210854715202004e-14,
+      "previous_display_rank": "104",
+      "previous_expected_rank": 84.7511873117199,
+      "publication_slot": "2026-09-07",
+      "ranking": "quality_of_play",
+      "repaired_display_rank": "103",
+      "repaired_expected_rank": 84.75118731171992,
+      "team_id": "275",
+      "team_name": "Wisconsin"
+    },
+    {
+      "display_rank_change": 2,
+      "expected_rank_change": 0.46277594599587246,
+      "previous_display_rank": "102",
+      "previous_expected_rank": 84.44992913892206,
+      "publication_slot": "2026-09-07",
+      "ranking": "quality_of_play",
+      "repaired_display_rank": "104",
+      "repaired_expected_rank": 84.91270508491793,
+      "team_id": "55",
+      "team_name": "Jacksonville State"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.0025438803584449943,
+      "previous_display_rank": "",
+      "previous_expected_rank": 95.39712588176702,
+      "publication_slot": "2026-09-08",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 95.39966976212547,
+      "team_id": "107",
+      "team_name": "Holy Cross"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": -3.1442010742420194,
+      "previous_display_rank": "",
+      "previous_expected_rank": 45.17593342058974,
+      "publication_slot": "2026-09-08",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 42.031732346347724,
+      "team_id": "2097",
+      "team_name": "Campbell"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.008082750394336813,
+      "previous_display_rank": "",
+      "previous_expected_rank": 39.86304799738805,
+      "publication_slot": "2026-09-08",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 39.87113074778239,
+      "team_id": "2142",
+      "team_name": "Colgate"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": -1.6031892333930955,
+      "previous_display_rank": "",
+      "previous_expected_rank": 77.70258721925526,
+      "publication_slot": "2026-09-08",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 76.09939798586217,
+      "team_id": "2193",
+      "team_name": "East Tennessee State"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.9967030683930744,
+      "previous_display_rank": "",
+      "previous_expected_rank": 98.25681920550738,
+      "publication_slot": "2026-09-08",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 99.25352227390046,
+      "team_id": "2198",
+      "team_name": "Eastern Kentucky"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.024224165705973633,
+      "previous_display_rank": "",
+      "previous_expected_rank": 70.645569856895,
+      "publication_slot": "2026-09-08",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 70.66979402260097,
+      "team_id": "2230",
+      "team_name": "Fordham"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.0007089334421692683,
+      "previous_display_rank": "",
+      "previous_expected_rank": 26.274082043260975,
+      "publication_slot": "2026-09-08",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 26.274790976703144,
+      "team_id": "2329",
+      "team_name": "Lehigh"
+    },
+    {
+      "display_rank_change": 0,
+      "expected_rank_change": 0.09842824917735271,
+      "previous_display_rank": "44",
+      "previous_expected_rank": 38.334537316163356,
+      "publication_slot": "2026-09-08",
+      "ranking": "context",
+      "repaired_display_rank": "44",
+      "repaired_expected_rank": 38.43296556534071,
+      "team_id": "2449",
+      "team_name": "North Dakota State"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 3.8302018644649394,
+      "previous_display_rank": "",
+      "previous_expected_rank": 49.44169395148104,
+      "publication_slot": "2026-09-08",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 53.27189581594598,
+      "team_id": "2717",
+      "team_name": "Western Carolina"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.0002923910690384446,
+      "previous_display_rank": "",
+      "previous_expected_rank": 93.01031362407703,
+      "publication_slot": "2026-09-08",
+      "ranking": "context",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 93.01060601514607,
+      "team_id": "46",
+      "team_name": "Georgetown"
+    },
+    {
+      "display_rank_change": 0,
+      "expected_rank_change": 0.3491654108033231,
+      "previous_display_rank": "105",
+      "previous_expected_rank": 90.87340409612216,
+      "publication_slot": "2026-09-08",
+      "ranking": "context",
+      "repaired_display_rank": "105",
+      "repaired_expected_rank": 91.22256950692548,
+      "team_id": "55",
+      "team_name": "Jacksonville State"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.0026211748032807236,
+      "previous_display_rank": "",
+      "previous_expected_rank": 95.36703764854917,
+      "publication_slot": "2026-09-08",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 95.36965882335245,
+      "team_id": "107",
+      "team_name": "Holy Cross"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": -3.080752144872662,
+      "previous_display_rank": "",
+      "previous_expected_rank": 44.95550990693573,
+      "publication_slot": "2026-09-08",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 41.87475776206307,
+      "team_id": "2097",
+      "team_name": "Campbell"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.008319641288792923,
+      "previous_display_rank": "",
+      "previous_expected_rank": 39.767680795055064,
+      "publication_slot": "2026-09-08",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 39.77600043634386,
+      "team_id": "2142",
+      "team_name": "Colgate"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": -1.5765939721746207,
+      "previous_display_rank": "",
+      "previous_expected_rank": 77.60306441044307,
+      "publication_slot": "2026-09-08",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 76.02647043826845,
+      "team_id": "2193",
+      "team_name": "East Tennessee State"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 1.0100191734869526,
+      "previous_display_rank": "",
+      "previous_expected_rank": 97.21250882320783,
+      "publication_slot": "2026-09-08",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 98.22252799669478,
+      "team_id": "2198",
+      "team_name": "Eastern Kentucky"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.024969088904271075,
+      "previous_display_rank": "",
+      "previous_expected_rank": 70.3588259115354,
+      "publication_slot": "2026-09-08",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 70.38379500043968,
+      "team_id": "2230",
+      "team_name": "Fordham"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.0007300215170005231,
+      "previous_display_rank": "",
+      "previous_expected_rank": 26.265708439563404,
+      "publication_slot": "2026-09-08",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 26.266438461080405,
+      "team_id": "2329",
+      "team_name": "Lehigh"
+    },
+    {
+      "display_rank_change": 0,
+      "expected_rank_change": 0.10096943159025074,
+      "previous_display_rank": "27",
+      "previous_expected_rank": 37.18329543012643,
+      "publication_slot": "2026-09-08",
+      "ranking": "history",
+      "repaired_display_rank": "27",
+      "repaired_expected_rank": 37.28426486171668,
+      "team_id": "2449",
+      "team_name": "North Dakota State"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 3.7775795848457676,
+      "previous_display_rank": "",
+      "previous_expected_rank": 49.04586983829143,
+      "publication_slot": "2026-09-08",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 52.8234494231372,
+      "team_id": "2717",
+      "team_name": "Western Carolina"
+    },
+    {
+      "display_rank_change": null,
+      "expected_rank_change": 0.000301151879000372,
+      "previous_display_rank": "",
+      "previous_expected_rank": 93.00685732676254,
+      "publication_slot": "2026-09-08",
+      "ranking": "history",
+      "repaired_display_rank": "",
+      "repaired_expected_rank": 93.00715847864154,
+      "team_id": "46",
+      "team_name": "Georgetown"
+    },
+    {
+      "display_rank_change": 0,
+      "expected_rank_change": 0.3717778883731313,
+      "previous_display_rank": "93",
+      "previous_expected_rank": 86.44118789537265,
+      "publication_slot": "2026-09-08",
+      "ranking": "history",
+      "repaired_display_rank": "93",
+      "repaired_expected_rank": 86.81296578374578,
+      "team_id": "55",
+      "team_name": "Jacksonville State"
+    },
+    {
+      "display_rank_change": -1,
+      "expected_rank_change": 0.0,
+      "previous_display_rank": "107",
+      "previous_expected_rank": 84.45179879250381,
+      "publication_slot": "2026-09-08",
+      "ranking": "quality_of_play",
+      "repaired_display_rank": "106",
+      "repaired_expected_rank": 84.45179879250381,
+      "team_id": "2393",
+      "team_name": "Middle Tennessee"
+    },
+    {
+      "display_rank_change": 0,
+      "expected_rank_change": 0.12220840880920747,
+      "previous_display_rank": "31",
+      "previous_expected_rank": 42.131288733747205,
+      "publication_slot": "2026-09-08",
+      "ranking": "quality_of_play",
+      "repaired_display_rank": "31",
+      "repaired_expected_rank": 42.25349714255641,
+      "team_id": "2449",
+      "team_name": "North Dakota State"
+    },
+    {
+      "display_rank_change": 1,
+      "expected_rank_change": 0.46277594599585825,
+      "previous_display_rank": "106",
+      "previous_expected_rank": 84.44992913892206,
+      "publication_slot": "2026-09-08",
+      "ranking": "quality_of_play",
+      "repaired_display_rank": "107",
+      "repaired_expected_rank": 84.91270508491792,
+      "team_id": "55",
+      "team_name": "Jacksonville State"
+    }
+  ],
+  "schema_version": "1.0",
+  "site_export": {
+    "published_variant_count": 12,
+    "removed_unreferenced_retired_exports": [],
+    "retired_exception_fields": 0,
+    "static_api_publication_count": 86
+  },
+  "snapshot_fixture_audit": {
+    "contaminated_bundle_count": 17,
+    "scanned_snapshot_bundle_count": 132,
+    "selected_contaminated_bundle_count": 12,
+    "selected_contaminated_bundles": [
+      {
+        "currently_published": true,
+        "included_game_count": 165,
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-06T17-34-56.895103Z/performance",
+        "performance_variant": null,
+        "prior_family": null,
+        "prior_model_version": "1.2",
+        "publication_slot": "2026-09-06",
+        "selected_for_repair": true,
+        "snapshot_id": "2026-weekly-2026-09-06T17-34-56.895103Z-performance"
+      },
+      {
+        "currently_published": true,
+        "included_game_count": 165,
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-06T17-34-56.895103Z/performance/quality_of_record",
+        "performance_variant": "quality_of_record",
+        "prior_family": null,
+        "prior_model_version": "1.2",
+        "publication_slot": "2026-09-06",
+        "selected_for_repair": true,
+        "snapshot_id": "2026-weekly-2026-09-06T17-34-56.895103Z-performance-quality-of-record"
+      },
+      {
+        "currently_published": true,
+        "included_game_count": 165,
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-06T17-34-56.895103Z-context/predictive/context",
+        "performance_variant": null,
+        "prior_family": "context",
+        "prior_model_version": "1.2",
+        "publication_slot": "2026-09-06",
+        "selected_for_repair": true,
+        "snapshot_id": "2026-weekly-2026-09-06T17-34-56.895103Z-context"
+      },
+      {
+        "currently_published": true,
+        "included_game_count": 165,
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-06T17-34-56.895103Z-history/predictive/history",
+        "performance_variant": null,
+        "prior_family": "history",
+        "prior_model_version": "1.1",
+        "publication_slot": "2026-09-06",
+        "selected_for_repair": true,
+        "snapshot_id": "2026-weekly-2026-09-06T17-34-56.895103Z-history"
+      },
+      {
+        "currently_published": true,
+        "included_game_count": 171,
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-07T13-42-50.853587Z/performance",
+        "performance_variant": null,
+        "prior_family": null,
+        "prior_model_version": "1.2",
+        "publication_slot": "2026-09-07",
+        "selected_for_repair": true,
+        "snapshot_id": "2026-weekly-2026-09-07T13-42-50.853587Z-performance"
+      },
+      {
+        "currently_published": true,
+        "included_game_count": 171,
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-07T13-42-50.853587Z/performance/quality_of_record",
+        "performance_variant": "quality_of_record",
+        "prior_family": null,
+        "prior_model_version": "1.2",
+        "publication_slot": "2026-09-07",
+        "selected_for_repair": true,
+        "snapshot_id": "2026-weekly-2026-09-07T13-42-50.853587Z-performance-quality-of-record"
+      },
+      {
+        "currently_published": true,
+        "included_game_count": 171,
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-07T13-42-50.853587Z-context/predictive/context",
+        "performance_variant": null,
+        "prior_family": "context",
+        "prior_model_version": "1.2",
+        "publication_slot": "2026-09-07",
+        "selected_for_repair": true,
+        "snapshot_id": "2026-weekly-2026-09-07T13-42-50.853587Z-context"
+      },
+      {
+        "currently_published": true,
+        "included_game_count": 171,
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-07T13-42-50.853587Z-history/predictive/history",
+        "performance_variant": null,
+        "prior_family": "history",
+        "prior_model_version": "1.1",
+        "publication_slot": "2026-09-07",
+        "selected_for_repair": true,
+        "snapshot_id": "2026-weekly-2026-09-07T13-42-50.853587Z-history"
+      },
+      {
+        "currently_published": true,
+        "included_game_count": 172,
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-db-repair/performance",
+        "performance_variant": null,
+        "prior_family": null,
+        "prior_model_version": "1.4",
+        "publication_slot": "2026-09-08",
+        "selected_for_repair": true,
+        "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-db-repair-performance"
+      },
+      {
+        "currently_published": true,
+        "included_game_count": 172,
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-db-repair/performance/quality_of_record",
+        "performance_variant": "quality_of_record",
+        "prior_family": null,
+        "prior_model_version": "1.4",
+        "publication_slot": "2026-09-08",
+        "selected_for_repair": true,
+        "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-db-repair-performance-quality-of-record"
+      },
+      {
+        "currently_published": true,
+        "included_game_count": 172,
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-db-repair/predictive/context",
+        "performance_variant": null,
+        "prior_family": "context",
+        "prior_model_version": "1.4",
+        "publication_slot": "2026-09-08",
+        "selected_for_repair": true,
+        "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-db-repair"
+      },
+      {
+        "currently_published": true,
+        "included_game_count": 172,
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-history/predictive/history",
+        "performance_variant": null,
+        "prior_family": "history",
+        "prior_model_version": "1.1",
+        "publication_slot": "2026-09-08",
+        "selected_for_repair": true,
+        "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-history"
+      }
+    ],
+    "unselected_contaminated_bundle_count": 5,
+    "unselected_contaminated_bundles": [
+      {
+        "currently_published": false,
+        "included_game_count": 172,
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z/performance",
+        "performance_variant": null,
+        "prior_family": null,
+        "prior_model_version": "1.2",
+        "publication_slot": null,
+        "selected_for_repair": false,
+        "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-performance"
+      },
+      {
+        "currently_published": false,
+        "included_game_count": 172,
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context/predictive/context",
+        "performance_variant": null,
+        "prior_family": "context",
+        "prior_model_version": "1.2",
+        "publication_slot": null,
+        "selected_for_repair": false,
+        "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-context"
+      },
+      {
+        "currently_published": false,
+        "included_game_count": 172,
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.3/predictive/context",
+        "performance_variant": null,
+        "prior_family": "context",
+        "prior_model_version": "1.3",
+        "publication_slot": null,
+        "selected_for_repair": false,
+        "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.3"
+      },
+      {
+        "currently_published": false,
+        "included_game_count": 172,
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4/performance",
+        "performance_variant": null,
+        "prior_family": null,
+        "prior_model_version": "1.4",
+        "publication_slot": null,
+        "selected_for_repair": false,
+        "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-performance"
+      },
+      {
+        "currently_published": false,
+        "included_game_count": 172,
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4/predictive/context",
+        "performance_variant": null,
+        "prior_family": "context",
+        "prior_model_version": "1.4",
+        "publication_slot": null,
+        "selected_for_repair": false,
+        "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4"
+      }
+    ]
+  },
+  "superseded_artifacts": [
+    {
+      "publication_slot": "2026-09-06",
+      "publication_status": "temporary",
+      "repaired": {
+        "effective_cutoff": "2026-09-06T17:34:56.895103+00:00",
+        "included_game_count": 164,
+        "included_game_rows_sha256": "0f6f074eeae439f1b4ffeb0e2ebaec520fb4b74790831f9d8cb1e1812ce0dab6",
+        "metadata_sha256": "6957c7da831fd2bca54d0ed512419e37fdaa27ee6cfff9f81c5b86ee4d9da4c9",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-06T17-34-56.895103Z-context-v1.2-issue-238/predictive/context",
+        "prior_family": "context",
+        "prior_model_version": "1.2",
+        "rankings_sha256": "63eb56d402948ece21d4691adea84f815c88d0baea036a3b59d0a385c9baa0af",
+        "requested_cutoff": "2026-09-06T17:34:56.895103+00:00",
+        "snapshot_id": "2026-weekly-2026-09-06T17-34-56.895103Z-context-v1.2-issue-238"
+      },
+      "role": "context",
+      "superseded": {
+        "included_game_count": 165,
+        "included_game_rows_sha256": "f3b5f56a4b2e02c7249ba1b14f0ea17244cb37f69efbe01d2b4cc1409e927a35",
+        "metadata_sha256": "22bdf4079398e79e89b17041c90e3bae0356b147de75d422587063336e901f03",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-06T17-34-56.895103Z-context/predictive/context",
+        "rankings_sha256": "6641c414715b800c7894080afa1d7b52cf7bb6d7281b8292daf1fa539c6bbdd9",
+        "snapshot_id": "2026-weekly-2026-09-06T17-34-56.895103Z-context"
+      }
+    },
+    {
+      "publication_slot": "2026-09-06",
+      "publication_status": "temporary",
+      "repaired": {
+        "effective_cutoff": "2026-09-06T17:34:56.895103+00:00",
+        "included_game_count": 164,
+        "included_game_rows_sha256": "0f6f074eeae439f1b4ffeb0e2ebaec520fb4b74790831f9d8cb1e1812ce0dab6",
+        "metadata_sha256": "bf83155bbaec268adc7b563f664c2ddfd3fa565b3ecf8c5b54621e2ce09cb439",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-06T17-34-56.895103Z-history-issue-238/predictive/history",
+        "prior_family": "history",
+        "prior_model_version": "1.1",
+        "rankings_sha256": "c692423715cb6ad9f6c22bc75bfe19c29d1193bc163859001f0a515722b10194",
+        "requested_cutoff": "2026-09-06T17:34:56.895103+00:00",
+        "snapshot_id": "2026-weekly-2026-09-06T17-34-56.895103Z-history-issue-238"
+      },
+      "role": "history",
+      "superseded": {
+        "included_game_count": 165,
+        "included_game_rows_sha256": "f3b5f56a4b2e02c7249ba1b14f0ea17244cb37f69efbe01d2b4cc1409e927a35",
+        "metadata_sha256": "e6c8b92a318963f22fbefcbaf1bc15d71ec9f9db549bfa12408bc99655bcffb8",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-06T17-34-56.895103Z-history/predictive/history",
+        "rankings_sha256": "e5e626c7bba79661d8b51caab7e8e02eef3c6e2232e19dbb2c776f23549690bc",
+        "snapshot_id": "2026-weekly-2026-09-06T17-34-56.895103Z-history"
+      }
+    },
+    {
+      "publication_slot": "2026-09-06",
+      "publication_status": "temporary",
+      "repaired": {
+        "effective_cutoff": "2026-09-06T17:34:56.895103+00:00",
+        "included_game_count": 164,
+        "included_game_rows_sha256": "0f6f074eeae439f1b4ffeb0e2ebaec520fb4b74790831f9d8cb1e1812ce0dab6",
+        "metadata_sha256": "964f46784ef0a1e8e71695425c57f0ef64b9087dee417dee196c76967666864e",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-06T17-34-56.895103Z-context-v1.2-issue-238/performance",
+        "prior_family": null,
+        "prior_model_version": "1.2",
+        "rankings_sha256": "dae0d7488d28dc6c40cbb86734321bff7d51d51748f69957203ad563baf136cf",
+        "requested_cutoff": "2026-09-06T17:34:56.895103+00:00",
+        "snapshot_id": "2026-weekly-2026-09-06T17-34-56.895103Z-context-v1.2-issue-238-performance"
+      },
+      "role": "quality_of_play",
+      "superseded": {
+        "included_game_count": 165,
+        "included_game_rows_sha256": "f3b5f56a4b2e02c7249ba1b14f0ea17244cb37f69efbe01d2b4cc1409e927a35",
+        "metadata_sha256": "25a20cf91a7c29caef9f9b5512b474dd25318e9c65276a0f2b20c2b5a8c930bc",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-06T17-34-56.895103Z/performance",
+        "rankings_sha256": "ede42052c424ba2bdfe6ab30cb72a7ef5bc28d0bda4018fef719f91cfe1ce132",
+        "snapshot_id": "2026-weekly-2026-09-06T17-34-56.895103Z-performance"
+      }
+    },
+    {
+      "publication_slot": "2026-09-06",
+      "publication_status": "temporary",
+      "repaired": {
+        "effective_cutoff": "2026-09-06T17:34:56.895103+00:00",
+        "included_game_count": 164,
+        "included_game_rows_sha256": "0f6f074eeae439f1b4ffeb0e2ebaec520fb4b74790831f9d8cb1e1812ce0dab6",
+        "metadata_sha256": "524fc7a37e928e24d12fc5ee4c19af40e295f0854929526e953239a616c8b731",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-06T17-34-56.895103Z-context-v1.2-issue-238/performance/quality_of_record",
+        "prior_family": null,
+        "prior_model_version": "1.2",
+        "rankings_sha256": "2e6d337db7e89154b3a77f2ab77af6e35622daf3d877f51f79f4591934eacaf5",
+        "requested_cutoff": "2026-09-06T17:34:56.895103+00:00",
+        "snapshot_id": "2026-weekly-2026-09-06T17-34-56.895103Z-context-v1.2-issue-238-performance-quality-of-record"
+      },
+      "role": "quality_of_record",
+      "superseded": {
+        "included_game_count": 165,
+        "included_game_rows_sha256": "f3b5f56a4b2e02c7249ba1b14f0ea17244cb37f69efbe01d2b4cc1409e927a35",
+        "metadata_sha256": "1df43a80a00a58852968ed73fd3984c9adc13b473291487c91fdcb19d7082102",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-06T17-34-56.895103Z/performance/quality_of_record",
+        "rankings_sha256": "2e6d337db7e89154b3a77f2ab77af6e35622daf3d877f51f79f4591934eacaf5",
+        "snapshot_id": "2026-weekly-2026-09-06T17-34-56.895103Z-performance-quality-of-record"
+      }
+    },
+    {
+      "publication_slot": "2026-09-07",
+      "publication_status": "temporary",
+      "repaired": {
+        "effective_cutoff": "2026-09-07T13:42:50.853587+00:00",
+        "included_game_count": 170,
+        "included_game_rows_sha256": "41ef395521d7876b2e9c36a4ab62ca1b031f2d940feec2a0b825e47d7e68877c",
+        "metadata_sha256": "f6d1b726bc9448fb9b9cbd12e29f044aead927323ae27835010a33c697c17150",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-07T13-42-50.853587Z-context-v1.2-issue-238/predictive/context",
+        "prior_family": "context",
+        "prior_model_version": "1.2",
+        "rankings_sha256": "44792615fe4a18e6de4a922aad455dad3c8547473be8af0750ea4dd66ed4614e",
+        "requested_cutoff": "2026-09-07T13:42:50.853587+00:00",
+        "snapshot_id": "2026-weekly-2026-09-07T13-42-50.853587Z-context-v1.2-issue-238"
+      },
+      "role": "context",
+      "superseded": {
+        "included_game_count": 171,
+        "included_game_rows_sha256": "b4d716d5e84dac0ce051389a447c25a674d8a7c7ce978b82900cc7108ab95fbd",
+        "metadata_sha256": "a0f29b767a784439b319a50230136421481ac467f67c4817f20cf9c3e1793d76",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-07T13-42-50.853587Z-context/predictive/context",
+        "rankings_sha256": "671a5e7bdde7b79a2dfa12298f49892e5b57cd9567ec2a26ed29808006ef38ba",
+        "snapshot_id": "2026-weekly-2026-09-07T13-42-50.853587Z-context"
+      }
+    },
+    {
+      "publication_slot": "2026-09-07",
+      "publication_status": "temporary",
+      "repaired": {
+        "effective_cutoff": "2026-09-07T13:42:50.853587+00:00",
+        "included_game_count": 170,
+        "included_game_rows_sha256": "41ef395521d7876b2e9c36a4ab62ca1b031f2d940feec2a0b825e47d7e68877c",
+        "metadata_sha256": "4b3d7112d2b7cd4250c3cb0ce5132c9dd70b9dd2f7272da3f221365501dafb82",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-07T13-42-50.853587Z-history-issue-238/predictive/history",
+        "prior_family": "history",
+        "prior_model_version": "1.1",
+        "rankings_sha256": "cbed9aa957a3640f468d2a90f3e4dd31815080bd08f61287f2f08746a11acd95",
+        "requested_cutoff": "2026-09-07T13:42:50.853587+00:00",
+        "snapshot_id": "2026-weekly-2026-09-07T13-42-50.853587Z-history-issue-238"
+      },
+      "role": "history",
+      "superseded": {
+        "included_game_count": 171,
+        "included_game_rows_sha256": "b4d716d5e84dac0ce051389a447c25a674d8a7c7ce978b82900cc7108ab95fbd",
+        "metadata_sha256": "016e0a2b0ec90eb1e3d6136080f259a5eb4f7e140a7341a4165841c1f59c9189",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-07T13-42-50.853587Z-history/predictive/history",
+        "rankings_sha256": "5cc1c3b6d5dde70bece4c501c6b46e71b197fd9073975587b072f7538c7bc939",
+        "snapshot_id": "2026-weekly-2026-09-07T13-42-50.853587Z-history"
+      }
+    },
+    {
+      "publication_slot": "2026-09-07",
+      "publication_status": "temporary",
+      "repaired": {
+        "effective_cutoff": "2026-09-07T13:42:50.853587+00:00",
+        "included_game_count": 170,
+        "included_game_rows_sha256": "41ef395521d7876b2e9c36a4ab62ca1b031f2d940feec2a0b825e47d7e68877c",
+        "metadata_sha256": "9aec2a0c3723a87e8ff16fb84cc00941fb97479152a19626bfe0efb12f4b2d00",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-07T13-42-50.853587Z-context-v1.2-issue-238/performance",
+        "prior_family": null,
+        "prior_model_version": "1.2",
+        "rankings_sha256": "1902ecc53a7aa9bae91adeecb54f7b7a411a37aa7e0930009885f35894e3fde9",
+        "requested_cutoff": "2026-09-07T13:42:50.853587+00:00",
+        "snapshot_id": "2026-weekly-2026-09-07T13-42-50.853587Z-context-v1.2-issue-238-performance"
+      },
+      "role": "quality_of_play",
+      "superseded": {
+        "included_game_count": 171,
+        "included_game_rows_sha256": "b4d716d5e84dac0ce051389a447c25a674d8a7c7ce978b82900cc7108ab95fbd",
+        "metadata_sha256": "e03540397663f69e29988bfb0d48879fe98c5737601a73ef231306026a777c32",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-07T13-42-50.853587Z/performance",
+        "rankings_sha256": "0507df154f4375b39caf357ee6c384b22f83e9a7b9a5cc1c4d81f411cb6c7df9",
+        "snapshot_id": "2026-weekly-2026-09-07T13-42-50.853587Z-performance"
+      }
+    },
+    {
+      "publication_slot": "2026-09-07",
+      "publication_status": "temporary",
+      "repaired": {
+        "effective_cutoff": "2026-09-07T13:42:50.853587+00:00",
+        "included_game_count": 170,
+        "included_game_rows_sha256": "41ef395521d7876b2e9c36a4ab62ca1b031f2d940feec2a0b825e47d7e68877c",
+        "metadata_sha256": "637cde4302bf63170203791fce9d26005932047148f273ebde455c18b4ba534b",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-07T13-42-50.853587Z-context-v1.2-issue-238/performance/quality_of_record",
+        "prior_family": null,
+        "prior_model_version": "1.2",
+        "rankings_sha256": "829580a5c0c4a335d8b02cb7313f1e511d7e6cda486762cf844ab5882e36f2e6",
+        "requested_cutoff": "2026-09-07T13:42:50.853587+00:00",
+        "snapshot_id": "2026-weekly-2026-09-07T13-42-50.853587Z-context-v1.2-issue-238-performance-quality-of-record"
+      },
+      "role": "quality_of_record",
+      "superseded": {
+        "included_game_count": 171,
+        "included_game_rows_sha256": "b4d716d5e84dac0ce051389a447c25a674d8a7c7ce978b82900cc7108ab95fbd",
+        "metadata_sha256": "8309434b312e89594a3b6533aa51c4b765e7883baeaf8c9cf948b9df6582cc5e",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-07T13-42-50.853587Z/performance/quality_of_record",
+        "rankings_sha256": "829580a5c0c4a335d8b02cb7313f1e511d7e6cda486762cf844ab5882e36f2e6",
+        "snapshot_id": "2026-weekly-2026-09-07T13-42-50.853587Z-performance-quality-of-record"
+      }
+    },
+    {
+      "publication_slot": "2026-09-08",
+      "publication_status": "official",
+      "repaired": {
+        "effective_cutoff": "2026-09-08T11:43:00.275833+00:00",
+        "included_game_count": 171,
+        "included_game_rows_sha256": "c59b39478ad7c9cab00a8856bd639272cb00d18a76cab1cc1d10035d8c14d0c5",
+        "metadata_sha256": "eaac422c29b0be46d4496b55edbe54cd38dd1055bc674e5d9bf4a045525a57d6",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-issue-238/predictive/context",
+        "prior_family": "context",
+        "prior_model_version": "1.4",
+        "rankings_sha256": "3d6b64d47b9ef146742ae1300598a763862479cb3236915739fca234d08e4b33",
+        "requested_cutoff": "2026-09-08T11:43:00.275833+00:00",
+        "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-issue-238"
+      },
+      "role": "context",
+      "superseded": {
+        "included_game_count": 172,
+        "included_game_rows_sha256": "9fe5aca7aa961dde5177f9eb9266f8fe23c65f8437bcc3e389bdcaff54675082",
+        "metadata_sha256": "8a8a0f45e3c4a4e0699a9fbd4124c6fdf92157ba39cc25769ae654f450251a94",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-db-repair/predictive/context",
+        "rankings_sha256": "f346a3f31f96068b369aee8d0a09747b9d5df121b99c7acc8c65184afb47e327",
+        "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-db-repair"
+      }
+    },
+    {
+      "publication_slot": "2026-09-08",
+      "publication_status": "official",
+      "repaired": {
+        "effective_cutoff": "2026-09-08T11:43:00.275833+00:00",
+        "included_game_count": 171,
+        "included_game_rows_sha256": "c59b39478ad7c9cab00a8856bd639272cb00d18a76cab1cc1d10035d8c14d0c5",
+        "metadata_sha256": "e8ec8de6a6887ce2578df6ac8210e31308a30667c077348883cf453c8a50ac8e",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-history-issue-238/predictive/history",
+        "prior_family": "history",
+        "prior_model_version": "1.1",
+        "rankings_sha256": "e75acc508e42e63141dcacce0bf485fea678ed7077108dcb32b54907899c701b",
+        "requested_cutoff": "2026-09-08T11:43:00.275833+00:00",
+        "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-history-issue-238"
+      },
+      "role": "history",
+      "superseded": {
+        "included_game_count": 172,
+        "included_game_rows_sha256": "9fe5aca7aa961dde5177f9eb9266f8fe23c65f8437bcc3e389bdcaff54675082",
+        "metadata_sha256": "5556090d9df5ad9d29993aa40d4290e99146d1c75770c5a66f3be772714b66eb",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-history/predictive/history",
+        "rankings_sha256": "d49978cef507e31b7d5cda1b4bf291395ba8440acc3d79f676e14918db07d716",
+        "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-history"
+      }
+    },
+    {
+      "publication_slot": "2026-09-08",
+      "publication_status": "official",
+      "repaired": {
+        "effective_cutoff": "2026-09-08T11:43:00.275833+00:00",
+        "included_game_count": 171,
+        "included_game_rows_sha256": "c59b39478ad7c9cab00a8856bd639272cb00d18a76cab1cc1d10035d8c14d0c5",
+        "metadata_sha256": "2bd2b71de749da70ac6fee26e010fab4389261856722f17bec9edfbe39291391",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-issue-238/performance",
+        "prior_family": null,
+        "prior_model_version": "1.4",
+        "rankings_sha256": "a0346da893a2cbfe2a4228bbf91e2ee47515df7d614deecf922f731edfd3f823",
+        "requested_cutoff": "2026-09-08T11:43:00.275833+00:00",
+        "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-issue-238-performance"
+      },
+      "role": "quality_of_play",
+      "superseded": {
+        "included_game_count": 172,
+        "included_game_rows_sha256": "9fe5aca7aa961dde5177f9eb9266f8fe23c65f8437bcc3e389bdcaff54675082",
+        "metadata_sha256": "745ae138ea06005f437d7e3c691939ec1260ad3f30831b8524f6308334d10ff1",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-db-repair/performance",
+        "rankings_sha256": "b2691baaa3ebce789110186acf1629c6561383b6310982c2ad52f2912fd42ebb",
+        "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-db-repair-performance"
+      }
+    },
+    {
+      "publication_slot": "2026-09-08",
+      "publication_status": "official",
+      "repaired": {
+        "effective_cutoff": "2026-09-08T11:43:00.275833+00:00",
+        "included_game_count": 171,
+        "included_game_rows_sha256": "c59b39478ad7c9cab00a8856bd639272cb00d18a76cab1cc1d10035d8c14d0c5",
+        "metadata_sha256": "3630ef2330cd972a10278c8a055ec2440214d533b899da2f45974cb0eabe4d53",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-issue-238/performance/quality_of_record",
+        "prior_family": null,
+        "prior_model_version": "1.4",
+        "rankings_sha256": "3d212e8513a68a364e1b0cb86b3063b9340cb316c12a0391d4fc5a6bb8557097",
+        "requested_cutoff": "2026-09-08T11:43:00.275833+00:00",
+        "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-issue-238-performance-quality-of-record"
+      },
+      "role": "quality_of_record",
+      "superseded": {
+        "included_game_count": 172,
+        "included_game_rows_sha256": "9fe5aca7aa961dde5177f9eb9266f8fe23c65f8437bcc3e389bdcaff54675082",
+        "metadata_sha256": "7a5a7faa86f95f81d4385ccc72d670612db9cf7956a664abac74e439fa7bc91c",
+        "path": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-db-repair/performance/quality_of_record",
+        "rankings_sha256": "3d212e8513a68a364e1b0cb86b3063b9340cb316c12a0391d4fc5a6bb8557097",
+        "snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-db-repair-performance-quality-of-record"
+      }
+    }
+  ]
+}

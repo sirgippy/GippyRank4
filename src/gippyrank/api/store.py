@@ -372,7 +372,6 @@ def _publication_metadata(
         "prior_family",
         "performance_variant",
         "evidence_mode",
-        "quality_of_record_evidence",
         "publication_slot",
         "publication_status",
         "display_label",
@@ -404,9 +403,6 @@ def _publication_metadata(
             snapshot.get(
                 "evidence_mode", "margin" if family == "performance" else None
             ),
-        ),
-        "quality_of_record_evidence": entry.get(
-            "quality_of_record_evidence", snapshot.get("quality_of_record_evidence")
         ),
         "prior_family": entry.get("prior_family", snapshot.get("prior_family")),
         "requested_cutoff": entry.get(

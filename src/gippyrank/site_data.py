@@ -38,10 +38,6 @@ from gippyrank.methodology import (
     WEEKLY_GAME_SCHEMA_VERSION,
     production_methodology_metadata,
 )
-from gippyrank.quality_of_record_evidence import (
-    INFERENCE_GAMES_FILE,
-    validate_quality_of_record_evidence,
-)
 from gippyrank.ranking_variants import performance_variant
 from gippyrank.redditcfb import (
     TeamHandleMappingError,
@@ -1477,34 +1473,25 @@ def _validate_performance_source(
                 f"{metadata['snapshot_id']}: Quality of Record differs from frozen Context game rows"
             )
         try:
-            used_rows, declaration = validate_quality_of_record_evidence(
-                source_metadata,
-                source_rows,
-                metadata,
-                source_metadata_sha256=_file_sha256(source_metadata_path),
-            )
-            inference_path = performance_source / INFERENCE_GAMES_FILE
-            if declaration is not None:
-                with inference_path.open(newline="", encoding="utf-8") as handle:
-                    inference_rows = [
-                        {
-                            field: str(row.get(field) or "")
-                            for field in INCLUDED_GAME_FIELDS
-                        }
-                        for row in csv.DictReader(handle)
-                    ]
-                if inference_rows != used_rows:
-                    raise ValueError(
-                        "Quality of Record inference game artifact mismatch"
-                    )
-            elif inference_path.exists():
-                raise ValueError("Undeclared Quality of Record inference game artifact")
-            diagnostics = _read_json(performance_source / "diagnostics.json")
-            if diagnostics.get(
-                "quality_of_record_evidence"
-            ) != declaration or diagnostics.get("raw_game_factor_count") != len(
-                used_rows
+            if any(
+                int(row["homePoints"]) == int(row["awayPoints"])
+                for row in source_rows
             ):
+                raise ValueError("Quality of Record source contains a winnerless game")
+            if "quality_of_record_evidence" in metadata:
+                raise ValueError("Retired Quality of Record evidence exception is present")
+            if (performance_source / "inference_games.csv").exists():
+                raise ValueError(
+                    "Retired Quality of Record inference game artifact is present"
+                )
+            if metadata.get("historical_evidence_correction") != source_metadata.get(
+                "historical_evidence_correction"
+            ):
+                raise ValueError("Quality of Record evidence correction mismatch")
+            diagnostics = _read_json(performance_source / "diagnostics.json")
+            if "quality_of_record_evidence" in diagnostics or diagnostics.get(
+                "raw_game_factor_count"
+            ) != len(source_rows):
                 raise ValueError("Quality of Record inference diagnostics mismatch")
         except (ValueError, OSError) as error:
             raise SiteDataValidationError(
@@ -4907,10 +4894,6 @@ def build_site_data(
                     "source_evidence_hash": metadata.get("source_evidence_hash"),
                 }
             )
-        if "quality_of_record_evidence" in metadata:
-            consumer_snapshot["quality_of_record_evidence"] = metadata[
-                "quality_of_record_evidence"
-            ]
         _write_json(
             output_directory / "snapshots" / f"{snapshot_id}.json", consumer_snapshot
         )
@@ -5160,10 +5143,6 @@ def build_site_data(
             }
             consumer_snapshot.update(backfill_fields)
             manifest_entry.update(backfill_fields)
-        if "quality_of_record_evidence" in metadata:
-            manifest_entry["quality_of_record_evidence"] = metadata[
-                "quality_of_record_evidence"
-            ]
         manifest_entries.append(manifest_entry)
     published_families = {entry["ranking_family"] for entry in manifest_entries}
     published_fbs_logo_audit = _logo_audit(published_fbs_identities)

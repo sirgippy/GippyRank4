@@ -1013,6 +1013,7 @@ def build_snapshot(
     evidence_snapshot: Path | None = None,
     presentation_schedule_path: Path | None = None,
     canonical_lineage_replay: bool = False,
+    evidence_correction_replay: bool = False,
 ) -> Snapshot:
     """Build an atomic-on-success schema-v1 bundle without any publishing logic."""
     started = time.perf_counter()
@@ -1048,6 +1049,13 @@ def build_snapshot(
     ):
         raise ValueError(
             "canonical lineage replay requires frozen evidence and Context 1.4"
+        )
+    if evidence_correction_replay and (
+        evidence_snapshot is None or not lineage_suffix or canonical_lineage_replay
+    ):
+        raise ValueError(
+            "evidence correction replay requires frozen evidence, a lineage suffix, "
+            "and no canonical prior migration"
         )
 
     if evidence_snapshot is not None:
@@ -1166,11 +1174,30 @@ def build_snapshot(
         ):
             raise ValueError(f"{replay_source}: frozen game corpus hash is invalid")
         source_game_corpus_sha256 = source_game_corpus_value
-        if snapshot_type not in {"preseason", "weekly"} or prior_family != "context":
+        if snapshot_type not in {"preseason", "weekly"} or (
+            prior_family != "context" and not evidence_correction_replay
+        ):
             raise ValueError(
                 "frozen evidence replay supports preseason or weekly Context snapshots"
             )
-        if selected_prior_version == str(replay_metadata.get("prior_model_version")):
+        if replay_metadata.get("prior_family") != prior_family:
+            raise ValueError(f"{replay_source}: frozen evidence prior family mismatch")
+        same_prior_version = selected_prior_version == str(
+            replay_metadata.get("prior_model_version")
+        )
+        if evidence_correction_replay:
+            correction = replay_metadata.get("historical_evidence_correction")
+            if (
+                not same_prior_version
+                or not isinstance(correction, dict)
+                or correction.get("source_snapshot_id")
+                != replay_metadata.get("snapshot_id")
+            ):
+                raise ValueError(
+                    "evidence correction replay must preserve the source prior and "
+                    "declare its original snapshot"
+                )
+        elif same_prior_version:
             corrected_same_version = (
                 canonical_lineage_replay
                 and lineage_suffix == "db-repair"
@@ -1182,7 +1209,10 @@ def build_snapshot(
                     "frozen evidence replay must change the prior model version "
                     "or identify a changed Context 1.4 DB-repair prior"
                 )
-        if selected_prior_version not in {"1.3", "1.4"}:
+        if not evidence_correction_replay and selected_prior_version not in {
+            "1.3",
+            "1.4",
+        }:
             raise ValueError(
                 "frozen evidence replay requires Context prior version 1.3 or 1.4"
             )
@@ -1429,13 +1459,18 @@ def build_snapshot(
         "fcs_population_source": fcs_population_source,
         "display_statistic": "expected_rank",
         "valid": result.converged,
-        "model_versions": {
-            "context_prior": selected_prior_version
-            if prior_family == "context"
-            else CONTEXT_PRIOR_VERSION,
-            "history_prior": HISTORY_PRIOR_VERSION,
-            "historical_likelihood": HISTORICAL_LIKELIHOOD_VERSION,
-        },
+        # Evidence correction changes included games, not model provenance.
+        "model_versions": (
+            replay_metadata["model_versions"]
+            if evidence_correction_replay and replay_metadata is not None
+            else {
+                "context_prior": selected_prior_version
+                if prior_family == "context"
+                else CONTEXT_PRIOR_VERSION,
+                "history_prior": HISTORY_PRIOR_VERSION,
+                "historical_likelihood": HISTORICAL_LIKELIHOOD_VERSION,
+            }
+        ),
         "team_season_path": "team_seasons.json" if prior_family == "context" else None,
         "team_season_schema_version": (
             TEAM_SEASON_SCHEMA_VERSION if prior_family == "context" else None
@@ -1463,7 +1498,12 @@ def build_snapshot(
                 "presentation_schedule_source": replay_schedule_source,
             }
         )
-        if canonical_lineage_replay:
+        if evidence_correction_replay:
+            metadata["lineage_migration"] = "historical_evidence_correction"
+            metadata["historical_evidence_correction"] = replay_metadata[
+                "historical_evidence_correction"
+            ]
+        elif canonical_lineage_replay:
             metadata["lineage_migration"] = "context_1_4_production_promotion"
         else:
             metadata["backfill"] = True
