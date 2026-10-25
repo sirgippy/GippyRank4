@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from gippyrank.api.static import build_static_api
 from gippyrank.ranking_variants import performance_variant
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -93,6 +94,21 @@ def test_repaired_publications_preserve_cutoffs_and_share_corrected_evidence() -
 
         context_metadata = by_kind["context"][0]
         history_metadata = by_kind["history"][0]
+        original_history_entry = next(
+            item
+            for item in audit["superseded_artifacts"]
+            if item["publication_slot"] == slot and item["role"] == "history"
+        )
+        original_history_metadata = json.loads(
+            (
+                ROOT
+                / original_history_entry["superseded"]["path"]
+                / "metadata.json"
+            ).read_text()
+        )
+        assert history_metadata["model_versions"] == original_history_metadata[
+            "model_versions"
+        ]
         assert context_metadata["prior_model_version"] == (
             "1.4" if index == 2 else "1.2"
         )
@@ -165,16 +181,20 @@ def test_repaired_publications_preserve_cutoffs_and_share_corrected_evidence() -
         assert (ROOT / item["repaired"]["path"]).is_dir()
 
 
-def test_site_and_static_api_no_longer_publish_the_temporary_exception() -> None:
+def test_site_and_static_api_no_longer_publish_the_temporary_exception(
+    tmp_path: Path,
+) -> None:
     manifest = json.loads((ROOT / "site/data/manifest.json").read_text())
     assert all(
         "quality_of_record_evidence" not in item for item in manifest["snapshots"]
     )
-    api = json.loads((ROOT / "site/api/v1/publications.json").read_text())
+    api_root = tmp_path / "api" / "v1"
+    build_static_api(data_dir=ROOT / "site/data", output_directory=api_root)
+    api = json.loads((api_root / "publications.json").read_text())
     assert all(
         "quality_of_record_evidence" not in item for item in api["publications"]
     )
-    for directory in (ROOT / "site/data", ROOT / "site/api/v1"):
+    for directory in (ROOT / "site/data", api_root):
         for artifact in directory.rglob("*.json"):
             content = artifact.read_text(encoding="utf-8")
             assert "quality_of_record_evidence" not in content
@@ -186,4 +206,3 @@ def test_site_and_static_api_no_longer_publish_the_temporary_exception() -> None
         ).read_text()
     )
     assert audit["site_export"]["retired_exception_fields"] == 0
-

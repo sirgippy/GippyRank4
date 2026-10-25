@@ -1459,13 +1459,18 @@ def build_snapshot(
         "fcs_population_source": fcs_population_source,
         "display_statistic": "expected_rank",
         "valid": result.converged,
-        "model_versions": {
-            "context_prior": selected_prior_version
-            if prior_family == "context"
-            else CONTEXT_PRIOR_VERSION,
-            "history_prior": HISTORY_PRIOR_VERSION,
-            "historical_likelihood": HISTORICAL_LIKELIHOOD_VERSION,
-        },
+        # Evidence correction changes included games, not model provenance.
+        "model_versions": (
+            replay_metadata["model_versions"]
+            if evidence_correction_replay and replay_metadata is not None
+            else {
+                "context_prior": selected_prior_version
+                if prior_family == "context"
+                else CONTEXT_PRIOR_VERSION,
+                "history_prior": HISTORY_PRIOR_VERSION,
+                "historical_likelihood": HISTORICAL_LIKELIHOOD_VERSION,
+            }
+        ),
         "team_season_path": "team_seasons.json" if prior_family == "context" else None,
         "team_season_schema_version": (
             TEAM_SEASON_SCHEMA_VERSION if prior_family == "context" else None
