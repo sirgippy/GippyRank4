@@ -30,6 +30,8 @@ GAME_FIELDS = (
     "seasonType",
     "startDate",
     "completed",
+    "status",
+    "gameStatus",
     "neutralSite",
     "conferenceGame",
     "homeId",

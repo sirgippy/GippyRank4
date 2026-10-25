@@ -135,16 +135,16 @@ def _root(tmp_path: Path) -> Path:
                 "completed": "True",
                 "neutralSite": "False",
                 "conferenceGame": "True",
-                "homeId": "1",
-                "homeTeam": "One",
+                "homeId": "2",
+                "homeTeam": "Two",
                 "homeClassification": "fbs",
                 "homeConference": "A",
-                "homePoints": 7,
-                "awayId": "2",
-                "awayTeam": "Two",
+                "homePoints": 24,
+                "awayId": "1",
+                "awayTeam": "One",
                 "awayClassification": "fbs",
                 "awayConference": "A",
-                "awayPoints": 24,
+                "awayPoints": 7,
             },
         ],
     )
@@ -392,8 +392,8 @@ def test_team_artifact_hides_future_results_and_site_exports_lazy_path(
     assert later["future_prediction_id"] == "later"
     prediction = artifact["future_predictions"]["later"]
     assert prediction["prediction_source"] == "predictive_context"
-    assert prediction["home_team_id"] == "1"
-    assert prediction["away_team_id"] == "2"
+    assert prediction["home_team_id"] == "2"
+    assert prediction["away_team_id"] == "1"
     assert prediction["margin_interval_50"][0] <= prediction["margin_interval_50"][1]
     assert prediction["home_win_probability"] + prediction[
         "away_win_probability"

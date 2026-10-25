@@ -61,7 +61,7 @@ def _regular(row: dict[str, str]) -> bool:
 
 
 def _cancelled(row: dict[str, str]) -> bool:
-    status = str(row.get("status", row.get("gameStatus", "")) or "").casefold()
+    status = str(row.get("status") or row.get("gameStatus", "") or "").casefold()
     return "cancel" in status or "postpon" in status
 
 

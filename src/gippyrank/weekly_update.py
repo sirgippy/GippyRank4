@@ -190,6 +190,8 @@ def _same_evidence(context: Snapshot, history: Snapshot) -> None:
         "included_game_count",
         "included_game_ids",
         "included_game_rows_sha256",
+        "game_evidence_exclusions",
+        "game_evidence_exclusions_sha256",
         "excluded_lower_division_games",
         "fcs_fallback_team_ids",
         "fcs_population_size",
@@ -424,6 +426,7 @@ def _report(
         "source_retrieved_at": metadata["source_retrieved_at"],
         "source_retrieval_times": metadata["source_retrieval_times"],
         "eligible_game_count": metadata["included_game_count"],
+        "game_evidence_exclusions": metadata.get("game_evidence_exclusions", []),
         "excluded_lower_division_games": metadata["excluded_lower_division_games"],
         "fcs_population_size": metadata["fcs_population_size"],
         "fcs_fallback_count": metadata["fcs_fallback_count"],
@@ -632,6 +635,7 @@ def render_review_markdown(report: dict[str, Any]) -> str:
         f"- Acquisition/effective cutoff: `{report['source_retrieved_at']}` / `{report['effective_cutoff']}`\n"
         f"- Source retrieval times: FBS `{report['source_retrieval_times'].get('fbs')}`; FCS `{report['source_retrieval_times'].get('fcs')}`\n"
         f"- Eligible games: `{report['eligible_game_count']}`; lower-division excluded: `{report['excluded_lower_division_games']}`\n"
+        f"- Completed-game evidence exclusions: `{len(report.get('game_evidence_exclusions', []))}`\n"
         f"- Newly eligible games since previous publication: `{report['new_eligible_game_count']}`\n"
         f"- FCS population/fallbacks: `{report['fcs_population_size']}` / `{report['fcs_fallback_count']}`\n"
         "- Validation: `passed` (shared cutoff, corpus, and eligible game set)\n\n"
@@ -664,6 +668,26 @@ def render_review_markdown(report: dict[str, Any]) -> str:
             else ""
         )
         + "\n## Review diagnostics\n\n"
+        + "### Completed-game evidence exclusions\n\n"
+        + (
+            "No suspicious or replaced completed-game records were excluded.\n\n"
+            if not report.get("game_evidence_exclusions")
+            else "\n".join(
+                f"- Game `{item['game_id']}`: {item['reason']}"
+                + (
+                    f"; replacement ID(s): {', '.join(item['replacement_game_ids'])}"
+                    if item.get("replacement_game_ids")
+                    else ""
+                )
+                + (
+                    "; investigation required"
+                    if item.get("investigation_required")
+                    else ""
+                )
+                for item in report["game_evidence_exclusions"]
+            )
+            + "\n\n"
+        )
         + f"### Context biggest movers (vs {report.get('context_movement_baseline') or 'no earlier official baseline'})\n\n"
         + "\n".join(
             f"- {item['team']}: {item['rank_change']:+d} display ranks"

@@ -11,7 +11,7 @@ from typing import Any
 from gippyrank.posterior.snapshots import (
     INCLUDED_GAME_FIELDS,
     build_snapshot,
-    filter_games,
+    filter_games_with_audit,
     included_game_rows_sha256,
     relative_path,
     stable_values_sha256,
@@ -510,9 +510,13 @@ def _boundary_sanity_check(
 ) -> dict[str, Any]:
     metadata = _read_json(snapshot_path / "metadata.json")
     effective_cutoff = datetime.fromisoformat(str(metadata["effective_cutoff"]))
-    expected_games, expected_rows, expected_lower, _ = filter_games(
-        root, 2026, effective_cutoff, "weekly"
-    )
+    (
+        expected_games,
+        expected_rows,
+        expected_lower,
+        _,
+        expected_exclusions,
+    ) = filter_games_with_audit(root, 2026, effective_cutoff, "weekly")
     expected_ids = [row["id"] for row in expected_rows]
     actual_ids = list(result["included_game_ids"])
     if actual_ids != expected_ids:
@@ -539,6 +543,10 @@ def _boundary_sanity_check(
     if expected_lower != metadata["excluded_lower_division_games"]:
         raise ContextComparisonError(
             "official Week 4 lower-division exclusion count is not reproducible"
+        )
+    if expected_exclusions != metadata.get("game_evidence_exclusions", []):
+        raise ContextComparisonError(
+            "official Week 4 game evidence exclusions are not reproducible"
         )
     return {
         "requested_cutoff": result["requested_cutoff"],

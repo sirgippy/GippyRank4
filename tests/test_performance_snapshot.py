@@ -85,6 +85,30 @@ def test_history_source_is_rejected(tmp_path: Path) -> None:
         build_performance_snapshot(history, root=ROOT, output_root=tmp_path)
 
 
+def test_game_evidence_exclusion_audit_hash_is_validated(tmp_path: Path) -> None:
+    context = _snapshot(CONTEXT_PATH)
+    metadata = {
+        **context.metadata,
+        "game_evidence_exclusions": [
+            {
+                "game_id": "suspicious",
+                "reason": "suspicious_completed_zero_zero_score",
+                "replacement_game_ids": [],
+                "investigation_required": True,
+            }
+        ],
+        "game_evidence_exclusions_sha256": "0" * 64,
+    }
+
+    with pytest.raises(
+        PerformanceSnapshotValidationError,
+        match="game evidence exclusion hash mismatch",
+    ):
+        build_performance_snapshot(
+            replace(context, metadata=metadata), root=ROOT, output_root=tmp_path
+        )
+
+
 @pytest.mark.parametrize("field", ["effective_cutoff", "included_game_ids", "game_corpus_sha256", "prior_artifact_sha256"])
 def test_context_performance_evidence_mismatch_is_rejected(field: str) -> None:
     context = _snapshot(CONTEXT_PATH)

@@ -76,7 +76,7 @@ def _regular(game: dict[str, Any]) -> bool:
 
 
 def _cancelled(game: dict[str, Any]) -> bool:
-    status = str(game.get("status", game.get("gameStatus", "")) or "").casefold()
+    status = str(game.get("status") or game.get("gameStatus", "") or "").casefold()
     return "cancel" in status or "postpon" in status
 
 

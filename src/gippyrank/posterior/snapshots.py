@@ -19,6 +19,10 @@ from gippyrank.artifact_hashes import (
     posterior_pmfs_sha256,
     stable_values_sha256,
 )
+from gippyrank.data.game_evidence import (
+    completed_flag,
+    reconcile_game_evidence_rows,
+)
 from gippyrank.likelihood_provenance import (
     supplied_likelihood_parameters,
     supplied_likelihood_sha256,
@@ -68,6 +72,13 @@ def sha256(path: Path) -> str:
         for block in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def _game_evidence_exclusions_sha256(rows: list[dict[str, object]]) -> str:
+    payload = json.dumps(
+        rows, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def relative_path(path: Path, root: Path) -> str:
@@ -210,6 +221,93 @@ def corpus_provenance(root: Path, season: int) -> CorpusProvenance:
     )
 
 
+def filter_games_with_audit(
+    root: Path,
+    season: int,
+    cutoff: datetime | date | None,
+    snapshot_type: SnapshotType,
+    *,
+    source_retrieved_at: datetime | None = None,
+) -> tuple[list[Game], list[dict[str, str]], int, Path, list[dict[str, object]]]:
+    """Filter eligible games and return the evidence-exclusion audit."""
+    path = root / "data/processed/cfbd/games.csv"
+    if not path.exists():
+        raise FileNotFoundError(path)
+    cutoff_dt = _as_utc_datetime(cutoff) if cutoff is not None else None
+    if snapshot_type != "preseason" and cutoff_dt is None:
+        raise ValueError("non-preseason snapshot needs cutoff")
+    if (
+        snapshot_type != "preseason"
+        and source_retrieved_at is not None
+        and _as_utc_datetime(source_retrieved_at) > cutoff_dt
+    ):
+        # A later mutable schedule response cannot prove any result at this
+        # cutoff. Do not inspect its rows or expose later replacement IDs.
+        return [], [], 0, path, []
+
+    candidate_rows: list[dict[str, str]] = []
+    with path.open(newline="", encoding="utf-8") as handle:
+        for row in csv.DictReader(handle):
+            if int(row["season"]) != season or snapshot_type == "preseason":
+                continue
+            is_completed = completed_flag(row)
+            if is_completed:
+                try:
+                    when = datetime.fromisoformat(row["startDate"])
+                except (KeyError, TypeError, ValueError) as exc:
+                    raise ValueError(
+                        f"completed game {row.get('id', '<unknown>')} needs a valid startDate"
+                    ) from exc
+                if when.tzinfo is None or when.utcoffset() is None:
+                    raise ValueError(
+                        f"completed game {row['id']} needs a timezone-aware date"
+                    )
+                if when.astimezone(UTC) > cutoff_dt:
+                    continue
+                candidate_rows.append(row)
+                continue
+
+            # Keep only in-cutoff schedule rows so a later replacement cannot
+            # be used to reconcile a historical cutoff that predates it.
+            try:
+                when = datetime.fromisoformat(row.get("startDate", ""))
+            except (TypeError, ValueError):
+                continue
+            if (
+                when.tzinfo is not None
+                and when.utcoffset() is not None
+                and when.astimezone(UTC) <= cutoff_dt
+            ):
+                candidate_rows.append(row)
+
+    reconciled_rows, evidence_exclusions = reconcile_game_evidence_rows(candidate_rows)
+    evidence_exclusions.sort(key=lambda item: str(item["game_id"]))
+    games: list[Game] = []
+    included_rows: list[dict[str, str]] = []
+    lower_division = 0
+    for row in reconciled_rows:
+        home, away = (
+            row["homeClassification"].lower(),
+            row["awayClassification"].lower(),
+        )
+        if home not in {"fbs", "fcs"} or away not in {"fbs", "fcs"}:
+            lower_division += 1
+            continue
+        game = Game(
+            str(row["id"]),
+            row["homeId"],
+            row["awayId"],
+            home,
+            away,
+            int(row["homePoints"]),
+            int(row["awayPoints"]),
+            _parse_completed(row["neutralSite"]),
+        )
+        games.append(game)
+        included_rows.append(row)
+    return games, included_rows, lower_division, path, evidence_exclusions
+
+
 def filter_games(
     root: Path,
     season: int,
@@ -218,63 +316,15 @@ def filter_games(
     *,
     source_retrieved_at: datetime | None = None,
 ) -> tuple[list[Game], list[dict[str, str]], int, Path]:
-    path = root / "data/processed/cfbd/games.csv"
-    if not path.exists():
-        raise FileNotFoundError(path)
-    games: list[Game] = []
-    included_rows: list[dict[str, str]] = []
-    lower_division = 0
-    cutoff_dt = _as_utc_datetime(cutoff) if cutoff is not None else None
-    with path.open(newline="", encoding="utf-8") as handle:
-        for row in csv.DictReader(handle):
-            if int(row["season"]) != season or not _parse_completed(row["completed"]):
-                continue
-            try:
-                when = datetime.fromisoformat(row["startDate"])
-            except (KeyError, TypeError, ValueError):
-                # Keep malformed completed rows out of inference. The team
-                # season builder will classify them as unresolved schedule
-                # state rather than silently dropping them.
-                continue
-            if when.tzinfo is None or when.utcoffset() is None:
-                raise ValueError(
-                    f"completed game {row['id']} needs a timezone-aware date"
-                )
-            if snapshot_type == "preseason" or (
-                cutoff_dt is not None and when > cutoff_dt
-            ):
-                continue
-            # A mutable response retrieved after the cutoff cannot establish
-            # when any of its completed scores became final. Scheduled start
-            # time is not completion evidence, even across a UTC date change.
-            if (
-                cutoff_dt is not None
-                and source_retrieved_at is not None
-                and source_retrieved_at > cutoff_dt
-            ):
-                continue
-            if cutoff_dt is None:
-                raise ValueError("non-preseason snapshot needs cutoff")
-            home, away = (
-                row["homeClassification"].lower(),
-                row["awayClassification"].lower(),
-            )
-            if home not in {"fbs", "fcs"} or away not in {"fbs", "fcs"}:
-                lower_division += 1
-                continue
-            game = Game(
-                str(row["id"]),
-                row["homeId"],
-                row["awayId"],
-                home,
-                away,
-                int(row["homePoints"]),
-                int(row["awayPoints"]),
-                _parse_completed(row["neutralSite"]),
-            )
-            games.append(game)
-            included_rows.append(row)
-    return games, included_rows, lower_division, path
+    """Backward-compatible game filter for historical research callers."""
+    games, rows, lower_division, path, _ = filter_games_with_audit(
+        root,
+        season,
+        cutoff,
+        snapshot_type,
+        source_retrieved_at=source_retrieved_at,
+    )
+    return games, rows, lower_division, path
 
 
 def _read_included_game_rows(path: Path) -> list[dict[str, str]]:
@@ -782,7 +832,9 @@ def _scheduled_future_fcs_rows(
                 for side in ("home", "away")
             ):
                 continue
-            status = str(row.get("status", row.get("gameStatus", "")) or "").casefold()
+            status = str(
+                row.get("status") or row.get("gameStatus", "") or ""
+            ).casefold()
             if "cancel" in status or "postpon" in status:
                 continue
             if snapshot_type == "preseason":
@@ -985,6 +1037,7 @@ def build_snapshot(
     replay_schedule_rows: list[dict[str, str]] | None = None
     replay_inference_configuration: dict[str, object] | None = None
     source_game_corpus_sha256: str | None = None
+    game_evidence_exclusions: list[dict[str, object]] = []
 
     if presentation_schedule_path is not None and evidence_snapshot is None:
         raise ValueError(
@@ -1030,6 +1083,9 @@ def build_snapshot(
             snapshot_type=snapshot_type,
             teams=teams,
             team_rows=team_rows,
+        )
+        game_evidence_exclusions = list(
+            replay_metadata.get("game_evidence_exclusions", [])
         )
         requested_cutoff = _metadata_datetime(
             replay_metadata.get("requested_cutoff"),
@@ -1142,7 +1198,13 @@ def build_snapshot(
         effective_cutoff = requested_cutoff
         if provenance.source_retrieved_at is not None and requested_cutoff is not None:
             effective_cutoff = min(requested_cutoff, provenance.source_retrieved_at)
-        games, included, excluded_lower, corpus_path = filter_games(
+        (
+            games,
+            included,
+            excluded_lower,
+            corpus_path,
+            game_evidence_exclusions,
+        ) = filter_games_with_audit(
             root,
             season,
             effective_cutoff,
@@ -1350,6 +1412,10 @@ def build_snapshot(
         "included_game_ids": included_game_ids,
         "included_game_ids_sha256": stable_values_sha256(included_game_ids),
         "included_game_rows_sha256": included_game_rows_sha256(included),
+        "game_evidence_exclusions": game_evidence_exclusions,
+        "game_evidence_exclusions_sha256": _game_evidence_exclusions_sha256(
+            game_evidence_exclusions
+        ),
         "fbs_team_count": len(fbs_team_ids),
         "fbs_team_keys_sha256": stable_values_sha256(fbs_team_ids),
         "excluded_lower_division_games": excluded_lower,
