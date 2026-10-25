@@ -24,9 +24,21 @@ ARMS = (
 )
 PRIMARY_POPULATION = "fbs_fbs"
 ALLOWED_POPULATIONS = {"fbs_fbs", "fbs_fcs"}
-STRONG_FAVORITE_PROBABILITY = 0.80
+STRONG_PRESEASON_TOP10_PROBABILITY = 0.50
 BOOTSTRAP_REPETITIONS = 1000
 BOOTSTRAP_SEED = 246
+
+PRESEASON_PRIOR_FIELDS = (
+    "season",
+    "model_arm",
+    "prior_family",
+    "policy",
+    "team_id",
+    "team",
+    "preseason_rank_top10_probability",
+    "preseason_rank_prior_group",
+    "preseason_rank_pmf_sha256",
+)
 
 TEAM_GAME_FIELDS = (
     "season",
@@ -47,8 +59,8 @@ TEAM_GAME_FIELDS = (
     "actual_margin",
     "predicted_margin",
     "signed_error",
-    "preseason_win_probability",
-    "preseason_favorite_group",
+    "preseason_rank_top10_probability",
+    "preseason_rank_prior_group",
     "evidence_game_count",
 )
 LAG_PAIR_FIELDS = (
@@ -73,8 +85,8 @@ LAG_PAIR_FIELDS = (
     "next_actual_margin",
     "next_predicted_margin",
     "next_signed_error",
-    "preseason_win_probability_next_game",
-    "preseason_favorite_group",
+    "preseason_rank_top10_probability",
+    "preseason_rank_prior_group",
     "previous_game_in_next_forecast_evidence",
     "eligible",
     "exclusion_reason",
@@ -86,7 +98,7 @@ SUMMARY_FIELDS = (
     "model_arm",
     "prior_family",
     "policy",
-    "preseason_favorite_group",
+    "preseason_rank_prior_group",
     "season_progress_bin",
     "transitions",
     "team_count",
@@ -97,7 +109,15 @@ SUMMARY_FIELDS = (
     "directional_persistence",
     "directional_ci95_low",
     "directional_ci95_high",
-    "directional_excess_over_half",
+    "nonzero_directional_pairs",
+    "positive_previous_error_share",
+    "positive_next_error_share",
+    "directional_independence_baseline",
+    "directional_baseline_ci95_low",
+    "directional_baseline_ci95_high",
+    "directional_excess_over_independence",
+    "directional_excess_ci95_low",
+    "directional_excess_ci95_high",
 )
 CONTRAST_FIELDS = (
     "model_arm",
@@ -194,14 +214,8 @@ def load_issue201_inputs(issue201_root: Path) -> dict[str, Any]:
         if row["forecast_stage"] == "rolling"
         and row["forecast_population"] in ALLOWED_POPULATIONS
     ]
-    preseason = [
-        row
-        for row in all_scores
-        if row["forecast_stage"] == "preseason"
-        and row["forecast_population"] in ALLOWED_POPULATIONS
-    ]
-    if not rolling or not preseason:
-        raise ValueError("issue 201 forecast scores lack rolling or preseason rows")
+    if not rolling:
+        raise ValueError("issue 201 forecast scores lack rolling rows")
 
     evidence_records: dict[tuple[int, str, str], dict[str, Any]] = {}
     with gzip.open(
@@ -230,12 +244,116 @@ def load_issue201_inputs(issue201_root: Path) -> dict[str, Any]:
     return {
         "manifest": manifest,
         "rolling_scores": rolling,
-        "preseason_scores": preseason,
         "evidence_records": evidence_records,
         "input_hashes": input_hashes,
         "parity_checks": parity_checks,
         "all_score_row_count": len(all_scores),
     }
+
+
+def load_issue200_preseason_rank_priors(
+    issue200_root: Path,
+) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
+    """Load and verify the retained #200 preseason team-rank PMFs."""
+    manifest_path = issue200_root / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if manifest.get("artifact_kind") != "issue_200_matched_pipeline_bundle":
+        raise ValueError(f"unexpected issue 200 manifest: {manifest_path}")
+    bundle_path = issue200_root / "pipeline_bundle.json"
+    expected = manifest.get("outputs", {}).get("pipeline_bundle.json")
+    if not isinstance(expected, dict):
+        raise TypeError("issue 200 manifest has no pipeline_bundle.json output record")
+    bundle_hash = sha256_file(bundle_path)
+    bundle_bytes = bundle_path.stat().st_size
+    if bundle_hash != expected.get("sha256") or bundle_bytes != expected.get(
+        "bytes"
+    ):
+        raise ValueError(f"issue 200 pipeline bundle hash mismatch: {bundle_path}")
+    bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
+    if bundle.get("experiment") != "issue-200-matched-history-context":
+        raise ValueError(f"unexpected issue 200 pipeline bundle: {bundle_path}")
+
+    input_hashes = {
+        "issue200/manifest.json": {
+            "sha256": sha256_file(manifest_path),
+            "bytes": manifest_path.stat().st_size,
+        },
+        "issue200/pipeline_bundle.json": {
+            "sha256": bundle_hash,
+            "bytes": bundle_bytes,
+        },
+    }
+    arm_by_key = {
+        (family.casefold(), policy): (arm, family, policy)
+        for arm, family, policy in ARMS
+    }
+    expected_populations = {
+        int(season): int(population)
+        for season, population in manifest["fbs_target_population_by_season"].items()
+    }
+    classifications: dict[tuple[int, str, str], dict[str, Any]] = {}
+    for prior in bundle.get("priors", []):
+        season = int(prior["season"])
+        model_family = str(prior["model_family"])
+        policy = str(prior["policy"])
+        arm_spec = arm_by_key.get((model_family.casefold(), policy))
+        if (
+            season not in SEASONS
+            or arm_spec is None
+            or str(prior.get("subdivision", "")).casefold() != "fbs"
+        ):
+            continue
+        arm, family, policy = arm_spec
+        pmf = [float(value) for value in prior["pmf"]]
+        if _sha256_json(pmf) != prior.get("pmf_sha256"):
+            raise ValueError(
+                f"issue 200 preseason PMF hash mismatch for {season}/{arm}/{prior['team_id']}"
+            )
+        expected_population = expected_populations[season]
+        if int(prior["population"]) != expected_population or len(pmf) != expected_population:
+            raise ValueError(
+                f"issue 200 preseason PMF support mismatch for {season}/{arm}/{prior['team_id']}"
+            )
+        if any(not math.isfinite(value) or value < 0 for value in pmf):
+            raise ValueError(
+                f"issue 200 preseason PMF has invalid probabilities for {season}/{arm}/{prior['team_id']}"
+            )
+        if not math.isclose(math.fsum(pmf), 1.0, rel_tol=0.0, abs_tol=1e-9):
+            raise ValueError(
+                f"issue 200 preseason PMF does not sum to one for {season}/{arm}/{prior['team_id']}"
+            )
+        p_top10 = top10_rank_probability(pmf)
+        key = (season, arm, str(prior["team_id"]))
+        if key in classifications:
+            raise ValueError(f"duplicate issue 200 preseason prior: {key}")
+        classifications[key] = {
+            "season": season,
+            "model_arm": arm,
+            "prior_family": family,
+            "policy": policy,
+            "team_id": str(prior["team_id"]),
+            "team": str(prior["team_name"]),
+            "preseason_rank_top10_probability": p_top10,
+            "preseason_rank_prior_group": preseason_rank_prior_group(p_top10),
+            "preseason_rank_pmf_sha256": str(prior["pmf_sha256"]),
+        }
+
+    for arm, _, _ in ARMS:
+        for season, expected_population in expected_populations.items():
+            observed = sum(
+                1
+                for row in classifications.values()
+                if row["season"] == season and row["model_arm"] == arm
+            )
+            if observed != expected_population:
+                raise ValueError(
+                    f"issue 200 prior coverage mismatch for {season}/{arm}: "
+                    f"{observed} != {expected_population}"
+                )
+    return sorted(
+        classifications.values(),
+        key=lambda row: (row["season"], row["model_arm"], row["team_id"]),
+    ), input_hashes
 
 
 def _verify_issue201_parity(
@@ -295,17 +413,24 @@ def signed_error_from_home_margin(
     return orientation * (actual_home_margin - predicted_home_margin)
 
 
-def preseason_favorite_group(win_probability: float) -> str:
+def preseason_rank_prior_group(top10_probability: float) -> str:
     return (
-        "strong_preseason_favorite"
-        if win_probability >= STRONG_FAVORITE_PROBABILITY
+        "strong_preseason_rank_prior"
+        if top10_probability >= STRONG_PRESEASON_TOP10_PROBABILITY
         else "other"
     )
 
 
+def top10_rank_probability(pmf: list[float]) -> float:
+    """Return the preseason PMF mass on ranks 1 through 10."""
+    if len(pmf) < 10:
+        raise ValueError("preseason rank PMF must include at least ten ranks")
+    return math.fsum(float(value) for value in pmf[:10])
+
+
 def _team_game_row(
     forecast: dict[str, str],
-    preseason: dict[str, str],
+    preseason_prior: dict[str, Any],
     *,
     is_home: bool,
 ) -> dict[str, Any]:
@@ -315,8 +440,6 @@ def _team_game_row(
     predicted_home_margin = _float(forecast, "expected_home_margin")
     actual_margin = actual_home_margin if is_home else -actual_home_margin
     predicted_margin = predicted_home_margin if is_home else -predicted_home_margin
-    probability_field = "home_win_probability" if is_home else "away_win_probability"
-    probability = _float(preseason, probability_field)
     return {
         "season": int(forecast["season"]),
         "model_arm": forecast["model_arm"],
@@ -337,15 +460,19 @@ def _team_game_row(
         "signed_error": signed_error_from_home_margin(
             actual_home_margin, predicted_home_margin, is_home=is_home
         ),
-        "preseason_win_probability": probability,
-        "preseason_favorite_group": preseason_favorite_group(probability),
+        "preseason_rank_top10_probability": preseason_prior[
+            "preseason_rank_top10_probability"
+        ],
+        "preseason_rank_prior_group": preseason_prior[
+            "preseason_rank_prior_group"
+        ],
         "evidence_game_count": int(forecast["evidence_game_count"]),
     }
 
 
 def build_team_game_errors(
     rolling_scores: list[dict[str, str]],
-    preseason_scores: list[dict[str, str]],
+    preseason_rank_priors: list[dict[str, Any]],
     evidence_records: dict[tuple[int, str, str], dict[str, Any]],
 ) -> list[dict[str, Any]]:
     """Orient each rolling forecast for its FBS team and number games in-season.
@@ -353,11 +480,11 @@ def build_team_game_errors(
     FBS-FCS rows contribute only the FBS team's orientation. This preserves a
     complete FBS regular-season sequence without inventing FCS-vs-FCS history.
     """
-    preseason_by_key: dict[tuple[int, str, str], dict[str, str]] = {}
-    for row in preseason_scores:
-        key = (int(row["season"]), row["model_arm"], row["game_id"])
+    preseason_by_key: dict[tuple[int, str, str], dict[str, Any]] = {}
+    for row in preseason_rank_priors:
+        key = (int(row["season"]), row["model_arm"], str(row["team_id"]))
         if key in preseason_by_key:
-            raise ValueError(f"duplicate issue 201 preseason row: {key}")
+            raise ValueError(f"duplicate preseason rank prior classification: {key}")
         preseason_by_key[key] = row
 
     team_rows: list[dict[str, Any]] = []
@@ -372,10 +499,6 @@ def build_team_game_errors(
         if key in rolling_keys:
             raise ValueError(f"duplicate issue 201 rolling forecast row: {key}")
         rolling_keys.add(key)
-        preseason = preseason_by_key.get(key)
-        if preseason is None:
-            raise ValueError(f"missing #201 preseason forecast for {key}")
-
         evidence_key = _evidence_key(season, row["cutoff_utc"], policy)
         evidence = evidence_records.get(evidence_key)
         if evidence is None:
@@ -407,14 +530,22 @@ def build_team_game_errors(
         home_fbs = row["home_subdivision"].casefold() == "fbs"
         away_fbs = row["away_subdivision"].casefold() == "fbs"
         if row["forecast_population"] == "fbs_fbs" and home_fbs and away_fbs:
+            home_prior = preseason_by_key.get((season, arm, row["home_id"]))
+            away_prior = preseason_by_key.get((season, arm, row["away_id"]))
+            if home_prior is None or away_prior is None:
+                raise ValueError(f"missing #200 preseason rank prior for {key}")
             team_rows.extend(
                 (
-                    _team_game_row(row, preseason, is_home=True),
-                    _team_game_row(row, preseason, is_home=False),
+                    _team_game_row(row, home_prior, is_home=True),
+                    _team_game_row(row, away_prior, is_home=False),
                 )
             )
         elif row["forecast_population"] == "fbs_fcs" and home_fbs != away_fbs:
-            team_rows.append(_team_game_row(row, preseason, is_home=home_fbs))
+            fbs_id = row["home_id"] if home_fbs else row["away_id"]
+            fbs_prior = preseason_by_key.get((season, arm, fbs_id))
+            if fbs_prior is None:
+                raise ValueError(f"missing #200 preseason rank prior for {key}")
+            team_rows.append(_team_game_row(row, fbs_prior, is_home=home_fbs))
         else:
             raise ValueError(
                 f"unexpected population/subdivision combination for {game_id}"
@@ -520,10 +651,12 @@ def build_lagged_pairs(
                     "next_actual_margin": current["actual_margin"],
                     "next_predicted_margin": current["predicted_margin"],
                     "next_signed_error": next_error,
-                    "preseason_win_probability_next_game": current[
-                        "preseason_win_probability"
+                    "preseason_rank_top10_probability": current[
+                        "preseason_rank_top10_probability"
                     ],
-                    "preseason_favorite_group": current["preseason_favorite_group"],
+                    "preseason_rank_prior_group": current[
+                        "preseason_rank_prior_group"
+                    ],
                     "previous_game_in_next_forecast_evidence": prior_included,
                     "eligible": eligible,
                     "exclusion_reason": exclusion_reason,
@@ -550,6 +683,11 @@ def lag_statistics(
             "transitions": 0,
             "lag1_correlation": None,
             "directional_persistence": None,
+            "nonzero_directional_pairs": 0,
+            "positive_previous_error_share": None,
+            "positive_next_error_share": None,
+            "directional_independence_baseline": None,
+            "directional_excess_over_independence": None,
         }
     previous = np.asarray([float(row["previous_signed_error"]) for row in rows])
     following = np.asarray([float(row["next_signed_error"]) for row in rows])
@@ -560,6 +698,11 @@ def lag_statistics(
             "transitions": 0,
             "lag1_correlation": None,
             "directional_persistence": None,
+            "nonzero_directional_pairs": 0,
+            "positive_previous_error_share": None,
+            "positive_next_error_share": None,
+            "directional_independence_baseline": None,
+            "directional_excess_over_independence": None,
         }
     x = previous[valid_weight]
     y = following[valid_weight]
@@ -578,14 +721,44 @@ def lag_statistics(
         correlation = covariance / math.sqrt(variance_x * variance_y)
     nonzero = (x != 0.0) & (y != 0.0)
     if np.any(nonzero):
-        same = (x[nonzero] > 0.0) == (y[nonzero] > 0.0)
-        directional = float(np.dot(w[nonzero], same.astype(float)) / w[nonzero].sum())
+        previous_positive = x[nonzero] > 0.0
+        next_positive = y[nonzero] > 0.0
+        directional_weights = w[nonzero]
+        directional_weight = float(directional_weights.sum())
+        previous_positive_share = float(
+            np.dot(directional_weights, previous_positive.astype(float))
+            / directional_weight
+        )
+        next_positive_share = float(
+            np.dot(directional_weights, next_positive.astype(float))
+            / directional_weight
+        )
+        same = previous_positive == next_positive
+        directional = float(
+            np.dot(directional_weights, same.astype(float)) / directional_weight
+        )
+        independence_baseline = (
+            previous_positive_share * next_positive_share
+            + (1.0 - previous_positive_share) * (1.0 - next_positive_share)
+        )
+        directional_excess = directional - independence_baseline
+        nonzero_pair_count = int(np.count_nonzero(nonzero))
     else:
         directional = None
+        previous_positive_share = None
+        next_positive_share = None
+        independence_baseline = None
+        directional_excess = None
+        nonzero_pair_count = 0
     return {
         "transitions": int(np.count_nonzero(valid_weight)),
         "lag1_correlation": correlation,
         "directional_persistence": directional,
+        "nonzero_directional_pairs": nonzero_pair_count,
+        "positive_previous_error_share": previous_positive_share,
+        "positive_next_error_share": next_positive_share,
+        "directional_independence_baseline": independence_baseline,
+        "directional_excess_over_independence": directional_excess,
     }
 
 
@@ -658,24 +831,38 @@ def _cluster_bootstrap_intervals(
             "correlation_ci95_high": None,
             "directional_ci95_low": None,
             "directional_ci95_high": None,
+            "directional_baseline_ci95_low": None,
+            "directional_baseline_ci95_high": None,
+            "directional_excess_ci95_low": None,
+            "directional_excess_ci95_high": None,
         }
     codes = _cluster_codes(rows)
     rng = np.random.default_rng(_seed_for(seed, label))
     correlations: list[float] = []
     directionals: list[float] = []
+    baselines: list[float] = []
+    excesses: list[float] = []
     for _ in range(repetitions):
         stats = lag_statistics(rows, _bootstrap_weights(rng, codes))
         if stats["lag1_correlation"] is not None:
             correlations.append(float(stats["lag1_correlation"]))
         if stats["directional_persistence"] is not None:
             directionals.append(float(stats["directional_persistence"]))
+            baselines.append(float(stats["directional_independence_baseline"]))
+            excesses.append(float(stats["directional_excess_over_independence"]))
     corr_low, corr_high = _percentile_interval(correlations)
     dir_low, dir_high = _percentile_interval(directionals)
+    baseline_low, baseline_high = _percentile_interval(baselines)
+    excess_low, excess_high = _percentile_interval(excesses)
     return {
         "correlation_ci95_low": corr_low,
         "correlation_ci95_high": corr_high,
         "directional_ci95_low": dir_low,
         "directional_ci95_high": dir_high,
+        "directional_baseline_ci95_low": baseline_low,
+        "directional_baseline_ci95_high": baseline_high,
+        "directional_excess_ci95_low": excess_low,
+        "directional_excess_ci95_high": excess_high,
     }
 
 
@@ -687,7 +874,7 @@ def _summary_row(
     arm: str,
     family: str,
     policy: str,
-    favorite_group: str = "",
+    prior_group: str = "",
     progress_bin: str = "",
     repetitions: int,
     seed: int,
@@ -697,7 +884,7 @@ def _summary_row(
         rows,
         repetitions,
         seed,
-        f"{summary_level}|{season}|{arm}|{favorite_group}|{progress_bin}",
+        f"{summary_level}|{season}|{arm}|{prior_group}|{progress_bin}",
     )
     games = {
         f"{row['season']}:{game_id}"
@@ -705,14 +892,13 @@ def _summary_row(
         for game_id in (row["previous_game_id"], row["next_game_id"])
     }
     teams = {str(row["team_id"]) for row in rows}
-    persistence = stats["directional_persistence"]
     return {
         "summary_level": summary_level,
         "season": season,
         "model_arm": arm,
         "prior_family": family,
         "policy": policy,
-        "preseason_favorite_group": favorite_group,
+        "preseason_rank_prior_group": prior_group,
         "season_progress_bin": progress_bin,
         "transitions": stats["transitions"],
         "team_count": len(teams),
@@ -720,12 +906,26 @@ def _summary_row(
         "lag1_correlation": stats["lag1_correlation"],
         "correlation_ci95_low": intervals["correlation_ci95_low"],
         "correlation_ci95_high": intervals["correlation_ci95_high"],
-        "directional_persistence": persistence,
+        "directional_persistence": stats["directional_persistence"],
         "directional_ci95_low": intervals["directional_ci95_low"],
         "directional_ci95_high": intervals["directional_ci95_high"],
-        "directional_excess_over_half": (
-            None if persistence is None else persistence - 0.5
-        ),
+        "nonzero_directional_pairs": stats["nonzero_directional_pairs"],
+        "positive_previous_error_share": stats["positive_previous_error_share"],
+        "positive_next_error_share": stats["positive_next_error_share"],
+        "directional_independence_baseline": stats[
+            "directional_independence_baseline"
+        ],
+        "directional_baseline_ci95_low": intervals[
+            "directional_baseline_ci95_low"
+        ],
+        "directional_baseline_ci95_high": intervals[
+            "directional_baseline_ci95_high"
+        ],
+        "directional_excess_over_independence": stats[
+            "directional_excess_over_independence"
+        ],
+        "directional_excess_ci95_low": intervals["directional_excess_ci95_low"],
+        "directional_excess_ci95_high": intervals["directional_excess_ci95_high"],
     }
 
 
@@ -745,7 +945,7 @@ def _contrast_bootstrap(
     rng = np.random.default_rng(_seed_for(seed, label))
     differences: dict[str, list[float]] = {
         "lag1_correlation": [],
-        "directional_persistence": [],
+        "directional_excess_over_independence": [],
     }
     for _ in range(repetitions):
         weights = _bootstrap_weights(rng, codes)
@@ -792,7 +992,7 @@ def _contrast_rows(
         label=f"{arm}|{contrast}",
     )
     output: list[dict[str, Any]] = []
-    for metric in ("lag1_correlation", "directional_persistence"):
+    for metric in ("lag1_correlation", "directional_excess_over_independence"):
         value_a = stats_a[metric]
         value_b = stats_b[metric]
         difference = (
@@ -858,19 +1058,19 @@ def summarize_lagged_pairs(
                     seed=seed,
                 )
             )
-        for favorite in ("strong_preseason_favorite", "other"):
+        for prior_group in ("strong_preseason_rank_prior", "other"):
             members = [
-                row for row in arm_rows if row["preseason_favorite_group"] == favorite
+                row for row in arm_rows if row["preseason_rank_prior_group"] == prior_group
             ]
             summaries.append(
                 _summary_row(
                     members,
-                    summary_level="pooled_favorite_stratum",
+                    summary_level="pooled_prior_stratum",
                     season="2022-2025",
                     arm=arm,
                     family=family,
                     policy=policy,
-                    favorite_group=favorite,
+                    prior_group=prior_group,
                     repetitions=repetitions,
                     seed=seed,
                 )
@@ -899,9 +1099,9 @@ def summarize_lagged_pairs(
                 arm=arm,
                 family=family,
                 policy=policy,
-                contrast="strong_preseason_favorite_minus_other",
-                attribute="preseason_favorite_group",
-                group_a="strong_preseason_favorite",
+                contrast="strong_preseason_rank_prior_minus_other",
+                attribute="preseason_rank_prior_group",
+                group_a="strong_preseason_rank_prior",
                 group_b="other",
                 repetitions=repetitions,
                 seed=seed,

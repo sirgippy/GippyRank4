@@ -20,10 +20,12 @@ from gippyrank.research.issue_246_error_persistence import (
     BOOTSTRAP_SEED,
     CONTRAST_FIELDS,
     LAG_PAIR_FIELDS,
+    PRESEASON_PRIOR_FIELDS,
     SUMMARY_FIELDS,
     TEAM_GAME_FIELDS,
     build_lagged_pairs,
     build_team_game_errors,
+    load_issue200_preseason_rank_priors,
     load_issue201_inputs,
     output_manifest,
     summarize_lagged_pairs,
@@ -31,6 +33,7 @@ from gippyrank.research.issue_246_error_persistence import (
 )
 
 DEFAULT_ISSUE201_ROOT = ROOT / "data/research/issue_201_prebowl_forecast"
+DEFAULT_ISSUE200_ROOT = ROOT / "data/research/matched_history_context_issue_200"
 DEFAULT_PROTOCOL = ROOT / "docs/issue_246_error_persistence.md"
 DEFAULT_OUTPUT = ROOT / "data/research/issue_246_error_persistence"
 AUDIT_FIELDS = (
@@ -82,7 +85,7 @@ def _summary_lookup(
     arm: str,
     *,
     season: int | str | None = None,
-    favorite: str = "",
+    prior_group: str = "",
     progress: str = "",
 ) -> dict[str, Any]:
     for row in summaries:
@@ -90,12 +93,12 @@ def _summary_lookup(
             row["summary_level"] == level
             and row["model_arm"] == arm
             and (season is None or str(row["season"]) == str(season))
-            and row["preseason_favorite_group"] == favorite
+            and row["preseason_rank_prior_group"] == prior_group
             and row["season_progress_bin"] == progress
         ):
             return row
     raise ValueError(
-        f"missing issue 246 summary row: {level}/{arm}/{season}/{favorite}/{progress}"
+        f"missing issue 246 summary row: {level}/{arm}/{season}/{prior_group}/{progress}"
     )
 
 
@@ -120,6 +123,7 @@ def render_report(
     summaries: list[dict[str, Any]],
     contrasts: list[dict[str, Any]],
     audit: list[dict[str, Any]],
+    preseason_rank_classifications: list[dict[str, Any]],
     bootstrap_repetitions: int,
 ) -> str:
     unique_games = {(row["season"], row["game_id"]) for row in team_games}
@@ -142,80 +146,102 @@ def render_report(
     progress_rows = [
         row for row in summaries if row["summary_level"] == "pooled_season_progress"
     ]
-    favorite_contrasts = [
+    prior_contrasts = [
         row
         for row in contrasts
-        if row["contrast"] == "strong_preseason_favorite_minus_other"
+        if row["contrast"] == "strong_preseason_rank_prior_minus_other"
     ]
     progress_contrasts = [
         row for row in contrasts if row["contrast"] == "late_minus_early"
     ]
-    all_pooled_intervals_cover_null = all(
-        row["correlation_ci95_low"] <= 0 <= row["correlation_ci95_high"]
-        and row["directional_ci95_low"] <= 0.5 <= row["directional_ci95_high"]
+
+    def covers_zero(row: dict[str, Any], low_key: str, high_key: str) -> bool:
+        low, high = row[low_key], row[high_key]
+        return low is not None and high is not None and low <= 0 <= high
+
+    pooled_intervals_cover_null = all(
+        covers_zero(row, "correlation_ci95_low", "correlation_ci95_high")
+        and covers_zero(
+            row, "directional_excess_ci95_low", "directional_excess_ci95_high"
+        )
         for row in pooled_rows
     )
-    all_season_intervals_cover_null = all(
-        row["correlation_ci95_low"] <= 0 <= row["correlation_ci95_high"]
-        and row["directional_ci95_low"] <= 0.5 <= row["directional_ci95_high"]
+    season_intervals_cover_null = all(
+        covers_zero(row, "correlation_ci95_low", "correlation_ci95_high")
+        and covers_zero(
+            row, "directional_excess_ci95_low", "directional_excess_ci95_high"
+        )
         for row in season_rows
     )
-    all_progress_intervals_cover_null = all(
-        row["correlation_ci95_low"] <= 0 <= row["correlation_ci95_high"]
-        and row["directional_ci95_low"] <= 0.5 <= row["directional_ci95_high"]
+    progress_intervals_cover_null = all(
+        covers_zero(row, "correlation_ci95_low", "correlation_ci95_high")
+        and covers_zero(
+            row, "directional_excess_ci95_low", "directional_excess_ci95_high"
+        )
         for row in progress_rows
     )
-    favorite_differences_cover_zero = all(
-        row["ci95_low"] <= 0 <= row["ci95_high"] for row in favorite_contrasts
+    prior_differences_cover_zero = all(
+        covers_zero(row, "ci95_low", "ci95_high") for row in prior_contrasts
     )
     progress_differences_cover_zero = all(
-        row["ci95_low"] <= 0 <= row["ci95_high"] for row in progress_contrasts
+        covers_zero(row, "ci95_low", "ci95_high") for row in progress_contrasts
     )
     no_consistent_signal = (
-        all_pooled_intervals_cover_null
-        and all_season_intervals_cover_null
-        and all_progress_intervals_cover_null
-        and favorite_differences_cover_zero
+        pooled_intervals_cover_null
+        and season_intervals_cover_null
+        and progress_intervals_cover_null
+        and prior_differences_cover_zero
         and progress_differences_cover_zero
     )
     pooled_r_values = [float(row["lag1_correlation"]) for row in pooled_rows]
-    pooled_direction_values = [
-        float(row["directional_persistence"]) for row in pooled_rows
+    pooled_excess_values = [
+        float(row["directional_excess_over_independence"]) for row in pooled_rows
     ]
     if no_consistent_signal:
         conclusion = (
-            "No consistent sequential directional-error signal was detected. Across the four pooled arms, "
+            "No consistent sequential error-persistence signal was detected. Across the four pooled arms, "
             f"lag-1 correlations range from {min(pooled_r_values):.3f} to {max(pooled_r_values):.3f}, "
-            f"and same-direction rates range from {min(pooled_direction_values):.3f} to "
-            f"{max(pooled_direction_values):.3f}. Their intervals cover zero and 0.5 respectively; "
-            "the season, progress, and preseason-favorite contrasts also include their no-effect values. "
-            "Weak effects remain possible because these intervals are not equivalence tests."
-        )
-        recommendation = (
-            "Defer model changes and further retrospective responsiveness probes. If this question remains "
-            "decision-relevant, run a pre-registered prospective replication on a genuinely later holdout, "
-            "keeping the same evidence-membership rule and team/game dependence handling. Do not tune the "
-            "model from this historical panel."
+            "and directional excess over the sign-marginal independence baseline ranges from "
+            f"{min(pooled_excess_values):.3f} to {max(pooled_excess_values):.3f}; their 95% intervals "
+            "include zero. Season, progress, and preseason-rank-prior contrasts also include their "
+            "no-effect values. These results fail to detect a consistent effect; they do not demonstrate "
+            "that meaningful effects are absent."
         )
     else:
         conclusion = (
-            "The sequential-error results are mixed or leave a possible effect; interpret the arm, season, "
-            "favorite, and progress tables together rather than treating the pooled estimate as confirmation."
+            "The sequential-error results are mixed or leave a possible effect. The pooled estimates do "
+            "not settle the question; interpret the arm, season, preseason-rank-prior, and progress "
+            "intervals together."
         )
-        recommendation = (
-            "Do not change model behavior from this historical panel. Scope any next responsiveness study "
-            "around the strata and uncertainty shown here, and use a pre-registered holdout if one is available."
+    recommendation = (
+        "Defer model changes whose rationale is sequential error persistence based on this exploratory "
+        "retrospective analysis. This does not resolve the broader calibration epic or establish that the "
+        "prior-likelihood balance is correct; assess other calibration questions using their own evidence."
+    )
+
+    def directional_rate(row: dict[str, Any]) -> str:
+        return (
+            f"{_fmt(row['directional_persistence'])} / "
+            f"{_fmt(row['directional_independence_baseline'])}"
         )
+
+    def directional_excess(row: dict[str, Any]) -> str:
+        return _interval(
+            row["directional_excess_over_independence"],
+            row["directional_excess_ci95_low"],
+            row["directional_excess_ci95_high"],
+        )
+
     lines = [
         "# Issue 246: sequential in-season forecast-error persistence",
         "",
         "## Result",
         "",
-        "This is a leakage-safe descriptive analysis of retained issue 201 forecasts. It asks whether a team's signed pregame margin error in one regular-season game predicts the error in that same team's next game, after the earlier result is present in the next forecast's evidence.",
+        "This leakage-safe descriptive analysis asks whether a team's signed pregame margin error in one regular-season game predicts the error in that team's next game, after the earlier result enters the next forecast's evidence.",
         "",
-        "The sample contains **four previously studied seasons (2022–2025)**, so the estimates are exploratory and are not independent confirmation. The analysis makes no model or production changes.",
+        "The four previously studied seasons (2022–2025) are exploratory historical data, not independent confirmation. No models are refit and no production behavior is changed.",
         "",
-        f"The retained issue 201 primary FBS–FBS score summaries passed parity for **{len(parity_checks)} arm-season rows**; the largest absolute difference from its stored mean CRPS or margin NLL was `{parity_max:.3g}`. The source score, summary, evidence, and manifest hashes are recorded in `manifest.json`.",
+        f"The retained #201 primary FBS–FBS score summaries passed parity for **{len(parity_checks)} arm-season rows**; the largest absolute difference from its stored mean CRPS or margin NLL was {parity_max:.3g}. The #201 inputs and retained #200 rank-PMF bundle are recorded by hash in manifest.json.",
         "",
         f"**Finding:** {conclusion}",
         "",
@@ -223,9 +249,9 @@ def render_report(
         "",
         "## Sample and eligibility",
         "",
-        f"The team-game panel has **{len(team_games):,} oriented FBS team-games** across **{len(unique_games):,} scheduled matchups** and **{len(unique_fbs_team_seasons):,} model-arm/team-seasons**. It includes each FBS–FBS game from both FBS teams' perspectives, and each FBS–FCS game once from the FBS team's perspective. FBS–FCS rows are needed to keep the FBS team's full regular-season sequence; FCS-only team histories are not inferred from this corpus.",
+        f"The panel contains **{len(team_games):,} oriented FBS team-games** across **{len(unique_games):,} matchups** and **{len(unique_fbs_team_seasons):,} model-arm/team-seasons**. It includes both FBS perspectives for FBS–FBS games and the FBS perspective for FBS–FCS games, preserving each FBS team's regular-season sequence.",
         "",
-        f"There are **{len(pairs):,} adjacent candidate transitions**; **{len(eligible_pairs):,}** pass the evidence check and **{excluded_pairs:,}** are excluded because the previous game is absent from the next forecast's included evidence IDs. The excluded pairs remain in `lagged_error_pairs.csv` with reasons. The next game's own game ID is checked to be absent from its evidence, and its cutoff must precede kickoff.",
+        f"The retained #200 preseason-rank PMFs classify **{len(preseason_rank_classifications):,} team-seasons**, once per model arm. There are **{len(pairs):,} adjacent candidate transitions**; **{len(eligible_pairs):,}** pass the evidence check and **{excluded_pairs:,}** are excluded because the previous game is absent from the next forecast's evidence IDs. Excluded pairs and reasons remain in lagged_error_pairs.csv.",
         "",
         "| Season | Prior family | Policy | Candidate pairs | Eligible pairs | Excluded |",
         "| --- | --- | --- | ---: | ---: | ---: |",
@@ -241,12 +267,12 @@ def render_report(
             "",
             "## Lag-1 results by season and prior family",
             "",
-            "Signed error is `observed team margin − expected team margin`. Positive means the team scored better than the model expected from its perspective; negative means worse. The retained #201 predictive mean is used. Lag-1 correlation is Pearson correlation between consecutive eligible signed errors. Directional persistence is the share of nonzero pairs with the same sign; 0.5 is the no-directional-persistence reference.",
+            "Signed error is observed team margin minus expected team margin; positive means the team performed better than expected. Lag-1 correlation is Pearson correlation between consecutive eligible errors. For nonzero error pairs, the table shows the observed same-direction share and the independence baseline computed from the observed positive-sign shares for the previous and next errors. The directional excess is observed persistence minus that baseline; zero is the no-association reference.",
             "",
-            f"Intervals are 95% percentile intervals from {bootstrap_repetitions:,} deterministic multiway pigeonhole bootstrap repetitions, resampling focal team IDs and game IDs jointly across both lag positions. This preserves repeated-team and shared-matchup dependence, including the two orientations of an FBS–FBS matchup. The intervals describe this historical panel and do not create four independent seasons.",
+            f"Intervals are 95% percentile intervals from {bootstrap_repetitions:,} deterministic multiway pigeonhole bootstrap repetitions, resampling focal team IDs and game IDs jointly across both lag positions. The directional-excess interval recomputes the sign marginals and independence baseline on every resample.",
             "",
-            "| Season | Prior family | Policy | Eligible pairs | Teams | Lag-1 r [95% interval] | Same-direction rate [95% interval] |",
-            "| --- | --- | --- | ---: | ---: | ---: | ---: |",
+            "| Season | Prior family | Policy | Pairs | Teams | Lag-1 r [95% interval] | Same direction / baseline | Excess over independence [95% interval] |",
+            "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |",
         ]
     )
     seasons = sorted({int(row["season"]) for row in audit})
@@ -256,7 +282,7 @@ def render_report(
             lines.append(
                 f"| {season} | {family} | {policy} | {row['transitions']} | {row['team_count']} | "
                 f"{_interval(row['lag1_correlation'], row['correlation_ci95_low'], row['correlation_ci95_high'])} | "
-                f"{_interval(row['directional_persistence'], row['directional_ci95_low'], row['directional_ci95_high'])} |"
+                f"{directional_rate(row)} | {directional_excess(row)} |"
             )
 
     lines.extend(
@@ -264,56 +290,62 @@ def render_report(
             "",
             "## Pooled results by model arm",
             "",
-            "| Prior family | Policy | Eligible pairs | Lag-1 r [95% interval] | Same-direction rate [95% interval] |",
-            "| --- | --- | ---: | ---: | ---: |",
+            "The previous/next positive-sign shares show why 0.5 is not assumed as the null. With marginal positive shares p1 and p2, the independence baseline is p1*p2 + (1-p1)*(1-p2).",
+            "",
+            "| Prior family | Policy | Pairs | Positive previous / next | Same direction / independence baseline | Excess over independence [95% interval] | Lag-1 r [95% interval] |",
+            "| --- | --- | ---: | ---: | ---: | ---: | ---: |",
         ]
     )
     for arm, family, policy in ARMS:
         row = _summary_lookup(summaries, "pooled_model_arm", arm, season="2022-2025")
+        sign_shares = (
+            f"{_fmt(row['positive_previous_error_share'])} / "
+            f"{_fmt(row['positive_next_error_share'])}"
+        )
         lines.append(
-            f"| {family} | {policy} | {row['transitions']} | "
-            f"{_interval(row['lag1_correlation'], row['correlation_ci95_low'], row['correlation_ci95_high'])} | "
-            f"{_interval(row['directional_persistence'], row['directional_ci95_low'], row['directional_ci95_high'])} |"
+            f"| {family} | {policy} | {row['transitions']} | {sign_shares} | "
+            f"{directional_rate(row)} | {directional_excess(row)} | "
+            f"{_interval(row['lag1_correlation'], row['correlation_ci95_low'], row['correlation_ci95_high'])} |"
         )
 
     lines.extend(
         [
             "",
-            "## Strong preseason favorites",
+            "## Strong preseason rank priors",
             "",
-            "A destination game is a strong preseason favorite case when the focal team's issue 201 preseason-only win probability is at least 0.80. This fixed threshold uses no in-season outcome. Each arm's rows are classified independently from its own preseason forecast.",
+            "A team-season is classified independently within each arm from its retained #200 preseason rank PMF. Strong prior means P(rank <= 10) >= 0.50. The group label is fixed for every game and transition in that team-season; it does not depend on opponents or game-level win probabilities.",
             "",
-            "| Prior family | Policy | Stratum | Eligible pairs | Lag-1 r [95% interval] | Same-direction rate [95% interval] |",
-            "| --- | --- | --- | ---: | ---: | ---: |",
+            "| Prior family | Policy | Stratum | Pairs | Same direction / independence baseline | Excess over independence [95% interval] | Lag-1 r [95% interval] |",
+            "| --- | --- | --- | ---: | ---: | ---: | ---: |",
         ]
     )
     for arm, family, policy in ARMS:
-        for favorite in ("strong_preseason_favorite", "other"):
+        for prior_group in ("strong_preseason_rank_prior", "other"):
             row = _summary_lookup(
                 summaries,
-                "pooled_favorite_stratum",
+                "pooled_prior_stratum",
                 arm,
                 season="2022-2025",
-                favorite=favorite,
+                prior_group=prior_group,
             )
             lines.append(
-                f"| {family} | {policy} | {favorite} | {row['transitions']} | "
-                f"{_interval(row['lag1_correlation'], row['correlation_ci95_low'], row['correlation_ci95_high'])} | "
-                f"{_interval(row['directional_persistence'], row['directional_ci95_low'], row['directional_ci95_high'])} |"
+                f"| {family} | {policy} | {prior_group} | {row['transitions']} | "
+                f"{directional_rate(row)} | {directional_excess(row)} | "
+                f"{_interval(row['lag1_correlation'], row['correlation_ci95_low'], row['correlation_ci95_high'])} |"
             )
     lines.extend(
         [
             "",
-            "The next table reports the paired stratum difference (strong favorite minus other). The difference intervals use the same team and matchup resamples for both strata.",
+            "Paired strong-prior-minus-other differences:",
             "",
             "| Prior family | Policy | Metric | Difference [95% interval] |",
             "| --- | --- | --- | ---: |",
         ]
     )
     for arm, family, policy in ARMS:
-        for metric in ("lag1_correlation", "directional_persistence"):
+        for metric in ("lag1_correlation", "directional_excess_over_independence"):
             row = _contrast_lookup(
-                contrasts, arm, "strong_preseason_favorite_minus_other", metric
+                contrasts, arm, "strong_preseason_rank_prior_minus_other", metric
             )
             lines.append(
                 f"| {family} | {policy} | {metric} | "
@@ -325,10 +357,10 @@ def render_report(
             "",
             "## Change over the season",
             "",
-            "Destination team-game ordinals 2–4 are early, 5–8 are middle, and 9 or later are late. Each transition is assigned according to the next game's ordinal.",
+            "Transitions are assigned by the destination team's game number: early games 2–4, middle games 5–8, and late games 9+.",
             "",
-            "| Prior family | Policy | Season progress | Eligible pairs | Lag-1 r [95% interval] | Same-direction rate [95% interval] |",
-            "| --- | --- | --- | ---: | ---: | ---: |",
+            "| Prior family | Policy | Progress | Pairs | Same direction / independence baseline | Excess over independence [95% interval] | Lag-1 r [95% interval] |",
+            "| --- | --- | --- | ---: | ---: | ---: | ---: |",
         ]
     )
     progress_labels = {
@@ -347,47 +379,42 @@ def render_report(
             )
             lines.append(
                 f"| {family} | {policy} | {label} | {row['transitions']} | "
-                f"{_interval(row['lag1_correlation'], row['correlation_ci95_low'], row['correlation_ci95_high'])} | "
-                f"{_interval(row['directional_persistence'], row['directional_ci95_low'], row['directional_ci95_high'])} |"
+                f"{directional_rate(row)} | {directional_excess(row)} | "
+                f"{_interval(row['lag1_correlation'], row['correlation_ci95_low'], row['correlation_ci95_high'])} |"
             )
     lines.extend(
         [
             "",
-            "Paired late-minus-early differences (late minus early):",
+            "Paired late-minus-early differences:",
             "",
             "| Prior family | Policy | Metric | Difference [95% interval] |",
             "| --- | --- | --- | ---: |",
         ]
     )
     for arm, family, policy in ARMS:
-        for metric in ("lag1_correlation", "directional_persistence"):
+        for metric in ("lag1_correlation", "directional_excess_over_independence"):
             row = _contrast_lookup(contrasts, arm, "late_minus_early", metric)
             lines.append(
                 f"| {family} | {policy} | {metric} | "
                 f"{_interval(row['difference_a_minus_b'], row['ci95_low'], row['ci95_high'])} |"
             )
+
     lines.extend(
         [
             "",
-            "Read sparse late-season rows with their interval widths.",
-            "",
             "## Interpretation and limits",
             "",
-            "The existing #201 forecasts already account for opponent strength and game site. A positive sequential association therefore describes residual errors that remain after the earlier game was available to the later posterior. It does not identify whether a specific information source, likelihood feature, or changing team state caused the association.",
+            "Intervals that include zero mean the analysis did not detect a clear effect at this resolution; they do not demonstrate that meaningful effects are absent. These intervals are not equivalence tests. Likewise, lack of lag-1 persistence does not establish that the prior-likelihood balance is correct.",
             "",
-            "This differs from issue #34: that study examined persistence in historical performance/rank residuals and recency-style probes. Issue 246 measures errors in leakage-safe pregame game-margin forecasts, then requires the preceding game to appear in the next forecast's evidence. No rankings or in-sample fitted-game residuals are substituted here.",
+            "The retained #201 forecasts account for opponent strength and game site. Error persistence alone does not identify a cause or justify changing a likelihood, prior, or production behavior. The broader calibration epic remains a separate question.",
             "",
-            "The four arms are shown separately: History and Context, each under the existing and pre-bowl policies. Policies are not pooled as independent replications. Repeated team-game pairs and shared matchup orientations are handled in the bootstrap, but the underlying four seasons remain previously studied exploratory data. This report supports a bounded decision about posterior responsiveness; it does not justify a model change or parameter tuning.",
+            "This differs from issue #34, which examined historical performance/rank residuals. Issue 246 uses leakage-safe pregame margin forecasts and requires the earlier game to appear in the next forecast's evidence. The four arms are shown separately; repeated teams and shared matchups are handled in the bootstrap, while the four seasons remain exploratory historical data.",
             "",
             "## Reproducibility",
             "",
-            "Run from the repository root with:",
+            "Reproduce from the repository root with: uv run python scripts/run_issue_246_error_persistence.py",
             "",
-            "```bash",
-            "uv run python scripts/run_issue_246_error_persistence.py",
-            "```",
-            "",
-            "The runner reads only the retained issue 201 score, summary, and replay-evidence artifacts; it verifies their stored hashes and reproduces issue 201's primary per-season CRPS and margin NLL means before calculating sequential errors. `team_game_errors.csv` and `lagged_error_pairs.csv` retain the auditable observations and eligibility decisions. The complete input and output hashes are in `manifest.json`.",
+            "The runner verifies the retained #201 forecast artifacts and the #200 pipeline bundle and PMF hashes. It does not refit models or rebuild the forecasting pipeline. preseason_rank_classification.csv, team_game_errors.csv, and lagged_error_pairs.csv retain the team-season labels, game errors, and transition eligibility decisions; all outputs and inputs are hashed in manifest.json.",
             "",
             "## Source parity",
             "",
@@ -399,12 +426,19 @@ def render_report(
     )
     return "\n".join(lines)
 
-
 def run(args: argparse.Namespace) -> dict[str, Any]:
     issue201 = load_issue201_inputs(args.issue201_root)
+    preseason_rank_classifications, issue200_hashes = (
+        load_issue200_preseason_rank_priors(args.issue200_root)
+    )
+    input_hashes = {
+        f"issue201/{name}": record
+        for name, record in issue201["input_hashes"].items()
+    }
+    input_hashes.update(issue200_hashes)
     team_games = build_team_game_errors(
         issue201["rolling_scores"],
-        issue201["preseason_scores"],
+        preseason_rank_classifications,
         issue201["evidence_records"],
     )
     pairs = build_lagged_pairs(team_games, issue201["evidence_records"])
@@ -417,6 +451,11 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     output_root: Path = args.output_root
     output_root.mkdir(parents=True, exist_ok=True)
 
+    _write_csv(
+        output_root / "preseason_rank_classification.csv",
+        PRESEASON_PRIOR_FIELDS,
+        preseason_rank_classifications,
+    )
     _write_csv(output_root / "team_game_errors.csv", TEAM_GAME_FIELDS, team_games)
     _write_csv(output_root / "lagged_error_pairs.csv", LAG_PAIR_FIELDS, pairs)
     _write_csv(output_root / "aggregate_summary.csv", SUMMARY_FIELDS, summaries)
@@ -429,6 +468,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         summaries=summaries,
         contrasts=contrasts,
         audit=audit,
+        preseason_rank_classifications=preseason_rank_classifications,
         bootstrap_repetitions=args.bootstrap_repetitions,
     )
     (output_root / "report.md").write_text(report, encoding="utf-8")
@@ -447,17 +487,24 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "eligible_transitions": sum(bool(row["eligible"]) for row in pairs),
         "excluded_transitions": sum(not bool(row["eligible"]) for row in pairs),
         "issue201_parity_rows": len(issue201["parity_checks"]),
+        "preseason_rank_classifications": len(preseason_rank_classifications),
+        "strong_preseason_rank_prior_team_seasons": sum(
+            row["preseason_rank_prior_group"] == "strong_preseason_rank_prior"
+            for row in preseason_rank_classifications
+        ),
     }
     payload = {
         "experiment": "issue-246-sequential-game-error-persistence",
         "schema_version": 1,
-        "input_hashes": issue201["input_hashes"],
+        "input_hashes": input_hashes,
         "config": {
             "issue201_root_label": "data/research/issue_201_prebowl_forecast",
+            "issue200_root_label": "data/research/matched_history_context_issue_200",
             "score_population": ["fbs_fbs", "fbs_fcs"],
             "focal_team_population": "FBS only",
             "signed_error": "observed team margin minus expected team margin",
-            "strong_preseason_favorite_probability": 0.80,
+            "preseason_rank_prior_classification": "P(rank <= 10) >= 0.50 from the #200 preseason rank PMF; once per team-season per model arm",
+            "directional_independence_baseline": "p(previous error > 0) * p(next error > 0) + p(previous error < 0) * p(next error < 0), among nonzero error pairs",
             "season_progress_bins": {
                 "early_games_2_4": [2, 4],
                 "middle_games_5_8": [5, 8],
@@ -478,7 +525,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     )
     manifest = output_manifest(
         output_root,
-        input_hashes=issue201["input_hashes"],
+        input_hashes=input_hashes,
         protocol_path=args.protocol,
         config=payload["config"],
         counts=counts,
@@ -493,6 +540,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--issue201-root", type=Path, default=DEFAULT_ISSUE201_ROOT)
+    parser.add_argument("--issue200-root", type=Path, default=DEFAULT_ISSUE200_ROOT)
     parser.add_argument("--protocol", type=Path, default=DEFAULT_PROTOCOL)
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument(
