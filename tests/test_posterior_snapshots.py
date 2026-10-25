@@ -689,6 +689,62 @@ def test_context_replay_uses_frozen_included_games_after_schedule_mutation(
     assert team_seasons["schedule_source"]["kind"] == "frozen_included_games"
 
 
+def test_historical_evidence_correction_replay_preserves_frozen_prior(
+    tmp_path: Path,
+) -> None:
+    root = _root(tmp_path)
+    _write_current_provenance(root, datetime(2026, 8, 30, 12, tzinfo=UTC))
+    likelihood_path = root / "data/processed/posterior/historical_likelihood_v1.json"
+    likelihood_path.parent.mkdir(parents=True)
+    shutil.copyfile(
+        ROOT / "data/processed/posterior/historical_likelihood_v1.json",
+        likelihood_path,
+    )
+    cutoff = datetime(2026, 9, 11, 23, 59, tzinfo=UTC)
+    source = build_snapshot(
+        season=2026,
+        cutoff=cutoff,
+        prior_family="context",
+        prior_model_version="1.2",
+        snapshot_type="weekly",
+        root=root,
+        output_root=tmp_path / "source-output",
+    )
+
+    common = {
+        "season": 2026,
+        "cutoff": cutoff,
+        "prior_family": "context",
+        "prior_model_version": "1.2",
+        "snapshot_type": "weekly",
+        "root": root,
+        "evidence_snapshot": source.directory,
+    }
+    with pytest.raises(ValueError, match="must change the prior model version"):
+        build_snapshot(**common, output_root=tmp_path / "unmarked-output")
+
+    correction = {
+        "issue": "238",
+        "source_snapshot_id": source.snapshot_id,
+        "excluded_games": [{"game_id": "401866625"}],
+    }
+    metadata_path = source.directory / "metadata.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata["historical_evidence_correction"] = correction
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+    replay = build_snapshot(
+        **common,
+        output_root=tmp_path / "corrected-output",
+        lineage_suffix="issue-238",
+        evidence_correction_replay=True,
+    )
+
+    assert replay.metadata["prior_model_version"] == "1.2"
+    assert replay.metadata["lineage_migration"] == "historical_evidence_correction"
+    assert replay.metadata["historical_evidence_correction"] == correction
+
+
 def test_posterior_docs_name_the_80_percent_interval() -> None:
     text = Path("docs/posterior_v1.md").read_text(encoding="utf-8")
     assert "80% interval coverage" in text

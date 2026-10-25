@@ -177,6 +177,7 @@ def validate_performance_against_context(
         "included_game_count",
         "game_evidence_exclusions",
         "game_evidence_exclusions_sha256",
+        "historical_evidence_correction",
         "prior_artifact_sha256",
         "prior_model_version",
     ):
@@ -488,6 +489,10 @@ def build_performance_snapshot(
     for field in ("game_evidence_exclusions", "game_evidence_exclusions_sha256"):
         if field in metadata:
             performance_metadata[field] = metadata[field]
+    if "historical_evidence_correction" in metadata:
+        performance_metadata["historical_evidence_correction"] = metadata[
+            "historical_evidence_correction"
+        ]
     diagnostics = {
         "method": PERFORMANCE_METHOD,
         "source_context_snapshot_id": metadata["snapshot_id"],

@@ -348,7 +348,7 @@ def test_canonical_context_is_unambiguous_and_retained_artifacts_are_readable() 
     )
     week_2 = [item for item in week_2 if item.metadata.publication_slot == "2026-09-08"]
 
-    canonical_id = "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-db-repair"
+    canonical_id = "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-issue-238"
     assert {item.metadata.snapshot_id for item in week_2} == {canonical_id}
     assert {item.metadata.model_versions.context_prior for item in week_2} == {"1.4"}
     assert store.get(canonical_id).metadata.model_versions.context_prior == "1.4"
@@ -395,7 +395,9 @@ def test_performance_variants_have_distinct_resources_and_legacy_selection() -> 
     assert len(store.filter(family="performance", variant="quality_of_record")) >= 1
 
 
-def test_official_week_2_qor_static_api_exposes_the_exact_exception(tmp_path: Path) -> None:
+def test_official_week_2_qor_static_api_uses_repaired_game_evidence(
+    tmp_path: Path,
+) -> None:
     entries = [entry for entry in FULL_MANIFEST["snapshots"] if entry["publication_slot"] == "2026-09-08" and (entry.get("prior_family") == "context" or entry.get("performance_variant") == "quality_of_record")]
     assert len(entries) == 2
     data_dir = tmp_path / "data"
@@ -411,14 +413,11 @@ def test_official_week_2_qor_static_api_exposes_the_exact_exception(tmp_path: Pa
     inventory = _read(api_root, "publications.json")
     publication = next(item for item in inventory["publications"] if item.get("performance_variant") == "quality_of_record")
     assert publication["publication_status"] == "official"
-    evidence = publication["quality_of_record_evidence"]
-    assert evidence["source_game_count"] == 172
-    assert evidence["inference_game_count"] == 171
-    assert evidence["exclusions"][0]["game_id"] == "401866625"
-    assert "401866625" not in evidence["inference_game_ids"]
-    assert "401917058" in evidence["inference_game_ids"]
+    assert publication["included_game_count"] == 171
+    assert "quality_of_record_evidence" not in publication
     rankings = _read(api_root, publication["links"]["rankings"])
-    assert rankings["publication"]["quality_of_record_evidence"] == evidence
+    assert "quality_of_record_evidence" not in rankings["publication"]
     assert len(rankings["rankings"]) == 138
     resolved = PublicationStore.load(data_dir).resolve(season=2026, publication_slot="2026-09-08", family="performance", variant="quality_of_record")
     assert resolved.metadata.snapshot_id == publication["snapshot_id"]
+    assert resolved.metadata.included_game_count == 171

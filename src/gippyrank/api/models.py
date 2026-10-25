@@ -55,27 +55,6 @@ class ModelVersions(PublicModel):
     season_simulation: str | None = None
 
 
-class QualityOfRecordExclusion(PublicModel):
-    game_id: str
-    reason: str
-    source_game_row_sha256: str
-
-
-class QualityOfRecordEvidence(PublicModel):
-    """Exact source and inference identities for a temporary QoR exception."""
-
-    schema_version: Literal["1.0"]
-    exception_id: str
-    source_game_count: int = Field(ge=1)
-    source_game_ids_sha256: str
-    source_game_rows_sha256: str
-    exclusions: list[QualityOfRecordExclusion]
-    inference_game_count: int = Field(ge=1)
-    inference_game_ids: list[str]
-    inference_game_ids_sha256: str
-    inference_game_rows_sha256: str
-
-
 class PublicationMetadata(PublicModel):
     api_version: Literal["v1"] = API_VERSION
     season: int
@@ -88,7 +67,6 @@ class PublicationMetadata(PublicModel):
     prior_family: Literal["context", "history"] | None = None
     performance_variant: Literal["quality_of_play", "quality_of_record"] | None = None
     evidence_mode: Literal["margin", "win_loss"] | None = None
-    quality_of_record_evidence: QualityOfRecordEvidence | None = None
     requested_cutoff: datetime | None = None
     effective_cutoff: datetime | None = None
     generation_timestamp: datetime

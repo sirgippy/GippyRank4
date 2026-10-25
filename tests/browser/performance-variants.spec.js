@@ -60,8 +60,8 @@ for (const slot of ["2026-09-06", "2026-09-07", "2026-09-08"]) {
     await expect(page.locator("#snapshot-kind")).toHaveText(slot === "2026-09-08" ? "Official publication" : "Interim publication");
     await expect(page.locator('[data-variant="quality_of_record"]')).toBeEnabled();
     await expect(page.locator("#rankings-body tr")).toHaveCount(25);
-    await expect(page.locator("#snapshot-evidence")).toContainText(`${entry.quality_of_record_evidence.inference_game_count} games used for Quality of Record`);
-    await expect(page.locator("#snapshot-evidence")).toContainText("malformed Campbell–Western Carolina 0–0 excluded");
+    await expect(page.locator("#snapshot-evidence")).toContainText(`${entry.included_game_count} eligible games included`);
+    await expect(page.locator("#snapshot-evidence")).not.toContainText("malformed Campbell");
     await expect(page).toHaveURL(new RegExp(`snapshot=${entry.snapshot_id.replaceAll(".", "\\.")}`));
   });
 }
