@@ -367,9 +367,10 @@ def test_campbell_evidence_is_cutoff_local_across_context_history_and_performanc
     for snapshot in (performance, quality_of_record):
         assert snapshot.metadata["included_game_ids"].count("401917058") == 1
         assert "401866625" not in snapshot.metadata["included_game_ids"]
-        assert snapshot.metadata["game_evidence_exclusions"] == context.metadata[
-            "game_evidence_exclusions"
-        ]
+        assert (
+            snapshot.metadata["game_evidence_exclusions"]
+            == context.metadata["game_evidence_exclusions"]
+        )
 
 
 def test_preseason_snapshot_is_prior_only_and_complete(tmp_path: Path) -> None:
@@ -555,7 +556,7 @@ def test_cutoff_between_source_retrievals_cannot_use_later_response(
         awayClassification="fcs",
     )
     _write(corpus, fields, [*original_rows, fcs_only])
-    games, rows, _, _, _ = filter_games(
+    games, rows, _, _ = filter_games(
         root,
         2026,
         cutoff,

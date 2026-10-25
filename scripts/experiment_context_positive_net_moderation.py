@@ -359,7 +359,7 @@ def make_evidence(
         for point in crossover.checkpoint_inputs(game_root, season):
             checkpoint = int(point["checkpoint"])
             cutoff = datetime.fromisoformat(str(point["cutoff"]))
-            games, included, excluded_lower, _, _ = filter_games(
+            games, included, excluded_lower, _ = filter_games(
                 game_root, season, cutoff, "weekly"
             )
             games, included, audit = historical.cutoff_safe_games(

@@ -75,7 +75,9 @@ def sha256(path: Path) -> str:
 
 
 def _game_evidence_exclusions_sha256(rows: list[dict[str, object]]) -> str:
-    payload = json.dumps(rows, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    payload = json.dumps(
+        rows, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    )
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
@@ -219,7 +221,7 @@ def corpus_provenance(root: Path, season: int) -> CorpusProvenance:
     )
 
 
-def filter_games(
+def filter_games_with_audit(
     root: Path,
     season: int,
     cutoff: datetime | date | None,
@@ -227,6 +229,7 @@ def filter_games(
     *,
     source_retrieved_at: datetime | None = None,
 ) -> tuple[list[Game], list[dict[str, str]], int, Path, list[dict[str, object]]]:
+    """Filter eligible games and return the evidence-exclusion audit."""
     path = root / "data/processed/cfbd/games.csv"
     if not path.exists():
         raise FileNotFoundError(path)
@@ -303,6 +306,25 @@ def filter_games(
         games.append(game)
         included_rows.append(row)
     return games, included_rows, lower_division, path, evidence_exclusions
+
+
+def filter_games(
+    root: Path,
+    season: int,
+    cutoff: datetime | date | None,
+    snapshot_type: SnapshotType,
+    *,
+    source_retrieved_at: datetime | None = None,
+) -> tuple[list[Game], list[dict[str, str]], int, Path]:
+    """Backward-compatible game filter for historical research callers."""
+    games, rows, lower_division, path, _ = filter_games_with_audit(
+        root,
+        season,
+        cutoff,
+        snapshot_type,
+        source_retrieved_at=source_retrieved_at,
+    )
+    return games, rows, lower_division, path
 
 
 def _read_included_game_rows(path: Path) -> list[dict[str, str]]:
@@ -810,7 +832,9 @@ def _scheduled_future_fcs_rows(
                 for side in ("home", "away")
             ):
                 continue
-            status = str(row.get("status") or row.get("gameStatus", "") or "").casefold()
+            status = str(
+                row.get("status") or row.get("gameStatus", "") or ""
+            ).casefold()
             if "cancel" in status or "postpon" in status:
                 continue
             if snapshot_type == "preseason":
@@ -1180,7 +1204,7 @@ def build_snapshot(
             excluded_lower,
             corpus_path,
             game_evidence_exclusions,
-        ) = filter_games(
+        ) = filter_games_with_audit(
             root,
             season,
             effective_cutoff,

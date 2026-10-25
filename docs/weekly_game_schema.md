@@ -67,18 +67,25 @@ and marked not modeled.
 
 CFBD's `completed` flag is not sufficient on its own. The normalized schedule
 retains both `status` and `gameStatus`; cancelled or postponed rows never enter
-inference. Completed scores must be non-negative integers, and tied final scores
-are excluded as suspicious evidence. Snapshot metadata records each such
-exclusion in `game_evidence_exclusions`, including nearby replacement game IDs
-when the source makes that link identifiable. Weekly review reports list these
+inference. Missing statuses remain supported for legacy records, while a
+nonempty status value must be recognized for a completed game. Completed scores
+must be non-negative integers, and tied final scores are excluded as suspicious
+evidence. Snapshot metadata records each such exclusion in
+`game_evidence_exclusions`, including nearby replacement game IDs when the
+source makes that link identifiable. Weekly review reports list these
 exclusions.
 
 Distinct game IDs are not merged just because the teams match. Two plausible
-completed records for the same teams and season type within 48 hours stop the
-build for review. A completed tie can be excluded while a nearby valid
-replacement remains eligible. Rematches separated in time remain separate
-factors. Current-season results are eligible only when the combined CFBD source
-was retrieved by the publication cutoff, so a later response cannot supply an
+completed records for the same teams and season type in the same CFBD week stop
+the build for review. Records within 30 days also stop for review unless both
+are non-neutral games with the home and away teams reversed, which establishes
+a home-and-away rematch. This catches replacement fixtures spanning a week
+without imposing one game per opponent. Rematches in a different CFBD week and
+more than 30 days apart remain separate factors. A close neutral-site or
+same-host rematch may need source review because the retained fields do not
+establish that the records are distinct.
+Current-season results are eligible only when the combined CFBD source was
+retrieved by the publication cutoff, so a later response cannot supply an
 earlier snapshot's score.
 
 ## Canonical game shape

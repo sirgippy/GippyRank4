@@ -121,10 +121,27 @@ def test_legitimate_same_team_rematch_is_not_collapsed() -> None:
         home_score=21,
         away_score=17,
     )
+    rematch["week"] = "12"
 
     eligible, exclusions = reconcile_game_evidence_rows([first, rematch])
 
     assert [row["id"] for row in eligible] == ["first", "rematch"]
+    assert exclusions == []
+
+
+def test_legitimate_home_and_away_rematch_within_30_days_is_preserved() -> None:
+    first = _game("first", start="2026-09-05T19:30:00+00:00")
+    rematch = _game(
+        "home-away-rematch",
+        start="2026-09-12T19:30:00+00:00",
+        home_score=21,
+        away_score=17,
+    )
+    rematch.update(week="2", homeId="2717", awayId="2097")
+
+    eligible, exclusions = reconcile_game_evidence_rows([first, rematch])
+
+    assert [row["id"] for row in eligible] == ["first", "home-away-rematch"]
     assert exclusions == []
 
 
@@ -145,6 +162,20 @@ def test_two_plausible_close_results_fail_instead_of_being_collapsed(
         home_score=second_home_score,
         away_score=second_away_score,
     )
+
+    with pytest.raises(ValueError, match="ambiguous completed CFBD records"):
+        reconcile_game_evidence_rows([first, second])
+
+
+def test_two_plausible_results_seven_days_apart_fail_as_possible_replacement() -> None:
+    first = _game("first-id", start="2026-09-05T19:30:00+00:00")
+    second = _game(
+        "replacement-id",
+        start="2026-09-12T19:30:00+00:00",
+        home_score=21,
+        away_score=17,
+    )
+    second["week"] = "2"
 
     with pytest.raises(ValueError, match="ambiguous completed CFBD records"):
         reconcile_game_evidence_rows([first, second])
@@ -189,7 +220,31 @@ def test_completed_scores_must_be_nonnegative_integers() -> None:
         reconcile_game_evidence_rows([row])
 
 
-def test_excluded_suspicious_score_is_not_published_as_completed_schedule_state() -> None:
+def test_completed_game_with_unrecognized_nonempty_status_fails() -> None:
+    row = _game(
+        "unknown-status",
+        start="2026-09-05T19:30:00+00:00",
+        status="CFBD added a status we do not recognize",
+    )
+
+    with pytest.raises(ValueError, match="unrecognized nonempty status"):
+        reconcile_game_evidence_rows([row])
+
+
+def test_completed_legacy_record_without_status_is_supported() -> None:
+    row = _game("legacy-final", start="2026-09-05T19:30:00+00:00")
+    row.pop("status")
+    row.pop("gameStatus", None)
+
+    eligible, exclusions = reconcile_game_evidence_rows([row])
+
+    assert [item["id"] for item in eligible] == ["legacy-final"]
+    assert exclusions == []
+
+
+def test_excluded_suspicious_score_is_not_published_as_completed_schedule_state() -> (
+    None
+):
     row = _game(
         "401866625",
         start="2026-09-05T19:30:00+00:00",

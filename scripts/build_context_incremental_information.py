@@ -554,7 +554,7 @@ def build_inference_panel(
             if checkpoint not in evidence_checkpoints:
                 continue
             cutoff = datetime.fromisoformat(str(point["cutoff"]))
-            games, included, excluded_lower, _, _ = filter_games(
+            games, included, excluded_lower, _ = filter_games(
                 game_root, season, cutoff, "weekly"
             )
             games, included, cutoff_audit = historical.cutoff_safe_games(

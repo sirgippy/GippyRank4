@@ -11,7 +11,7 @@ STATUS_FIELDS = ("status", "gameStatus")
 _TRUE_VALUES = {"true", "1", "yes"}
 _FALSE_VALUES = {"false", "0", "no", ""}
 _REPLACEMENT_WINDOW = timedelta(days=7)
-_AMBIGUOUS_COMPLETED_WINDOW = timedelta(hours=48)
+_AMBIGUOUS_COMPLETED_WINDOW = timedelta(days=30)
 
 
 def completed_flag(row: Mapping[str, object]) -> bool:
@@ -28,6 +28,7 @@ def completed_flag(row: Mapping[str, object]) -> bool:
 
 def _status_category(row: Mapping[str, object]) -> str:
     categories = set()
+    has_unrecognized_status = False
     for field in STATUS_FIELDS:
         value = str(row.get(field, "") or "").strip().casefold()
         if not value:
@@ -38,15 +39,19 @@ def _status_category(row: Mapping[str, object]) -> str:
         elif re.search(r"\b(final|complete|completed)\b", normalized):
             categories.add("completed")
         elif re.search(
-            r"\b(scheduled|pregame|pre game|live|in progress|delayed|suspended)\b",
+            r"\b(scheduled|pregame|pre game|live|in ?progress|delayed|suspended)\b",
             normalized,
         ):
             categories.add("pending")
+        else:
+            has_unrecognized_status = True
     if len(categories) > 1:
         raise ValueError(
             f"CFBD game {row.get('id', '<unknown>')} has conflicting status fields"
         )
-    return next(iter(categories), "unknown")
+    if has_unrecognized_status:
+        return "unknown"
+    return next(iter(categories), "")
 
 
 def _score(row: Mapping[str, object], side: str) -> int:
@@ -67,7 +72,9 @@ def _start_time(row: Mapping[str, object]) -> datetime | None:
         parsed = datetime.fromisoformat(value)
     except ValueError:
         return None
-    return parsed if parsed.tzinfo is not None and parsed.utcoffset() is not None else None
+    return (
+        parsed if parsed.tzinfo is not None and parsed.utcoffset() is not None else None
+    )
 
 
 def _matchup_key(row: Mapping[str, object]) -> tuple[str, str, tuple[str, str]] | None:
@@ -84,6 +91,19 @@ def _game_id_order(game_id: str) -> tuple[int, int | str]:
     return (0, int(game_id)) if game_id.isdigit() else (1, game_id)
 
 
+def _clear_home_and_away_rematch(
+    first: Mapping[str, object], second: Mapping[str, object]
+) -> bool:
+    false_values = {"false", "0", "no"}
+    first_neutral = str(first.get("neutralSite", "") or "").strip().casefold()
+    second_neutral = str(second.get("neutralSite", "") or "").strip().casefold()
+    if first_neutral not in false_values or second_neutral not in false_values:
+        return False
+    return str(first.get("homeId", "")) == str(second.get("awayId", "")) and str(
+        first.get("awayId", "")
+    ) == str(second.get("homeId", ""))
+
+
 def reconcile_game_evidence_rows(
     rows: Iterable[Mapping[str, str]],
 ) -> tuple[list[dict[str, str]], list[dict[str, object]]]:
@@ -92,8 +112,10 @@ def reconcile_game_evidence_rows(
     The caller must first remove records whose source was unavailable at the
     publication cutoff and completed records whose scheduled kickoff is later
     than that cutoff. Distinct IDs are never merged merely because they share
-    teams: suspicious scores are excluded, while two plausible completed
-    records for the same matchup within 48 hours fail as an unresolved event.
+    teams: suspicious scores are excluded, while plausible completed records
+    for the same matchup in the same CFBD week or within 30 days fail as an
+    unresolved event unless the non-neutral home and away teams are reversed.
+    A longer gap in a different week remains eligible as a possible rematch.
     """
     unique_rows: list[dict[str, str]] = []
     by_id: dict[str, dict[str, str]] = {}
@@ -117,6 +139,8 @@ def reconcile_game_evidence_rows(
         game_id = row["id"]
         completed = completed_flag(row)
         status = _status_category(row)
+        if completed and status == "unknown":
+            raise ValueError(f"CFBD game {game_id} has an unrecognized nonempty status")
         scores_present = bool(
             str(row.get("homePoints", "") or "").strip()
             or str(row.get("awayPoints", "") or "").strip()
@@ -153,7 +177,9 @@ def reconcile_game_evidence_rows(
             continue
 
         if _matchup_key(row) is None:
-            raise ValueError(f"completed CFBD game {game_id} needs two distinct team IDs")
+            raise ValueError(
+                f"completed CFBD game {game_id} needs two distinct team IDs"
+            )
         if _start_time(row) is None:
             raise ValueError(
                 f"completed CFBD game {game_id} needs a timezone-aware startDate"
@@ -177,11 +203,12 @@ def reconcile_game_evidence_rows(
             continue
         eligible.append(row)
 
-    # A close pair of plausible results cannot be resolved from team IDs alone.
-    # Fail visibly instead of silently counting both or choosing one.
-    matchups: defaultdict[
-        tuple[str, str, tuple[str, str]], list[dict[str, str]]
-    ] = defaultdict(list)
+    # Same-opponent records close in the season schedule can be replacement IDs,
+    # even when their scores are individually plausible. The 30-day window is
+    # intentionally conservative; it does not silently choose or merge rows.
+    matchups: defaultdict[tuple[str, str, tuple[str, str]], list[dict[str, str]]] = (
+        defaultdict(list)
+    )
     for row in eligible:
         key = _matchup_key(row)
         assert key is not None
@@ -194,11 +221,20 @@ def reconcile_game_evidence_rows(
             for second in matchup_rows[index + 1 :]:
                 second_time = _start_time(second)
                 assert second_time is not None
-                if second_time - first_time > _AMBIGUOUS_COMPLETED_WINDOW:
-                    break
+                same_cfbd_week = bool(first.get("week")) and (
+                    first.get("week") == second.get("week")
+                )
+                clear_home_and_away_rematch = _clear_home_and_away_rematch(
+                    first, second
+                )
+                if not same_cfbd_week and (
+                    second_time - first_time > _AMBIGUOUS_COMPLETED_WINDOW
+                    or clear_home_and_away_rematch
+                ):
+                    continue
                 raise ValueError(
-                    "ambiguous completed CFBD records for the same matchup within "
-                    f"48 hours: {first['id']} and {second['id']}"
+                    "ambiguous completed CFBD records for the same matchup in the "
+                    f"same season schedule: {first['id']} and {second['id']}"
                 )
 
     # Link an explicit cancellation or a rejected tied result to the nearby

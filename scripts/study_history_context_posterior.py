@@ -402,7 +402,7 @@ def historical(
         old_panel = json.loads((BACKTEST / f"{season}_rolling.json").read_text())
         for checkpoint, old in enumerate(old_panel["cutoffs"], 1):
             cutoff = datetime.fromisoformat(old["cutoff"])
-            games, included, excluded, _, _ = filter_games(
+            games, included, excluded, _ = filter_games(
                 game_root, season, cutoff, "weekly"
             )
             games, included, audit = cutoff_safe_games(games, included, cutoff)
