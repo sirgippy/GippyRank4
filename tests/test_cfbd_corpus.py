@@ -114,6 +114,17 @@ def test_build_stats_ignores_provenance_and_cannot_create_fake_rows(
     assert {row["game_id"] for row in rows} == {101}
 
 
+def test_historical_game_materialization_preserves_cfbd_status_fields() -> None:
+    game = _game(101)
+    game.update({"status": "Postponed", "gameStatus": "Delayed"})
+
+    rows, report = corpus.build_games({(2025, "fbs"): [game]})
+
+    assert report["conflicts"] == []
+    assert rows[0]["status"] == "Postponed"
+    assert rows[0]["gameStatus"] == "Delayed"
+
+
 def test_fetch_raw_continues_to_write_provenance_sidecar(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

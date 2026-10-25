@@ -240,7 +240,7 @@ def test_team_season_schedule_preserves_kickoff_certainty(tmp_path: Path) -> Non
 def test_later_retrieval_cannot_prove_same_day_result_at_historical_cutoff(
     tmp_path: Path,
 ) -> None:
-    games, rows, _, _ = filter_games(
+    games, rows, _, _, _ = filter_games(
         _root(tmp_path),
         2026,
         datetime(2026, 9, 10, 12, tzinfo=UTC),
@@ -264,7 +264,7 @@ def test_later_retrieval_cannot_prove_result_across_utc_midnight(
     midnight_game.update(id="midnight", startDate="2026-09-09T23:30:00Z")
     _write(path, fields, [*rows, midnight_game])
     cutoff = datetime(2026, 9, 10, 0, 15, tzinfo=UTC)
-    games, included, _, _ = filter_games(
+    games, included, _, _, _ = filter_games(
         root,
         2026,
         cutoff,
@@ -288,7 +288,7 @@ def test_later_retrieval_cannot_prove_result_across_utc_midnight(
 
 
 def test_date_cutoff_includes_its_calendar_day(tmp_path: Path) -> None:
-    games, _, _, _ = filter_games(_root(tmp_path), 2026, date(2026, 8, 29), "weekly")
+    games, _, _, _, _ = filter_games(_root(tmp_path), 2026, date(2026, 8, 29), "weekly")
     assert [game.game_id for game in games] == ["early"]
 
 

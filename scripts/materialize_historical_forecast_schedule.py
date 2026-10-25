@@ -62,7 +62,7 @@ def _normalise(game: dict[str, Any]) -> dict[str, str]:
         "season_type": _text(game.get("seasonType") or "regular"),
         "start_date": _text(game.get("startDate")),
         "completed": _text(game.get("completed")),
-        "status": _text(game.get("status", game.get("gameStatus"))),
+        "status": _text(game.get("status") or game.get("gameStatus")),
         "neutral_site": _text(game.get("neutralSite")),
         "home_team_id": _text(game.get("homeId")),
         "home_team_name": _text(game.get("homeTeam")),

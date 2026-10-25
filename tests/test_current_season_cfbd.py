@@ -26,7 +26,8 @@ def _game(
     return {
         "id": game_id, "season": 2026, "week": 1, "seasonType": "regular",
         "startDate": "2026-08-29T00:00:00Z", "startTimeTBD": start_time_tbd,
-        "completed": completed,
+        "completed": completed, "status": "completed" if completed else "scheduled",
+        "gameStatus": None,
         "neutralSite": False, "conferenceGame": False, "homeId": 1,
         "homeTeam": "One", "homeClassification": "fbs", "homeConference": "A",
         "homePoints": 20 if completed else None, "awayId": 3, "awayTeam": "Three",
@@ -123,10 +124,31 @@ def test_overlap_deduplicates_conflicts_fail_and_historical_rows_are_retained(tm
     assert rows[-1]["completed"] == "False"  # raw corpus retains future games
     assert rows[-2]["startTimeTBD"] == "False"
     assert rows[-1]["startTimeTBD"] == "True"
+    assert rows[-1]["status"] == "scheduled"
+    assert rows[-1]["gameStatus"] == ""
     conflict = dict(_game(100))
     conflict["homePoints"] = 99
     with pytest.raises(ValueError, match="Conflicting"):
         deduplicate_schedule_queries({"fbs": [_game(100)], "fcs": [conflict]})
+
+
+def test_processed_schedule_preserves_either_cfbd_status_field(tmp_path: Path) -> None:
+    game = _game(100, completed=False)
+    game.pop("status")
+    game["gameStatus"] = "Postponed"
+
+    update_processed_game_corpus(
+        root=tmp_path,
+        season=2026,
+        schedules={"fbs": [game], "fcs": []},
+    )
+
+    with (tmp_path / "data/processed/cfbd/games.csv").open(
+        newline="", encoding="utf-8"
+    ) as handle:
+        row = next(csv.DictReader(handle))
+    assert row["status"] == ""
+    assert row["gameStatus"] == "Postponed"
 
 
 def test_acquisition_object_is_simple_to_mock_for_weekly_orchestration() -> None:

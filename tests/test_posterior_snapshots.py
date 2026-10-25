@@ -16,6 +16,7 @@ from gippyrank.context_comparison import (
     build_context_backfill,
     validate_context_backfill,
 )
+from gippyrank.performance_snapshot import build_performance_snapshot
 from gippyrank.posterior.engine import LikelihoodV1
 from gippyrank.posterior.snapshots import (
     _frozen_provenance,
@@ -26,6 +27,7 @@ from gippyrank.posterior.snapshots import (
     historical_schedule_rows_from_site_artifact,
     snapshot_id,
 )
+from gippyrank.quality_of_record_snapshot import build_quality_of_record_snapshot
 from gippyrank.site_data import (
     SiteDataValidationError,
     _validate_metadata,
@@ -212,6 +214,164 @@ def _write_current_provenance(
         )
 
 
+def _add_campbell_prior_rows(root: Path) -> None:
+    for path in root.glob("data/processed/preseason/**/annual/2026/predictions.csv"):
+        with path.open(newline="", encoding="utf-8") as handle:
+            reader = csv.DictReader(handle)
+            fields = list(reader.fieldnames or [])
+            rows = list(reader)
+        for team_id, name in (("2097", "Campbell"), ("2717", "Western Carolina")):
+            if not any(row["team_id"] == team_id for row in rows):
+                rows.append(
+                    {
+                        "season": "2026",
+                        "subdivision": "fcs",
+                        "team_id": team_id,
+                        "team_name": name,
+                        "pmf": "[0.5,0.5]",
+                    }
+                )
+        _write(path, fields, rows)
+
+
+def _campbell_game(
+    game_id: str,
+    *,
+    start: str,
+    home_points: str,
+    away_points: str,
+) -> dict[str, str]:
+    return {
+        "id": game_id,
+        "season": "2026",
+        "week": "1",
+        "seasonType": "regular",
+        "startDate": start,
+        "startTimeTBD": "False",
+        "completed": "True",
+        "status": "",
+        "gameStatus": "",
+        "neutralSite": "False",
+        "conferenceGame": "False",
+        "homeId": "2097",
+        "homeTeam": "Campbell",
+        "homeClassification": "fcs",
+        "homeConference": "Coastal Athletic",
+        "homePoints": home_points,
+        "awayId": "2717",
+        "awayTeam": "Western Carolina",
+        "awayClassification": "fcs",
+        "awayConference": "Southern",
+        "awayPoints": away_points,
+    }
+
+
+def _write_campbell_games(root: Path, *, include_result: bool) -> None:
+    path = root / "data/processed/cfbd/games.csv"
+    with path.open(newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle)
+        fields = list(reader.fieldnames or [])
+        rows = list(reader)
+    for field in ("status", "gameStatus"):
+        if field not in fields:
+            fields.append(field)
+    rows.extend(
+        [
+            _campbell_game(
+                "401866625",
+                start="2026-09-05T19:30:00Z",
+                home_points="0",
+                away_points="0",
+            )
+        ]
+    )
+    if include_result:
+        rows.append(
+            _campbell_game(
+                "401917058",
+                start="2026-09-06T15:00:00Z",
+                home_points="28",
+                away_points="19",
+            )
+        )
+    _write(path, fields, rows)
+
+
+def test_campbell_evidence_is_cutoff_local_across_context_history_and_performance(
+    tmp_path: Path,
+) -> None:
+    root = _root(tmp_path)
+    _add_campbell_prior_rows(root)
+    _write_campbell_games(root, include_result=False)
+    before_result_cutoff = datetime(2026, 9, 6, 23, 59, tzinfo=UTC)
+    _write_current_provenance(root, datetime(2026, 9, 6, 20, tzinfo=UTC))
+
+    before_result = build_snapshot(
+        season=2026,
+        cutoff=before_result_cutoff,
+        prior_family="context",
+        snapshot_type="weekly",
+        root=root,
+        output_root=root / "snapshots-before-result",
+        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
+    )
+    assert before_result.metadata["included_game_ids"] == ["early"]
+    assert "401866625" not in before_result.metadata["included_game_ids"]
+    assert before_result.metadata["game_evidence_exclusions"] == [
+        {
+            "game_id": "401866625",
+            "reason": "suspicious_completed_zero_zero_score",
+            "replacement_game_ids": [],
+            "investigation_required": True,
+        }
+    ]
+
+    # A later CFBD response containing the actual score cannot be used to
+    # revise a snapshot whose evidence cutoff predates that response.
+    _write_campbell_games(root, include_result=True)
+    result_available_at = datetime(2026, 9, 7, 13, 30, tzinfo=UTC)
+    _write_current_provenance(root, result_available_at)
+    unavailable_result = build_snapshot(
+        season=2026,
+        cutoff=before_result_cutoff,
+        prior_family="context",
+        snapshot_type="weekly",
+        root=root,
+        output_root=root / "snapshots-result-unavailable",
+        likelihood=LikelihoodV1(np.zeros(34), 1.0, 15.0),
+    )
+    assert unavailable_result.metadata["included_game_ids"] == []
+    assert "401917058" not in unavailable_result.metadata["included_game_ids"]
+
+    after_result_cutoff = datetime(2026, 9, 7, 14, tzinfo=UTC)
+    common = {
+        "season": 2026,
+        "cutoff": after_result_cutoff,
+        "snapshot_type": "weekly",
+        "root": root,
+        "output_root": root / "snapshots-after-result",
+        "likelihood": LikelihoodV1(np.zeros(34), 1.0, 15.0),
+    }
+    context = build_snapshot(prior_family="context", **common)
+    history = build_snapshot(prior_family="history", **common)
+    for snapshot in (context, history):
+        game_ids = snapshot.metadata["included_game_ids"]
+        assert game_ids.count("401917058") == 1
+        assert "401866625" not in game_ids
+        assert snapshot.metadata["game_evidence_exclusions"][0][
+            "replacement_game_ids"
+        ] == ["401917058"]
+
+    performance = build_performance_snapshot(context, root=root)
+    quality_of_record = build_quality_of_record_snapshot(context, root=root)
+    for snapshot in (performance, quality_of_record):
+        assert snapshot.metadata["included_game_ids"].count("401917058") == 1
+        assert "401866625" not in snapshot.metadata["included_game_ids"]
+        assert snapshot.metadata["game_evidence_exclusions"] == context.metadata[
+            "game_evidence_exclusions"
+        ]
+
+
 def test_preseason_snapshot_is_prior_only_and_complete(tmp_path: Path) -> None:
     root = _root(tmp_path)
     snapshot = build_snapshot(
@@ -395,7 +555,7 @@ def test_cutoff_between_source_retrievals_cannot_use_later_response(
         awayClassification="fcs",
     )
     _write(corpus, fields, [*original_rows, fcs_only])
-    games, rows, _, _ = filter_games(
+    games, rows, _, _, _ = filter_games(
         root,
         2026,
         cutoff,

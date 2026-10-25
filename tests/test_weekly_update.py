@@ -155,6 +155,8 @@ def _acquisition(
         "source_mode",
         "source_kind",
         "included_game_rows_sha256",
+        "game_evidence_exclusions",
+        "game_evidence_exclusions_sha256",
         "included_game_count",
         "fcs_fallback_team_ids",
         "fcs_population_size",
@@ -177,6 +179,8 @@ def test_same_evidence_checks_rows_and_provenance(field: str, tmp_path: Path) ->
             "game_corpus_sha256",
             "included_game_ids",
             "included_game_rows_sha256",
+            "game_evidence_exclusions",
+            "game_evidence_exclusions_sha256",
             "included_game_count",
             "excluded_lower_division_games",
             "fcs_fallback_team_ids",
@@ -220,8 +224,11 @@ def test_weekly_update_pairs_h_c_preserves_preseason_and_is_idempotent(
         "source_retrieval_times",
         "source_response_hashes",
         "game_corpus_sha256",
+        "game_evidence_exclusions",
+        "game_evidence_exclusions_sha256",
     ):
         assert first.context.metadata[field] == first.history.metadata[field]
+    assert first.report["game_evidence_exclusions"] == []
     assert first.context.metadata["included_game_ids"] == [
         "100"
     ]  # future game cannot enter inference

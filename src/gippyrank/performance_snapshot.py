@@ -23,7 +23,12 @@ from gippyrank.methodology import (
     PERFORMANCE_VERSION,
     TEAM_SEASON_SCHEMA_VERSION,
 )
-from gippyrank.posterior.snapshots import Snapshot, load_teams, sha256
+from gippyrank.posterior.snapshots import (
+    Snapshot,
+    _game_evidence_exclusions_sha256,
+    load_teams,
+    sha256,
+)
 
 PERFORMANCE_MODEL_VERSION = PERFORMANCE_VERSION
 PERFORMANCE_RANKING_FAMILY = "performance"
@@ -57,9 +62,29 @@ def _require_metadata(metadata: dict[str, Any], fields: tuple[str, ...]) -> None
         )
 
 
+def _validate_game_evidence_exclusions(
+    metadata: dict[str, Any], *, label: str
+) -> None:
+    has_rows = "game_evidence_exclusions" in metadata
+    has_hash = "game_evidence_exclusions_sha256" in metadata
+    if not has_rows and not has_hash:
+        return
+    exclusions = metadata.get("game_evidence_exclusions")
+    digest = metadata.get("game_evidence_exclusions_sha256")
+    if (
+        not isinstance(exclusions, list)
+        or not isinstance(digest, str)
+        or _game_evidence_exclusions_sha256(exclusions) != digest
+    ):
+        raise PerformanceSnapshotValidationError(
+            f"{label} game evidence exclusion hash mismatch"
+        )
+
+
 def validate_context_source(source_context: Snapshot, root: Path) -> Path:
     """Validate that ``source_context`` is a valid canonical Context snapshot."""
     metadata = source_context.metadata
+    _validate_game_evidence_exclusions(metadata, label="Context")
     _require_metadata(
         metadata,
         (
@@ -124,6 +149,8 @@ def validate_performance_against_context(
     """Fail closed when Performance and Context do not share evidence."""
     context_metadata = context.metadata
     performance_metadata = performance.metadata
+    _validate_game_evidence_exclusions(context_metadata, label="Context")
+    _validate_game_evidence_exclusions(performance_metadata, label="Performance")
     if performance_metadata.get("ranking_family") != PERFORMANCE_RANKING_FAMILY:
         raise PerformanceSnapshotValidationError("Snapshot is not a Performance snapshot")
     if performance_metadata.get("anchor_family") != "context":
@@ -148,6 +175,8 @@ def validate_performance_against_context(
         "game_corpus_sha256",
         "included_game_ids",
         "included_game_count",
+        "game_evidence_exclusions",
+        "game_evidence_exclusions_sha256",
         "prior_artifact_sha256",
         "prior_model_version",
     ):
@@ -456,6 +485,9 @@ def build_performance_snapshot(
         "unrated_count": sum(not row["rated"] for row in ranked),
         "valid": True,
     }
+    for field in ("game_evidence_exclusions", "game_evidence_exclusions_sha256"):
+        if field in metadata:
+            performance_metadata[field] = metadata[field]
     diagnostics = {
         "method": PERFORMANCE_METHOD,
         "source_context_snapshot_id": metadata["snapshot_id"],

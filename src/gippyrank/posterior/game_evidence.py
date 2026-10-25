@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from pathlib import Path
@@ -222,9 +223,15 @@ def _schedule_state(
     season_type = str(row.get("seasonType", "regular") or "regular").casefold()
     if season_type not in {"", "regular"}:
         return "out_of_scope"
-    status = str(row.get("status", row.get("gameStatus", "")) or "").casefold()
+    status = str(row.get("status") or row.get("gameStatus", "") or "").casefold()
     if "cancel" in status or "postpon" in status:
         return "cancelled"
+    game_id = str(row.get("id", ""))
+    if any(
+        isinstance(item, Mapping) and str(item.get("game_id", "")) == game_id
+        for item in metadata.get("game_evidence_exclusions", [])
+    ):
+        return "unresolved"
     if metadata.get("snapshot_type") == "preseason":
         return "future"
     when = _schedule_datetime(row.get("startDate"))
@@ -503,12 +510,37 @@ def build_team_season_artifact(
             )
             continue
         if state == "unresolved" and _bool(row.get("completed")):
+            evidence_exclusion = next(
+                (
+                    item
+                    for item in metadata.get("game_evidence_exclusions", [])
+                    if isinstance(item, Mapping)
+                    and str(item.get("game_id", "")) == game_id
+                ),
+                None,
+            )
             excluded_schedule_games.append(
                 {
                     "game_id": game_id,
                     "home_team_id": row.get("homeId", ""),
                     "away_team_id": row.get("awayId", ""),
-                    "reason": "result_not_confirmed_at_cutoff",
+                    "reason": (
+                        str(evidence_exclusion["reason"])
+                        if evidence_exclusion is not None
+                        else "result_not_confirmed_at_cutoff"
+                    ),
+                    **(
+                        {
+                            "replacement_game_ids": evidence_exclusion.get(
+                                "replacement_game_ids", []
+                            ),
+                            "investigation_required": evidence_exclusion.get(
+                                "investigation_required", False
+                            ),
+                        }
+                        if evidence_exclusion is not None
+                        else {}
+                    ),
                 }
             )
             continue

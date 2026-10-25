@@ -63,6 +63,24 @@ are football facts, separate from `included_game_ids` model evidence, and
 carry no rating or retrospective expectation. Otherwise they remain unresolved
 and marked not modeled.
 
+## Completed-game evidence checks
+
+CFBD's `completed` flag is not sufficient on its own. The normalized schedule
+retains both `status` and `gameStatus`; cancelled or postponed rows never enter
+inference. Completed scores must be non-negative integers, and tied final scores
+are excluded as suspicious evidence. Snapshot metadata records each such
+exclusion in `game_evidence_exclusions`, including nearby replacement game IDs
+when the source makes that link identifiable. Weekly review reports list these
+exclusions.
+
+Distinct game IDs are not merged just because the teams match. Two plausible
+completed records for the same teams and season type within 48 hours stop the
+build for review. A completed tie can be excluded while a nearby valid
+replacement remains eligible. Rematches separated in time remain separate
+factors. Current-season results are eligible only when the combined CFBD source
+was retrieved by the publication cutoff, so a later response cannot supply an
+earlier snapshot's score.
+
 ## Canonical game shape
 
 Each scheduled game occurs once in `weeks[].games[]` and retains:

@@ -720,7 +720,7 @@ def run_posteriors(
     for point in checkpoint_inputs(root, season):
         checkpoint = int(point["checkpoint"])
         cutoff = datetime.fromisoformat(str(point["cutoff"]))
-        games, included, excluded_lower, _ = filter_games(
+        games, included, excluded_lower, _, _ = filter_games(
             root, season, cutoff, "weekly"
         )
         games, included, audit = hcp.cutoff_safe_games(games, included, cutoff)

@@ -453,6 +453,9 @@ def build_quality_of_record_snapshot(
         "unrated_count": sum(not row["rated"] for row in ranked),
         "valid": True,
     }
+    for field in ("game_evidence_exclusions", "game_evidence_exclusions_sha256"):
+        if field in source:
+            metadata[field] = source[field]
     snapshot = Snapshot(snapshot_id, directory, metadata)
     diagnostics = {
         "inference": "deterministic_damped_loopy_sum_product_binary",
