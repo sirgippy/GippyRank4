@@ -3,13 +3,19 @@ from __future__ import annotations
 import hashlib
 import json
 import shutil
+from copy import deepcopy
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import pytest
 
 from gippyrank.api.static import build_static_api
-from gippyrank.api.store import PublicationStore
+from gippyrank.api.store import (
+    PublicationDataError,
+    PublicationStore,
+    _validate_team_season_artifact,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 FULL_MANIFEST = json.loads(
@@ -26,13 +32,19 @@ def _tree_hash(directory: Path) -> str:
     return digest.hexdigest()
 
 
-def _copy_selected_publication(tmp_path: Path) -> tuple[Path, dict[str, Any]]:
-    entry = next(
-        item
-        for item in FULL_MANIFEST["snapshots"]
-        if item["ranking_family"] == "predictive"
-        and item.get("prior_family") == "context"
-        and item["snapshot_type"] == "weekly"
+def _copy_selected_publication(
+    tmp_path: Path, selected_entry: dict[str, Any] | None = None
+) -> tuple[Path, dict[str, Any]]:
+    entry = (
+        dict(selected_entry)
+        if selected_entry is not None
+        else next(
+            item
+            for item in FULL_MANIFEST["snapshots"]
+            if item["ranking_family"] == "predictive"
+            and item.get("prior_family") == "context"
+            and item["snapshot_type"] == "weekly"
+        )
     )
     data_dir = tmp_path / "data"
     methodology_source = (
@@ -63,6 +75,145 @@ def _copy_selected_publication(tmp_path: Path) -> tuple[Path, dict[str, Any]]:
     }
     (data_dir / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     return data_dir, entry
+
+
+OCTOBER_24_CUTOFF = "2026-10-24T23:49:36.463412+00:00"
+OCTOBER_24_GAME_DATE = "2026-10-24T23:30:00+00:00"
+
+
+@pytest.fixture(scope="module")
+def october_24_publication() -> tuple[dict[str, Any], dict[str, Any], Any]:
+    entry = next(
+        item
+        for item in FULL_MANIFEST["snapshots"]
+        if item.get("season") == 2026
+        and item.get("ranking_family") == "predictive"
+        and item.get("prior_family") == "context"
+        and item.get("snapshot_type") == "weekly"
+        and str(item.get("effective_cutoff", "")).startswith("2026-10-24")
+    )
+    artifact_path = ROOT / "site" / entry["team_seasons_path"]
+    artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
+    publication = PublicationStore.load(ROOT / "site/data").get(entry["snapshot_id"])
+    return entry, artifact, publication
+
+
+def _set_prediction_game_date(team_season: dict[str, Any], game_date: str) -> str:
+    candidate = next(
+        game
+        for team in team_season["teams"].values()
+        for game in team["games"]
+        if game.get("future_prediction_id") is not None
+        and game.get("score") is None
+        and game.get("result") is None
+    )
+    game_id = str(candidate["game_id"])
+    for team in team_season["teams"].values():
+        for game in team["games"]:
+            if str(game.get("game_id")) == game_id:
+                game["date"] = game_date
+    return game_id
+
+
+def _validate_october_24_prediction(
+    october_24_publication: tuple[dict[str, Any], dict[str, Any], Any],
+    game_date: str,
+) -> None:
+    _, source_artifact, publication = october_24_publication
+    artifact = deepcopy(source_artifact)
+    _set_prediction_game_date(artifact, game_date)
+    artifact["effective_cutoff"] = OCTOBER_24_CUTOFF
+    metadata = publication.metadata.model_copy(
+        update={"effective_cutoff": datetime.fromisoformat(OCTOBER_24_CUTOFF)}
+    )
+    _validate_team_season_artifact(artifact, metadata, list(publication.rankings))
+
+
+def test_team_season_predictions_use_the_cutoff_utc_calendar_day(
+    october_24_publication: tuple[dict[str, Any], dict[str, Any], Any],
+) -> None:
+    _validate_october_24_prediction(october_24_publication, OCTOBER_24_GAME_DATE)
+    _validate_october_24_prediction(october_24_publication, "2026-10-25T00:00:00+00:00")
+
+
+def test_team_season_rejects_predictions_from_before_the_cutoff_utc_day(
+    october_24_publication: tuple[dict[str, Any], dict[str, Any], Any],
+) -> None:
+    with pytest.raises(
+        PublicationDataError, match="future prediction is not after the cutoff"
+    ):
+        _validate_october_24_prediction(
+            october_24_publication, "2026-10-23T23:59:59+00:00"
+        )
+
+
+def test_team_season_still_rejects_completed_evidence_outside_the_snapshot(
+    october_24_publication: tuple[dict[str, Any], dict[str, Any], Any],
+) -> None:
+    _, source_artifact, publication = october_24_publication
+    artifact = deepcopy(source_artifact)
+    included_ids = {str(game_id) for game_id in artifact["included_game_ids"]}
+    game = next(
+        game
+        for team in artifact["teams"].values()
+        for game in team["games"]
+        if game.get("future_prediction_id") is not None
+        and str(game["game_id"]) not in included_ids
+    )
+    game["score"] = {"home": 10, "away": 7}
+    game["result"] = "W"
+    artifact["effective_cutoff"] = OCTOBER_24_CUTOFF
+    metadata = publication.metadata.model_copy(
+        update={"effective_cutoff": datetime.fromisoformat(OCTOBER_24_CUTOFF)}
+    )
+
+    with pytest.raises(
+        PublicationDataError, match="schedule exposes evidence outside the snapshot"
+    ):
+        _validate_team_season_artifact(artifact, metadata, list(publication.rankings))
+
+
+def test_static_api_generation_accepts_october_24_same_day_prediction(
+    tmp_path: Path,
+    october_24_publication: tuple[dict[str, Any], dict[str, Any], Any],
+) -> None:
+    source_entry, _, _ = october_24_publication
+    data_dir, entry = _copy_selected_publication(tmp_path, source_entry)
+    team_path = data_dir / entry["team_seasons_path"].removeprefix("data/")
+    weekly_path = data_dir / entry["week_games_path"].removeprefix("data/")
+    snapshot_path = data_dir / entry["data_path"].removeprefix("data/")
+    team_season = json.loads(team_path.read_text(encoding="utf-8"))
+    weekly = json.loads(weekly_path.read_text(encoding="utf-8"))
+    snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+
+    game_id = _set_prediction_game_date(team_season, OCTOBER_24_GAME_DATE)
+    weekly_game_found = False
+    for week in weekly["weeks"]:
+        for game in week["games"]:
+            if str(game["game_id"]) == game_id:
+                game["date"] = OCTOBER_24_GAME_DATE
+                weekly_game_found = True
+    assert weekly_game_found
+
+    for artifact in (team_season, weekly):
+        artifact["effective_cutoff"] = OCTOBER_24_CUTOFF
+    for metadata in (entry, snapshot):
+        metadata["effective_cutoff"] = OCTOBER_24_CUTOFF
+        metadata["requested_cutoff"] = OCTOBER_24_CUTOFF
+        metadata["generation_timestamp"] = OCTOBER_24_CUTOFF
+
+    manifest_path = data_dir / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["snapshots"][0] = entry
+    team_path.write_text(json.dumps(team_season), encoding="utf-8")
+    weekly_path.write_text(json.dumps(weekly), encoding="utf-8")
+    snapshot_path.write_text(json.dumps(snapshot), encoding="utf-8")
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    api_root = tmp_path / "api" / "v1"
+    result = build_static_api(data_dir=data_dir, output_directory=api_root)
+    assert result["publication_count"] == 1
+    assert (api_root / "index.json").is_file()
 
 
 @pytest.fixture(scope="module")

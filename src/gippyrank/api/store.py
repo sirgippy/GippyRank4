@@ -794,7 +794,10 @@ def _validate_team_season_artifact(
             if (
                 prediction_id is not None
                 and cutoff is not None
-                and (game_date is None or game_date <= cutoff)
+                and (
+                    game_date is None
+                    or game_date.astimezone(UTC).date() < cutoff.astimezone(UTC).date()
+                )
             ):
                 raise PublicationDataError(
                     f"{metadata.snapshot_id}: future prediction is not after the cutoff"
