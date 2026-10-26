@@ -24,12 +24,12 @@ truth as the serializers and publication checks.
 
 `site/publish_config.json` is the explicit list of snapshot directories approved
 for publication. Its ordered `publication_slots` list is the publication
-chronology, and each slot must be explicitly marked `official` or `temporary`.
-All Predictive Context, Predictive History, Quality of Play, and Quality of Record snapshots in a slot inherit that one
-status. The publisher refuses missing or incompatible metadata, copies
-display-level summaries only, and derives records solely from each snapshot's
-`included_games.csv`. Raw posterior PMFs remain research artifacts and are not
-sent to the browser.
+chronology, and each slot must be explicitly marked `official` or `temporary`
+(Interim). All Predictive Context, Predictive History, Quality of Play, and
+Quality of Record snapshots in a slot inherit that status. The publisher
+refuses missing or incompatible metadata, copies display-level summaries only,
+and derives records solely from each snapshot's `included_games.csv`. Raw
+posterior PMFs remain research artifacts and are not sent to the browser.
 
 Team names link to a deep-linkable `site/team.html` view. It lazy-loads a
 snapshot-scoped team-season artifact containing schedule metadata and compact,
@@ -77,14 +77,27 @@ views preserves (for example) Sep. 5 rather than jumping to Preseason. The
 visible **Modeled record** likewise includes only FBS/FCS games eligible for the
 ranking model, not a conventional all-games standings record.
 
-Official snapshots are the historical comparison checkpoints. The static export
-resolves each snapshot's movement baseline as the latest strictly earlier
-official slot with the same season, ranking family, and predictive prior family.
-Temporary snapshots remain selectable but never reset that baseline. The
-current 2026 configuration marks Preseason and Week 2 official; Sep. 5, Sep. 6,
-and Sep. 7 are temporary. To promote a future candidate, change only its slot
-status to `official` in `publication_slots` and regenerate `site/data`; no model
-rebuild is required.
+Official snapshots are retained as historical comparison checkpoints. The
+static export resolves each snapshot's movement baseline as the latest strictly
+earlier Official slot with the same season, ranking family, and predictive prior
+family. Interim snapshots remain public until a later Official is published
+for their season; that Official retires older Interims from the manifest,
+selectors, site data, and static API. Pin an Interim by setting
+`"pinned": true` on its temporary entry in `publication_slots`. Retention only
+changes public generated artifacts; it leaves snapshot source bundles and
+Official comparison baselines intact. Required replay inputs are listed under
+`build_dependencies` in the manifest, outside the selectable snapshot and API
+inventories. If the configured default has expired, the exporter uses the
+newest retained publication slot.
+
+To promote a candidate, change its slot status to `official` in
+`publication_slots` and regenerate the public data. No model rebuild is
+required. Preview the retention decision and the generated files it would
+remove with:
+
+```bash
+uv run python scripts/build_site_data.py --dry-run
+```
 
 Publication families are registered in `RANKING_FAMILIES` in
 `src/gippyrank/site_data.py`. To publish a future family, add its label to that
@@ -100,8 +113,9 @@ After manually building and reviewing a new snapshot, add it to
 uv run python scripts/build_site_data.py
 ```
 
-Commit the resulting `site/data/` changes with the configuration change. This
-command never creates a snapshot, calls CFBD, or runs Posterior V1.
+Commit the resulting `site/data/` and `site/api/v1/` changes with the
+configuration change. This command never creates a snapshot, calls CFBD, or
+runs Posterior V1.
 
 ### Preview locally
 

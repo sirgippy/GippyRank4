@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from gippyrank import site_data
 from gippyrank.site_data import (
     SiteDataValidationError,
     _validate_matching_team_schedules,
@@ -28,10 +29,26 @@ def _source(prior: str) -> tuple[dict, dict]:
     )
 
 
+def _rankings(metadata: dict) -> list[dict]:
+    source = (
+        ROOT
+        / "data/processed/snapshots/2026"
+        / str(metadata["snapshot_id"])
+        / "predictive/context"
+    )
+    rankings = site_data._ranking_rows(source / "rankings.csv", metadata)
+    conferences = site_data.build_fbs_conference_map(
+        ROOT / "data/processed/cfbd/games.csv", seasons={metadata["season"]}
+    )
+    for ranking in rankings:
+        ranking["conference"] = conferences[(metadata["season"], ranking["team_id"])]
+    return rankings
+
+
 def _validate(artifact: dict, metadata: dict) -> None:
-    snapshot = ROOT / "site/data/snapshots" / f"{metadata['snapshot_id']}.json"
-    rankings = json.loads(snapshot.read_text())["rankings"]
-    _validate_team_season_artifact(artifact, metadata, rankings, root=NO_RAW_CFBD_ROOT)
+    _validate_team_season_artifact(
+        artifact, metadata, _rankings(metadata), root=NO_RAW_CFBD_ROOT
+    )
 
 
 def test_each_fbs_participant_must_reference_its_retrospective() -> None:
@@ -91,18 +108,29 @@ def test_history_merge_refuses_changed_matchup() -> None:
         _validate_matching_team_schedules(context, history, metadata["snapshot_id"])
 
 
-@pytest.mark.parametrize("field,value", [
-    ("opponent_name", "Different FCS name"),
-    ("opponent_conference", "Different league"),
-    ("conference_game", True),
-    ("season_type", "postseason"),
-])
-def test_history_merge_checks_browser_schedule_metadata(field: str, value: object) -> None:
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("opponent_name", "Different FCS name"),
+        ("opponent_conference", "Different league"),
+        ("conference_game", True),
+        ("season_type", "postseason"),
+    ],
+)
+def test_history_merge_checks_browser_schedule_metadata(
+    field: str, value: object
+) -> None:
     context, _ = _source("context-v1.3")
     history, metadata = _source("history")
-    game = next(game for game in history["teams"]["61"]["games"] if game["game_id"] == "401856658")
+    game = next(
+        game
+        for game in history["teams"]["61"]["games"]
+        if game["game_id"] == "401856658"
+    )
     game[field] = value
-    with pytest.raises(SiteDataValidationError, match="Context/History schedule differs"):
+    with pytest.raises(
+        SiteDataValidationError, match="Context/History schedule differs"
+    ):
         _validate_matching_team_schedules(context, history, metadata["snapshot_id"])
 
 
@@ -196,7 +224,8 @@ def test_retained_retrospective_requires_a_schedule_projection() -> None:
     artifact, metadata = _source("context-v1.3")
     for team_id in ("61", "201"):
         artifact["teams"][team_id]["games"] = [
-            game for game in artifact["teams"][team_id]["games"]
+            game
+            for game in artifact["teams"][team_id]["games"]
             if game["game_id"] != "401856700"
         ]
     with pytest.raises(SiteDataValidationError, match="missing schedule projections"):
@@ -206,7 +235,8 @@ def test_retained_retrospective_requires_a_schedule_projection() -> None:
 def test_fbs_fcs_retrospective_requires_its_fbs_schedule_projection() -> None:
     artifact, metadata = _source("context-v1.3")
     artifact["teams"]["61"]["games"] = [
-        game for game in artifact["teams"]["61"]["games"]
+        game
+        for game in artifact["teams"]["61"]["games"]
         if game["game_id"] != "401856658"
     ]
     with pytest.raises(SiteDataValidationError, match="missing schedule projections"):
@@ -216,21 +246,28 @@ def test_fbs_fcs_retrospective_requires_its_fbs_schedule_projection() -> None:
 def test_browser_artifact_excludes_fcs_only_retrospectives() -> None:
     artifact, metadata = _source("context-v1.3")
     source_games = artifact["retrospective_game_expectations"]["games"]
-    assert any(game["home_subdivision"] == game["away_subdivision"] == "fcs" for game in source_games.values())
-    snapshot = ROOT / "site/data/snapshots" / f"{metadata['snapshot_id']}.json"
-    rankings = json.loads(snapshot.read_text())["rankings"]
+    assert any(
+        game["home_subdivision"] == game["away_subdivision"] == "fcs"
+        for game in source_games.values()
+    )
+    rankings = _rankings(metadata)
     adapted = _validate_team_season_artifact(
         artifact, metadata, rankings, root=NO_RAW_CFBD_ROOT
     )
     projection = adapted["retrospective_game_expectations"]
     browser_games = projection["games"]
-    assert projection["artifact_kind"] == "retrospective_game_expectations_site_projection"
+    assert (
+        projection["artifact_kind"] == "retrospective_game_expectations_site_projection"
+    )
     assert projection["site_projection_version"] == "1.0"
     assert projection["coverage"] == "fbs_team_schedules"
     assert set(projection["published_game_ids"]) == set(browser_games)
     assert len(projection["included_game_ids"]) == len(source_games)
     assert projection["inference"]["games_evaluated"] == len(source_games)
-    assert all(game["home_subdivision"] == "fbs" or game["away_subdivision"] == "fbs" for game in browser_games.values())
+    assert all(
+        game["home_subdivision"] == "fbs" or game["away_subdivision"] == "fbs"
+        for game in browser_games.values()
+    )
     assert len(browser_games) < len(source_games)
 
 
@@ -270,7 +307,11 @@ def test_schedule_order_uses_instants_across_different_offsets() -> None:
 )
 def test_schedule_row_base_contract(field: str, value: object, message: str) -> None:
     artifact, metadata = _source("context-v1.3")
-    game = next(game for game in artifact["teams"]["61"]["games"] if game["game_id"] == "401856712")
+    game = next(
+        game
+        for game in artifact["teams"]["61"]["games"]
+        if game["game_id"] == "401856712"
+    )
     game[field] = value
     with pytest.raises(SiteDataValidationError, match=message):
         _validate(artifact, metadata)
@@ -280,7 +321,9 @@ def test_schedule_row_base_contract(field: str, value: object, message: str) -> 
 def test_team_identity_is_rooted_in_rankings(field: str, value: str) -> None:
     artifact, metadata = _source("context-v1.3")
     artifact["teams"]["61"][field] = value
-    with pytest.raises(SiteDataValidationError, match="team identity differs from rankings"):
+    with pytest.raises(
+        SiteDataValidationError, match="team identity differs from rankings"
+    ):
         _validate(artifact, metadata)
 
 
@@ -295,13 +338,19 @@ def test_consistently_rewritten_display_identity_still_fails_ranking_anchor() ->
         for side in ("home", "away"):
             if prediction[f"{side}_team_id"] == "61":
                 prediction[f"{side}_team_name"] = "Fake Georgia"
-    with pytest.raises(SiteDataValidationError, match="team identity differs from rankings"):
+    with pytest.raises(
+        SiteDataValidationError, match="team identity differs from rankings"
+    ):
         _validate(artifact, metadata)
 
 
 def test_scored_game_requires_timezone_aware_date() -> None:
     artifact, metadata = _source("context-v1.3")
-    game = next(game for game in artifact["teams"]["61"]["games"] if game["game_id"] == "401856700")
+    game = next(
+        game
+        for game in artifact["teams"]["61"]["games"]
+        if game["game_id"] == "401856700"
+    )
     game["date"] = game["date"].replace("Z", "").split("+")[0]
     with pytest.raises(SiteDataValidationError, match="timezone-aware date"):
         _validate(artifact, metadata)
@@ -310,9 +359,15 @@ def test_scored_game_requires_timezone_aware_date() -> None:
 @pytest.mark.parametrize("date", ["2026-10-10T00:00:00", "2026-10-10T00:00:00+02:00"])
 def test_unscored_calendar_anchor_must_be_timezone_aware_utc(date: str) -> None:
     artifact, metadata = _source("context-v1.3")
-    game = next(game for game in artifact["teams"]["61"]["games"] if game["game_id"] == "401856712")
+    game = next(
+        game
+        for game in artifact["teams"]["61"]["games"]
+        if game["game_id"] == "401856712"
+    )
     game["date"] = date
-    with pytest.raises(SiteDataValidationError, match="timezone-aware|UTC calendar anchor"):
+    with pytest.raises(
+        SiteDataValidationError, match="timezone-aware|UTC calendar anchor"
+    ):
         _validate(artifact, metadata)
 
 
@@ -333,7 +388,11 @@ def test_fbs_conference_is_rooted_in_rankings(target: str) -> None:
         artifact["teams"]["61"]["conference"] = "MAC"
         message = "team conference differs"
     else:
-        game = next(game for game in artifact["teams"]["61"]["games"] if game["opponent_classification"] == "fbs")
+        game = next(
+            game
+            for game in artifact["teams"]["61"]["games"]
+            if game["opponent_classification"] == "fbs"
+        )
         game["opponent_conference"] = "MAC"
         message = "opponent conference differs"
     with pytest.raises(SiteDataValidationError, match=message):
@@ -342,12 +401,16 @@ def test_fbs_conference_is_rooted_in_rankings(target: str) -> None:
 
 def test_weekly_fold_rejects_conflicting_reciprocal_descriptors() -> None:
     artifact, metadata = _source("context-v1.3")
-    rankings = json.loads((ROOT / "site/data/snapshots" / f"{metadata['snapshot_id']}.json").read_text())["rankings"]
+    rankings = _rankings(metadata)
     adapted = _validate_team_season_artifact(
         artifact, metadata, rankings, root=NO_RAW_CFBD_ROOT
     )
     assert adapted["teams"]["61"]["conference"] == "SEC"
-    game = next(game for game in adapted["teams"]["61"]["games"] if game["game_id"] == "401856700")
+    game = next(
+        game
+        for game in adapted["teams"]["61"]["games"]
+        if game["game_id"] == "401856700"
+    )
     assert game["opponent_conference"] == "SEC"
     game["opponent_conference"] = "MAC"
     with pytest.raises(SiteDataValidationError, match="conflicting team descriptors"):
@@ -356,9 +419,15 @@ def test_weekly_fold_rejects_conflicting_reciprocal_descriptors() -> None:
 
 def test_retrospective_schedule_subdivision_matches_record() -> None:
     artifact, metadata = _source("context-v1.3")
-    game = next(game for game in artifact["teams"]["61"]["games"] if game["game_id"] == "401856658")
+    game = next(
+        game
+        for game in artifact["teams"]["61"]["games"]
+        if game["game_id"] == "401856658"
+    )
     game["opponent_classification"] = "fbs"
-    with pytest.raises(SiteDataValidationError, match="invalid opponent classification"):
+    with pytest.raises(
+        SiteDataValidationError, match="invalid opponent classification"
+    ):
         _validate(artifact, metadata)
 
 
@@ -379,7 +448,11 @@ def test_fbs_schedule_display_identity_matches_canonical_team(
         if game["game_id"] == "401856700"
     )
     game[field] = value
-    message = "invalid opponent classification" if field == "opponent_classification" else "cross-team display identity mismatch"
+    message = (
+        "invalid opponent classification"
+        if field == "opponent_classification"
+        else "cross-team display identity mismatch"
+    )
     with pytest.raises(SiteDataValidationError, match=message):
         _validate(artifact, metadata)
 
@@ -424,8 +497,7 @@ def test_scored_out_of_scope_date_uses_local_display_policy() -> None:
         if game["game_id"] == "401856658"
     )
     game["game_state"] = "out_of_scope"
-    snapshot = ROOT / "site/data/snapshots" / f"{metadata['snapshot_id']}.json"
-    rankings = json.loads(snapshot.read_text())["rankings"]
+    rankings = _rankings(metadata)
     adapted = _validate_team_season_artifact(
         artifact, metadata, rankings, root=NO_RAW_CFBD_ROOT
     )

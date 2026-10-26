@@ -48,14 +48,11 @@ def test_repaired_publications_preserve_cutoffs_and_share_corrected_evidence() -
     )
     audit = json.loads(
         (
-            ROOT
-            / "data/processed/issue_238_historical_repair/lineage_audit.json"
+            ROOT / "data/processed/issue_238_historical_repair/lineage_audit.json"
         ).read_text()
     )
     assert audit["issue"] == "238"
-    assert [item["publication_slot"] for item in audit["publications"]] == list(
-        SLOTS
-    )
+    assert [item["publication_slot"] for item in audit["publications"]] == list(SLOTS)
     assert [item["publication_status"] for item in audit["publications"]] == [
         "temporary",
         "temporary",
@@ -101,36 +98,33 @@ def test_repaired_publications_preserve_cutoffs_and_share_corrected_evidence() -
         )
         original_history_metadata = json.loads(
             (
-                ROOT
-                / original_history_entry["superseded"]["path"]
-                / "metadata.json"
+                ROOT / original_history_entry["superseded"]["path"] / "metadata.json"
             ).read_text()
         )
-        assert history_metadata["model_versions"] == original_history_metadata[
-            "model_versions"
-        ]
+        assert (
+            history_metadata["model_versions"]
+            == original_history_metadata["model_versions"]
+        )
         assert context_metadata["prior_model_version"] == (
             "1.4" if index == 2 else "1.2"
         )
         assert history_metadata["prior_model_version"] == "1.1"
-        assert context_metadata["requested_cutoff"] == history_metadata[
-            "requested_cutoff"
-        ]
-        assert context_metadata["effective_cutoff"] == history_metadata[
-            "effective_cutoff"
-        ]
+        assert (
+            context_metadata["requested_cutoff"] == history_metadata["requested_cutoff"]
+        )
+        assert (
+            context_metadata["effective_cutoff"] == history_metadata["effective_cutoff"]
+        )
         context_schedule = json.loads(
             (
-                ROOT
-                / "site/data/team-seasons"
-                / f"{context_metadata['snapshot_id']}.json"
+                by_kind["context"][1]
+                / (context_metadata.get("team_season_path") or "team_seasons.json")
             ).read_text()
         )
         history_schedule = json.loads(
             (
-                ROOT
-                / "site/data/team-seasons"
-                / f"{history_metadata['snapshot_id']}.json"
+                by_kind["history"][1]
+                / (history_metadata.get("team_season_path") or "team_seasons.json")
             ).read_text()
         )
         assert set(context_schedule["teams"]) == set(history_schedule["teams"])
@@ -147,9 +141,10 @@ def test_repaired_publications_preserve_cutoffs_and_share_corrected_evidence() -
             diagnostics = json.loads((directory / "diagnostics.json").read_text())
             assert "quality_of_record_evidence" not in diagnostics
             if kind in {"quality_of_play", "quality_of_record"}:
-                assert metadata["source_context_snapshot_id"] == context_metadata[
-                    "snapshot_id"
-                ]
+                assert (
+                    metadata["source_context_snapshot_id"]
+                    == context_metadata["snapshot_id"]
+                )
 
     normalized = _rows(ROOT / "data/processed/cfbd/games.csv")
     assert PHANTOM_ID not in {row["id"] for row in normalized}
@@ -158,20 +153,17 @@ def test_repaired_publications_preserve_cutoffs_and_share_corrected_evidence() -
     assert (result[0]["homePoints"], result[0]["awayPoints"]) == ("28", "19")
 
     backfill = json.loads(
-        (
-            ROOT
-            / "data/processed/quality_of_record_backfill/manifest.json"
-        ).read_text()
+        (ROOT / "data/processed/quality_of_record_backfill/manifest.json").read_text()
     )
     assert backfill["status"] == "complete"
-    assert backfill["eligible_publication_count"] == audit["performance_backfill"][
-        "publication_count"
-    ]
+    assert (
+        backfill["eligible_publication_count"]
+        == audit["performance_backfill"]["publication_count"]
+    )
     assert backfill["eligible_publication_count"] == len(backfill["publications"])
     assert backfill["blocked_publication_count"] == 0
     assert all(
-        "quality_of_record_evidence" not in item
-        for item in backfill["publications"]
+        "quality_of_record_evidence" not in item for item in backfill["publications"]
     )
 
     superseded = audit["superseded_artifacts"]
@@ -191,9 +183,7 @@ def test_site_and_static_api_no_longer_publish_the_temporary_exception(
     api_root = tmp_path / "api" / "v1"
     build_static_api(data_dir=ROOT / "site/data", output_directory=api_root)
     api = json.loads((api_root / "publications.json").read_text())
-    assert all(
-        "quality_of_record_evidence" not in item for item in api["publications"]
-    )
+    assert all("quality_of_record_evidence" not in item for item in api["publications"])
     for directory in (ROOT / "site/data", api_root):
         for artifact in directory.rglob("*.json"):
             content = artifact.read_text(encoding="utf-8")
@@ -201,8 +191,7 @@ def test_site_and_static_api_no_longer_publish_the_temporary_exception(
             assert "inference_games.csv" not in content
     audit = json.loads(
         (
-            ROOT
-            / "data/processed/issue_238_historical_repair/lineage_audit.json"
+            ROOT / "data/processed/issue_238_historical_repair/lineage_audit.json"
         ).read_text()
     )
     assert audit["site_export"]["retired_exception_fields"] == 0
