@@ -252,10 +252,15 @@ def test_weekly_update_pairs_h_c_preserves_preseason_and_is_idempotent(
         "performance",
         "quality_of_record",
     }
-    assert first.quality_of_record.metadata["performance_variant"] == "quality_of_record"
+    assert (
+        first.quality_of_record.metadata["performance_variant"] == "quality_of_record"
+    )
     assert first.report["quality_of_record"]["converged"] is True
     assert "## Quality of Record" in first.candidate_paths.report_md.read_text()
-    assert first.candidate_paths.quality_of_record_snapshot == first.quality_of_record.directory
+    assert (
+        first.candidate_paths.quality_of_record_snapshot
+        == first.quality_of_record.directory
+    )
     manifest = json.loads((root / "site/data/manifest.json").read_text())
     assert manifest["default_publication_slot"] == slot
     assert {
@@ -492,7 +497,7 @@ def test_upserting_a_slot_preserves_preseason_and_older_slots(tmp_path: Path) ->
                 "default_publication_slot": "2026-old",
                 "publication_slots": [
                     {"id": "2026-preseason", "status": "official"},
-                    {"id": "2026-old", "status": "temporary"},
+                    {"id": "2026-old", "status": "temporary", "pinned": True},
                 ],
                 "snapshots": [
                     {
@@ -537,6 +542,18 @@ def test_upserting_a_slot_preserves_preseason_and_older_slots(tmp_path: Path) ->
         "2026-old",
         "2026-09-12",
     }
+    _upsert_publication(
+        root=tmp_path,
+        config_path=config,
+        slot="2026-old",
+        label="Pinned Interim",
+        context=Snapshot("context", context_dir, {}),
+        history=Snapshot("history", history_dir, {}),
+    )
+    value = json.loads(config.read_text())
+    assert next(
+        entry for entry in value["publication_slots"] if entry["id"] == "2026-old"
+    ) == {"id": "2026-old", "status": "temporary", "pinned": True}
 
 
 @pytest.mark.parametrize(
@@ -691,7 +708,9 @@ def _candidate_repo(tmp_path: Path) -> dict[str, str]:
     subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
     environment = _candidate_environment()
     for relative_path in environment.values():
-        if relative_path.endswith(("context", "history", "performance", "quality_of_record", "data")):
+        if relative_path.endswith(
+            ("context", "history", "performance", "quality_of_record", "data")
+        ):
             _write_candidate_file(tmp_path, f"{relative_path}/artifact.json")
         else:
             _write_candidate_file(tmp_path, relative_path)
@@ -884,22 +903,47 @@ def test_update_rankings_script_forwards_official_flag(
     assert captured["official"] is True
 
 
-def test_unchanged_detection_includes_quality_of_record(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_unchanged_detection_includes_quality_of_record(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     root = _root(tmp_path)
     timestamp = datetime(2026, 9, 12, 15, tzinfo=UTC)
-    monkeypatch.setattr(weekly_update, "fetch_current_season", lambda **_: _acquisition(root, timestamp))
+    monkeypatch.setattr(
+        weekly_update, "fetch_current_season", lambda **_: _acquisition(root, timestamp)
+    )
     update = prepare_weekly_update(season=2026, root=root)
     config = json.loads((root / "site/publish_config.json").read_text())
-    arguments = (root, config, update.context, update.history, update.performance, update.quality_of_record)
-    assert not weekly_update._is_publishable_change(*arguments, publication_slot=update.publication_slot, publication_status="temporary")
+    arguments = (
+        root,
+        config,
+        update.context,
+        update.history,
+        update.performance,
+        update.quality_of_record,
+    )
+    assert not weekly_update._is_publishable_change(
+        *arguments,
+        publication_slot=update.publication_slot,
+        publication_status="temporary",
+    )
     path = update.quality_of_record.directory / "rankings.csv"
     original = path.read_bytes()
     path.write_bytes(original + b"\n")
     # Compare the independently retained candidate against a changed published
     # Record artifact while Context, History, and Play remain identical.
     import shutil
+
     candidate_dir = root / "record-candidate"
     shutil.copytree(update.quality_of_record.directory, candidate_dir)
     (candidate_dir / "rankings.csv").write_bytes(original)
-    candidate = Snapshot(update.quality_of_record.snapshot_id, candidate_dir, update.quality_of_record.metadata)
-    assert weekly_update._is_publishable_change(*arguments[:-1], candidate, publication_slot=update.publication_slot, publication_status="temporary")
+    candidate = Snapshot(
+        update.quality_of_record.snapshot_id,
+        candidate_dir,
+        update.quality_of_record.metadata,
+    )
+    assert weekly_update._is_publishable_change(
+        *arguments[:-1],
+        candidate,
+        publication_slot=update.publication_slot,
+        publication_status="temporary",
+    )

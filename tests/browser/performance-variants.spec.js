@@ -1,6 +1,20 @@
 const { test, expect } = require("@playwright/test");
+const fs = require("node:fs");
+const path = require("node:path");
 const { SITE_ORIGIN, installStaticSiteRoute } = require("./static-site");
 const manifest = require("../../site/data/manifest.json");
+const publishConfig = require("../../site/publish_config.json");
+
+function retiredQualityOfRecordSnapshotId(slot) {
+  for (const publication of publishConfig.snapshots.filter((item) => item.publication_slot === slot)) {
+    const metadataPath = path.resolve(__dirname, "../..", publication.source, "metadata.json");
+    const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf8"));
+    if (metadata.ranking_family === "performance" && metadata.performance_variant === "quality_of_record") {
+      return metadata.snapshot_id;
+    }
+  }
+  throw new Error(`No historical Quality of Record metadata found for ${slot}`);
+}
 
 test.beforeEach(async ({ page }) => {
   await installStaticSiteRoute(page);
@@ -50,18 +64,30 @@ test("exact Quality of Record snapshot links work without a variant parameter", 
   await expect(page.locator("#snapshot-select")).toHaveValue(entry.publication_slot);
 });
 
-for (const slot of ["2026-09-06", "2026-09-07", "2026-09-08"]) {
-  test(`previously blocked QoR publication ${slot} is available`, async ({ page }) => {
+for (const slot of ["2026-09-08"]) {
+  test(`Official QoR publication ${slot} remains available`, async ({ page }) => {
     const entry = manifest.snapshots.find((item) => item.publication_slot === slot && item.performance_variant === "quality_of_record");
     expect(entry).toBeTruthy();
     await page.goto(`/?family=performance&variant=quality_of_record&snapshot=${encodeURIComponent(entry.snapshot_id)}`);
     await expect(page.locator("#snapshot-title")).toContainText("Quality of Record");
     await expect(page.locator("#snapshot-select")).toHaveValue(slot);
-    await expect(page.locator("#snapshot-kind")).toHaveText(slot === "2026-09-08" ? "Official publication" : "Interim publication");
+    await expect(page.locator("#snapshot-kind")).toHaveText("Official publication");
     await expect(page.locator('[data-variant="quality_of_record"]')).toBeEnabled();
     await expect(page.locator("#rankings-body tr")).toHaveCount(25);
     await expect(page.locator("#snapshot-evidence")).toContainText(`${entry.included_game_count} eligible games included`);
     await expect(page.locator("#snapshot-evidence")).not.toContainText("malformed Campbell");
     await expect(page).toHaveURL(new RegExp(`snapshot=${entry.snapshot_id.replaceAll(".", "\\.")}`));
+  });
+}
+
+for (const slot of ["2026-09-06", "2026-09-07"]) {
+  const snapshotId = retiredQualityOfRecordSnapshotId(slot);
+  test(`retired QoR interim ${slot} is unavailable`, async ({ page }) => {
+    expect(manifest.snapshots.some((item) => item.snapshot_id === snapshotId)).toBe(false);
+    await page.goto(`/?family=performance&variant=quality_of_record&snapshot=${encodeURIComponent(snapshotId)}`);
+    await expect(page.locator("#snapshot-status")).toContainText(snapshotId);
+    await expect(page.locator("#snapshot-status")).toContainText("unavailable");
+    await expect(page.locator("#rankings-body tr")).toHaveCount(0);
+    expect(new URL(page.url()).searchParams.get("snapshot")).toBe(snapshotId);
   });
 }

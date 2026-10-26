@@ -30,7 +30,9 @@ from gippyrank.posterior.snapshots import (
 from gippyrank.site_data import SiteDataValidationError
 
 ROOT = Path(__file__).resolve().parents[1]
-BACKFILL_SCRIPT = runpy.run_path(str(ROOT / "scripts/backfill_retrospective_game_expectations.py"))
+BACKFILL_SCRIPT = runpy.run_path(
+    str(ROOT / "scripts/backfill_retrospective_game_expectations.py")
+)
 backfill = BACKFILL_SCRIPT["backfill"]
 sync_performance_sources = BACKFILL_SCRIPT["sync_performance_sources"]
 
@@ -70,18 +72,34 @@ def test_retained_predictive_snapshots_publish_completed_game_expectations() -> 
 
 
 def test_retained_source_availability_does_not_relabel_legacy_cutoff() -> None:
-    source = ROOT / "data/processed/snapshots/2026/2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3/predictive/context"
+    source = (
+        ROOT
+        / "data/processed/snapshots/2026/2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3/predictive/context"
+    )
     metadata = json.loads((source / "metadata.json").read_text())
     assert metadata["source_retrieved_at_contract"] == "legacy_first_response"
-    assert metadata["combined_source_available_at"] == max(metadata["source_retrieval_times"].values())
+    assert metadata["combined_source_available_at"] == max(
+        metadata["source_retrieval_times"].values()
+    )
     assert metadata["source_retrieved_at"] == metadata["effective_cutoff"]
     assert metadata["combined_source_available_at"] > metadata["effective_cutoff"]
 
 
 def test_empty_preseason_site_projection_keeps_projection_contract() -> None:
-    artifact = json.loads((ROOT / "site/data/team-seasons/2026-preseason-context.json").read_text())
+    manifest = json.loads((ROOT / "site/data/manifest.json").read_text())
+    entry = next(
+        item
+        for item in manifest["snapshots"]
+        if item["snapshot_type"] == "preseason"
+        and item["ranking_family"] == "predictive"
+        and item["prior_family"] == "context"
+    )
+    artifact = json.loads((ROOT / "site" / entry["team_seasons_path"]).read_text())
     retrospective = artifact["retrospective_game_expectations"]
-    assert retrospective["artifact_kind"] == "retrospective_game_expectations_site_projection"
+    assert (
+        retrospective["artifact_kind"]
+        == "retrospective_game_expectations_site_projection"
+    )
     assert retrospective["site_projection_version"] == "1.0"
     assert retrospective["coverage"] == "fbs_team_schedules"
     assert retrospective["published_game_ids"] == []
@@ -89,7 +107,9 @@ def test_empty_preseason_site_projection_keeps_projection_contract() -> None:
 
 
 def test_static_publication_rejects_unverified_likelihood() -> None:
-    source = ROOT / "data/processed/snapshots/2026/2026-preseason-context/predictive/context"
+    source = (
+        ROOT / "data/processed/snapshots/2026/2026-preseason-context/predictive/context"
+    )
     artifact = json.loads((source / "team_seasons.json").read_text())
     metadata = json.loads((source / "metadata.json").read_text())
     metadata["historical_likelihood_sha256"] = None
@@ -104,13 +124,17 @@ def test_static_publication_rejects_unverified_likelihood() -> None:
 def test_published_v1_requires_pinned_likelihood_for_every_provenance(
     provenance: str,
 ) -> None:
-    source = ROOT / "data/processed/snapshots/2026/2026-preseason-context/predictive/context"
+    source = (
+        ROOT / "data/processed/snapshots/2026/2026-preseason-context/predictive/context"
+    )
     artifact = json.loads((source / "team_seasons.json").read_text())
     metadata = json.loads((source / "metadata.json").read_text())
     metadata["historical_likelihood_provenance"] = provenance
     if provenance == "loaded_from_artifact":
         metadata["historical_likelihood_sha256"] = "0" * 64
-        artifact["retrospective_game_expectations"]["historical_likelihood_sha256"] = "0" * 64
+        artifact["retrospective_game_expectations"]["historical_likelihood_sha256"] = (
+            "0" * 64
+        )
         message = "not pinned V1"
     else:
         message = "research-only"
@@ -124,19 +148,31 @@ def test_backfill_rejects_untrusted_posterior_rows(tmp_path: Path) -> None:
     teams = [Team("a", "A", "fbs", np.array([0.5, 0.5]))]
     pmfs = {"a": np.array([0.4, 0.6])}
     metadata = {"posterior_pmfs_sha256": posterior_pmfs_sha256(pmfs)}
-    (tmp_path / "diagnostics.json").write_text(json.dumps({
-        "converged": True, "iterations": 1, "max_message_delta": 0,
-        "objective_surrogate": 0, "raw_game_likelihood_count": 0,
-        "unique_pairwise_factor_count": 0, "maximum_team_degree": 0,
-    }))
+    (tmp_path / "diagnostics.json").write_text(
+        json.dumps(
+            {
+                "converged": True,
+                "iterations": 1,
+                "max_message_delta": 0,
+                "objective_surrogate": 0,
+                "raw_game_likelihood_count": 0,
+                "unique_pairwise_factor_count": 0,
+                "maximum_team_degree": 0,
+            }
+        )
+    )
     path = tmp_path / "posterior_pmfs.csv"
+
     def write(rows: list[tuple[str, int, float]]) -> None:
         with path.open("w", newline="") as handle:
             writer = csv.writer(handle)
             writer.writerow(("team_id", "rank", "probability"))
             writer.writerows(rows)
+
     write([("a", 1, 0.4), ("a", 2, 0.6)])
-    assert np.array_equal(load_retained_posterior(tmp_path, metadata, teams).pmfs["a"], pmfs["a"])
+    assert np.array_equal(
+        load_retained_posterior(tmp_path, metadata, teams).pmfs["a"], pmfs["a"]
+    )
     for rows, message in (
         ([("a", 1, 0.4), ("a", 1, 0.6)], "duplicate posterior rank"),
         ([("a", 1, 0.4)], "incomplete posterior ranks"),
@@ -157,27 +193,44 @@ def test_backfill_preserves_only_equivalent_frozen_records() -> None:
         "historical_likelihood_sha256": HISTORICAL_LIKELIHOOD_SHA256,
         "posterior_pmfs_sha256": "pmf-hash",
     }
-    existing = {**provenance, "games": {
-        "stable": {"expected_home_margin": 26.92384615053041, "actual_home_margin": 17},
-        "changed": {"expected_home_margin": 12.0, "actual_home_margin": 17},
-    }}
-    refreshed = {**provenance, "games": {
-        "stable": {"expected_home_margin": 26.923846150530405, "actual_home_margin": 17},
-        "changed": {"expected_home_margin": 13.0, "actual_home_margin": 17},
-    }}
+    existing = {
+        **provenance,
+        "games": {
+            "stable": {
+                "expected_home_margin": 26.92384615053041,
+                "actual_home_margin": 17,
+            },
+            "changed": {"expected_home_margin": 12.0, "actual_home_margin": 17},
+        },
+    }
+    refreshed = {
+        **provenance,
+        "games": {
+            "stable": {
+                "expected_home_margin": 26.923846150530405,
+                "actual_home_margin": 17,
+            },
+            "changed": {"expected_home_margin": 13.0, "actual_home_margin": 17},
+        },
+    }
     preserve_equivalent_retrospective_records(existing, refreshed)
     assert refreshed["games"]["stable"] is existing["games"]["stable"]
     assert refreshed["games"]["changed"] is not existing["games"]["changed"]
-    different_probability = {**provenance, "games": {
-        "stable": {"expected_home_margin": 0.50000000001, "actual_home_margin": 17},
-        "changed": refreshed["games"]["changed"],
-    }}
+    different_probability = {
+        **provenance,
+        "games": {
+            "stable": {"expected_home_margin": 0.50000000001, "actual_home_margin": 17},
+            "changed": refreshed["games"]["changed"],
+        },
+    }
     preserve_equivalent_retrospective_records(existing, different_probability)
     assert different_probability["games"]["stable"] is not existing["games"]["stable"]
 
 
 def test_forced_preseason_backfill_is_byte_identical(tmp_path: Path) -> None:
-    source = ROOT / "data/processed/snapshots/2026/2026-preseason-context/predictive/context"
+    source = (
+        ROOT / "data/processed/snapshots/2026/2026-preseason-context/predictive/context"
+    )
     copied = tmp_path / "preseason"
     shutil.copytree(source, copied)
     backfill(copied)
@@ -194,28 +247,43 @@ def test_targeted_backfill_syncs_only_dependent_performance(tmp_path: Path) -> N
     other = base / "other/predictive/context"
     for source, value in ((changed, "new"), (other, "other")):
         source.mkdir(parents=True)
-        (source / "metadata.json").write_text(json.dumps({
-            "combined_source_available_at": value,
-            "source_retrieved_at_contract": "combined_latest",
-        }))
+        (source / "metadata.json").write_text(
+            json.dumps(
+                {
+                    "combined_source_available_at": value,
+                    "source_retrieved_at_contract": "combined_latest",
+                }
+            )
+        )
         (source / "team_seasons.json").write_text(value)
     for name in ("changed", "other"):
         performance = base / name / "performance"
         performance.mkdir()
-        (performance / "metadata.json").write_text(json.dumps({
-            "source_context_path": str((base / name / "predictive/context").relative_to(tmp_path)),
-            "source_context_metadata_sha256": "old",
-        }))
+        (performance / "metadata.json").write_text(
+            json.dumps(
+                {
+                    "source_context_path": str(
+                        (base / name / "predictive/context").relative_to(tmp_path)
+                    ),
+                    "source_context_metadata_sha256": "old",
+                }
+            )
+        )
         (performance / "team_seasons.json").write_text("old")
     sync_performance_sources({changed.resolve()}, root=tmp_path)
     assert (base / "changed/performance/team_seasons.json").read_text() == "new"
     assert (base / "other/performance/team_seasons.json").read_text() == "old"
     metadata = json.loads((base / "changed/performance/metadata.json").read_text())
-    assert metadata["source_context_metadata_sha256"] == sha256(changed / "metadata.json")
+    assert metadata["source_context_metadata_sha256"] == sha256(
+        changed / "metadata.json"
+    )
 
 
 def test_retrospective_records_match_schedule_participants_site_and_score() -> None:
-    source = ROOT / "data/processed/snapshots/2026/2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3/predictive/context"
+    source = (
+        ROOT
+        / "data/processed/snapshots/2026/2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3/predictive/context"
+    )
     original = json.loads((source / "team_seasons.json").read_text(encoding="utf-8"))
     metadata = json.loads((source / "metadata.json").read_text(encoding="utf-8"))
     expected_ids = set(original["included_game_ids"])
@@ -232,15 +300,32 @@ def test_retrospective_records_match_schedule_participants_site_and_score() -> N
         return data["retrospective_game_expectations"]["games"][game_id]
 
     def schedule_game(data: dict) -> dict:
-        return next(game for game in data["teams"]["61"]["games"] if game["game_id"] == game_id)
+        return next(
+            game for game in data["teams"]["61"]["games"] if game["game_id"] == game_id
+        )
 
     mutations = (
-        (lambda data: record(data).update(home_team_id="194", away_team_id="333"), "wrong team"),
-        (lambda data: schedule_game(data).update(opponent_id="999"), "opponent mismatch"),
-        (lambda data: schedule_game(data).update(game_id="other-game"), "another matchup"),
-        (lambda data: record(data).update(neutral_site=True), "site orientation mismatch"),
+        (
+            lambda data: record(data).update(home_team_id="194", away_team_id="333"),
+            "wrong team",
+        ),
+        (
+            lambda data: schedule_game(data).update(opponent_id="999"),
+            "opponent mismatch",
+        ),
+        (
+            lambda data: schedule_game(data).update(game_id="other-game"),
+            "another matchup",
+        ),
+        (
+            lambda data: record(data).update(neutral_site=True),
+            "site orientation mismatch",
+        ),
         (lambda data: record(data).update(actual_home_margin=28.4), "not integral"),
-        (lambda data: record(data).update(actual_home_margin=29.0), "disagrees with score"),
+        (
+            lambda data: record(data).update(actual_home_margin=29.0),
+            "disagrees with score",
+        ),
     )
     for mutate, message in mutations:
         artifact = deepcopy(original)
