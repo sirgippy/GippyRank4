@@ -1,0 +1,307 @@
+{
+  "campbell_fixture_id_excluded": "401866625",
+  "campbell_replacement_game_id": "401917058",
+  "candidate_margin_weights": [
+    0.0,
+    0.25,
+    0.5,
+    0.75,
+    1.0
+  ],
+  "candidate_margin_weights_sha256": "debbb4894dbb88f6eb6b66876c49ca1f65c082a91cc105c87736b5f1f23f6417",
+  "convergence_required": true,
+  "endpoint_tolerance": 1e-08,
+  "factor_definition": "P(sign(m)|theta) ** (1-lambda) * p(m|theta) ** lambda",
+  "inference": "one deterministic damped loopy sum-product posterior per weight and snapshot",
+  "issue": 242,
+  "output_sha256": {
+    "case_studies.csv": "9db23cb37b2f371ea2c9164ed9650d8f848c7ed22d09ec60e2cfdcecbd22547b",
+    "case_study_games.csv": "6114f6d89017357413b0c55f3f505d85945169332cac632f5bb68033e32ac181",
+    "endpoint_parity.json": "cacbbf0014a106d2eca9ce6795156cde12bb441cd74b9a956eb4af5fad13cdee",
+    "marshall_fine_weight_sweep.csv": "3fd95f86ca96138690cffb7f4eeed6cad671c358d457842427a223e266fec038",
+    "oregon_blowout_counterfactual.csv": "4efa1d00c89cb718405db9b2a238c07b2f94b9666062c67ea3eabf81d3286d81",
+    "rankings.csv": "eeff34c8f4fedd3099b352522cac699ce5aa31578ff723b7a83d1228da7a6132",
+    "sensitivity_summary.csv": "d4a0b3f1f62d8139e275fbb2ad1f9c944d86273d19beec4f8bcc860bdffadd66",
+    "snapshot_summary.csv": "2c5fc90f254d7aa5f2a6e133d2566bfce3ce16128c9d648b7349a385779cc0b9"
+  },
+  "posterior_pmf_artifacts": [
+    {
+      "path": "posterior_pmfs/2026-09-08.csv.gz",
+      "publication_slot": "2026-09-08",
+      "sha256": "c9c257684f9d66419d0c6e51c00c9bd28ea52fa39ba03fcdf4f6731f7ea7ef04"
+    },
+    {
+      "path": "posterior_pmfs/2026-09-13.csv.gz",
+      "publication_slot": "2026-09-13",
+      "sha256": "514ea85986f30f0b846a0104a3306006f69a8c962382b59e140555937c560b1d"
+    },
+    {
+      "path": "posterior_pmfs/2026-09-20.csv.gz",
+      "publication_slot": "2026-09-20",
+      "sha256": "50895ece3d6bcd715ce7ce373a9c6fa6f0db479f8b145094d0be1d0c6ee1ad85"
+    },
+    {
+      "path": "posterior_pmfs/2026-09-27.csv.gz",
+      "publication_slot": "2026-09-27",
+      "sha256": "a3090d52e5276988df736ecf28fd76473acd1a86a23605edaf8d186a53e768b4"
+    },
+    {
+      "path": "posterior_pmfs/2026-10-04.csv.gz",
+      "publication_slot": "2026-10-04",
+      "sha256": "661e7be566eb5d6569af0319965c03ed50ee23c15a9fc83f951ef439b8d34ca5"
+    },
+    {
+      "path": "posterior_pmfs/2026-10-11T12-47-27.781981Z.csv.gz",
+      "publication_slot": "2026-10-11T12-47-27.781981Z",
+      "sha256": "74b7bad98272153cc38c0918cd3f0714294cfe7902483b44b27301ed732c6173"
+    },
+    {
+      "path": "posterior_pmfs/2026-10-18T13-04-45.309059Z.csv.gz",
+      "publication_slot": "2026-10-18T13-04-45.309059Z",
+      "sha256": "5269c8de33252b635b69fb7c34f1eaddb99252854954142406cc8289e8bd4670"
+    },
+    {
+      "path": "posterior_pmfs/2026-10-25T12-59-22.246522Z.csv.gz",
+      "publication_slot": "2026-10-25T12-59-22.246522Z",
+      "sha256": "37ebcf9f2650b063082d78d91e5ae7ffe21c96e15d4ab269931ba8767dfd3f0d"
+    }
+  ],
+  "prior_method": "Performance prior stripping; uniform PMF for zero-game FBS teams",
+  "publication_config": "site/publish_config.json",
+  "publication_config_sha256": "9182362d2b76ea648d89fba177df3e0b450181c8058d8001f2283755fb06b7eb",
+  "publication_status": "official",
+  "schema_version": "1.0",
+  "snapshot_type": "weekly",
+  "snapshots": [
+    {
+      "campbell_fixture_absent": true,
+      "campbell_replacement_game_present": true,
+      "context_metadata_sha256": "eaac422c29b0be46d4496b55edbe54cd38dd1055bc674e5d9bf4a045525a57d6",
+      "context_snapshot_id": "2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-issue-238",
+      "context_source": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-issue-238/predictive/context",
+      "display_label": "Week 2",
+      "historical_evidence_correction_issue": "238",
+      "historical_likelihood_sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+      "historical_likelihood_version": "V1",
+      "included_game_count": 171,
+      "included_game_ids_sha256": "a7244ab94d8491df15e8edfd9a38c2fe89fadb819f07229fc832ec932e6507ba",
+      "included_game_rows_sha256": "c59b39478ad7c9cab00a8856bd639272cb00d18a76cab1cc1d10035d8c14d0c5",
+      "posterior_inference_configuration": {
+        "damping": 0.35,
+        "implementation": "deterministic_damped_loopy_sum_product",
+        "max_iterations": 500,
+        "tolerance": 1e-09
+      },
+      "prior_artifact": "data/processed/preseason/context_v1_4/annual/2026/predictions.csv",
+      "prior_artifact_sha256": "70a8e6c49f159eb91d5108acee0829f9194a51865198ee663c6af40037027a9a",
+      "publication_slot": "2026-09-08",
+      "quality_of_play_metadata_sha256": "2bd2b71de749da70ac6fee26e010fab4389261856722f17bec9edfbe39291391",
+      "quality_of_record_metadata_sha256": "3630ef2330cd972a10278c8a055ec2440214d533b899da2f45974cb0eabe4d53"
+    },
+    {
+      "campbell_fixture_absent": true,
+      "campbell_replacement_game_present": true,
+      "context_metadata_sha256": "ff4c6a6bcf128c78b8f651df0d8c761c432d0d0ee2bc3484e56dc6db3fb1665d",
+      "context_snapshot_id": "2026-weekly-2026-09-13T12-02-55.255941Z-context-v1.4-db-repair",
+      "context_source": "data/processed/snapshots/2026/2026-weekly-2026-09-13T12-02-55.255941Z-context-v1.4-db-repair/predictive/context",
+      "display_label": "Week 3",
+      "historical_evidence_correction_issue": null,
+      "historical_likelihood_sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+      "historical_likelihood_version": "V1",
+      "included_game_count": 291,
+      "included_game_ids_sha256": "57b8af5632b540a88742592dffa9b9e08d0f4c2c50367e1b310dee54e16fd0ee",
+      "included_game_rows_sha256": "53224e723aeddef345b2189f302d33ee9859198bc20f9ccf0971d67dd98eedb0",
+      "posterior_inference_configuration": {
+        "damping": 0.35,
+        "implementation": "deterministic_damped_loopy_sum_product",
+        "max_iterations": 500,
+        "tolerance": 1e-09
+      },
+      "prior_artifact": "data/processed/preseason/context_v1_4/annual/2026/predictions.csv",
+      "prior_artifact_sha256": "70a8e6c49f159eb91d5108acee0829f9194a51865198ee663c6af40037027a9a",
+      "publication_slot": "2026-09-13",
+      "quality_of_play_metadata_sha256": "151b5c705688cf6f54575365c98367028959e4ba380c33ddd87638be7fbc8e35",
+      "quality_of_record_metadata_sha256": "2c862fac27f724c11efe65004f38c444aefe611d299ba7af9e0d5c000bd1eb36"
+    },
+    {
+      "campbell_fixture_absent": true,
+      "campbell_replacement_game_present": true,
+      "context_metadata_sha256": "6b7d2ce0e81b6d095e28293f2f2cea5db928ce34e727bee329570d14e80b3e26",
+      "context_snapshot_id": "2026-weekly-2026-09-20T11-00-14.294077Z-context-v1.4-db-repair",
+      "context_source": "data/processed/snapshots/2026/2026-weekly-2026-09-20T11-00-14.294077Z-context-v1.4-db-repair/predictive/context",
+      "display_label": "Week 4",
+      "historical_evidence_correction_issue": null,
+      "historical_likelihood_sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+      "historical_likelihood_version": "V1",
+      "included_game_count": 410,
+      "included_game_ids_sha256": "6633f1f5d6fc4d4a1012d7b6f63dd128c19dcbdc4c792b1151161a000aedebb2",
+      "included_game_rows_sha256": "14c2e5eab7154be99d78af9fd237faff2c4322a53ee90ddb51ebb5e1b5d3d834",
+      "posterior_inference_configuration": {
+        "damping": 0.35,
+        "implementation": "deterministic_damped_loopy_sum_product",
+        "max_iterations": 500,
+        "tolerance": 1e-09
+      },
+      "prior_artifact": "data/processed/preseason/context_v1_4/annual/2026/predictions.csv",
+      "prior_artifact_sha256": "70a8e6c49f159eb91d5108acee0829f9194a51865198ee663c6af40037027a9a",
+      "publication_slot": "2026-09-20",
+      "quality_of_play_metadata_sha256": "6b1de35c889ad6c7f28cb0d548fac4bcf34e0ebfd01e8c932228aa9e51c5dbaf",
+      "quality_of_record_metadata_sha256": "5d140f227ff2572cf2fd8ba46c369694089f4f7db94820804d33f78a438fbebb"
+    },
+    {
+      "campbell_fixture_absent": true,
+      "campbell_replacement_game_present": true,
+      "context_metadata_sha256": "ab846fcb033234c5bbd0c74304ca8a385ce112fa204551a7f292dc18f6530b8c",
+      "context_snapshot_id": "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.4-db-repair",
+      "context_source": "data/processed/snapshots/2026/2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.4-db-repair/predictive/context",
+      "display_label": "Week 5",
+      "historical_evidence_correction_issue": null,
+      "historical_likelihood_sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+      "historical_likelihood_version": "V1",
+      "included_game_count": 530,
+      "included_game_ids_sha256": "c79a9edf637373d9aac9b0f438d3469ebb799678c72bdb3aaf014b368f190aa9",
+      "included_game_rows_sha256": "9281006ca0ba69ddcd71aab6a716adb2fe1584014de043a660ae74fdd3d3a7a3",
+      "posterior_inference_configuration": {
+        "damping": 0.35,
+        "implementation": "deterministic_damped_loopy_sum_product",
+        "max_iterations": 500,
+        "tolerance": 1e-09
+      },
+      "prior_artifact": "data/processed/preseason/context_v1_4/annual/2026/predictions.csv",
+      "prior_artifact_sha256": "70a8e6c49f159eb91d5108acee0829f9194a51865198ee663c6af40037027a9a",
+      "publication_slot": "2026-09-27",
+      "quality_of_play_metadata_sha256": "1695b0bda0cf583ff1e2ba6489b665dd0ae7e1ffcf977bdd34ecfad02220cf8b",
+      "quality_of_record_metadata_sha256": "dee970bb188600b597c2c70e7505fcb30c5164940176a46cb4be39cc02fe353d"
+    },
+    {
+      "campbell_fixture_absent": true,
+      "campbell_replacement_game_present": true,
+      "context_metadata_sha256": "8babf2787654311d029b8091aca82fa80c79d6ecb741fef4c8bc76631ba72050",
+      "context_snapshot_id": "2026-weekly-2026-10-04T14-51-53.251364Z-context-v1.4-db-repair",
+      "context_source": "data/processed/snapshots/2026/2026-weekly-2026-10-04T14-51-53.251364Z-context-v1.4-db-repair/predictive/context",
+      "display_label": "Week 6",
+      "historical_evidence_correction_issue": null,
+      "historical_likelihood_sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+      "historical_likelihood_version": "V1",
+      "included_game_count": 644,
+      "included_game_ids_sha256": "03e722be9346b594851cee27c3a0dbdc82bc389146fd3d58627dcc44b7192409",
+      "included_game_rows_sha256": "5e7402c1c9efad76ead50a592225967f61fc07381b72df1a865a01880de420a8",
+      "posterior_inference_configuration": {
+        "damping": 0.35,
+        "implementation": "deterministic_damped_loopy_sum_product",
+        "max_iterations": 500,
+        "tolerance": 1e-09
+      },
+      "prior_artifact": "data/processed/preseason/context_v1_4/annual/2026/predictions.csv",
+      "prior_artifact_sha256": "70a8e6c49f159eb91d5108acee0829f9194a51865198ee663c6af40037027a9a",
+      "publication_slot": "2026-10-04",
+      "quality_of_play_metadata_sha256": "7a9cae654e0044d88fa9774f892e1850e32ad03fbcf324c31658ecd0e9368079",
+      "quality_of_record_metadata_sha256": "93f1f645af7bb0165686b3397339981ea6ccd05041484031bf3dca954a4d1bd2"
+    },
+    {
+      "campbell_fixture_absent": true,
+      "campbell_replacement_game_present": true,
+      "context_metadata_sha256": "3d90c75d4923435bdd29bad9dd8a1a01c93992507d2072bd691abe18d68cb5f3",
+      "context_snapshot_id": "2026-weekly-2026-10-11T12-47-27.781981Z-context-v1.4",
+      "context_source": "data/processed/snapshots/2026/2026-weekly-2026-10-11T12-47-27.781981Z-context-v1.4/predictive/context",
+      "display_label": "Week 7",
+      "historical_evidence_correction_issue": null,
+      "historical_likelihood_sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+      "historical_likelihood_version": "V1",
+      "included_game_count": 748,
+      "included_game_ids_sha256": "2ee1046e7a35d73c32ab52dd1ad69ef9ccf9686e6404e32ff458636159d893a1",
+      "included_game_rows_sha256": "a77091eacd96697d1cf70a6c58d0cbe815f48a3963ab48c306b23883c7d39132",
+      "posterior_inference_configuration": {
+        "damping": 0.35,
+        "implementation": "deterministic_damped_loopy_sum_product",
+        "max_iterations": 500,
+        "tolerance": 1e-09
+      },
+      "prior_artifact": "data/processed/preseason/context_v1_4/annual/2026/predictions.csv",
+      "prior_artifact_sha256": "70a8e6c49f159eb91d5108acee0829f9194a51865198ee663c6af40037027a9a",
+      "publication_slot": "2026-10-11T12-47-27.781981Z",
+      "quality_of_play_metadata_sha256": "8978973c53a84e6bcab3f740716403b738feb587e4e07903125609d7bd8a9d46",
+      "quality_of_record_metadata_sha256": "95e22e784f01f891cfb5f26f7f77f423b09a220246830c413114b8b06836051a"
+    },
+    {
+      "campbell_fixture_absent": true,
+      "campbell_replacement_game_present": true,
+      "context_metadata_sha256": "cef7e7d6008bcabe37430ca720c2515cc72a925b558a720649ca03d3e0eca024",
+      "context_snapshot_id": "2026-weekly-2026-10-18T13-04-45.309059Z-context-v1.4",
+      "context_source": "data/processed/snapshots/2026/2026-weekly-2026-10-18T13-04-45.309059Z-context-v1.4/predictive/context",
+      "display_label": "Week 8",
+      "historical_evidence_correction_issue": null,
+      "historical_likelihood_sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+      "historical_likelihood_version": "V1",
+      "included_game_count": 864,
+      "included_game_ids_sha256": "e02b7a32dff285b273d8ec7ca6cd5a3c6baf6aae58490661c41962e2b749c10d",
+      "included_game_rows_sha256": "f5d9a5368325f04508bebacbf63f2bb4408ee6a74bfe7c08fcde97864fd1f1f4",
+      "posterior_inference_configuration": {
+        "damping": 0.35,
+        "implementation": "deterministic_damped_loopy_sum_product",
+        "max_iterations": 500,
+        "tolerance": 1e-09
+      },
+      "prior_artifact": "data/processed/preseason/context_v1_4/annual/2026/predictions.csv",
+      "prior_artifact_sha256": "70a8e6c49f159eb91d5108acee0829f9194a51865198ee663c6af40037027a9a",
+      "publication_slot": "2026-10-18T13-04-45.309059Z",
+      "quality_of_play_metadata_sha256": "06cd73eb10f026c51f1f0040cbca94156547c3091e106dc250aac701484c7906",
+      "quality_of_record_metadata_sha256": "94ce8edf446e7865f898fcb5b0289b35452a5b348bbee7ba0c933e489b76615e"
+    },
+    {
+      "campbell_fixture_absent": true,
+      "campbell_replacement_game_present": true,
+      "context_metadata_sha256": "510336356c9121b38f3dc0e93d44099926c688b0842b9acb789c9731fde8a5de",
+      "context_snapshot_id": "2026-weekly-2026-10-25T12-59-22.246522Z-context-v1.4",
+      "context_source": "data/processed/snapshots/2026/2026-weekly-2026-10-25T12-59-22.246522Z-context-v1.4/predictive/context",
+      "display_label": "Week 9",
+      "historical_evidence_correction_issue": null,
+      "historical_likelihood_sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+      "historical_likelihood_version": "V1",
+      "included_game_count": 975,
+      "included_game_ids_sha256": "052c000bd7e59a93ca0428812e73c33d3ccc1b4ccc98623e158354eee2fea2c1",
+      "included_game_rows_sha256": "c8365867a99001313dfa06a8106bcddb86d0ca7b92557120099a1eaa00d5a7f5",
+      "posterior_inference_configuration": {
+        "damping": 0.35,
+        "implementation": "deterministic_damped_loopy_sum_product",
+        "max_iterations": 500,
+        "tolerance": 1e-09
+      },
+      "prior_artifact": "data/processed/preseason/context_v1_4/annual/2026/predictions.csv",
+      "prior_artifact_sha256": "70a8e6c49f159eb91d5108acee0829f9194a51865198ee663c6af40037027a9a",
+      "publication_slot": "2026-10-25T12-59-22.246522Z",
+      "quality_of_play_metadata_sha256": "b640bde7c4940c8ecd2d192c2f77b2f3c99bac5404b51b20c2582c446529767a",
+      "quality_of_record_metadata_sha256": "418c48bf32e24a408e8d49045a91978f80d7af12fd01d2c6c88f89ba398ab33e"
+    }
+  ],
+  "study": "research_only_quality_of_results",
+  "targeted_sensitivity_experiments": {
+    "marshall_fine_weight_sweep": {
+      "margin_weights": [
+        0.0,
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.25
+      ],
+      "performed": true,
+      "publication_slot": "2026-09-27",
+      "step_size": 0.05
+    },
+    "oregon_blowout_counterfactual": {
+      "actual_score": "84-0",
+      "counterfactual_score": "35-7",
+      "margin_weights": [
+        0.0,
+        0.25,
+        0.5,
+        0.75,
+        1.0
+      ],
+      "performed": true,
+      "preserve_win": true,
+      "publication_slot": "2026-10-25T12-59-22.246522Z"
+    }
+  }
+}
