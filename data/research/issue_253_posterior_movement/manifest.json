@@ -1,0 +1,348 @@
+{
+  "checkpoints": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "compatibility": {
+    "existing_policy_family_labels_match": true,
+    "focal_game_count_checks": 7476,
+    "issue192_fbs_rank_populations": {
+      "2022": {
+        "fbs_rank_population": 131,
+        "team_rows_by_checkpoint": {
+          "1": 131,
+          "2": 131,
+          "3": 131,
+          "4": 131,
+          "5": 131,
+          "6": 131,
+          "7": 131
+        }
+      },
+      "2023": {
+        "fbs_rank_population": 133,
+        "team_rows_by_checkpoint": {
+          "1": 133,
+          "2": 133,
+          "3": 133,
+          "4": 133,
+          "5": 133,
+          "6": 133,
+          "7": 133
+        }
+      },
+      "2024": {
+        "fbs_rank_population": 134,
+        "team_rows_by_checkpoint": {
+          "1": 134,
+          "2": 134,
+          "3": 134,
+          "4": 134,
+          "5": 134,
+          "6": 134,
+          "7": 134
+        }
+      },
+      "2025": {
+        "fbs_rank_population": 136,
+        "team_rows_by_checkpoint": {
+          "1": 136,
+          "2": 136,
+          "3": 136,
+          "4": 136,
+          "5": 136,
+          "6": 136,
+          "7": 136
+        }
+      }
+    },
+    "issue192_likelihood_sha256": [
+      "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153"
+    ],
+    "issue192_vs_issue200_existing_preseason_pmf_comparison": {
+      "Context": {
+        "exact_pmf_hash_matches": 0,
+        "max_l1_distance": 0.3252587186721905,
+        "maximum_absolute_expected_rank_difference": 12.025925581558909,
+        "maximum_bin_absolute_difference": 0.01730987592678141,
+        "median_absolute_expected_rank_difference": 0.03382895861704327,
+        "median_l1_distance": 0.002182667305788823,
+        "median_max_bin_absolute_difference": 6.239724963787163e-05,
+        "pmf_hash_mismatches": 534,
+        "team_seasons_compared": 534
+      },
+      "History": {
+        "exact_pmf_hash_matches": 0,
+        "max_l1_distance": 0.0556413025004773,
+        "maximum_absolute_expected_rank_difference": 2.0198631108592906,
+        "maximum_bin_absolute_difference": 0.005908442055751639,
+        "median_absolute_expected_rank_difference": 0.0478733661858044,
+        "median_l1_distance": 0.0024638498134825666,
+        "median_max_bin_absolute_difference": 5.009387828665366e-05,
+        "pmf_hash_mismatches": 534,
+        "team_seasons_compared": 534
+      }
+    },
+    "issue201_existing_likelihood_sha256": [
+      "c56520a9c8fd1c62985941d9de413edecdfa89f1ab7a3baf714e5d111154e8e1"
+    ],
+    "issue201_frozen_192_panel_and_evidence_hashes_match": true,
+    "issue247_existing_arm_row_counts": {
+      "Context_existing": 6481,
+      "History_existing": 6481
+    },
+    "issue247_forecast_population_counts": {
+      "fbs_fbs": 11992,
+      "fbs_fcs": 970
+    },
+    "issue247_game_error_rows": 12962,
+    "issue247_preseason_pmf_hashes_match_issue200": true,
+    "issue247_preseason_pmfs_used_for_posterior_movement": false,
+    "issue247_recorded_issue201_and_issue200_hashes_match": true,
+    "joined_focal_game_count_records": 48740,
+    "joined_games_at_or_after_cutoff": 0,
+    "likelihood_configurations_match": false,
+    "model_configuration_note": "The rank posterior and game-margin surprise forecasts have distinct likelihood configurations. They are not treated as one fitted model: only #192 PMFs define posterior movement, and only #247 game surprises define the joined descriptive predictor.",
+    "posterior_source": "#192 retained History 1.1 and repaired Context 1.4 PMFs",
+    "surprise_source": "#247 game-level standardized errors from #201 existing-policy forecasts"
+  },
+  "config": {
+    "bootstrap_clusters": "team_id x season-checkpoint pigeonhole resampling",
+    "bootstrap_repetitions": 1000,
+    "bootstrap_seed": 253,
+    "central_interval": "discrete equal-tail central 80% interval; width is upper minus lower rank",
+    "history_prior_games": 3,
+    "kl": "KL(posterior || preseason prior), no smoothing",
+    "rank_movement_sign": "positive means expected-rank improvement",
+    "rank_normalization": "divide location and dispersion changes by rank_population - 1",
+    "surprise_group_threshold": 0.5,
+    "total_variation": "0.5 * L1 distance between adjacent posterior PMFs",
+    "trajectory_selection": "min/max family-mean accumulated surprise at checkpoint 7; >=3 prior games"
+  },
+  "counts": {
+    "checkpoints": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "cold_start_team_checkpoints": 84,
+    "cold_start_team_seasons": 6,
+    "fbs_panel_team_checkpoints": 3738,
+    "fbs_team_seasons": 534,
+    "focal_game_count_checks": 7476,
+    "included_game_evidence_records_across_checkpoints": 23180,
+    "joined_focal_game_records_across_families_and_checkpoints": 48740,
+    "joined_games_at_or_after_cutoff": 0,
+    "season_populations": {
+      "2022": {
+        "fbs_rank_population": 131,
+        "team_rows_by_checkpoint": {
+          "1": 131,
+          "2": 131,
+          "3": 131,
+          "4": 131,
+          "5": 131,
+          "6": 131,
+          "7": 131
+        }
+      },
+      "2023": {
+        "fbs_rank_population": 133,
+        "team_rows_by_checkpoint": {
+          "1": 133,
+          "2": 133,
+          "3": 133,
+          "4": 133,
+          "5": 133,
+          "6": 133,
+          "7": 133
+        }
+      },
+      "2024": {
+        "fbs_rank_population": 134,
+        "team_rows_by_checkpoint": {
+          "1": 134,
+          "2": 134,
+          "3": 134,
+          "4": 134,
+          "5": 134,
+          "6": 134,
+          "7": 134
+        }
+      },
+      "2025": {
+        "fbs_rank_population": 136,
+        "team_rows_by_checkpoint": {
+          "1": 136,
+          "2": 136,
+          "3": 136,
+          "4": 136,
+          "5": 136,
+          "6": 136,
+          "7": 136
+        }
+      }
+    },
+    "seasons": [
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "surprise_eligible_team_checkpoints": 6088,
+    "team_checkpoint_rows": 7476
+  },
+  "experiment": "issue-253-posterior-movement-and-uncertainty",
+  "input_sha256": {
+    "issue192/evidence.json": {
+      "bytes": 591591,
+      "sha256": "e58faa21c41042a70c740489ccaa0e9c4a1240fe0bd7fe7f2f9f59df693317e5"
+    },
+    "issue192/inference_panel.jsonl.gz": {
+      "bytes": 41053804,
+      "sha256": "e33e17f7de4fef7bd2dce5163925cb54f34eb453806bc40973512747c3fa2727"
+    },
+    "issue192/manifest.json": {
+      "bytes": 8484,
+      "sha256": "89feed8c3ea3040648b627085bc568d8d2da70222ae1b81698e9b61584e60165"
+    },
+    "issue200/manifest.json": {
+      "bytes": 49089,
+      "sha256": "12bb43aa49009a849b0ca3ebdf8110f92fa6c3bff6df1bcc32aa1e473c08dbe5"
+    },
+    "issue200/pipeline_bundle.json": {
+      "bytes": 9901447,
+      "sha256": "c5a80a6e5aa1415bacfe3cc373cfbbc6cfe02465f33be202d8ce26962cb8419c"
+    },
+    "issue201/forecast_scores.csv": {
+      "bytes": 21710645,
+      "sha256": "fbc5c51f0747d4d11c3d31d8eb032f32ad65c8abe41f0307b295415a264351bb"
+    },
+    "issue201/forecast_summary.csv": {
+      "bytes": 62725,
+      "sha256": "c288b5ad6f024b3fba221536e2ed311639dd57da08478a4a758670eed1580ffd"
+    },
+    "issue201/manifest.json": {
+      "bytes": 22278,
+      "sha256": "c6103fafc8fdf0e6abc074214013bcc07f3db5afa6cdf22b03de851f2fb5653d"
+    },
+    "issue201/replay_evidence.jsonl.gz": {
+      "bytes": 4981202,
+      "sha256": "2bc922ba47ded55b20672b42e21924cf915c5a7599966b7b923489485171f89d"
+    },
+    "issue247/group_contrasts.csv": {
+      "bytes": 1833,
+      "sha256": "8075d12050bb6b237e546f81f360dda2dc2b0357dceea212b8a84250bcc5afc1"
+    },
+    "issue247/manifest.json": {
+      "bytes": 5039,
+      "sha256": "a477da07b9e731d51eedf6b613b521909ba973de2a223acce56226319551d651"
+    },
+    "issue247/model_estimates.csv": {
+      "bytes": 8503,
+      "sha256": "73ffb93a05967249a2a0d8c0768451bc94ac5649e8c876c6e051175358a1ec7c"
+    },
+    "issue247/report.md": {
+      "bytes": 10396,
+      "sha256": "48f888af13a8798be3074c2b59f76f967837a0494aa4e5fa121eb4966b573823"
+    },
+    "issue247/selected_examples.csv": {
+      "bytes": 1430,
+      "sha256": "105cbf2c2b1ed5fe45ba82ac52aa3f53c164c71c04227bb17c2b18accebc4bec"
+    },
+    "issue247/summary.json": {
+      "bytes": 42944,
+      "sha256": "2869441ef65565395d14332b531226c6d4aefc649171f6bf56e840c8a2959e8e"
+    },
+    "issue247/summary_by_surprise.csv": {
+      "bytes": 1480,
+      "sha256": "09e9345b6beb5df9a26934ff46aaa3c4d6fbbc2c7349830b442cf52f33bdbace"
+    },
+    "issue247/team_game_errors.csv": {
+      "bytes": 5930864,
+      "sha256": "7955e6f47a32639284a973883a566a36f5c521143ed17df0cdde3e459176ba43"
+    },
+    "issue247/team_game_observations.csv": {
+      "bytes": 7411934,
+      "sha256": "11a19f69a062b084fe079b9ab02f1915dda632dfe1153dc350770b12aeede906"
+    }
+  },
+  "manifest_hash_policy": "input, source, and output files are hashed; this manifest does not hash itself",
+  "output_sha256": {
+    "aggregate_by_season_checkpoint.csv": {
+      "bytes": 133046,
+      "sha256": "4c14e732c805261b429f189553a8b57446574aa6c6c1ad6e949c8d156723bace"
+    },
+    "compatibility_audit.json": {
+      "bytes": 3366,
+      "sha256": "b3abdf61412b77cc02065441e90bcd42fec50e4338bc1a71018c9aa0fc816133"
+    },
+    "family_movement_differences.csv": {
+      "bytes": 4047,
+      "sha256": "d1bdd01bb87d5e74109a772dae36c5fd893766783640289d11b60549b077f562"
+    },
+    "family_surprise_slope_differences.csv": {
+      "bytes": 1439,
+      "sha256": "00653d80056dddd8360d0c635316974a8f6044a4ff63dfe4289790c2af8c5bff"
+    },
+    "report.md": {
+      "bytes": 12652,
+      "sha256": "358fd72fcf1922e1c4e6118cf324ed34cb2ba285168276d52891f413c7f5b845"
+    },
+    "selected_trajectories.csv": {
+      "bytes": 522,
+      "sha256": "50fe31c2274978fc30ece187fa156c38e65a091b705907624980b4fbb1c22f2a"
+    },
+    "selected_trajectory_pmfs.jsonl.gz": {
+      "bytes": 73977,
+      "sha256": "4be3286108891991d613e44ee3cbf56075303ab93459579e2935208b4cad48a8"
+    },
+    "surprise_group_contrasts.csv": {
+      "bytes": 7129,
+      "sha256": "ce71d4ce0815fdaa24e3348421d82052dedc80a26c856ba96709d625cc417b26"
+    },
+    "surprise_group_summary.csv": {
+      "bytes": 158463,
+      "sha256": "59c8dacdc644f52e3fb62f42b249694c245e1e95dd7781b6e5121074e25b4dc3"
+    },
+    "surprise_response_models.csv": {
+      "bytes": 25287,
+      "sha256": "e5b2a77616acb19e62c89109ad947adcc77ca631c31b50ee40f8224f34014930"
+    },
+    "team_checkpoint_pmfs.jsonl.gz": {
+      "bytes": 19837217,
+      "sha256": "e4f27d5c9d49c0c33ad01f47035245f171d11735ed10bdc4f0ccdd900384aab6"
+    },
+    "team_checkpoint_summary.csv": {
+      "bytes": 4705747,
+      "sha256": "794de3641ddb7fa93005cf4a495a5bfd557b93dddd3aa377511136a1f27a81d5"
+    }
+  },
+  "runtime": {
+    "numpy": "2.5.2",
+    "platform": "linux",
+    "python": "3.13.15"
+  },
+  "schema_version": 1,
+  "seasons": [
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "source_sha256": {
+    "docs/issue_253_posterior_movement_protocol.md": "d281bfa94c3ca4fa1431e1245a7340b5a818d0a127658c96b17968f3433378db",
+    "scripts/run_issue_253_posterior_movement.py": "affc2a6e44bb6852928328f53167659cf6ae5450a092377ae92100a7590d7c51",
+    "src/gippyrank/research/issue_253_posterior_movement.py": "5e5f1f95638e740845b94b1721bbcfd2d1e9567702c48599b3f16ba1834bcfaa"
+  },
+  "status": "complete"
+}
