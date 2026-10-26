@@ -487,7 +487,6 @@ def build_report(
     group_contrasts: list[dict[str, Any]],
     regressions: list[dict[str, Any]],
     family_differences: list[dict[str, Any]],
-    family_slope_differences: list[dict[str, Any]],
     selected: list[dict[str, Any]],
     bootstrap_repetitions: int,
 ) -> str:
@@ -577,6 +576,8 @@ def build_report(
             "",
             "The #247 groups retain their fixed ±0.5 cutoffs and require at least three games available in the exact #192 evidence set. Pooled group differences and percentile intervals are descriptive. The regressions use continuous surprise, preseason strength and uncertainty, game count, and season/checkpoint fixed effects. The main continuous surprise slopes are evaluated at mean preseason strength. Positive location slopes mean positive prior game surprises are associated with rank improvement in the next checkpoint; negative SD-change slopes mean greater surprises are associated with narrowing rank uncertainty.",
             "",
+            "We use #247 game surprises as external descriptive proxies for surprising evidence to the #192 posterior models; the surprise values themselves come from separate #247 forecast distributions, not from the #192 models. The underlying priors and likelihood configurations differ, so these associations cannot establish causal responsiveness or precisely quantify how either posterior responds to the same evidence.",
+            "",
             "| Family | Outcome | Term | Estimate | 95% interval | Team-checkpoint rows |",
             "| --- | --- | --- | ---: | ---: | ---: |",
         ]
@@ -628,11 +629,11 @@ def build_report(
     lines.extend(
         [
             "",
-            "The continuous directional slopes are positive in both families, and absolute movement also increases with absolute surprise. This matches the expected direction of posterior response in the retained data. The adjusted average surprise slopes for adjacent-checkpoint SD and central-80%-width changes include zero; their surprise-by-preseason-strength terms are negative in both families, so the uncertainty association varies with preseason strength in this descriptive model.",
+            "The continuous directional slopes are positive in both families, and absolute movement also increases with absolute surprise. Thus posterior movement is directionally associated with accumulated unexpected performances in the retained data, while the external-proxy and model-lineage limits above prevent interpreting this as a comparison of response to identical evidence. The adjusted average surprise slopes for adjacent-checkpoint SD and central-80%-width changes include zero; their surprise-by-preseason-strength terms are negative in both families, so the uncertainty association varies with preseason strength in this descriptive model.",
             "",
             "## History and Context differences",
             "",
-            "Paired differences use the same team-season-checkpoint in both families. The table reports checkpoint-7 History-minus-Context movement differences; continuous surprise-slope differences are Context minus History.",
+            "Paired differences use the same team-season-checkpoint in both families. The table reports checkpoint-7 History-minus-Context movement, uncertainty, KL, and total-variation differences. These are descriptive comparisons of retained posterior movement, not comparisons of response to a shared surprise predictor.",
             "",
             "| Movement outcome at checkpoint 7 | History minus Context | 95% interval | Matched team-seasons |",
             "| --- | ---: | ---: | ---: |",
@@ -651,19 +652,6 @@ def build_report(
         )
         lines.append(
             f"| {metric} | {_fmt(row['difference'], 4)} | "
-            f"{_fmt(row['ci95_low'], 4)} to {_fmt(row['ci95_high'], 4)} | "
-            f"{row['team_checkpoints']:,} |"
-        )
-    lines.extend(
-        [
-            "",
-            "| Context minus History slope | Difference | 95% interval | Matched team-checkpoints |",
-            "| --- | ---: | ---: | ---: |",
-        ]
-    )
-    for row in family_slope_differences:
-        lines.append(
-            f"| {row['analysis']} | {_fmt(row['difference'], 4)} | "
             f"{_fmt(row['ci95_low'], 4)} to {_fmt(row['ci95_high'], 4)} | "
             f"{row['team_checkpoints']:,} |"
         )
@@ -818,9 +806,6 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     family_differences = issue253.paired_family_movement_differences(
         observations, repetitions=args.bootstrap_repetitions, seed=args.bootstrap_seed
     )
-    family_slope_differences = issue253.paired_family_surprise_slope_differences(
-        observations, repetitions=args.bootstrap_repetitions, seed=args.bootstrap_seed
-    )
     selected = issue253.select_trajectories(observations)
     selected_pmfs = issue253.build_selected_trajectory_rows(observations, selected)
     pooled_summary = _pooled_checkpoint_summary(observations)
@@ -828,6 +813,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 
     output_root: Path = args.output_root
     output_root.mkdir(parents=True, exist_ok=True)
+    (output_root / "family_surprise_slope_differences.csv").unlink(missing_ok=True)
     output_rows = [
         ("team_checkpoint_summary.csv", [{key: value for key, value in row.items() if key not in {"prior_pmf", "posterior_pmf"}} for row in observations]),
         ("team_checkpoint_pmfs.jsonl.gz", observations),
@@ -836,7 +822,6 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         ("surprise_group_contrasts.csv", group_contrasts),
         ("surprise_response_models.csv", regression_rows),
         ("family_movement_differences.csv", family_differences),
-        ("family_surprise_slope_differences.csv", family_slope_differences),
         ("selected_trajectories.csv", selected),
         ("selected_trajectory_pmfs.jsonl.gz", selected_pmfs),
     ]
@@ -860,7 +845,6 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         group_contrasts=group_contrasts,
         regressions=regression_rows,
         family_differences=family_differences,
-        family_slope_differences=family_slope_differences,
         selected=selected,
         bootstrap_repetitions=args.bootstrap_repetitions,
     )

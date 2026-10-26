@@ -50,6 +50,8 @@ Checkpoint-7 median location movement changed sign across the four years: 2022â€
 
 The #247 groups retain their fixed Â±0.5 cutoffs and require at least three games available in the exact #192 evidence set. Pooled group differences and percentile intervals are descriptive. The regressions use continuous surprise, preseason strength and uncertainty, game count, and season/checkpoint fixed effects. The main continuous surprise slopes are evaluated at mean preseason strength. Positive location slopes mean positive prior game surprises are associated with rank improvement in the next checkpoint; negative SD-change slopes mean greater surprises are associated with narrowing rank uncertainty.
 
+We use #247 game surprises as external descriptive proxies for surprising evidence to the #192 posterior models; the surprise values themselves come from separate #247 forecast distributions, not from the #192 models. The underlying priors and likelihood configurations differ, so these associations cannot establish causal responsiveness or precisely quantify how either posterior responds to the same evidence.
+
 | Family | Outcome | Term | Estimate | 95% interval | Team-checkpoint rows |
 | --- | --- | --- | ---: | ---: | ---: |
 | History | directional_location_movement | accumulated_surprise | 0.1562 | 0.1059 to 0.2033 | 3,044 |
@@ -80,11 +82,11 @@ Group mean contrasts (sustained group minus neutral) use two-way pigeonhole boot
 | Context | rank_sd_change_since_previous_normalized | sustained_negative_minus_approximately_neutral | -0.0273 | -0.0461 to -0.0068 | 98 / 2,817 |
 | Context | rank_sd_change_since_previous_normalized | sustained_positive_minus_approximately_neutral | -0.0232 | -0.0372 to -0.0072 | 129 / 2,817 |
 
-The continuous directional slopes are positive in both families, and absolute movement also increases with absolute surprise. This matches the expected direction of posterior response in the retained data. The adjusted average surprise slopes for adjacent-checkpoint SD and central-80%-width changes include zero; their surprise-by-preseason-strength terms are negative in both families, so the uncertainty association varies with preseason strength in this descriptive model.
+The continuous directional slopes are positive in both families, and absolute movement also increases with absolute surprise. Thus posterior movement is directionally associated with accumulated unexpected performances in the retained data, while the external-proxy and model-lineage limits above prevent interpreting this as a comparison of response to identical evidence. The adjusted average surprise slopes for adjacent-checkpoint SD and central-80%-width changes include zero; their surprise-by-preseason-strength terms are negative in both families, so the uncertainty association varies with preseason strength in this descriptive model.
 
 ## History and Context differences
 
-Paired differences use the same team-season-checkpoint in both families. The table reports checkpoint-7 History-minus-Context movement differences; continuous surprise-slope differences are Context minus History.
+Paired differences use the same team-season-checkpoint in both families. The table reports checkpoint-7 History-minus-Context movement, uncertainty, KL, and total-variation differences. These are descriptive comparisons of retained posterior movement, not comparisons of response to a shared surprise predictor.
 
 | Movement outcome at checkpoint 7 | History minus Context | 95% interval | Matched team-seasons |
 | --- | ---: | ---: | ---: |
@@ -92,13 +94,6 @@ Paired differences use the same team-season-checkpoint in both families. The tab
 | rank_sd_change_from_preseason_normalized | -0.0127 | -0.0155 to -0.0101 | 534 |
 | kl_posterior_from_prior | 0.0510 | 0.0254 to 0.0761 | 534 |
 | total_variation_since_previous | 0.0011 | -0.0001 to 0.0022 | 534 |
-
-| Context minus History slope | Difference | 95% interval | Matched team-checkpoints |
-| --- | ---: | ---: | ---: |
-| directional_location_movement | -0.0100 | -0.0192 to -0.0010 | 3,044 |
-| absolute_location_movement | -0.0045 | -0.0153 to 0.0076 | 3,044 |
-| rank_sd_change | -0.0003 | -0.0023 to 0.0016 | 3,044 |
-| central80_width_change | -0.0007 | -0.0072 to 0.0061 | 3,044 |
 
 All pooled intervals use 1,000 two-way pigeonhole resamples. These are approximate: posterior inference couples teams through shared evidence, only four exploratory seasons are retained, and repeated checkpoints are not independent. A relationship here is observational, not a causal effect of particular games.
 
