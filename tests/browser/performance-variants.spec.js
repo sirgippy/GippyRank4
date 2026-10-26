@@ -1,6 +1,20 @@
 const { test, expect } = require("@playwright/test");
+const fs = require("node:fs");
+const path = require("node:path");
 const { SITE_ORIGIN, installStaticSiteRoute } = require("./static-site");
 const manifest = require("../../site/data/manifest.json");
+const publishConfig = require("../../site/publish_config.json");
+
+function retiredQualityOfRecordSnapshotId(slot) {
+  for (const publication of publishConfig.snapshots.filter((item) => item.publication_slot === slot)) {
+    const metadataPath = path.resolve(__dirname, "../..", publication.source, "metadata.json");
+    const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf8"));
+    if (metadata.ranking_family === "performance" && metadata.performance_variant === "quality_of_record") {
+      return metadata.snapshot_id;
+    }
+  }
+  throw new Error(`No historical Quality of Record metadata found for ${slot}`);
+}
 
 test.beforeEach(async ({ page }) => {
   await installStaticSiteRoute(page);
@@ -67,12 +81,13 @@ for (const slot of ["2026-09-08"]) {
 }
 
 for (const slot of ["2026-09-06", "2026-09-07"]) {
+  const snapshotId = retiredQualityOfRecordSnapshotId(slot);
   test(`retired QoR interim ${slot} is unavailable`, async ({ page }) => {
-    expect(manifest.snapshots.some((item) => item.publication_slot === slot)).toBe(false);
-    await page.goto(`/?family=performance&variant=quality_of_record&snapshot=${encodeURIComponent(slot)}`);
-    await expect(page.locator("#snapshot-status")).toContainText(slot);
-    await expect(page.locator("#snapshot-status")).toContainText("is unavailable");
+    expect(manifest.snapshots.some((item) => item.snapshot_id === snapshotId)).toBe(false);
+    await page.goto(`/?family=performance&variant=quality_of_record&snapshot=${encodeURIComponent(snapshotId)}`);
+    await expect(page.locator("#snapshot-status")).toContainText(snapshotId);
+    await expect(page.locator("#snapshot-status")).toContainText("unavailable");
     await expect(page.locator("#rankings-body tr")).toHaveCount(0);
-    await expect(page).toHaveURL(new RegExp(`snapshot=${slot}`));
+    expect(new URL(page.url()).searchParams.get("snapshot")).toBe(snapshotId);
   });
 }

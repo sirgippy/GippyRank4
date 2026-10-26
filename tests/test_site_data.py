@@ -1936,19 +1936,36 @@ def test_retention_dry_run_reports_cleanup_without_writing(tmp_path: Path) -> No
         {"id": "preseason", "status": "official"},
         {"id": "old-interim", "status": "temporary"},
         {"id": "week-2", "status": "official"},
+        {"id": "current-interim", "status": "temporary"},
     ]
     snapshots = []
     for slot, snapshot_id in (
         ("preseason", "season-preseason"),
         ("old-interim", "season-old-interim"),
         ("week-2", "season-week-2"),
+        ("current-interim", "season-current-interim"),
     ):
         source = root / "data/processed/snapshots" / snapshot_id
         source.mkdir(parents=True)
-        (source / "metadata.json").write_text(
-            json.dumps({"season": 2032, "snapshot_id": snapshot_id}),
-            encoding="utf-8",
-        )
+        metadata = {"season": 2032, "snapshot_id": snapshot_id}
+        if slot in {"preseason", "week-2", "current-interim"}:
+            metadata.update(
+                {
+                    "ranking_family": "predictive",
+                    "prior_family": "context",
+                    "prior_model_version": "1.4",
+                    "model_versions": {"context_prior": "1.4"},
+                    "snapshot_type": "preseason" if slot == "preseason" else "weekly",
+                }
+            )
+        if slot == "current-interim":
+            metadata.update(
+                {
+                    "lineage_migration": "context_1_4_production_promotion",
+                    "source_evidence_snapshot_id": "retained-source-context",
+                }
+            )
+        (source / "metadata.json").write_text(json.dumps(metadata), encoding="utf-8")
         snapshots.append(
             {
                 "source": source.relative_to(root).as_posix(),
@@ -1969,34 +1986,62 @@ def test_retention_dry_run_reports_cleanup_without_writing(tmp_path: Path) -> No
     )
     retired_artifact = output / "snapshots/season-old-interim.json"
     retained_artifact = output / "snapshots/season-week-2.json"
+    newly_retained_artifact = output / "snapshots/season-current-interim.json"
     retired_artifact.parent.mkdir(parents=True)
     retired_artifact.write_text("retired", encoding="utf-8")
     retained_artifact.write_text("retained", encoding="utf-8")
+    newly_retained_artifact.write_text("newly retained", encoding="utf-8")
     orphan_artifact = output / "team-seasons/legacy-orphan.json"
     orphan_artifact.parent.mkdir(parents=True)
     orphan_artifact.write_text("orphan", encoding="utf-8")
+    dependency_artifact = output / "team-seasons/retained-source-context.json"
+    dependency_artifact.write_text("dependency", encoding="utf-8")
+    retired_trajectory = output / "team-trajectories/season-old-interim.json"
+    newly_retained_trajectory = output / "team-trajectories/season-current-interim.json"
+    retired_trajectory.parent.mkdir(parents=True)
+    retired_trajectory.write_text("retired trajectory", encoding="utf-8")
+    newly_retained_trajectory.write_text("new trajectory", encoding="utf-8")
     manifest_path = output / "manifest.json"
     previous_manifest = {
         "snapshots": [
-            {"snapshot_id": "season-old-interim"},
+            {
+                "snapshot_id": "season-old-interim",
+                "season_trajectory_path": "data/team-trajectories/season-old-interim.json",
+            },
             {"snapshot_id": "season-week-2"},
         ]
     }
     manifest_path.write_text(json.dumps(previous_manifest), encoding="utf-8")
     manifest_before = manifest_path.read_bytes()
+    config_before = config_path.read_bytes()
+    artifacts_before = {
+        path.relative_to(output).as_posix(): path.read_bytes()
+        for directory in site_data._GENERATED_ARTIFACT_DIRECTORIES
+        for path in (output / directory).glob("*.json")
+    }
 
     preview = site_data.plan_publication_retention(
         root=root, config_path=config_path, output_directory=output
     )
 
-    assert preview["default_publication_slot"] == "week-2"
+    assert preview["default_publication_slot"] == "current-interim"
     assert preview["retired_publication_slots"] == ["old-interim"]
     assert preview["artifacts_to_remove"] == [
         "data/snapshots/season-old-interim.json",
         "data/team-seasons/legacy-orphan.json",
+        "data/team-trajectories/season-old-interim.json",
     ]
     assert retired_artifact.read_text(encoding="utf-8") == "retired"
+    assert newly_retained_artifact.read_text(encoding="utf-8") == "newly retained"
+    assert dependency_artifact.read_text(encoding="utf-8") == "dependency"
+    assert newly_retained_trajectory.read_text(encoding="utf-8") == "new trajectory"
     assert manifest_path.read_bytes() == manifest_before
+    assert config_path.read_bytes() == config_before
+    assert {
+        path.relative_to(output).as_posix(): path.read_bytes()
+        for directory in site_data._GENERATED_ARTIFACT_DIRECTORIES
+        for path in (output / directory).glob("*.json")
+    } == artifacts_before
 
 
 def test_retired_artifact_cleanup_is_scoped_and_idempotent(tmp_path: Path) -> None:

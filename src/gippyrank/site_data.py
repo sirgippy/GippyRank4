@@ -573,26 +573,31 @@ def plan_publication_retention(
     retained, retired = _retained_publications(selected, metadata_by_source)
     dependencies = _retained_build_dependencies(retained, metadata_by_source)
     previous_manifest = _read_previous_manifest(output_directory)
-    retained_ids = {
-        str(metadata_by_source[item.source].get("snapshot_id")) for item in retained
-    }
-    previous_entries = (
-        previous_manifest.get("snapshots", []) if previous_manifest is not None else []
-    )
+    # Trajectory paths use the exporter's metadata-only preseason resolver.
+    # Empty prepared payloads let the preview share those paths without
+    # preparing rankings, distributions, or schedules.
+    projected_snapshots = [
+        PreparedSnapshot(
+            selected=publication,
+            metadata=metadata_by_source[publication.source],
+            snapshot_id=str(metadata_by_source[publication.source]["snapshot_id"]),
+            rankings=[],
+            distribution={},
+            team_seasons={},
+            records={},
+        )
+        for publication in retained
+    ]
     projected_manifest = {
         "snapshots": [
-            entry
-            for entry in previous_entries
-            if isinstance(entry, dict) and entry.get("snapshot_id") in retained_ids
+            {
+                "snapshot_id": snapshot.snapshot_id,
+                **_preseason_reference_fields(snapshot, projected_snapshots),
+            }
+            for snapshot in projected_snapshots
         ],
         "build_dependencies": dependencies,
     }
-    for snapshot_id in retained_ids:
-        if not any(
-            isinstance(entry, dict) and entry.get("snapshot_id") == snapshot_id
-            for entry in projected_manifest["snapshots"]
-        ):
-            projected_manifest["snapshots"].append({"snapshot_id": snapshot_id})
     previous_paths = (
         _manifest_generated_artifacts(previous_manifest)
         if previous_manifest is not None
