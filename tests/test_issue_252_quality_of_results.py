@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import hashlib
+import json
+import shutil
+from pathlib import Path
+
 import numpy as np
 
 from gippyrank.posterior.engine import LikelihoodV1, Team
@@ -9,6 +14,7 @@ from gippyrank.research.issue_252_quality_of_results import (
     _pmf_distances,
     expected_focal_win_probability,
     generate_trial,
+    refresh_report_from_artifacts,
     summarize_pairs,
 )
 
@@ -102,3 +108,42 @@ def test_posterior_distance_metrics_match_discrete_rank_definitions() -> None:
     total_variation, wasserstein = _pmf_distances(left, right)
     assert total_variation == 1.0
     assert wasserstein == 1.0
+
+
+def test_report_only_refresh_preserves_simulation_artifacts(tmp_path: Path) -> None:
+    root = Path(__file__).resolve().parents[1]
+    source_artifacts = root / "data/research/issue_252_quality_of_results"
+    output_dir = tmp_path / "artifacts"
+    shutil.copytree(source_artifacts, output_dir)
+    original_manifest = json.loads((output_dir / "manifest.json").read_text())
+    original_summary_hash = hashlib.sha256(
+        (output_dir / "simulation_summary.csv").read_bytes()
+    ).hexdigest()
+
+    refreshed = refresh_report_from_artifacts(root, output_dir)
+
+    assert refreshed["report_generation"]["simulation_rerun"] is False
+    assert refreshed["simulation_provenance"] == original_manifest.get(
+        "simulation_provenance",
+        {
+            "source_revision": original_manifest["source_revision"],
+            "source_code_sha256": original_manifest["source_code_sha256"],
+        },
+    )
+    assert all(
+        refreshed["artifact_sha256"][name] == expected
+        for name, expected in original_manifest["artifact_sha256"].items()
+        if name != "report.md"
+    )
+    assert (
+        refreshed["artifact_sha256"]["report.md"]
+        == hashlib.sha256((output_dir / "report.md").read_bytes()).hexdigest()
+    )
+    assert (
+        hashlib.sha256((output_dir / "simulation_summary.csv").read_bytes()).hexdigest()
+        == original_summary_hash
+    )
+    report = (output_dir / "report.md").read_text()
+    assert "not evidence of equivalence" in report
+    assert "not selected on their own records" in report
+    assert "cannot be attributed exclusively to the strength" in report

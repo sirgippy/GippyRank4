@@ -5,7 +5,7 @@
     "outcome_sensitivity.csv": "d8a6555c4012b5a374d7a1c16dc3c52477b813ce1ae9023802c3c67e95c57970",
     "pair_trial_summaries.csv": "35b1b35d4d0dc23b6a5485447742dffcfbd0308e1736ec6f3efa9044b3430cf1",
     "prior_profiles.csv.gz": "1e6b8d45e86e7787f5a947886b02db1ed810d4b50b3ebb0c48da6e8e27369109",
-    "report.md": "95b72ca5936e7050adb9a9cacb6f5e5e4ae61fca2c0a9836d8dd5ef323fa3b35",
+    "report.md": "ec0f5d975133e5c5d057c0caeebdfc912e5faf09e56c662d9c8d755574709ee5",
     "representative_comparison.csv": "f864b1e1f754747bde5c8217617c1159996d584ab038fe1bac8d0a299bad21e7",
     "representative_pmfs.csv.gz": "7f0a3e520cb45d72eb7b9f8c1d95342504b1fa52f012ac5a972ec3c3cd8354cd",
     "schedule_definitions.csv": "759e23452533b870e387919c46b48bf6a9bf3161184b5eb027520704985e6f8c",
@@ -47,6 +47,18 @@
   },
   "issue": 252,
   "protocol_sha256": "17fa055af531da4a12970e01f6b78dc11d98d7563c76f25f0fd6523034db18ed",
+  "report_generation": {
+    "input_artifacts": [
+      "schedule_definitions.csv",
+      "simulation_summary.csv",
+      "representative_comparison.csv",
+      "outcome_sensitivity.csv"
+    ],
+    "method": "deterministic_render_from_saved_artifacts",
+    "simulation_rerun": false,
+    "source_code_sha256": "6737a8d7c2841b4ef191c5249958546aadd4bd10979f5cf22ef4d828289d4e38",
+    "source_revision": "302d73242754d6d0ac0dc0a965ce0bdda672e8c1"
+  },
   "schedule_design": {
     "computed_schedule_mean_probabilities": {
       "approximately_even": 0.5014078980784167,
@@ -318,7 +330,11 @@
     "unconditional_draw_count": 500,
     "unconditional_seed_start": 2520000
   },
-  "source_code_sha256": "8b956769e0de7549c91f476faa3faebbb3eaecff60f34739fd1b15574559b490",
-  "source_revision": "a6fca861d1c111dcfa7c627a7adbcf62dd0426a5",
+  "simulation_provenance": {
+    "source_code_sha256": "8b956769e0de7549c91f476faa3faebbb3eaecff60f34739fd1b15574559b490",
+    "source_revision": "a6fca861d1c111dcfa7c627a7adbcf62dd0426a5"
+  },
+  "source_code_sha256": "6737a8d7c2841b4ef191c5249958546aadd4bd10979f5cf22ef4d828289d4e38",
+  "source_revision": "302d73242754d6d0ac0dc0a965ce0bdda672e8c1",
   "study": "research_only_quality_of_results_schedule_equivalence"
 }

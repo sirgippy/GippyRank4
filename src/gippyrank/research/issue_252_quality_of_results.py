@@ -888,7 +888,7 @@ def _markdown_table(rows: list[dict[str, object]], fields: tuple[str, ...]) -> s
 
 def _render_report(
     summaries: list[dict[str, object]],
-    schedules: dict[str, tuple[OpponentSlot, ...]],
+    schedule_probabilities: dict[str, tuple[float, ...]],
     conditioned_accepted: int,
     conditioned_attempts: int,
     representative_rows: list[dict[str, object]],
@@ -903,7 +903,7 @@ def _render_report(
         "",
         "This is research only. It evaluates the issue 242 Quality of Results inference at λ = 0, 0.25, 0.50, 0.75, and 1; it does not change or publish a ranking. Synthetic margins are drawn from the byte-pinned Historical Likelihood V1 Student-t model with site effects. Focal and opponent beliefs are discrete 2026 Context 1.4 rank PMFs, and the issue 242 inference strips each focal Context prior after posterior inference. The shared focal prior is Colorado's preseason PMF (expected rank 63.14) from the complete 138-team FBS support.",
         "",
-        f"The unconditional panel has 500 paired seasons. The record-conditioned panel has {conditioned_accepted} exact 5–5 / 8–2 pairs, found in {conditioned_attempts} independent seed attempts. That panel conditions on the motivating records and must be read separately from the unconditional panel. The same-schedule control compares two teams facing cloned approximately-even prior schedules, with the same latent focal and opponent ranks but independent margin draws.",
+        f"The unconditional panel has 500 paired seasons. The record-conditioned panel has {conditioned_accepted} exact 5–5 / 8–2 pairs, found in {conditioned_attempts} independent seed attempts. Acceptance is based only on the approximately-even team's 5–5 record and the weaker-opponent team's 8–2 record; read this panel separately from the unconditional panel. Same-schedule control realizations saved at these accepted seeds are not selected on their own records.",
         "",
         "The schedule-control conclusion applies to the median-prior focal strength in the 2026 FBS population. Additional focal-strength strata were not run.",
         "",
@@ -916,10 +916,10 @@ def _render_report(
                 {
                     "role": role,
                     "target": f"{np.mean(SCHEDULE_TARGETS[role]):.3f}",
-                    "computed": f"{np.mean([slot.expected_win_probability for slot in slots]):.3f}",
-                    "range": f"{min(slot.expected_win_probability for slot in slots):.3f}–{max(slot.expected_win_probability for slot in slots):.3f}",
+                    "computed": f"{np.mean(probabilities):.3f}",
+                    "range": f"{min(probabilities):.3f}–{max(probabilities):.3f}",
                 }
-                for role, slots in schedules.items()
+                for role, probabilities in schedule_probabilities.items()
             ],
             ("role", "target", "computed", "range"),
         ),
@@ -996,7 +996,9 @@ def _render_report(
             ),
         ),
         "",
-        "A small mean by itself is not evidence of equivalence. The interval and the spread of paired rank differences show how often individual season realizations differ.",
+        "The λ=0.25 mean advantage is about one expected-rank place and its interval spans zero; that is uncertainty about the mean, not evidence that schedules are equivalent. At λ=0.50, 0.75, and 1.0, the mean advantages are smaller than one place, but their intervals exclude zero. These intervals distinguish the estimated mean from zero under this Monte Carlo analysis; they do not measure whether a difference matters for ranking decisions. Practical importance depends on the season-accomplishment tradeoff and cannot be decided from statistical distinguishability alone. No post-hoc equivalence threshold is applied.",
+        "",
+        "The increasing probability that the weaker-schedule team outranks the approximately-even-schedule team (0.508, 0.544, and 0.576 at λ=0.50, 0.75, and 1.0) is not contradictory to its shrinking mean advantage. The mean reflects both how often and by how many places one team outranks the other; the probability records only which team has the better expected rank in each pair. The 5th–95th percentile spread also remains much wider than the mean shifts.",
         "",
         "## Record-conditioned schedule comparison",
         "",
@@ -1021,7 +1023,7 @@ def _render_report(
     lines.extend(
         [
             "",
-            "The same-schedule control estimates outcome-driven variation when opponent priors, venue slots, and latent ranks are shared. Its distribution is the reference for interpreting schedule-pair variation; it is not subtracted from the schedule comparison.",
+            "The same-schedule control estimates outcome-driven variation when opponent priors, venue slots, and latent ranks are shared. Its unconditional distribution is a reference for interpreting schedule-pair variation; it is not subtracted from the schedule comparison. The artifact also retains control rows labeled `record_conditioned`. Their seeds were selected because the primary approximately-even and weaker-opponent schedules produced 5–5 and 8–2 records, respectively; the two control outcomes were not filtered on their own records. Thus those control rows are conditioned on the primary pair's seed selection, not on control records, and their variability should not be directly compared with the record-conditioned primary comparison as if both used the same outcome selection.",
             "",
             "### Same-schedule control",
             "",
@@ -1036,6 +1038,8 @@ def _render_report(
             "## Outcome sensitivity",
             "",
             "The contrast reports rank benefit of outcome B over A as expected rank A minus expected rank B, so positive values mean B receives a better expected rank. Each row reuses the same opponents, venue, and other nine game results. A zero effect at λ=0 for same-winner margin changes is expected from the binary endpoint and serves as a consistency check. All five weights are shown.",
+            "",
+            "Within each schedule, each contrast changes one selected game's margin while holding its other nine games fixed. Comparisons across strong, approximately-even, and weaker-opponent schedules also change the surrounding nine-game context. Differences in sensitivity across those schedules therefore cannot be attributed exclusively to the strength of the selected opponent.",
             "",
             _markdown_table(
                 [
@@ -1073,11 +1077,11 @@ def _render_report(
             "",
             "## Interpretation and next step",
             "",
-            "The unconditional panel estimates a weaker-schedule advantage of −1.03 expected-rank places at λ=0.25 (95% Monte Carlo interval −2.09 to +0.03; weaker team outranks probability 0.500). The interval includes zero, and the representative 5–5 / 8–2 panel slightly favors the approximately-even schedule at this weight (+0.30 places; weaker team outranks in 45% of draws). At λ=0.50 and above, unconditional mean shifts toward the weaker-schedule team are under one place, while the paired difference distribution remains much wider than that mean. The outrank probability rises to 0.544 at λ=0.75 and 0.576 at λ=1. Different posterior uncertainty is present: at λ=0.25 the weaker slate has mean rank SD +1.95, entropy +0.13 bits, and 80% interval width +5.39 places.",
+            "The unconditional λ=0.25 estimate is a 1.03-place mean advantage for the weaker-schedule team (95% Monte Carlo interval −2.09 to +0.03; outrank probability 0.500). The interval includes zero, so the estimated mean is uncertain; that is not evidence of equivalence. At λ=0.50, 0.75, and 1.0, the smaller mean advantages (0.78, 0.61, and 0.54 places) have intervals excluding zero. Those statistically distinguishable mean shifts are small in expected-rank units, but practical importance depends on the ranking's intended season-accomplishment tradeoff. The probability the weaker-schedule team outranks rises from 0.508 at λ=0.50 to 0.544 at λ=0.75 and 0.576 at λ=1.0; this can coexist with smaller mean advantages because the probability ignores the size of each pair's rank difference. In the exact-record-conditioned primary panel, the weaker-minus-even mean difference is +0.30 places (95% interval +0.09 to +0.52; weaker team outranks in 45.0% of pairs), a small mean favoring the approximately-even schedule. The weaker schedule also has greater mean rank SD (+2.07), entropy (+0.13 bits), and 80% interval width (+5.87 places) in this panel. The paired differences remain broad at every weight.",
             "",
             "At λ=0.25, changing a narrow loss to a narrow win improves expected rank by 8.40 places against the approximately-even opponent and 5.44 against the weaker opponent; changing an ordinary +10 win to +35 improves rank by 1.69 and 1.73 places in those same cases. The weak-opponent +14 to +35 comparison improves rank by 1.38. By λ=0.50, decisive-margin changes approach the win/loss change for a weaker opponent. These counterfactuals make λ=0.25 the clearest existing candidate in this experiment for preserving the win/loss distinction while retaining margin evidence.",
             "",
-            "**Recommendation:** carry λ=0.25 into a preregistered follow-up with additional focal-strength strata, then review it against the intended season-accomplishment tradeoff before any separate model or publication proposal. The evidence supports further evaluation, not activation: the unconditional mean interval at λ=0.25 narrowly crosses zero, the conditional comparison favors the stronger schedule slightly, and only one focal-strength stratum was evaluated.",
+            "**Recommendation:** retain λ=0.25 as a promising candidate for a preregistered follow-up with additional focal-strength strata. This recommendation reflects the combined pattern: a small, uncertain unconditional schedule mean shift alongside broad paired variation, a slightly stronger-schedule advantage in the exact-record-conditioned primary comparison, and a clearer winner-versus-margin distinction in the outcome-sensitivity contrasts. It does not follow simply from the λ=0.25 interval spanning zero and is not a claim of schedule equivalence. Review it against the intended season-accomplishment tradeoff before any separate model or publication proposal; this study supports further evaluation, not activation.",
             "",
             "## Reproducibility",
             "",
@@ -1086,6 +1090,106 @@ def _render_report(
         ]
     )
     return "\n".join(lines)
+
+
+def _read_report_csv(path: Path) -> list[dict[str, object]]:
+    """Read a saved report input CSV while restoring its numeric values."""
+    with path.open(newline="", encoding="utf-8") as handle:
+        rows = csv.DictReader(handle)
+        result: list[dict[str, object]] = []
+        for row in rows:
+            converted: dict[str, object] = {}
+            for key, value in row.items():
+                if value is None or value == "":
+                    converted[key] = value
+                    continue
+                try:
+                    if any(marker in value.lower() for marker in (".", "e")):
+                        numeric: float | int = float(value)
+                    else:
+                        numeric = int(value)
+                except ValueError:
+                    converted[key] = value
+                else:
+                    converted[key] = numeric
+            result.append(converted)
+    return result
+
+
+def refresh_report_from_artifacts(
+    root: Path, output_dir: Path | None = None
+) -> dict[str, object]:
+    """Re-render the report from saved summaries without rerunning inference."""
+    root = root.resolve()
+    output_dir = output_dir or root / "data/research/issue_252_quality_of_results"
+    manifest_path = output_dir / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    artifact_hashes = manifest["artifact_sha256"]
+    for name, expected_hash in artifact_hashes.items():
+        artifact_path = output_dir / name
+        if sha256_file(artifact_path) != expected_hash:
+            raise ValueError(f"saved artifact hash does not match manifest: {name}")
+
+    schedule_probabilities: dict[str, list[float]] = {}
+    for row in _read_report_csv(output_dir / "schedule_definitions.csv"):
+        role = str(row["schedule_role"])
+        schedule_probabilities.setdefault(role, []).append(
+            float(row["v1_expected_focal_win_probability"])
+        )
+    summaries = _read_report_csv(output_dir / "simulation_summary.csv")
+    representative_rows = _read_report_csv(output_dir / "representative_comparison.csv")
+    sensitivity = _read_report_csv(output_dir / "outcome_sensitivity.csv")
+    simulation = manifest["simulation"]
+    report = _render_report(
+        summaries,
+        {role: tuple(values) for role, values in schedule_probabilities.items()},
+        int(simulation["conditioned_accepted_draw_count"]),
+        int(simulation["conditioned_attempt_count"]),
+        representative_rows,
+        sensitivity,
+    )
+    report_path = output_dir / "report.md"
+    report_path.write_text(report, encoding="utf-8")
+
+    source_path = root / "src/gippyrank/research/issue_252_quality_of_results.py"
+    source_hash = sha256_file(source_path)
+    simulation_provenance = manifest.get(
+        "simulation_provenance",
+        {
+            "source_revision": manifest["source_revision"],
+            "source_code_sha256": manifest["source_code_sha256"],
+        },
+    )
+    try:
+        source_revision = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        source_revision = "unavailable"
+    manifest["simulation_provenance"] = simulation_provenance
+    manifest["source_revision"] = source_revision
+    manifest["source_code_sha256"] = source_hash
+    manifest["report_generation"] = {
+        "method": "deterministic_render_from_saved_artifacts",
+        "simulation_rerun": False,
+        "source_revision": source_revision,
+        "source_code_sha256": source_hash,
+        "input_artifacts": [
+            "schedule_definitions.csv",
+            "simulation_summary.csv",
+            "representative_comparison.csv",
+            "outcome_sensitivity.csv",
+        ],
+    }
+    artifact_hashes["report.md"] = sha256_file(report_path)
+    manifest_path.write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return manifest
 
 
 def run_experiment(root: Path, output_dir: Path | None = None) -> dict[str, object]:
@@ -1257,7 +1361,10 @@ def run_experiment(root: Path, output_dir: Path | None = None) -> dict[str, obje
     }
     report = _render_report(
         summaries,
-        schedules,
+        {
+            role: tuple(slot.expected_win_probability for slot in slots)
+            for role, slots in schedules.items()
+        },
         len(conditioned_trials),
         conditioned_attempts,
         representative_rows,
@@ -1375,8 +1482,16 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--output", type=Path)
+    parser.add_argument(
+        "--report-only",
+        action="store_true",
+        help="regenerate the report and manifest from saved artifacts without inference",
+    )
     args = parser.parse_args()
-    manifest = run_experiment(args.root, args.output)
+    if args.report_only:
+        manifest = refresh_report_from_artifacts(args.root, args.output)
+    else:
+        manifest = run_experiment(args.root, args.output)
     print(json.dumps(manifest, indent=2, sort_keys=True))
 
 

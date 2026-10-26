@@ -4,7 +4,7 @@
 
 This is research only. It evaluates the issue 242 Quality of Results inference at λ = 0, 0.25, 0.50, 0.75, and 1; it does not change or publish a ranking. Synthetic margins are drawn from the byte-pinned Historical Likelihood V1 Student-t model with site effects. Focal and opponent beliefs are discrete 2026 Context 1.4 rank PMFs, and the issue 242 inference strips each focal Context prior after posterior inference. The shared focal prior is Colorado's preseason PMF (expected rank 63.14) from the complete 138-team FBS support.
 
-The unconditional panel has 500 paired seasons. The record-conditioned panel has 200 exact 5–5 / 8–2 pairs, found in 4351 independent seed attempts. That panel conditions on the motivating records and must be read separately from the unconditional panel. The same-schedule control compares two teams facing cloned approximately-even prior schedules, with the same latent focal and opponent ranks but independent margin draws.
+The unconditional panel has 500 paired seasons. The record-conditioned panel has 200 exact 5–5 / 8–2 pairs, found in 4351 independent seed attempts. Acceptance is based only on the approximately-even team's 5–5 record and the weaker-opponent team's 8–2 record; read this panel separately from the unconditional panel. Same-schedule control realizations saved at these accepted seeds are not selected on their own records.
 
 The schedule-control conclusion applies to the median-prior focal strength in the 2026 FBS population. Additional focal-strength strata were not run.
 
@@ -49,7 +49,9 @@ The rank difference is weaker-schedule expected rank minus approximately-even ex
 | 0.75 | -0.61 [-0.98, -0.25] | -0.37 | -7.4 to 6.1 | 0.544 [0.500, 0.587] | +0.89 | +0.07 | +2.42 | 0.094 | 500 |
 | 1.0 | -0.54 [-0.82, -0.26] | -0.63 | -6.0 to 4.7 | 0.576 [0.532, 0.619] | +0.56 | +0.05 | +1.48 | 0.077 | 500 |
 
-A small mean by itself is not evidence of equivalence. The interval and the spread of paired rank differences show how often individual season realizations differ.
+The λ=0.25 mean advantage is about one expected-rank place and its interval spans zero; that is uncertainty about the mean, not evidence that schedules are equivalent. At λ=0.50, 0.75, and 1.0, the mean advantages are smaller than one place, but their intervals exclude zero. These intervals distinguish the estimated mean from zero under this Monte Carlo analysis; they do not measure whether a difference matters for ranking decisions. Practical importance depends on the season-accomplishment tradeoff and cannot be decided from statistical distinguishability alone. No post-hoc equivalence threshold is applied.
+
+The increasing probability that the weaker-schedule team outranks the approximately-even-schedule team (0.508, 0.544, and 0.576 at λ=0.50, 0.75, and 1.0) is not contradictory to its shrinking mean advantage. The mean reflects both how often and by how many places one team outranks the other; the probability records only which team has the better expected rank in each pair. The 5th–95th percentile spread also remains much wider than the mean shifts.
 
 ## Record-conditioned schedule comparison
 
@@ -61,7 +63,7 @@ A small mean by itself is not evidence of equivalence. The interval and the spre
 | 0.75 | 0.21 [-0.23, 0.65] | 0.02 | -4.1 to 5.9 | 0.495 [0.426, 0.564] | +0.96 | +0.07 | +2.55 |
 | 1 | 0.02 [-0.49, 0.53] | -0.35 | -5.3 to 6.7 | 0.535 [0.466, 0.603] | +0.60 | +0.05 | +1.48 |
 
-The same-schedule control estimates outcome-driven variation when opponent priors, venue slots, and latent ranks are shared. Its distribution is the reference for interpreting schedule-pair variation; it is not subtracted from the schedule comparison.
+The same-schedule control estimates outcome-driven variation when opponent priors, venue slots, and latent ranks are shared. Its unconditional distribution is a reference for interpreting schedule-pair variation; it is not subtracted from the schedule comparison. The artifact also retains control rows labeled `record_conditioned`. Their seeds were selected because the primary approximately-even and weaker-opponent schedules produced 5–5 and 8–2 records, respectively; the two control outcomes were not filtered on their own records. Thus those control rows are conditioned on the primary pair's seed selection, not on control records, and their variability should not be directly compared with the record-conditioned primary comparison as if both used the same outcome selection.
 
 ### Same-schedule control
 
@@ -76,6 +78,8 @@ The same-schedule control estimates outcome-driven variation when opponent prior
 ## Outcome sensitivity
 
 The contrast reports rank benefit of outcome B over A as expected rank A minus expected rank B, so positive values mean B receives a better expected rank. Each row reuses the same opponents, venue, and other nine game results. A zero effect at λ=0 for same-winner margin changes is expected from the binary endpoint and serves as a consistency check. All five weights are shown.
+
+Within each schedule, each contrast changes one selected game's margin while holding its other nine games fixed. Comparisons across strong, approximately-even, and weaker-opponent schedules also change the surrounding nine-game context. Differences in sensitivity across those schedules therefore cannot be attributed exclusively to the strength of the selected opponent.
 
 | schedule | case | λ | focal p(win) | rank benefit | rank SD Δ | entropy Δ | PMF TV |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -134,11 +138,11 @@ These fixed counterfactuals characterize the candidates' relative response to a 
 
 ## Interpretation and next step
 
-The unconditional panel estimates a weaker-schedule advantage of −1.03 expected-rank places at λ=0.25 (95% Monte Carlo interval −2.09 to +0.03; weaker team outranks probability 0.500). The interval includes zero, and the representative 5–5 / 8–2 panel slightly favors the approximately-even schedule at this weight (+0.30 places; weaker team outranks in 45% of draws). At λ=0.50 and above, unconditional mean shifts toward the weaker-schedule team are under one place, while the paired difference distribution remains much wider than that mean. The outrank probability rises to 0.544 at λ=0.75 and 0.576 at λ=1. Different posterior uncertainty is present: at λ=0.25 the weaker slate has mean rank SD +1.95, entropy +0.13 bits, and 80% interval width +5.39 places.
+The unconditional λ=0.25 estimate is a 1.03-place mean advantage for the weaker-schedule team (95% Monte Carlo interval −2.09 to +0.03; outrank probability 0.500). The interval includes zero, so the estimated mean is uncertain; that is not evidence of equivalence. At λ=0.50, 0.75, and 1.0, the smaller mean advantages (0.78, 0.61, and 0.54 places) have intervals excluding zero. Those statistically distinguishable mean shifts are small in expected-rank units, but practical importance depends on the ranking's intended season-accomplishment tradeoff. The probability the weaker-schedule team outranks rises from 0.508 at λ=0.50 to 0.544 at λ=0.75 and 0.576 at λ=1.0; this can coexist with smaller mean advantages because the probability ignores the size of each pair's rank difference. In the exact-record-conditioned primary panel, the weaker-minus-even mean difference is +0.30 places (95% interval +0.09 to +0.52; weaker team outranks in 45.0% of pairs), a small mean favoring the approximately-even schedule. The weaker schedule also has greater mean rank SD (+2.07), entropy (+0.13 bits), and 80% interval width (+5.87 places) in this panel. The paired differences remain broad at every weight.
 
 At λ=0.25, changing a narrow loss to a narrow win improves expected rank by 8.40 places against the approximately-even opponent and 5.44 against the weaker opponent; changing an ordinary +10 win to +35 improves rank by 1.69 and 1.73 places in those same cases. The weak-opponent +14 to +35 comparison improves rank by 1.38. By λ=0.50, decisive-margin changes approach the win/loss change for a weaker opponent. These counterfactuals make λ=0.25 the clearest existing candidate in this experiment for preserving the win/loss distinction while retaining margin evidence.
 
-**Recommendation:** carry λ=0.25 into a preregistered follow-up with additional focal-strength strata, then review it against the intended season-accomplishment tradeoff before any separate model or publication proposal. The evidence supports further evaluation, not activation: the unconditional mean interval at λ=0.25 narrowly crosses zero, the conditional comparison favors the stronger schedule slightly, and only one focal-strength stratum was evaluated.
+**Recommendation:** retain λ=0.25 as a promising candidate for a preregistered follow-up with additional focal-strength strata. This recommendation reflects the combined pattern: a small, uncertain unconditional schedule mean shift alongside broad paired variation, a slightly stronger-schedule advantage in the exact-record-conditioned primary comparison, and a clearer winner-versus-margin distinction in the outcome-sensitivity contrasts. It does not follow simply from the λ=0.25 interval spanning zero and is not a claim of schedule equivalence. Review it against the intended season-accomplishment tradeoff before any separate model or publication proposal; this study supports further evaluation, not activation.
 
 ## Reproducibility
 
