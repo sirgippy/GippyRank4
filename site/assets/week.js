@@ -1,5 +1,6 @@
-import { variantFor, requestedVariant } from "./ranking-variants.js";
+import { variantFor } from "./ranking-variants.js";
 import { percentage } from "./probability.js";
+import { publicationParams, renderPublicationAlternatives, resolvePublication } from "./publication-selection.js";
 
 const $ = (selector) => document.querySelector(selector);
 const params = new URLSearchParams(window.location.search);
@@ -8,10 +9,11 @@ const state = {
   family: params.get("family") === "performance" ? "performance" : "predictive",
   season: Number(params.get("season")) || null,
   slot: params.get("snapshot") || params.get("slot") || null,
-  variant: requestedVariant(params),
+  variant: "quality_of_play",
   prior: params.get("prior") === "history" ? "history" : "context",
   view: params.get("view") === "marquee" ? "marquee" : "all",
   weekKey: params.get("week") || null,
+  resolution: null,
 };
 
 const priorExplanations = {
@@ -95,20 +97,6 @@ function selectedEntry() {
   return choices().find((entry) => matchesContext(entry) && (entry.snapshot_id === state.slot || entry.publication_slot === state.slot));
 }
 
-function chooseDefault() {
-  const available = choices();
-  const preferred = state.manifest.default_publication_slot;
-  const entry = available.find((item) => matchesContext(item) && item.snapshot_id === state.slot)
-    ?? available.find((item) => matchesContext(item) && item.publication_slot === state.slot)
-    ?? available.find((item) => matchesContext(item) && item.publication_slot === preferred)
-    ?? available.find((item) => matchesContext(item))
-    ?? available[0];
-  if (!entry) return null;
-  state.slot = entry.publication_slot;
-  if (state.family !== "performance") state.prior = entry.prior_family;
-  return entry;
-}
-
 function contextParams(entry, week = null) {
   const next = new URLSearchParams();
   next.set("season", String(entry.season));
@@ -123,6 +111,10 @@ function contextParams(entry, week = null) {
 
 function navigateTo(next) {
   window.location.href = `${window.location.pathname}?${next.toString()}`;
+}
+
+function scheduleAlternativeUrl(entry) {
+  return `./schedule.html?${publicationParams(entry, params).toString()}`;
 }
 
 function teamPageUrl(team, entry, week) {
@@ -376,15 +368,22 @@ function populateControls(entry) {
   $("#season-select").replaceChildren(...seasons.map((season) => new Option(season, season, season === state.season, season === state.season)));
   const available = choices();
   const groups = [...new Map(available.map((item) => [item.publication_slot, item])).values()];
-  $("#snapshot-select").replaceChildren(...groups.map((item) => new Option(labelFor(item), item.publication_slot, item.publication_slot === state.slot, item.publication_slot === state.slot)));
-  $("#snapshot-select").value = entry?.publication_slot || "";
+  const options = groups.map((item) => new Option(labelFor(item), item.publication_slot, item.publication_slot === state.slot, item.publication_slot === state.slot));
+  const requestedIsSlot = state.manifest.snapshots.some((item) => item.season === state.season && item.publication_slot === state.slot);
+  const unavailableRequest = !entry && state.resolution?.error && state.slot && !groups.some((item) => item.publication_slot === state.slot);
+  if (unavailableRequest) {
+    options.unshift(new Option(`Unavailable request: ${state.slot}`, state.slot, true, true));
+  }
+  $("#snapshot-select").replaceChildren(...options);
+  $("#snapshot-select").value = entry?.publication_slot || (unavailableRequest || (state.resolution?.error && requestedIsSlot) ? state.slot : "");
   const performance = state.family === "performance";
   $("#prior-select").hidden = performance;
   $("#prior-select").disabled = performance;
   $("#performance-variant-select").hidden = !performance;
   $("#performance-variant-select").disabled = !performance;
   document.querySelectorAll("[data-variant]").forEach((button) => {
-    const available = state.manifest.snapshots.some((item) => item.season === state.season && item.publication_slot === entry?.publication_slot && item.ranking_family === "performance" && variantFor(item) === button.dataset.variant);
+    const requestedSlot = entry?.publication_slot ?? (requestedIsSlot ? state.slot : null);
+    const available = state.manifest.snapshots.some((item) => item.season === state.season && item.publication_slot === requestedSlot && item.ranking_family === "performance" && variantFor(item) === button.dataset.variant);
     button.disabled = !available;
     button.title = available ? "" : "This variant is unavailable for the selected publication.";
     button.classList.toggle("is-active", button.dataset.variant === state.variant);
@@ -456,10 +455,15 @@ async function load() {
   const response = await fetch("./data/manifest.json");
   if (!response.ok) throw new Error("Could not load the published manifest.");
   state.manifest = await response.json();
-  if (!state.season || !state.manifest.seasons.includes(state.season)) state.season = state.manifest.seasons[0];
-  const entry = selectedEntry() || chooseDefault();
+  state.resolution = resolvePublication(state.manifest, params);
+  state.family = state.resolution.family;
+  state.season = state.resolution.season;
+  state.prior = state.resolution.prior;
+  state.variant = state.resolution.variant;
+  state.slot = state.resolution.entry?.publication_slot ?? state.resolution.requested;
+  const entry = state.resolution.entry;
   populateControls(entry);
-  if (!entry) throw new Error("No published snapshot matches this Schedule view.");
+  if (!entry) throw new Error(state.resolution.error?.message ?? "No published snapshot matches this Schedule view.");
   updateBackLink(entry, state.weekKey);
   const artifactResponse = await fetch(`./${entry.week_games_path}`);
   if (!artifactResponse.ok) throw new Error("The selected Schedule artifact is unavailable.");
@@ -477,15 +481,22 @@ async function load() {
   renderSchedule(week, artifact, entry);
 }
 
-$("#family-select").addEventListener("change", (event) => { const next = new URLSearchParams(params); next.set("family", event.target.value); next.delete("snapshot"); navigateTo(next); });
-$("#season-select").addEventListener("change", (event) => { const next = new URLSearchParams(params); next.set("season", event.target.value); next.delete("snapshot"); navigateTo(next); });
-$("#snapshot-select").addEventListener("change", (event) => { const next = new URLSearchParams(params); next.set("snapshot", event.target.value); navigateTo(next); });
-document.querySelectorAll("[data-prior]").forEach((button) => button.addEventListener("click", () => { const next = new URLSearchParams(params); next.set("prior", button.dataset.prior); next.delete("snapshot"); navigateTo(next); }));
+$("#family-select").addEventListener("change", (event) => { const next = new URLSearchParams(params); next.set("family", event.target.value); next.delete("snapshot"); next.delete("slot"); next.delete("prior"); next.delete("variant"); navigateTo(next); });
+$("#season-select").addEventListener("change", (event) => { const next = new URLSearchParams(params); next.set("season", event.target.value); next.delete("snapshot"); next.delete("slot"); navigateTo(next); });
+$("#snapshot-select").addEventListener("change", (event) => { const next = new URLSearchParams(params); next.set("snapshot", event.target.value); next.delete("slot"); navigateTo(next); });
+document.querySelectorAll("[data-prior]").forEach((button) => button.addEventListener("click", () => { const next = new URLSearchParams(params); next.set("prior", button.dataset.prior); next.delete("snapshot"); next.delete("slot"); next.delete("variant"); navigateTo(next); }));
 $("#week-select").addEventListener("change", (event) => { const next = new URLSearchParams(params); next.set("week", event.target.value); navigateTo(next); });
 $("#previous-week").addEventListener("click", () => { const options = [...$("#week-select").options]; const index = options.findIndex((option) => option.selected); if (index > 0) { const next = new URLSearchParams(params); next.set("week", options[index - 1].value); navigateTo(next); } });
 $("#next-week").addEventListener("click", () => { const options = [...$("#week-select").options]; const index = options.findIndex((option) => option.selected); if (index >= 0 && index < options.length - 1) { const next = new URLSearchParams(params); next.set("week", options[index + 1].value); navigateTo(next); } });
 document.querySelectorAll("[data-view]").forEach((button) => button.addEventListener("click", () => { state.view = button.dataset.view; const next = new URLSearchParams(params); if (state.view === "marquee") next.set("view", "marquee"); else next.delete("view"); navigateTo(next); }));
 
-load().catch((error) => { $("#schedule-status").textContent = error.message; $("#schedule-status").className = "team-page-status team-page-error"; });
+load().catch((error) => {
+  const status = $("#schedule-status");
+  status.className = "team-page-status team-page-error";
+  const resolution = state.resolution?.error
+    ? state.resolution
+    : { error: { message: error.message }, alternatives: [] };
+  renderPublicationAlternatives(status, resolution, scheduleAlternativeUrl);
+});
 
-document.querySelectorAll("[data-variant]").forEach((button) => button.addEventListener("click", () => { const next = new URLSearchParams(params); next.set("variant", button.dataset.variant); next.set("snapshot", selectedEntry()?.publication_slot ?? state.slot); navigateTo(next); }));
+document.querySelectorAll("[data-variant]").forEach((button) => button.addEventListener("click", () => { const next = new URLSearchParams(params); next.set("family", "performance"); next.set("variant", button.dataset.variant); next.delete("prior"); next.delete("slot"); next.set("snapshot", selectedEntry()?.publication_slot ?? state.slot); navigateTo(next); }));

@@ -1,10 +1,12 @@
-import { variantFor, requestedVariant, performanceLabel } from "./ranking-variants.js";
+import { variantFor, performanceLabel } from "./ranking-variants.js";
 import { percentage, matchupProbability, matchupProbabilityPair } from "./probability.js";
+import { publicationParams, renderPublicationAlternatives, resolvePublication } from "./publication-selection.js";
 
 const $ = (selector) => document.querySelector(selector);
 const params = new URLSearchParams(window.location.search);
 let logoUrlTemplate = null;
 let logoHandles = {};
+let publicationResolution = null;
 
 function node(name, className, text) {
   const value = document.createElement(name);
@@ -1199,22 +1201,6 @@ function priorLabel(prior) {
   return prior === "history" ? "History" : "Context";
 }
 
-function entryFor(manifest) {
-  const family = params.get("family") === "performance" ? "performance" : "predictive";
-  const season = Number(params.get("season")) || manifest.seasons[0];
-  const seasonEntries = manifest.snapshots.filter((item) => item.season === season && item.ranking_family === family && (family !== "performance" || variantFor(item) === requestedVariant(params)));
-  const snapshot = params.get("snapshot");
-  const exact = seasonEntries.find((item) => item.snapshot_id === snapshot);
-  if (exact) return exact;
-  let entries = seasonEntries;
-  const prior = params.get("prior") === "history" ? "history" : "context";
-  if (family === "predictive") entries = entries.filter((item) => item.prior_family === prior);
-  return entries.find((item) => item.snapshot_id === snapshot)
-    ?? entries.find((item) => item.publication_slot === snapshot)
-    ?? entries.find((item) => item.publication_slot === manifest.default_publication_slot)
-    ?? entries[0];
-}
-
 function teamPageUrl(entry, prior) {
   const url = new URL("./team.html", document.baseURI);
   url.searchParams.set("team", params.get("team"));
@@ -1222,6 +1208,12 @@ function teamPageUrl(entry, prior) {
   url.searchParams.set("snapshot", entry.snapshot_id);
   url.searchParams.set("family", "predictive");
   url.searchParams.set("prior", prior);
+  return `${url.pathname}${url.search}`;
+}
+
+function teamAlternativeUrl(entry) {
+  const url = new URL("./team.html", document.baseURI);
+  url.search = publicationParams(entry, params).toString();
   return `${url.pathname}${url.search}`;
 }
 
@@ -1241,6 +1233,7 @@ function updatePriorSwitch(manifest, entry) {
       if (counterpart) {
         const url = new URL(window.location.href);
         url.searchParams.set("snapshot", counterpart.snapshot_id);
+        url.searchParams.delete("slot");
         url.searchParams.set("variant", variant);
         link.href = `${url.pathname}${url.search}`;
       }
@@ -1306,9 +1299,10 @@ async function load() {
   const manifest = await manifestResponse.json();
   logoUrlTemplate = manifest.team_logos?.url_template || null;
   logoHandles = manifest.team_logos?.handles || {};
-  const entry = entryFor(manifest);
+  publicationResolution = resolvePublication(manifest, params);
+  const entry = publicationResolution.entry;
   updateBackLink(entry);
-  if (!entry) throw new Error("No published snapshot matches this team page.");
+  if (!entry) throw new Error(publicationResolution.error?.message ?? "No published snapshot matches this team page.");
   const teamId = params.get("team");
   if (!teamId) throw new Error("A stable team ID is required.");
   const predictive = entry.ranking_family === "predictive";
@@ -1338,6 +1332,10 @@ async function load() {
 load().catch((error) => {
   updateBackLink(null);
   $("#team-page-status").hidden = false;
-  $("#team-page-status").textContent = error.message;
-  $("#team-page-status").className = "team-page-status team-page-error";
+  const status = $("#team-page-status");
+  status.className = "team-page-status team-page-error";
+  const resolution = publicationResolution?.error
+    ? publicationResolution
+    : { error: { message: error.message }, alternatives: [] };
+  renderPublicationAlternatives(status, resolution, teamAlternativeUrl);
 });
