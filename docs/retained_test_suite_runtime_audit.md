@@ -166,3 +166,6 @@ JavaScript tests, production static API validation for 41 publications, and
 113 browser tests with 9 existing skips also passed. `git diff --check` and
 both validation jobs' tracked-file side-effect checks passed. The final
 required-gate run is linked from the PR.
+
+The follow-up investigation and current CI measurements for issue 220 are in
+[the CI validation runtime audit](ci_validation_runtime_audit_220.md).
