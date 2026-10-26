@@ -1,0 +1,140 @@
+{
+  "config": {
+    "accumulated_surprise": "unweighted arithmetic mean of every earlier same-season team-game surprise in the exact future forecast evidence set",
+    "bootstrap_repetitions": 1000,
+    "bootstrap_seed": 247,
+    "cluster_bootstrap": "pigeonhole resampling focal team IDs and target game IDs",
+    "example_minimum_prior_games": 5,
+    "example_selection": "minimum and maximum accumulated surprise per model family among observations with at least five eligible prior games; target errors are not used for selection",
+    "issue200_root_label": "data/research/matched_history_context_issue_200",
+    "issue201_root_label": "data/research/issue_201_prebowl_forecast",
+    "model_arms": [
+      "History_existing",
+      "Context_existing"
+    ],
+    "ols_adjustments": [
+      "continuous preseason strength",
+      "continuous preseason uncertainty",
+      "accumulated surprise by preseason strength interaction",
+      "eligible previous-game count",
+      "target team-game number",
+      "season fixed effects for pooled models"
+    ],
+    "preseason_strength": "1 - (expected rank - 1) / (FBS population - 1)",
+    "preseason_uncertainty": "rank PMF standard deviation / (FBS population - 1)",
+    "primary_minimum_prior_games": 3,
+    "primary_outcome": "future signed margin error in points",
+    "secondary_outcome": "future signed margin error / future forecast 80% interval half-width",
+    "standardized_surprise": "oriented signed margin error divided by the forecast's 80% interval half-width",
+    "surprise_group_threshold": 0.5,
+    "uncertainty_scale": "half-width of each retained central 80% predictive margin interval"
+  },
+  "counts": {
+    "eligible_observations_by_arm_and_season": {
+      "Context_existing": {
+        "2022": 1183,
+        "2023": 1211,
+        "2024": 1216,
+        "2025": 1231
+      },
+      "History_existing": {
+        "2022": 1183,
+        "2023": 1211,
+        "2024": 1216,
+        "2025": 1231
+      }
+    },
+    "excluded_below_minimum_history": 3280,
+    "issue201_parity_rows": 16,
+    "issue201_score_rows_read": 27864,
+    "oriented_fbs_team_games_existing_arms": 12962,
+    "primary_eligible_observations": 9682,
+    "rolling_forecast_rows_used": 13932,
+    "selected_examples": 4,
+    "surprise_groups_by_arm": {
+      "Context_existing": {
+        "approximately_neutral": 4446,
+        "sustained_negative": 167,
+        "sustained_positive": 228
+      },
+      "History_existing": {
+        "approximately_neutral": 4400,
+        "sustained_negative": 193,
+        "sustained_positive": 248
+      }
+    },
+    "target_team_game_observations": 12962,
+    "unique_arm_team_seasons": 1068,
+    "unique_schedule_matchups": 3483
+  },
+  "experiment": "issue-247-accumulated-contradictory-evidence",
+  "input_hashes": {
+    "issue200/manifest.json": {
+      "bytes": 49089,
+      "sha256": "12bb43aa49009a849b0ca3ebdf8110f92fa6c3bff6df1bcc32aa1e473c08dbe5"
+    },
+    "issue200/pipeline_bundle.json": {
+      "bytes": 9901447,
+      "sha256": "c5a80a6e5aa1415bacfe3cc373cfbbc6cfe02465f33be202d8ce26962cb8419c"
+    },
+    "issue201/forecast_scores.csv": {
+      "bytes": 21710645,
+      "sha256": "fbc5c51f0747d4d11c3d31d8eb032f32ad65c8abe41f0307b295415a264351bb"
+    },
+    "issue201/forecast_summary.csv": {
+      "bytes": 62725,
+      "sha256": "c288b5ad6f024b3fba221536e2ed311639dd57da08478a4a758670eed1580ffd"
+    },
+    "issue201/manifest.json": {
+      "bytes": 22278,
+      "sha256": "c6103fafc8fdf0e6abc074214013bcc07f3db5afa6cdf22b03de851f2fb5653d"
+    },
+    "issue201/replay_evidence.jsonl.gz": {
+      "bytes": 4981202,
+      "sha256": "2bc922ba47ded55b20672b42e21924cf915c5a7599966b7b923489485171f89d"
+    }
+  },
+  "outputs": {
+    "group_contrasts.csv": {
+      "bytes": 1833,
+      "sha256": "8075d12050bb6b237e546f81f360dda2dc2b0357dceea212b8a84250bcc5afc1"
+    },
+    "model_estimates.csv": {
+      "bytes": 8503,
+      "sha256": "73ffb93a05967249a2a0d8c0768451bc94ac5649e8c876c6e051175358a1ec7c"
+    },
+    "report.md": {
+      "bytes": 9858,
+      "sha256": "8bb465d0bf4a25acf403f9949745fe3aacb84c4a859f77a867c3043ce9e20d0d"
+    },
+    "selected_examples.csv": {
+      "bytes": 1430,
+      "sha256": "105cbf2c2b1ed5fe45ba82ac52aa3f53c164c71c04227bb17c2b18accebc4bec"
+    },
+    "summary.json": {
+      "bytes": 42944,
+      "sha256": "2869441ef65565395d14332b531226c6d4aefc649171f6bf56e840c8a2959e8e"
+    },
+    "summary_by_surprise.csv": {
+      "bytes": 1480,
+      "sha256": "09e9345b6beb5df9a26934ff46aaa3c4d6fbbc2c7349830b442cf52f33bdbace"
+    },
+    "team_game_errors.csv": {
+      "bytes": 5930864,
+      "sha256": "7955e6f47a32639284a973883a566a36f5c521143ed17df0cdde3e459176ba43"
+    },
+    "team_game_observations.csv": {
+      "bytes": 7411934,
+      "sha256": "11a19f69a062b084fe079b9ab02f1915dda632dfe1153dc350770b12aeede906"
+    }
+  },
+  "protocol_sha256": "569d696d791ca9240b5481e4bda68031f5f247f0c8b87991eb6a128c2a3330b5",
+  "schema_version": 1,
+  "seasons": [
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "status": "complete"
+}

@@ -323,6 +323,7 @@ def load_issue200_preseason_rank_priors(
                 f"issue 200 preseason PMF does not sum to one for {season}/{arm}/{prior['team_id']}"
             )
         p_top10 = top10_rank_probability(pmf)
+        rank_summary = rank_pmf_summary(pmf)
         key = (season, arm, str(prior["team_id"]))
         if key in classifications:
             raise ValueError(f"duplicate issue 200 preseason prior: {key}")
@@ -335,6 +336,7 @@ def load_issue200_preseason_rank_priors(
             "team": str(prior["team_name"]),
             "preseason_rank_top10_probability": p_top10,
             "preseason_rank_prior_group": preseason_rank_prior_group(p_top10),
+            **rank_summary,
             "preseason_rank_pmf_sha256": str(prior["pmf_sha256"]),
         }
 
@@ -426,6 +428,32 @@ def top10_rank_probability(pmf: list[float]) -> float:
     if len(pmf) < 10:
         raise ValueError("preseason rank PMF must include at least ten ranks")
     return math.fsum(float(value) for value in pmf[:10])
+
+
+def rank_pmf_summary(pmf: list[float]) -> dict[str, float | int]:
+    """Summarize rank location and uncertainty on a normalized rank scale."""
+    if len(pmf) < 2:
+        raise ValueError("preseason rank PMF must include at least two ranks")
+    probabilities = np.asarray(pmf, dtype=float)
+    if np.any(~np.isfinite(probabilities)) or np.any(probabilities < 0.0):
+        raise ValueError("preseason rank PMF must contain finite nonnegative values")
+    if not math.isclose(
+        math.fsum(float(value) for value in pmf), 1.0, rel_tol=0.0, abs_tol=1e-9
+    ):
+        raise ValueError("preseason rank PMF must sum to one")
+    population = len(pmf)
+    ranks = np.arange(1, population + 1, dtype=float)
+    expected_rank = float(np.dot(ranks, probabilities))
+    variance = float(np.dot((ranks - expected_rank) ** 2, probabilities))
+    rank_sd = math.sqrt(max(variance, 0.0))
+    return {
+        "preseason_expected_rank": expected_rank,
+        "preseason_rank_sd": rank_sd,
+        "preseason_rank_strength_percentile": 1.0
+        - (expected_rank - 1.0) / (population - 1.0),
+        "preseason_rank_uncertainty_fraction": rank_sd / (population - 1.0),
+        "preseason_rank_population": population,
+    }
 
 
 def _team_game_row(
