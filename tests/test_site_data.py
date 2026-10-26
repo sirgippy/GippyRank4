@@ -51,6 +51,26 @@ def production_site_data(
     return output, manifest
 
 
+@pytest.fixture(scope="session")
+def pinned_interim_site_data(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> tuple[Path, dict[str, object]]:
+    output = tmp_path_factory.mktemp("pinned-interim-site-data")
+    config = json.loads(CONFIG.read_text(encoding="utf-8"))
+    pinned_slots = {"2026-sep-05", "2026-09-26"}
+    for slot in config["publication_slots"]:
+        if slot["id"] in pinned_slots:
+            slot["pinned"] = True
+    config_path = output / "publish-config.json"
+    config_path.write_text(json.dumps(config), encoding="utf-8")
+    manifest = build_site_data(
+        root=ROOT,
+        config_path=config_path,
+        output_directory=output / "site-data",
+    )
+    return output / "site-data", manifest
+
+
 def _hash_tree(directory: Path) -> str:
     digest = hashlib.sha256()
     for path in sorted(directory.rglob("*")):
@@ -372,7 +392,11 @@ def synthetic_context_site_data(tmp_path: Path) -> tuple[Path, dict[str, object]
         "publication_slots": [
             {"id": SYNTHETIC_PRESEASON_SNAPSHOT_ID, "status": "official"},
             {"id": SYNTHETIC_WEEK_1_SNAPSHOT_ID, "status": "official"},
-            {"id": SYNTHETIC_INTERIM_SNAPSHOT_ID, "status": "temporary"},
+            {
+                "id": SYNTHETIC_INTERIM_SNAPSHOT_ID,
+                "status": "temporary",
+                "pinned": True,
+            },
             {"id": SYNTHETIC_WEEK_2_SNAPSHOT_ID, "status": "official"},
         ],
         "snapshots": snapshots,
@@ -401,6 +425,24 @@ def test_publication_slot_status_is_required_and_closed(tmp_path: Path) -> None:
     payload["publication_slots"] = [{"id": "test", "status": "unknown"}]
     config.write_text(json.dumps(payload), encoding="utf-8")
     with pytest.raises(SiteDataValidationError, match="official or temporary"):
+        build_site_data(
+            root=tmp_path, config_path=config, output_directory=tmp_path / "data"
+        )
+
+    payload["publication_slots"] = [
+        {"id": "test", "status": "temporary", "pinned": "yes"}
+    ]
+    config.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(SiteDataValidationError, match="pinned must be a boolean"):
+        build_site_data(
+            root=tmp_path, config_path=config, output_directory=tmp_path / "data"
+        )
+
+    payload["publication_slots"] = [
+        {"id": "test", "status": "official", "pinned": True}
+    ]
+    config.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(SiteDataValidationError, match="only temporary"):
         build_site_data(
             root=tmp_path, config_path=config, output_directory=tmp_path / "data"
         )
@@ -899,7 +941,7 @@ def test_persisted_week_5_kickoff_provenance_is_bound_to_snapshot() -> None:
         )
 
 
-def _isolated_publication_root(tmp_path: Path) -> Path:
+def _isolated_publication_root(tmp_path: Path, dependency_source: Path) -> Path:
     """Build under a repository-shaped root with replaceable canonical raw paths."""
     root = tmp_path / "repo"
     (root / "data/processed").parent.mkdir(parents=True)
@@ -928,12 +970,10 @@ def _isolated_publication_root(tmp_path: Path) -> Path:
     shutil.copyfile(CONFIG, site / "publish_config.json")
     retained = site / "data/team-seasons"
     retained.mkdir(parents=True)
-    for source_name in (
-        "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.3.json",
-        "2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.4.json",
-    ):
+    for source_name in ("2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.4.json",):
         shutil.copyfile(
-            ROOT / "site/data/team-seasons" / source_name, retained / source_name
+            dependency_source / "team-seasons" / source_name,
+            retained / source_name,
         )
     return root
 
@@ -1053,7 +1093,7 @@ def test_week_5_kickoff_certainty_survives_replacing_mutable_cfbd_cache(
     production_site_data: tuple[Path, dict[str, object]],
 ) -> None:
     baseline_output, baseline_manifest = production_site_data
-    root = _isolated_publication_root(tmp_path)
+    root = _isolated_publication_root(tmp_path, baseline_output)
     source_metadata_path = (
         root
         / "data/processed/snapshots/2026"
@@ -1157,9 +1197,9 @@ def _local_time(value: object) -> tuple[int, int, int, int, int]:
 
 
 def test_retained_pre_certainty_snapshot_keeps_legacy_score_display(
-    production_site_data: tuple[Path, dict[str, object]],
+    pinned_interim_site_data: tuple[Path, dict[str, object]],
 ) -> None:
-    output, manifest = production_site_data
+    output, manifest = pinned_interim_site_data
     entry = next(
         item
         for item in manifest["snapshots"]
@@ -1180,9 +1220,9 @@ def test_retained_pre_certainty_snapshot_keeps_legacy_score_display(
 
 
 def test_weekly_rank_lookup_matches_every_selected_ranking_view(
-    production_site_data: tuple[Path, dict[str, object]],
+    pinned_interim_site_data: tuple[Path, dict[str, object]],
 ) -> None:
-    output, manifest = production_site_data
+    output, manifest = pinned_interim_site_data
     saw_performance_nr = False
     for entry in manifest["snapshots"]:
         snapshot = json.loads(
@@ -1200,7 +1240,9 @@ def test_weekly_rank_lookup_matches_every_selected_ranking_view(
         }
         assert weekly["team_rankings"] == expected
         if entry["ranking_family"] == "performance":
-            saw_performance_nr |= any(not row["rated"] for row in snapshot["rankings"])
+            saw_performance_nr |= any(
+                row["display_rank"] == "NR" for row in snapshot["rankings"]
+            )
     assert saw_performance_nr
 
 
@@ -1691,15 +1733,71 @@ def test_conference_enrichment_preserves_ranking_pmf_and_record_values(
         )
 
 
-def test_site_data_publishes_all_initial_h_c_preseason_and_current_snapshots(
+def test_site_data_publishes_retained_preseason_and_weekly_snapshots(
     production_site_data: tuple[Path, dict[str, object]],
 ) -> None:
-    _, manifest = production_site_data
+    output, manifest = production_site_data
     assert manifest["seasons"] == [2026]
     configured_default_slot = json.loads(CONFIG.read_text(encoding="utf-8"))[
         "default_publication_slot"
     ]
     assert manifest["default_publication_slot"] == configured_default_slot
+    config = json.loads(CONFIG.read_text(encoding="utf-8"))
+    publication_slots = config["publication_slots"]
+    latest_official_order_by_season: dict[int, int] = {}
+    for order, slot in enumerate(publication_slots):
+        for entry in config["snapshots"]:
+            if entry["publication_slot"] != slot["id"]:
+                continue
+            metadata = json.loads(
+                (ROOT / entry["source"] / "metadata.json").read_text(encoding="utf-8")
+            )
+            if slot["status"] == "official":
+                latest_official_order_by_season[metadata["season"]] = max(
+                    latest_official_order_by_season.get(metadata["season"], -1), order
+                )
+    retained_slots = {
+        slot["id"]
+        for order, slot in enumerate(publication_slots)
+        if slot["status"] == "official"
+        or slot.get("pinned", False)
+        or any(
+            order > latest_official_order_by_season[metadata["season"]]
+            for entry in config["snapshots"]
+            if entry["publication_slot"] == slot["id"]
+            for metadata in [
+                json.loads(
+                    (ROOT / entry["source"] / "metadata.json").read_text(
+                        encoding="utf-8"
+                    )
+                )
+            ]
+        )
+    }
+    assert {
+        entry["publication_slot"] for entry in manifest["snapshots"]
+    } == retained_slots
+    expected_build_dependencies = {
+        metadata["source_evidence_snapshot_id"]
+        for entry in config["snapshots"]
+        if entry["publication_slot"] in retained_slots
+        for metadata in [
+            json.loads(
+                (ROOT / entry["source"] / "metadata.json").read_text(encoding="utf-8")
+            )
+        ]
+        if metadata.get("lineage_migration") == "context_1_4_production_promotion"
+    }
+    assert {
+        dependency["snapshot_id"] for dependency in manifest["build_dependencies"]
+    } == expected_build_dependencies
+    for dependency in manifest["build_dependencies"]:
+        assert (
+            output / dependency["team_seasons_path"].removeprefix("data/")
+        ).is_file()
+        assert dependency["snapshot_id"] not in {
+            entry["snapshot_id"] for entry in manifest["snapshots"]
+        }
     predictive = [
         entry
         for entry in manifest["snapshots"]
@@ -1710,8 +1808,6 @@ def test_site_data_publishes_all_initial_h_c_preseason_and_current_snapshots(
     } == {
         ("preseason", "context"),
         ("preseason", "history"),
-        ("live", "context"),
-        ("live", "history"),
         ("weekly", "context"),
         ("weekly", "history"),
     }
@@ -1722,19 +1818,14 @@ def test_site_data_publishes_all_initial_h_c_preseason_and_current_snapshots(
         and entry["publication_slot"] == configured_default_slot
     ]
     assert {entry["performance_variant"] for entry in performance} == {
-        "quality_of_play", "quality_of_record"
+        "quality_of_play",
+        "quality_of_record",
     }
     assert len(performance) == 2
     for entry in performance:
         assert entry["publication_slot"] == configured_default_slot
         assert "prior_family" not in entry
         assert entry["rated_count"] + entry["unrated_count"] == entry["rank_count"]
-    current = [
-        entry for entry in manifest["snapshots"] if entry["snapshot_type"] == "live"
-    ]
-    assert {entry["effective_cutoff"] for entry in current} == {
-        "2026-09-05T20:11:12.864212+00:00"
-    }
     weekly = [
         entry
         for entry in manifest["snapshots"]
@@ -1761,6 +1852,200 @@ def test_site_data_publishes_all_initial_h_c_preseason_and_current_snapshots(
     )
 
 
+def test_interim_retention_is_per_season_and_honors_pins() -> None:
+    publications = [
+        site_data.PublishedSnapshot(
+            Path("preseason"), "Preseason", "preseason", "official", 0
+        ),
+        site_data.PublishedSnapshot(
+            Path("old-interim"), "Old Interim", "old-interim", "temporary", 1
+        ),
+        site_data.PublishedSnapshot(
+            Path("pinned-interim"),
+            "Pinned Interim",
+            "pinned-interim",
+            "temporary",
+            2,
+            True,
+        ),
+        site_data.PublishedSnapshot(Path("week-2"), "Week 2", "week-2", "official", 3),
+        site_data.PublishedSnapshot(
+            Path("current-interim"), "Current", "current-interim", "temporary", 4
+        ),
+        site_data.PublishedSnapshot(
+            Path("other-season-a"), "Other A", "other-season-a", "temporary", 5
+        ),
+        site_data.PublishedSnapshot(
+            Path("other-season-b"), "Other B", "other-season-b", "temporary", 6
+        ),
+    ]
+    metadata = {
+        publication.source: {
+            "season": 2027
+            if publication.source.name.startswith("other-season")
+            else 2026
+        }
+        for publication in publications
+    }
+
+    retained, retired = site_data._retained_publications(publications, metadata)
+
+    assert [publication.publication_slot for publication in retained] == [
+        "preseason",
+        "pinned-interim",
+        "week-2",
+        "current-interim",
+        "other-season-a",
+        "other-season-b",
+    ]
+    assert [publication.publication_slot for publication in retired] == ["old-interim"]
+
+
+def test_retained_inventory_has_no_site_or_api_orphans(
+    production_site_data: tuple[Path, dict[str, object]],
+) -> None:
+    output, manifest = production_site_data
+    expected_artifacts = site_data._manifest_generated_artifacts(manifest)
+    actual_artifacts = {
+        f"data/{directory}/{path.name}"
+        for directory in site_data._GENERATED_ARTIFACT_DIRECTORIES
+        for path in (output / directory).glob("*.json")
+    }
+    assert actual_artifacts == expected_artifacts
+
+    api_inventory = json.loads((ROOT / "site/api/v1/publications.json").read_text())
+    assert {entry["snapshot_id"] for entry in api_inventory["publications"]} == {
+        entry["snapshot_id"] for entry in manifest["snapshots"]
+    }
+
+
+def test_retention_dry_run_reports_cleanup_without_writing(tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    output = root / "site/data"
+    output.mkdir(parents=True)
+    config_path = root / "site/publish_config.json"
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    slots = [
+        {"id": "preseason", "status": "official"},
+        {"id": "old-interim", "status": "temporary"},
+        {"id": "week-2", "status": "official"},
+    ]
+    snapshots = []
+    for slot, snapshot_id in (
+        ("preseason", "season-preseason"),
+        ("old-interim", "season-old-interim"),
+        ("week-2", "season-week-2"),
+    ):
+        source = root / "data/processed/snapshots" / snapshot_id
+        source.mkdir(parents=True)
+        (source / "metadata.json").write_text(
+            json.dumps({"season": 2032, "snapshot_id": snapshot_id}),
+            encoding="utf-8",
+        )
+        snapshots.append(
+            {
+                "source": source.relative_to(root).as_posix(),
+                "display_label": slot,
+                "publication_slot": slot,
+            }
+        )
+    config_path.write_text(
+        json.dumps(
+            {
+                "schema_version": site_data.SITE_SCHEMA_VERSION,
+                "publication_slots": slots,
+                "snapshots": snapshots,
+                "default_publication_slot": "old-interim",
+            }
+        ),
+        encoding="utf-8",
+    )
+    retired_artifact = output / "snapshots/season-old-interim.json"
+    retained_artifact = output / "snapshots/season-week-2.json"
+    retired_artifact.parent.mkdir(parents=True)
+    retired_artifact.write_text("retired", encoding="utf-8")
+    retained_artifact.write_text("retained", encoding="utf-8")
+    orphan_artifact = output / "team-seasons/legacy-orphan.json"
+    orphan_artifact.parent.mkdir(parents=True)
+    orphan_artifact.write_text("orphan", encoding="utf-8")
+    manifest_path = output / "manifest.json"
+    previous_manifest = {
+        "snapshots": [
+            {"snapshot_id": "season-old-interim"},
+            {"snapshot_id": "season-week-2"},
+        ]
+    }
+    manifest_path.write_text(json.dumps(previous_manifest), encoding="utf-8")
+    manifest_before = manifest_path.read_bytes()
+
+    preview = site_data.plan_publication_retention(
+        root=root, config_path=config_path, output_directory=output
+    )
+
+    assert preview["default_publication_slot"] == "week-2"
+    assert preview["retired_publication_slots"] == ["old-interim"]
+    assert preview["artifacts_to_remove"] == [
+        "data/snapshots/season-old-interim.json",
+        "data/team-seasons/legacy-orphan.json",
+    ]
+    assert retired_artifact.read_text(encoding="utf-8") == "retired"
+    assert manifest_path.read_bytes() == manifest_before
+
+
+def test_retired_artifact_cleanup_is_scoped_and_idempotent(tmp_path: Path) -> None:
+    output = tmp_path / "site/data"
+    retired = output / "snapshots/old.json"
+    retained = output / "snapshots/current.json"
+    orphan = output / "unmanaged/keep.json"
+    generated_orphan = output / "snapshots/unlisted.json"
+    trajectory = output / "team-trajectories/old.json"
+    external = tmp_path / "outside.json"
+    external.write_text("outside", encoding="utf-8")
+    for path in (retired, retained, orphan, generated_orphan, trajectory):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("artifact", encoding="utf-8")
+    symlink = output / "snapshots/external.json"
+    symlink.symlink_to(external)
+    previous = {
+        "snapshots": [
+            {
+                "snapshot_id": "old",
+                "season_trajectory_path": "data/team-trajectories/old.json",
+            },
+            {"snapshot_id": "current"},
+            {"snapshot_id": "external"},
+        ]
+    }
+    current = {"snapshots": [{"snapshot_id": "current"}]}
+
+    removed = site_data._remove_retired_artifacts(
+        output_directory=output,
+        previous_manifest=previous,
+        current_manifest=current,
+    )
+
+    assert removed == [
+        "data/snapshots/old.json",
+        "data/snapshots/unlisted.json",
+        "data/team-trajectories/old.json",
+    ]
+    assert not retired.exists()
+    assert not trajectory.exists()
+    assert retained.exists()
+    assert orphan.exists()
+    assert not generated_orphan.exists()
+    assert symlink.is_symlink()
+    assert external.read_text(encoding="utf-8") == "outside"
+    assert (
+        site_data._remove_retired_artifacts(
+            output_directory=output,
+            previous_manifest=previous,
+            current_manifest=current,
+        )
+        == []
+    )
+
+
 def test_publication_status_and_official_comparison_chain(
     production_site_data: tuple[Path, dict[str, object]],
 ) -> None:
@@ -1774,7 +2059,20 @@ def test_publication_status_and_official_comparison_chain(
         if entry["ranking_family"] == "predictive"
         and entry["prior_family"] == "context"
     ]
-    assert len(context_entries) == len(publication_slots)
+    latest_official_order = max(
+        index
+        for index, slot in enumerate(publication_slots)
+        if slot["status"] == "official"
+    )
+    retained_slots = {
+        slot["id"]
+        for index, slot in enumerate(publication_slots)
+        if slot["status"] == "official"
+        or slot.get("pinned", False)
+        or index > latest_official_order
+    }
+    assert len(context_entries) == len(retained_slots)
+    assert {entry["publication_slot"] for entry in context_entries} == retained_slots
     for entry in context_entries:
         assert (
             entry["publication_status"]
@@ -2063,10 +2361,8 @@ def test_rank_change_uses_display_rank_and_handles_nr_transitions() -> None:
     [
         ("2026-preseason", "context", "history"),
         ("2026-preseason", "history", "context"),
-        ("2026-sep-05", "context", "history"),
-        ("2026-sep-05", "history", "context"),
-        ("2026-09-06", "context", "history"),
-        ("2026-09-06", "history", "context"),
+        ("2026-09-08", "context", "history"),
+        ("2026-09-08", "history", "context"),
     ],
 )
 def test_logical_publication_slots_pair_context_and_history(
@@ -2095,14 +2391,14 @@ def test_missing_logical_counterpart_keeps_current_selection(
     current = next(
         entry
         for entry in manifest["snapshots"]
-        if entry["publication_slot"] == "2026-sep-05"
+        if entry["publication_slot"] == "2026-09-08"
         and entry["prior_family"] == "context"
     )
     entries = [
         entry
         for entry in manifest["snapshots"]
         if not (
-            entry["publication_slot"] == "2026-sep-05"
+            entry["publication_slot"] == "2026-09-08"
             and entry.get("prior_family") == "history"
         )
     ]
@@ -2157,13 +2453,15 @@ def test_distribution_artifact_contains_complete_fbs_pmfs_and_summaries(
 
 
 def test_performance_export_keeps_nr_after_rated_teams_and_out_of_top25(
-    production_site_data: tuple[Path, dict[str, object]],
+    pinned_interim_site_data: tuple[Path, dict[str, object]],
 ) -> None:
-    output, manifest = production_site_data
+    output, manifest = pinned_interim_site_data
     entry = next(
         item
         for item in manifest["snapshots"]
         if item["ranking_family"] == "performance"
+        and item["publication_slot"] == "2026-sep-05"
+        and item["performance_variant"] == "quality_of_play"
     )
     snapshot = json.loads(
         (output / entry["data_path"].removeprefix("data/")).read_text()
@@ -2701,7 +2999,7 @@ def _assert_performance_backfill_coverage(
     manifest: dict[str, object], audit: dict[str, object]
 ) -> None:
     snapshots = manifest["snapshots"]
-    eligible_slots = {
+    public_eligible_slots = {
         entry["publication_slot"]
         for entry in snapshots
         if entry.get("prior_family") == "context"
@@ -2723,12 +3021,26 @@ def _assert_performance_backfill_coverage(
 
     plays = set(variant_snapshots["quality_of_play"])
     records = set(variant_snapshots["quality_of_record"])
-    assert plays == eligible_slots, (
-        "Quality of Play coverage must match all eligible production slots"
+    assert plays == public_eligible_slots, (
+        "Quality of Play coverage must match retained public slots"
     )
-    assert records == eligible_slots, (
-        "Quality of Record coverage must match all eligible production slots"
+    assert records == public_eligible_slots, (
+        "Quality of Record coverage must match retained public slots"
     )
+
+    config = json.loads(CONFIG.read_text(encoding="utf-8"))
+    configured_eligible_slots: set[str] = set()
+    source_by_snapshot_id: dict[str, Path] = {}
+    for configured in config["snapshots"]:
+        source = ROOT / configured["source"]
+        metadata = json.loads((source / "metadata.json").read_text(encoding="utf-8"))
+        if (
+            metadata.get("ranking_family") == "predictive"
+            and metadata.get("prior_family") == "context"
+            and metadata.get("snapshot_type") != "preseason"
+        ):
+            configured_eligible_slots.add(configured["publication_slot"])
+        source_by_snapshot_id[metadata["snapshot_id"]] = source
 
     publications = audit["publications"]
     audited_slots = {publication["publication_slot"] for publication in publications}
@@ -2740,14 +3052,14 @@ def _assert_performance_backfill_coverage(
     assert not audited_slots & blocked, (
         "historical publication cannot be both backfilled and blocked"
     )
-    assert historical_slots <= eligible_slots, (
-        "historical backfill audit references an ineligible publication slot"
+    assert historical_slots == configured_eligible_slots, (
+        "historical backfill audit must continue covering every configured source slot"
     )
     assert len(historical_slots) == audit["eligible_publication_count"], (
         "historical eligible publication count does not match audit scope"
     )
-    assert len(audited_slots & records) == audit["publication_count"], (
-        "historical Quality of Record publication count does not match audit"
+    assert len(audited_slots) == audit["publication_count"], (
+        "historical publication count does not match audit"
     )
     assert len(blocked) == audit["blocked_publication_count"], (
         "historical blocked publication count does not match audit"
@@ -2764,13 +3076,33 @@ def _assert_performance_backfill_coverage(
                 f"historical audit is missing {variant} artifact for {slot}"
             )
             audited_artifact = audited_variants[variant]
-            published_artifact = variant_snapshots[variant].get(slot)
-            assert published_artifact is not None, (
+            source = source_by_snapshot_id.get(audited_artifact.get("snapshot_id"))
+            assert source is not None, (
                 f"historical {variant} artifact is missing for {slot}"
             )
-            assert published_artifact["snapshot_id"] == audited_artifact.get(
-                "snapshot_id"
-            ), f"historical {variant} artifact does not match audit for {slot}"
+            assert source.is_dir(), f"historical {variant} bundle is missing for {slot}"
+            for filename, digest_field in (
+                ("posterior_pmfs.csv", "pmf_file_sha256"),
+                ("rankings.csv", "rankings_sha256"),
+            ):
+                assert (
+                    hashlib.sha256((source / filename).read_bytes()).hexdigest()
+                    == (audited_artifact[digest_field])
+                ), f"historical {variant} source hash does not match audit for {slot}"
+            published_artifact = variant_snapshots[variant].get(slot)
+            if slot in public_eligible_slots:
+                assert published_artifact is not None, (
+                    f"historical public {variant} artifact is missing for {slot}"
+                )
+                assert published_artifact["snapshot_id"] == audited_artifact.get(
+                    "snapshot_id"
+                ), (
+                    f"historical public {variant} artifact does not match audit for {slot}"
+                )
+            else:
+                assert published_artifact is None, (
+                    f"retired {variant} artifact remains in the public inventory for {slot}"
+                )
             for digest_field in ("pmf_file_sha256", "rankings_sha256"):
                 digest = audited_artifact.get(digest_field)
                 assert (

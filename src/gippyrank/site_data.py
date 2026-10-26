@@ -11,10 +11,11 @@ import csv
 import hashlib
 import json
 import math
+import shutil
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -90,6 +91,7 @@ class PublishedSnapshot:
     publication_slot: str
     publication_status: str
     publication_order: int
+    pinned: bool = False
 
 
 @dataclass(frozen=True)
@@ -205,14 +207,16 @@ def _read_json(path: Path) -> dict[str, Any]:
     return value
 
 
-def publication_slot_metadata(config: dict[str, Any]) -> dict[str, tuple[str, int]]:
-    """Validate and index the explicitly ordered publication-slot metadata."""
+def publication_slot_metadata(
+    config: dict[str, Any],
+) -> dict[str, tuple[str, int, bool]]:
+    """Validate and index explicitly ordered publication-slot metadata."""
     slot_entries = config.get("publication_slots")
     if not isinstance(slot_entries, list):
         raise SiteDataValidationError(
             "Publish configuration needs a publication_slots list"
         )
-    slots: dict[str, tuple[str, int]] = {}
+    slots: dict[str, tuple[str, int, bool]] = {}
     for order, entry in enumerate(slot_entries):
         if not isinstance(entry, dict):
             raise SiteDataValidationError("Each publication slot must be an object")
@@ -230,7 +234,14 @@ def publication_slot_metadata(config: dict[str, Any]) -> dict[str, tuple[str, in
             raise SiteDataValidationError(
                 f"{slot}: publication status must be official or temporary"
             )
-        slots[slot] = (status, order)
+        pinned = entry.get("pinned", False)
+        if not isinstance(pinned, bool):
+            raise SiteDataValidationError(f"{slot}: pinned must be a boolean")
+        if pinned and status != "temporary":
+            raise SiteDataValidationError(
+                f"{slot}: only temporary publication slots can be pinned"
+            )
+        slots[slot] = (status, order, pinned)
     return slots
 
 
@@ -279,9 +290,11 @@ def load_publish_config(
             raise SiteDataValidationError(
                 f"Selected snapshot directory does not exist: {source}"
             )
-        status, order = slots[slot]
+        status, order, pinned = slots[slot]
         referenced_slots.add(slot)
-        selected.append(PublishedSnapshot(source_path, label, slot, status, order))
+        selected.append(
+            PublishedSnapshot(source_path, label, slot, status, order, pinned)
+        )
     if referenced_slots != set(slots):
         missing = sorted(set(slots) - referenced_slots)
         raise SiteDataValidationError(
@@ -298,6 +311,342 @@ def load_publish_config(
                 "default_publication_slot is not a published slot"
             )
     return selected, default_slot
+
+
+def _retained_publications(
+    selected: list[PublishedSnapshot],
+    metadata_by_source: dict[Path, dict[str, Any]],
+) -> tuple[list[PublishedSnapshot], list[PublishedSnapshot]]:
+    """Keep all Officials and Interims since the latest Official per season."""
+    latest_official_order: dict[int, int] = {}
+    for publication in selected:
+        metadata = metadata_by_source[publication.source]
+        season = metadata.get("season")
+        if not isinstance(season, int) or isinstance(season, bool):
+            raise SiteDataValidationError(
+                f"{publication.source}: season must be an integer"
+            )
+        if publication.publication_status == "official":
+            latest_official_order[season] = max(
+                latest_official_order.get(season, -1), publication.publication_order
+            )
+
+    retained: list[PublishedSnapshot] = []
+    retired: list[PublishedSnapshot] = []
+    for publication in selected:
+        season = metadata_by_source[publication.source]["season"]
+        if (
+            publication.publication_status == "official"
+            or publication.pinned
+            or publication.publication_order > latest_official_order.get(season, -1)
+        ):
+            retained.append(publication)
+        else:
+            retired.append(publication)
+    return retained, retired
+
+
+def _retained_default_slot(
+    default_slot: str | None, retained: list[PublishedSnapshot]
+) -> str | None:
+    """Move an expired default to the newest remaining publication slot."""
+    retained_slots = {item.publication_slot for item in retained}
+    if default_slot is None or default_slot in retained_slots:
+        return default_slot
+    if not retained:
+        raise SiteDataValidationError("No publication snapshots remain after retention")
+    return max(retained, key=lambda item: item.publication_order).publication_slot
+
+
+def _retained_build_dependencies(
+    selected: list[PublishedSnapshot],
+    metadata_by_source: dict[Path, dict[str, Any]],
+) -> list[dict[str, str]]:
+    """Declare generated team-season inputs needed by retained replay bundles."""
+    snapshot_ids: set[str] = set()
+    for publication in selected:
+        metadata = metadata_by_source[publication.source]
+        if metadata.get("lineage_migration") != "context_1_4_production_promotion":
+            continue
+        source_id = metadata.get("source_evidence_snapshot_id")
+        if not isinstance(source_id, str) or not source_id:
+            raise SiteDataValidationError(
+                f"{metadata.get('snapshot_id', publication.source)}: "
+                "Context 1.4 replay lacks its retained source ID"
+            )
+        relative_path = f"data/team-seasons/{source_id}.json"
+        if _safe_generated_artifact_relative_path(relative_path) is None:
+            raise SiteDataValidationError(
+                f"{metadata.get('snapshot_id', publication.source)}: "
+                "retained source ID is not a safe artifact name"
+            )
+        snapshot_ids.add(source_id)
+    return [
+        {
+            "snapshot_id": snapshot_id,
+            "team_seasons_path": f"data/team-seasons/{snapshot_id}.json",
+        }
+        for snapshot_id in sorted(snapshot_ids)
+    ]
+
+
+def _copy_build_dependencies(
+    *, root: Path, output_directory: Path, dependencies: list[dict[str, str]]
+) -> None:
+    """Copy source views explicitly retained for reproducible official replays."""
+    output_root = output_directory.resolve()
+    for dependency in dependencies:
+        relative = _safe_generated_artifact_relative_path(
+            dependency["team_seasons_path"]
+        )
+        if relative is None:
+            raise SiteDataValidationError("Invalid retained build dependency path")
+        source = root / "site" / Path(*relative.parts)
+        if not source.is_file() or source.is_symlink():
+            raise SiteDataValidationError(
+                f"Retained build dependency is unavailable: {source}"
+            )
+        target = output_root.joinpath(*relative.parts[1:])
+        if target.resolve(strict=False) == source.resolve():
+            continue
+        if target.parent.is_symlink():
+            raise SiteDataValidationError(
+                f"Refusing to write through a symlinked build dependency: {target}"
+            )
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if target.is_symlink():
+            raise SiteDataValidationError(
+                f"Refusing to write through a symlinked build dependency: {target}"
+            )
+        try:
+            target.resolve(strict=False).relative_to(output_root)
+        except ValueError as error:
+            raise SiteDataValidationError(
+                f"Build dependency escapes the output directory: {target}"
+            ) from error
+        shutil.copyfile(source, target)
+
+
+_GENERATED_ARTIFACT_DIRECTORIES = frozenset(
+    {"snapshots", "distributions", "team-seasons", "week-games", "team-trajectories"}
+)
+
+
+def _manifest_generated_artifacts(manifest: dict[str, Any]) -> set[str]:
+    """Return only exporter-owned JSON artifact paths referenced by a manifest."""
+    paths: set[str] = set()
+    entries = manifest.get("snapshots", [])
+    if not isinstance(entries, list):
+        return paths
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        snapshot_id = entry.get("snapshot_id")
+        if isinstance(snapshot_id, str) and snapshot_id:
+            for directory in (
+                "snapshots",
+                "distributions",
+                "team-seasons",
+                "week-games",
+            ):
+                paths.add(f"data/{directory}/{snapshot_id}.json")
+        for key, value in entry.items():
+            if key.endswith("_path") and isinstance(value, str):
+                paths.add(value)
+    dependencies = manifest.get("build_dependencies", [])
+    if isinstance(dependencies, list):
+        for dependency in dependencies:
+            if not isinstance(dependency, dict):
+                continue
+            for key, value in dependency.items():
+                if key.endswith("_path") and isinstance(value, str):
+                    paths.add(value)
+    return {
+        path
+        for path in paths
+        if _safe_generated_artifact_relative_path(path) is not None
+    }
+
+
+def _safe_generated_artifact_relative_path(path: str) -> PurePosixPath | None:
+    """Restrict cleanup to exporter-owned JSON files under known data folders."""
+    relative = PurePosixPath(path)
+    if (
+        relative.is_absolute()
+        or ".." in relative.parts
+        or len(relative.parts) != 3
+        or relative.parts[0] != "data"
+        or relative.parts[1] not in _GENERATED_ARTIFACT_DIRECTORIES
+        or relative.suffix != ".json"
+    ):
+        return None
+    return relative
+
+
+def _artifact_file_for_cleanup(
+    output_directory: Path, relative_path: str
+) -> Path | None:
+    """Resolve a cleanup candidate while refusing symlinks and escapes."""
+    relative = _safe_generated_artifact_relative_path(relative_path)
+    if relative is None:
+        return None
+    output_root = output_directory.resolve()
+    target = output_root.joinpath(*relative.parts[1:])
+    current = output_root
+    for part in relative.parts[1:]:
+        current = current / part
+        if current.is_symlink():
+            return None
+    try:
+        target.resolve(strict=False).relative_to(output_root)
+    except ValueError:
+        return None
+    return target if target.is_file() and not target.is_symlink() else None
+
+
+def _existing_generated_artifacts(output_directory: Path) -> set[str]:
+    """Find JSON files directly inside the exporter's dedicated artifact folders."""
+    output_root = output_directory.resolve()
+    artifacts: set[str] = set()
+    for directory in _GENERATED_ARTIFACT_DIRECTORIES:
+        folder = output_root / directory
+        if folder.is_symlink() or not folder.is_dir():
+            continue
+        for path in folder.iterdir():
+            relative_path = f"data/{directory}/{path.name}"
+            if (
+                path.suffix == ".json"
+                and _safe_generated_artifact_relative_path(relative_path) is not None
+            ):
+                artifacts.add(relative_path)
+    return artifacts
+
+
+def _remove_retired_artifacts(
+    *,
+    output_directory: Path,
+    previous_manifest: dict[str, Any] | None,
+    current_manifest: dict[str, Any],
+) -> list[str]:
+    """Remove stale generated JSON files while preserving unlisted site data."""
+    previous = (
+        _manifest_generated_artifacts(previous_manifest)
+        if previous_manifest is not None
+        else set()
+    )
+    current = _manifest_generated_artifacts(current_manifest)
+    removed: list[str] = []
+    candidates = previous | _existing_generated_artifacts(output_directory)
+    for relative_path in sorted(candidates - current):
+        artifact = _artifact_file_for_cleanup(output_directory, relative_path)
+        if artifact is None:
+            continue
+        artifact.unlink()
+        removed.append(relative_path)
+    return removed
+
+
+def _read_previous_manifest(output_directory: Path) -> dict[str, Any] | None:
+    manifest_path = output_directory / "manifest.json"
+    if not manifest_path.exists():
+        return None
+    if manifest_path.is_symlink():
+        raise SiteDataValidationError(
+            f"Refusing to use symlinked publication manifest: {manifest_path}"
+        )
+    return _read_json(manifest_path)
+
+
+def plan_publication_retention(
+    *,
+    root: Path,
+    config_path: Path,
+    output_directory: Path,
+    static_api_directory: Path | None = None,
+) -> dict[str, Any]:
+    """Preview retained publications and safely removable prior artifacts."""
+    selected, default_slot = load_publish_config(config_path, root)
+    metadata_by_source = {
+        publication.source: _read_json(publication.source / "metadata.json")
+        for publication in selected
+    }
+    retained, retired = _retained_publications(selected, metadata_by_source)
+    dependencies = _retained_build_dependencies(retained, metadata_by_source)
+    previous_manifest = _read_previous_manifest(output_directory)
+    retained_ids = {
+        str(metadata_by_source[item.source].get("snapshot_id")) for item in retained
+    }
+    previous_entries = (
+        previous_manifest.get("snapshots", []) if previous_manifest is not None else []
+    )
+    projected_manifest = {
+        "snapshots": [
+            entry
+            for entry in previous_entries
+            if isinstance(entry, dict) and entry.get("snapshot_id") in retained_ids
+        ],
+        "build_dependencies": dependencies,
+    }
+    for snapshot_id in retained_ids:
+        if not any(
+            isinstance(entry, dict) and entry.get("snapshot_id") == snapshot_id
+            for entry in projected_manifest["snapshots"]
+        ):
+            projected_manifest["snapshots"].append({"snapshot_id": snapshot_id})
+    previous_paths = (
+        _manifest_generated_artifacts(previous_manifest)
+        if previous_manifest is not None
+        else set()
+    ) | _existing_generated_artifacts(output_directory)
+    projected_paths = _manifest_generated_artifacts(projected_manifest)
+    removals = [
+        path
+        for path in sorted(previous_paths - projected_paths)
+        if _artifact_file_for_cleanup(output_directory, path) is not None
+    ]
+    plan = {
+        "default_publication_slot": _retained_default_slot(default_slot, retained),
+        "retained_snapshot_count": len(retained),
+        "retained_publication_slots": sorted(
+            {item.publication_slot for item in retained},
+            key=lambda slot: next(
+                item.publication_order
+                for item in retained
+                if item.publication_slot == slot
+            ),
+        ),
+        "retired_publication_slots": sorted(
+            {item.publication_slot for item in retired},
+            key=lambda slot: next(
+                item.publication_order
+                for item in retired
+                if item.publication_slot == slot
+            ),
+        ),
+        "retired_snapshot_ids": sorted(
+            str(metadata_by_source[item.source].get("snapshot_id")) for item in retired
+        ),
+        "artifacts_to_remove": removals,
+    }
+    if static_api_directory is not None:
+        api_root = static_api_directory.resolve()
+        existing_api_files = (
+            sum(
+                path.is_file() and not path.is_symlink() for path in api_root.rglob("*")
+            )
+            if api_root.exists()
+            else 0
+        )
+        try:
+            api_display_path = api_root.relative_to(root.resolve()).as_posix()
+        except ValueError:
+            api_display_path = str(api_root)
+        plan["static_api_rebuild"] = {
+            "directory": api_display_path,
+            "existing_file_count": existing_api_files,
+            "operation": "replace the complete generated API tree from the retained manifest",
+        }
+    return plan
 
 
 def _logo_url_template(path: Path) -> str:
@@ -1474,12 +1823,13 @@ def _validate_performance_source(
             )
         try:
             if any(
-                int(row["homePoints"]) == int(row["awayPoints"])
-                for row in source_rows
+                int(row["homePoints"]) == int(row["awayPoints"]) for row in source_rows
             ):
                 raise ValueError("Quality of Record source contains a winnerless game")
             if "quality_of_record_evidence" in metadata:
-                raise ValueError("Retired Quality of Record evidence exception is present")
+                raise ValueError(
+                    "Retired Quality of Record evidence exception is present"
+                )
             if (performance_source / "inference_games.csv").exists():
                 raise ValueError(
                     "Retired Quality of Record inference game artifact is present"
@@ -4624,7 +4974,14 @@ def build_site_data(
         and output_directory.resolve() == (root / "site/data").resolve()
     ):
         static_api_directory = root / "site/api/v1"
-    selected, default_slot = load_publish_config(config_path, root)
+    selected, configured_default_slot = load_publish_config(config_path, root)
+    previous_manifest = _read_previous_manifest(output_directory)
+    all_metadata_by_source = {
+        selected_snapshot.source: _read_json(selected_snapshot.source / "metadata.json")
+        for selected_snapshot in selected
+    }
+    selected, _ = _retained_publications(selected, all_metadata_by_source)
+    default_slot = _retained_default_slot(configured_default_slot, selected)
     config = _read_json(config_path)
     site_url = _site_url(config)
     team_handle_table, team_handle_source, team_handle_path = _team_handle_mapping(
@@ -4640,9 +4997,10 @@ def build_site_data(
     schedule_path = root / "data/processed/cfbd/games.csv"
     conference_maps: dict[int, dict[tuple[int, str], str]] = {}
     metadata_by_source = {
-        selected_snapshot.source: _read_json(selected_snapshot.source / "metadata.json")
+        selected_snapshot.source: all_metadata_by_source[selected_snapshot.source]
         for selected_snapshot in selected
     }
+    build_dependencies = _retained_build_dependencies(selected, metadata_by_source)
     context_sources: dict[tuple[int, str, str], tuple[Path, dict[str, Any]]] = {}
     context_sources_by_slot: defaultdict[
         tuple[int, str], list[tuple[Path, dict[str, Any]]]
@@ -5202,6 +5560,7 @@ def build_site_data(
     manifest = {
         "schema_version": SITE_SCHEMA_VERSION,
         "site_url": site_url,
+        "build_dependencies": build_dependencies,
         "methodology_path": "data/methodology.json",
         "methodology_schema_version": METHODOLOGY_SCHEMA_VERSION,
         "seasons": sorted(
@@ -5258,6 +5617,11 @@ def build_site_data(
             "initial_rankings_page_bytes": ranking_snapshot_bytes,
         },
     }
+    _copy_build_dependencies(
+        root=root,
+        output_directory=output_directory,
+        dependencies=build_dependencies,
+    )
     _write_json(output_directory / "methodology.json", methodology)
     _write_json(output_directory / "manifest.json", manifest)
     if static_api_directory is not None:
@@ -5271,4 +5635,9 @@ def build_site_data(
             output_directory=static_api_directory,
         )
         _write_json(output_directory / "manifest.json", manifest)
+    _remove_retired_artifacts(
+        output_directory=output_directory,
+        previous_manifest=previous_manifest,
+        current_manifest=manifest,
+    )
     return manifest

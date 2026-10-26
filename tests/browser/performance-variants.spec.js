@@ -50,18 +50,29 @@ test("exact Quality of Record snapshot links work without a variant parameter", 
   await expect(page.locator("#snapshot-select")).toHaveValue(entry.publication_slot);
 });
 
-for (const slot of ["2026-09-06", "2026-09-07", "2026-09-08"]) {
-  test(`previously blocked QoR publication ${slot} is available`, async ({ page }) => {
+for (const slot of ["2026-09-08"]) {
+  test(`Official QoR publication ${slot} remains available`, async ({ page }) => {
     const entry = manifest.snapshots.find((item) => item.publication_slot === slot && item.performance_variant === "quality_of_record");
     expect(entry).toBeTruthy();
     await page.goto(`/?family=performance&variant=quality_of_record&snapshot=${encodeURIComponent(entry.snapshot_id)}`);
     await expect(page.locator("#snapshot-title")).toContainText("Quality of Record");
     await expect(page.locator("#snapshot-select")).toHaveValue(slot);
-    await expect(page.locator("#snapshot-kind")).toHaveText(slot === "2026-09-08" ? "Official publication" : "Interim publication");
+    await expect(page.locator("#snapshot-kind")).toHaveText("Official publication");
     await expect(page.locator('[data-variant="quality_of_record"]')).toBeEnabled();
     await expect(page.locator("#rankings-body tr")).toHaveCount(25);
     await expect(page.locator("#snapshot-evidence")).toContainText(`${entry.included_game_count} eligible games included`);
     await expect(page.locator("#snapshot-evidence")).not.toContainText("malformed Campbell");
     await expect(page).toHaveURL(new RegExp(`snapshot=${entry.snapshot_id.replaceAll(".", "\\.")}`));
+  });
+}
+
+for (const slot of ["2026-09-06", "2026-09-07"]) {
+  test(`retired QoR interim ${slot} is unavailable`, async ({ page }) => {
+    expect(manifest.snapshots.some((item) => item.publication_slot === slot)).toBe(false);
+    await page.goto(`/?family=performance&variant=quality_of_record&snapshot=${encodeURIComponent(slot)}`);
+    await expect(page.locator("#snapshot-status")).toContainText(slot);
+    await expect(page.locator("#snapshot-status")).toContainText("is unavailable");
+    await expect(page.locator("#rankings-body tr")).toHaveCount(0);
+    await expect(page).toHaveURL(new RegExp(`snapshot=${slot}`));
   });
 }

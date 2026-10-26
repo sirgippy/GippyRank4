@@ -1,9 +1,16 @@
 const { test, expect } = require("@playwright/test");
 const { SITE_ORIGIN, installStaticSiteRoute } = require("./static-site");
+const manifest = require("../../site/data/manifest.json");
 
 const contextSnapshot = "2026-weekly-2026-09-20T11-00-14.294077Z-context-v1.4-db-repair";
-const historySnapshot = "2026-weekly-2026-09-11T17-02-26.077461Z-history";
-const performanceSnapshot = "2026-weekly-2026-09-11T17-02-26.077461Z-performance";
+const historySnapshot = manifest.snapshots.find((entry) => entry.season === 2026
+  && entry.ranking_family === "predictive"
+  && entry.prior_family === "history"
+  && entry.publication_slot === manifest.default_publication_slot).snapshot_id;
+const performanceSnapshot = manifest.snapshots.find((entry) => entry.season === 2026
+  && entry.ranking_family === "performance"
+  && entry.performance_variant === "quality_of_play"
+  && entry.publication_slot === manifest.default_publication_slot).snapshot_id;
 const currentContextSnapshot = "2026-weekly-2026-10-04T14-51-53.251364Z-context-v1.4-db-repair";
 
 const logoResponse = `<svg xmlns="http://www.w3.org/2000/svg" width="60" height="40" viewBox="0 0 60 40"><rect width="60" height="40" fill="#d6dfda"/></svg>`;
@@ -84,7 +91,7 @@ test.describe("Preseason starting point browser checks", () => {
     await expect(page.locator("#schedule-list .game-card").first()).toBeVisible();
     await expect(page.locator("#team-page-meta")).toContainText("Predictive History");
     await expect(page.locator("#season-movement-context")).toContainText("History");
-    await expect(page.locator("#season-story-content")).toContainText("Preseason → Sep 11 interim");
+    await expect(page.locator("#season-story-content")).toContainText("Preseason →");
     await expect(page.locator("#team-history-link")).toHaveAttribute("aria-current", "page");
   });
 

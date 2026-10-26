@@ -295,6 +295,8 @@ def _upsert_publication(
     for entry in slot_entries:
         if isinstance(entry, dict) and entry.get("id") == slot:
             entry["status"] = status
+            if status == "official":
+                entry.pop("pinned", None)
             break
     else:
         slot_entries.append({"id": slot, "status": status})
@@ -461,7 +463,7 @@ def _publication_comparisons(
     for entry in config.get("snapshots", []):
         source = root / entry["source"]
         metadata = _load_json(source / "metadata.json")
-        status, order = slots[entry["publication_slot"]]
+        status, order, _ = slots[entry["publication_slot"]]
         snapshot_id = str(metadata["snapshot_id"])
         comparisons.append(
             PublicationComparison(
@@ -526,7 +528,7 @@ def _previous_official_comparison(
     comparisons, _ = _publication_comparisons(root, config)
     slot_metadata = publication_slot_metadata(config)
     if publication_slot in slot_metadata:
-        status, order = slot_metadata[publication_slot]
+        status, order, _ = slot_metadata[publication_slot]
     else:
         status, order = "temporary", len(slot_metadata)
     ranking_family = (

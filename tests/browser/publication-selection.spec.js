@@ -8,7 +8,7 @@ const contextEntry = manifest.snapshots.find((entry) => entry.season === 2026 &&
 const qualityOfPlayEntry = manifest.snapshots.find((entry) => entry.season === 2026 && entry.ranking_family === "performance" && (entry.performance_variant ?? "quality_of_play") === "quality_of_play" && entry.publication_slot === manifest.default_publication_slot);
 const qualityOfRecordEntry = manifest.snapshots.find((entry) => entry.season === 2026 && entry.ranking_family === "performance" && entry.performance_variant === "quality_of_record" && entry.publication_slot === manifest.default_publication_slot);
 const alternateQualityOfRecordEntry = manifest.snapshots.find((entry) => entry.season === 2026 && entry.ranking_family === "performance" && entry.performance_variant === "quality_of_record" && entry.publication_slot !== manifest.default_publication_slot);
-const missingVariantSlot = "2026-09-06";
+const missingVariantSlot = manifest.default_publication_slot;
 
 test.beforeEach(async ({ page }) => {
   await installStaticSiteRoute(page);

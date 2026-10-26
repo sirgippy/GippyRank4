@@ -37,9 +37,7 @@ def _write_pair_artifact(root: Path, *, prior_version: str, game_id: str) -> Non
         "historical_likelihood_sha256": "likelihood-hash",
         "included_game_count": 1,
         "included_game_ids": [game_id],
-        "included_game_ids_sha256": hashlib.sha256(
-            game_id.encode("utf-8")
-        ).hexdigest(),
+        "included_game_ids_sha256": hashlib.sha256(game_id.encode("utf-8")).hexdigest(),
         "game_corpus_sha256": "corpus-hash",
         "fbs_team_count": 1,
         "fbs_team_keys_sha256": hashlib.sha256(b"1").hexdigest(),
@@ -76,7 +74,9 @@ def _write_pair_artifact(root: Path, *, prior_version: str, game_id: str) -> Non
         writer = csv.DictWriter(handle, fieldnames=["team_id", "subdivision"])
         writer.writeheader()
         writer.writerows([{"team_id": "1", "subdivision": "fbs"}])
-    with (root / "included_games.csv").open("w", newline="", encoding="utf-8") as handle:
+    with (root / "included_games.csv").open(
+        "w", newline="", encoding="utf-8"
+    ) as handle:
         writer = csv.DictWriter(handle, fieldnames=["id"])
         writer.writeheader()
         writer.writerow({"id": game_id})
@@ -93,9 +93,7 @@ def test_week4_pair_requires_identical_evidence_boundary(tmp_path: Path) -> None
     assert result["prior_model_versions"] == ["1.2", "1.3"]
     assert result["included_game_ids"] == ["game-1"]
 
-    (context_1_3 / "included_games.csv").write_text(
-        "id\ngame-2\n", encoding="utf-8"
-    )
+    (context_1_3 / "included_games.csv").write_text("id\ngame-2\n", encoding="utf-8")
     with pytest.raises(ContextComparisonError, match="included_game_ids"):
         validate_week4_pair(context_1_2, context_1_3)
 
@@ -142,11 +140,14 @@ def test_week4_pair_rejects_incorrect_declared_row_hash(tmp_path: Path) -> None:
         validate_week4_pair(first, second)
 
 
-@pytest.mark.parametrize("field", [
-    "combined_source_available_at",
-    "source_retrieved_at_contract",
-    "historical_likelihood_sha256",
-])
+@pytest.mark.parametrize(
+    "field",
+    [
+        "combined_source_available_at",
+        "source_retrieved_at_contract",
+        "historical_likelihood_sha256",
+    ],
+)
 def test_week4_pair_rejects_mismatched_source_and_likelihood_provenance(
     tmp_path: Path, field: str
 ) -> None:
@@ -197,9 +198,10 @@ def test_committed_comparison_quartet_is_complete_and_frozen() -> None:
     assert recorded["fbs_team_count"] == 138
     assert recorded["historical_likelihood_version"] == "V1"
     assert recorded["prior_model_versions"] == ["1.2", "1.3"]
-    assert recorded["prior_artifact_sha256"]["1.2"] != recorded[
-        "prior_artifact_sha256"
-    ]["1.3"]
+    assert (
+        recorded["prior_artifact_sha256"]["1.2"]
+        != recorded["prior_artifact_sha256"]["1.3"]
+    )
     assert manifest["validation"]["non_null_artifact_count"] == 4
     assert manifest["validation"]["boundary_sanity"]["week_3_missing_game_ids"] == []
     assert manifest["validation"]["boundary_sanity"]["week_4_included_game_ids"] == []
@@ -229,17 +231,9 @@ def test_committed_weekly_context_backfills_have_frozen_lineage(
     expected_corpus_hash: str,
 ) -> None:
     root = Path(__file__).resolve().parents[1]
-    source = (
-        root
-        / "data/processed/snapshots/2026"
-        / source_name
-        / "predictive/context"
-    )
+    source = root / "data/processed/snapshots/2026" / source_name / "predictive/context"
     backfill = (
-        root
-        / "data/processed/snapshots/2026"
-        / backfill_name
-        / "predictive/context"
+        root / "data/processed/snapshots/2026" / backfill_name / "predictive/context"
     )
 
     result = validate_context_backfill(source, backfill)
@@ -262,10 +256,7 @@ def test_committed_context_backfills_use_frozen_historical_schedule_surface(
 ) -> None:
     root = Path(__file__).resolve().parents[1]
     backfill = (
-        root
-        / "data/processed/snapshots/2026"
-        / backfill_name
-        / "predictive/context"
+        root / "data/processed/snapshots/2026" / backfill_name / "predictive/context"
     )
     metadata = json.loads((backfill / "metadata.json").read_text(encoding="utf-8"))
     team_seasons = json.loads(
@@ -276,7 +267,10 @@ def test_committed_context_backfills_use_frozen_historical_schedule_surface(
     assert metadata["presentation_schedule_game_count"] == 888
     assert source["kind"] == "frozen_historical_schedule"
     assert source["snapshot_id"] == metadata["source_evidence_snapshot_id"]
-    assert (root / source["path"]).is_file()
+    assert source["path"].startswith("site/data/week-games/")
+    assert not (root / source["path"]).exists()
+    source_bundle = root / metadata["source_evidence_snapshot_path"]
+    assert (source_bundle / "team_seasons.json").is_file()
     assert team_seasons["schedule_source"] == source
     assert len(team_seasons["future_predictions"]) == expected_future_predictions
 
@@ -334,6 +328,7 @@ def test_weekly_lineage_manifest_records_both_retrospective_backfills() -> None:
     for report in manifest["backfills"].values():
         assert report["evidence_parity"] == "passed"
         assert len(report["largest_ranking_differences"]) == 10
-        assert report["source_context_1_2_snapshot"] != report[
-            "generated_context_1_3_snapshot"
-        ]
+        assert (
+            report["source_context_1_2_snapshot"]
+            != report["generated_context_1_3_snapshot"]
+        )

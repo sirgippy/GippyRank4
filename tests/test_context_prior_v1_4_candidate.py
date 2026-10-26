@@ -1917,8 +1917,14 @@ def test_candidate_construction_does_not_mutate_production_artifacts() -> None:
         ROOT / "data/processed/preseason/history/predictions.csv",
         ROOT / "data/processed/context_history_crossover/hybrid_prior_results.csv",
         ROOT / "data/processed/context_positive_net_moderation/team_season_results.csv",
-        ROOT / "site/data/snapshots/2026-preseason-context-v1.3.json",
-        ROOT / "site/data/distributions/2026-preseason-context-v1.3.json",
+        ROOT
+        / "data/processed/snapshots/2026/2026-preseason-context-v1.3/predictive/context/metadata.json",
+        ROOT
+        / "data/processed/snapshots/2026/2026-preseason-context-v1.3/predictive/context/rankings.csv",
+        ROOT
+        / "data/processed/snapshots/2026/2026-preseason-context-v1.3/predictive/context/posterior_pmfs.csv",
+        ROOT
+        / "data/processed/snapshots/2026/2026-preseason-context-v1.3/predictive/context/team_seasons.json",
     )
     protected = (
         tuple(
@@ -1930,6 +1936,10 @@ def test_candidate_construction_does_not_mutate_production_artifacts() -> None:
         + protected_files
     )
     assert all(path.is_file() for path in protected)
+    assert not (ROOT / "site/data/snapshots/2026-preseason-context-v1.3.json").exists()
+    assert not (
+        ROOT / "site/data/distributions/2026-preseason-context-v1.3.json"
+    ).exists()
     before = {path: _sha256(path) for path in protected}
     construct_candidate_prior(_fitted_input())
     assert {path: _sha256(path) for path in protected} == before
