@@ -47,7 +47,12 @@ def production_site_data(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[Path, dict[str, object]]:
     output = tmp_path_factory.mktemp("production-site-data")
-    manifest = build_site_data(root=ROOT, config_path=CONFIG, output_directory=output)
+    manifest = build_site_data(
+        root=ROOT,
+        config_path=CONFIG,
+        output_directory=output,
+        static_api_directory=output.parent / "api" / "v1",
+    )
     return output, manifest
 
 
@@ -1913,7 +1918,9 @@ def test_retained_inventory_has_no_site_or_api_orphans(
     }
     assert actual_artifacts == expected_artifacts
 
-    api_inventory = json.loads((ROOT / "site/api/v1/publications.json").read_text())
+    api_inventory = json.loads(
+        (output.parent / "api" / "v1" / "publications.json").read_text()
+    )
     assert {entry["snapshot_id"] for entry in api_inventory["publications"]} == {
         entry["snapshot_id"] for entry in manifest["snapshots"]
     }
