@@ -2,7 +2,7 @@
 
 ## Decision and scope
 
-This is a research-only feasibility and design artifact. It selects four deterministic focal priors, estimates feasible FBS opponent and schedule win-probability ranges, fixes schedule pairs, and runs a generation-only record-acceptance pilot. It does not run posterior inference, compare any λ candidate rankings, select a margin weight, or change ranking behavior.
+This is a research-only feasibility and design artifact. It selects four deterministic focal priors, estimates feasible FBS opponent and schedule win-probability ranges, fixes schedule pairs, and runs a generation-only record-acceptance pilot. The published issue 252 report is used only for sample-size and compute planning. This ticket runs no candidate posterior inference, generates no issue 258 ranking results, selects no margin weight, and changes no ranking behavior.
 
 The four main profiles are selected by nearest 2026 Context 1.4 preseason expected rank to 5, 20, 65, and 120, with canonical team ID breaking ties. The complete prior PMFs are retained. Colorado is included as a reference to the issue 252 focal prior; it is not an additional stratum in the main follow-up budget.
 
@@ -162,4 +162,4 @@ The unconditional and primary conditioned panels require 700 four-component infe
 
 The manifest pins the source prior CSV, Historical Likelihood V1 bytes, issue 252 schedule protocol, this design code, selected focal PMFs, opponent PMFs, schedule definitions, pilot seed ranges, NumPy/SciPy versions, and SHA-256 hashes for every output. Gzip output uses a fixed timestamp. All profile selection, schedule construction, pilot criteria, outcome targets, and follow-up budgets are fixed without issue 258 candidate posterior inference. If a comparison cannot be run within the stated FBS population and budgets, the follow-up should report that limitation rather than introduce FCS opponents, duplicate opponents, schedule bonuses, likelihood changes, or invented profiles.
 
-Base repository revision: `fdf6fc095a864b65907fc3c2056bde559f018546`.
+Base repository revision: `1c61356957ed71a94d878cfa253cf4b6f5ae0452`.

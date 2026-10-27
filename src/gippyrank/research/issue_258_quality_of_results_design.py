@@ -478,7 +478,7 @@ def _render_report(
             "",
             "## Decision and scope",
             "",
-            "This is a research-only feasibility and design artifact. It selects four deterministic focal priors, estimates feasible FBS opponent and schedule win-probability ranges, fixes schedule pairs, and runs a generation-only record-acceptance pilot. It does not run posterior inference, compare any λ candidate rankings, select a margin weight, or change ranking behavior.",
+            "This is a research-only feasibility and design artifact. It selects four deterministic focal priors, estimates feasible FBS opponent and schedule win-probability ranges, fixes schedule pairs, and runs a generation-only record-acceptance pilot. The published issue 252 report is used only for sample-size and compute planning. This ticket runs no candidate posterior inference, generates no issue 258 ranking results, selects no margin weight, and changes no ranking behavior.",
             "",
             "The four main profiles are selected by nearest 2026 Context 1.4 preseason expected rank to 5, 20, 65, and 120, with canonical team ID breaking ties. The complete prior PMFs are retained. Colorado is included as a reference to the issue 252 focal prior; it is not an additional stratum in the main follow-up budget.",
             "",
@@ -988,7 +988,7 @@ def run_design(root: Path, output_dir: Path | None = None) -> dict[str, object]:
                 profile: list(means) for profile, means in SCHEDULE_TARGET_MEANS.items()
             },
             "candidate_quality_of_results_inference_run": False,
-            "candidate_ranking_outcomes_inspected": False,
+            "issue_258_candidate_ranking_outcomes_inspected": False,
         },
         "generation_pilot": {
             "seed_start": PILOT_SEED_START,
