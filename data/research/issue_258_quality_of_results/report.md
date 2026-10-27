@@ -43,6 +43,16 @@ Every schedule has ten distinct FBS opponents and the issue 252 venue sequence (
 | issue_252_reference | lower_win_probability | 0.500 | 0.500 | 0.052 | 0.421–0.583 | 0.501 |
 | issue_252_reference | higher_win_probability | 0.800 | 0.801 | 0.046 | 0.730–0.888 | 0.803 |
 
+Achieved schedule probability contrasts are the difference between the two arm means. The follow-up must report each stratum's actual contrast alongside its ranking effects and consider the contrast size when comparing effects across strata.
+
+| Profile | Lower schedule mean | Higher schedule mean | Achieved separation |
+|---|---|---|---|
+| elite | 0.599 | 0.801 | 0.202 |
+| strong | 0.499 | 0.800 | 0.301 |
+| middle | 0.501 | 0.800 | 0.298 |
+| weak | 0.200 | 0.388 | 0.188 |
+| issue_252_reference | 0.500 | 0.801 | 0.301 |
+
 ### Game-level schedule pairs
 
 ### elite: Oregon (ID 2483)
@@ -150,7 +160,8 @@ The next ticket should use 500 unconditional paired seasons, 200 accepted primar
 
 - Reuse issue 252's disconnected inference forest, issue 242 Quality of Results implementation, complete 138-rank support, default deterministic BP settings, focal prior stripping, and five frozen candidates (λ = 0, 0.25, 0.50, 0.75, 1). Keep each opponent prior uncertain in inference; do not plug in expected ranks or treat opponents as known.
 - Generate identical trial evidence for all five candidates. The two primary teams in a pair share the same underlying focal PMF, focal latent-rank draw, starting-prior treatment, schedule game count, and venue distribution. Opponents are independently sampled from their own Context 1.4 PMFs; no opponent repeats within one slate.
-- Report results separately by strength stratum. The primary schedule effect is the paired difference in expected rank (higher-win-probability arm minus lower-win-probability arm), with a 95% normal Monte Carlo interval for the mean, the difference distribution, outrank probability with a 95% Wilson interval, rank SD, entropy, central 80% width, PMF total variation, and Wasserstein distance. Compare schedule effects across strata; do not compare absolute expected ranks across strata as if those were schedule effects.
+- Report results separately by strength stratum. Alongside each stratum's ranking effects, report its actual achieved schedule win-probability separation (the higher-arm mean minus the lower-arm mean). The primary schedule effect is the paired difference in expected rank (higher-win-probability arm minus lower-win-probability arm), with a 95% normal Monte Carlo interval for the mean, the difference distribution, outrank probability with a 95% Wilson interval, rank SD, entropy, central 80% width, PMF total variation, and Wasserstein distance.
+- When comparing schedule effects across strata, explicitly consider differences in their achieved schedule separations. Do not conclude that the methodology is more or less schedule-sensitive at a strength level solely because its absolute ranking differences are larger or smaller. Do not compare absolute expected ranks across strata as if those were schedule effects, and do not introduce a new normalization formula.
 - Use same-schedule controls to estimate outcome-driven variation at the lower schedule distribution. Report them beside, not subtracted from, the primary schedule contrast. Keep unconditional controls unconditional. Build a separate control-conditioned panel accepted on the two controls' own records; never label controls selected only by a primary pair's seed as record-conditioned controls.
 - Separate schedule-driven differences (paired schedule contrast), realized-outcome variation (within-panel difference distributions and same-schedule controls), posterior uncertainty (paired rank SD, entropy, interval width), and between-stratum context (within-stratum effects and their contrasts). Do not select or revise schedules after seeing candidate posterior ranks.
 
@@ -162,4 +173,4 @@ The unconditional and primary conditioned panels require 700 four-component infe
 
 The manifest pins the source prior CSV, Historical Likelihood V1 bytes, issue 252 schedule protocol, this design code, selected focal PMFs, opponent PMFs, schedule definitions, pilot seed ranges, NumPy/SciPy versions, and SHA-256 hashes for every output. Gzip output uses a fixed timestamp. All profile selection, schedule construction, pilot criteria, outcome targets, and follow-up budgets are fixed without issue 258 candidate posterior inference. If a comparison cannot be run within the stated FBS population and budgets, the follow-up should report that limitation rather than introduce FCS opponents, duplicate opponents, schedule bonuses, likelihood changes, or invented profiles.
 
-Base repository revision: `1c61356957ed71a94d878cfa253cf4b6f5ae0452`.
+Pinned source revision: `1c61356957ed71a94d878cfa253cf4b6f5ae0452`.
