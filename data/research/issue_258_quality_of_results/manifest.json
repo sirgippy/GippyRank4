@@ -1,0 +1,163 @@
+{
+  "artifact_sha256": {
+    "feasibility.csv": "aee9fb342d013bc49c9efaa549115e5b5256f519fc72a1bc87bdd8fb105c2c79",
+    "focal_prior_pmfs.csv.gz": "7a91929b2cd8a9340b241d10715dce71fd940cfa102331a9cfe1e481bf28d3df",
+    "generation_pilot.csv": "578328e3af8dde9e7f0451fda0e827502aab58fb57a94e2669b367202f2364f5",
+    "historical_likelihood_v1.json": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+    "opponent_prior_pmfs.csv.gz": "a98e428e47f03d92de3cf66d1555eebbe51ac8dc1a2aa0b95db22b9bd0d9a3c4",
+    "profile_summary.csv": "24b59c8d5281afd1bdef98ceb207a40ae04571088fa4f759f47ddc97e6eff99d",
+    "report.md": "e9abc890eeb89f672966e9f658edbb20eff51d1a35207f04e6ccb4d354a35767",
+    "schedule_games.csv": "461a6a086e126c13db27c50f75748ebbd9a4e89ba5e4ebc3a21fa091eceeb816",
+    "schedule_summary.csv": "99edea72f7475ce64ce1908e3f27636027602aa2a6d7d8f4843855348ad00b04"
+  },
+  "base_source_revision": "fdf6fc095a864b65907fc3c2056bde559f018546",
+  "design_code_sha256": "25cf6c423b9f5c624a93e105142462142b2d87444f6c0456c104978663a4bfe1",
+  "documentation_path": "docs/issue_258_quality_of_results_design.md",
+  "documentation_sha256": "e9abc890eeb89f672966e9f658edbb20eff51d1a35207f04e6ccb4d354a35767",
+  "follow_up_plan": {
+    "all_candidates_share_trial_evidence": true,
+    "conditioning_search_ceiling_per_panel": 20000,
+    "control_conditioned_seed_ranges": {
+      "elite": [
+        2810000,
+        2829999
+      ],
+      "middle": [
+        2850000,
+        2869999
+      ],
+      "strong": [
+        2830000,
+        2849999
+      ],
+      "weak": [
+        2870000,
+        2889999
+      ]
+    },
+    "control_seed_start": 2810000,
+    "estimate_uses_issue_252_three_trial_five_weight_timing": 2.029666666666667,
+    "margin_weights": [
+      0.0,
+      0.25,
+      0.5,
+      0.75,
+      1.0
+    ],
+    "primary_conditioned_seed_ranges": {
+      "elite": [
+        2710000,
+        2729999
+      ],
+      "middle": [
+        2750000,
+        2769999
+      ],
+      "strong": [
+        2730000,
+        2749999
+      ],
+      "weak": [
+        2770000,
+        2789999
+      ]
+    },
+    "primary_record_conditioned_pairs_per_profile": 200,
+    "primary_seed_start": 2710000,
+    "seeds_disjoint_from_pilot": true,
+    "self_record_conditioned_control_pairs_per_profile": 200,
+    "unconditional_pairs_per_profile": 500,
+    "unconditional_shared_seed_range": [
+      2700000,
+      2700499
+    ]
+  },
+  "generation_pilot": {
+    "candidate_quality_of_results_inference_run": false,
+    "draws_per_profile": 10000,
+    "matched_draws": "shared focal latent rank and opponent/margin quantiles across schedule pair; independent margin draws across same-schedule controls",
+    "record_conditioned_target_acceptances": "primary schedule pair and lower schedule same-schedule control pair are counted separately",
+    "seed_start": 2580000
+  },
+  "inputs": {
+    "fbs_team_count": 138,
+    "historical_likelihood_path": "data/processed/posterior/historical_likelihood_v1.json",
+    "historical_likelihood_sha256": "89eff21a304939a62beed6fd58dd642e0e4dbba698d7bdaa9aaca9f09f2de153",
+    "historical_likelihood_version": "V1",
+    "prior_family": "context",
+    "prior_model_version": "1.4",
+    "prior_path": "data/processed/preseason/context_v1_4/annual/2026/predictions.csv",
+    "prior_sha256": "70a8e6c49f159eb91d5108acee0829f9194a51865198ee663c6af40037027a9a",
+    "rank_support": 138,
+    "season": 2026
+  },
+  "issue": 258,
+  "issue_252_protocol_sha256": "17fa055af531da4a12970e01f6b78dc11d98d7563c76f25f0fd6523034db18ed",
+  "profile_selection": {
+    "complete_focal_pmfs_retained": true,
+    "issue_252_reference_team_id": "38",
+    "method": "nearest frozen preseason expected rank to target; ties by canonical team ID",
+    "targets": {
+      "elite": 5.0,
+      "middle": 65.0,
+      "strong": 20.0,
+      "weak": 120.0
+    }
+  },
+  "schedule_design": {
+    "candidate_quality_of_results_inference_run": false,
+    "candidate_ranking_outcomes_inspected": false,
+    "games_per_schedule": 10,
+    "no_repeated_opponent_within_schedule": true,
+    "opponent_beliefs": "independent full Context 1.4 rank PMFs",
+    "opponent_population": "2026 FBS only",
+    "requested_means": {
+      "elite": [
+        0.6,
+        0.8
+      ],
+      "issue_252_reference": [
+        0.5,
+        0.8
+      ],
+      "middle": [
+        0.5,
+        0.8
+      ],
+      "strong": [
+        0.5,
+        0.8
+      ],
+      "weak": [
+        0.2,
+        0.4
+      ]
+    },
+    "selection": "minimum absolute V1 probability distance to target profile by venue with unique opponents; target profile center calibrated to requested mean using frozen priors only",
+    "target_profile_half_width": 0.08,
+    "venue_counts": {
+      "away": 4,
+      "home": 4,
+      "neutral": 2
+    },
+    "venue_slots": [
+      "home",
+      "away",
+      "home",
+      "away",
+      "neutral",
+      "home",
+      "away",
+      "home",
+      "away",
+      "neutral"
+    ],
+    "win_probability": "Historical Likelihood V1 Student-t CDF integrated over focal and opponent rank PMFs with venue effects"
+  },
+  "schema_version": "1.0",
+  "study": "research_only_multistrength_quality_of_results_schedule_design",
+  "versions": {
+    "numpy": "2.5.2",
+    "scipy": "1.18.1"
+  }
+}
