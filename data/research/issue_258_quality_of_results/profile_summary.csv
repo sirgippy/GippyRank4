@@ -1,0 +1,6 @@
+profile,selection_target_expected_rank,team_id,team_name,expected_rank,rank_sd,median_rank,interval_80_low,interval_80_high,interval_80,selection_method,source_artifact,prior_model_version
+elite,5.0,2483,Oregon,6.456109748031965,7.91206751352118,4,1,15,1–15,nearest preseason expected rank to target; ties by canonical team ID,data/processed/preseason/context_v1_4/annual/2026/predictions.csv,1.4
+strong,20.0,201,Oklahoma,20.165055968291217,18.330146439783224,14,4,45,4–45,nearest preseason expected rank to target; ties by canonical team ID,data/processed/preseason/context_v1_4/annual/2026/predictions.csv,1.4
+middle,65.0,2711,Western Michigan,64.9513118725281,33.267480267874554,64,21,112,21–112,nearest preseason expected rank to target; ties by canonical team ID,data/processed/preseason/context_v1_4/annual/2026/predictions.csv,1.4
+weak,120.0,2534,Sam Houston,120.0523827794109,19.579468689003615,127,93,136,93–136,nearest preseason expected rank to target; ties by canonical team ID,data/processed/preseason/context_v1_4/annual/2026/predictions.csv,1.4
+issue_252_reference,63.143266276460025,38,Colorado,63.143266276460025,33.44328416722277,61,19,111,19–111,issue 252 manifest focal team; retained as a design reference,data/processed/preseason/context_v1_4/annual/2026/predictions.csv,1.4
