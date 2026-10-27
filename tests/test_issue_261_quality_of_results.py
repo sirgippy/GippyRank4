@@ -129,8 +129,6 @@ def test_checkpoint_rejects_changed_source_or_seed(tmp_path: Path) -> None:
 def test_completed_artifact_contract() -> None:
     """Audit retained results without executing expensive inference in CI."""
     output = ROOT / "data/research/issue_261_quality_of_results"
-    if not (output / "manifest.json").exists():
-        pytest.skip("full study artifacts not yet materialized")
     manifest = json.loads((output / "manifest.json").read_text())
     for name, expected in manifest["artifact_sha256"].items():
         assert hashlib.sha256((output / name).read_bytes()).hexdigest() == expected
@@ -153,3 +151,172 @@ def test_completed_artifact_contract() -> None:
         sum(row["comparison_population"] == "primary_seed_control" for row in rows)
         == 20
     )
+
+
+def test_retained_evidence_records_and_candidate_pairing() -> None:
+    """Audit the scientific populations from portable game and trial tables."""
+    from collections import Counter, defaultdict
+
+    output = ROOT / "data/research/issue_261_quality_of_results"
+    records = {"elite": (6, 8), "strong": (5, 8), "middle": (5, 8), "weak": (2, 4)}
+    evidence = defaultdict(list)
+    for row in study.read_csv(output / "simulated_games.csv.gz"):
+        evidence[row["profile"], row["panel"], row["seed"], row["focal_group"]].append(
+            row
+        )
+        margin = float(row["synthetic_focal_margin"])
+        assert np.isfinite(margin)
+        assert (row["focal_won"] == "True") == (margin > 0)
+        home_margin = float(row["synthetic_home_margin"])
+        assert margin == (-home_margin if row["venue"] == "away" else home_margin)
+    candidates = defaultdict(list)
+    trial_hashes = defaultdict(set)
+    for row in study.read_csv(output / "team_trial_summaries.csv.gz"):
+        key = row["profile"], row["panel"], row["seed"], row["focal_group"]
+        candidates[key].append(float(row["margin_weight"]))
+        trial_hashes[key[:3]].add(row["evidence_sha256"])
+        games = evidence[key]
+        assert len(games) == 10
+        assert int(row["wins"]) == sum(game["focal_won"] == "True" for game in games)
+        assert {int(game["focal_true_rank"]) for game in games} == {
+            int(row["focal_true_rank"])
+        }
+        assert row["converged"] == "True" and int(row["iterations"]) <= 500
+        assert tuple(game["venue"] for game in games) == original.SITE_SLOTS
+        if row["panel"] == "primary_conditioned" and row["focal_group"] in {
+            "approximately_even",
+            "weaker_opponents",
+        }:
+            assert (
+                int(row["wins"])
+                == records[row["profile"]][row["focal_group"] == "weaker_opponents"]
+            )
+        if row["panel"] == "control_conditioned":
+            assert row["focal_group"].startswith("same_schedule_")
+            assert int(row["wins"]) == records[row["profile"]][0]
+    assert len(candidates) == 12800 and len(trial_hashes) == 3600
+    assert all(
+        set(weights) == set(original.MARGIN_WEIGHTS) and len(weights) == 5
+        for weights in candidates.values()
+    )
+    assert all(len(hashes) == 1 for hashes in trial_hashes.values())
+    group_counts = Counter(key[:3] for key in candidates)
+    assert all(
+        count == (2 if key[1] == "control_conditioned" else 4)
+        for key, count in group_counts.items()
+    )
+    # Matching is across observations, not just the metadata assertion.
+    for profile, panel, seed in group_counts:
+        names = ("same_schedule_a", "same_schedule_b")
+        if panel != "control_conditioned":
+            names = ("approximately_even", "weaker_opponents", *names)
+        groups = {name: evidence[profile, panel, seed, name] for name in names}
+        assert len({games[0]["focal_true_rank"] for games in groups.values()}) == 1
+        if panel == "control_conditioned":
+            continue
+        lower, higher = groups["approximately_even"], groups["weaker_opponents"]
+        assert [row["standardized_margin_residual"] for row in lower] == [
+            row["standardized_margin_residual"] for row in higher
+        ]
+
+
+def test_retained_aggregate_means_match_paired_trials() -> None:
+    from collections import defaultdict
+
+    output = ROOT / "data/research/issue_261_quality_of_results"
+    paired = defaultdict(list)
+    for row in study.read_csv(output / "pair_trial_summaries.csv.gz"):
+        paired[
+            row["profile"], row["panel"], row["comparison"], row["margin_weight"]
+        ].append(row)
+    for summary in study.read_csv(output / "simulation_summary.csv"):
+        rows = paired[
+            summary["profile"],
+            summary["panel"],
+            summary["comparison"],
+            summary["margin_weight"],
+        ]
+        differences = np.array([float(row["rank_difference"]) for row in rows])
+        count = int(summary["draw_count"])
+        assert (
+            len(rows) == count == (500 if summary["panel"] == "unconditional" else 200)
+        )
+        mean = float(differences.mean())
+        half_width = 1.959963984540054 * float(differences.std(ddof=1)) / count**0.5
+        assert float(summary["rank_mean"]) == pytest.approx(mean)
+        assert float(summary["rank_mean_ci95_low"]) == pytest.approx(mean - half_width)
+        assert float(summary["rank_mean_ci95_high"]) == pytest.approx(mean + half_width)
+        assert float(summary["rank_difference_median"]) == pytest.approx(
+            float(np.median(differences))
+        )
+        assert float(summary["right_outranks_left_probability"]) == pytest.approx(
+            float(np.mean(differences < 0))
+        )
+        expected_label = (
+            "primary_seed_control"
+            if summary["panel"] == "primary_conditioned"
+            and summary["comparison"] == "same_schedule_control"
+            else summary["panel"]
+        )
+        assert summary["comparison_population"] == expected_label
+
+
+def test_retained_pair_direction_and_distance_invariants() -> None:
+    output = ROOT / "data/research/issue_261_quality_of_results"
+    teams = {
+        (
+            row["profile"],
+            row["panel"],
+            row["seed"],
+            row["margin_weight"],
+            row["focal_group"],
+        ): row
+        for row in study.read_csv(output / "team_trial_summaries.csv.gz")
+    }
+    for row in study.read_csv(output / "pair_trial_summaries.csv.gz"):
+        key = row["profile"], row["panel"], row["seed"], row["margin_weight"]
+        left, right = teams[*key, row["left_group"]], teams[*key, row["right_group"]]
+        delta = float(right["expected_rank"]) - float(left["expected_rank"])
+        assert float(row["rank_difference"]) == pytest.approx(delta)
+        assert (row["right_outranks_left"] == "True") == (delta < 0)
+        if row["comparison"] == "schedule_pair":
+            assert row["left_group"] == "approximately_even"
+            assert row["right_group"] == "weaker_opponents"
+        assert 0 <= float(row["pmf_total_variation"]) <= 1
+        assert float(row["pmf_wasserstein_rank_distance"]) + 1e-9 >= abs(delta)
+
+
+def test_report_refresh_preserves_simulation_and_is_deterministic(
+    tmp_path: Path,
+) -> None:
+    from gippyrank.research.issue_261_report import render
+
+    source = ROOT / "data/research/issue_261_quality_of_results"
+    target = tmp_path / "results"
+    shutil.copytree(source, target, ignore=shutil.ignore_patterns(".checkpoints"))
+    original_manifest = json.loads((target / "manifest.json").read_text())
+    render(ROOT, target)
+    refreshed = json.loads((target / "manifest.json").read_text())
+    # PNG compression/font rendering can vary between execution environments;
+    # numerical inputs and report text must survive an inference-free refresh.
+    assert {
+        name: digest
+        for name, digest in refreshed["artifact_sha256"].items()
+        if name != "schedule_effects.png"
+    } == {
+        name: digest
+        for name, digest in original_manifest["artifact_sha256"].items()
+        if name != "schedule_effects.png"
+    }
+    render(ROOT, target)
+    assert (
+        json.loads((target / "manifest.json").read_text())["artifact_sha256"]
+        == refreshed["artifact_sha256"]
+    )
+    assert refreshed["source_revision"] == original_manifest["source_revision"]
+    assert len(study.read_csv(target / "candidate_contrasts.csv")) == 200
+    report = (target / "report.md").read_text()
+    assert "primary_seed_control" in report
+    assert "Separation (pp)" in report
+    assert "not bias estimates subtracted" in report
+    assert "CPU time nor study wall time" in report
