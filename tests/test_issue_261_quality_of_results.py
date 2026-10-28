@@ -126,11 +126,90 @@ def test_checkpoint_rejects_changed_source_or_seed(tmp_path: Path) -> None:
         study.load_checkpoint(path, "original", 8)
 
 
+def test_fresh_checkpoints_ignore_published_source_identity(
+    design: study.Design, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    output = tmp_path / "reproduction"
+    published = json.loads(
+        (ROOT / "data/research/issue_261_quality_of_results/manifest.json").read_text()
+    )
+    study.write_json(output / "manifest.json", published)
+    expected_fingerprint = study.fingerprint(design)
+    assert expected_fingerprint != published["fingerprint"]
+
+    # Exercise the real checkpoint writers with one mocked trial, without BP.
+    monkeypatch.setattr(study, "PROFILES", ("elite",))
+    monkeypatch.setattr(study, "PANELS", ("unconditional",))
+    monkeypatch.setattr(study, "_infer_trial", lambda *args: ([], [], {}))
+    seed = design.manifest["follow_up_plan"]["unconditional_shared_seed_range"][0]
+    monkeypatch.setattr(
+        study,
+        "select_seeds",
+        lambda *args: {
+            "seeds": [seed],
+            "attempts": 1,
+            "target": 1,
+            "seed_range": [seed, seed],
+            "complete": True,
+        },
+    )
+    study.smoke(design, output)
+    study.run_profile(design, output, "elite")
+    checkpoint = study.checkpoint_path(output, "elite", "unconditional", seed)
+    fresh = json.loads(checkpoint.read_text())
+    assert fresh["fingerprint"] == expected_fingerprint
+    assert json.loads((output / "manifest.json").read_text()) == published
+
+    # A later checkout cannot relabel the smoke execution's revision.
+    study.aggregate(replace(design, source_revision="later-checkout"), output)
+    regenerated = json.loads((output / "manifest.json").read_text())
+    assert regenerated["provenance"] == design.provenance
+    assert regenerated["fingerprint"] == expected_fingerprint
+    assert regenerated["source_revision"] == design.source_revision
+    assert (
+        regenerated["published_execution_revision"] == study.PINNED_EXECUTION_REVISION
+    )
+
+    # An old identity must not become valid just because it was published.
+    study.write_json(checkpoint, {**fresh, "fingerprint": published["fingerprint"]})
+    with pytest.raises(ValueError, match="checkpoint provenance differs"):
+        study.aggregate(design, output)
+    study.write_json(checkpoint, fresh)
+    for source in (study.SOURCE_FILES[0], "src/gippyrank/posterior/engine.py"):
+        changed = replace(
+            design,
+            provenance={
+                **design.provenance,
+                "source_sha256": {
+                    **design.provenance["source_sha256"],
+                    source: "changed",
+                },
+            },
+        )
+        with pytest.raises(ValueError, match="selection fingerprint differs"):
+            study.aggregate(changed, output)
+    changed_inputs = replace(
+        design,
+        provenance={
+            **design.provenance,
+            "frozen_manifest_sha256": "changed",
+        },
+    )
+    with pytest.raises(ValueError, match="selection fingerprint differs"):
+        study.aggregate(changed_inputs, output)
+
+
 def test_completed_artifact_contract() -> None:
     """Audit retained results without executing expensive inference in CI."""
     output = ROOT / "data/research/issue_261_quality_of_results"
     manifest = json.loads((output / "manifest.json").read_text())
     assert manifest["source_revision"] == study.PINNED_EXECUTION_REVISION
+    assert (
+        manifest["fingerprint"]
+        == hashlib.sha256(
+            json.dumps(manifest["provenance"], sort_keys=True).encode()
+        ).hexdigest()
+    )
     for name, expected in manifest["artifact_sha256"].items():
         assert hashlib.sha256((output / name).read_bytes()).hexdigest() == expected
     assert manifest["counts"] == {
