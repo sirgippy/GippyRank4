@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import csv
 import json
 import shutil
 from pathlib import Path
@@ -57,12 +58,65 @@ def test_regeneration_is_deterministic_without_any_candidate_inference(
     monkeypatch.setattr(engine, "infer_posterior", forbidden)
     monkeypatch.setattr(quality_of_results, "infer_quality_of_results", forbidden)
     monkeypatch.setattr(replay, "infer_quality_of_results", forbidden)
-    generated = design.build_design(ROOT, tmp_path)
+    first = tmp_path / "first"
+    repeated = tmp_path / "repeated"
+    generated = design.build_design(ROOT, first)
+    design.build_design(ROOT, repeated)
     assert generated["candidate_inference_performed"] is False
+    design.check_design(ROOT, first)
+
+    def equivalent(actual, expected):
+        if isinstance(expected, dict):
+            assert actual.keys() == expected.keys()
+            for key in expected:
+                equivalent(actual[key], expected[key])
+        elif isinstance(expected, list):
+            assert len(actual) == len(expected)
+            for left, right in zip(actual, expected, strict=True):
+                equivalent(left, right)
+        elif isinstance(expected, float):
+            assert actual == pytest.approx(expected, rel=0, abs=1e-10)
+        else:
+            assert actual == expected
+
+    # Exact repeated output is required within one runtime. BLAS/libm and
+    # Python patch versions may differ on CI, so compare recomputed numeric
+    # descriptors to the retained values with a tight absolute tolerance.
+    # IDs, categories, inputs, and snapshot hashes still compare exactly.
     for artifact in FROZEN.iterdir():
-        assert (tmp_path / artifact.name).read_bytes() == artifact.read_bytes(), (
-            artifact.name
-        )
+        actual = first / artifact.name
+        assert actual.read_bytes() == (repeated / artifact.name).read_bytes()
+        if artifact.name == "manifest.json":
+            continue  # Output hashes are verified against the generated files.
+        if artifact.suffix == ".csv":
+
+            def numeric_rows(path):
+                with path.open(newline="") as handle:
+                    rows = list(csv.DictReader(handle))
+                for row in rows:
+                    for key, value in row.items():
+                        if key in {
+                            "season",
+                            "team_id",
+                            "game_id",
+                            "opponent_id",
+                            "reference_team_id",
+                        }:
+                            continue
+                        try:
+                            row[key] = float(value)
+                        except ValueError:
+                            pass
+                return rows
+
+            equivalent(numeric_rows(actual), numeric_rows(artifact))
+        else:
+            left = json.loads(actual.read_text())
+            right = json.loads(artifact.read_text())
+            if artifact.name == "protocol.json":
+                left.pop("artifact_sha256")
+                right.pop("artifact_sha256")
+            equivalent(left, right)
 
 
 @pytest.mark.parametrize(
