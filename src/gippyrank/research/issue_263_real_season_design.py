@@ -33,6 +33,7 @@ from gippyrank.research.issue_242_quality_of_results import (
     _read_rows,
     _write_csv,
 )
+from gippyrank.research.issue_263_historical_evidence import build_historical_design
 
 BASE_REVISION = "95401c6b1699ee9750884fab2163772420951a6e"
 SELECTED_SLOTS = ("2026-09-08", "2026-09-27", "2026-10-25T12-59-22.246522Z")
@@ -521,15 +522,13 @@ def build_design(root: Path, output: Path) -> dict[str, Any]:
     corpus_seasons = sorted(
         {r["season"] for r in _read_rows(root / historical_paths[0])}
     )
-    if corpus_seasons != ["2026"] or list(
-        (root / "data/processed/snapshots/2025").glob("**/metadata.json")
-    ):
-        raise ValueError("historical availability changed; amend the design explicitly")
+    historical = build_historical_design(root, output)
     common_paths = [
         "data/processed/posterior/historical_likelihood_v1.json",
         "data/processed/preseason/context_v1_4/annual/2026/fitted_instance.json",
         "data/processed/issue_238_historical_repair/lineage_audit.json",
         "src/gippyrank/research/issue_263_real_season_design.py",
+        "src/gippyrank/research/issue_263_historical_evidence.py",
         "scripts/design_issue_263_real_seasons.py",
         DOCUMENT,
         "src/gippyrank/research/quality_of_results.py",
@@ -541,34 +540,39 @@ def build_design(root: Path, output: Path) -> dict[str, Any]:
         "src/gippyrank/performance_snapshot.py",
         "src/gippyrank/performance_v1.py",
         "src/gippyrank/research/issue_242_quality_of_results.py",
+        "data/processed/preseason/context/predictions.csv",
+        "data/processed/preseason/context/model_spec.json",
+        "data/processed/preseason/context/model_report.json",
+        "data/processed/preseason/context/feature_provenance.json",
+        "src/gippyrank/data/cfbd.py",
+        "src/gippyrank/data/cfbd_games.py",
+        "src/gippyrank/data/game_evidence.py",
         ".python-version",
         "uv.lock",
         "pyproject.toml",
     ]
     spec = {
-        "schema_version": "1.0",
+        "schema_version": "1.1",
         "issue": 263,
         "base_source_revision": BASE_REVISION,
         "design_only": True,
         "candidate_inference_performed": False,
         "selected_publication_slots": list(SELECTED_SLOTS),
+        "selected_snapshot_ids": [s["snapshot_id"] for s in historical["snapshots"]]
+        + list(SELECTED_SLOTS),
         "snapshot_audit": audits,
-        "unavailable_snapshots": [
-            {
-                "season": 2025,
-                "phase": phase,
-                "selected": False,
-                "reason": "No cutoff-local game rows or publication/endpoint bundles retained; priors and summaries alone are insufficient",
-                "fallback": "Execute only frozen partial 2026 study; completed-season validation requires a separate provenance prerequisite",
-            }
-            for phase in ("pre_bowl", "final")
-        ],
+        "historical_snapshots": historical["snapshots"],
+        "historical_case_selection": historical["case_selection"],
+        "unavailable_snapshots": [],
         "historical_audit": {
-            "game_corpus_seasons": corpus_seasons,
+            "worker_current_normalized_corpus_seasons": corpus_seasons,
+            "recovered_archive_seasons": [2025],
             "context_2025_prior_rows": sum(
                 r["season"] == "2025" for r in _read_rows(root / historical_paths[1])
             ),
-            "snapshot_2025_metadata_count": 0,
+            "retained_published_2025_snapshot_metadata_count": 0,
+            "reconstructed_2025_snapshot_count": 2,
+            "recovered_archives": historical["source_audit"],
         },
         "candidate_configuration": {
             "margin_weights": list(MARGIN_WEIGHTS),
@@ -578,7 +582,7 @@ def build_design(root: Path, output: Path) -> dict[str, Any]:
             "prior_stripping": "existing Performance ratio; zero-game FBS uniform",
             "convergence_required": True,
             "endpoint_pmf_max_abs_tolerance": 1e-8,
-            "endpoint_expected_rank_tolerance": 138e-8,
+            "endpoint_expected_rank_tolerance": "snapshot_rank_support * 1e-8",
             "pmf_sum_tolerance": 1e-9,
             "endpoint_ordinal_mismatch": "report ties within mean tolerance; otherwise fail",
             "order_reversal_check_weights": [0, 0.5, 1],
@@ -625,18 +629,19 @@ def build_design(root: Path, output: Path) -> dict[str, Any]:
                 "maximum absolute with team ID",
             ],
             "schedule": "standardized full preseason PMF nearest expected rank65 integrated against frozen Context opponent PMFs through V1 at actual venue; lower mean win probability is harder",
-            "comparisons": "within snapshot and endpoint QoP ordinal bands 1:10,11:40,41:95,96:138; schedule terciles with ID tie break; record and near-expected-record panels",
+            "comparisons": "within snapshot; 2026 retained QoP ordinal bands 1:10,11:40,41:95,96:138; 2025 frozen Context 1.2 prior ordinal bands 1:10,11:40,41:95,96:136; schedule terciles with ID tie break; record and near-expected-record panels (2025 primary uses prior_expected_wins)",
             "uncertainty_interpretation": "descriptive marginals; no independent-team posterior superiority probability or sampling CI",
             "details": DOCUMENT,
         },
         "execution": {
-            "baseline_solves": 15,
+            "baseline_solves": 25,
+            "historical_endpoint_reference_solves": 4,
             "counterfactual_solves": 40,
             "removal_solves": 5 * len(removal_ids),
             "order_reversal_solves": 3,
-            "maximum_network_solves": 58 + 5 * len(removal_ids),
+            "maximum_network_solves": 72 + 5 * len(removal_ids),
             "strategy": "serial snapshots and solves, reuse factor surfaces within snapshot, cold-start BP, checkpoint by full input+configuration hash",
-            "wall_budget_hours": 2,
+            "wall_budget_hours": 3,
             "single_solve_timeout_seconds": 600,
             "rss_budget_gib": 4,
             "on_failure": "retain diagnostic failure, stop affected snapshot; no relaxed tolerance, changed weight or silent replacement",
@@ -661,15 +666,18 @@ def build_design(root: Path, output: Path) -> dict[str, Any]:
             p: sha256(root / p) for p in ["site/publish_config.json", *historical_paths]
         },
         "artifact_sha256": {
-            p.name: sha256(p)
-            for p in sorted(output.iterdir())
-            if p.name
-            in {
-                "reference_descriptors.csv",
-                "reference_games.csv",
-                "cases.json",
-                "publication_config.json",
-            }
+            **historical["artifact_sha256"],
+            **{
+                p.name: sha256(p)
+                for p in sorted(output.iterdir())
+                if p.name
+                in {
+                    "reference_descriptors.csv",
+                    "reference_games.csv",
+                    "cases.json",
+                    "publication_config.json",
+                }
+            },
         },
     }
     (output / "protocol.json").write_text(
@@ -678,14 +686,17 @@ def build_design(root: Path, output: Path) -> dict[str, Any]:
     manifest = {
         "issue": 263,
         "artifact_sha256": {
-            name: sha256(output / name)
-            for name in (
-                "protocol.json",
-                "cases.json",
-                "reference_descriptors.csv",
-                "reference_games.csv",
-                "publication_config.json",
-            )
+            **spec["artifact_sha256"],
+            **{
+                name: sha256(output / name)
+                for name in (
+                    "protocol.json",
+                    "cases.json",
+                    "reference_descriptors.csv",
+                    "reference_games.csv",
+                    "publication_config.json",
+                )
+            },
         },
     }
     (output / "manifest.json").write_text(
@@ -738,8 +749,9 @@ def main() -> None:
         json.dumps(
             {
                 "status": "frozen",
-                "selected_snapshots": len(spec["selected_publication_slots"]),
-                "case_teams": len(spec["case_selection"]["case_team_ids"]),
+                "selected_snapshots": len(spec["selected_snapshot_ids"]),
+                "case_teams": len(spec["case_selection"]["case_team_ids"])
+                + len(spec["historical_case_selection"]["team_ids"]),
                 "candidate_inference_performed": False,
             },
             sort_keys=True,

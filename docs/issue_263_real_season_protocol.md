@@ -50,35 +50,78 @@ in evidence depth; the remaining five are audited, not an adaptive reserve pool.
 Preseason has no observed Performance evidence and temporary publications are
 excluded. New official weeks do not enter this frozen population automatically.
 
-### 2025 pre-bowl and final feasibility
+### Recovered 2025 corpus and selected reconstructions
 
-2025 is **unavailable for execution from retained inputs**. The normalized game
-corpus and raw CFBD game responses in this checkout contain 2026 only; there are
-no 2025 snapshot metadata/game/PMF bundles under `data/processed/snapshots`.
-The repository does retain 136-team 2025 Context prior rows in
-`data/processed/preseason/context/predictions.csv`, historical candidate priors,
-DB-repair historical prior/model files, and `posterior_backtest/2025_rolling.json`.
-The latter holds scores, IDs, and runtimes rather than reproducible game networks
-and endpoint PMFs. The issue 200 target manifest identifies a December 7, 2025
-pre-bowl ranking measurement; it is not a Context/game publication bundle.
-Hashes of these inspected artifacts are in `audit_only_input_sha256`. Historical priors alone
-cannot recover the missing game rows, cutoff availability, FCS population,
-likelihood/source identity, or matched endpoint outputs. The current Context 1.4
-annual production directory contains only 2026. Do not apply its prior to 2025 or
-reinterpret repaired historical forecasts as a published 2025 checkpoint.
+The 2025 corpus exists in other local worktrees. The original checkout-only audit
+was incomplete; absence from this worker did not establish data unavailability.
+Byte-identical FBS/FCS responses were recovered from
+`/home/gippy/src/GippyRank4/data/raw/cfbd/games` and
+`/tmp/GippyRank4-issue-164/data/raw/cfbd/games`. Their unchanged bytes are now
+retained under this design's `raw/`, so execution and CI require neither external
+worktree. `historical_source_audit.json` records the original paths, worktree
+revisions, response hashes and the comparison of both copies. The existing
+normalized 2026 corpus and all source worktrees remain unchanged.
 
-Pre-bowl and final should eventually be separate experiments: pre-bowl excludes
-bowl/playoff results, whereas final includes postseason evidence under potentially
-different roster/coaching conditions. The retained December 7 measurement does
-not establish a safe game-evidence cutoff; there is no justified exact final
-cutoff to freeze here. Both desired snapshots are explicitly unselected in the
-specification. The bounded alternative is the three available 2026 checkpoints;
-it supplies no completed-season substitute. Completed-season conclusions remain
-unavailable. A separate prerequisite must acquire and freeze 2025 games, original
-availability/cutoff evidence, season-specific established priors, FCS coverage,
-and endpoint bundles, then amend the protocol before looking at candidate results.
-No historical reconstruction, new acquisition, refit, or repair is required for
-the follow-up 2026 execution ticket.
+The responses contain 934 FBS-query rows and 879 FCS-query rows, with 126 identical
+query overlaps: 1,687 unique games. The full population is 136 FBS and 129 FCS
+teams. Separate normalization applies the existing canonical subdivision rules,
+rejects conflicting query duplicates, and excludes 62 games involving lower or
+unknown subdivisions. All 1,625 FBS/FCS-only games have completed non-tied scores;
+the last FBS game is the national championship at 2026-01-20 00:30 UTC.
+Neither archive has retained acquisition-time sidecars. File timestamps and the
+worktree commits do not prove original retrieval times, so this is a retrospective
+season-accomplishment comparison, not a prospective replay of a published 2025
+ranking or exact historical result availability.
+
+| Frozen research ID | Research cutoff UTC | Latest eligible kickoff UTC | Games | Variables | Phase |
+| --- | --- | --- | ---: | ---: | --- |
+| 2025-prebowl | 2025-12-10 00:00 | 2025-12-08 00:00 | 1,570 | 265 | FBS pre-bowl; excludes later regular games |
+| 2025-final | 2026-01-23 00:00 | 2026-01-21 00:00 | 1,625 | 265 | completed season, including postseason |
+
+Both snapshots use a frozen 48-hour kickoff safety lag, an explicit conservative
+processing rule rather than proof of source availability. The pre-bowl checkpoint
+includes conference championship games, precedes the first FBS bowl (December 14
+01:00 UTC), and excludes Army–Navy on December 13. Do not silently add that later
+regular-season game. The final checkpoint includes it and all retained postseason
+games. Included rows, exact IDs, cutoffs, exclusions and full prior inputs are
+retained separately under `inputs/2025-prebowl/` and `inputs/2025-final/`.
+FCS playoff rounds sometimes carry CFBD's `regular` seasonType: select by explicit
+cutoff and score eligibility, not a postseason flag alone. FBS phase labels do
+not imply every FCS observation shares that phase.
+
+Repeated matchups were inspected explicitly: 16 pairs are genuine conference
+championship, playoff, bowl, or home-and-away rematches, recorded with source
+notes and dates. The generic current-season reconciler's 30-day ambiguity guard
+rejects some legitimate conference-title rematches. This research preparation
+retains the exact reviewed pairs and applies the existing completion/score checks
+one row at a time; unreviewed repeated pairs fail closed. No production reconciler
+or raw evidence is changed. The inference engine must retain both observations
+and its existing grouped-pair factors.
+
+Use the established 2025 Context **1.2** prior rows from
+`data/processed/preseason/context/predictions.csv`, with their recorded August 15,
+2025 effective cutoff, model specification/report and feature provenance. These
+historical forecasts use the established frozen model (the report's historical
+final-test fit is trained through 2021); they are not a new fit. Do not substitute
+2026 Context 1.4 or a later DB-repair candidate. The full 136-rank FBS PMFs and
+uniform 129-rank FCS fallback constructor inputs are frozen. The historical
+loader applies the existing Team normalization once and verifies the resulting
+prior-PMF hash. All candidates share those exact season-specific inputs.
+
+There are no retained 2025 published Quality of Record/Play bundles. This limits
+**published endpoint parity**, not feasibility of the comparison. Execution must
+construct independent references with existing `infer_quality_of_record` and
+margin `infer_posterior` plus `strip_context_prior`, then compare all FBS PMFs to
+λ=0/1 with the same tolerances. This costs four extra solves across two snapshots.
+These references are research outputs, never labeled recovered publications.
+No such inference is performed in this design ticket.
+
+Keep 2025 and 2026 panels separate: prior versions, rank supports, populations and
+information phases differ. Compare pre-bowl with final explicitly and annotate
+postseason roster/coaching limitations; do not interpret this as a controlled
+roster-effect estimate. A completed-season study can now proceed without new
+acquisition, model fitting, production backfill, or another data-prerequisite
+issue. Original acquisition availability remains unverified and must stay labeled.
 
 ### Campbell correction, historical lineage, and availability limits
 
@@ -114,7 +157,7 @@ changes between cutoffs explicitly.
 ## Frozen candidate inference and gates
 
 Use `infer_quality_of_results` at λ = **0, 0.25, 0.50, 0.75, 1** with the byte-pinned
-V1 likelihood and each snapshot's retained Context prior and complete opponent
+V1 likelihood and each snapshot's frozen season-specific Context prior and complete opponent
 network. The game factor is `P(sign(m)|ranks)^(1−λ) p(m|ranks)^λ`. Preserve site,
 subdivision, rematch grouping, full PMFs, existing prior stripping, and uniform
 Performance distributions for zero-game FBS teams. No scalar strength/Elo layer,
@@ -122,7 +165,7 @@ likelihood refit, new λ, empirical schedule correction, or endpoint averaging i
 permitted. Load snapshots directly from specification paths, never rediscover
 current publication slots in the execution runner.
 
-All selected sources retain deterministic damped loopy sum-product BP with
+The retained 2026 sources and frozen 2025 plans use deterministic damped loopy sum-product BP with
 max_iterations=500, tolerance=1e−9, damping=0.35. Use cold starts, canonical team
 and game ordering, and the same eligible rows for every candidate. Keep inference
 rank coordinates separate from display ranks obtained by sorting expected rank
@@ -131,15 +174,16 @@ permutation of the FBS population. FCS variables remain uncertain but are exclud
 from FBS display ranking.
 
 Before inference verify every execution-input and frozen artifact hash, row population, cutoff, version, game
-ID, prior/support, Campbell correction and endpoint identity. Reuse
+ID, prior/support, and endpoint identity, plus the Campbell correction for 2026. For 2026 reuse
 `_input_bundle`/`_baseline_rankings` with the pinned `PublishedInput` paths, not
 `run_experiment` from issue 242: that runner discovers weeks and makes additional
 adaptive selections/sweeps outside this design. The frozen loader must supply
 retained FCS fallbacks. Hash the post-fallback prior PMFs as well as the prior file.
 
 Require convergence and finite nonnegative PMFs summing to 1 within 1e−9. Rerun
-λ=0/1 and compare all FBS prior-stripped PMFs to retained Quality of Record/Play:
-maximum absolute cell difference ≤1e−8, expected-rank difference ≤138×1e−8.
+λ=0/1 and compare all FBS prior-stripped PMFs to retained Quality of Record/Play
+for 2026, or the independent existing-method references described above for 2025:
+maximum absolute cell difference ≤1e−8, expected-rank difference ≤N×1e−8, where N is that snapshot’s FBS rank support.
 Require identical ordinal order except for means tied within that propagated
 numerical tolerance; report all such ties. A failure stops that snapshot without
 relaxing settings. Retain partial failures and timings. No candidate gets a
@@ -149,7 +193,7 @@ adding a chronological model. No production artifact is overwritten.
 
 ## Whole-population evaluation
 
-Infer every network variable; report all 138 FBS PMFs and summaries, retaining
+Infer every network variable; report all 136 (2025) or 138 (2026) FBS PMFs and summaries, retaining
 zero-game teams as unrated/uniform. Rank contrasts use teams with ≥1 eligible
 game; longitudinal comparisons use the intersection of rated populations and
 report entrants separately. Never silently discard failed candidates or teams.
@@ -189,6 +233,16 @@ to own games. Do not compare the three checkpoints as independent replications.
 
 ### Accomplishments and opponent-aware descriptions
 
+The two historical snapshots retain prior-only descriptors before candidate
+inference: integrate the complete 2025 Context 1.2 PMFs, with Colorado's full PMF
+(nearest retained expected rank 65) as the common schedule reference. Keep these
+frozen descriptors and their populations. After baseline execution, also report
+2025 descriptions using the independently reproduced margin Context posterior
+as the opponent reference, matching the retrospective 2026 description below.
+Those secondary descriptions must not change the case inventory or frozen prior
+strata. Do not pool prior-only and posterior-based schedule values as one measure.
+
+
 Use every team's actual eligible W–L, game count, margins (mean, median, complete
 list), close results (|margin|≤7), dominant wins (margin≥28), and FBS/FCS mix.
 Schedule quality must use the integrated V1 opponent distributions at actual
@@ -210,13 +264,19 @@ reference allows reproducible case selection without running new inference.
 Cavity or game-removal diagnostics below address self-influence for a bounded
 subset. FCS effects and generic fallback priors limit all these descriptions.
 
-Before consulting candidate outputs, fix QoP ordinal bands 1–10 (elite), 11–40
+For 2026, before consulting candidate outputs, fix QoP ordinal bands 1–10 (elite), 11–40
 (strong), 41–95 (middle), 96–138 (weak). Within each band/snapshot sort by schedule
 reference mean, then string ID; partition using `numpy.array_split(...,3)` into
 hard/middle/easy terciles. Also tabulate win fractions [0,.3), [.3,.6], (.6,.8),
 [.8,1], raw W–L/game-count groups, and near-expected-record teams satisfying
 `abs(wins−context_expected_wins)≤1`. Report sample sizes and empty cells; do not
 change cutpoints after seeing candidates.
+
+For 2025 apply the same strength-band cutpoints to the retained Context **prior**
+order, ending the weak band at 136. Primary historical schedule terciles use the
+frozen prior-based descriptors and the near-expected-record condition is
+`abs(wins−prior_expected_wins)≤1`. The secondary posterior-reference descriptions
+remain separate; they do not redefine those primary strata or select new cases.
 
 For each panel and all pairwise candidate changes report signed mean, median,
 mean absolute change, SD/width changes, full distributions and top/boundary
@@ -308,7 +368,40 @@ the concrete rows and diagnostic game IDs are machine-frozen, so execution does
 not repeat a subjective selection step. Every selected case asks its category's
 question at each available cutoff and includes all five candidates, eligible
 opponents and posterior uncertainty. The inventory is a 2026 team-season
-inventory; there are no defensible frozen 2025 cases from the available evidence.
+inventory. The additional recovered-2025 inventory is specified below.
+
+### Frozen 2025 cases
+
+`historical_cases.json` adds 11 team-season cases, selected at **2025-prebowl**
+and followed at final. Selection uses only the actual pre-bowl evidence and
+retained preseason Context 1.2 reference order/PMFs. No endpoint or intermediate
+candidate results are computed or read to choose these cases.
+
+| Team | ID | Pre-bowl W–L | Selection |
+| --- | --- | --- | --- |
+| Alabama | 333 | 10–3 | elite prior reference |
+| Boise State | 68 | 9–4 | strong prior reference |
+| Buffalo | 2084 | 5–7 | middle prior reference; matched-record pair |
+| Florida Atlantic | 2226 | 4–8 | weak prior reference |
+| Iowa | 2294 | 8–4 | prior reference boundary 12 |
+| SMU | 2567 | 8–4 | prior reference boundary 25 |
+| Navy | 2426 | 9–2 | excellent record/easiest qualifying prior-based schedule |
+| Wisconsin | 275 | 4–8 | middling record/hardest qualifying prior-based schedule |
+| Kentucky | 96 | 5–7 | middle matched-record schedule pair with Buffalo |
+| Purdue | 2509 | 2–10 | weak matched-record schedule pair |
+| UTEP | 2638 | 2–10 | weak matched-record schedule pair with Purdue |
+
+Historical selection mirrors the four nearest-reference positions 5/20/65/120,
+excellent/middling record rules and maximum-gap exact-record pairs, using **prior**
+reference order instead of unavailable published QoP. Boundary references 12/25
+are prior-based inspection anchors, not claims about candidate positions.
+The other categories, including established QoR/QoP disagreement and targeted
+close-loss/narrow-win/blowout diagnostics, remain covered by the frozen 2026
+inventory. This avoids manufacturing historical endpoints or adding per-category
+quotas. The complete inventory is 27 team-season cases (70 snapshot-case rows).
+Show actual game lists and pre-bowl→final changes for all historical cases,
+including the 55 extra observations across the entire network; do not attribute
+each team's movement only to its own postseason games.
 
 ## Game-level diagnostics and limits
 
@@ -377,29 +470,32 @@ issue 252 and is not a universal point-to-victory exchange rate.
 
 ## Compute, reproducibility and bounded execution ticket
 
-No smoke-test inference is necessary: retained source diagnostics already record
-converged real networks. Week2/5/9 Context solves took approximately
-0.388/2.018/13.540 seconds (existing hardware, 253/266/266 variables). These are
-**endpoint reference timings, not measured new candidate runtimes**. Five solves
-per checkpoint give a baseline estimate of `5×sum(t)=79.73 seconds`. Network
-cycles, intermediate weights, binary factors and host variance can increase cost.
-Budget four times retained timing per solve, at least one minute per solve,
-plus IO/analysis; allow two wall-clock hours and 4 GiB RSS overall, with a
-600-second single-solve limit. Record actual elapsed and peak RSS in execution.
+No smoke-test inference is necessary for this bounded design. Retained 2026
+source diagnostics record converged real networks: Week2/5/9 took approximately
+0.388/2.018/13.540 seconds (253/266/266 variables). Retained 2025 backtest summaries
+record a 19.08-second Context solve at December 13; they are feasibility evidence,
+not recovered endpoint bundles or measurements of the proposed five candidates.
+Use 30 seconds per reconstructed 2025 solve for initial planning, conservatively
+above that reference. The final network has 1,625 observations and legitimate
+rematches, so convergence and runtime still require execution verification.
 
-The plan uses 15 baseline solves, 40 four-state counterfactual solves, five
-removal solves per unique frozen game, and three Week9 input-order reversals.
-The exact total is in `execution.maximum_network_solves` (at most 83 with five
-unique removal games). At the largest reference timing, 83 solves are about
-19 minutes before the safety multiplier; a fourfold bound is about 75 minutes,
-within the two-hour cap; applying the one-minute planning floor yields about
-83 minutes plus IO/analysis. The baseline's 79.73 seconds is not a promise for the
-whole diagnostic study. Zero simulations or acceptance searches are required.
+The plan now contains **25 candidate baseline solves** across five snapshots,
+**four independent historical endpoint-reference solves**, 40 four-state probes,
+25 game removals, and three input-order reversals: **97 network solves** total.
+The perturbations and reversals remain fixed to 2026 Week 9; the two 2025
+snapshots add full-population and frozen-case comparisons, not a new exhaustive
+attribution campaign. Raw timing extrapolation is about 8.3 minutes overall,
+but that is not a measured candidate-run duration. Budget four times the retained
+reference timing with a one-minute floor per solve (two minutes for the 14 added
+historical solves): approximately 111 minutes before analysis/IO. The frozen
+wall budget is **three hours**, RSS budget 4 GiB, and single-solve timeout 600
+seconds. Preserve failures and actual timings rather than relaxing the protocol.
 
 Use a serial worker to bound memory; share binary/margin factor surfaces within
 a snapshot, discard between snapshots. Two dense 138² float64 surfaces for 975
 games occupy about 283 MiB before BP/grouped factors, messages and Python overhead;
-FCS surfaces are smaller. Keep PMFs in deterministic gzip (`mtime=0`). Checkpoint
+FCS surfaces are smaller. At 1,625 games, two full 136² surfaces would occupy
+about 459 MiB; the existing 4 GiB process cap also covers BP/grouped factors. Keep PMFs in deterministic gzip (`mtime=0`). Checkpoint
 by input hashes, λ, complete inference configuration and diagnostic perturbation,
 never by label alone; only resume verified matching converged results. Preserve
 failed attempts and stop affected snapshots at resource limits. Do not relax
@@ -411,13 +507,17 @@ The next execution ticket should implement a narrowly scoped runner under
 
 1. Run `uv run python scripts/design_issue_263_real_seasons.py` to verify frozen
    inputs/artifacts. Load only specification-selected paths and inventory IDs.
+   Use `_input_bundle` for the three 2026 publications and
+   `load_historical_network` for the two frozen 2025 input directories; do not
+   feed the unpublished reconstructions to a production publication builder.
    Record the execution commit, pinned model hashes, dependency lock and runtime.
-2. Execute 15 baseline solves with endpoint/numerical/population gates; retain full
+2. Execute 25 baseline solves and four independent 2025 endpoint references with
+   endpoint/numerical/population gates; retain full
    PMFs and `rankings.csv`, `convergence.csv`, `endpoint_parity.json`.
-3. Produce all ten pairwise contrasts per snapshot, accomplishments/schedule/
+3. Produce all ten pairwise contrasts for each of the five snapshots, accomplishments/schedule/
    uncertainty panels and longitudinal transitions before interpreting cases.
    Save `population_contrasts.csv` and `accomplishment_panels.csv` plus full rows.
-4. Report frozen cases using `cases.json` and per-game actual evidence; save
+4. Report frozen cases using `cases.json`, `historical_cases.json`, and per-game actual evidence; save
    `case_results.csv`. Run the fixed removal/four-state/order diagnostics with
    entire-network reruns; save `game_diagnostics.csv` and uncertainty details.
 5. Save a manifest with every input/output hash, exact perturbations, timings,
@@ -434,15 +534,13 @@ the execution ticket. Run Ruff and the sandbox-compatible Python suite; CI check
 API tests. No browser validation is required because no site files change.
 
 `publication_config.json` preserves the design-time configuration. The original
-mutable configuration, normalized corpus and historical availability-audit files
+mutable configuration, current normalized corpus and historical availability-audit files
 are identified by `audit_only_input_sha256`; they are not execution dependencies.
 New publications or updated current acquisition files therefore do not block the
 frozen study or expand its population. All retained snapshot bundles, priors,
 models, implementation sources and the copied configuration remain hash-gated.
 
-The full 2025 comparison, prospective availability proof, likelihood/prior
-misspecification, roster/coach transition effects and causal schedule bias remain
-outside what these retained snapshots can establish. There is no unresolved
-choice blocking the bounded 2026 study; completed-season evidence requires the
-separate provenance prerequisite described above. These limits must accompany
-any execution conclusion.
+Prospective availability proof, likelihood/prior misspecification, roster/coach
+transition effects and causal schedule bias remain outside what these retained
+inputs can establish. The five-snapshot 2025/2026 study is ready for execution;
+these limits must accompany its conclusions.

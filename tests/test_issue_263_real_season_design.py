@@ -31,11 +31,12 @@ def test_frozen_population_and_provenance(specification):
     assert spec["selected_publication_slots"] == list(design.SELECTED_SLOTS)
     assert len(spec["snapshot_audit"]) == 8
     assert spec["historical_audit"]["context_2025_prior_rows"] == 136
-    assert {row["phase"] for row in spec["unavailable_snapshots"]} == {
+    assert spec["unavailable_snapshots"] == []
+    assert len(spec["selected_snapshot_ids"]) == 5
+    assert {row["information_phase"] for row in spec["historical_snapshots"]} == {
         "pre_bowl",
         "final",
     }
-    assert all(not row["selected"] for row in spec["unavailable_snapshots"])
     assert spec["candidate_configuration"]["margin_weights"] == [0, 0.25, 0.5, 0.75, 1]
     for snapshot in spec["snapshot_audit"]:
         assert snapshot["campbell_corrected"]
@@ -43,7 +44,9 @@ def test_frozen_population_and_provenance(specification):
         assert snapshot["fbs_team_ids"] == snapshot["rated_fbs_team_ids"]
         assert snapshot["historical_likelihood_version"] == "V1"
     assert len(spec["case_selection"]["case_team_ids"]) == 16
-    assert spec["execution"]["maximum_network_solves"] == 83
+    assert spec["execution"]["maximum_network_solves"] == 97
+    assert spec["execution"]["baseline_solves"] == 25
+    assert spec["execution"]["historical_endpoint_reference_solves"] == 4
     probes = spec["game_diagnostics"]["counterfactuals"]
     assert {p["profile"] for p in probes} == {"elite", "weak"}
     assert all(p["margins"] == [-3, 3, 10, 35] for p in probes)
@@ -103,9 +106,12 @@ def test_regeneration_is_deterministic_without_any_candidate_inference(
     # Python patch versions may differ on CI, so compare recomputed numeric
     # descriptors to the retained values with a tight absolute tolerance.
     # IDs, categories, inputs, and snapshot hashes still compare exactly.
-    for artifact in FROZEN.iterdir():
-        actual = first / artifact.name
-        assert actual.read_bytes() == (repeated / artifact.name).read_bytes()
+    for artifact in FROZEN.rglob("*"):
+        if not artifact.is_file():
+            continue
+        relative = artifact.relative_to(FROZEN)
+        actual = first / relative
+        assert actual.read_bytes() == (repeated / relative).read_bytes()
         if artifact.name == "manifest.json":
             continue  # Output hashes are verified against the generated files.
         if artifact.suffix == ".csv":
