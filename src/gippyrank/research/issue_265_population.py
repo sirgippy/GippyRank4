@@ -142,15 +142,24 @@ def compare(p: np.ndarray, q: np.ndarray) -> dict:
     }
 
 
-def top_changes(left: dict[str, int], right: dict[str, int], k: int) -> dict:
+def top_changes(
+    left: dict[str, int], right: dict[str, int], k: int, names: dict[str, str]
+) -> dict:
     a, b = {t for t in left if left[t] <= k}, {t for t in right if right[t] <= k}
     return {
         f"top{k}_overlap": len(a & b),
         f"top{k}_symmetric_difference": len(a ^ b),
         f"top{k}_entries": sorted(b - a),
         f"top{k}_exits": sorted(a - b),
+        f"top{k}_entry_names": [names[t] for t in sorted(b - a)],
+        f"top{k}_exit_names": [names[t] for t in sorted(a - b)],
         f"top{k}_union_movement": [
-            {"team_id": t, "before": left.get(t), "after": right.get(t)}
+            {
+                "team_id": t,
+                "team_name": names[t],
+                "before": left.get(t),
+                "after": right.get(t),
+            }
             for t in sorted(a | b)
         ],
     }
@@ -637,8 +646,18 @@ def analyze(root: Path, output: Path) -> None:
                     "ordering_inversions": inversions,
                     "ordering_inversion_fraction": inversions
                     / (len(pair_rows) * (len(pair_rows) - 1) / 2),
-                    **top_changes(orders[low], orders[high], 10),
-                    **top_changes(orders[low], orders[high], 25),
+                    **top_changes(
+                        orders[low],
+                        orders[high],
+                        10,
+                        {t: r["team_name"] for t, r in ds.items()},
+                    ),
+                    **top_changes(
+                        orders[low],
+                        orders[high],
+                        25,
+                        {t: r["team_name"] for t, r in ds.items()},
+                    ),
                 }
             )
             by_id = {r["team_id"]: r for r in pair_rows}
@@ -854,8 +873,18 @@ def analyze(root: Path, output: Path) -> None:
                         for r in new_rows
                     ),
                     **contrast_summary(rows),
-                    **top_changes(eo[weight], lo[weight], 10),
-                    **top_changes(eo[weight], lo[weight], 25),
+                    **top_changes(
+                        eo[weight],
+                        lo[weight],
+                        10,
+                        {t: r["team_name"] for t, r in ed.items()},
+                    ),
+                    **top_changes(
+                        eo[weight],
+                        lo[weight],
+                        25,
+                        {t: r["team_name"] for t, r in ed.items()},
+                    ),
                 }
             )
     files = {

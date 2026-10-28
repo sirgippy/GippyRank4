@@ -258,3 +258,16 @@ def test_failed_cell_preserves_successes_and_does_not_claim_complete(
     assert (
         len(json.loads((tmp_path / "endpoint_parity.json").read_text())["second"]) == 2
     )
+
+
+def test_top_set_transitions_retain_named_entries_exits_and_union():
+    result = population.top_changes(
+        {"a": 1, "b": 2}, {"b": 1, "a": 2}, 1, {"a": "Alpha", "b": "Beta"}
+    )
+    assert result["top1_entries"] == ["b"]
+    assert result["top1_entry_names"] == ["Beta"]
+    assert result["top1_exit_names"] == ["Alpha"]
+    assert result["top1_union_movement"] == [
+        {"team_id": "a", "team_name": "Alpha", "before": 1, "after": 2},
+        {"team_id": "b", "team_name": "Beta", "before": 2, "after": 1},
+    ]
