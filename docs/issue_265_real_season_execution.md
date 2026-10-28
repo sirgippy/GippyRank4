@@ -14,18 +14,24 @@ verification command is read-only:
 
 ```bash
 uv run python scripts/design_issue_263_real_seasons.py
-uv run python scripts/run_issue_265_real_seasons.py
+uv run python scripts/run_issue_265_real_seasons.py --verify-only
 ```
 
 On a restricted worker with a read-only default uv cache, prefix commands with
 `UV_CACHE_DIR=/tmp/gippyrank-uv-cache`. No API key, acquisition, external checkout,
 new publication discovery, or production snapshot builder is required.
 
-Default outputs live under `data/research/issue_265_real_seasons`. Use
-`--output-dir /absolute/path` for an isolated reproduction. Checkpoints are
-portable within the recorded source/dependency/runtime environment. Every cell
-fingerprint covers the entire frozen input inventory, actual inference sources,
-complete snapshot specification, weight, job kind, configuration and input order.
+The completed outputs live under `data/research/issue_265_real_seasons` and are
+immutable historical evidence. The default command also verifies this saved run
+without inference or writes. Use `--output-dir /absolute/path` to identify another
+run; an empty directory still requests new inference. Newly generated checkpoints
+require the exact scoped source/dependency/runtime fingerprint. Every cell
+fingerprint covers the frozen input inventory, the explicit `BASELINE_SOURCES`
+list, complete snapshot specification, weight, job kind, configuration and input order.
+The list covers the runner, frozen loaders and validators, factors/BP, prior
+stripping, shared likelihood/hash primitives, dependency lock and Python pin.
+Adding or modifying unrelated research modules does not change it. A mismatch
+is rejected before an existing run's provenance can be overwritten.
 Analysis has a separate source hash, so refining a descriptive table or figure
 does not require repeating inference. Runtime timings and measured peak memory
 vary between executions; scientific summaries and gzip outputs are deterministic
@@ -39,11 +45,46 @@ fails. The saved execution state cannot claim completion without all 32 cells
 and passing gates in all five snapshots. Every analysis replay independently
 validates all saved cells and recomputes the parity gates.
 
-To regenerate analysis from compatible saved inference without another solve:
+The original 32 cells remain identified by execution revision
+`aba5f265a7bbca3bb3f6014d7c5500d1e9fdcd5a` and fingerprint
+`dc7ab5703b9a7d464c7782b4d0ab75d8167f9cedd7a03d533e6d21f50addc0fa`.
+Neither their fingerprints nor their provenance have been migrated or rewritten.
+The verifier authenticates the exact original manifest, all its output hashes,
+the self-consistent original provenance, frozen inputs/configuration, relevant
+dependency hashes, every checkpoint's identity/PMFs/convergence, and all endpoint
+and input-order gates. Because this repair changes the runner's own file hash,
+one explicit compatibility check pins its original inference/loader definitions
+and project imports using their AST hash. Provenance/CLI/verification additions
+do not change that inference path. Other relevant files must still match the
+original source hashes. This exception accepts only this specific historical
+run, never newly generated checkpoints.
+
+Historical runtime versions remain audit data. Read-only verification works on
+another platform without implying that the original solves ran there. Numerical
+gates are recomputed against the frozen tolerances; insignificant differences in
+floating-point error summaries across platforms need not be bit-identical.
+
+The diagnostic study can consume the verified original cells directly:
+
+```python
+from pathlib import Path
+from gippyrank.research.issue_265_real_seasons import verify_completed_execution
+
+root = Path.cwd()
+run = verify_completed_execution(root, root / "data/research/issue_265_real_seasons")
+baseline = run.cells["2025-final"]["baseline", 0.25]
+pmfs = baseline["pmfs"]  # Full FBS PMFs, with original execution identity.
+```
+
+For newly generated compatible runs, analysis can be regenerated without solving:
 
 ```bash
-uv run python scripts/run_issue_265_real_seasons.py --analyze-only
+uv run python scripts/run_issue_265_real_seasons.py --analyze-only --output-dir /path/to/new-run
 ```
+
+In-place analysis regeneration of the historical run is rejected to preserve its
+anchored manifest and scientific outputs. Follow-up diagnostic outputs belong in
+their own directory and use the read-only handoff above.
 
 The serial runner polls Linux process RSS and wall time every 0.1 seconds with
 `setitimer`; a solve stops at 600 seconds or 4 GiB RSS, and the invocation has a

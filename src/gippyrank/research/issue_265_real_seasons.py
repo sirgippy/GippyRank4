@@ -7,8 +7,10 @@ perturbation experiments, warm starts, or fitting occurs here.
 from __future__ import annotations
 
 import argparse
+import ast
 import gc
 import gzip
+import hashlib
 import json
 import platform
 import resource
@@ -44,7 +46,6 @@ from gippyrank.research.issue_242_quality_of_results import (
     _read_rows,
     _sha256_json,
 )
-from gippyrank.research.issue_261_quality_of_results import write_json
 from gippyrank.research.issue_263_historical_evidence import load_historical_network
 from gippyrank.research.issue_263_real_season_design import (
     ARTIFACT_DIR,
@@ -55,6 +56,66 @@ from gippyrank.research.quality_of_results import infer_quality_of_results
 
 OUTPUT = "data/research/issue_265_real_seasons"
 CONFIG = {"max_iterations": 500, "tolerance": 1e-9, "damping": 0.35}
+# Audited execution path: frozen loaders/validators, factors/BP, prior stripping,
+# shared likelihood/hash primitives and this runner. Imported research programs
+# used only during design or reporting are not baseline inference dependencies.
+BASELINE_SOURCES = (
+    "src/gippyrank/artifact_hashes.py",
+    "src/gippyrank/data/cfbd.py",
+    "src/gippyrank/data/cfbd_games.py",
+    "src/gippyrank/data/game_evidence.py",
+    "src/gippyrank/likelihood_provenance.py",
+    "src/gippyrank/methodology.py",
+    "src/gippyrank/modeling.py",
+    "src/gippyrank/performance_snapshot.py",
+    "src/gippyrank/performance_v1.py",
+    "src/gippyrank/posterior/engine.py",
+    "src/gippyrank/posterior/predictive.py",
+    "src/gippyrank/posterior/season_simulation.py",
+    "src/gippyrank/posterior/snapshots.py",
+    "src/gippyrank/quality_of_record.py",
+    "src/gippyrank/quality_of_record_snapshot.py",
+    "src/gippyrank/research/issue_242_quality_of_results.py",
+    "src/gippyrank/research/issue_263_historical_evidence.py",
+    "src/gippyrank/research/issue_263_real_season_design.py",
+    "src/gippyrank/research/quality_of_results.py",
+    "src/gippyrank/research/issue_265_real_seasons.py",
+    "scripts/run_issue_265_real_seasons.py",
+    "uv.lock",
+    ".python-version",
+)
+
+# One immutable, already completed run. These anchors identify the original
+# artifacts, not a replacement execution identity or rewritten fingerprints.
+HISTORICAL_FINGERPRINT = (
+    "dc7ab5703b9a7d464c7782b4d0ab75d8167f9cedd7a03d533e6d21f50addc0fa"
+)
+HISTORICAL_REVISION = "aba5f265a7bbca3bb3f6014d7c5500d1e9fdcd5a"
+HISTORICAL_MANIFEST_SHA256 = (
+    "6c6454697b19109ad76b3cf4dfd8cde8afa5aa7162882e9a81cff692b03c8f37"
+)
+HISTORICAL_RUNNER_SHA256 = (
+    "b30fd16de9a26437d1a2f379cc759fae9b8d12a233d537a52e3c9706bc0eb3d8"
+)
+HISTORICAL_RUNNER_DEFINITIONS = {
+    "Network",
+    "load_network",
+    "validate_pmfs",
+    "mean_rank",
+    "parity",
+    "cell_fingerprint",
+    "current_rss_bytes",
+    "resource_guard",
+    "solve",
+}
+
+
+def write_json(path: Path, value: object) -> None:
+    """Atomic execution metadata, independent of other research runners."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n")
+    temporary.replace(path)
 
 
 @dataclass
@@ -222,21 +283,8 @@ def parity(
     }
 
 
-def provenance(root: Path, spec: dict) -> dict:
-    # Include transitive implementation sources, not just this entry point.
-    paths = sorted(root.glob("src/gippyrank/**/*.py"))
-    paths = [p for p in paths if p.name != "issue_265_population.py"]
-    paths += [
-        root / p
-        for p in ("uv.lock", ".python-version", "scripts/run_issue_265_real_seasons.py")
-    ]
-    sources = {str(p.relative_to(root)): sha256(p) for p in paths}
-    environment = {
-        "python": platform.python_version(),
-        "numpy": np.__version__,
-        "scipy": scipy.__version__,
-        "platform": platform.platform(),
-    }
+def frozen_input_hashes(root: Path, spec: dict) -> dict[str, str]:
+    """The protocol's exact inventory, validated rather than relabeled on drift."""
     inputs = {**spec["input_sha256"]}
     for snapshot in spec["snapshot_audit"]:
         inputs.update(snapshot["artifact_sha256"])
@@ -247,12 +295,26 @@ def provenance(root: Path, spec: dict) -> dict:
     inputs[f"{ARTIFACT_DIR}/manifest.json"] = sha256(
         root / ARTIFACT_DIR / "manifest.json"
     )
+    for path, expected in inputs.items():
+        if sha256(root / path) != expected:
+            raise ValueError(f"frozen input hash mismatch: {path}")
+    return inputs
+
+
+def provenance(root: Path, spec: dict) -> dict:
+    sources = {path: sha256(root / path) for path in BASELINE_SOURCES}
+    environment = {
+        "python": platform.python_version(),
+        "numpy": np.__version__,
+        "scipy": scipy.__version__,
+        "platform": platform.platform(),
+    }
     revision = subprocess.check_output(
         ["git", "rev-parse", "HEAD"], cwd=root, text=True
     ).strip()
     value = {
         "source_sha256": sources,
-        "input_sha256": inputs,
+        "input_sha256": frozen_input_hashes(root, spec),
         "environment": environment,
         "configuration": CONFIG,
         "scope": "25 baselines + 4 independent references + 3 order reversals",
@@ -305,6 +367,182 @@ def read_checkpoint(path: Path, fingerprint: str, network: Network) -> dict:
     if value["counts"] != network.counts:
         raise ValueError("checkpoint evidence counts mismatch")
     return value
+
+
+@dataclass
+class VerifiedExecution:
+    """Read-only handoff of validated cells, retaining their original identity."""
+
+    specification: dict[str, Any]
+    origin: dict[str, Any]
+    execution: dict[str, Any]
+    networks: dict[str, Network]
+    cells: dict[str, dict[tuple[str, float], dict[str, Any]]]
+    historical: bool
+
+
+def historical_runner_signature(root: Path) -> str:
+    """Pin the original inference path while allowing the provenance repair.
+
+    This single-run compatibility check covers the original inference/loader
+    definitions and project imports. It does not exempt arbitrary edits to solve
+    or silently declare a newly generated checkpoint historically compatible.
+    """
+    tree = ast.parse(
+        (root / "src/gippyrank/research/issue_265_real_seasons.py").read_text()
+    )
+    nodes = [
+        node
+        for node in tree.body
+        if (
+            isinstance(node, (ast.FunctionDef, ast.ClassDef))
+            and node.name in HISTORICAL_RUNNER_DEFINITIONS
+        )
+        or (
+            isinstance(node, ast.ImportFrom)
+            and (node.module or "").startswith("gippyrank.")
+            and node.module != "gippyrank.research.issue_261_quality_of_results"
+        )
+    ]
+    return hashlib.sha256(
+        ast.dump(
+            ast.Module(body=nodes, type_ignores=[]), include_attributes=False
+        ).encode()
+    ).hexdigest()
+
+
+def verify_completed_execution(root: Path, output: Path) -> VerifiedExecution:
+    """Consume all 32 cells without solving, writing, or changing their identity.
+
+    Only the explicitly pinned original run has historical compatibility. Every
+    newly generated run still requires its exact current execution fingerprint.
+    Historical runtime versions remain audit data; reading immutable PMFs on a
+    different platform does not assert that inference ran on that platform.
+    """
+    spec = check_design(root, root / ARTIFACT_DIR)
+    origin = _read_json(output / "provenance.json")
+    historical = origin["fingerprint"] == HISTORICAL_FINGERPRINT
+    if historical:
+        if sha256(output / "manifest.json") != HISTORICAL_MANIFEST_SHA256:
+            raise ValueError("historical manifest integrity mismatch")
+        manifest = _read_json(output / "manifest.json")
+        payload = {
+            k: v
+            for k, v in origin.items()
+            if k not in {"execution_revision", "fingerprint"}
+        }
+        if (
+            manifest["execution_provenance"] != origin
+            or origin["execution_revision"] != HISTORICAL_REVISION
+            or _sha256_json(payload) != HISTORICAL_FINGERPRINT
+        ):
+            raise ValueError("historical execution identity mismatch")
+        if origin["configuration"] != CONFIG or origin[
+            "input_sha256"
+        ] != frozen_input_hashes(root, spec):
+            raise ValueError("historical inputs/configuration mismatch")
+        for path in BASELINE_SOURCES:
+            if path == "src/gippyrank/research/issue_265_real_seasons.py":
+                continue  # Its inference definitions/imports are checked below.
+            if sha256(root / path) != origin["source_sha256"][path]:
+                raise ValueError(f"historical inference dependency changed: {path}")
+        if historical_runner_signature(root) != HISTORICAL_RUNNER_SHA256:
+            raise ValueError("historical runner inference path changed")
+        for path, expected in manifest["output_sha256"].items():
+            if sha256(output / path) != expected:
+                raise ValueError(f"historical output integrity mismatch: {path}")
+    elif origin["fingerprint"] != provenance(root, spec)["fingerprint"]:
+        raise ValueError("checkpoint input/configuration/source mismatch")
+    execution = _read_json(output / "execution.json")
+    gates = _read_json(output / "endpoint_parity.json")
+    if (
+        not execution["complete"]
+        or execution["failures"]
+        or execution["expected_cells"] != 32
+        or len(execution["cells"]) != 32
+        or set(gates) != set(spec["selected_snapshot_ids"])
+    ):
+        raise ValueError("incomplete execution cannot be consumed")
+    if not all(g["passed"] for snapshot in gates.values() for g in snapshot.values()):
+        raise ValueError("numerical gates block consumption")
+    networks, cells = {}, {}
+    for snapshot_id in spec["selected_snapshot_ids"]:
+        network = load_network(root, spec, snapshot_id)
+        networks[snapshot_id] = network
+        jobs = [("baseline", w) for w in MARGIN_WEIGHTS]
+        if network.specification["season"] == 2025:
+            jobs += [("reference", 0.0), ("reference", 1.0)]
+        if snapshot_id == spec["game_diagnostics"]["publication_slot"]:
+            jobs += [
+                ("reversed", w)
+                for w in spec["candidate_configuration"]["order_reversal_check_weights"]
+            ]
+        recorded = [c for c in execution["cells"] if c["snapshot_id"] == snapshot_id]
+        if len(recorded) != len(jobs) or {
+            (c["kind"], c["margin_weight"]) for c in recorded
+        } != set(jobs):
+            raise ValueError("execution coverage mismatch")
+        validated = {}
+        for kind, weight in jobs:
+            relative = f"checkpoints/{snapshot_id}/{kind}-{weight:g}.json.gz"
+            fingerprint = cell_fingerprint(network, origin, kind, weight)
+            cell = read_checkpoint(output / relative, fingerprint, network)
+            if (
+                cell["snapshot_id"] != snapshot_id
+                or cell["kind"] != kind
+                or cell["margin_weight"] != weight
+                or (historical and cell["execution_revision"] != HISTORICAL_REVISION)
+            ):
+                raise ValueError("checkpoint execution identity mismatch")
+            entry = next(
+                c for c in recorded if (c["kind"], c["margin_weight"]) == (kind, weight)
+            )
+            if (
+                entry["checkpoint"] != relative
+                or entry["fingerprint"] != fingerprint
+                or any(entry[k] != v for k, v in cell["diagnostics"].items())
+            ):
+                raise ValueError("checkpoint execution inventory mismatch")
+            validated[kind, weight] = cell
+        recomputed = {}
+        for weight, family in ((0.0, "qor"), (1.0, "qop")):
+            reference = (
+                network.references[family]
+                if network.references
+                else {
+                    t: np.array(p)
+                    for t, p in validated["reference", weight]["pmfs"].items()
+                }
+            )
+            recomputed[family] = parity(
+                {
+                    t: np.array(p)
+                    for t, p in validated["baseline", weight]["pmfs"].items()
+                },
+                reference,
+                network.counts,
+            )
+        for kind, weight in jobs:
+            if kind == "reversed":
+                recomputed[f"order_{weight:g}"] = parity(
+                    {
+                        t: np.array(p)
+                        for t, p in validated[kind, weight]["pmfs"].items()
+                    },
+                    {
+                        t: np.array(p)
+                        for t, p in validated["baseline", weight]["pmfs"].items()
+                    },
+                    network.counts,
+                )
+        # Recheck the frozen tolerances, not bitwise equality of floating-point
+        # error summaries across BLAS/platforms. The original gates are anchored.
+        if set(recomputed) != set(gates[snapshot_id]) or not all(
+            g["passed"] for g in recomputed.values()
+        ):
+            raise ValueError("recomputed numerical gates failed")
+        cells[snapshot_id] = validated
+    return VerifiedExecution(spec, origin, execution, networks, cells, historical)
 
 
 def current_rss_bytes() -> int:
@@ -413,8 +651,21 @@ def solve(
 def execute(root: Path, output: Path) -> dict:
     started = time.monotonic()
     spec = check_design(root, root / ARTIFACT_DIR)
+    saved = (
+        _read_json(output / "provenance.json")
+        if (output / "provenance.json").exists()
+        else None
+    )
+    if saved and saved["fingerprint"] == HISTORICAL_FINGERPRINT:
+        return verify_completed_execution(root, output).execution
     origin = provenance(root, spec)
-    write_json(output / "provenance.json", origin)
+    actual_revision = origin["execution_revision"]
+    if saved:
+        if saved["fingerprint"] != origin["fingerprint"]:
+            raise ValueError("existing execution input/configuration/source mismatch")
+        origin = saved  # Resume preserves the original run identity.
+    else:
+        write_json(output / "provenance.json", origin)
     deadline = started + spec["execution"]["wall_budget_hours"] * 3600
     cells, failures, gates = [], [], {}
     for snapshot_id in spec["selected_snapshot_ids"]:
@@ -451,7 +702,7 @@ def execute(root: Path, output: Path) -> dict:
                             fingerprint,
                             surfaces,
                             deadline,
-                            origin["execution_revision"],
+                            actual_revision,
                         )
                         write_checkpoint(path, value)
                 except Exception as error:
@@ -547,8 +798,34 @@ def main() -> None:
     )
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--analyze-only", action="store_true")
+    parser.add_argument(
+        "--verify-only",
+        action="store_true",
+        help="Read and verify saved results without inference or writes",
+    )
     args = parser.parse_args()
     output = args.output_dir or args.root / OUTPUT
+    if args.verify_only or (
+        not args.analyze_only
+        and (output / "provenance.json").exists()
+        and _read_json(output / "provenance.json")["fingerprint"]
+        == HISTORICAL_FINGERPRINT
+    ):
+        verified = verify_completed_execution(args.root, output)
+        print(
+            json.dumps(
+                {
+                    "status": "verified_historical"
+                    if verified.historical
+                    else "verified",
+                    "cells": sum(len(c) for c in verified.cells.values()),
+                    "execution_revision": verified.origin["execution_revision"],
+                    "fingerprint": verified.origin["fingerprint"],
+                },
+                sort_keys=True,
+            )
+        )
+        return
     invocation_deadline = time.monotonic() + 3 * 3600
     if not args.analyze_only:
         result = execute(args.root, output)

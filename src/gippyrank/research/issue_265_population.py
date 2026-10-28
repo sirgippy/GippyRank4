@@ -11,6 +11,7 @@ import gzip
 import io
 import itertools
 import json
+import subprocess
 from collections import Counter
 from dataclasses import replace
 from pathlib import Path
@@ -26,18 +27,13 @@ from gippyrank.posterior.predictive import (
 from gippyrank.posterior.snapshots import sha256
 from gippyrank.research.issue_242_quality_of_results import (
     MARGIN_WEIGHTS,
-    _read_json,
     _read_rows,
 )
 from gippyrank.research.issue_261_quality_of_results import write_json
-from gippyrank.research.issue_263_real_season_design import ARTIFACT_DIR, check_design
+from gippyrank.research.issue_263_real_season_design import ARTIFACT_DIR
 from gippyrank.research.issue_265_real_seasons import (
-    cell_fingerprint,
-    load_network,
     mean_rank,
-    parity,
-    provenance,
-    read_checkpoint,
+    verify_completed_execution,
 )
 
 
@@ -464,81 +460,26 @@ def panels(descriptors: dict[str, dict]) -> list[tuple[str, list[str]]]:
 
 
 def analyze(root: Path, output: Path) -> None:
-    spec = check_design(root, root / ARTIFACT_DIR)
-    origin = provenance(root, spec)
-    execution = _read_json(output / "execution.json")
-    saved_origin = _read_json(output / "provenance.json")
-    if (
-        not execution["complete"]
-        or saved_origin["fingerprint"] != origin["fingerprint"]
-    ):
-        raise ValueError("incomplete or incompatible execution cannot be interpreted")
-    gates = _read_json(output / "endpoint_parity.json")
-    if set(gates) != set(spec["selected_snapshot_ids"]) or not all(
-        g["passed"] for s in gates.values() for g in s.values()
-    ):
-        raise ValueError("numerical gates block interpretation")
+    verified = verify_completed_execution(root, output)
+    if verified.historical:
+        raise ValueError(
+            "historical results are immutable; use --verify-only or consume verify_completed_execution()"
+        )
+    spec, saved_origin, execution = (
+        verified.specification,
+        verified.origin,
+        verified.execution,
+    )
     rankings, pmf_rows, contrasts, aggregates, panel_rows = [], [], [], [], []
     boundaries, associations, matched, sensitivity, uncertainty = [], [], [], [], []
     games_all, accomplishments, saved = [], [], {}
     for snapshot_id in spec["selected_snapshot_ids"]:
-        network = load_network(root, spec, snapshot_id)
-        jobs = [("baseline", w) for w in MARGIN_WEIGHTS]
-        if network.specification["season"] == 2025:
-            jobs += [("reference", 0.0), ("reference", 1.0)]
-        if snapshot_id == spec["game_diagnostics"]["publication_slot"]:
-            jobs += [
-                ("reversed", w)
-                for w in spec["candidate_configuration"]["order_reversal_check_weights"]
-            ]
-        expected_cells = {(kind, weight) for kind, weight in jobs}
-        recorded_cells = [
-            (c["kind"], c["margin_weight"])
-            for c in execution["cells"]
-            if c["snapshot_id"] == snapshot_id
-        ]
-        if (
-            len(recorded_cells) != len(expected_cells)
-            or set(recorded_cells) != expected_cells
-        ):
-            raise ValueError("execution coverage mismatch")
-        validated = {}
-        for kind, weight in jobs:
-            path = output / "checkpoints" / snapshot_id / f"{kind}-{weight:g}.json.gz"
-            cell = read_checkpoint(
-                path, cell_fingerprint(network, origin, kind, weight), network
-            )
-            validated[kind, weight] = cell
+        network = verified.networks[snapshot_id]
+        validated = verified.cells[snapshot_id]
         data = {
             w: {t: np.array(p) for t, p in validated["baseline", w]["pmfs"].items()}
             for w in MARGIN_WEIGHTS
         }
-        # Recompute gates from validated cells on every analysis-only replay.
-        recomputed = {}
-        for weight, family in ((0.0, "qor"), (1.0, "qop")):
-            reference_pmfs = (
-                network.references[family]
-                if network.references
-                else {
-                    t: np.array(p)
-                    for t, p in validated["reference", weight]["pmfs"].items()
-                }
-            )
-            recomputed[family] = parity(data[weight], reference_pmfs, network.counts)
-        for kind, weight in jobs:
-            if kind == "reversed":
-                recomputed[f"order_{weight:g}"] = parity(
-                    {
-                        t: np.array(p)
-                        for t, p in validated[kind, weight]["pmfs"].items()
-                    },
-                    data[weight],
-                    network.counts,
-                )
-        if recomputed != gates[snapshot_id]:
-            raise ValueError(
-                "saved parity gates differ from validated checkpoint results"
-            )
         counts = network.counts
         orders = {w: order(p, counts) for w, p in data.items()}
         ds = frozen_descriptors(root, snapshot_id, network.specification["season"])
@@ -917,7 +858,9 @@ def analyze(root: Path, output: Path) -> None:
         "failed_cells": execution["failures"],
         "execution_provenance": saved_origin,
         "analysis_source_sha256": sha256(analysis_source),
-        "analysis_revision": origin["execution_revision"],
+        "analysis_revision": subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=root, text=True
+        ).strip(),
         "interpretation": "descriptive census; no causal schedule identification; no weight selected",
         "output_sha256": {
             str(p.relative_to(output)): sha256(p)
