@@ -35,6 +35,7 @@ from gippyrank.research.issue_265_real_seasons import (
     cell_fingerprint,
     load_network,
     mean_rank,
+    parity,
     provenance,
     read_checkpoint,
 )
@@ -217,6 +218,11 @@ def frozen_descriptors(root: Path, snapshot_id: str, season: int) -> dict[str, d
             "prior_expected_wins", r.get("context_expected_wins")
         )
         r["wins_minus_expectation"] = r["wins"] - r["expected_wins"]
+        r["primary_schedule_expected_wins"] = (
+            r["games"] * r["schedule_reference_mean_win_probability"]
+            if r["games"]
+            else 0.0
+        )
         r["near_expected_record"] = abs(r["wins_minus_expectation"]) <= 1
         rank = r["reference_ordinal"]
         r["strength_band"] = (
@@ -454,13 +460,59 @@ def analyze(root: Path, output: Path) -> None:
     games_all, accomplishments, saved = [], [], {}
     for snapshot_id in spec["selected_snapshot_ids"]:
         network = load_network(root, spec, snapshot_id)
-        data = {}
-        for weight in MARGIN_WEIGHTS:
-            path = output / "checkpoints" / snapshot_id / f"baseline-{weight:g}.json.gz"
+        jobs = [("baseline", w) for w in MARGIN_WEIGHTS]
+        if network.specification["season"] == 2025:
+            jobs += [("reference", 0.0), ("reference", 1.0)]
+        if snapshot_id == spec["game_diagnostics"]["publication_slot"]:
+            jobs += [("reversed", w) for w in (0.0, 0.5, 1.0)]
+        expected_cells = {(kind, weight) for kind, weight in jobs}
+        recorded_cells = [
+            (c["kind"], c["margin_weight"])
+            for c in execution["cells"]
+            if c["snapshot_id"] == snapshot_id
+        ]
+        if (
+            len(recorded_cells) != len(expected_cells)
+            or set(recorded_cells) != expected_cells
+        ):
+            raise ValueError("execution coverage mismatch")
+        validated = {}
+        for kind, weight in jobs:
+            path = output / "checkpoints" / snapshot_id / f"{kind}-{weight:g}.json.gz"
             cell = read_checkpoint(
-                path, cell_fingerprint(network, origin, "baseline", weight), network
+                path, cell_fingerprint(network, origin, kind, weight), network
             )
-            data[weight] = {t: np.array(p) for t, p in cell["pmfs"].items()}
+            validated[kind, weight] = cell
+        data = {
+            w: {t: np.array(p) for t, p in validated["baseline", w]["pmfs"].items()}
+            for w in MARGIN_WEIGHTS
+        }
+        # Recompute gates from validated cells on every analysis-only replay.
+        recomputed = {}
+        for weight, family in ((0.0, "qor"), (1.0, "qop")):
+            reference_pmfs = (
+                network.references[family]
+                if network.references
+                else {
+                    t: np.array(p)
+                    for t, p in validated["reference", weight]["pmfs"].items()
+                }
+            )
+            recomputed[family] = parity(data[weight], reference_pmfs, network.counts)
+        for kind, weight in jobs:
+            if kind == "reversed":
+                recomputed[f"order_{weight:g}"] = parity(
+                    {
+                        t: np.array(p)
+                        for t, p in validated[kind, weight]["pmfs"].items()
+                    },
+                    data[weight],
+                    network.counts,
+                )
+        if recomputed != gates[snapshot_id]:
+            raise ValueError(
+                "saved parity gates differ from validated checkpoint results"
+            )
         counts = network.counts
         orders = {w: order(p, counts) for w, p in data.items()}
         ds = frozen_descriptors(root, snapshot_id, network.specification["season"])
@@ -473,14 +525,7 @@ def analyze(root: Path, output: Path) -> None:
                 for family in ("qop", "qor")
             ]
         else:
-            reference_path = (
-                output / "checkpoints" / snapshot_id / "reference-1.json.gz"
-            )
-            reference = read_checkpoint(
-                reference_path,
-                cell_fingerprint(network, origin, "reference", 1.0),
-                network,
-            )
+            reference = validated["reference", 1.0]
             context = {t: np.array(p) for t, p in reference["context"].items()}
             reference_orders = [orders[1.0], orders[0.0]]
         game_rows, descriptions = game_descriptions(
@@ -815,6 +860,7 @@ def analyze(root: Path, output: Path) -> None:
     }
     for name, rows in files.items():
         write_csv(output / name, rows)
+    render_figures(output, rankings, contrasts, accomplishments)
     analysis_source = Path(__file__)
     manifest = {
         "issue": 265,
@@ -830,7 +876,7 @@ def analyze(root: Path, output: Path) -> None:
         "output_sha256": {
             str(p.relative_to(output)): sha256(p)
             for p in sorted(output.rglob("*"))
-            if p.is_file() and p.name not in ("manifest.json", "report.md")
+            if p.is_file() and p.name != "manifest.json"
         },
     }
     write_json(output / "manifest.json", manifest)
@@ -838,3 +884,110 @@ def analyze(root: Path, output: Path) -> None:
         f"Population analysis complete: {len(rankings)} rankings, {len(aggregates)} candidate pairs",
         flush=True,
     )
+
+
+def render_figures(
+    output: Path,
+    rankings: list[dict],
+    contrasts: list[dict],
+    accomplishments: list[dict],
+) -> None:
+    """Standalone descriptive research figures; keep seasons in separate panels."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    plt.rcParams.update(
+        {"font.size": 9, "axes.spines.top": False, "axes.spines.right": False}
+    )
+    ids = list(dict.fromkeys(r["snapshot_id"] for r in rankings))
+    labels = dict(
+        zip(
+            ids,
+            (
+                "2025 pre-bowl",
+                "2025 final",
+                "2026 Week 2",
+                "2026 Week 5",
+                "2026 Week 9",
+            ),
+            strict=True,
+        )
+    )
+    colors = ("#334155", "#0f766e", "#0369a1", "#7c3aed", "#b45309")
+    fig, axes = plt.subplots(2, 2, figsize=(11, 7), layout="constrained")
+    for column, season_ids in enumerate((ids[:2], ids[2:])):
+        for sid in season_ids:
+            rs = [r for r in rankings if r["snapshot_id"] == sid and r["rated"]]
+            cs = [
+                r
+                for r in contrasts
+                if r["snapshot_id"] == sid and r["lambda_high"] == 1.0
+            ]
+            means = [
+                np.mean(
+                    [abs(r["delta_expected_rank"]) for r in cs if r["lambda_low"] == w]
+                )
+                for w in MARGIN_WEIGHTS[:-1]
+            ] + [0.0]
+            axes[0, column].plot(MARGIN_WEIGHTS, means, marker="o", label=labels[sid])
+            axes[1, column].plot(
+                MARGIN_WEIGHTS,
+                [
+                    np.mean([r["rank_sd"] for r in rs if r["margin_weight"] == w])
+                    for w in MARGIN_WEIGHTS
+                ],
+                marker="o",
+                label=labels[sid],
+            )
+        axes[0, column].set(
+            title="2025 retrospective reconstructions"
+            if column == 0
+            else "2026 retained evidence",
+            ylabel="Mean |expected-rank difference| from λ=1",
+        )
+        axes[1, column].set(
+            xlabel="Margin weight λ", ylabel="Population mean posterior rank SD"
+        )
+        for axis in axes[:, column]:
+            axis.set_xticks(MARGIN_WEIGHTS)
+            axis.legend(frameon=False)
+            axis.grid(alpha=0.15)
+    fig.savefig(output / "candidate_progression.png", dpi=160)
+    plt.close(fig)
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4), layout="constrained")
+    for axis, sid in zip(axes, (ids[1], ids[4]), strict=True):
+        ds = {r["team_id"]: r for r in accomplishments if r["snapshot_id"] == sid}
+        cs = [
+            r
+            for r in contrasts
+            if r["snapshot_id"] == sid
+            and r["lambda_low"] == 0.25
+            and r["lambda_high"] == 1.0
+        ]
+        for color, band in zip(
+            colors, ("elite", "strong", "middle", "weak"), strict=False
+        ):
+            subset = [r for r in cs if ds[r["team_id"]]["strength_band"] == band]
+            axis.scatter(
+                [
+                    ds[r["team_id"]]["schedule_reference_mean_win_probability"]
+                    for r in subset
+                ],
+                [-r["delta_expected_rank"] for r in subset],
+                s=18,
+                alpha=0.75,
+                color=color,
+                label=band,
+            )
+        axis.axhline(0, color="#64748b", linewidth=0.7)
+        axis.set(
+            title=labels[sid],
+            xlabel="Frozen schedule win probability (larger = easier)",
+            ylabel="E[rank] at λ=.25 minus E[rank] at λ=1",
+        )
+        axis.grid(alpha=0.15)
+        axis.legend(frameon=False, ncol=2)
+    fig.savefig(output / "schedule_associations.png", dpi=160)
+    plt.close(fig)
