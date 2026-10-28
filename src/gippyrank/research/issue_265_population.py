@@ -374,6 +374,20 @@ def game_descriptions(
                 ],
             }
         )
+    if network.specification["season"] == 2026:
+        for row in aggregated:
+            if row["games"] and (
+                abs(
+                    row["posterior_schedule_reference_mean"]
+                    - row["schedule_reference_mean_win_probability"]
+                )
+                > 1e-10
+                or abs(row["posterior_context_expected_wins"] - row["expected_wins"])
+                > 1e-10
+            ):
+                raise ValueError(
+                    "integrated descriptions differ from frozen reference evidence"
+                )
     return rows, aggregated
 
 

@@ -204,3 +204,57 @@ def test_gzip_population_outputs_are_byte_deterministic(tmp_path):
         .strip('"')
         .replace('""', '"')
     ) == [0.2, 0.8]
+
+
+def test_failed_cell_preserves_successes_and_does_not_claim_complete(
+    tmp_path, monkeypatch, network
+):
+    spec = {
+        "selected_snapshot_ids": ["first", "second"],
+        "execution": {"wall_budget_hours": 3},
+        "game_diagnostics": {"publication_slot": "neither"},
+    }
+    monkeypatch.setattr(execution, "check_design", lambda *_: spec)
+    monkeypatch.setattr(
+        execution,
+        "provenance",
+        lambda *_: {"fingerprint": "inputs", "execution_revision": "revision"},
+    )
+
+    def load(_root, _spec, sid):
+        n = copy.deepcopy(network)
+        n.snapshot_id = sid
+        return n
+
+    called = []
+
+    def solve(n, kind, weight, fingerprint, *_args):
+        called.append((n.snapshot_id, kind, weight))
+        if n.snapshot_id == "first" and weight == 0.25:
+            raise RuntimeError("synthetic convergence failure")
+        return {
+            "fingerprint": fingerprint,
+            "pmfs": {
+                t.team_id: t.prior.tolist() for t in n.teams if t.subdivision == "fbs"
+            },
+            "context": {t.team_id: t.prior.tolist() for t in n.teams},
+            "counts": n.counts,
+            "diagnostics": {
+                "converged": True,
+                "iterations": 1,
+                "max_message_delta": 0.0,
+            },
+        }
+
+    monkeypatch.setattr(execution, "load_network", load)
+    monkeypatch.setattr(execution, "solve", solve)
+    result = execution.execute(ROOT, tmp_path)
+    assert not result["complete"]
+    assert len(result["cells"]) == 8
+    assert len(result["failures"]) == 1
+    assert ("first", "baseline", 0.5) not in called
+    assert (tmp_path / "checkpoints/first/baseline-0.json.gz").is_file()
+    assert (tmp_path / "failures/first-baseline-0.25.json").is_file()
+    assert (
+        len(json.loads((tmp_path / "endpoint_parity.json").read_text())["second"]) == 2
+    )
