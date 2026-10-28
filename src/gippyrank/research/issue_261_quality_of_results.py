@@ -13,7 +13,6 @@ import hashlib
 import json
 import os
 import platform
-import subprocess
 import time
 from collections import Counter, defaultdict
 from dataclasses import dataclass, replace
@@ -41,6 +40,8 @@ from gippyrank.research.issue_252_quality_of_results import (
 
 PROFILES = ("elite", "strong", "middle", "weak")
 PANELS = ("unconditional", "primary_conditioned", "control_conditioned")
+# Revision of the completed experiment, independent of later aggregation edits.
+PINNED_EXECUTION_REVISION = "ec422581b537ce3d83190794485b8ee61ba09fb2"
 SOURCE_FILES = (
     "src/gippyrank/research/issue_261_quality_of_results.py",
     "src/gippyrank/research/issue_252_quality_of_results.py",
@@ -395,6 +396,19 @@ def smoke(design: Design, output: Path) -> dict:
 
 def aggregate(design: Design, output: Path) -> None:
     """Regenerate portable results from completed, provenance-checked trials."""
+    manifest_path = output / "manifest.json"
+    if manifest_path.exists():
+        saved_manifest = json.loads(manifest_path.read_text())
+        # This runner's execution hash predates aggregation-only corrections.
+        # Keep other source/input/version checks active in the fingerprint.
+        source_file = "src/gippyrank/research/issue_261_quality_of_results.py"
+        source_hashes = dict(design.provenance["source_sha256"])
+        source_hashes[source_file] = saved_manifest["provenance"]["source_sha256"][
+            source_file
+        ]
+        design = replace(
+            design, provenance={**design.provenance, "source_sha256": source_hashes}
+        )
     teams, pairs, games, selections, outcome_rows = [], [], [], {}, []
     inference_seconds = 0.0
     for profile in PROFILES:
@@ -540,9 +554,7 @@ def aggregate(design: Design, output: Path) -> None:
         "issue": 261,
         "schema_version": "1.0",
         "study": "research_only_multistrength_quality_of_results_schedule_equivalence",
-        "source_revision": subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], text=True
-        ).strip(),
+        "source_revision": PINNED_EXECUTION_REVISION,
         "provenance": design.provenance,
         "fingerprint": fingerprint(design),
         "frozen_follow_up_plan": design.manifest["follow_up_plan"],

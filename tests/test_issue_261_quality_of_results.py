@@ -130,6 +130,7 @@ def test_completed_artifact_contract() -> None:
     """Audit retained results without executing expensive inference in CI."""
     output = ROOT / "data/research/issue_261_quality_of_results"
     manifest = json.loads((output / "manifest.json").read_text())
+    assert manifest["source_revision"] == study.PINNED_EXECUTION_REVISION
     for name, expected in manifest["artifact_sha256"].items():
         assert hashlib.sha256((output / name).read_bytes()).hexdigest() == expected
     assert manifest["counts"] == {
