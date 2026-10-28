@@ -478,7 +478,10 @@ def analyze(root: Path, output: Path) -> None:
         if network.specification["season"] == 2025:
             jobs += [("reference", 0.0), ("reference", 1.0)]
         if snapshot_id == spec["game_diagnostics"]["publication_slot"]:
-            jobs += [("reversed", w) for w in (0.0, 0.5, 1.0)]
+            jobs += [
+                ("reversed", w)
+                for w in spec["candidate_configuration"]["order_reversal_check_weights"]
+            ]
         expected_cells = {(kind, weight) for kind, weight in jobs}
         recorded_cells = [
             (c["kind"], c["margin_weight"])
