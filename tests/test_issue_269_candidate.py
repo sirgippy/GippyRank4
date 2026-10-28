@@ -11,6 +11,7 @@ import pytest
 from gippyrank.posterior.engine import LikelihoodV1, Team
 from gippyrank.research import issue_252_quality_of_results as synthetic
 from gippyrank.research import issue_269_candidate as candidate
+from gippyrank.research.issue_269_analysis import matched_rows, numeric
 
 
 def test_only_requested_extension_weight_is_solved(monkeypatch):
@@ -112,6 +113,25 @@ def test_archive_hash_is_checked_before_reuse(tmp_path: Path):
     path.write_bytes(path.read_bytes() + b"changed")
     with pytest.raises(ValueError, match="integrity"):
         candidate.read_hashed(path)
+
+
+def test_retained_boolean_flags_do_not_become_truthy_strings():
+    assert numeric({"right_outranks_left": "False", "seed": "42", "team_id": "01"}) == {
+        "right_outranks_left": False,
+        "seed": 42.0,
+        "team_id": "01",
+    }
+
+
+def test_matched_comparisons_reject_different_samples_and_duplicates():
+    rows = [
+        {"seed": s, "margin_weight": w} for w in candidate.NEIGHBORS for s in (1, 2)
+    ]
+    assert all(set(v) == {1, 2} for v in matched_rows(list(reversed(rows))).values())
+    with pytest.raises(ValueError, match="unmatched"):
+        matched_rows(rows[:-1])
+    with pytest.raises(ValueError, match="duplicate"):
+        matched_rows([*rows, rows[0]])
 
 
 def test_provenance_requires_same_sources_but_portable_reads_preserve_runtime(
