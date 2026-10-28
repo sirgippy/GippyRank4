@@ -1,0 +1,535 @@
+{
+  "default_publication_slot": "2026-10-25T12-59-22.246522Z",
+  "publication_slots": [
+    {
+      "id": "2026-preseason",
+      "status": "official"
+    },
+    {
+      "id": "2026-sep-05",
+      "status": "temporary"
+    },
+    {
+      "id": "2026-09-06",
+      "status": "temporary"
+    },
+    {
+      "id": "2026-09-07",
+      "status": "temporary"
+    },
+    {
+      "id": "2026-09-08",
+      "status": "official"
+    },
+    {
+      "id": "2026-09-11",
+      "status": "temporary"
+    },
+    {
+      "id": "2026-09-12",
+      "status": "temporary"
+    },
+    {
+      "id": "2026-09-13",
+      "status": "official"
+    },
+    {
+      "id": "2026-09-19",
+      "status": "temporary"
+    },
+    {
+      "id": "2026-09-20",
+      "status": "official"
+    },
+    {
+      "id": "2026-09-26",
+      "status": "temporary"
+    },
+    {
+      "id": "2026-09-27",
+      "status": "official"
+    },
+    {
+      "id": "2026-10-04",
+      "status": "official"
+    },
+    {
+      "id": "2026-10-10T14-56-43.682891Z",
+      "status": "temporary"
+    },
+    {
+      "id": "2026-10-11T12-47-27.781981Z",
+      "status": "official"
+    },
+    {
+      "id": "2026-10-16T13-19-09.273219Z",
+      "status": "temporary"
+    },
+    {
+      "id": "2026-10-17T15-45-39.000640Z",
+      "status": "temporary"
+    },
+    {
+      "id": "2026-10-18T13-04-45.309059Z",
+      "status": "official"
+    },
+    {
+      "id": "2026-10-21T04-08-46.790889Z",
+      "status": "temporary"
+    },
+    {
+      "id": "2026-10-23T11-42-20.806724Z",
+      "status": "temporary"
+    },
+    {
+      "id": "2026-10-24T13-31-42.760884Z",
+      "status": "temporary"
+    },
+    {
+      "id": "2026-10-25T12-59-22.246522Z",
+      "status": "official"
+    }
+  ],
+  "redditcfb_team_handles": {
+    "path": "data/reference/redditcfb_team_handles.csv",
+    "source": "RedditCFB Team.handle reference, verified 2026-09-08"
+  },
+  "schema_version": "1.0",
+  "site_url": "https://sirgippy.github.io/GippyRank4/",
+  "snapshots": [
+    {
+      "display_label": "Preseason",
+      "publication_slot": "2026-preseason",
+      "source": "data/processed/snapshots/2026/2026-preseason-history/predictive/history"
+    },
+    {
+      "display_label": "Sep. 5",
+      "publication_slot": "2026-sep-05",
+      "source": "data/processed/snapshots/2026/2026-live-2026-09-05T23-59-59Z-context/predictive/context"
+    },
+    {
+      "display_label": "Sep. 5",
+      "publication_slot": "2026-sep-05",
+      "source": "data/processed/snapshots/2026/2026-live-2026-09-05T23-59-59Z-history/predictive/history"
+    },
+    {
+      "display_label": "20260906",
+      "publication_slot": "2026-09-06",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-06T17-34-56.895103Z-context-v1.2-issue-238/predictive/context"
+    },
+    {
+      "display_label": "20260906",
+      "publication_slot": "2026-09-06",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-06T17-34-56.895103Z-history-issue-238/predictive/history"
+    },
+    {
+      "display_label": "20260906",
+      "publication_slot": "2026-09-06",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-06T17-34-56.895103Z-context-v1.2-issue-238/performance"
+    },
+    {
+      "display_label": "Sep. 7",
+      "publication_slot": "2026-09-07",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-07T13-42-50.853587Z-context-v1.2-issue-238/predictive/context"
+    },
+    {
+      "display_label": "Sep. 7",
+      "publication_slot": "2026-09-07",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-07T13-42-50.853587Z-history-issue-238/predictive/history"
+    },
+    {
+      "display_label": "Sep. 7",
+      "publication_slot": "2026-09-07",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-07T13-42-50.853587Z-context-v1.2-issue-238/performance"
+    },
+    {
+      "display_label": "Week 2",
+      "publication_slot": "2026-09-08",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-history-issue-238/predictive/history"
+    },
+    {
+      "display_label": "Sep. 11",
+      "publication_slot": "2026-09-11",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-11T17-02-26.077461Z-context/predictive/context"
+    },
+    {
+      "display_label": "Sep. 11",
+      "publication_slot": "2026-09-11",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-11T17-02-26.077461Z-history/predictive/history"
+    },
+    {
+      "display_label": "Sep. 11",
+      "publication_slot": "2026-09-11",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-11T17-02-26.077461Z/performance"
+    },
+    {
+      "display_label": "Sep. 12",
+      "publication_slot": "2026-09-12",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-12T21-35-16.399017Z-context/predictive/context"
+    },
+    {
+      "display_label": "Sep. 12",
+      "publication_slot": "2026-09-12",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-12T21-35-16.399017Z-history/predictive/history"
+    },
+    {
+      "display_label": "Sep. 12",
+      "publication_slot": "2026-09-12",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-12T21-35-16.399017Z/performance"
+    },
+    {
+      "display_label": "Week 3",
+      "publication_slot": "2026-09-13",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-13T12-02-55.255941Z-history/predictive/history"
+    },
+    {
+      "display_label": "Sep. 19",
+      "publication_slot": "2026-09-19",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-19T22-14-03.513809Z-context/predictive/context"
+    },
+    {
+      "display_label": "Sep. 19",
+      "publication_slot": "2026-09-19",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-19T22-14-03.513809Z-history/predictive/history"
+    },
+    {
+      "display_label": "Sep. 19",
+      "publication_slot": "2026-09-19",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-19T22-14-03.513809Z/performance"
+    },
+    {
+      "display_label": "Week 4",
+      "publication_slot": "2026-09-20",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-20T11-00-14.294077Z-history/predictive/history"
+    },
+    {
+      "display_label": "Sep. 26",
+      "publication_slot": "2026-09-26",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-26T12-09-11.589245Z-context-v1.3/predictive/context"
+    },
+    {
+      "display_label": "Sep. 26",
+      "publication_slot": "2026-09-26",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-26T12-09-11.589245Z-history/predictive/history"
+    },
+    {
+      "display_label": "Sep. 26",
+      "publication_slot": "2026-09-26",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-26T12-09-11.589245Z-context-v1.3/performance"
+    },
+    {
+      "display_label": "Week 5",
+      "publication_slot": "2026-09-27",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-27T12-27-35.698895Z-history/predictive/history"
+    },
+    {
+      "display_label": "Preseason",
+      "publication_slot": "2026-preseason",
+      "source": "data/processed/snapshots/2026/2026-preseason-context-v1.4-db-repair/predictive/context"
+    },
+    {
+      "display_label": "Week 2",
+      "publication_slot": "2026-09-08",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-issue-238/predictive/context"
+    },
+    {
+      "display_label": "Week 2",
+      "publication_slot": "2026-09-08",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-issue-238/performance"
+    },
+    {
+      "display_label": "Week 3",
+      "publication_slot": "2026-09-13",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-13T12-02-55.255941Z-context-v1.4-db-repair/predictive/context"
+    },
+    {
+      "display_label": "Week 3",
+      "publication_slot": "2026-09-13",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-13T12-02-55.255941Z-context-v1.4-db-repair/performance"
+    },
+    {
+      "display_label": "Week 4",
+      "publication_slot": "2026-09-20",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-20T11-00-14.294077Z-context-v1.4-db-repair/predictive/context"
+    },
+    {
+      "display_label": "Week 4",
+      "publication_slot": "2026-09-20",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-20T11-00-14.294077Z-context-v1.4-db-repair/performance"
+    },
+    {
+      "display_label": "Week 5",
+      "publication_slot": "2026-09-27",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.4-db-repair/predictive/context"
+    },
+    {
+      "display_label": "Week 5",
+      "publication_slot": "2026-09-27",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.4-db-repair/performance"
+    },
+    {
+      "display_label": "Week 6",
+      "publication_slot": "2026-10-04",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-04T14-51-53.251364Z-context-v1.4-db-repair/predictive/context"
+    },
+    {
+      "display_label": "Week 6",
+      "publication_slot": "2026-10-04",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-04T14-51-53.251364Z-history/predictive/history"
+    },
+    {
+      "display_label": "Week 6",
+      "publication_slot": "2026-10-04",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-04T14-51-53.251364Z-context-v1.4-db-repair/performance"
+    },
+    {
+      "display_label": "Oct. 10 \u00b7 9:56 AM CT",
+      "publication_slot": "2026-10-10T14-56-43.682891Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-10T14-56-43.682891Z-context-v1.4/predictive/context"
+    },
+    {
+      "display_label": "Oct. 10 \u00b7 9:56 AM CT",
+      "publication_slot": "2026-10-10T14-56-43.682891Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-10T14-56-43.682891Z-history/predictive/history"
+    },
+    {
+      "display_label": "Oct. 10 \u00b7 9:56 AM CT",
+      "publication_slot": "2026-10-10T14-56-43.682891Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-10T14-56-43.682891Z-context-v1.4/performance"
+    },
+    {
+      "display_label": "Week 7",
+      "publication_slot": "2026-10-11T12-47-27.781981Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-11T12-47-27.781981Z-context-v1.4/predictive/context"
+    },
+    {
+      "display_label": "Week 7",
+      "publication_slot": "2026-10-11T12-47-27.781981Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-11T12-47-27.781981Z-history/predictive/history"
+    },
+    {
+      "display_label": "Week 7",
+      "publication_slot": "2026-10-11T12-47-27.781981Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-11T12-47-27.781981Z-context-v1.4/performance"
+    },
+    {
+      "display_label": "Oct. 16 \u00b7 8:19 AM CT",
+      "publication_slot": "2026-10-16T13-19-09.273219Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-16T13-19-09.273219Z-context-v1.4/predictive/context"
+    },
+    {
+      "display_label": "Oct. 16 \u00b7 8:19 AM CT",
+      "publication_slot": "2026-10-16T13-19-09.273219Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-16T13-19-09.273219Z-history/predictive/history"
+    },
+    {
+      "display_label": "Oct. 16 \u00b7 8:19 AM CT",
+      "publication_slot": "2026-10-16T13-19-09.273219Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-16T13-19-09.273219Z-context-v1.4/performance"
+    },
+    {
+      "display_label": "Oct. 17 \u00b7 10:45 AM CT",
+      "publication_slot": "2026-10-17T15-45-39.000640Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-17T15-45-39.000640Z-context-v1.4/predictive/context"
+    },
+    {
+      "display_label": "Oct. 17 \u00b7 10:45 AM CT",
+      "publication_slot": "2026-10-17T15-45-39.000640Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-17T15-45-39.000640Z-history/predictive/history"
+    },
+    {
+      "display_label": "Oct. 17 \u00b7 10:45 AM CT",
+      "publication_slot": "2026-10-17T15-45-39.000640Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-17T15-45-39.000640Z-context-v1.4/performance"
+    },
+    {
+      "display_label": "Week 8",
+      "publication_slot": "2026-10-18T13-04-45.309059Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-18T13-04-45.309059Z-context-v1.4/predictive/context"
+    },
+    {
+      "display_label": "Week 8",
+      "publication_slot": "2026-10-18T13-04-45.309059Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-18T13-04-45.309059Z-history/predictive/history"
+    },
+    {
+      "display_label": "Week 8",
+      "publication_slot": "2026-10-18T13-04-45.309059Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-18T13-04-45.309059Z-context-v1.4/performance"
+    },
+    {
+      "display_label": "Sep. 5",
+      "publication_slot": "2026-sep-05",
+      "source": "data/processed/snapshots/2026/2026-live-2026-09-05T23-59-59Z/performance"
+    },
+    {
+      "display_label": "Sep. 5",
+      "publication_slot": "2026-sep-05",
+      "source": "data/processed/snapshots/2026/2026-live-2026-09-05T23-59-59Z/performance/quality_of_record"
+    },
+    {
+      "display_label": "Sep. 11",
+      "publication_slot": "2026-09-11",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-11T17-02-26.077461Z/performance/quality_of_record"
+    },
+    {
+      "display_label": "Sep. 12",
+      "publication_slot": "2026-09-12",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-12T21-35-16.399017Z/performance/quality_of_record"
+    },
+    {
+      "display_label": "Sep. 19",
+      "publication_slot": "2026-09-19",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-19T22-14-03.513809Z/performance/quality_of_record"
+    },
+    {
+      "display_label": "Sep. 26",
+      "publication_slot": "2026-09-26",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-26T12-09-11.589245Z-context-v1.3/performance/quality_of_record"
+    },
+    {
+      "display_label": "Week 3",
+      "publication_slot": "2026-09-13",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-13T12-02-55.255941Z-context-v1.4-db-repair/performance/quality_of_record"
+    },
+    {
+      "display_label": "Week 4",
+      "publication_slot": "2026-09-20",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-20T11-00-14.294077Z-context-v1.4-db-repair/performance/quality_of_record"
+    },
+    {
+      "display_label": "Week 5",
+      "publication_slot": "2026-09-27",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-27T12-27-35.698895Z-context-v1.4-db-repair/performance/quality_of_record"
+    },
+    {
+      "display_label": "Week 6",
+      "publication_slot": "2026-10-04",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-04T14-51-53.251364Z-context-v1.4-db-repair/performance/quality_of_record"
+    },
+    {
+      "display_label": "Oct. 10 \u00b7 9:56 AM CT",
+      "publication_slot": "2026-10-10T14-56-43.682891Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-10T14-56-43.682891Z-context-v1.4/performance/quality_of_record"
+    },
+    {
+      "display_label": "Week 7",
+      "publication_slot": "2026-10-11T12-47-27.781981Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-11T12-47-27.781981Z-context-v1.4/performance/quality_of_record"
+    },
+    {
+      "display_label": "Oct. 16 \u00b7 8:19 AM CT",
+      "publication_slot": "2026-10-16T13-19-09.273219Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-16T13-19-09.273219Z-context-v1.4/performance/quality_of_record"
+    },
+    {
+      "display_label": "Oct. 17 \u00b7 10:45 AM CT",
+      "publication_slot": "2026-10-17T15-45-39.000640Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-17T15-45-39.000640Z-context-v1.4/performance/quality_of_record"
+    },
+    {
+      "display_label": "Week 8",
+      "publication_slot": "2026-10-18T13-04-45.309059Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-18T13-04-45.309059Z-context-v1.4/performance/quality_of_record"
+    },
+    {
+      "display_label": "20260906",
+      "publication_slot": "2026-09-06",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-06T17-34-56.895103Z-context-v1.2-issue-238/performance/quality_of_record"
+    },
+    {
+      "display_label": "Sep. 7",
+      "publication_slot": "2026-09-07",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-07T13-42-50.853587Z-context-v1.2-issue-238/performance/quality_of_record"
+    },
+    {
+      "display_label": "Week 2",
+      "publication_slot": "2026-09-08",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-09-08T11-43-00.275833Z-context-v1.4-issue-238/performance/quality_of_record"
+    },
+    {
+      "display_label": "Oct. 20 \u00b7 11:08 PM CT",
+      "publication_slot": "2026-10-21T04-08-46.790889Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-21T04-08-46.790889Z-context-v1.4/predictive/context"
+    },
+    {
+      "display_label": "Oct. 20 \u00b7 11:08 PM CT",
+      "publication_slot": "2026-10-21T04-08-46.790889Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-21T04-08-46.790889Z-history/predictive/history"
+    },
+    {
+      "display_label": "Oct. 20 \u00b7 11:08 PM CT",
+      "publication_slot": "2026-10-21T04-08-46.790889Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-21T04-08-46.790889Z-context-v1.4/performance"
+    },
+    {
+      "display_label": "Oct. 20 \u00b7 11:08 PM CT",
+      "publication_slot": "2026-10-21T04-08-46.790889Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-21T04-08-46.790889Z-context-v1.4/performance/quality_of_record"
+    },
+    {
+      "display_label": "Oct. 23 \u00b7 6:42 AM CT",
+      "publication_slot": "2026-10-23T11-42-20.806724Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-23T11-42-20.806724Z-context-v1.4/predictive/context"
+    },
+    {
+      "display_label": "Oct. 23 \u00b7 6:42 AM CT",
+      "publication_slot": "2026-10-23T11-42-20.806724Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-23T11-42-20.806724Z-history/predictive/history"
+    },
+    {
+      "display_label": "Oct. 23 \u00b7 6:42 AM CT",
+      "publication_slot": "2026-10-23T11-42-20.806724Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-23T11-42-20.806724Z-context-v1.4/performance"
+    },
+    {
+      "display_label": "Oct. 23 \u00b7 6:42 AM CT",
+      "publication_slot": "2026-10-23T11-42-20.806724Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-23T11-42-20.806724Z-context-v1.4/performance/quality_of_record"
+    },
+    {
+      "display_label": "Oct. 24 \u00b7 8:31 AM CT",
+      "publication_slot": "2026-10-24T13-31-42.760884Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-24T13-31-42.760884Z-context-v1.4/predictive/context"
+    },
+    {
+      "display_label": "Oct. 24 \u00b7 8:31 AM CT",
+      "publication_slot": "2026-10-24T13-31-42.760884Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-24T13-31-42.760884Z-history/predictive/history"
+    },
+    {
+      "display_label": "Oct. 24 \u00b7 8:31 AM CT",
+      "publication_slot": "2026-10-24T13-31-42.760884Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-24T13-31-42.760884Z-context-v1.4/performance"
+    },
+    {
+      "display_label": "Oct. 24 \u00b7 8:31 AM CT",
+      "publication_slot": "2026-10-24T13-31-42.760884Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-24T13-31-42.760884Z-context-v1.4/performance/quality_of_record"
+    },
+    {
+      "display_label": "Week 9",
+      "publication_slot": "2026-10-25T12-59-22.246522Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-25T12-59-22.246522Z-context-v1.4/predictive/context"
+    },
+    {
+      "display_label": "Week 9",
+      "publication_slot": "2026-10-25T12-59-22.246522Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-25T12-59-22.246522Z-history/predictive/history"
+    },
+    {
+      "display_label": "Week 9",
+      "publication_slot": "2026-10-25T12-59-22.246522Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-25T12-59-22.246522Z-context-v1.4/performance"
+    },
+    {
+      "display_label": "Week 9",
+      "publication_slot": "2026-10-25T12-59-22.246522Z",
+      "source": "data/processed/snapshots/2026/2026-weekly-2026-10-25T12-59-22.246522Z-context-v1.4/performance/quality_of_record"
+    }
+  ],
+  "team_logos": {
+    "source": "RedditCFB",
+    "url_template": "https://cdn.redditcfb.com/60x40/cfb/{handle}.png"
+  }
+}
