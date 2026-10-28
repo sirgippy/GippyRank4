@@ -420,59 +420,346 @@ def evidence(root: Path, baseline: Path, verified: VerifiedExecution) -> dict:
     }
 
 
+def case_question_categories(row: dict) -> list[str]:
+    """The frozen inventories pair categories/questions in order, plus 2025 evolution."""
+    categories = [*row["categories"]]
+    if row["season"] == 2025:
+        categories.append("postseason")
+    if len(categories) != len(row["questions"]):
+        raise ValueError("frozen question/category coverage mismatch")
+    return categories
+
+
+def actual_result_text(games: list[dict]) -> str:
+    """Describe actual opponent-aware evidence, without assigning game contributions."""
+    groups = []
+    for label, selected in (
+        ("Wins", [g for g in games if g["margin"] > 0]),
+        ("Losses", [g for g in games if g["margin"] < 0]),
+    ):
+        details = (
+            "; ".join(
+                f"{g['opponent_name']} ({g['opponent_subdivision']}) {g['margin']:+d} "
+                f"[reference p(win)={g['frozen_primary_win_probability']:.3f}; "
+                f"opponent Context E/SD={g['opponent_context_expected_rank']:.2f}/{g['opponent_context_rank_sd']:.2f}]"
+                for g in selected
+            )
+            or "none"
+        )
+        average = (
+            f", mean margin {np.mean([g['margin'] for g in selected]):+.2f}"
+            if selected
+            else ""
+        )
+        groups.append(f"{label}{average}: {details}.")
+    return " ".join(groups)
+
+
+def candidate_comparison_text(candidates: list[dict]) -> str:
+    record, play = candidates[0], candidates[-1]
+    gap = play["expected_rank"] - record["expected_rank"]
+    progression = "; ".join(
+        f"lambda={c['margin_weight']:g}: {c['expected_rank']:.2f}/{c['ordinal_rank']}"
+        for c in candidates
+    )
+    return (
+        f"Candidate E[rank]/ordinal progression: {progression}. "
+        f"Play minus Record E[rank]={gap:+.2f} (positive means Play ranks worse); "
+        f"Record/Play SD={record['rank_sd']:.2f}/{play['rank_sd']:.2f}, "
+        f"entropy={record['entropy_bits']:.3f}/{play['entropy_bits']:.3f}, "
+        f"80% intervals={record['low_80']}-{record['high_80']}/{play['low_80']}-{play['high_80']}. "
+    )
+
+
+def schedule_panel_text(panels: dict, row: dict, band: str) -> str:
+    """Read the already completed population panels; never fit a schedule effect."""
+    hard, easy = (
+        panels[row["snapshot_id"], row["margin_weight"], f"band/{band}/schedule/{s}"]
+        for s in ("hard", "easy")
+    )
+    if not int(hard["n"]) or not int(easy["n"]):
+        return f"The frozen {band} hard/easy panel has n={hard['n']}/{easy['n']}; the empty cell prevents a group comparison. "
+    changes = {
+        k: float(easy[f"{k}_mean"]) - float(hard[f"{k}_mean"])
+        for k in (
+            "expected_rank",
+            "rank_sd",
+            "entropy_bits",
+            "width_50",
+            "width_80",
+            "width_95",
+        )
+    }
+    direction = (
+        "narrower"
+        if changes["rank_sd"] < 0
+        else "wider"
+        if changes["rank_sd"] > 0
+        else "equal in SD"
+    )
+    return (
+        f"The retained {band}-band hard/easy schedule panel at this cutoff and lambda has n={hard['n']}/{easy['n']}; "
+        f"easy minus hard mean E[rank]={changes['expected_rank']:+.2f}, SD={changes['rank_sd']:+.2f}, "
+        f"entropy={changes['entropy_bits']:+.3f}, and 50/80/95% widths="
+        f"{changes['width_50']:+.2f}/{changes['width_80']:+.2f}/{changes['width_95']:+.2f}. "
+        f"The easier group's marginals are {direction} here. These are descriptive groups with different accomplishments "
+        "and posterior locations, not a causal schedule contrast or evidence of schedule equivalence. "
+    )
+
+
+def controlled_response_text(probe: dict | None, diagnostic: dict | None) -> str:
+    parts = []
+    if probe is not None:
+        benefit, margin = (
+            probe["outcome_boundary_benefit"],
+            probe["within_win_margin_benefit"],
+        )
+        relation = (
+            "exceeds"
+            if benefit > margin
+            else "is less than"
+            if benefit < margin
+            else "equals"
+        )
+        parts.append(
+            f"Numerical controlled response at {probe['snapshot_id']} for game {probe['game_id']}: "
+            f"loss by 3 to win by 3 improves E[rank] by {benefit:.3f}; win by 10 to win by 35 improves it by "
+            f"{margin:.3f}; outcome minus margin benefit={benefit - margin:+.3f}. The outcome-boundary benefit {relation} "
+            f"the within-win benefit at this lambda. Loss-by-3/win-by-3 SD="
+            f"{probe['margin_-3_rank_sd']:.2f}/{probe['margin_+3_rank_sd']:.2f}, entropy="
+            f"{probe['margin_-3_entropy_bits']:.3f}/{probe['margin_+3_entropy_bits']:.3f}, 80% widths="
+            f"{probe['margin_-3_width_80']}/{probe['margin_+3_width_80']}. "
+            f"SD changes {probe['margin_+3_rank_sd'] - probe['margin_-3_rank_sd']:+.2f} across that outcome boundary; "
+            "the direction is a model response, not independent evidence of correctness. This measures sensitivity to changing evidence on this "
+            "network, not a football prediction, a universal win/margin exchange rate, or a schedule effect."
+        )
+    if diagnostic is not None:
+        parts.append(
+            f"Numerical removal response for game {diagnostic['game_id']}: E[rank] changes "
+            f"{diagnostic['delta_expected_rank']:+.3f}, ordinal {diagnostic['delta_ordinal_rank']:+d}, "
+            f"SD {diagnostic['delta_rank_sd']:+.3f}, entropy {diagnostic['delta_entropy_bits']:+.3f}, "
+            f"80% width {diagnostic['delta_width_80']:+d}, TV={diagnostic['total_variation']:.3f}, "
+            f"W1={diagnostic['wasserstein_rank']:.3f}. Positive rank change means the remaining evidence ranks worse. "
+            "This is the total network response, not an independent additive contribution of that game."
+        )
+    return " ".join(parts)
+
+
 def case_answer(
-    question: str, row: dict, peer: dict | None, diagnostic: dict | None
+    category: str,
+    row: dict,
+    *,
+    candidates: list[dict],
+    panels: dict,
+    peer: dict | None = None,
+    diagnostic: dict | None = None,
+    probe: dict | None = None,
+    selected_game: dict | None = None,
 ) -> str:
-    """Post-observation interpretation, kept separate from the frozen question."""
+    """Answer a frozen selection category with its relevant retained evidence.
+
+    Routing never depends on words in a question or on which candidate looks
+    favorable. The inventory's exact original question is retained by the caller.
+    """
     common = (
         f"At lambda={row['margin_weight']:g}, E[rank]={row['expected_rank']:.2f}, ordinal={row['ordinal_rank']}, "
-        f"SD={row['rank_sd']:.2f}, entropy={row['entropy_bits']:.3f} bits, central 80%={row['low_80']}-{row['high_80']}; "
-        f"versus Record/Play the mean-rank changes are {row['vs_record_delta_expected_rank']:+.2f}/{row['vs_play_delta_expected_rank']:+.2f}. "
+        f"SD={row['rank_sd']:.2f}, entropy={row['entropy_bits']:.3f}, central 50/80/95% widths="
+        f"{row['width_50']}/{row['width_80']}/{row['width_95']} (80% interval {row['low_80']}-{row['high_80']}). "
     )
-    q = question.lower()
-    if "postseason" in q:
+    observed = (
+        f"Actual record {row['wins']}-{row['losses']}, mean margin {row['average_margin']:+.2f}, "
+        f"close wins/losses {row['close_wins']}/{row['close_losses']}, dominant wins {row['dominant_wins']}; "
+        f"standardized schedule probability={row['schedule_reference_mean_win_probability']:.3f} (larger is easier), "
+        f"expected wins={row['expected_wins']:.2f}, wins minus expectation={row['wins_minus_expectation']:+.2f}. "
+        + (
+            "The 2026 reference is retrospective and reuses these games. "
+            if row["season"] == 2026
+            else "The primary 2025 reference uses preseason priors; original prospective availability is unknown. "
+        )
+    )
+    comparison = candidate_comparison_text(candidates)
+    if category == "postseason":
+        e = row["evolution_across_snapshots"][0]
+        return common + (
+            f"Pre-bowl to final E[rank] moves {e['earlier_expected_rank']:.2f} to {e['later_expected_rank']:.2f} "
+            f"({e['delta_expected_rank']:+.2f}); ordinal changes {e['delta_ordinal_rank']:+d}, "
+            f"SD {e['delta_rank_sd']:+.2f}, entropy {e['delta_entropy_bits']:+.3f}, "
+            f"80% width {e['delta_width_80']:+d}, TV={e['total_variation']:.3f}. "
+            f"Record changes {e['earlier_record']} to {e['later_record']}, with {len(e['added_own_games'])} "
+            f"added own observations and {e['added_network_game_count']} network observations. "
+            + actual_result_text(e["added_own_games"])
+            + " This is the observed postseason transition, including "
+            "opponent updates; unchanged own records can move and own games do not supply an additive explanation."
+        )
+    if category in ("middle_schedule_pair", "weak_schedule_pair"):
+        if peer is None:
+            raise ValueError("frozen schedule-pair question lacks its peer")
+        hard, easy = sorted(
+            (row, peer), key=lambda r: r["schedule_reference_mean_win_probability"]
+        )
+        matched = (hard["wins"], hard["losses"]) == (easy["wins"], easy["losses"])
+        gap = easy["expected_rank"] - hard["expected_rank"]
         return (
             common
-            + "The pre-bowl-to-final comparison is retained for every lambda in case_evolution.csv, including own new games and the 55 added network observations; movement includes opponent updates and cannot be assigned solely to the team's postseason games."
+            + observed
+            + (
+                f"Harder {hard['team_name']} versus easier {easy['team_name']}: records "
+                f"{hard['wins']}-{hard['losses']}/{easy['wins']}-{easy['losses']}, schedule probabilities "
+                f"{hard['schedule_reference_mean_win_probability']:.3f}/{easy['schedule_reference_mean_win_probability']:.3f}, "
+                f"reference ordinals {hard['reference_strength_ordinal']}/{easy['reference_strength_ordinal']}, "
+                f"wins minus expectation {hard['wins_minus_expectation']:+.2f}/{easy['wins_minus_expectation']:+.2f}. "
+                f"Records {'match' if matched else 'do not match'} at this cutoff; pairs were selected at the frozen selection snapshot. "
+                f"E[rank]={hard['expected_rank']:.2f}/{easy['expected_rank']:.2f}, easy minus hard gap={gap:+.2f}; "
+                f"SD={hard['rank_sd']:.2f}/{easy['rank_sd']:.2f}, entropy={hard['entropy_bits']:.3f}/{easy['entropy_bits']:.3f}, "
+                f"50/80/95% widths={hard['width_50']}/{hard['width_80']}/{hard['width_95']} versus "
+                f"{easy['width_50']}/{easy['width_80']}/{easy['width_95']}. "
+                f"The easier team's SD is {'lower' if easy['rank_sd'] < hard['rank_sd'] else 'higher or equal'} here. "
+                "Accomplishment, reference strength and bounded posterior location differ along with schedule; neither "
+                "this uncertainty ordering nor the rank gap identifies a causal scheduling effect or establishes equivalence. "
+            )
+            + comparison
         )
-    if peer is not None and any(
-        word in q for word in ("schedule", "identical", "uncertainty")
+    if category.startswith(("boundary_", "reference_boundary_")):
+        boundary = int(category.rsplit("_", 1)[1])
+        ordinals = [c["ordinal_rank"] for c in candidates]
+        crossing = min(ordinals) <= boundary < max(ordinals)
+        return (
+            common
+            + comparison
+            + (
+                f"The candidates {'cross' if crossing else 'do not cross'} the top-{boundary} display boundary "
+                f"(ordinal range {min(ordinals)}-{max(ordinals)}); this candidate's latent mass through rank {boundary} "
+                f"is {row[f'mass_le_{boundary}']:.3f}. Adjacent mean gaps better/worse="
+                f"{row['gap_to_better']}/{row['gap_to_worse']}, compared with marginal SD {row['rank_sd']:.2f}. "
+                "Display crossings and posterior mass answer different questions: marginal uncertainty is not a joint "
+                "probability of occupying a display slot, and nearby means do not establish sharp team separation. "
+                + (
+                    "This boundary category is a preseason-reference anchor, not a promise of candidate membership. "
+                    if row["season"] == 2025
+                    else ""
+                )
+            )
+        )
+    if category in (
+        "competitive_elite_loss",
+        "narrow_win_weaker_opponent",
+        "dominant_win_overmatched_opponent",
     ):
-        gap = row["expected_rank"] - peer["expected_rank"]
-        return common + (
-            f"The frozen peer {peer['team_name']} is {peer['wins']}-{peer['losses']} with standardized schedule probability "
-            f"{peer['schedule_reference_mean_win_probability']:.3f}, E[rank]={peer['expected_rank']:.2f}, SD={peer['rank_sd']:.2f}, "
-            f"entropy={peer['entropy_bits']:.3f}, widths 50/80/95={peer['width_50']}/{peer['width_80']}/{peer['width_95']}; "
-            f"this team's expected-rank gap is {gap:+.2f} and SD gap {row['rank_sd'] - peer['rank_sd']:+.2f}. "
-            "Accomplishments, reference strength and bounded posterior locations differ; this selected comparison cannot isolate a causal schedule effect or establish equivalence."
+        observation = (
+            actual_result_text([selected_game])
+            if selected_game
+            else "The frozen category-selected game has not yet occurred at this cutoff."
         )
-    if "boundary" in q:
-        return common + (
-            f"Latent top10/12/25 mass is {row['mass_le_10']:.3f}/{row['mass_le_12']:.3f}/{row['mass_le_25']:.3f}. "
-            f"Adjacent expected-rank gaps are {row['gap_to_better']}/{row['gap_to_worse']}. "
-            "Ordinal crossings are consequential display changes, while these diffuse marginals do not establish sharp separation. Historical boundary categories refer to preseason references."
+        response = (
+            controlled_response_text(None, diagnostic)
+            or "No removal was executed at this cutoff; a later Week 9 response cannot be attributed to this earlier network."
         )
-    if diagnostic is not None and any(
-        word in q for word in ("loss", "narrow", "dominant", "blowout")
+        implication = {
+            "competitive_elite_loss": "The observed loss is binary adverse evidence, while its margin relative to the listed opponent can support a different Play evaluation; the measured sign across candidates tests that distinction.",
+            "narrow_win_weaker_opponent": "A narrow win retains binary success despite its margin relative to the opponent; the measured candidate contrast tests how much that success offsets margin evidence.",
+            "dominant_win_overmatched_opponent": "The removal response tests how much of this season evaluation changes without the blowout. Its size relative to the retained full-season ranks describes influence, not proof that this game dominates or an additive share of the ranking.",
+        }[category]
+        return (
+            common
+            + observed
+            + comparison
+            + observation
+            + " "
+            + response
+            + " "
+            + implication
+        )
+    if category == "endpoint_disagreement":
+        upset_wins = [
+            g
+            for g in row["actual_games"]
+            if g["margin"] > 0 and g["frozen_primary_win_probability"] < 0.5
+        ]
+        return (
+            common
+            + observed
+            + comparison
+            + actual_result_text(row["actual_games"])
+            + (
+                f" Record retains all {row['wins']} observed wins, including {row['close_wins']} close wins and "
+                f"{len(upset_wins)} wins with retrospective reference p(win)<.5 "
+                f"({', '.join(g['opponent_name'] for g in upset_wins) or 'none'}), despite the listed loss margins. "
+                "Play also retains how severely the losses were incurred relative to the opponent distributions. "
+                "That contrast between successful outcomes and the win/loss margin profile makes the observed endpoint "
+                "disagreement understandable as an evidence-weighting tradeoff. The reference chances reuse these games, "
+                "so these are descriptive opponent-aware surprises rather than independent forecasts. "
+                "The endpoint SDs/intervals show uncertainty in both readings; "
+                "the intermediate candidate does not turn their disagreement into a precise rank. This is a descriptive "
+                "explanation of the record/margin tension, not an additive attribution to individual games. No "
+                "game for this case was selected for removal, so the contribution of any particular observation was not measured."
+            )
+        )
+    if category in ("elite", "strong"):
+        response = controlled_response_text(probe, diagnostic)
+        if not response:
+            response = "No controlled response was frozen for this team-season and cutoff; other snapshots' or seasons' responses do not measure this case."
+        return (
+            common
+            + observed
+            + comparison
+            + actual_result_text(row["actual_games"])
+            + " "
+            + response
+            + (
+                " Interpretation: these actual wins, close outcomes and margins against the listed opponent distributions "
+                "make the candidate credit tradeoff concrete. The controlled benefits, where available, measure winning "
+                "versus extending a win on this selected network; neither endpoint agreement nor a narrow marginal "
+                "independently validates elite/strong-season credit."
+            )
+        )
+    if category in ("weak", "middle"):
+        response = controlled_response_text(probe, diagnostic)
+        return (
+            common
+            + observed
+            + comparison
+            + schedule_panel_text(panels, row, category)
+            + (
+                actual_result_text(row["actual_games"]) + " "
+                if category == "weak"
+                else ""
+            )
+            + response
+            + (
+                " Interpretation: the population SD/width contrast addresses the schedule-uncertainty direction, "
+                "while the candidate ranks and any controlled outcome/margin benefits address accomplishment credit. "
+                "This selected team's record and location cannot isolate an easier-schedule advantage or explain the "
+                "uncertainty contrast causally."
+            )
+            + (
+                " No counterfactual was executed for this team at this cutoff."
+                if not probe
+                else ""
+            )
+        )
+    if category in (
+        "excellent_record_easy_schedule",
+        "middling_record_difficult_schedule",
     ):
-        return common + (
-            f"Removing the frozen {diagnostic['game_id']} observation changes this team's mean rank by "
-            f"{diagnostic['delta_expected_rank']:+.2f}, ordinal by {diagnostic['delta_ordinal_rank']:+d}, "
-            f"SD by {diagnostic['delta_rank_sd']:+.2f}, TV={diagnostic['total_variation']:.3f}. "
-            "This measures the total network response to removing one observation, not an additive contribution."
+        implication = (
+            "An excellent record earns outcome credit, but the listed opponent quality, close wins and reference "
+            "expectation distinguish it from wins over demanding opponents. The rank and uncertainty retained "
+            "after that recognition do not by themselves establish disproportionate easier-schedule credit."
+            if category == "excellent_record_easy_schedule"
+            else "The ordinary record must be read against these opponents and its reference expected wins. Its "
+            "measured shortfall/excess and candidate positions describe whether the accomplishments look ordinary "
+            "under that reference; they do not causally identify schedule difficulty as the explanation."
         )
-    return common + (
-        f"Actual evidence is {row['wins']}-{row['losses']}, mean margin {row['average_margin']:+.2f}, "
-        f"{row['close_wins']} close wins and {row['close_losses']} close losses, standardized schedule probability "
-        f"{row['schedule_reference_mean_win_probability']:.3f}, expected wins {row['expected_wins']:.2f}, "
-        f"wins minus expectation {row['wins_minus_expectation']:+.2f}. "
-        "These describe the record/margin disagreement and opponent-aware accomplishment, without independently validating a candidate. "
-        + (
-            "The expectation is retrospective and reuses these games."
-            if row["season"] == 2026
-            else "The primary expectation uses frozen preseason priors; original prospective availability remains unknown."
+        return (
+            common
+            + observed
+            + comparison
+            + actual_result_text(row["actual_games"])
+            + " "
+            + schedule_panel_text(panels, row, row["strength_band"])
+            + implication
         )
-    )
+    raise ValueError(f"unhandled frozen case question category: {category}")
 
 
 def analyze_cases(
@@ -482,6 +769,7 @@ def analyze_cases(
     ranks: dict,
     games: dict,
     focused: list,
+    sensitivity: list,
 ) -> tuple[list, list]:
     cases = [
         *json.loads((root / ARTIFACT_DIR / "cases.json").read_text()),
@@ -570,54 +858,8 @@ def analyze_cases(
                 }
             )
     lookup = {(r["snapshot_id"], r["margin_weight"], r["team_id"]): r for r in rows}
-    interpretations = []
     for r in rows:
-        peers = [
-            v
-            for v in rows
-            if v["snapshot_id"] == r["snapshot_id"]
-            and v["margin_weight"] == r["margin_weight"]
-            and v["team_id"] != r["team_id"]
-            and set(v["categories"])
-            & set(r["categories"])
-            & {"weak_schedule_pair", "middle_schedule_pair"}
-        ]
-        diagnostics = [
-            d
-            for d in focused
-            if d["snapshot_id"] == r["snapshot_id"]
-            and d["margin_weight"] == r["margin_weight"]
-            and d["team_id"] == r["team_id"]
-            and d["kind"] == "removal"
-            and d["role"] == "focal"
-        ]
-        r["answers_after_observation"] = [
-            {
-                "question": q,
-                "answer": case_answer(
-                    q,
-                    r,
-                    peers[0] if peers else None,
-                    diagnostics[0] if diagnostics else None,
-                ),
-            }
-            for q in r["questions"]
-        ]
-        interpretations.append(
-            {
-                k: r[k]
-                for k in (
-                    "snapshot_id",
-                    "season",
-                    "team_id",
-                    "team_name",
-                    "margin_weight",
-                    "categories",
-                    "questions",
-                    "answers_after_observation",
-                )
-            }
-        )
+        r["answers_after_observation"] = []
     transitions = [
         ("2025-prebowl", "2025-final"),
         ("2026-09-08", "2026-09-27"),
@@ -657,8 +899,28 @@ def analyze_cases(
                         ),
                     }
                 )
-    # Answer the historical evolution question with its measured transition,
-    # rather than leaving readers to join a second table themselves.
+    # Join only retained measurements at their actual snapshot/weight. The
+    # selection-game identity can be shown earlier if already observed, but its
+    # Week 9 response must never be presented as an earlier-cutoff measurement.
+    diagnostic_snapshot = verified.specification["game_diagnostics"]["publication_slot"]
+    probes = {
+        (diagnostic_snapshot, p["focal_team_id"], p["margin_weight"]): {
+            **p,
+            "snapshot_id": diagnostic_snapshot,
+        }
+        for p in sensitivity
+    }
+    removals = {
+        (d["snapshot_id"], d["team_id"], d["margin_weight"]): d
+        for d in focused
+        if d["kind"] == "removal" and d["role"] == "focal"
+    }
+    selected_ids = {d["profile"]: d["game_id"] for d in removals.values()}
+    panels = {
+        (r["snapshot_id"], float(r["margin_weight"]), r["panel"]): r
+        for r in read_csv(root / BASELINE_OUTPUT / "uncertainty_panels.csv")
+    }
+    interpretations = []
     for r in rows:
         r["evolution_across_snapshots"] = [
             e
@@ -667,21 +929,59 @@ def analyze_cases(
             and e["season"] == r["season"]
             and e["margin_weight"] == r["margin_weight"]
         ]
-        if r["season"] == 2025:
-            e = r["evolution_across_snapshots"][0]
-            for answer in r["answers_after_observation"]:
-                if "postseason" in answer["question"].lower():
-                    answer["answer"] = (
-                        f"At lambda={r['margin_weight']:g}, pre-bowl-to-final E[rank] moves "
-                        f"{e['earlier_expected_rank']:.2f} to {e['later_expected_rank']:.2f} "
-                        f"({e['delta_expected_rank']:+.2f}); ordinal changes {e['delta_ordinal_rank']:+d}, "
-                        f"SD changes {e['delta_rank_sd']:+.2f}, entropy {e['delta_entropy_bits']:+.3f}, "
-                        f"80% width {e['delta_width_80']:+d}, TV={e['total_variation']:.3f}. "
-                        f"Record changes {e['earlier_record']} to {e['later_record']}, with "
-                        f"{len(e['added_own_games'])} added own observations and 55 network observations. "
-                        "These are total network changes, including opponent updates; even unchanged own "
-                        "records can move, and own games do not supply an additive explanation."
-                    )
+        key = r["snapshot_id"], r["team_id"], r["margin_weight"]
+        candidates = [lookup[r["snapshot_id"], w, r["team_id"]] for w in MARGIN_WEIGHTS]
+        for category, question in zip(
+            case_question_categories(r), r["questions"], strict=True
+        ):
+            peers = [
+                v
+                for v in rows
+                if v["snapshot_id"] == r["snapshot_id"]
+                and v["margin_weight"] == r["margin_weight"]
+                and v["team_id"] != r["team_id"]
+                and category in ("middle_schedule_pair", "weak_schedule_pair")
+                and category in v["categories"]
+            ]
+            selected_game = next(
+                (
+                    g
+                    for g in r["actual_games"]
+                    if g["game_id"] == selected_ids.get(category)
+                ),
+                None,
+            )
+            r["answers_after_observation"].append(
+                {
+                    "question": question,
+                    "category": category,
+                    "answer": case_answer(
+                        category,
+                        r,
+                        candidates=candidates,
+                        panels=panels,
+                        peer=peers[0] if peers else None,
+                        diagnostic=removals.get(key),
+                        probe=probes.get(key),
+                        selected_game=selected_game,
+                    ).strip(),
+                }
+            )
+        interpretations.append(
+            {
+                k: r[k]
+                for k in (
+                    "snapshot_id",
+                    "season",
+                    "team_id",
+                    "team_name",
+                    "margin_weight",
+                    "categories",
+                    "questions",
+                    "answers_after_observation",
+                )
+            }
+        )
     write_csv(output / "case_results.csv", rows)
     write_csv(output / "case_evolution.csv", evolution)
     write_json(output / "case_interpretations.json", interpretations)
@@ -824,7 +1124,9 @@ def _analyze(root: Path, output: Path, verified: VerifiedExecution) -> None:
         output, verified, jobs, cells, ranks
     )
     games = evidence(root, baseline, verified)
-    cases, evolution = analyze_cases(root, output, verified, ranks, games, focused)
+    cases, evolution = analyze_cases(
+        root, output, verified, ranks, games, focused, sensitivity
+    )
     write_case_studies(output, cases, evolution)
     from gippyrank.research.issue_267_report import write_report
 
