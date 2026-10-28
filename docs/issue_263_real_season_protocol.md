@@ -248,6 +248,13 @@ selection. Endpoint references are permitted established information, but this
 selection emphasizes endpoint disagreement and is not an unbiased population
 sample. Use all population rows to judge prevalence.
 
+Reference ordinal positions come directly from the retained publications'
+`rankings.csv` display ranks. Do not re-sort these established references using
+recomputed expected ranks: floating-point differences can swap numerically tied
+early-season teams across runtimes. Recomputed numeric descriptors may differ
+by at most 1e−10 between environments; frozen input hashes, IDs, categories and
+reference ordering must match exactly.
+
 The concrete Week 9 selection is below. The machine inventory contains the same
 IDs at all three checkpoints, with cutoff-specific record/schedule context and
 the specific question for each category.

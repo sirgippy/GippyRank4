@@ -29,7 +29,6 @@ from gippyrank.research.issue_242_quality_of_results import (
     _input_bundle,
     _pmf_summaries,
     _published_inputs,
-    _rank_order,
     _read_json,
     _read_rows,
     _write_csv,
@@ -118,12 +117,12 @@ def reference_descriptors(
     qor: dict[str, np.ndarray],
     counts: dict[str, int],
     likelihood: LikelihoodV1,
+    ranks: dict[str, int],
+    qor_ranks: dict[str, int],
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Describe actual evidence with fixed reference beliefs, never candidate outputs."""
     by_id = {team.team_id: team for team in teams}
     fbs = sorted(qop)
-    ranks = {team_id: i for i, team_id in enumerate(_rank_order(qop, counts), 1)}
-    qor_ranks = {team_id: i for i, team_id in enumerate(_rank_order(qor, counts), 1)}
     # Same full preseason PMF for every schedule: no scalar strength estimate.
     reference = min(
         (by_id[team_id] for team_id in fbs),
@@ -409,7 +408,29 @@ def audit_snapshot(
             str(p.relative_to(root)): sha256(p) for p in artifact_paths
         },
     }
-    return audit, (teams, games, context_pmfs, qop_pmfs, qor_pmfs, counts, likelihood)
+    reference_orders = []
+    for snapshot in (qop, qor):
+        order = {
+            row["team_id"]: int(row["display_rank"])
+            for row in _read_rows(snapshot.directory / "rankings.csv")
+            if row["display_rank"]
+        }
+        rated = {t.team_id for t in fbs if counts[t.team_id]}
+        if set(order) != rated or sorted(order.values()) != list(
+            range(1, len(rated) + 1)
+        ):
+            raise ValueError("invalid retained reference display order")
+        reference_orders.append(order)
+    return audit, (
+        teams,
+        games,
+        context_pmfs,
+        qop_pmfs,
+        qor_pmfs,
+        counts,
+        likelihood,
+        *reference_orders,
+    )
 
 
 def build_design(root: Path, output: Path) -> dict[str, Any]:

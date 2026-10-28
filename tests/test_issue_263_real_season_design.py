@@ -49,6 +49,26 @@ def test_frozen_population_and_provenance(specification):
     assert all(p["margins"] == [-3, 3, 10, 35] for p in probes)
 
 
+def test_reference_ordinals_preserve_published_order_even_for_near_ties(specification):
+    descriptors = design._read_rows(FROZEN / "reference_descriptors.csv")
+    for snapshot in specification["snapshot_audit"]:
+        if not snapshot["selected"]:
+            continue
+        rows = [
+            row
+            for row in descriptors
+            if row["publication_slot"] == snapshot["publication_slot"]
+        ]
+        for family in ("qop", "qor"):
+            published = {
+                r["team_id"]: r["display_rank"]
+                for r in design._read_rows(
+                    ROOT / snapshot[family + "_source"] / "rankings.csv"
+                )
+            }
+            assert {r["team_id"]: r[family + "_ordinal"] for r in rows} == published
+
+
 def test_regeneration_is_deterministic_without_any_candidate_inference(
     tmp_path, monkeypatch
 ):
