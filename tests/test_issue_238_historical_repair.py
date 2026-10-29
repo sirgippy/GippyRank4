@@ -42,10 +42,12 @@ def _sources() -> dict[str, dict[str, tuple[dict[str, Any], Path]]]:
 def test_repaired_publications_preserve_cutoffs_and_share_corrected_evidence() -> None:
     sources = _sources()
     assert all(
-        set(sources[slot])
-        == {"context", "history", "quality_of_play", "quality_of_record"}
+        {"context", "history", "quality_of_play", "quality_of_record"}
+        <= set(sources[slot])
         for slot in SLOTS
     )
+    assert "quality_of_results" in sources["2026-09-08"]
+    assert all("quality_of_results" not in sources[slot] for slot in SLOTS[:2])
     audit = json.loads(
         (
             ROOT / "data/processed/issue_238_historical_repair/lineage_audit.json"
@@ -140,7 +142,7 @@ def test_repaired_publications_preserve_cutoffs_and_share_corrected_evidence() -
             assert not (directory / "inference_games.csv").exists()
             diagnostics = json.loads((directory / "diagnostics.json").read_text())
             assert "quality_of_record_evidence" not in diagnostics
-            if kind in {"quality_of_play", "quality_of_record"}:
+            if kind in {"quality_of_play", "quality_of_record", "quality_of_results"}:
                 assert (
                     metadata["source_context_snapshot_id"]
                     == context_metadata["snapshot_id"]
