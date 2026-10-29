@@ -146,3 +146,33 @@ def test_blocked_slot_does_not_register_other_staged_results(tmp_path: Path) -> 
     assert report["status"] == "blocked"
     assert report["publication_count"] == report["blocked_publication_count"] == 1
     assert len(json.loads(config_path.read_text())["snapshots"]) == 3
+
+
+def test_published_results_follow_audit_and_official_chronology() -> None:
+    root = Path(__file__).resolve().parents[1]
+    audit = json.loads(
+        (root / "data/processed/quality_of_results_backfill/manifest.json").read_text()
+    )
+    manifest = json.loads((root / "site/data/manifest.json").read_text())
+    audited_ids = {entry["snapshot_id"] for entry in audit["publications"]}
+    results = [
+        entry
+        for entry in manifest["snapshots"]
+        if entry.get("performance_variant") == "quality_of_results"
+        and entry["snapshot_id"] in audited_ids
+    ]
+    assert [entry["snapshot_id"] for entry in results] == [
+        entry["snapshot_id"] for entry in audit["publications"]
+    ]
+    previous: dict[int, str] = {}
+    for entry, record in zip(results, audit["publications"], strict=True):
+        assert entry["publication_slot"] == record["publication_slot"]
+        assert entry["publication_status"] == record["publication_status"]
+        assert entry["margin_weight"] == 0.4
+        assert entry["comparison_snapshot_id"] == previous.get(entry["season"])
+        assert (root / "site" / entry["data_path"]).is_file()
+        if entry["publication_status"] == "official":
+            previous[entry["season"]] = entry["snapshot_id"]
+    assert not {"2026-09-06", "2026-09-07"} & {
+        entry["publication_slot"] for entry in manifest["snapshots"]
+    }
