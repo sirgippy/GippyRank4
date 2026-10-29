@@ -449,6 +449,7 @@ def _infer_trial(
     max_iterations: int = 500,
     tolerance: float = 1e-9,
     damping: float = 0.35,
+    margin_weights: tuple[float, ...] = MARGIN_WEIGHTS,
 ) -> tuple[
     list[dict[str, object]], list[dict[str, object]], dict[float, dict[str, np.ndarray]]
 ]:
@@ -459,7 +460,7 @@ def _infer_trial(
     pair_rows: list[dict[str, object]] = []
     per_weight: dict[float, dict[str, np.ndarray]] = {}
     factor_surfaces: dict[tuple[object, ...], dict[str, np.ndarray]] = {}
-    for weight in MARGIN_WEIGHTS:
+    for weight in margin_weights:
         inference = infer_quality_of_results(
             teams,
             games,
@@ -491,6 +492,7 @@ def _infer_trial(
                     **summary,
                     "converged": posterior.converged,
                     "iterations": posterior.iterations,
+                    "max_message_delta": posterior.max_message_delta,
                 }
             )
         for comparison, left_name, right_name in (
@@ -558,13 +560,16 @@ def _wilson_interval(successes: int, count: int) -> tuple[float, float, float]:
 
 
 def summarize_pairs(
-    pair_rows: list[dict[str, object]], panel: str
+    pair_rows: list[dict[str, object]],
+    panel: str,
+    *,
+    margin_weights: tuple[float, ...] = MARGIN_WEIGHTS,
 ) -> list[dict[str, object]]:
     """Aggregate per-trial comparisons with Monte Carlo intervals."""
     output: list[dict[str, object]] = []
     comparisons = sorted({str(row["comparison"]) for row in pair_rows})
     for comparison in comparisons:
-        for weight in MARGIN_WEIGHTS:
+        for weight in margin_weights:
             rows = [
                 row
                 for row in pair_rows
