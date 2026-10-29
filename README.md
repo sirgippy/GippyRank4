@@ -183,6 +183,10 @@ reported together. Legacy Performance links select Quality of Play. See
 [Quality of Record](docs/quality_of_record.md) for the one-time historical
 backfill command and its explicit blocker reporting.
 
+[Quality of Results](docs/quality_of_results.md) is also available as a standalone
+production snapshot at λ=0.40, with generation, independent validation, and a
+research-parity command. Publication integration is a separate follow-up.
+
 The **Publish this ranking as Official** checkbox is unchecked by default. An
 unchecked run creates an Interim publication; checking it marks the generated
 publication slot Official. This Official/Interim decision is made when the
