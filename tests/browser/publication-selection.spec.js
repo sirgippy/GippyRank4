@@ -272,6 +272,11 @@ test("team Performance variant links clear the legacy slot parameter", async ({ 
 
 for (const surface of surfaces) {
   test(`${surface} handles an unpublished Quality of Results slot without falling back`, async ({ page }) => {
+    const withoutResults = structuredClone(manifest);
+    withoutResults.snapshots = withoutResults.snapshots.filter((entry) => !(
+      entry.publication_slot === missingVariantSlot && entry.performance_variant === "quality_of_results"
+    ));
+    await page.route("**/data/manifest.json", (route) => route.fulfill({ json: withoutResults }));
     await page.goto(urlFor(surface, {
       season: "2026", family: "performance", variant: "quality_of_results", snapshot: missingVariantSlot,
     }));
@@ -283,10 +288,8 @@ for (const surface of surfaces) {
 }
 
 test("published Quality of Results remains selected through ballot, team and schedule", async ({ page }) => {
-  // Reuse an existing consumer fixture while declaring a separate Results publication.
-  const resultsEntry = { ...qualityOfRecordEntry, performance_variant: "quality_of_results", margin_weight: 0.4 };
-  const fixture = { ...manifest, snapshots: manifest.snapshots.map((entry) => entry.snapshot_id === resultsEntry.snapshot_id ? resultsEntry : entry) };
-  await page.route(`${SITE_ORIGIN}/data/manifest.json`, (route) => route.fulfill({ json: fixture }));
+  const resultsEntry = manifest.snapshots.find((entry) => entry.performance_variant === "quality_of_results" && entry.publication_slot === "2026-09-27");
+  expect(resultsEntry).toBeTruthy();
   await page.goto(urlFor("rankings", { season: "2026", family: "performance", variant: "quality_of_results", snapshot: resultsEntry.publication_slot }));
   await expectResolved(page, "rankings", resultsEntry, "Quality of Results");
   const [download] = await Promise.all([page.waitForEvent("download"), page.locator("#download-ballot").click()]);
