@@ -39,6 +39,9 @@ from gippyrank.methodology import (
     WEEKLY_GAME_SCHEMA_VERSION,
     production_methodology_metadata,
 )
+from gippyrank.quality_of_results_snapshot import (
+    validate_quality_of_results_against_context,
+)
 from gippyrank.ranking_variants import performance_variant
 from gippyrank.redditcfb import (
     TeamHandleMappingError,
@@ -1875,6 +1878,15 @@ def _validate_performance_source(
             raise SiteDataValidationError(
                 f"{metadata['snapshot_id']}: Quality of Record needs pinned V1"
             )
+    if performance_variant(metadata) == "quality_of_results":
+        try:
+            validate_quality_of_results_against_context(
+                source, performance_source, root=root
+            )
+        except (ValueError, OSError, KeyError, TypeError) as error:
+            raise SiteDataValidationError(
+                f"{metadata['snapshot_id']}: invalid Quality of Results: {error}"
+            ) from error
     source_hash = metadata.get("source_context_metadata_sha256")
     if source_hash is not None and source_hash != _file_sha256(source_metadata_path):
         raise SiteDataValidationError(
@@ -5031,10 +5043,9 @@ def build_site_data(
         source = selected_snapshot.source
         metadata = metadata_by_source[source]
         _validate_metadata(metadata, source)
-        if (
-            metadata["ranking_family"] == "predictive"
-            or performance_variant(metadata) == "quality_of_record"
-        ):
+        if metadata["ranking_family"] == "predictive" or performance_variant(
+            metadata
+        ) in {"quality_of_record", "quality_of_results"}:
             _validate_included_game_hashes(source, metadata)
         if metadata["ranking_family"] == "performance":
             _validate_performance_source(metadata, root, source)
@@ -5239,6 +5250,14 @@ def build_site_data(
                     "model_version": metadata["model_version"],
                     "performance_variant": performance_variant(metadata),
                     "evidence_mode": metadata.get("evidence_mode", "margin"),
+                    **(
+                        {
+                            "margin_weight": metadata["margin_weight"],
+                            "model": metadata["model"],
+                        }
+                        if performance_variant(metadata) == "quality_of_results"
+                        else {}
+                    ),
                     "method": metadata["method"],
                     "anchor_family": metadata["anchor_family"],
                     "source_context_snapshot_id": metadata[
@@ -5491,6 +5510,14 @@ def build_site_data(
                     "model_version": metadata["model_version"],
                     "performance_variant": performance_variant(metadata),
                     "evidence_mode": metadata.get("evidence_mode", "margin"),
+                    **(
+                        {
+                            "margin_weight": metadata["margin_weight"],
+                            "model": metadata["model"],
+                        }
+                        if performance_variant(metadata) == "quality_of_results"
+                        else {}
+                    ),
                     "method": metadata["method"],
                     "anchor_family": metadata["anchor_family"],
                 }

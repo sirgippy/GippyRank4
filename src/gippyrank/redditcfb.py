@@ -258,12 +258,17 @@ def build_ballot(
     semantics = (
         "Predictive estimates current underlying team quality using preseason information plus games."
         if ranking_family == "predictive"
+        else "Quality of Results evaluates what teams accomplished against their opponents, giving winning special significance while also considering scoring margins."
+        if performance_variant == "quality_of_results"
         else f"{family_label} evaluates {'wins and losses' if performance_variant == 'quality_of_record' else 'scoring margins'} throughout the eligible Context-anchored game network, with the focal prior stripped. Quality of Record is not ESPN's Strength of Record methodology."
     )
+    description = (
+        "a probabilistic college-football ranking model that expresses uncertainty in season accomplishments"
+        if ranking_family == "performance" and performance_variant == "quality_of_results"
+        else "a probabilistic college-football ranking model that estimates underlying team quality from game performance and expresses uncertainty rather than treating rank as perfectly known"
+    )
     overall = (
-        "Generated from GippyRank4, a probabilistic college-football ranking model "
-        "that estimates underlying team quality from game performance and expresses "
-        "uncertainty rather than treating rank as perfectly known. This ballot uses "
+        f"Generated from GippyRank4, {description}. This ballot uses "
         f"the {season} {snapshot_label} {family_label}{prior_label} rankings. "
         f"{semantics}\n\nExplore the rankings and uncertainty at: {site_url}"
     )

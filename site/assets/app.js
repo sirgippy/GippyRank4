@@ -130,8 +130,11 @@ function selectedViewLabel(entry) {
 function overallBallotRationale(entry) {
   const semantics = state.family === "predictive"
     ? "Predictive estimates current underlying team quality using preseason information plus games."
-    : `${familyLabel()} asks what quality is implied by ${state.variant === "quality_of_record" ? "wins and losses" : "scoring margins"}, with Context preseason priors anchoring the game network and the focal prior stripped. Quality of Record is not ESPN's Strength of Record methodology.`;
-  return `Generated from GippyRank4, a probabilistic college-football ranking model that estimates underlying team quality from game performance and expresses uncertainty rather than treating rank as perfectly known. This ballot uses the ${selectedViewLabel(entry)} rankings. ${semantics}\n\nExplore the rankings and uncertainty at: ${state.manifest.site_url}`;
+    : state.variant === "quality_of_results" ? "Quality of Results evaluates what teams accomplished against their opponents, giving winning special significance while also considering scoring margins." : `${familyLabel()} asks what quality is implied by ${state.variant === "quality_of_record" ? "wins and losses" : "scoring margins"}, with Context preseason priors anchoring the game network and the focal prior stripped. Quality of Record is not ESPN's Strength of Record methodology.`;
+  const description = state.family === "performance" && state.variant === "quality_of_results"
+    ? "a probabilistic college-football ranking model that expresses uncertainty in season accomplishments"
+    : "a probabilistic college-football ranking model that estimates underlying team quality from game performance and expresses uncertainty rather than treating rank as perfectly known";
+  return `Generated from GippyRank4, ${description}. This ballot uses the ${selectedViewLabel(entry)} rankings. ${semantics}\n\nExplore the rankings and uncertainty at: ${state.manifest.site_url}`;
 }
 
 function teamBallotRationale(row) {
@@ -540,7 +543,7 @@ function renderDetail(row, entry, distribution) {
   $("#detail-team-meta").textContent = `${rankLabel} by expected rank · ${row.conference || "Independent"} · ${row.record} modeled record · ${familyLabel()}${state.family === "predictive" ? ` · ${entry.prior_family === "context" ? "Context" : "History"}` : ""}`;
   const heading = element("h3", "detail-section-title", "Rank uncertainty");
   const explainer = element("p", "detail-explainer", state.family === "performance"
-    ? `${familyLabel()} uses ${state.variant === "quality_of_record" ? "wins and losses throughout the eligible game network" : "scoring margins in the eligible game network"}. Context preseason priors anchor opponent beliefs; ${row.team_name}'s own prior is stripped as a direct factor. Quality of Record is not ESPN's Strength of Record methodology.`
+    ? state.variant === "quality_of_results" ? "Quality of Results evaluates what teams accomplished against their opponents, giving winning special significance while also considering scoring margins." : `${familyLabel()} uses ${state.variant === "quality_of_record" ? "wins and losses throughout the eligible game network" : "scoring margins in the eligible game network"}. Context preseason priors anchor opponent beliefs; ${row.team_name}'s own prior is stripped as a direct factor. Quality of Record is not ESPN's Strength of Record methodology.`
     : `GippyRank does not assign ${row.team_name} one certain rank. It maintains a probability distribution over possible ranks. The table orders teams by expected rank; this distribution shows how uncertain that estimate is.`);
   const currentBelief = element("p", "detail-current-belief", state.family === "performance" && row.rated === false
     ? "No eligible games have been played by this team in the selected snapshot. It is shown as NR with a neutral uniform distribution."

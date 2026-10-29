@@ -4,10 +4,13 @@ export function variantFor(entry) {
 }
 
 export function requestedVariant(params) {
-  if (params.has("variant")) return params.get("variant") === "quality_of_record" ? "quality_of_record" : "quality_of_play";
-  return params.get("snapshot")?.endsWith("-performance-quality-of-record") ? "quality_of_record" : "quality_of_play";
+  const variant = params.get("variant");
+  if (variant) return ["quality_of_record", "quality_of_results"].includes(variant) ? variant : "quality_of_play";
+  const snapshot = params.get("snapshot");
+  if (snapshot?.endsWith("-performance-quality-of-results")) return "quality_of_results";
+  return snapshot?.endsWith("-performance-quality-of-record") ? "quality_of_record" : "quality_of_play";
 }
 
 export function performanceLabel(entry) {
-  return variantFor(entry) === "quality_of_record" ? "Quality of Record" : "Quality of Play";
+  return { quality_of_play: "Quality of Play", quality_of_record: "Quality of Record", quality_of_results: "Quality of Results" }[variantFor(entry)] ?? "Quality of Play";
 }

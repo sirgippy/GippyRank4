@@ -348,7 +348,9 @@ def _rankings(source: _Source, pmfs: dict[str, np.ndarray]) -> list[dict[str, An
     return ranked
 
 
-def _declaration(source: _Source, root: Path) -> dict[str, Any]:
+def _declaration(
+    source: _Source, root: Path, source_context_path: Path | None = None
+) -> dict[str, Any]:
     snapshot = source.snapshot
     _, base = _logical_snapshot_id(snapshot.snapshot_id)
     return {
@@ -364,7 +366,9 @@ def _declaration(source: _Source, root: Path) -> dict[str, Any]:
         "method": PERFORMANCE_METHOD,
         "anchor_family": "context",
         "source_context_snapshot_id": snapshot.snapshot_id,
-        "source_context_path": _relative_or_absolute(snapshot.directory, root),
+        "source_context_path": _relative_or_absolute(
+            source_context_path or snapshot.directory, root
+        ),
         "source_context_metadata_sha256": sha256(snapshot.directory / "metadata.json"),
         "source_context_diagnostics_sha256": sha256(
             snapshot.directory / "diagnostics.json"
@@ -401,7 +405,11 @@ def _write_pmfs(path: Path, pmfs: dict[str, np.ndarray]) -> None:
 
 
 def validate_quality_of_results_against_context(
-    context: Snapshot | Path, quality_of_results: Snapshot | Path, *, root: Path
+    context: Snapshot | Path,
+    quality_of_results: Snapshot | Path,
+    *,
+    root: Path,
+    source_context_path: Path | None = None,
 ) -> None:
     """Validate retained output and its frozen source without rerunning inference.
 
@@ -417,7 +425,7 @@ def validate_quality_of_results_against_context(
         "Output metadata artifact mismatch",
     )
     validate_performance_against_context(source.snapshot, output)
-    for field, expected in _declaration(source, root).items():
+    for field, expected in _declaration(source, root, source_context_path).items():
         _require(
             metadata.get(field) == expected, f"Quality of Results {field} mismatch"
         )
@@ -507,12 +515,13 @@ def build_quality_of_results_snapshot(
     *,
     root: Path,
     output_root: Path | None = None,
+    source_context_path: Path | None = None,
     generation_timestamp: datetime | None = None,
 ) -> Snapshot:
     """Generate and validate a new standalone λ=.40 snapshot; never acquire data."""
     started = time.perf_counter()
     source = _load_source(source_context, root)
-    metadata = _declaration(source, root)
+    metadata = _declaration(source, root, source_context_path)
     _, base = _logical_snapshot_id(source.snapshot.snapshot_id)
     output_root = (
         output_root if output_root is not None else root / "data/processed/snapshots"
@@ -599,6 +608,8 @@ def build_quality_of_results_snapshot(
         (staging / "metadata.json").write_text(
             json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
-        validate_quality_of_results_against_context(source.snapshot, staging, root=root)
+        validate_quality_of_results_against_context(
+            source.snapshot, staging, root=root, source_context_path=source_context_path
+        )
         staging.rename(directory)
     return Snapshot(metadata["snapshot_id"], directory, metadata)

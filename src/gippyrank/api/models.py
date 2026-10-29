@@ -65,8 +65,16 @@ class PublicationMetadata(PublicModel):
     display_label: str
     ranking_family: Literal["predictive", "performance"]
     prior_family: Literal["context", "history"] | None = None
-    performance_variant: Literal["quality_of_play", "quality_of_record"] | None = None
-    evidence_mode: Literal["margin", "win_loss"] | None = None
+    performance_variant: (
+        Literal["quality_of_play", "quality_of_record", "quality_of_results"] | None
+    ) = None
+    evidence_mode: (
+        Literal["margin", "win_loss", "outcome_and_tempered_margin"] | None
+    ) = None
+    margin_weight: float | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+    model: str | None = Field(default=None, exclude_if=lambda value: value is None)
     requested_cutoff: datetime | None = None
     effective_cutoff: datetime | None = None
     generation_timestamp: datetime

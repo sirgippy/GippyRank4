@@ -488,7 +488,7 @@ function renderSummary(entry, row) {
   $("#team-page-kind").textContent = `${entry.season} ${entry.display_label} · ${publicationStatusLabel(entry)} publication`;
   $("#team-page-title").textContent = row.team_name;
   $("#team-page-meta").textContent = `${row.conference || "Independent"} · ${entry.snapshot_type === "preseason" ? "Before game evidence" : `Through ${formatDate(entry.effective_cutoff)}`} · ${entry.ranking_family === "performance" ? performanceLabel(entry) : `Predictive ${priorLabel(entry.prior_family)}`}`;
-  $("#prediction-source").textContent = `Completed-game expectations compare each result with what GippyRank knows at the selected snapshot, including that game. They are retrospective, not pregame forecasts. Checkpoint rows show shared published belief changes. Future matchups use ${entry.ranking_family === "performance" ? "Predictive Context" : `Predictive ${priorLabel(entry.prior_family)}`} at this snapshot.`;
+  $("#prediction-source").textContent = `Completed-game expectations use ${entry.ranking_family === "performance" ? "Predictive Context at the selected publication" : `Predictive ${priorLabel(entry.prior_family)} at the selected snapshot`} and include that game. They are retrospective, not pregame forecasts. Checkpoint rows show shared published belief changes. Future matchups use ${entry.ranking_family === "performance" ? "Predictive Context" : `Predictive ${priorLabel(entry.prior_family)}`} at this snapshot.`;
 
   const summary = node("div", "team-summary-grid");
   summary.append(summaryItem("Published rank", rankLabel), summaryItem("Record", row.record));
@@ -1224,7 +1224,7 @@ function updatePriorSwitch(manifest, entry) {
   const performanceNav = $("#team-performance-switch");
   performanceNav.hidden = predictive;
   if (!predictive && entry) {
-    ["quality_of_play", "quality_of_record"].forEach((variant) => {
+    ["quality_of_play", "quality_of_record", "quality_of_results"].forEach((variant) => {
       const link = performanceNav.querySelector(`[data-variant-link="${variant}"]`);
       const counterpart = manifest.snapshots.find((candidate) => candidate.season === entry.season
         && candidate.publication_slot === entry.publication_slot

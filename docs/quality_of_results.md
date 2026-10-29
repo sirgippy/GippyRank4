@@ -141,5 +141,5 @@ source/output corruption, nonconvergence and preservation of existing variants.
 The full-season parity command is explicit and does not add the research inventory
 to ordinary CI.
 
-This ticket supplies standalone production snapshots. Scheduled publication,
-website/API exports, historical backfills, and ballot integration remain separate.
+Weekly publication generates this variant alongside Quality of Play and Quality of Record.
+The site and static API expose it where published; older slots do not require backfills.
