@@ -128,6 +128,14 @@ def test_official_comparisons_never_cross_performance_variants() -> None:
     record = replace(
         play, snapshot_id="record", performance_variant="quality_of_record"
     )
+    results = replace(
+        play, snapshot_id="results", performance_variant="quality_of_results"
+    )
+    current_results = replace(results, publication_slot="second", publication_order=1)
+    assert resolve_previous_official(current_results, [play, record]) is None
+    assert (
+        resolve_previous_official(current_results, [play, record, results]) == results
+    )
     current = replace(record, publication_slot="second", publication_order=1)
     assert resolve_previous_official(current, [play]) is None
     assert resolve_previous_official(current, [play, record]) == record

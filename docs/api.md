@@ -43,13 +43,23 @@ and preserve the distinction between:
   `performance_variant: quality_of_play`.
 - Performance / Quality of Record: observed wins and losses, with
   `performance_variant: quality_of_record` and `evidence_mode: win_loss`.
+- Performance / Quality of Results: outcomes with tempered margins, with
+  `performance_variant: quality_of_results`, `evidence_mode: outcome_and_tempered_margin`,
+  and `margin_weight: 0.4`.
 
-Both Performance variants are Context-anchored with the focal prior stripped.
+All three Performance variants are Context-anchored with the focal prior stripped.
 An older Performance artifact without a variant means Quality of Play; its
 snapshot ID and resources remain valid. Select the desired variant from the
 inventory and use its exact snapshot ID in resource paths. Convenience selectors
 with `family=performance` and no variant retain Quality of Play semantics.
 
+For example, discover available Quality of Results publications with:
+
+```bash
+curl -s https://sirgippy.github.io/GippyRank4/api/v1/publications.json | jq ' .publications[] | select(.performance_variant == "quality_of_results") | {snapshot_id, margin_weight, links}'
+```
+
+Older slots may have no Quality of Results entry.
 Official and temporary publications are both explicit in the inventory.
 Historical snapshots remain bounded by their effective cutoff; later scores,
 game states, performance results, and predictions are not substituted into an

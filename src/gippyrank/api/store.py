@@ -372,6 +372,8 @@ def _publication_metadata(
         "prior_family",
         "performance_variant",
         "evidence_mode",
+        "margin_weight",
+        "model",
         "publication_slot",
         "publication_status",
         "display_label",
@@ -404,6 +406,8 @@ def _publication_metadata(
                 "evidence_mode", "margin" if family == "performance" else None
             ),
         ),
+        "margin_weight": entry.get("margin_weight", snapshot.get("margin_weight")),
+        "model": entry.get("model", snapshot.get("model")),
         "prior_family": entry.get("prior_family", snapshot.get("prior_family")),
         "requested_cutoff": entry.get(
             "requested_cutoff", snapshot.get("requested_cutoff")

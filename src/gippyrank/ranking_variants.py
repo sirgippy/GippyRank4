@@ -1,4 +1,4 @@
-"""The two Performance variants, including the legacy snapshot default."""
+"""The Performance variants, including the legacy snapshot default."""
 
 from collections.abc import Mapping
 from typing import Any
@@ -6,6 +6,7 @@ from typing import Any
 PERFORMANCE_VARIANTS = {
     "quality_of_play": "Quality of Play",
     "quality_of_record": "Quality of Record",
+    "quality_of_results": "Quality of Results",
 }
 
 

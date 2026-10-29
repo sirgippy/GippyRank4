@@ -269,3 +269,36 @@ test("team Performance variant links clear the legacy slot parameter", async ({ 
   await page.reload();
   await expectResolved(page, "team", qualityOfRecordEntry, "Quality of Record");
 });
+
+for (const surface of surfaces) {
+  test(`${surface} handles an unpublished Quality of Results slot without falling back`, async ({ page }) => {
+    await page.goto(urlFor(surface, {
+      season: "2026", family: "performance", variant: "quality_of_results", snapshot: missingVariantSlot,
+    }));
+    await expect(statusFor(page, surface)).toBeVisible();
+    await expect(statusFor(page, surface)).toContainText("Quality of Results is unavailable");
+    await expect(rowsFor(page, surface)).toHaveCount(0);
+    await expect(page).toHaveURL(/variant=quality_of_results/);
+  });
+}
+
+test("published Quality of Results remains selected through ballot, team and schedule", async ({ page }) => {
+  // Reuse an existing consumer fixture while declaring a separate Results publication.
+  const resultsEntry = { ...qualityOfRecordEntry, performance_variant: "quality_of_results", margin_weight: 0.4 };
+  const fixture = { ...manifest, snapshots: manifest.snapshots.map((entry) => entry.snapshot_id === resultsEntry.snapshot_id ? resultsEntry : entry) };
+  await page.route(`${SITE_ORIGIN}/data/manifest.json`, (route) => route.fulfill({ json: fixture }));
+  await page.goto(urlFor("rankings", { season: "2026", family: "performance", variant: "quality_of_results", snapshot: resultsEntry.publication_slot }));
+  await expectResolved(page, "rankings", resultsEntry, "Quality of Results");
+  const [download] = await Promise.all([page.waitForEvent("download"), page.locator("#download-ballot").click()]);
+  expect(download.suggestedFilename()).toContain("quality-of-results");
+  const ballot = JSON.parse(await require("node:fs/promises").readFile(await download.path(), "utf8"));
+  expect(ballot.overall_rationale).toContain("Quality of Results");
+  const ranking = require(`../../site/${resultsEntry.data_path}`).rankings.filter((row) => row.rated).slice(0, 25);
+  expect(ballot.entries.map((entry) => entry.team_handle)).toEqual(ranking.map((row) => manifest.redditcfb.team_handles[row.team_id]));
+  await page.locator('#rankings-body a[href*="team.html"]').first().click();
+  await expect(page.locator("#team-page-meta")).toContainText("Quality of Results");
+  await expect(page).toHaveURL(/variant=quality_of_results/);
+  await page.locator("#back-to-schedule").click();
+  await expect(page.locator('[data-variant="quality_of_results"]')).toHaveAttribute("aria-pressed", "true");
+  await expect(page).toHaveURL(/variant=quality_of_results/);
+});

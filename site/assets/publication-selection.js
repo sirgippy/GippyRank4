@@ -2,7 +2,7 @@ import { performanceLabel, variantFor } from "./ranking-variants.js";
 
 const families = new Set(["predictive", "performance"]);
 const priors = new Set(["context", "history"]);
-const variants = new Set(["quality_of_play", "quality_of_record"]);
+const variants = new Set(["quality_of_play", "quality_of_record", "quality_of_results"]);
 
 function entryLabel(entry) {
   const family = entry.ranking_family === "performance"
@@ -79,7 +79,7 @@ export function resolvePublication(manifest, params) {
     : params.get("prior") ?? "context";
   let variant = exact && !variantExplicit && exact.ranking_family === "performance"
     ? variantFor(exact)
-    : params.get("variant") ?? (raw?.endsWith("-performance-quality-of-record") ? "quality_of_record" : "quality_of_play");
+    : params.get("variant") ?? (raw?.endsWith("-performance-quality-of-results") ? "quality_of_results" : raw?.endsWith("-performance-quality-of-record") ? "quality_of_record" : "quality_of_play");
   const selection = { family, season, prior, variant, requested: raw, explicit: hasSnapshot || hasSlot };
 
   if (hasSnapshot && hasSlot && params.get("snapshot") !== params.get("slot")) {

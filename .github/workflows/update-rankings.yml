@@ -76,6 +76,7 @@ jobs:
           HISTORY_SNAPSHOT_PATH: ${{ steps.candidate.outputs.history_snapshot_path }}
           PERFORMANCE_SNAPSHOT_PATH: ${{ steps.candidate.outputs.performance_snapshot_path }}
           QUALITY_OF_RECORD_SNAPSHOT_PATH: ${{ steps.candidate.outputs.quality_of_record_snapshot_path }}
+          QUALITY_OF_RESULTS_SNAPSHOT_PATH: ${{ steps.candidate.outputs.quality_of_results_snapshot_path }}
           REPORT_MD_PATH: ${{ steps.candidate.outputs.report_md_path }}
           REPORT_JSON_PATH: ${{ steps.candidate.outputs.report_json_path }}
           PUBLISH_CONFIG_PATH: ${{ steps.candidate.outputs.publish_config_path }}

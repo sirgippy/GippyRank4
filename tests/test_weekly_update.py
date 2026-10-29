@@ -243,7 +243,7 @@ def test_weekly_update_pairs_h_c_preserves_preseason_and_is_idempotent(
         "Publication status: `Interim`" in first.candidate_paths.report_md.read_text()
     )
     entries = config["snapshots"]
-    assert len(entries) == 4 and {entry["publication_slot"] for entry in entries} == {
+    assert len(entries) == 5 and {entry["publication_slot"] for entry in entries} == {
         slot
     }
     assert {entry["source"].rsplit("/", 1)[-1] for entry in entries} == {
@@ -251,6 +251,7 @@ def test_weekly_update_pairs_h_c_preserves_preseason_and_is_idempotent(
         "history",
         "performance",
         "quality_of_record",
+        "quality_of_results",
     }
     assert (
         first.quality_of_record.metadata["performance_variant"] == "quality_of_record"
@@ -261,7 +262,47 @@ def test_weekly_update_pairs_h_c_preserves_preseason_and_is_idempotent(
         first.candidate_paths.quality_of_record_snapshot
         == first.quality_of_record.directory
     )
+    from gippyrank.quality_of_results_snapshot import (
+        validate_quality_of_results_against_context,
+    )
+
+    results = first.quality_of_results
+    assert (
+        results.metadata["source_context_path"]
+        == first.context.directory.relative_to(root).as_posix()
+    )
+    assert results.metadata["margin_weight"] == 0.40
+    validate_quality_of_results_against_context(first.context, results, root=root)
+    assert first.candidate_paths.quality_of_results_snapshot == results.directory
+    assert "## Quality of Results" in first.candidate_paths.report_md.read_text()
+    assert first.report["quality_of_results"]["movement_baseline"] is None
     manifest = json.loads((root / "site/data/manifest.json").read_text())
+    result_entry = next(
+        entry
+        for entry in manifest["snapshots"]
+        if entry.get("performance_variant") == "quality_of_results"
+    )
+    assert result_entry["margin_weight"] == 0.40
+    inventory = json.loads((root / "site/api/v1/publications.json").read_text())
+    api_entry = next(
+        entry
+        for entry in inventory["publications"]
+        if entry.get("performance_variant") == "quality_of_results"
+    )
+    assert api_entry["margin_weight"] == 0.40
+    assert api_entry["model"] == "quality_of_results_v1"
+    ranking_api = json.loads(
+        (root / "site/api/v1" / api_entry["links"]["rankings"]).read_text()
+    )
+    assert ranking_api["publication"]["performance_variant"] == "quality_of_results"
+    exported = json.loads(
+        (root / "site/data/snapshots" / f"{results.snapshot_id}.json").read_text()
+    )
+    assert [row["team_id"] for row in exported["rankings"]] == [
+        row["team_id"]
+        for row in json.loads((results.directory / "rankings.json").read_text())
+    ]
+
     assert manifest["default_publication_slot"] == slot
     assert {
         entry["publication_status"]
@@ -363,7 +404,7 @@ def test_same_day_interim_publications_keep_distinct_slots_and_artifacts(
         first.publication_slot,
         second.publication_slot,
     }
-    assert len(config["snapshots"]) == 8
+    assert len(config["snapshots"]) == 10
 
     manifest = json.loads((root / "site/data/manifest.json").read_text())
     assert {entry["publication_slot"] for entry in manifest["snapshots"]} == {
@@ -431,7 +472,7 @@ def test_official_status_change_is_publishable_without_ranking_changes(
     assert official.published
     config = json.loads((root / "site/publish_config.json").read_text())
     assert config["publication_slots"] == [{"id": "2026-09-12", "status": "official"}]
-    assert len(config["snapshots"]) == 4
+    assert len(config["snapshots"]) == 5
     assert {entry["publication_slot"] for entry in config["snapshots"]} == {
         "2026-09-12"
     }
@@ -664,6 +705,7 @@ def test_update_workflow_commits_only_a_published_non_dry_run_candidate() -> Non
         ("history_snapshot_path", "HISTORY_SNAPSHOT_PATH"),
         ("performance_snapshot_path", "PERFORMANCE_SNAPSHOT_PATH"),
         ("quality_of_record_snapshot_path", "QUALITY_OF_RECORD_SNAPSHOT_PATH"),
+        ("quality_of_results_snapshot_path", "QUALITY_OF_RESULTS_SNAPSHOT_PATH"),
         ("report_md_path", "REPORT_MD_PATH"),
         ("report_json_path", "REPORT_JSON_PATH"),
         ("publish_config_path", "PUBLISH_CONFIG_PATH"),
@@ -694,6 +736,7 @@ def _candidate_environment() -> dict[str, str]:
         "HISTORY_SNAPSHOT_PATH": "data/processed/snapshots/2026/actual-history/predictive/history",
         "PERFORMANCE_SNAPSHOT_PATH": "data/processed/snapshots/2026/actual-performance/performance",
         "QUALITY_OF_RECORD_SNAPSHOT_PATH": "data/processed/snapshots/2026/actual-performance/performance/quality_of_record",
+        "QUALITY_OF_RESULTS_SNAPSHOT_PATH": "data/processed/snapshots/2026/actual-performance/performance/quality_of_results",
         "REPORT_MD_PATH": "data/processed/weekly_updates/2026-09-12.md",
         "REPORT_JSON_PATH": "data/processed/weekly_updates/2026-09-12.json",
         "PUBLISH_CONFIG_PATH": "site/publish_config.json",
@@ -709,7 +752,14 @@ def _candidate_repo(tmp_path: Path) -> dict[str, str]:
     environment = _candidate_environment()
     for relative_path in environment.values():
         if relative_path.endswith(
-            ("context", "history", "performance", "quality_of_record", "data")
+            (
+                "context",
+                "history",
+                "performance",
+                "quality_of_record",
+                "quality_of_results",
+                "data",
+            )
         ):
             _write_candidate_file(tmp_path, f"{relative_path}/artifact.json")
         else:
@@ -750,6 +800,7 @@ def test_candidate_staging_force_adds_only_durable_ignored_publication_artifacts
         "data/processed/snapshots/2026/actual-history/predictive/history/artifact.json",
         "data/processed/snapshots/2026/actual-performance/performance/artifact.json",
         "data/processed/snapshots/2026/actual-performance/performance/quality_of_record/artifact.json",
+        "data/processed/snapshots/2026/actual-performance/performance/quality_of_results/artifact.json",
         "data/processed/weekly_updates/2026-09-12.md",
         "data/processed/weekly_updates/2026-09-12.json",
         "site/publish_config.json",
@@ -920,6 +971,7 @@ def test_unchanged_detection_includes_quality_of_record(
         update.history,
         update.performance,
         update.quality_of_record,
+        update.quality_of_results,
     )
     assert not weekly_update._is_publishable_change(
         *arguments,
@@ -942,7 +994,109 @@ def test_unchanged_detection_includes_quality_of_record(
         update.quality_of_record.metadata,
     )
     assert weekly_update._is_publishable_change(
-        *arguments[:-1],
+        *arguments[:-2],
+        candidate,
+        update.quality_of_results,
+        publication_slot=update.publication_slot,
+        publication_status="temporary",
+    )
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("model", "quality_of_record_v1"),
+        ("margin_weight", 0.5),
+        ("source_context_metadata_sha256", "bad"),
+    ],
+)
+def test_results_export_rejects_corrupted_identity_and_provenance(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, field: str, value: object
+) -> None:
+    from gippyrank.site_data import SiteDataValidationError, build_site_data
+
+    root = _root(tmp_path)
+    timestamp = datetime(2026, 9, 12, 15, tzinfo=UTC)
+    monkeypatch.setattr(
+        weekly_update, "fetch_current_season", lambda **_: _acquisition(root, timestamp)
+    )
+    update = prepare_weekly_update(season=2026, root=root)
+    metadata_path = update.quality_of_results.directory / "metadata.json"
+    metadata = json.loads(metadata_path.read_text())
+    metadata[field] = value
+    metadata_path.write_text(json.dumps(metadata))
+    with pytest.raises(SiteDataValidationError):
+        build_site_data(
+            root=root,
+            config_path=root / "site/publish_config.json",
+            output_directory=root / "site/data",
+        )
+
+
+def test_candidate_staging_rejects_missing_results(tmp_path: Path) -> None:
+    environment = _candidate_repo(tmp_path)
+    shutil.rmtree(tmp_path / environment["QUALITY_OF_RESULTS_SNAPSHOT_PATH"])
+    result = subprocess.run(
+        ["bash", str(ROOT / "scripts/stage_weekly_publication_candidate.sh")],
+        cwd=tmp_path,
+        env={**os.environ, **environment},
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode != 0
+
+
+def test_results_generation_failure_does_not_promote_candidate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = _root(tmp_path)
+    timestamp = datetime(2026, 9, 12, 15, tzinfo=UTC)
+    monkeypatch.setattr(
+        weekly_update, "fetch_current_season", lambda **_: _acquisition(root, timestamp)
+    )
+
+    def fail(**kwargs: object) -> None:
+        raise ValueError("invalid Results")
+
+    monkeypatch.setattr(
+        weekly_update,
+        "build_quality_of_results_snapshot",
+        lambda *args, **kwargs: fail(**kwargs),
+    )
+    before = (root / "site/publish_config.json").read_bytes()
+    with pytest.raises(ValueError, match="invalid Results"):
+        prepare_weekly_update(season=2026, root=root)
+    assert (root / "site/publish_config.json").read_bytes() == before
+    assert not (root / "data/processed/snapshots").exists()
+
+
+def test_results_change_triggers_publication(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = _root(tmp_path)
+    timestamp = datetime(2026, 9, 12, 15, tzinfo=UTC)
+    monkeypatch.setattr(
+        weekly_update, "fetch_current_season", lambda **_: _acquisition(root, timestamp)
+    )
+    update = prepare_weekly_update(season=2026, root=root)
+    config = json.loads((root / "site/publish_config.json").read_text())
+    candidate_dir = root / "results-candidate"
+    shutil.copytree(update.quality_of_results.directory, candidate_dir)
+    candidate = Snapshot(
+        update.quality_of_results.snapshot_id,
+        candidate_dir,
+        update.quality_of_results.metadata,
+    )
+    with (candidate_dir / "rankings.csv").open("a") as handle:
+        handle.write("\n")
+    assert weekly_update._is_publishable_change(
+        root,
+        config,
+        update.context,
+        update.history,
+        update.performance,
+        update.quality_of_record,
         candidate,
         publication_slot=update.publication_slot,
         publication_status="temporary",
