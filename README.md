@@ -25,9 +25,9 @@ truth as the serializers and publication checks.
 `site/publish_config.json` is the explicit list of snapshot directories approved
 for publication. Its ordered `publication_slots` list is the publication
 chronology, and each slot must be explicitly marked `official` or `temporary`
-(Interim). All Predictive Context, Predictive History, Quality of Play, and
-Quality of Record snapshots in a slot inherit that status. The publisher
-refuses missing or incompatible metadata, copies display-level summaries only,
+(Interim). Predictive Context, Predictive History, Quality of Play, Quality of
+Record, and Quality of Results snapshots in a slot inherit that status. The
+publisher refuses missing or incompatible metadata, copies display-level summaries only,
 and derives records solely from each snapshot's `included_games.csv`. Raw
 posterior PMFs remain research artifacts and are not sent to the browser.
 
@@ -79,9 +79,9 @@ ranking model, not a conventional all-games standings record.
 
 Official snapshots are retained as historical comparison checkpoints. The
 static export resolves each snapshot's movement baseline as the latest strictly
-earlier Official slot with the same season, ranking family, and predictive prior
-family. Interim snapshots remain public until a later Official is published
-for their season; that Official retires older Interims from the manifest,
+earlier Official slot with the same season and ranking family, and the same
+predictive prior or Performance variant. Interim snapshots remain public until a
+later Official is published for their season; that Official retires older Interims from the manifest,
 selectors, site data, and static API. Pin an Interim by setting
 `"pinned": true` on its temporary entry in `publication_slots`. Retention only
 changes public generated artifacts; it leaves snapshot source bundles and
@@ -176,22 +176,22 @@ requested/effective evidence boundary and a stable date publication slot; label
 and slot are optional overrides. Context and History are built as `weekly`
 snapshots from that exact corpus and must agree on cutoffs, source hashes, and
 eligible game IDs before any site data is prepared. An invalid or nonconverged
-snapshot fails closed. Quality of Play uses the existing margin-based Performance
-result; Quality of Record re-infers the frozen network with win/loss evidence.
-Both variants strip the focal Context prior and are validated, staged, and
-reported together. Legacy Performance links select Quality of Play. See
-[Quality of Record](docs/quality_of_record.md) for the one-time historical
-backfill command and its explicit blocker reporting.
-
-[Quality of Results](docs/quality_of_results.md) is also available as a standalone
-production snapshot at λ=0.40, with generation, independent validation, and a
-research-parity command. Publication integration is a separate follow-up.
+snapshot fails closed. Quality of Play uses the margin-based Performance result;
+Quality of Record re-infers the frozen network with win/loss evidence; and
+[Quality of Results](docs/quality_of_results.md) re-infers it with outcome and
+tempered margin evidence at λ=0.40. All three strip the focal Context prior and
+are generated, validated, staged, and reported together. Legacy Performance
+links select Quality of Play. See [Quality of Record](docs/quality_of_record.md)
+for the historical backfill command and its explicit blocker reporting. Historical
+Quality of Results reconstruction remains separate and upcoming; older slots
+without it remain available.
 
 The **Publish this ranking as Official** checkbox is unchecked by default. An
 unchecked run creates an Interim publication; checking it marks the generated
 publication slot Official. This Official/Interim decision is made when the
 Update GippyRank rankings workflow is run, and applies together to the Context,
-History, Quality of Play, and Quality of Record snapshots in that slot.
+History, Quality of Play, Quality of Record, and Quality of Results snapshots
+in that slot.
 
 The Action creates or updates `automation/rankings-<publication-slot>` and its
 review PR; it never pushes to `main`, merges, or enables auto-merge. If your
