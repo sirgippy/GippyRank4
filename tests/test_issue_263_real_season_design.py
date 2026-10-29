@@ -11,7 +11,7 @@ import pytest
 
 from gippyrank.posterior import engine
 from gippyrank.posterior.engine import Game, Team
-from gippyrank.posterior.snapshots import load_teams
+from gippyrank.posterior.snapshots import load_teams, sha256
 from gippyrank.quality_of_record_snapshot import _load_source_likelihood
 from gippyrank.research import issue_242_quality_of_results as replay
 from gippyrank.research import issue_263_real_season_design as design
@@ -147,6 +147,12 @@ def test_regeneration_is_deterministic_without_any_candidate_inference(
             if artifact.name == "protocol.json":
                 left.pop("artifact_sha256")
                 right.pop("artifact_sha256")
+                assert left["audit_only_input_sha256"].pop(
+                    "site/publish_config.json"
+                ) == sha256(ROOT / "site/publish_config.json")
+                assert right["audit_only_input_sha256"].pop(
+                    "site/publish_config.json"
+                ) == sha256(FROZEN / "publication_config.json")
             equivalent(left, right)
 
 
