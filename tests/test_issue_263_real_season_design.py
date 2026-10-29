@@ -114,6 +114,11 @@ def test_regeneration_is_deterministic_without_any_candidate_inference(
         assert actual.read_bytes() == (repeated / relative).read_bytes()
         if artifact.name == "manifest.json":
             continue  # Output hashes are verified against the generated files.
+        if artifact.name == "publication_config.json":
+            # Regeneration records the current configuration, which can grow
+            # without changing the frozen study population.
+            assert actual.read_bytes() == (ROOT / "site/publish_config.json").read_bytes()
+            continue
         if artifact.suffix == ".csv":
 
             def numeric_rows(path):

@@ -291,3 +291,20 @@ def test_missing_semantic_identities_require_a_declared_legacy_source(
     else:
         with pytest.raises(PerformanceSnapshotValidationError, match="mismatch"):
             build_quality_of_results_snapshot(context, root=tmp_path)
+
+
+def test_validator_accepts_floating_point_reduction_roundoff(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    context = _context_snapshot(tmp_path)
+    result = build_quality_of_results_snapshot(context, root=tmp_path)
+    original = quality_of_results_snapshot._rankings
+
+    def different_reduction(*args: object, **kwargs: object) -> list[dict[str, object]]:
+        rows = original(*args, **kwargs)
+        for row in rows:
+            row["expected_rank"] += 1e-13
+        return rows
+
+    monkeypatch.setattr(quality_of_results_snapshot, "_rankings", different_reduction)
+    validate_quality_of_results_against_context(context, result, root=tmp_path)
