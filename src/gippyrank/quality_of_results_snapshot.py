@@ -475,15 +475,30 @@ def validate_quality_of_results_against_context(
             f"Prior stripping mismatch: {team.team_id}",
         )
     rankings = _rankings(source, pmfs)
+    stored_rankings = json.loads((directory / "rankings.json").read_text())
     _require(
-        json.loads((directory / "rankings.json").read_text()) == rankings,
-        "Ranking summaries, order or evidence counts mismatch",
+        isinstance(stored_rankings, list) and len(stored_rankings) == len(rankings),
+        "Ranking population mismatch",
     )
+    for stored, expected in zip(stored_rankings, rankings, strict=True):
+        _require(
+            isinstance(stored, dict) and stored.keys() == expected.keys(),
+            "Ranking fields mismatch",
+        )
+        for key, value in expected.items():
+            actual = stored[key]
+            matches = (
+                type(actual) is float
+                and math.isclose(actual, value, rel_tol=0, abs_tol=1e-12)
+                if type(value) is float
+                else type(actual) is type(value) and actual == value
+            )
+            _require(matches, "Ranking summaries, order or evidence counts mismatch")
     with (directory / "rankings.csv").open(newline="", encoding="utf-8") as handle:
         csv_rows = list(csv.DictReader(handle))
     expected_csv = [
         {key: "" if value is None else str(value) for key, value in row.items()}
-        for row in rankings
+        for row in stored_rankings
     ]
     _require(csv_rows == expected_csv, "Ranking CSV mismatch")
     diagnostics = _read_json(directory / "diagnostics.json")

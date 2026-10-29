@@ -1825,8 +1825,9 @@ def test_site_data_publishes_retained_preseason_and_weekly_snapshots(
     assert {entry["performance_variant"] for entry in performance} == {
         "quality_of_play",
         "quality_of_record",
+        "quality_of_results",
     }
-    assert len(performance) == 2
+    assert len(performance) == 3
     for entry in performance:
         assert entry["publication_slot"] == configured_default_slot
         assert "prior_family" not in entry
