@@ -291,6 +291,12 @@ def test_weekly_update_pairs_h_c_preserves_preseason_and_is_idempotent(
     )
     assert api_entry["margin_weight"] == 0.40
     assert api_entry["model"] == "quality_of_results_v1"
+    for legacy in (
+        entry
+        for entry in inventory["publications"]
+        if entry.get("performance_variant") in {"quality_of_play", "quality_of_record"}
+    ):
+        assert "margin_weight" not in legacy and "model" not in legacy
     ranking_api = json.loads(
         (root / "site/api/v1" / api_entry["links"]["rankings"]).read_text()
     )
