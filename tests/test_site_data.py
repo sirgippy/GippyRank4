@@ -3049,7 +3049,7 @@ def test_percentage_formatter_preserves_nonzero_and_noncertainty_distinctions() 
 
 
 def _assert_performance_backfill_coverage(
-    manifest: dict[str, object], audit: dict[str, object]
+    manifest: dict[str, object], audit: dict[str, object], *, config_path: Path = CONFIG
 ) -> None:
     snapshots = manifest["snapshots"]
     public_eligible_slots = {
@@ -3081,7 +3081,7 @@ def _assert_performance_backfill_coverage(
         "Quality of Record coverage must match retained public slots"
     )
 
-    config = json.loads(CONFIG.read_text(encoding="utf-8"))
+    config = json.loads(config_path.read_text(encoding="utf-8"))
     configured_eligible_slots: set[str] = set()
     source_by_snapshot_id: dict[str, Path] = {}
     for configured in config["snapshots"]:
@@ -3105,8 +3105,17 @@ def _assert_performance_backfill_coverage(
     assert not audited_slots & blocked, (
         "historical publication cannot be both backfilled and blocked"
     )
-    assert historical_slots == configured_eligible_slots, (
-        "historical backfill audit must continue covering every configured source slot"
+    # The one-time backfill's population is frozen independently of the live
+    # publication config, which continues to grow as new rankings are published.
+    frozen_slots = json.loads(
+        (ROOT / "tests/fixtures/performance_backfill_slots.json").read_text()
+    )
+    assert len(frozen_slots) == len(set(frozen_slots))
+    assert historical_slots == set(frozen_slots), (
+        "historical backfill audit must cover its frozen publication slots"
+    )
+    assert historical_slots <= configured_eligible_slots, (
+        "historical backfill source slots must remain configured"
     )
     assert len(historical_slots) == audit["eligible_publication_count"], (
         "historical eligible publication count does not match audit scope"
@@ -3179,6 +3188,7 @@ def test_every_historical_performance_slot_is_backfilled_or_explicitly_blocked(
 
 def test_new_publication_does_not_invalidate_historical_backfill_audit(
     production_site_data: tuple[Path, dict[str, object]],
+    tmp_path: Path,
 ) -> None:
     _, manifest = production_site_data
     audit = json.loads(
@@ -3218,7 +3228,47 @@ def test_new_publication_does_not_invalidate_historical_backfill_audit(
         "snapshots": [*manifest["snapshots"], *new_snapshots],
     }
 
-    _assert_performance_backfill_coverage(manifest_with_new_publication, audit)
+    config = json.loads(CONFIG.read_text(encoding="utf-8"))
+    configured_context = next(
+        entry
+        for entry in config["snapshots"]
+        if entry["publication_slot"] == source_slot
+        and json.loads((ROOT / entry["source"] / "metadata.json").read_text()).get(
+            "ranking_family"
+        )
+        == "predictive"
+        and json.loads((ROOT / entry["source"] / "metadata.json").read_text()).get(
+            "prior_family"
+        )
+        == "context"
+    )
+    config["snapshots"].append({**configured_context, "publication_slot": new_slot})
+    config_path = tmp_path / "publish_config.json"
+    config_path.write_text(json.dumps(config))
+    _assert_performance_backfill_coverage(
+        manifest_with_new_publication, audit, config_path=config_path
+    )
+
+    # Even a publication outside the historical audit must have both variants.
+    manifest_with_new_publication["snapshots"].pop()
+    with pytest.raises(AssertionError, match="Quality of Record coverage"):
+        _assert_performance_backfill_coverage(
+            manifest_with_new_publication, audit, config_path=config_path
+        )
+
+
+def test_historical_backfill_cannot_omit_a_slot(
+    production_site_data: tuple[Path, dict[str, object]],
+) -> None:
+    _, manifest = production_site_data
+    audit = json.loads(
+        (ROOT / "data/processed/quality_of_record_backfill/manifest.json").read_text()
+    )
+    audit["publications"].pop()
+    audit["publication_count"] -= 1
+    audit["eligible_publication_count"] -= 1
+    with pytest.raises(AssertionError, match="frozen publication slots"):
+        _assert_performance_backfill_coverage(manifest, audit)
 
 
 def test_missing_quality_of_record_coverage_fails_validation(
