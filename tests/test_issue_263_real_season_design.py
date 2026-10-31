@@ -101,7 +101,14 @@ def test_regeneration_is_deterministic_without_any_candidate_inference(
         for path in (ROOT / parent).iterdir():
             if path.name != next_part:
                 (live_root / parent / path.name).symlink_to(path)
-    (live_root / inventory).write_bytes((ROOT / inventory).read_bytes() + b"\n")
+    shutil.copyfile(ROOT / inventory, live_root / inventory)
+    with (live_root / inventory).open(newline="") as handle:
+        reader = csv.DictReader(handle)
+        row = next(reader)
+        fieldnames = reader.fieldnames
+    row["season"] = "2099"
+    with (live_root / inventory).open("a", newline="") as handle:
+        csv.DictWriter(handle, fieldnames=fieldnames).writerow(row)
     first = tmp_path / "first"
     repeated = tmp_path / "repeated"
     generated = design.build_design(live_root, first)
@@ -178,6 +185,17 @@ def test_regeneration_is_deterministic_without_any_candidate_inference(
                     right.pop("audit_only_input_sha256"),
                     live_root,
                     FROZEN,
+                )
+                with (live_root / inventory).open(newline="") as handle:
+                    seasons = sorted({row["season"] for row in csv.DictReader(handle)})
+                assert (
+                    left["historical_audit"].pop(
+                        "worker_current_normalized_corpus_seasons"
+                    )
+                    == seasons
+                )
+                right["historical_audit"].pop(
+                    "worker_current_normalized_corpus_seasons"
                 )
             equivalent(left, right)
 
