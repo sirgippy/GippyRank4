@@ -21,6 +21,15 @@ ROOT = Path(__file__).resolve().parents[1]
 FROZEN = ROOT / design.ARTIFACT_DIR
 
 
+def _compare_audit_only_inputs(actual, frozen, root, frozen_dir):
+    assert actual.keys() == frozen.keys()
+    for path, digest in actual.items():
+        assert digest == sha256(root / path)
+    assert frozen["site/publish_config.json"] == sha256(
+        frozen_dir / "publication_config.json"
+    )
+
+
 @pytest.fixture(scope="module")
 def specification():
     return json.loads((FROZEN / "protocol.json").read_text())
@@ -81,12 +90,34 @@ def test_regeneration_is_deterministic_without_any_candidate_inference(
     monkeypatch.setattr(engine, "infer_posterior", forbidden)
     monkeypatch.setattr(quality_of_results, "infer_quality_of_results", forbidden)
     monkeypatch.setattr(replay, "infer_quality_of_results", forbidden)
+    # Give regeneration an independently changed live inventory while all
+    # frozen inputs and retained evidence still point to the original files.
+    live_root = tmp_path / "live-root"
+    live_root.mkdir()
+    inventory = Path("data/processed/cfbd/games.csv")
+    for parent in (Path(), *inventory.parents[-2::-1]):
+        (live_root / parent).mkdir(exist_ok=True)
+        next_part = inventory.parts[len(parent.parts)]
+        for path in (ROOT / parent).iterdir():
+            if path.name != next_part:
+                (live_root / parent / path.name).symlink_to(path)
+    shutil.copyfile(ROOT / inventory, live_root / inventory)
+    with (live_root / inventory).open(newline="") as handle:
+        reader = csv.DictReader(handle)
+        row = next(reader)
+        fieldnames = reader.fieldnames
+    row["season"] = "2099"
+    with (live_root / inventory).open("a", newline="") as handle:
+        csv.DictWriter(handle, fieldnames=fieldnames).writerow(row)
     first = tmp_path / "first"
     repeated = tmp_path / "repeated"
-    generated = design.build_design(ROOT, first)
-    design.build_design(ROOT, repeated)
+    generated = design.build_design(live_root, first)
+    design.build_design(live_root, repeated)
     assert generated["candidate_inference_performed"] is False
-    design.check_design(ROOT, first)
+    assert generated["audit_only_input_sha256"][str(inventory)] != sha256(
+        ROOT / inventory
+    )
+    design.check_design(live_root, first)
 
     def equivalent(actual, expected):
         if isinstance(expected, dict):
@@ -105,7 +136,7 @@ def test_regeneration_is_deterministic_without_any_candidate_inference(
     # Exact repeated output is required within one runtime. BLAS/libm and
     # Python patch versions may differ on CI, so compare recomputed numeric
     # descriptors to the retained values with a tight absolute tolerance.
-    # IDs, categories, inputs, and snapshot hashes still compare exactly.
+    # IDs, categories, frozen inputs, and snapshot hashes still compare exactly.
     for artifact in FROZEN.rglob("*"):
         if not artifact.is_file():
             continue
@@ -117,7 +148,9 @@ def test_regeneration_is_deterministic_without_any_candidate_inference(
         if artifact.name == "publication_config.json":
             # Regeneration records the current configuration, which can grow
             # without changing the frozen study population.
-            assert actual.read_bytes() == (ROOT / "site/publish_config.json").read_bytes()
+            assert (
+                actual.read_bytes() == (ROOT / "site/publish_config.json").read_bytes()
+            )
             continue
         if artifact.suffix == ".csv":
 
@@ -147,13 +180,44 @@ def test_regeneration_is_deterministic_without_any_candidate_inference(
             if artifact.name == "protocol.json":
                 left.pop("artifact_sha256")
                 right.pop("artifact_sha256")
-                assert left["audit_only_input_sha256"].pop(
-                    "site/publish_config.json"
-                ) == sha256(ROOT / "site/publish_config.json")
-                assert right["audit_only_input_sha256"].pop(
-                    "site/publish_config.json"
-                ) == sha256(FROZEN / "publication_config.json")
+                _compare_audit_only_inputs(
+                    left.pop("audit_only_input_sha256"),
+                    right.pop("audit_only_input_sha256"),
+                    live_root,
+                    FROZEN,
+                )
+                with (live_root / inventory).open(newline="") as handle:
+                    seasons = sorted({row["season"] for row in csv.DictReader(handle)})
+                assert (
+                    left["historical_audit"].pop(
+                        "worker_current_normalized_corpus_seasons"
+                    )
+                    == seasons
+                )
+                right["historical_audit"].pop(
+                    "worker_current_normalized_corpus_seasons"
+                )
             equivalent(left, right)
+
+
+def test_audit_only_inventory_can_change_but_regeneration_records_its_hash(tmp_path):
+    config = tmp_path / "site/publish_config.json"
+    inventory = tmp_path / "data/processed/cfbd/games.csv"
+    config.parent.mkdir(parents=True)
+    inventory.parent.mkdir(parents=True)
+    config.write_text("frozen config")
+    inventory.write_text("old inventory")
+    frozen_dir = tmp_path / "frozen"
+    frozen_dir.mkdir()
+    (frozen_dir / "publication_config.json").write_text(config.read_text())
+    paths = ["site/publish_config.json", "data/processed/cfbd/games.csv"]
+    frozen = {path: sha256(tmp_path / path) for path in paths}
+    inventory.write_text("updated inventory")
+    current = {path: sha256(tmp_path / path) for path in paths}
+    _compare_audit_only_inputs(current, frozen, tmp_path, frozen_dir)
+    current[paths[1]] = frozen[paths[1]]
+    with pytest.raises(AssertionError):
+        _compare_audit_only_inputs(current, frozen, tmp_path, frozen_dir)
 
 
 @pytest.mark.parametrize(
@@ -191,6 +255,21 @@ def test_new_publication_does_not_change_or_block_frozen_population(
     changed.unlink()
     changed.write_text("modified retained evidence")
     with pytest.raises(ValueError, match="frozen snapshot hash mismatch"):
+        design.check_design(tmp_path, FROZEN)
+
+
+def test_modified_frozen_input_is_rejected(tmp_path, specification):
+    paths = set(specification["input_sha256"])
+    for snapshot in specification["snapshot_audit"]:
+        paths.update(snapshot["artifact_sha256"])
+    for path in paths:
+        linked = tmp_path / path
+        linked.parent.mkdir(parents=True, exist_ok=True)
+        linked.symlink_to(ROOT / path)
+    changed = tmp_path / next(iter(specification["input_sha256"]))
+    changed.unlink()
+    changed.write_text("modified frozen input")
+    with pytest.raises(ValueError, match="frozen input hash mismatch"):
         design.check_design(tmp_path, FROZEN)
 
 
