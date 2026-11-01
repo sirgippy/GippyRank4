@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import gzip
 import json
+import shutil
 from dataclasses import replace
 from pathlib import Path
 
@@ -13,7 +14,9 @@ from gippyrank.performance_v1 import infer_performance
 from gippyrank.posterior.engine import Game, LikelihoodV1, Team, game_factor
 from gippyrank.quality_of_record import binary_game_factor, infer_quality_of_record
 from gippyrank.research.issue_242_quality_of_results import (
+    BAD_CAMPBELL_FIXTURE_ID,
     MARGIN_WEIGHTS,
+    REPAIRED_CAMPBELL_GAME_ID,
     _published_inputs,
     _write_pmf_artifact,
 )
@@ -130,24 +133,74 @@ def test_tie_only_rejects_models_that_use_binary_winner_evidence() -> None:
         blended_game_factor(tied, teams["a"], teams["b"], likelihood, 0.5)
 
 
-def test_official_weekly_inputs_use_repaired_campbell_evidence() -> None:
-    root = Path(__file__).resolve().parents[1]
+def _assert_official_weekly_inputs_use_repaired_campbell_evidence(root: Path) -> None:
     snapshots = _published_inputs(root)
-    assert len(snapshots) == 8
+    assert snapshots, "no official weekly Context snapshots found"
     week_two = next(
         snapshot for snapshot in snapshots if snapshot.slot_id == "2026-09-08"
     )
     metadata = json.loads((week_two.context_path / "metadata.json").read_text())
     correction = metadata["historical_evidence_correction"]
     assert correction["issue"] == "238"
-    assert correction["excluded_games"][0]["game_id"] == "401866625"
+    assert correction["excluded_games"][0]["game_id"] == BAD_CAMPBELL_FIXTURE_ID
     for snapshot in snapshots:
         with (snapshot.context_path / "included_games.csv").open(
             newline="", encoding="utf-8"
         ) as handle:
             game_ids = {row["id"] for row in csv.DictReader(handle)}
-        assert "401866625" not in game_ids
-        assert "401917058" in game_ids
+        assert BAD_CAMPBELL_FIXTURE_ID not in game_ids, (
+            f"{snapshot.slot_id}: superseded Campbell game is present"
+        )
+        assert REPAIRED_CAMPBELL_GAME_ID in game_ids, (
+            f"{snapshot.slot_id}: corrected Campbell game is missing"
+        )
+
+
+def test_official_weekly_inputs_use_repaired_campbell_evidence() -> None:
+    _assert_official_weekly_inputs_use_repaired_campbell_evidence(
+        Path(__file__).resolve().parents[1]
+    )
+
+
+@pytest.mark.parametrize(
+    ("game_ids", "message"),
+    [
+        ([BAD_CAMPBELL_FIXTURE_ID, REPAIRED_CAMPBELL_GAME_ID], "superseded"),
+        (["other-game"], "corrected"),
+    ],
+)
+def test_new_official_week_is_checked_for_campbell_evidence(
+    tmp_path: Path, game_ids: list[str], message: str
+) -> None:
+    root = Path(__file__).resolve().parents[1]
+    snapshots = _published_inputs(root)
+    context = tmp_path / "new-week/predictive/context"
+    context.mkdir(parents=True)
+    shutil.copyfile(
+        snapshots[-1].context_path / "metadata.json", context / "metadata.json"
+    )
+    games = context / "included_games.csv"
+    games.write_text(f"id\n{REPAIRED_CAMPBELL_GAME_ID}\n")
+
+    config = json.loads((root / "site/publish_config.json").read_text())
+    slot = "issue-280-future-official-week"
+    assert slot not in {entry["id"] for entry in config["publication_slots"]}
+    config["publication_slots"].append({"id": slot, "status": "official"})
+    config["snapshots"].append(
+        {"source": str(context), "publication_slot": slot, "display_label": "Future"}
+    )
+    (tmp_path / "site").mkdir()
+    (tmp_path / "site/publish_config.json").write_text(json.dumps(config))
+    (tmp_path / "data").symlink_to(root / "data", target_is_directory=True)
+    assert {item.slot_id for item in _published_inputs(tmp_path)} == {
+        *(item.slot_id for item in snapshots),
+        slot,
+    }
+    _assert_official_weekly_inputs_use_repaired_campbell_evidence(tmp_path)
+
+    games.write_text("id\n" + "\n".join(game_ids) + "\n")
+    with pytest.raises(AssertionError, match=f"{slot}: {message}"):
+        _assert_official_weekly_inputs_use_repaired_campbell_evidence(tmp_path)
 
 
 def test_pmf_gzip_artifacts_have_deterministic_headers_and_bytes(
