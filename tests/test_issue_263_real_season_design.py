@@ -30,6 +30,13 @@ def _compare_audit_only_inputs(actual, frozen, root, frozen_dir):
     )
 
 
+def _frozen_published_inputs(root, specification):
+    slots = [entry["publication_slot"] for entry in specification["snapshot_audit"]]
+    assert slots and len(slots) == len(set(slots))
+    # The existing selector fails if any requested historical slot is missing.
+    return replay._published_inputs(root, slots)
+
+
 @pytest.fixture(scope="module")
 def specification():
     return json.loads((FROZEN / "protocol.json").read_text())
@@ -90,6 +97,8 @@ def test_regeneration_is_deterministic_without_any_candidate_inference(
     monkeypatch.setattr(engine, "infer_posterior", forbidden)
     monkeypatch.setattr(quality_of_results, "infer_quality_of_results", forbidden)
     monkeypatch.setattr(replay, "infer_quality_of_results", forbidden)
+    # Verify the frozen protocol and evidence before using its audited slots.
+    specification = design.check_design(ROOT, FROZEN)
     # Give regeneration an independently changed live inventory while all
     # frozen inputs and retained evidence still point to the original files.
     live_root = tmp_path / "live-root"
@@ -109,11 +118,39 @@ def test_regeneration_is_deterministic_without_any_candidate_inference(
     row["season"] = "2099"
     with (live_root / inventory).open("a", newline="") as handle:
         csv.DictWriter(handle, fieldnames=fieldnames).writerow(row)
+
+    # Add another valid official weekly entry to the live inventory. The
+    # retained research population must still come from the frozen audit.
+    site = live_root / "site"
+    site.unlink()
+    site.mkdir()
+    config = json.loads((ROOT / "site/publish_config.json").read_text())
+    latest = replay._published_inputs(ROOT)[-1]
+    latest_context = next(
+        entry
+        for entry in config["snapshots"]
+        if entry["publication_slot"] == latest.slot_id
+        and Path(entry["source"]).parts[-2:] == ("predictive", "context")
+    )
+    new_slot = "issue-280-future-official-week"
+    assert new_slot not in {slot["id"] for slot in config["publication_slots"]}
+    config["publication_slots"].append({"id": new_slot, "status": "official"})
+    config["snapshots"].append({**latest_context, "publication_slot": new_slot})
+    (site / "publish_config.json").write_text(json.dumps(config))
+    assert new_slot in {item.slot_id for item in replay._published_inputs(live_root)}
+    monkeypatch.setattr(
+        design,
+        "_published_inputs",
+        lambda root: _frozen_published_inputs(root, specification),
+    )
     first = tmp_path / "first"
     repeated = tmp_path / "repeated"
     generated = design.build_design(live_root, first)
     design.build_design(live_root, repeated)
     assert generated["candidate_inference_performed"] is False
+    assert [row["publication_slot"] for row in generated["snapshot_audit"]] == [
+        row["publication_slot"] for row in specification["snapshot_audit"]
+    ]
     assert generated["audit_only_input_sha256"][str(inventory)] != sha256(
         ROOT / inventory
     )
@@ -149,7 +186,8 @@ def test_regeneration_is_deterministic_without_any_candidate_inference(
             # Regeneration records the current configuration, which can grow
             # without changing the frozen study population.
             assert (
-                actual.read_bytes() == (ROOT / "site/publish_config.json").read_bytes()
+                actual.read_bytes()
+                == (live_root / "site/publish_config.json").read_bytes()
             )
             continue
         if artifact.suffix == ".csv":
@@ -198,6 +236,26 @@ def test_regeneration_is_deterministic_without_any_candidate_inference(
                     "worker_current_normalized_corpus_seasons"
                 )
             equivalent(left, right)
+
+
+def test_frozen_regeneration_selection_rejects_a_missing_audited_slot(
+    tmp_path, specification
+):
+    slot = specification["snapshot_audit"][0]["publication_slot"]
+    config = json.loads((ROOT / "site/publish_config.json").read_text())
+    config["snapshots"] = [
+        entry
+        for entry in config["snapshots"]
+        if not (
+            entry["publication_slot"] == slot
+            and Path(entry["source"]).parts[-2:] == ("predictive", "context")
+        )
+    ]
+    (tmp_path / "site").mkdir()
+    (tmp_path / "site/publish_config.json").write_text(json.dumps(config))
+    (tmp_path / "data").symlink_to(ROOT / "data", target_is_directory=True)
+    with pytest.raises(ValueError, match="requested slots are not official weekly"):
+        _frozen_published_inputs(tmp_path, specification)
 
 
 def test_audit_only_inventory_can_change_but_regeneration_records_its_hash(tmp_path):
