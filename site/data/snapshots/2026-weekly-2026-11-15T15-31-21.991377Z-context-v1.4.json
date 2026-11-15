@@ -1,0 +1,5418 @@
+{
+  "comparison_display_label": "Week 11",
+  "comparison_snapshot_id": "2026-weekly-2026-11-08T13-06-17.039313Z-context-v1.4",
+  "effective_cutoff": "2026-11-15T15:31:21.991377+00:00",
+  "excluded_lower_division_games": 68,
+  "generation_timestamp": "2026-11-15T15:31:21.991377+00:00",
+  "included_game_count": 1341,
+  "model_versions": {
+    "context_prior": "1.4",
+    "historical_likelihood": "V1",
+    "history_prior": "1.1"
+  },
+  "preseason_display_label": "Preseason",
+  "preseason_distribution_path": "data/distributions/2026-preseason-context-v1.4-db-repair.json",
+  "preseason_snapshot_id": "2026-preseason-context-v1.4-db-repair",
+  "preseason_team_seasons_path": "data/team-seasons/2026-preseason-context-v1.4-db-repair.json",
+  "prior_family": "context",
+  "prior_lineage": "context_1.4",
+  "prior_model_version": "1.4",
+  "publication_slot": "2026-11-15T15-31-21.991377Z",
+  "publication_status": "temporary",
+  "rank_count": 138,
+  "ranking_family": "predictive",
+  "rankings": [
+    {
+      "conference": "SEC",
+      "display_rank": 1,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 2.672277180369961,
+      "interval_50": [
+        1,
+        3
+      ],
+      "interval_80": [
+        1.0,
+        5.0
+      ],
+      "interval_95": [
+        1,
+        7
+      ],
+      "interval_widths": {
+        "50": 3,
+        "80": 5,
+        "95": 7
+      },
+      "median_rank": 2.0,
+      "mode_rank": 2,
+      "previous_official_rank": 1,
+      "rank_1_probability": 0.27046403780405326,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "9-1",
+      "team_id": "61",
+      "team_name": "Georgia",
+      "top10_probability": 0.99669349069536,
+      "top25_probability": 0.9999989639349333,
+      "top5_probability": 0.9297541186058753
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 2,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 3.914045957583749,
+      "interval_50": [
+        2,
+        5
+      ],
+      "interval_80": [
+        1.0,
+        8.0
+      ],
+      "interval_95": [
+        1,
+        11
+      ],
+      "interval_widths": {
+        "50": 4,
+        "80": 8,
+        "95": 11
+      },
+      "median_rank": 3.0,
+      "mode_rank": 2,
+      "previous_official_rank": 2,
+      "rank_1_probability": 0.16519766915453704,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "7-3",
+      "team_id": "194",
+      "team_name": "Ohio State",
+      "top10_probability": 0.966672984608005,
+      "top25_probability": 0.9999030724226902,
+      "top5_probability": 0.7785126481885649
+    },
+    {
+      "conference": "FBS Independents",
+      "display_rank": 3,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 4.095691570401872,
+      "interval_50": [
+        2,
+        5
+      ],
+      "interval_80": [
+        1.0,
+        8.0
+      ],
+      "interval_95": [
+        1,
+        11
+      ],
+      "interval_widths": {
+        "50": 4,
+        "80": 8,
+        "95": 11
+      },
+      "median_rank": 3.0,
+      "mode_rank": 2,
+      "previous_official_rank": 3,
+      "rank_1_probability": 0.10937605563914145,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "9-1",
+      "team_id": "87",
+      "team_name": "Notre Dame",
+      "top10_probability": 0.9709281353735922,
+      "top25_probability": 0.9999423796709702,
+      "top5_probability": 0.7666051310295698
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 4,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 4.479975422363648,
+      "interval_50": [
+        2,
+        6
+      ],
+      "interval_80": [
+        2.0,
+        8.0
+      ],
+      "interval_95": [
+        1,
+        12
+      ],
+      "interval_widths": {
+        "50": 5,
+        "80": 7,
+        "95": 12
+      },
+      "median_rank": 4.0,
+      "mode_rank": 2,
+      "previous_official_rank": 4,
+      "rank_1_probability": 0.09062193801247222,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "9-1",
+      "team_id": "2390",
+      "team_name": "Miami",
+      "top10_probability": 0.9586683048022036,
+      "top25_probability": 0.9999182236679104,
+      "top5_probability": 0.715008830579413
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 5,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 4.807548169020306,
+      "interval_50": [
+        3,
+        6
+      ],
+      "interval_80": [
+        2.0,
+        9.0
+      ],
+      "interval_95": [
+        1,
+        12
+      ],
+      "interval_widths": {
+        "50": 4,
+        "80": 8,
+        "95": 12
+      },
+      "median_rank": 4.0,
+      "mode_rank": 3,
+      "previous_official_rank": 6,
+      "rank_1_probability": 0.0784647665339365,
+      "rank_change": 1,
+      "rank_change_accessible": "Up 1 since Week 11",
+      "rank_change_display": "\u21911",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "8-2",
+      "team_id": "251",
+      "team_name": "Texas",
+      "top10_probability": 0.9456415956064483,
+      "top25_probability": 0.9998504316745175,
+      "top5_probability": 0.6721369478818988
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 6,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 5.052596210059401,
+      "interval_50": [
+        3,
+        7
+      ],
+      "interval_80": [
+        2.0,
+        9.0
+      ],
+      "interval_95": [
+        1,
+        12
+      ],
+      "interval_widths": {
+        "50": 5,
+        "80": 8,
+        "95": 12
+      },
+      "median_rank": 4.0,
+      "mode_rank": 3,
+      "previous_official_rank": 5,
+      "rank_1_probability": 0.040765308594111045,
+      "rank_change": -1,
+      "rank_change_accessible": "Down 1 since Week 11",
+      "rank_change_display": "\u21931",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "8-2",
+      "team_id": "333",
+      "team_name": "Alabama",
+      "top10_probability": 0.9484161531395864,
+      "top25_probability": 0.9998903408107704,
+      "top5_probability": 0.6431739067921411
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 7,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 5.647428996846271,
+      "interval_50": [
+        3,
+        8
+      ],
+      "interval_80": [
+        2.0,
+        11.0
+      ],
+      "interval_95": [
+        1,
+        15
+      ],
+      "interval_widths": {
+        "50": 6,
+        "80": 10,
+        "95": 15
+      },
+      "median_rank": 5.0,
+      "mode_rank": 2,
+      "previous_official_rank": 8,
+      "rank_1_probability": 0.08968943643912741,
+      "rank_change": 1,
+      "rank_change_accessible": "Up 1 since Week 11",
+      "rank_change_display": "\u21911",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "7-3",
+      "team_id": "2483",
+      "team_name": "Oregon",
+      "top10_probability": 0.8860171892082651,
+      "top25_probability": 0.999252493761546,
+      "top5_probability": 0.574791938844057
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 8,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 5.697016357232441,
+      "interval_50": [
+        3,
+        7
+      ],
+      "interval_80": [
+        2.0,
+        10.0
+      ],
+      "interval_95": [
+        1,
+        14
+      ],
+      "interval_widths": {
+        "50": 5,
+        "80": 9,
+        "95": 14
+      },
+      "median_rank": 5.0,
+      "mode_rank": 3,
+      "previous_official_rank": 7,
+      "rank_1_probability": 0.03903321334534074,
+      "rank_change": -1,
+      "rank_change_accessible": "Down 1 since Week 11",
+      "rank_change_display": "\u21931",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "99",
+      "team_name": "LSU",
+      "top10_probability": 0.9073754697509608,
+      "top25_probability": 0.9995276483767235,
+      "top5_probability": 0.5653735644089716
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 9,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 6.127729468431666,
+      "interval_50": [
+        3,
+        8
+      ],
+      "interval_80": [
+        2.0,
+        12.0
+      ],
+      "interval_95": [
+        1,
+        16
+      ],
+      "interval_widths": {
+        "50": 6,
+        "80": 11,
+        "95": 16
+      },
+      "median_rank": 5.0,
+      "mode_rank": 3,
+      "previous_official_rank": 9,
+      "rank_1_probability": 0.058634735401184884,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "9-1",
+      "team_id": "84",
+      "team_name": "Indiana",
+      "top10_probability": 0.864228340970238,
+      "top25_probability": 0.9985426038667692,
+      "top5_probability": 0.5293208135900282
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 10,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 6.281065256454321,
+      "interval_50": [
+        4,
+        8
+      ],
+      "interval_80": [
+        2.0,
+        11.0
+      ],
+      "interval_95": [
+        1,
+        15
+      ],
+      "interval_widths": {
+        "50": 5,
+        "80": 10,
+        "95": 15
+      },
+      "median_rank": 6.0,
+      "mode_rank": 4,
+      "previous_official_rank": 10,
+      "rank_1_probability": 0.02978495124520428,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "10-0",
+      "team_id": "254",
+      "team_name": "Utah",
+      "top10_probability": 0.873371140575844,
+      "top25_probability": 0.999197466237554,
+      "top5_probability": 0.4968095400797017
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 11,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 7.028284744149143,
+      "interval_50": [
+        3,
+        9
+      ],
+      "interval_80": [
+        2.0,
+        13.0
+      ],
+      "interval_95": [
+        1,
+        19
+      ],
+      "interval_widths": {
+        "50": 7,
+        "80": 12,
+        "95": 19
+      },
+      "median_rank": 6.0,
+      "mode_rank": 3,
+      "previous_official_rank": 11,
+      "rank_1_probability": 0.05027712416899487,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-3",
+      "team_id": "145",
+      "team_name": "Ole Miss",
+      "top10_probability": 0.8020666777190255,
+      "top25_probability": 0.9942456658038531,
+      "top5_probability": 0.46389784568910436
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 12,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 7.283786535328167,
+      "interval_50": [
+        4,
+        9
+      ],
+      "interval_80": [
+        3.0,
+        13.0
+      ],
+      "interval_95": [
+        2,
+        17
+      ],
+      "interval_widths": {
+        "50": 6,
+        "80": 11,
+        "95": 16
+      },
+      "median_rank": 6.0,
+      "mode_rank": 5,
+      "previous_official_rank": 12,
+      "rank_1_probability": 0.017555278845131864,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "8-2",
+      "team_id": "2633",
+      "team_name": "Tennessee",
+      "top10_probability": 0.8079149645956191,
+      "top25_probability": 0.9977341547698856,
+      "top5_probability": 0.39463971987919316
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 13,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 7.976314257784878,
+      "interval_50": [
+        5,
+        10
+      ],
+      "interval_80": [
+        3.0,
+        14.0
+      ],
+      "interval_95": [
+        2,
+        18
+      ],
+      "interval_widths": {
+        "50": 6,
+        "80": 12,
+        "95": 17
+      },
+      "median_rank": 7.0,
+      "mode_rank": 6,
+      "previous_official_rank": 15,
+      "rank_1_probability": 0.005281580737177655,
+      "rank_change": 2,
+      "rank_change_accessible": "Up 2 since Week 11",
+      "rank_change_display": "\u21912",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "9-1",
+      "team_id": "154",
+      "team_name": "Wake Forest",
+      "top10_probability": 0.7693727836999781,
+      "top25_probability": 0.9965118271521111,
+      "top5_probability": 0.3212063283624596
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 14,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 8.909350639370127,
+      "interval_50": [
+        4,
+        12
+      ],
+      "interval_80": [
+        3.0,
+        17.0
+      ],
+      "interval_95": [
+        1,
+        24
+      ],
+      "interval_widths": {
+        "50": 9,
+        "80": 15,
+        "95": 24
+      },
+      "median_rank": 8.0,
+      "mode_rank": 5,
+      "previous_official_rank": 16,
+      "rank_1_probability": 0.02636259005798419,
+      "rank_change": 2,
+      "rank_change_accessible": "Up 2 since Week 11",
+      "rank_change_display": "\u21912",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "9-1",
+      "team_id": "2641",
+      "team_name": "Texas Tech",
+      "top10_probability": 0.6841209108569053,
+      "top25_probability": 0.9812804478012889,
+      "top5_probability": 0.33480804424462096
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 15,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 9.799935126917894,
+      "interval_50": [
+        6,
+        13
+      ],
+      "interval_80": [
+        4.0,
+        17.0
+      ],
+      "interval_95": [
+        2,
+        23
+      ],
+      "interval_widths": {
+        "50": 8,
+        "80": 14,
+        "95": 22
+      },
+      "median_rank": 9.0,
+      "mode_rank": 7,
+      "previous_official_rank": 13,
+      "rank_1_probability": 0.006785756613761949,
+      "rank_change": -2,
+      "rank_change_accessible": "Down 2 since Week 11",
+      "rank_change_display": "\u21932",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "8-2",
+      "team_id": "2294",
+      "team_name": "Iowa",
+      "top10_probability": 0.6203319144157824,
+      "top25_probability": 0.9862295664095863,
+      "top5_probability": 0.22268254647866356
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 16,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 11.074704609349524,
+      "interval_50": [
+        7,
+        14
+      ],
+      "interval_80": [
+        4.0,
+        19.0
+      ],
+      "interval_95": [
+        3,
+        26
+      ],
+      "interval_widths": {
+        "50": 8,
+        "80": 16,
+        "95": 24
+      },
+      "median_rank": 10.0,
+      "mode_rank": 8,
+      "previous_official_rank": 17,
+      "rank_1_probability": 0.004416551050809262,
+      "rank_change": 1,
+      "rank_change_accessible": "Up 1 since Week 11",
+      "rank_change_display": "\u21911",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "8-2",
+      "team_id": "252",
+      "team_name": "BYU",
+      "top10_probability": 0.5308848073649036,
+      "top25_probability": 0.9744516402333578,
+      "top5_probability": 0.1622552103209455
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 17,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 11.358709950869887,
+      "interval_50": [
+        7,
+        15
+      ],
+      "interval_80": [
+        5.0,
+        19.0
+      ],
+      "interval_95": [
+        3,
+        26
+      ],
+      "interval_widths": {
+        "50": 9,
+        "80": 15,
+        "95": 24
+      },
+      "median_rank": 10.0,
+      "mode_rank": 8,
+      "previous_official_rank": 14,
+      "rank_1_probability": 0.002116963306288657,
+      "rank_change": -3,
+      "rank_change_accessible": "Down 3 since Week 11",
+      "rank_change_display": "\u21933",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "10-0",
+      "team_id": "26",
+      "team_name": "UCLA",
+      "top10_probability": 0.516403525477749,
+      "top25_probability": 0.9709754370635737,
+      "top5_probability": 0.14879747655037276
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 18,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 13.256598379912056,
+      "interval_50": [
+        8,
+        17
+      ],
+      "interval_80": [
+        5.0,
+        23.0
+      ],
+      "interval_95": [
+        3,
+        31
+      ],
+      "interval_widths": {
+        "50": 10,
+        "80": 19,
+        "95": 29
+      },
+      "median_rank": 12.0,
+      "mode_rank": 10,
+      "previous_official_rank": 22,
+      "rank_1_probability": 0.0017617666722922886,
+      "rank_change": 4,
+      "rank_change_accessible": "Up 4 since Week 11",
+      "rank_change_display": "\u21914",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "7-3",
+      "team_id": "12",
+      "team_name": "Arizona",
+      "top10_probability": 0.4093558182932696,
+      "top25_probability": 0.9371786904465026,
+      "top5_probability": 0.10751811691455765
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 19,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 13.277822674153489,
+      "interval_50": [
+        8,
+        17
+      ],
+      "interval_80": [
+        5.0,
+        22.0
+      ],
+      "interval_95": [
+        3,
+        31
+      ],
+      "interval_widths": {
+        "50": 10,
+        "80": 18,
+        "95": 29
+      },
+      "median_rank": 12.0,
+      "mode_rank": 10,
+      "previous_official_rank": 21,
+      "rank_1_probability": 0.001814521564020133,
+      "rank_change": 2,
+      "rank_change_accessible": "Up 2 since Week 11",
+      "rank_change_display": "\u21912",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "77",
+      "team_name": "Northwestern",
+      "top10_probability": 0.3988530733483212,
+      "top25_probability": 0.9417527670079883,
+      "top5_probability": 0.10215336208401406
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 20,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 13.860212966365628,
+      "interval_50": [
+        9,
+        17
+      ],
+      "interval_80": [
+        6.0,
+        23.0
+      ],
+      "interval_95": [
+        4,
+        31
+      ],
+      "interval_widths": {
+        "50": 9,
+        "80": 18,
+        "95": 28
+      },
+      "median_rank": 13.0,
+      "mode_rank": 11,
+      "previous_official_rank": 19,
+      "rank_1_probability": 0.0010515581647828362,
+      "rank_change": -1,
+      "rank_change_accessible": "Down 1 since Week 11",
+      "rank_change_display": "\u21931",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "7-3",
+      "team_id": "97",
+      "team_name": "Louisville",
+      "top10_probability": 0.3572935544118257,
+      "top25_probability": 0.935768903632068,
+      "top5_probability": 0.07880384981257746
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 21,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 14.794196510301564,
+      "interval_50": [
+        9,
+        19
+      ],
+      "interval_80": [
+        6.0,
+        24.0
+      ],
+      "interval_95": [
+        4,
+        33
+      ],
+      "interval_widths": {
+        "50": 11,
+        "80": 19,
+        "95": 30
+      },
+      "median_rank": 14.0,
+      "mode_rank": 12,
+      "previous_official_rank": 24,
+      "rank_1_probability": 0.0007611910983009504,
+      "rank_change": 3,
+      "rank_change_accessible": "Up 3 since Week 11",
+      "rank_change_display": "\u21913",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "158",
+      "team_name": "Nebraska",
+      "top10_probability": 0.31185637054894666,
+      "top25_probability": 0.9167208351421291,
+      "top5_probability": 0.06568658996613
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 22,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 16.7576902413476,
+      "interval_50": [
+        11,
+        21
+      ],
+      "interval_80": [
+        8.0,
+        28.0
+      ],
+      "interval_95": [
+        5,
+        39
+      ],
+      "interval_widths": {
+        "50": 11,
+        "80": 21,
+        "95": 35
+      },
+      "median_rank": 15.0,
+      "mode_rank": 13,
+      "previous_official_rank": 18,
+      "rank_1_probability": 0.0002729538278121485,
+      "rank_change": -4,
+      "rank_change_accessible": "Down 4 since Week 11",
+      "rank_change_display": "\u21934",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "7-3",
+      "team_id": "248",
+      "team_name": "Houston",
+      "top10_probability": 0.22870612810747826,
+      "top25_probability": 0.8710614646447142,
+      "top5_probability": 0.03510790981914792
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 23,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 17.53267422157158,
+      "interval_50": [
+        11,
+        22
+      ],
+      "interval_80": [
+        8.0,
+        29.0
+      ],
+      "interval_95": [
+        5,
+        41
+      ],
+      "interval_widths": {
+        "50": 12,
+        "80": 22,
+        "95": 37
+      },
+      "median_rank": 16.0,
+      "mode_rank": 14,
+      "previous_official_rank": 26,
+      "rank_1_probability": 0.0005561727354001455,
+      "rank_change": 3,
+      "rank_change_accessible": "Up 3 since Week 11",
+      "rank_change_display": "\u21913",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "7-3",
+      "team_id": "30",
+      "team_name": "USC",
+      "top10_probability": 0.21741751781018137,
+      "top25_probability": 0.8402958132709389,
+      "top5_probability": 0.04075809488381766
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 24,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 17.642010202966844,
+      "interval_50": [
+        11,
+        22
+      ],
+      "interval_80": [
+        8.0,
+        29.0
+      ],
+      "interval_95": [
+        5,
+        43
+      ],
+      "interval_widths": {
+        "50": 12,
+        "80": 22,
+        "95": 39
+      },
+      "median_rank": 16.0,
+      "mode_rank": 14,
+      "previous_official_rank": 27,
+      "rank_1_probability": 0.0005120549798000153,
+      "rank_change": 3,
+      "rank_change_accessible": "Up 3 since Week 11",
+      "rank_change_display": "\u21913",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "57",
+      "team_name": "Florida",
+      "top10_probability": 0.21158260238696916,
+      "top25_probability": 0.8463435834412733,
+      "top5_probability": 0.037479354804823554
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 25,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 17.976873531721676,
+      "interval_50": [
+        11,
+        23
+      ],
+      "interval_80": [
+        8.0,
+        30.0
+      ],
+      "interval_95": [
+        5,
+        41
+      ],
+      "interval_widths": {
+        "50": 13,
+        "80": 23,
+        "95": 37
+      },
+      "median_rank": 16.0,
+      "mode_rank": 14,
+      "previous_official_rank": 23,
+      "rank_1_probability": 0.0005446292486469774,
+      "rank_change": -2,
+      "rank_change_accessible": "Down 2 since Week 11",
+      "rank_change_display": "\u21932",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "142",
+      "team_name": "Missouri",
+      "top10_probability": 0.2097101912952018,
+      "top25_probability": 0.8208712459155947,
+      "top5_probability": 0.039787226987632936
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 26,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 18.00359090834194,
+      "interval_50": [
+        11,
+        23
+      ],
+      "interval_80": [
+        8.0,
+        30.0
+      ],
+      "interval_95": [
+        5,
+        41
+      ],
+      "interval_widths": {
+        "50": 13,
+        "80": 23,
+        "95": 37
+      },
+      "median_rank": 16.0,
+      "mode_rank": 14,
+      "previous_official_rank": 29,
+      "rank_1_probability": 0.00041995445483476983,
+      "rank_change": 3,
+      "rank_change_accessible": "Up 3 since Week 11",
+      "rank_change_display": "\u21913",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "7-3",
+      "team_id": "150",
+      "team_name": "Duke",
+      "top10_probability": 0.2061820085344756,
+      "top25_probability": 0.8232578158859498,
+      "top5_probability": 0.03805112706738149
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 27,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 18.275205078161186,
+      "interval_50": [
+        12,
+        23
+      ],
+      "interval_80": [
+        8.0,
+        30.0
+      ],
+      "interval_95": [
+        5,
+        42
+      ],
+      "interval_widths": {
+        "50": 12,
+        "80": 23,
+        "95": 38
+      },
+      "median_rank": 16.0,
+      "mode_rank": 14,
+      "previous_official_rank": 20,
+      "rank_1_probability": 9.625947856558099e-05,
+      "rank_change": -7,
+      "rank_change_accessible": "Down 7 since Week 11",
+      "rank_change_display": "\u21937",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "197",
+      "team_name": "Oklahoma State",
+      "top10_probability": 0.18528778592741182,
+      "top25_probability": 0.8244162791848757,
+      "top5_probability": 0.025004701673846694
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 28,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 20.577688534943615,
+      "interval_50": [
+        14,
+        26
+      ],
+      "interval_80": [
+        10.0,
+        33.0
+      ],
+      "interval_95": [
+        6,
+        44
+      ],
+      "interval_widths": {
+        "50": 13,
+        "80": 24,
+        "95": 39
+      },
+      "median_rank": 19.0,
+      "mode_rank": 16,
+      "previous_official_rank": 30,
+      "rank_1_probability": 8.308770614778829e-05,
+      "rank_change": 2,
+      "rank_change_accessible": "Up 2 since Week 11",
+      "rank_change_display": "\u21912",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "239",
+      "team_name": "Baylor",
+      "top10_probability": 0.12012331745366493,
+      "top25_probability": 0.7449861438771593,
+      "top5_probability": 0.014949125587367159
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 29,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 21.34457925037849,
+      "interval_50": [
+        14,
+        27
+      ],
+      "interval_80": [
+        10.0,
+        34.0
+      ],
+      "interval_95": [
+        6,
+        45
+      ],
+      "interval_widths": {
+        "50": 14,
+        "80": 25,
+        "95": 40
+      },
+      "median_rank": 20.0,
+      "mode_rank": 17,
+      "previous_official_rank": 31,
+      "rank_1_probability": 7.923537499869759e-05,
+      "rank_change": 2,
+      "rank_change_accessible": "Up 2 since Week 11",
+      "rank_change_display": "\u21912",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "9-1",
+      "team_id": "68",
+      "team_name": "Boise State",
+      "top10_probability": 0.11285537315100581,
+      "top25_probability": 0.7109442644929048,
+      "top5_probability": 0.01474288118618942
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 30,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 21.51565233825562,
+      "interval_50": [
+        15,
+        27
+      ],
+      "interval_80": [
+        11.0,
+        34.0
+      ],
+      "interval_95": [
+        7,
+        44
+      ],
+      "interval_widths": {
+        "50": 13,
+        "80": 24,
+        "95": 38
+      },
+      "median_rank": 20.0,
+      "mode_rank": 18,
+      "previous_official_rank": 36,
+      "rank_1_probability": 0.0001337148653822896,
+      "rank_change": 6,
+      "rank_change_accessible": "Up 6 since Week 11",
+      "rank_change_display": "\u21916",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "213",
+      "team_name": "Penn State",
+      "top10_probability": 0.0957186237411379,
+      "top25_probability": 0.7102301394874616,
+      "top5_probability": 0.012466673014707766
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 31,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 22.104628668636263,
+      "interval_50": [
+        14,
+        28
+      ],
+      "interval_80": [
+        10.0,
+        37.0
+      ],
+      "interval_95": [
+        7,
+        49
+      ],
+      "interval_widths": {
+        "50": 15,
+        "80": 28,
+        "95": 43
+      },
+      "median_rank": 20.0,
+      "mode_rank": 17,
+      "previous_official_rank": 28,
+      "rank_1_probability": 0.0001637855395811414,
+      "rank_change": -3,
+      "rank_change_accessible": "Down 3 since Week 11",
+      "rank_change_display": "\u21933",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-4",
+      "team_id": "201",
+      "team_name": "Oklahoma",
+      "top10_probability": 0.10364009646536247,
+      "top25_probability": 0.693506387627982,
+      "top5_probability": 0.014329386384083091
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 32,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 22.483153216794957,
+      "interval_50": [
+        15,
+        28
+      ],
+      "interval_80": [
+        11.0,
+        37.0
+      ],
+      "interval_95": [
+        7,
+        50
+      ],
+      "interval_widths": {
+        "50": 14,
+        "80": 27,
+        "95": 44
+      },
+      "median_rank": 21.0,
+      "mode_rank": 18,
+      "previous_official_rank": 39,
+      "rank_1_probability": 8.956244768022067e-05,
+      "rank_change": 7,
+      "rank_change_accessible": "Up 7 since Week 11",
+      "rank_change_display": "\u21917",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "2",
+      "team_name": "Auburn",
+      "top10_probability": 0.08916257857362317,
+      "top25_probability": 0.685777350012998,
+      "top5_probability": 0.010521373298744844
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 33,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 23.97361372775294,
+      "interval_50": [
+        17,
+        29
+      ],
+      "interval_80": [
+        12.0,
+        38.0
+      ],
+      "interval_95": [
+        8,
+        49
+      ],
+      "interval_widths": {
+        "50": 13,
+        "80": 27,
+        "95": 42
+      },
+      "median_rank": 22.0,
+      "mode_rank": 20,
+      "previous_official_rank": 32,
+      "rank_1_probability": 7.97157846241702e-05,
+      "rank_change": -1,
+      "rank_change_accessible": "Down 1 since Week 11",
+      "rank_change_display": "\u21931",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "4-6",
+      "team_id": "245",
+      "team_name": "Texas A&M",
+      "top10_probability": 0.05905963985694528,
+      "top25_probability": 0.6227070394769152,
+      "top5_probability": 0.006871892848943622
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 34,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 24.614712082745793,
+      "interval_50": [
+        17,
+        31
+      ],
+      "interval_80": [
+        12.0,
+        39.0
+      ],
+      "interval_95": [
+        8,
+        50
+      ],
+      "interval_widths": {
+        "50": 15,
+        "80": 28,
+        "95": 43
+      },
+      "median_rank": 23.0,
+      "mode_rank": 20,
+      "previous_official_rank": 33,
+      "rank_1_probability": 3.221447255391794e-05,
+      "rank_change": -1,
+      "rank_change_accessible": "Down 1 since Week 11",
+      "rank_change_display": "\u21931",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "275",
+      "team_name": "Wisconsin",
+      "top10_probability": 0.05891634816725712,
+      "top25_probability": 0.5929072429971947,
+      "top5_probability": 0.006201022673014752
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 35,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 24.627339385781408,
+      "interval_50": [
+        16,
+        31
+      ],
+      "interval_80": [
+        11.0,
+        42.0
+      ],
+      "interval_95": [
+        7,
+        54
+      ],
+      "interval_widths": {
+        "50": 16,
+        "80": 32,
+        "95": 48
+      },
+      "median_rank": 22.0,
+      "mode_rank": 18,
+      "previous_official_rank": 25,
+      "rank_1_probability": 0.00010369441201735768,
+      "rank_change": -10,
+      "rank_change_accessible": "Down 10 since Week 11",
+      "rank_change_display": "\u219310",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "2579",
+      "team_name": "South Carolina",
+      "top10_probability": 0.08273866959482286,
+      "top25_probability": 0.6047502194424289,
+      "top5_probability": 0.011030073882108062
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 36,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 26.274659839037167,
+      "interval_50": [
+        18,
+        33
+      ],
+      "interval_80": [
+        14.0,
+        42.0
+      ],
+      "interval_95": [
+        10,
+        53
+      ],
+      "interval_widths": {
+        "50": 16,
+        "80": 29,
+        "95": 44
+      },
+      "median_rank": 24.0,
+      "mode_rank": 20,
+      "previous_official_rank": 34,
+      "rank_1_probability": 3.4966272587621087e-06,
+      "rank_change": -2,
+      "rank_change_accessible": "Down 2 since Week 11",
+      "rank_change_display": "\u21932",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "7-3",
+      "team_id": "96",
+      "team_name": "Kentucky",
+      "top10_probability": 0.03519155841667412,
+      "top25_probability": 0.551382896131958,
+      "top5_probability": 0.002056460335687081
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 37,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 28.21329738914117,
+      "interval_50": [
+        19,
+        36
+      ],
+      "interval_80": [
+        14.0,
+        46.0
+      ],
+      "interval_95": [
+        10,
+        57
+      ],
+      "interval_widths": {
+        "50": 18,
+        "80": 33,
+        "95": 48
+      },
+      "median_rank": 26.0,
+      "mode_rank": 20,
+      "previous_official_rank": 37,
+      "rank_1_probability": 1.0553185909845673e-05,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "2628",
+      "team_name": "TCU",
+      "top10_probability": 0.03539978811027276,
+      "top25_probability": 0.4887619069520821,
+      "top5_probability": 0.0026782513960730866
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 38,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 28.438928713705224,
+      "interval_50": [
+        18,
+        37
+      ],
+      "interval_80": [
+        13.0,
+        48.0
+      ],
+      "interval_95": [
+        9,
+        60
+      ],
+      "interval_widths": {
+        "50": 20,
+        "80": 36,
+        "95": 52
+      },
+      "median_rank": 26.0,
+      "mode_rank": 20,
+      "previous_official_rank": 41,
+      "rank_1_probability": 2.531702575757047e-05,
+      "rank_change": 3,
+      "rank_change_accessible": "Up 3 since Week 11",
+      "rank_change_display": "\u21913",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "356",
+      "team_name": "Illinois",
+      "top10_probability": 0.04504382434576972,
+      "top25_probability": 0.4997195600564701,
+      "top5_probability": 0.004230978324101367
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 39,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 29.484845413159054,
+      "interval_50": [
+        21,
+        36
+      ],
+      "interval_80": [
+        16.0,
+        47.0
+      ],
+      "interval_95": [
+        11,
+        59
+      ],
+      "interval_widths": {
+        "50": 16,
+        "80": 32,
+        "95": 49
+      },
+      "median_rank": 27.0,
+      "mode_rank": 24,
+      "previous_official_rank": 49,
+      "rank_1_probability": 8.16010790580476e-06,
+      "rank_change": 10,
+      "rank_change_accessible": "Up 10 since Week 11",
+      "rank_change_display": "\u219110",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "66",
+      "team_name": "Iowa State",
+      "top10_probability": 0.021154963121124734,
+      "top25_probability": 0.430615434968554,
+      "top5_probability": 0.0015629840865862877
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 40,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 30.63882480296727,
+      "interval_50": [
+        21,
+        39
+      ],
+      "interval_80": [
+        16.0,
+        50.0
+      ],
+      "interval_95": [
+        11,
+        61
+      ],
+      "interval_widths": {
+        "50": 19,
+        "80": 35,
+        "95": 51
+      },
+      "median_rank": 28.0,
+      "mode_rank": 23,
+      "previous_official_rank": 42,
+      "rank_1_probability": 8.367634504121895e-07,
+      "rank_change": 2,
+      "rank_change_accessible": "Up 2 since Week 11",
+      "rank_change_display": "\u21912",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "153",
+      "team_name": "North Carolina",
+      "top10_probability": 0.018287559029046576,
+      "top25_probability": 0.4164637103413334,
+      "top5_probability": 0.0008037992844163108
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 41,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 31.69199982203998,
+      "interval_50": [
+        22,
+        40
+      ],
+      "interval_80": [
+        16.0,
+        50.0
+      ],
+      "interval_95": [
+        11,
+        62
+      ],
+      "interval_widths": {
+        "50": 19,
+        "80": 35,
+        "95": 52
+      },
+      "median_rank": 30.0,
+      "mode_rank": 27,
+      "previous_official_rank": 45,
+      "rank_1_probability": 1.3233978762389626e-05,
+      "rank_change": 4,
+      "rank_change_accessible": "Up 4 since Week 11",
+      "rank_change_display": "\u21914",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "264",
+      "team_name": "Washington",
+      "top10_probability": 0.02025257254555504,
+      "top25_probability": 0.3613433126120066,
+      "top5_probability": 0.0018211384863693872
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 42,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 32.22240484409557,
+      "interval_50": [
+        23,
+        40
+      ],
+      "interval_80": [
+        17.0,
+        50.0
+      ],
+      "interval_95": [
+        12,
+        63
+      ],
+      "interval_widths": {
+        "50": 18,
+        "80": 34,
+        "95": 52
+      },
+      "median_rank": 31.0,
+      "mode_rank": 25,
+      "previous_official_rank": 35,
+      "rank_1_probability": 8.760487245923188e-06,
+      "rank_change": -7,
+      "rank_change_accessible": "Down 7 since Week 11",
+      "rank_change_display": "\u21937",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "7-3",
+      "team_id": "2567",
+      "team_name": "SMU",
+      "top10_probability": 0.016654704403952655,
+      "top25_probability": 0.3421848931331624,
+      "top5_probability": 0.0013830527649449117
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 43,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 33.5184683605096,
+      "interval_50": [
+        23,
+        42
+      ],
+      "interval_80": [
+        17.0,
+        54.0
+      ],
+      "interval_95": [
+        11,
+        67
+      ],
+      "interval_widths": {
+        "50": 20,
+        "80": 38,
+        "95": 57
+      },
+      "median_rank": 31.0,
+      "mode_rank": 28,
+      "previous_official_rank": 48,
+      "rank_1_probability": 1.2840394298108625e-05,
+      "rank_change": 5,
+      "rank_change_accessible": "Up 5 since Week 11",
+      "rank_change_display": "\u21915",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "52",
+      "team_name": "Florida State",
+      "top10_probability": 0.017994703092462677,
+      "top25_probability": 0.33397052947332023,
+      "top5_probability": 0.0016472104600543502
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 44,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 33.91367654250961,
+      "interval_50": [
+        23,
+        43
+      ],
+      "interval_80": [
+        17.0,
+        53.0
+      ],
+      "interval_95": [
+        12,
+        65
+      ],
+      "interval_widths": {
+        "50": 21,
+        "80": 37,
+        "95": 54
+      },
+      "median_rank": 32.0,
+      "mode_rank": 26,
+      "previous_official_rank": 40,
+      "rank_1_probability": 1.1663930441145388e-05,
+      "rank_change": -4,
+      "rank_change_accessible": "Down 4 since Week 11",
+      "rank_change_display": "\u21934",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "130",
+      "team_name": "Michigan",
+      "top10_probability": 0.014307885814382295,
+      "top25_probability": 0.31223085677132967,
+      "top5_probability": 0.001189866514279264
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 45,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 36.935803057367714,
+      "interval_50": [
+        27,
+        45
+      ],
+      "interval_80": [
+        21.0,
+        56.0
+      ],
+      "interval_95": [
+        15,
+        68
+      ],
+      "interval_widths": {
+        "50": 19,
+        "80": 36,
+        "95": 54
+      },
+      "median_rank": 35.0,
+      "mode_rank": 33,
+      "previous_official_rank": 44,
+      "rank_1_probability": 4.0100697577052983e-07,
+      "rank_change": -1,
+      "rank_change_accessible": "Down 1 since Week 11",
+      "rank_change_display": "\u21931",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "221",
+      "team_name": "Pittsburgh",
+      "top10_probability": 0.004596930940492597,
+      "top25_probability": 0.21499701729285872,
+      "top5_probability": 0.00020681478258104436
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 46,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 37.24432216361012,
+      "interval_50": [
+        27,
+        46
+      ],
+      "interval_80": [
+        20.0,
+        57.0
+      ],
+      "interval_95": [
+        15,
+        69
+      ],
+      "interval_widths": {
+        "50": 20,
+        "80": 38,
+        "95": 55
+      },
+      "median_rank": 36.0,
+      "mode_rank": 31,
+      "previous_official_rank": 59,
+      "rank_1_probability": 3.9855911248068034e-07,
+      "rank_change": 13,
+      "rank_change_accessible": "Up 13 since Week 11",
+      "rank_change_display": "\u219113",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "4-6",
+      "team_id": "2305",
+      "team_name": "Kansas",
+      "top10_probability": 0.004524120315487162,
+      "top25_probability": 0.22079047163501953,
+      "top5_probability": 0.00018962330201268316
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 47,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 38.140548234047984,
+      "interval_50": [
+        28,
+        47
+      ],
+      "interval_80": [
+        21.0,
+        58.0
+      ],
+      "interval_95": [
+        15,
+        70
+      ],
+      "interval_widths": {
+        "50": 20,
+        "80": 38,
+        "95": 56
+      },
+      "median_rank": 36.0,
+      "mode_rank": 34,
+      "previous_official_rank": 55,
+      "rank_1_probability": 1.2516598185529467e-06,
+      "rank_change": 8,
+      "rank_change_accessible": "Up 8 since Week 11",
+      "rank_change_display": "\u21918",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "258",
+      "team_name": "Virginia",
+      "top10_probability": 0.003946374164755818,
+      "top25_probability": 0.1938459118278312,
+      "top5_probability": 0.00022801844689453876
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 48,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 38.98230162862452,
+      "interval_50": [
+        28,
+        49
+      ],
+      "interval_80": [
+        20.0,
+        59.0
+      ],
+      "interval_95": [
+        14,
+        71
+      ],
+      "interval_widths": {
+        "50": 22,
+        "80": 40,
+        "95": 58
+      },
+      "median_rank": 38.0,
+      "mode_rank": 37,
+      "previous_official_rank": 43,
+      "rank_1_probability": 1.133356841053472e-06,
+      "rank_change": -5,
+      "rank_change_accessible": "Down 5 since Week 11",
+      "rank_change_display": "\u21935",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "8-2",
+      "team_id": "167",
+      "team_name": "New Mexico",
+      "top10_probability": 0.008493960276332969,
+      "top25_probability": 0.20111445133050024,
+      "top5_probability": 0.0005787987423313418
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 49,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 40.99172223108122,
+      "interval_50": [
+        30,
+        51
+      ],
+      "interval_80": [
+        21.0,
+        61.0
+      ],
+      "interval_95": [
+        14,
+        73
+      ],
+      "interval_widths": {
+        "50": 22,
+        "80": 41,
+        "95": 60
+      },
+      "median_rank": 40.0,
+      "mode_rank": 40,
+      "previous_official_rank": 38,
+      "rank_1_probability": 3.450430824768606e-06,
+      "rank_change": -11,
+      "rank_change_accessible": "Down 11 since Week 11",
+      "rank_change_display": "\u219311",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "8-3",
+      "team_id": "256",
+      "team_name": "James Madison",
+      "top10_probability": 0.008560133725158119,
+      "top25_probability": 0.16968139887755626,
+      "top5_probability": 0.0007554001679214136
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 50,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 41.26030217893073,
+      "interval_50": [
+        30,
+        51
+      ],
+      "interval_80": [
+        23.0,
+        62.0
+      ],
+      "interval_95": [
+        17,
+        74
+      ],
+      "interval_widths": {
+        "50": 22,
+        "80": 40,
+        "95": 58
+      },
+      "median_rank": 40.0,
+      "mode_rank": 36,
+      "previous_official_rank": 66,
+      "rank_1_probability": 2.59359557473142e-07,
+      "rank_change": 16,
+      "rank_change_accessible": "Up 16 since Week 11",
+      "rank_change_display": "\u219116",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "9",
+      "team_name": "Arizona State",
+      "top10_probability": 0.002489185333925589,
+      "top25_probability": 0.1537470889804734,
+      "top5_probability": 0.00010073791383248547
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 51,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 41.638062159457,
+      "interval_50": [
+        30,
+        52
+      ],
+      "interval_80": [
+        23.0,
+        62.0
+      ],
+      "interval_95": [
+        16,
+        74
+      ],
+      "interval_widths": {
+        "50": 23,
+        "80": 40,
+        "95": 59
+      },
+      "median_rank": 40.0,
+      "mode_rank": 38,
+      "previous_official_rank": 58,
+      "rank_1_probability": 1.04158543160921e-07,
+      "rank_change": 7,
+      "rank_change_accessible": "Up 7 since Week 11",
+      "rank_change_display": "\u21917",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "204",
+      "team_name": "Oregon State",
+      "top10_probability": 0.0027669468022305274,
+      "top25_probability": 0.15055288333623018,
+      "top5_probability": 0.0001051516844546546
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 52,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 42.08790440112684,
+      "interval_50": [
+        32,
+        51
+      ],
+      "interval_80": [
+        24.0,
+        63.0
+      ],
+      "interval_95": [
+        17,
+        75
+      ],
+      "interval_widths": {
+        "50": 20,
+        "80": 40,
+        "95": 59
+      },
+      "median_rank": 41.0,
+      "mode_rank": 39,
+      "previous_official_rank": 52,
+      "rank_1_probability": 2.474869600914484e-07,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "326",
+      "team_name": "Texas State",
+      "top10_probability": 0.0029119828748408487,
+      "top25_probability": 0.1308077734696423,
+      "top5_probability": 0.00013780349312718365
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 53,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 42.65400354180324,
+      "interval_50": [
+        32,
+        52
+      ],
+      "interval_80": [
+        25.0,
+        64.0
+      ],
+      "interval_95": [
+        19,
+        78
+      ],
+      "interval_widths": {
+        "50": 21,
+        "80": 40,
+        "95": 60
+      },
+      "median_rank": 40.0,
+      "mode_rank": 36,
+      "previous_official_rank": 46,
+      "rank_1_probability": 2.3362354199574218e-07,
+      "rank_change": -7,
+      "rank_change_accessible": "Down 7 since Week 11",
+      "rank_change_display": "\u21937",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "228",
+      "team_name": "Clemson",
+      "top10_probability": 0.0013504240266327691,
+      "top25_probability": 0.10897282395894173,
+      "top5_probability": 6.402711656202681e-05
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 54,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 42.69281900701801,
+      "interval_50": [
+        31,
+        53
+      ],
+      "interval_80": [
+        24.0,
+        65.0
+      ],
+      "interval_95": [
+        17,
+        78
+      ],
+      "interval_widths": {
+        "50": 23,
+        "80": 42,
+        "95": 62
+      },
+      "median_rank": 41.0,
+      "mode_rank": 34,
+      "previous_official_rank": 62,
+      "rank_1_probability": 8.982502173310761e-07,
+      "rank_change": 8,
+      "rank_change_accessible": "Up 8 since Week 11",
+      "rank_change_display": "\u21918",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "8-2",
+      "team_id": "235",
+      "team_name": "Memphis",
+      "top10_probability": 0.0032250046875481474,
+      "top25_probability": 0.12565643667852394,
+      "top5_probability": 0.00024550071305616257
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 55,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 43.63999933852386,
+      "interval_50": [
+        32,
+        53
+      ],
+      "interval_80": [
+        25.0,
+        66.0
+      ],
+      "interval_95": [
+        19,
+        81
+      ],
+      "interval_widths": {
+        "50": 22,
+        "80": 42,
+        "95": 63
+      },
+      "median_rank": 41.0,
+      "mode_rank": 36,
+      "previous_official_rank": 47,
+      "rank_1_probability": 1.3330998009983403e-08,
+      "rank_change": -8,
+      "rank_change_accessible": "Down 8 since Week 11",
+      "rank_change_display": "\u21938",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "4-6",
+      "team_id": "344",
+      "team_name": "Mississippi State",
+      "top10_probability": 0.0006037146595578948,
+      "top25_probability": 0.10078055405312342,
+      "top5_probability": 1.4010508065512731e-05
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 56,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 43.6669642275355,
+      "interval_50": [
+        31,
+        55
+      ],
+      "interval_80": [
+        24.0,
+        67.0
+      ],
+      "interval_95": [
+        17,
+        81
+      ],
+      "interval_widths": {
+        "50": 25,
+        "80": 44,
+        "95": 65
+      },
+      "median_rank": 41.0,
+      "mode_rank": 29,
+      "previous_official_rank": 50,
+      "rank_1_probability": 5.259509078968413e-07,
+      "rank_change": -6,
+      "rank_change_accessible": "Down 6 since Week 11",
+      "rank_change_display": "\u21936",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "9-1",
+      "team_id": "2335",
+      "team_name": "Liberty",
+      "top10_probability": 0.003423754581440595,
+      "top25_probability": 0.12330461637504674,
+      "top5_probability": 0.00024504692965187876
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 57,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 44.623880041232056,
+      "interval_50": [
+        31,
+        55
+      ],
+      "interval_80": [
+        25.0,
+        69.0
+      ],
+      "interval_95": [
+        19,
+        84
+      ],
+      "interval_widths": {
+        "50": 25,
+        "80": 45,
+        "95": 66
+      },
+      "median_rank": 42.0,
+      "mode_rank": 32,
+      "previous_official_rank": 70,
+      "rank_1_probability": 3.3408697604726485e-08,
+      "rank_change": 13,
+      "rank_change_accessible": "Up 13 since Week 11",
+      "rank_change_display": "\u219113",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "4-6",
+      "team_id": "8",
+      "team_name": "Arkansas",
+      "top10_probability": 0.0007997116560698766,
+      "top25_probability": 0.10632927724975264,
+      "top5_probability": 2.3685989859898673e-05
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 58,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 45.7852770952586,
+      "interval_50": [
+        34,
+        56
+      ],
+      "interval_80": [
+        26.0,
+        67.0
+      ],
+      "interval_95": [
+        18,
+        79
+      ],
+      "interval_widths": {
+        "50": 23,
+        "80": 42,
+        "95": 62
+      },
+      "median_rank": 45.0,
+      "mode_rank": 44,
+      "previous_official_rank": 51,
+      "rank_1_probability": 1.4514701294996597e-07,
+      "rank_change": -7,
+      "rank_change_accessible": "Down 7 since Week 11",
+      "rank_change_display": "\u21937",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "2132",
+      "team_name": "Cincinnati",
+      "top10_probability": 0.001361282744714143,
+      "top25_probability": 0.09873706691050466,
+      "top5_probability": 5.356326372618168e-05
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 59,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 46.17465621007096,
+      "interval_50": [
+        35,
+        57
+      ],
+      "interval_80": [
+        27.0,
+        68.0
+      ],
+      "interval_95": [
+        19,
+        80
+      ],
+      "interval_widths": {
+        "50": 23,
+        "80": 42,
+        "95": 62
+      },
+      "median_rank": 45.0,
+      "mode_rank": 41,
+      "previous_official_rank": 53,
+      "rank_1_probability": 2.2377148708745278e-07,
+      "rank_change": -6,
+      "rank_change_accessible": "Down 6 since Week 11",
+      "rank_change_display": "\u21936",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "7-3",
+      "team_id": "249",
+      "team_name": "North Texas",
+      "top10_probability": 0.0012617299606051517,
+      "top25_probability": 0.08256658349135507,
+      "top5_probability": 6.73560497502868e-05
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 60,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 46.83713822147228,
+      "interval_50": [
+        36,
+        57
+      ],
+      "interval_80": [
+        27.0,
+        68.0
+      ],
+      "interval_95": [
+        19,
+        79
+      ],
+      "interval_widths": {
+        "50": 22,
+        "80": 42,
+        "95": 61
+      },
+      "median_rank": 46.0,
+      "mode_rank": 46,
+      "previous_official_rank": 54,
+      "rank_1_probability": 1.3358294238469218e-08,
+      "rank_change": -6,
+      "rank_change_accessible": "Down 6 since Week 11",
+      "rank_change_display": "\u21936",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "2116",
+      "team_name": "UCF",
+      "top10_probability": 0.0008022021064272588,
+      "top25_probability": 0.08482005676258898,
+      "top5_probability": 1.8163719833896082e-05
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 61,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 47.24946822104355,
+      "interval_50": [
+        35,
+        58
+      ],
+      "interval_80": [
+        26.0,
+        70.0
+      ],
+      "interval_95": [
+        18,
+        82
+      ],
+      "interval_widths": {
+        "50": 24,
+        "80": 45,
+        "95": 65
+      },
+      "median_rank": 46.0,
+      "mode_rank": 43,
+      "previous_official_rank": 60,
+      "rank_1_probability": 3.4459158255412274e-06,
+      "rank_change": -1,
+      "rank_change_accessible": "Down 1 since Week 11",
+      "rank_change_display": "\u21931",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "8-2",
+      "team_id": "2449",
+      "team_name": "North Dakota State",
+      "top10_probability": 0.0028788104862506217,
+      "top25_probability": 0.0883308885891936,
+      "top5_probability": 0.00030139576018414316
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 62,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 47.96576362301203,
+      "interval_50": [
+        37,
+        58
+      ],
+      "interval_80": [
+        29.0,
+        69.0
+      ],
+      "interval_95": [
+        21,
+        80
+      ],
+      "interval_widths": {
+        "50": 22,
+        "80": 41,
+        "95": 60
+      },
+      "median_rank": 47.0,
+      "mode_rank": 44,
+      "previous_official_rank": 67,
+      "rank_1_probability": 2.578710087982371e-08,
+      "rank_change": 5,
+      "rank_change_accessible": "Up 5 since Week 11",
+      "rank_change_display": "\u21915",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "8-2",
+      "team_id": "2348",
+      "team_name": "Louisiana Tech",
+      "top10_probability": 0.0007569932957620153,
+      "top25_probability": 0.0654922277071501,
+      "top5_probability": 2.6218580689394422e-05
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 63,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 47.96709782957483,
+      "interval_50": [
+        37,
+        58
+      ],
+      "interval_80": [
+        29.0,
+        68.0
+      ],
+      "interval_95": [
+        21,
+        80
+      ],
+      "interval_widths": {
+        "50": 22,
+        "80": 40,
+        "95": 60
+      },
+      "median_rank": 47.0,
+      "mode_rank": 45,
+      "previous_official_rank": 64,
+      "rank_1_probability": 2.6942714430711817e-08,
+      "rank_change": 1,
+      "rank_change_accessible": "Up 1 since Week 11",
+      "rank_change_display": "\u21911",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "183",
+      "team_name": "Syracuse",
+      "top10_probability": 0.0005965455137594712,
+      "top25_probability": 0.06417417540478107,
+      "top5_probability": 1.6853109643044877e-05
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 64,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 48.1467448899126,
+      "interval_50": [
+        37,
+        59
+      ],
+      "interval_80": [
+        29.0,
+        69.0
+      ],
+      "interval_95": [
+        21,
+        81
+      ],
+      "interval_widths": {
+        "50": 23,
+        "80": 41,
+        "95": 61
+      },
+      "median_rank": 47.0,
+      "mode_rank": 43,
+      "previous_official_rank": 65,
+      "rank_1_probability": 3.4488416719042885e-08,
+      "rank_change": 1,
+      "rank_change_accessible": "Up 1 since Week 11",
+      "rank_change_display": "\u21911",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "4-6",
+      "team_id": "2306",
+      "team_name": "Kansas State",
+      "top10_probability": 0.00047290507036834497,
+      "top25_probability": 0.06308298904401126,
+      "top5_probability": 1.4555561577427427e-05
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 65,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 49.52003194262256,
+      "interval_50": [
+        38,
+        60
+      ],
+      "interval_80": [
+        29.0,
+        71.0
+      ],
+      "interval_95": [
+        22,
+        83
+      ],
+      "interval_widths": {
+        "50": 23,
+        "80": 43,
+        "95": 62
+      },
+      "median_rank": 49.0,
+      "mode_rank": 49,
+      "previous_official_rank": 63,
+      "rank_1_probability": 1.4630924678646016e-09,
+      "rank_change": -2,
+      "rank_change_accessible": "Down 2 since Week 11",
+      "rank_change_display": "\u21932",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-7",
+      "team_id": "127",
+      "team_name": "Michigan State",
+      "top10_probability": 0.00021216231053412547,
+      "top25_probability": 0.05552103587185889,
+      "top5_probability": 3.099243611381e-06
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 66,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 49.997277930872066,
+      "interval_50": [
+        38,
+        61
+      ],
+      "interval_80": [
+        29.0,
+        72.0
+      ],
+      "interval_95": [
+        22,
+        84
+      ],
+      "interval_widths": {
+        "50": 24,
+        "80": 44,
+        "95": 63
+      },
+      "median_rank": 49.0,
+      "mode_rank": 49,
+      "previous_official_rank": 56,
+      "rank_1_probability": 5.077395946447649e-09,
+      "rank_change": -10,
+      "rank_change_accessible": "Down 10 since Week 11",
+      "rank_change_display": "\u219310",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "277",
+      "team_name": "West Virginia",
+      "top10_probability": 0.00035601291096972013,
+      "top25_probability": 0.05609025032482093,
+      "top5_probability": 7.410897967649678e-06
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 67,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 50.240679861015195,
+      "interval_50": [
+        38,
+        61
+      ],
+      "interval_80": [
+        28.0,
+        72.0
+      ],
+      "interval_95": [
+        20,
+        85
+      ],
+      "interval_widths": {
+        "50": 24,
+        "80": 45,
+        "95": 66
+      },
+      "median_rank": 50.0,
+      "mode_rank": 51,
+      "previous_official_rank": 57,
+      "rank_1_probability": 9.477778245777984e-08,
+      "rank_change": -10,
+      "rank_change_accessible": "Down 10 since Week 11",
+      "rank_change_display": "\u219310",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "135",
+      "team_name": "Minnesota",
+      "top10_probability": 0.000988788264798998,
+      "top25_probability": 0.07030847556715393,
+      "top5_probability": 3.8023921097514056e-05
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 68,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 50.72128670761575,
+      "interval_50": [
+        37,
+        63
+      ],
+      "interval_80": [
+        29.0,
+        76.0
+      ],
+      "interval_95": [
+        22,
+        89
+      ],
+      "interval_widths": {
+        "50": 27,
+        "80": 48,
+        "95": 68
+      },
+      "median_rank": 49.0,
+      "mode_rank": 43,
+      "previous_official_rank": 68,
+      "rank_1_probability": 2.9634775995062264e-09,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-7",
+      "team_id": "2509",
+      "team_name": "Purdue",
+      "top10_probability": 0.00022647195084926262,
+      "top25_probability": 0.05455449669217318,
+      "top5_probability": 4.3368649919025395e-06
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 69,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 53.31644951385905,
+      "interval_50": [
+        41,
+        65
+      ],
+      "interval_80": [
+        32.0,
+        76.0
+      ],
+      "interval_95": [
+        24,
+        88
+      ],
+      "interval_widths": {
+        "50": 25,
+        "80": 45,
+        "95": 65
+      },
+      "median_rank": 52.0,
+      "mode_rank": 50,
+      "previous_official_rank": 69,
+      "rank_1_probability": 5.61098485488344e-09,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "278",
+      "team_name": "Fresno State",
+      "top10_probability": 0.00022075009060555168,
+      "top25_probability": 0.03417555055265039,
+      "top5_probability": 6.2280553258153626e-06
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 70,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 57.52685332260523,
+      "interval_50": [
+        46,
+        69
+      ],
+      "interval_80": [
+        36.0,
+        79.0
+      ],
+      "interval_95": [
+        27,
+        91
+      ],
+      "interval_widths": {
+        "50": 24,
+        "80": 44,
+        "95": 65
+      },
+      "median_rank": 57.0,
+      "mode_rank": 53,
+      "previous_official_rank": 61,
+      "rank_1_probability": 8.43489632261154e-09,
+      "rank_change": -9,
+      "rank_change_accessible": "Down 9 since Week 11",
+      "rank_change_display": "\u21939",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "259",
+      "team_name": "Virginia Tech",
+      "top10_probability": 0.00015675456206890346,
+      "top25_probability": 0.019797251288495892,
+      "top5_probability": 5.364421523319467e-06
+    },
+    {
+      "conference": "Big 12",
+      "display_rank": 71,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 57.815774431008855,
+      "interval_50": [
+        45,
+        70
+      ],
+      "interval_80": [
+        35.0,
+        81.0
+      ],
+      "interval_95": [
+        26,
+        93
+      ],
+      "interval_widths": {
+        "50": 26,
+        "80": 47,
+        "95": 68
+      },
+      "median_rank": 57.0,
+      "mode_rank": 55,
+      "previous_official_rank": 81,
+      "rank_1_probability": 3.8778908564081586e-10,
+      "rank_change": 10,
+      "rank_change_accessible": "Up 10 since Week 11",
+      "rank_change_display": "\u219110",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "4-6",
+      "team_id": "38",
+      "team_name": "Colorado",
+      "top10_probability": 4.421645475491095e-05,
+      "top25_probability": 0.020130258633566205,
+      "top5_probability": 6.099243045494337e-07
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 72,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 58.25732016518341,
+      "interval_50": [
+        46,
+        70
+      ],
+      "interval_80": [
+        36.0,
+        81.0
+      ],
+      "interval_95": [
+        26,
+        93
+      ],
+      "interval_widths": {
+        "50": 25,
+        "80": 46,
+        "95": 68
+      },
+      "median_rank": 58.0,
+      "mode_rank": 55,
+      "previous_official_rank": 73,
+      "rank_1_probability": 8.061593357945285e-09,
+      "rank_change": 1,
+      "rank_change_accessible": "Up 1 since Week 11",
+      "rank_change_display": "\u21911",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "202",
+      "team_name": "Tulsa",
+      "top10_probability": 0.0002560390231916401,
+      "top25_probability": 0.0236112519243133,
+      "top5_probability": 9.397637845994238e-06
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 73,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 59.57034721954653,
+      "interval_50": [
+        47,
+        71
+      ],
+      "interval_80": [
+        38.0,
+        82.0
+      ],
+      "interval_95": [
+        29,
+        94
+      ],
+      "interval_widths": {
+        "50": 25,
+        "80": 45,
+        "95": 66
+      },
+      "median_rank": 59.0,
+      "mode_rank": 61,
+      "previous_official_rank": 71,
+      "rank_1_probability": 4.58837632622388e-09,
+      "rank_change": -2,
+      "rank_change_accessible": "Down 2 since Week 11",
+      "rank_change_display": "\u21932",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "4-6",
+      "team_id": "152",
+      "team_name": "NC State",
+      "top10_probability": 6.194349780184539e-05,
+      "top25_probability": 0.01388576361171459,
+      "top5_probability": 1.7754950332883244e-06
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 74,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 59.64603896606313,
+      "interval_50": [
+        46,
+        73
+      ],
+      "interval_80": [
+        36.0,
+        84.0
+      ],
+      "interval_95": [
+        27,
+        96
+      ],
+      "interval_widths": {
+        "50": 28,
+        "80": 49,
+        "95": 70
+      },
+      "median_rank": 59.0,
+      "mode_rank": 62,
+      "previous_official_rank": 75,
+      "rank_1_probability": 1.01327635614089e-09,
+      "rank_change": 1,
+      "rank_change_accessible": "Up 1 since Week 11",
+      "rank_change_display": "\u21911",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "4-6",
+      "team_id": "120",
+      "team_name": "Maryland",
+      "top10_probability": 4.719423151261895e-05,
+      "top25_probability": 0.017732852211352824,
+      "top5_probability": 9.108159397228493e-07
+    },
+    {
+      "conference": "SEC",
+      "display_rank": 75,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 59.65097856840352,
+      "interval_50": [
+        46,
+        72
+      ],
+      "interval_80": [
+        36.0,
+        83.0
+      ],
+      "interval_95": [
+        28,
+        95
+      ],
+      "interval_widths": {
+        "50": 27,
+        "80": 48,
+        "95": 68
+      },
+      "median_rank": 59.0,
+      "mode_rank": 60,
+      "previous_official_rank": 72,
+      "rank_1_probability": 3.0454095311926015e-10,
+      "rank_change": -3,
+      "rank_change_accessible": "Down 3 since Week 11",
+      "rank_change_display": "\u21933",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "4-6",
+      "team_id": "238",
+      "team_name": "Vanderbilt",
+      "top10_probability": 2.1177983263942385e-05,
+      "top25_probability": 0.01454316126988088,
+      "top5_probability": 2.995454032121692e-07
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 76,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 61.077855316922864,
+      "interval_50": [
+        49,
+        73
+      ],
+      "interval_80": [
+        39.0,
+        83.0
+      ],
+      "interval_95": [
+        30,
+        94
+      ],
+      "interval_widths": {
+        "50": 25,
+        "80": 45,
+        "95": 65
+      },
+      "median_rank": 61.0,
+      "mode_rank": 60,
+      "previous_official_rank": 74,
+      "rank_1_probability": 4.3638199312606497e-10,
+      "rank_change": -2,
+      "rank_change_accessible": "Down 2 since Week 11",
+      "rank_change_display": "\u21932",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "290",
+      "team_name": "Georgia Southern",
+      "top10_probability": 3.0143764479828287e-05,
+      "top25_probability": 0.010278630746708943,
+      "top5_probability": 6.499133080535193e-07
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 77,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 61.87318725339078,
+      "interval_50": [
+        49,
+        75
+      ],
+      "interval_80": [
+        37.0,
+        86.0
+      ],
+      "interval_95": [
+        28,
+        97
+      ],
+      "interval_widths": {
+        "50": 27,
+        "80": 50,
+        "95": 70
+      },
+      "median_rank": 62.0,
+      "mode_rank": 61,
+      "previous_official_rank": 80,
+      "rank_1_probability": 7.685938577973024e-09,
+      "rank_change": 3,
+      "rank_change_accessible": "Up 3 since Week 11",
+      "rank_change_display": "\u21913",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "8-2",
+      "team_id": "2636",
+      "team_name": "UTSA",
+      "top10_probability": 0.00013404751726307258,
+      "top25_probability": 0.016685479771706473,
+      "top5_probability": 5.176696564678469e-06
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 78,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 65.38470752517162,
+      "interval_50": [
+        54,
+        77
+      ],
+      "interval_80": [
+        43.0,
+        88.0
+      ],
+      "interval_95": [
+        33,
+        99
+      ],
+      "interval_widths": {
+        "50": 24,
+        "80": 46,
+        "95": 67
+      },
+      "median_rank": 65.0,
+      "mode_rank": 66,
+      "previous_official_rank": 79,
+      "rank_1_probability": 1.3715951259874388e-09,
+      "rank_change": 1,
+      "rank_change_accessible": "Up 1 since Week 11",
+      "rank_change_display": "\u21911",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "7-3",
+      "team_id": "309",
+      "team_name": "Louisiana",
+      "top10_probability": 3.262470007318331e-05,
+      "top25_probability": 0.006054913549563334,
+      "top5_probability": 1.0771438108873813e-06
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 79,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 66.74250627977074,
+      "interval_50": [
+        55,
+        79
+      ],
+      "interval_80": [
+        44.0,
+        90.0
+      ],
+      "interval_95": [
+        34,
+        100
+      ],
+      "interval_widths": {
+        "50": 25,
+        "80": 47,
+        "95": 67
+      },
+      "median_rank": 67.0,
+      "mode_rank": 67,
+      "previous_official_rank": 78,
+      "rank_1_probability": 6.997091384539174e-10,
+      "rank_change": -1,
+      "rank_change_accessible": "Down 1 since Week 11",
+      "rank_change_display": "\u21931",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-4",
+      "team_id": "349",
+      "team_name": "Army",
+      "top10_probability": 2.6834869770747223e-05,
+      "top25_probability": 0.0051571285591654505,
+      "top5_probability": 7.427306753198643e-07
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 80,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 66.77282160713825,
+      "interval_50": [
+        55,
+        79
+      ],
+      "interval_80": [
+        44.0,
+        90.0
+      ],
+      "interval_95": [
+        33,
+        101
+      ],
+      "interval_widths": {
+        "50": 25,
+        "80": 47,
+        "95": 69
+      },
+      "median_rank": 67.0,
+      "mode_rank": 68,
+      "previous_official_rank": 77,
+      "rank_1_probability": 2.866096490285236e-08,
+      "rank_change": -3,
+      "rank_change_accessible": "Down 3 since Week 11",
+      "rank_change_display": "\u21933",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "8-2",
+      "team_id": "2649",
+      "team_name": "Toledo",
+      "top10_probability": 0.00013026901808862838,
+      "top25_probability": 0.008346016142599232,
+      "top5_probability": 8.076130665187177e-06
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 81,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 67.0169957102104,
+      "interval_50": [
+        55,
+        79
+      ],
+      "interval_80": [
+        44.0,
+        90.0
+      ],
+      "interval_95": [
+        33,
+        100
+      ],
+      "interval_widths": {
+        "50": 25,
+        "80": 47,
+        "95": 68
+      },
+      "median_rank": 67.0,
+      "mode_rank": 68,
+      "previous_official_rank": 82,
+      "rank_1_probability": 1.4532446598700749e-09,
+      "rank_change": 1,
+      "rank_change_accessible": "Up 1 since Week 11",
+      "rank_change_display": "\u21911",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "7-3",
+      "team_id": "2711",
+      "team_name": "Western Michigan",
+      "top10_probability": 2.4754540745069904e-05,
+      "top25_probability": 0.0053375753858742455,
+      "top5_probability": 8.522187120564391e-07
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 82,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 67.4992184437672,
+      "interval_50": [
+        56,
+        80
+      ],
+      "interval_80": [
+        45.0,
+        90.0
+      ],
+      "interval_95": [
+        34,
+        100
+      ],
+      "interval_widths": {
+        "50": 25,
+        "80": 46,
+        "95": 67
+      },
+      "median_rank": 68.0,
+      "mode_rank": 69,
+      "previous_official_rank": 76,
+      "rank_1_probability": 9.516555508109593e-09,
+      "rank_change": -6,
+      "rank_change_accessible": "Down 6 since Week 11",
+      "rank_change_display": "\u21936",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "58",
+      "team_name": "South Florida",
+      "top10_probability": 3.440794717082911e-05,
+      "top25_probability": 0.005020566299957245,
+      "top5_probability": 1.8581902478067361e-06
+    },
+    {
+      "conference": "FBS Independents",
+      "display_rank": 83,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 68.9420262523557,
+      "interval_50": [
+        57,
+        81
+      ],
+      "interval_80": [
+        46.0,
+        92.0
+      ],
+      "interval_95": [
+        36,
+        102
+      ],
+      "interval_widths": {
+        "50": 25,
+        "80": 47,
+        "95": 67
+      },
+      "median_rank": 69.0,
+      "mode_rank": 69,
+      "previous_official_rank": 89,
+      "rank_1_probability": 3.6786673277088636e-10,
+      "rank_change": 6,
+      "rank_change_accessible": "Up 6 since Week 11",
+      "rank_change_display": "\u21916",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "41",
+      "team_name": "UConn",
+      "top10_probability": 1.5066287056826937e-05,
+      "top25_probability": 0.0037087055527420653,
+      "top5_probability": 3.997031597142461e-07
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 84,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 71.61029292949311,
+      "interval_50": [
+        59,
+        84
+      ],
+      "interval_80": [
+        48.0,
+        95.0
+      ],
+      "interval_95": [
+        37,
+        105
+      ],
+      "interval_widths": {
+        "50": 26,
+        "80": 48,
+        "95": 69
+      },
+      "median_rank": 72.0,
+      "mode_rank": 72,
+      "previous_official_rank": 91,
+      "rank_1_probability": 6.454998554035745e-11,
+      "rank_change": 7,
+      "rank_change_accessible": "Up 7 since Week 11",
+      "rank_change_display": "\u21917",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-7",
+      "team_id": "59",
+      "team_name": "Georgia Tech",
+      "top10_probability": 3.8863650748206164e-06,
+      "top25_probability": 0.0024672565531174387,
+      "top5_probability": 6.489992001605738e-08
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 85,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 73.23823899275094,
+      "interval_50": [
+        62,
+        85
+      ],
+      "interval_80": [
+        51.0,
+        95.0
+      ],
+      "interval_95": [
+        40,
+        104
+      ],
+      "interval_widths": {
+        "50": 24,
+        "80": 45,
+        "95": 65
+      },
+      "median_rank": 74.0,
+      "mode_rank": 75,
+      "previous_official_rank": 88,
+      "rank_1_probability": 1.5290688448353017e-11,
+      "rank_change": 3,
+      "rank_change_accessible": "Up 3 since Week 11",
+      "rank_change_display": "\u21913",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "8-2",
+      "team_id": "2005",
+      "team_name": "Air Force",
+      "top10_probability": 2.168701692422294e-06,
+      "top25_probability": 0.0012229198325095902,
+      "top5_probability": 3.90728684793491e-08
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 86,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 73.29974291781636,
+      "interval_50": [
+        61,
+        86
+      ],
+      "interval_80": [
+        50.0,
+        96.0
+      ],
+      "interval_95": [
+        39,
+        106
+      ],
+      "interval_widths": {
+        "50": 26,
+        "80": 47,
+        "95": 68
+      },
+      "median_rank": 73.0,
+      "mode_rank": 73,
+      "previous_official_rank": 93,
+      "rank_1_probability": 4.979538963526288e-11,
+      "rank_change": 7,
+      "rank_change_accessible": "Up 7 since Week 11",
+      "rank_change_display": "\u21917",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-8",
+      "team_id": "265",
+      "team_name": "Washington State",
+      "top10_probability": 1.978864703669708e-06,
+      "top25_probability": 0.0015727294509341465,
+      "top5_probability": 3.50548364811212e-08
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 87,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 80.01411649136416,
+      "interval_50": [
+        68,
+        92
+      ],
+      "interval_80": [
+        57.0,
+        102.0
+      ],
+      "interval_95": [
+        45,
+        111
+      ],
+      "interval_widths": {
+        "50": 25,
+        "80": 46,
+        "95": 67
+      },
+      "median_rank": 81.0,
+      "mode_rank": 83,
+      "previous_official_rank": 95,
+      "rank_1_probability": 2.4266824559366196e-11,
+      "rank_change": 8,
+      "rank_change_accessible": "Up 8 since Week 11",
+      "rank_change_display": "\u21918",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "2439",
+      "team_name": "UNLV",
+      "top10_probability": 1.063344150033228e-06,
+      "top25_probability": 0.0005347811570734136,
+      "top5_probability": 2.24618094371785e-08
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 88,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 81.65570140403227,
+      "interval_50": [
+        70,
+        94
+      ],
+      "interval_80": [
+        57.0,
+        104.0
+      ],
+      "interval_95": [
+        42,
+        113
+      ],
+      "interval_widths": {
+        "50": 25,
+        "80": 48,
+        "95": 72
+      },
+      "median_rank": 83.0,
+      "mode_rank": 83,
+      "previous_official_rank": 84,
+      "rank_1_probability": 7.061532979544942e-13,
+      "rank_change": -4,
+      "rank_change_accessible": "Down 4 since Week 11",
+      "rank_change_display": "\u21934",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "4-6",
+      "team_id": "103",
+      "team_name": "Boston College",
+      "top10_probability": 2.781820071725304e-07,
+      "top25_probability": 0.0007837731474149756,
+      "top5_probability": 2.1855486414326416e-09
+    },
+    {
+      "conference": "Big Ten",
+      "display_rank": 89,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 82.25512920987182,
+      "interval_50": [
+        70,
+        95
+      ],
+      "interval_80": [
+        59.0,
+        104.0
+      ],
+      "interval_95": [
+        45,
+        114
+      ],
+      "interval_widths": {
+        "50": 26,
+        "80": 46,
+        "95": 70
+      },
+      "median_rank": 83.0,
+      "mode_rank": 88,
+      "previous_official_rank": 83,
+      "rank_1_probability": 1.2942543294169782e-12,
+      "rank_change": -6,
+      "rank_change_accessible": "Down 6 since Week 11",
+      "rank_change_display": "\u21936",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-8",
+      "team_id": "164",
+      "team_name": "Rutgers",
+      "top10_probability": 2.471387982750977e-07,
+      "top25_probability": 0.0005458074373943246,
+      "top5_probability": 2.1949328583513764e-09
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 90,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 83.1460939942178,
+      "interval_50": [
+        73,
+        95
+      ],
+      "interval_80": [
+        60.0,
+        104.0
+      ],
+      "interval_95": [
+        47,
+        113
+      ],
+      "interval_widths": {
+        "50": 23,
+        "80": 45,
+        "95": 67
+      },
+      "median_rank": 84.0,
+      "mode_rank": 84,
+      "previous_official_rank": 85,
+      "rank_1_probability": 7.822729944463874e-13,
+      "rank_change": -5,
+      "rank_change_accessible": "Down 5 since Week 11",
+      "rank_change_display": "\u21935",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "4-6",
+      "team_id": "328",
+      "team_name": "Utah State",
+      "top10_probability": 2.28380521878475e-07,
+      "top25_probability": 0.0004072437357359213,
+      "top5_probability": 2.3557302416573332e-09
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 91,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 83.73868031345229,
+      "interval_50": [
+        73,
+        96
+      ],
+      "interval_80": [
+        61.0,
+        105.0
+      ],
+      "interval_95": [
+        48,
+        113
+      ],
+      "interval_widths": {
+        "50": 24,
+        "80": 45,
+        "95": 66
+      },
+      "median_rank": 85.0,
+      "mode_rank": 88,
+      "previous_official_rank": 98,
+      "rank_1_probability": 3.0220913639099965e-12,
+      "rank_change": 7,
+      "rank_change_accessible": "Up 7 since Week 11",
+      "rank_change_display": "\u21917",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "21",
+      "team_name": "San Diego State",
+      "top10_probability": 2.240920244053556e-07,
+      "top25_probability": 0.0002702349828243831,
+      "top5_probability": 3.3099211958856587e-09
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 92,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 83.85095342452252,
+      "interval_50": [
+        73,
+        96
+      ],
+      "interval_80": [
+        62.0,
+        104.0
+      ],
+      "interval_95": [
+        50,
+        112
+      ],
+      "interval_widths": {
+        "50": 24,
+        "80": 43,
+        "95": 63
+      },
+      "median_rank": 85.0,
+      "mode_rank": 90,
+      "previous_official_rank": 86,
+      "rank_1_probability": 6.136463424589274e-12,
+      "rank_change": -6,
+      "rank_change_accessible": "Down 6 since Week 11",
+      "rank_change_display": "\u21936",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "7-3",
+      "team_id": "55",
+      "team_name": "Jacksonville State",
+      "top10_probability": 3.504083826054696e-07,
+      "top25_probability": 0.000197861488289874,
+      "top5_probability": 7.870192327901383e-09
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 93,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 84.34814857554589,
+      "interval_50": [
+        74,
+        96
+      ],
+      "interval_80": [
+        62.0,
+        105.0
+      ],
+      "interval_95": [
+        49,
+        114
+      ],
+      "interval_widths": {
+        "50": 23,
+        "80": 44,
+        "95": 66
+      },
+      "median_rank": 85.0,
+      "mode_rank": 87,
+      "previous_official_rank": 92,
+      "rank_1_probability": 1.5660727102834247e-12,
+      "rank_change": -1,
+      "rank_change_accessible": "Down 1 since Week 11",
+      "rank_change_display": "\u21931",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-6",
+      "team_id": "2426",
+      "team_name": "Navy",
+      "top10_probability": 2.2172814025632754e-07,
+      "top25_probability": 0.00024495114865694985,
+      "top5_probability": 3.1850435365255482e-09
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 94,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 85.66141615843983,
+      "interval_50": [
+        74,
+        98
+      ],
+      "interval_80": [
+        64.0,
+        106.0
+      ],
+      "interval_95": [
+        51,
+        114
+      ],
+      "interval_widths": {
+        "50": 25,
+        "80": 43,
+        "95": 64
+      },
+      "median_rank": 87.0,
+      "mode_rank": 91,
+      "previous_official_rank": 87,
+      "rank_1_probability": 6.006676642450288e-13,
+      "rank_change": -7,
+      "rank_change_accessible": "Down 7 since Week 11",
+      "rank_change_display": "\u21937",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "2247",
+      "team_name": "Georgia State",
+      "top10_probability": 1.1671828413567518e-07,
+      "top25_probability": 0.00011593941556236554,
+      "top5_probability": 1.6319458330701786e-09
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 95,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 86.43664953022918,
+      "interval_50": [
+        75,
+        99
+      ],
+      "interval_80": [
+        64.0,
+        107.0
+      ],
+      "interval_95": [
+        51,
+        115
+      ],
+      "interval_widths": {
+        "50": 25,
+        "80": 44,
+        "95": 65
+      },
+      "median_rank": 88.0,
+      "mode_rank": 93,
+      "previous_official_rank": 90,
+      "rank_1_probability": 1.303591393590894e-12,
+      "rank_change": -5,
+      "rank_change_accessible": "Down 5 since Week 11",
+      "rank_change_display": "\u21935",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "2226",
+      "team_name": "Florida Atlantic",
+      "top10_probability": 2.0758810507987963e-07,
+      "top25_probability": 0.00017713342884848052,
+      "top5_probability": 3.1486319491342015e-09
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 96,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 91.47890593542074,
+      "interval_50": [
+        82,
+        102
+      ],
+      "interval_80": [
+        71.0,
+        110.0
+      ],
+      "interval_95": [
+        59,
+        118
+      ],
+      "interval_widths": {
+        "50": 21,
+        "80": 40,
+        "95": 60
+      },
+      "median_rank": 93.0,
+      "mode_rank": 95,
+      "previous_official_rank": 96,
+      "rank_1_probability": 3.64253199444272e-13,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "151",
+      "team_name": "East Carolina",
+      "top10_probability": 2.537836153572084e-08,
+      "top25_probability": 3.749862081921455e-05,
+      "top5_probability": 4.2042454395507196e-10
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 97,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 91.51917382740281,
+      "interval_50": [
+        81,
+        104
+      ],
+      "interval_80": [
+        70.0,
+        112.0
+      ],
+      "interval_95": [
+        54,
+        120
+      ],
+      "interval_widths": {
+        "50": 24,
+        "80": 43,
+        "95": 67
+      },
+      "median_rank": 93.0,
+      "mode_rank": 96,
+      "previous_official_rank": 112,
+      "rank_1_probability": 5.605681777321739e-15,
+      "rank_change": 15,
+      "rank_change_accessible": "Up 15 since Week 11",
+      "rank_change_display": "\u219115",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "24",
+      "team_name": "Stanford",
+      "top10_probability": 1.1053937973857836e-08,
+      "top25_probability": 0.00013219651487027216,
+      "top5_probability": 4.594019265634766e-11
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 98,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 92.42873140040116,
+      "interval_50": [
+        83,
+        104
+      ],
+      "interval_80": [
+        72.0,
+        111.0
+      ],
+      "interval_95": [
+        58,
+        118
+      ],
+      "interval_widths": {
+        "50": 22,
+        "80": 40,
+        "95": 61
+      },
+      "median_rank": 94.0,
+      "mode_rank": 98,
+      "previous_official_rank": 94,
+      "rank_1_probability": 7.681946413233948e-12,
+      "rank_change": -4,
+      "rank_change_accessible": "Down 4 since Week 11",
+      "rank_change_display": "\u21934",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "7-3",
+      "team_id": "195",
+      "team_name": "Ohio",
+      "top10_probability": 1.215965579708066e-07,
+      "top25_probability": 6.610410623550077e-05,
+      "top5_probability": 3.87553720492519e-09
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 99,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 92.50622729523054,
+      "interval_50": [
+        83,
+        103
+      ],
+      "interval_80": [
+        72.0,
+        111.0
+      ],
+      "interval_95": [
+        60,
+        118
+      ],
+      "interval_widths": {
+        "50": 21,
+        "80": 40,
+        "95": 59
+      },
+      "median_rank": 94.0,
+      "mode_rank": 97,
+      "previous_official_rank": 101,
+      "rank_1_probability": 1.4950022244687137e-13,
+      "rank_change": 2,
+      "rank_change_accessible": "Up 2 since Week 11",
+      "rank_change_display": "\u21912",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "48",
+      "team_name": "Delaware",
+      "top10_probability": 1.1037869329923542e-08,
+      "top25_probability": 2.0562241192104758e-05,
+      "top5_probability": 1.67892039733963e-10
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 100,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 92.5474349440812,
+      "interval_50": [
+        83,
+        103
+      ],
+      "interval_80": [
+        73.0,
+        111.0
+      ],
+      "interval_95": [
+        61,
+        118
+      ],
+      "interval_widths": {
+        "50": 21,
+        "80": 39,
+        "95": 58
+      },
+      "median_rank": 94.0,
+      "mode_rank": 96,
+      "previous_official_rank": 100,
+      "rank_1_probability": 2.3455962933665895e-14,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "6",
+      "team_name": "South Alabama",
+      "top10_probability": 5.335818887360628e-09,
+      "top25_probability": 1.4181804444458302e-05,
+      "top5_probability": 5.944742772826458e-11
+    },
+    {
+      "conference": "ACC",
+      "display_rank": 101,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 93.28007040271628,
+      "interval_50": [
+        83,
+        105
+      ],
+      "interval_80": [
+        72.0,
+        112.0
+      ],
+      "interval_95": [
+        60,
+        120
+      ],
+      "interval_widths": {
+        "50": 23,
+        "80": 41,
+        "95": 61
+      },
+      "median_rank": 95.0,
+      "mode_rank": 98,
+      "previous_official_rank": 97,
+      "rank_1_probability": 7.363463489930889e-15,
+      "rank_change": -4,
+      "rank_change_accessible": "Down 4 since Week 11",
+      "rank_change_display": "\u21934",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-7",
+      "team_id": "25",
+      "team_name": "California",
+      "top10_probability": 2.902839280442268e-09,
+      "top25_probability": 2.486012639865452e-05,
+      "top5_probability": 1.685319481637921e-11
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 102,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 93.69132151614897,
+      "interval_50": [
+        84,
+        105
+      ],
+      "interval_80": [
+        72.0,
+        113.0
+      ],
+      "interval_95": [
+        59,
+        120
+      ],
+      "interval_widths": {
+        "50": 22,
+        "80": 42,
+        "95": 62
+      },
+      "median_rank": 95.0,
+      "mode_rank": 98,
+      "previous_official_rank": 102,
+      "rank_1_probability": 6.154016087474103e-13,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "2655",
+      "team_name": "Tulane",
+      "top10_probability": 3.1953243466322736e-08,
+      "top25_probability": 3.1934620739863376e-05,
+      "top5_probability": 5.551652069423912e-10
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 103,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 93.87574390298565,
+      "interval_50": [
+        84,
+        105
+      ],
+      "interval_80": [
+        74.0,
+        112.0
+      ],
+      "interval_95": [
+        61,
+        120
+      ],
+      "interval_widths": {
+        "50": 22,
+        "80": 39,
+        "95": 60
+      },
+      "median_rank": 95.0,
+      "mode_rank": 97,
+      "previous_official_rank": 109,
+      "rank_1_probability": 1.5714499988631556e-14,
+      "rank_change": 6,
+      "rank_change_accessible": "Up 6 since Week 11",
+      "rank_change_display": "\u21916",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "5",
+      "team_name": "UAB",
+      "top10_probability": 5.634239186126231e-09,
+      "top25_probability": 1.5027951350787724e-05,
+      "top5_probability": 5.67399146440056e-11
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 104,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 94.02621977026607,
+      "interval_50": [
+        85,
+        105
+      ],
+      "interval_80": [
+        74.0,
+        112.0
+      ],
+      "interval_95": [
+        62,
+        120
+      ],
+      "interval_widths": {
+        "50": 21,
+        "80": 39,
+        "95": 59
+      },
+      "median_rank": 95.0,
+      "mode_rank": 98,
+      "previous_official_rank": 99,
+      "rank_1_probability": 4.8335088749173256e-14,
+      "rank_change": -5,
+      "rank_change_accessible": "Down 5 since Week 11",
+      "rank_change_display": "\u21935",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "2026",
+      "team_name": "App State",
+      "top10_probability": 9.20738504624069e-09,
+      "top25_probability": 1.2170837049528424e-05,
+      "top5_probability": 1.2529761005470652e-10
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 105,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 95.78733622610986,
+      "interval_50": [
+        87,
+        106
+      ],
+      "interval_80": [
+        76.0,
+        113.0
+      ],
+      "interval_95": [
+        64,
+        120
+      ],
+      "interval_widths": {
+        "50": 20,
+        "80": 38,
+        "95": 57
+      },
+      "median_rank": 97.0,
+      "mode_rank": 100,
+      "previous_official_rank": 103,
+      "rank_1_probability": 6.875743060696361e-15,
+      "rank_change": -2,
+      "rank_change_accessible": "Down 2 since Week 11",
+      "rank_change_display": "\u21932",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "4-6",
+      "team_id": "324",
+      "team_name": "Coastal Carolina",
+      "top10_probability": 2.2065285278007804e-09,
+      "top25_probability": 6.1492677410584905e-06,
+      "top5_probability": 2.2473552084792333e-11
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 106,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 96.55653631298314,
+      "interval_50": [
+        87,
+        107
+      ],
+      "interval_80": [
+        77.0,
+        115.0
+      ],
+      "interval_95": [
+        64,
+        122
+      ],
+      "interval_widths": {
+        "50": 21,
+        "80": 39,
+        "95": 59
+      },
+      "median_rank": 98.0,
+      "mode_rank": 100,
+      "previous_official_rank": 110,
+      "rank_1_probability": 9.798491057904777e-14,
+      "rank_change": 4,
+      "rank_change_accessible": "Up 4 since Week 11",
+      "rank_change_display": "\u21914",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "6-4",
+      "team_id": "193",
+      "team_name": "Miami (OH)",
+      "top10_probability": 9.633839591267721e-09,
+      "top25_probability": 1.147868123140641e-05,
+      "top5_probability": 1.5631968509989199e-10
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 107,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 96.9422252731997,
+      "interval_50": [
+        88,
+        108
+      ],
+      "interval_80": [
+        78.0,
+        114.0
+      ],
+      "interval_95": [
+        65,
+        120
+      ],
+      "interval_widths": {
+        "50": 21,
+        "80": 37,
+        "95": 56
+      },
+      "median_rank": 99.0,
+      "mode_rank": 103,
+      "previous_official_rank": 106,
+      "rank_1_probability": 4.651801099306898e-15,
+      "rank_change": -1,
+      "rank_change_accessible": "Down 1 since Week 11",
+      "rank_change_display": "\u21931",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "4-6",
+      "team_id": "2440",
+      "team_name": "Nevada",
+      "top10_probability": 2.863564587286052e-09,
+      "top25_probability": 1.000658466501201e-05,
+      "top5_probability": 2.4669171388694878e-11
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 108,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 97.81038216617834,
+      "interval_50": [
+        89,
+        108
+      ],
+      "interval_80": [
+        79.0,
+        115.0
+      ],
+      "interval_95": [
+        67,
+        122
+      ],
+      "interval_widths": {
+        "50": 20,
+        "80": 37,
+        "95": 56
+      },
+      "median_rank": 99.0,
+      "mode_rank": 102,
+      "previous_official_rank": 104,
+      "rank_1_probability": 4.427877674865824e-15,
+      "rank_change": -4,
+      "rank_change_accessible": "Down 4 since Week 11",
+      "rank_change_display": "\u21934",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "4-6",
+      "team_id": "2032",
+      "team_name": "Arkansas State",
+      "top10_probability": 1.1734450855950587e-09,
+      "top25_probability": 3.652733843951369e-06,
+      "top5_probability": 1.1985985969092632e-11
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 109,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 99.69276580354922,
+      "interval_50": [
+        91,
+        110
+      ],
+      "interval_80": [
+        81.0,
+        116.0
+      ],
+      "interval_95": [
+        68,
+        123
+      ],
+      "interval_widths": {
+        "50": 20,
+        "80": 36,
+        "95": 56
+      },
+      "median_rank": 101.0,
+      "mode_rank": 105,
+      "previous_official_rank": 107,
+      "rank_1_probability": 1.7488320119387323e-14,
+      "rank_change": -2,
+      "rank_change_accessible": "Down 2 since Week 11",
+      "rank_change_display": "\u21932",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "4-6",
+      "team_id": "338",
+      "team_name": "Kennesaw State",
+      "top10_probability": 1.6794860867353426e-09,
+      "top25_probability": 3.953560049417219e-06,
+      "top5_probability": 2.361227290541841e-11
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 110,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 100.8621056258113,
+      "interval_50": [
+        92,
+        111
+      ],
+      "interval_80": [
+        82.0,
+        118.0
+      ],
+      "interval_95": [
+        70,
+        124
+      ],
+      "interval_widths": {
+        "50": 20,
+        "80": 37,
+        "95": 55
+      },
+      "median_rank": 102.0,
+      "mode_rank": 107,
+      "previous_official_rank": 108,
+      "rank_1_probability": 3.12565978558093e-14,
+      "rank_change": -2,
+      "rank_change_accessible": "Down 2 since Week 11",
+      "rank_change_display": "\u21932",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "7-3",
+      "team_id": "2751",
+      "team_name": "Wyoming",
+      "top10_probability": 3.304432656838694e-09,
+      "top25_probability": 4.636276335318432e-06,
+      "top5_probability": 5.758265221575659e-11
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 111,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 103.21366869568796,
+      "interval_50": [
+        95,
+        113
+      ],
+      "interval_80": [
+        85.0,
+        118.0
+      ],
+      "interval_95": [
+        74,
+        124
+      ],
+      "interval_widths": {
+        "50": 19,
+        "80": 34,
+        "95": 51
+      },
+      "median_rank": 105.0,
+      "mode_rank": 109,
+      "previous_official_rank": 111,
+      "rank_1_probability": 1.7063024333203999e-15,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "2117",
+      "team_name": "Central Michigan",
+      "top10_probability": 4.115713945461246e-10,
+      "top25_probability": 1.848070365138012e-06,
+      "top5_probability": 4.331276832027306e-12
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 112,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 104.56179166650924,
+      "interval_50": [
+        97,
+        114
+      ],
+      "interval_80": [
+        87.0,
+        120.0
+      ],
+      "interval_95": [
+        75,
+        125
+      ],
+      "interval_widths": {
+        "50": 18,
+        "80": 34,
+        "95": 51
+      },
+      "median_rank": 106.0,
+      "mode_rank": 109,
+      "previous_official_rank": 116,
+      "rank_1_probability": 5.542293517773448e-16,
+      "rank_change": 4,
+      "rank_change_accessible": "Up 4 since Week 11",
+      "rank_change_display": "\u21914",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-7",
+      "team_id": "62",
+      "team_name": "Hawai'i",
+      "top10_probability": 1.445213477670602e-10,
+      "top25_probability": 5.183853351252506e-07,
+      "top5_probability": 1.3964998482654385e-12
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 113,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 106.59756216955176,
+      "interval_50": [
+        99,
+        115
+      ],
+      "interval_80": [
+        90.0,
+        121.0
+      ],
+      "interval_95": [
+        79,
+        126
+      ],
+      "interval_widths": {
+        "50": 17,
+        "80": 32,
+        "95": 48
+      },
+      "median_rank": 108.0,
+      "mode_rank": 111,
+      "previous_official_rank": 115,
+      "rank_1_probability": 1.9815929188410144e-16,
+      "rank_change": 2,
+      "rank_change_accessible": "Up 2 since Week 11",
+      "rank_change_display": "\u21912",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "4-6",
+      "team_id": "2229",
+      "team_name": "Florida International",
+      "top10_probability": 4.038835577143916e-11,
+      "top25_probability": 1.9486260419176586e-07,
+      "top5_probability": 4.45984766095021e-13
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 114,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 107.40805166843194,
+      "interval_50": [
+        99,
+        117
+      ],
+      "interval_80": [
+        89.0,
+        123.0
+      ],
+      "interval_95": [
+        78,
+        129
+      ],
+      "interval_widths": {
+        "50": 19,
+        "80": 35,
+        "95": 52
+      },
+      "median_rank": 109.0,
+      "mode_rank": 112,
+      "previous_official_rank": 105,
+      "rank_1_probability": 6.8930653483569e-17,
+      "rank_change": -9,
+      "rank_change_accessible": "Down 9 since Week 11",
+      "rank_change_display": "\u21939",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-8",
+      "team_id": "218",
+      "team_name": "Temple",
+      "top10_probability": 4.2484617435221235e-11,
+      "top25_probability": 2.57611787350811e-07,
+      "top5_probability": 3.1877812692913116e-13
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 115,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 108.63854400670832,
+      "interval_50": [
+        101,
+        118
+      ],
+      "interval_80": [
+        90.0,
+        124.0
+      ],
+      "interval_95": [
+        78,
+        129
+      ],
+      "interval_widths": {
+        "50": 18,
+        "80": 35,
+        "95": 52
+      },
+      "median_rank": 111.0,
+      "mode_rank": 115,
+      "previous_official_rank": 114,
+      "rank_1_probability": 1.2278860912536286e-15,
+      "rank_change": -1,
+      "rank_change_accessible": "Down 1 since Week 11",
+      "rank_change_display": "\u21931",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "4-6",
+      "team_id": "2653",
+      "team_name": "Troy",
+      "top10_probability": 2.473938466180378e-10,
+      "top25_probability": 5.986177663815129e-07,
+      "top5_probability": 2.973642175904144e-12
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 116,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 110.33823203192458,
+      "interval_50": [
+        104,
+        118
+      ],
+      "interval_80": [
+        95.0,
+        123.0
+      ],
+      "interval_95": [
+        84,
+        128
+      ],
+      "interval_widths": {
+        "50": 15,
+        "80": 29,
+        "95": 45
+      },
+      "median_rank": 112.0,
+      "mode_rank": 114,
+      "previous_official_rank": 117,
+      "rank_1_probability": 8.455657545117271e-19,
+      "rank_change": 1,
+      "rank_change_accessible": "Up 1 since Week 11",
+      "rank_change_display": "\u21911",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-6",
+      "team_id": "23",
+      "team_name": "San Jos\u00e9 State",
+      "top10_probability": 1.4721763084765464e-12,
+      "top25_probability": 2.157003234051882e-08,
+      "top5_probability": 7.216257399291357e-15
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 117,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 110.66803623675429,
+      "interval_50": [
+        104,
+        119
+      ],
+      "interval_80": [
+        94.0,
+        125.0
+      ],
+      "interval_95": [
+        83,
+        130
+      ],
+      "interval_widths": {
+        "50": 16,
+        "80": 32,
+        "95": 48
+      },
+      "median_rank": 112.0,
+      "mode_rank": 115,
+      "previous_official_rank": 123,
+      "rank_1_probability": 2.385102433788634e-16,
+      "rank_change": 6,
+      "rank_change_accessible": "Up 6 since Week 11",
+      "rank_change_display": "\u21916",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "7-3",
+      "team_id": "2084",
+      "team_name": "Buffalo",
+      "top10_probability": 7.246365635733572e-11,
+      "top25_probability": 3.133452647740401e-07,
+      "top5_probability": 8.160221516679767e-13
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 118,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 112.07114770925648,
+      "interval_50": [
+        105,
+        120
+      ],
+      "interval_80": [
+        97.0,
+        125.0
+      ],
+      "interval_95": [
+        86,
+        130
+      ],
+      "interval_widths": {
+        "50": 16,
+        "80": 29,
+        "95": 45
+      },
+      "median_rank": 114.0,
+      "mode_rank": 116,
+      "previous_official_rank": 124,
+      "rank_1_probability": 6.994136399434771e-19,
+      "rank_change": 6,
+      "rank_change_accessible": "Up 6 since Week 11",
+      "rank_change_display": "\u21916",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "2393",
+      "team_name": "Middle Tennessee",
+      "top10_probability": 1.617856212424771e-12,
+      "top25_probability": 1.9485783380035718e-08,
+      "top5_probability": 8.439582442969791e-15
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 119,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 112.48362034769852,
+      "interval_50": [
+        106,
+        121
+      ],
+      "interval_80": [
+        97.0,
+        126.0
+      ],
+      "interval_95": [
+        87,
+        131
+      ],
+      "interval_widths": {
+        "50": 16,
+        "80": 30,
+        "95": 45
+      },
+      "median_rank": 114.0,
+      "mode_rank": 116,
+      "previous_official_rank": 121,
+      "rank_1_probability": 1.412762952308391e-19,
+      "rank_change": 2,
+      "rank_change_accessible": "Up 2 since Week 11",
+      "rank_change_display": "\u21912",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-9",
+      "team_id": "242",
+      "team_name": "Rice",
+      "top10_probability": 4.0654173583944304e-13,
+      "top25_probability": 1.4859323655261215e-08,
+      "top5_probability": 1.2934262912310828e-15
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 120,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 112.56575748273906,
+      "interval_50": [
+        106,
+        121
+      ],
+      "interval_80": [
+        98.0,
+        126.0
+      ],
+      "interval_95": [
+        86,
+        130
+      ],
+      "interval_widths": {
+        "50": 16,
+        "80": 29,
+        "95": 45
+      },
+      "median_rank": 114.0,
+      "mode_rank": 117,
+      "previous_official_rank": 118,
+      "rank_1_probability": 2.0293317983003798e-17,
+      "rank_change": -2,
+      "rank_change_accessible": "Down 2 since Week 11",
+      "rank_change_display": "\u21932",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-7",
+      "team_id": "295",
+      "team_name": "Old Dominion",
+      "top10_probability": 3.8586785870410725e-12,
+      "top25_probability": 3.1736774878318336e-08,
+      "top5_probability": 3.4795571646653565e-14
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 121,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 112.75127383113126,
+      "interval_50": [
+        106,
+        121
+      ],
+      "interval_80": [
+        97.0,
+        126.0
+      ],
+      "interval_95": [
+        85,
+        131
+      ],
+      "interval_widths": {
+        "50": 16,
+        "80": 30,
+        "95": 47
+      },
+      "median_rank": 115.0,
+      "mode_rank": 118,
+      "previous_official_rank": 125,
+      "rank_1_probability": 1.4333517855699118e-15,
+      "rank_change": 4,
+      "rank_change_accessible": "Up 4 since Week 11",
+      "rank_change_display": "\u21914",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "4-6",
+      "team_id": "98",
+      "team_name": "Western Kentucky",
+      "top10_probability": 1.0506769430805427e-10,
+      "top25_probability": 2.98271233301336e-07,
+      "top5_probability": 1.5531634933130192e-12
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 122,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 112.77138131923977,
+      "interval_50": [
+        107,
+        120
+      ],
+      "interval_80": [
+        99.0,
+        125.0
+      ],
+      "interval_95": [
+        88,
+        129
+      ],
+      "interval_widths": {
+        "50": 14,
+        "80": 27,
+        "95": 42
+      },
+      "median_rank": 114.0,
+      "mode_rank": 117,
+      "previous_official_rank": 120,
+      "rank_1_probability": 6.824291205072794e-18,
+      "rank_change": -2,
+      "rank_change_accessible": "Down 2 since Week 11",
+      "rank_change_display": "\u21932",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "276",
+      "team_name": "Marshall",
+      "top10_probability": 1.4977106577525385e-12,
+      "top25_probability": 1.5709697678371365e-08,
+      "top5_probability": 1.3417069526341177e-14
+    },
+    {
+      "conference": "Pac-12",
+      "display_rank": 123,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 112.84725304916918,
+      "interval_50": [
+        106,
+        122
+      ],
+      "interval_80": [
+        97.0,
+        127.0
+      ],
+      "interval_95": [
+        85,
+        132
+      ],
+      "interval_widths": {
+        "50": 17,
+        "80": 31,
+        "95": 48
+      },
+      "median_rank": 114.0,
+      "mode_rank": 118,
+      "previous_official_rank": 113,
+      "rank_1_probability": 1.128708141479396e-18,
+      "rank_change": -10,
+      "rank_change_accessible": "Down 10 since Week 11",
+      "rank_change_display": "\u219310",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-7",
+      "team_id": "36",
+      "team_name": "Colorado State",
+      "top10_probability": 2.8389430007284542e-12,
+      "top25_probability": 5.3636244215258815e-08,
+      "top5_probability": 1.0363990659809462e-14
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 124,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 114.41570467227676,
+      "interval_50": [
+        108,
+        122
+      ],
+      "interval_80": [
+        100.0,
+        127.0
+      ],
+      "interval_95": [
+        89,
+        131
+      ],
+      "interval_widths": {
+        "50": 15,
+        "80": 28,
+        "95": 43
+      },
+      "median_rank": 116.0,
+      "mode_rank": 119,
+      "previous_official_rank": 122,
+      "rank_1_probability": 6.14222995197814e-17,
+      "rank_change": -2,
+      "rank_change_accessible": "Down 2 since Week 11",
+      "rank_change_display": "\u21932",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "4-6",
+      "team_id": "2623",
+      "team_name": "Missouri State",
+      "top10_probability": 6.162946388291778e-12,
+      "top25_probability": 2.3394054279801325e-08,
+      "top5_probability": 7.884852633556241e-14
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 125,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 114.47559801585619,
+      "interval_50": [
+        108,
+        122
+      ],
+      "interval_80": [
+        100.0,
+        127.0
+      ],
+      "interval_95": [
+        90,
+        131
+      ],
+      "interval_widths": {
+        "50": 15,
+        "80": 28,
+        "95": 42
+      },
+      "median_rank": 116.0,
+      "mode_rank": 119,
+      "previous_official_rank": 119,
+      "rank_1_probability": 1.5058937855206409e-18,
+      "rank_change": -6,
+      "rank_change_accessible": "Down 6 since Week 11",
+      "rank_change_display": "\u21936",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-7",
+      "team_id": "2572",
+      "team_name": "Southern Miss",
+      "top10_probability": 9.514991214513891e-13,
+      "top25_probability": 1.0053755360082045e-08,
+      "top5_probability": 5.9566029215949285e-15
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 126,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 118.7640486857104,
+      "interval_50": [
+        113,
+        126
+      ],
+      "interval_80": [
+        106.0,
+        130.0
+      ],
+      "interval_95": [
+        96,
+        134
+      ],
+      "interval_widths": {
+        "50": 14,
+        "80": 25,
+        "95": 39
+      },
+      "median_rank": 120.0,
+      "mode_rank": 123,
+      "previous_official_rank": 126,
+      "rank_1_probability": 3.340307759972885e-20,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-7",
+      "team_id": "166",
+      "team_name": "New Mexico State",
+      "top10_probability": 6.797895248698983e-14,
+      "top25_probability": 1.172183420499785e-09,
+      "top5_probability": 3.0817289946093275e-16
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 127,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 120.02324391431617,
+      "interval_50": [
+        115,
+        127
+      ],
+      "interval_80": [
+        108.0,
+        130.0
+      ],
+      "interval_95": [
+        99,
+        134
+      ],
+      "interval_widths": {
+        "50": 13,
+        "80": 23,
+        "95": 36
+      },
+      "median_rank": 121.0,
+      "mode_rank": 124,
+      "previous_official_rank": 128,
+      "rank_1_probability": 1.2546084926610233e-20,
+      "rank_change": 1,
+      "rank_change_accessible": "Up 1 since Week 11",
+      "rank_change_display": "\u21911",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-7",
+      "team_id": "189",
+      "team_name": "Bowling Green",
+      "top10_probability": 1.9949198964429124e-14,
+      "top25_probability": 4.696308639849185e-10,
+      "top5_probability": 9.425600596396444e-17
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 128,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 120.32523348147356,
+      "interval_50": [
+        115,
+        127
+      ],
+      "interval_80": [
+        108.0,
+        131.0
+      ],
+      "interval_95": [
+        99,
+        134
+      ],
+      "interval_widths": {
+        "50": 13,
+        "80": 24,
+        "95": 36
+      },
+      "median_rank": 122.0,
+      "mode_rank": 124,
+      "previous_official_rank": 127,
+      "rank_1_probability": 1.5616911392959807e-19,
+      "rank_change": -1,
+      "rank_change_accessible": "Down 1 since Week 11",
+      "rank_change_display": "\u21931",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "4-6",
+      "team_id": "2199",
+      "team_name": "Eastern Michigan",
+      "top10_probability": 7.145988473797953e-14,
+      "top25_probability": 6.871069444610897e-10,
+      "top5_probability": 5.492905575602224e-16
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 129,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 124.06030524544737,
+      "interval_50": [
+        119,
+        131
+      ],
+      "interval_80": [
+        111.0,
+        135.0
+      ],
+      "interval_95": [
+        102,
+        137
+      ],
+      "interval_widths": {
+        "50": 13,
+        "80": 25,
+        "95": 36
+      },
+      "median_rank": 126.0,
+      "mode_rank": 128,
+      "previous_official_rank": 129,
+      "rank_1_probability": 1.6132779303804207e-20,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "5-5",
+      "team_id": "113",
+      "team_name": "Massachusetts",
+      "top10_probability": 5.649568061009192e-14,
+      "top25_probability": 5.99501165629369e-10,
+      "top5_probability": 3.1151079085093076e-16
+    },
+    {
+      "conference": "American Athletic",
+      "display_rank": 130,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 126.99661712165499,
+      "interval_50": [
+        123,
+        132
+      ],
+      "interval_80": [
+        118.0,
+        135.0
+      ],
+      "interval_95": [
+        110,
+        137
+      ],
+      "interval_widths": {
+        "50": 10,
+        "80": 18,
+        "95": 28
+      },
+      "median_rank": 128.0,
+      "mode_rank": 131,
+      "previous_official_rank": 134,
+      "rank_1_probability": 1.5885475854395565e-23,
+      "rank_change": 4,
+      "rank_change_accessible": "Up 4 since Week 11",
+      "rank_change_display": "\u21914",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-9",
+      "team_id": "2429",
+      "team_name": "Charlotte",
+      "top10_probability": 5.5396575549171496e-17,
+      "top25_probability": 3.6366594422742583e-12,
+      "top5_probability": 1.7125471923931157e-19
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 131,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 127.75671846780618,
+      "interval_50": [
+        124,
+        133
+      ],
+      "interval_80": [
+        119.0,
+        135.0
+      ],
+      "interval_95": [
+        112,
+        137
+      ],
+      "interval_widths": {
+        "50": 10,
+        "80": 17,
+        "95": 26
+      },
+      "median_rank": 129.0,
+      "mode_rank": 131,
+      "previous_official_rank": 130,
+      "rank_1_probability": 1.6740809315121116e-23,
+      "rank_change": -1,
+      "rank_change_accessible": "Down 1 since Week 11",
+      "rank_change_display": "\u21931",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-7",
+      "team_id": "2050",
+      "team_name": "Ball State",
+      "top10_probability": 9.668847476422666e-17,
+      "top25_probability": 4.6918541817595936e-12,
+      "top5_probability": 2.810639510831283e-19
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 132,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 128.23919126423965,
+      "interval_50": [
+        125,
+        133
+      ],
+      "interval_80": [
+        120.0,
+        135.0
+      ],
+      "interval_95": [
+        113,
+        137
+      ],
+      "interval_widths": {
+        "50": 9,
+        "80": 16,
+        "95": 25
+      },
+      "median_rank": 129.0,
+      "mode_rank": 132,
+      "previous_official_rank": 131,
+      "rank_1_probability": 1.0988419848905797e-23,
+      "rank_change": -1,
+      "rank_change_accessible": "Down 1 since Week 11",
+      "rank_change_display": "\u21931",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "3-7",
+      "team_id": "2309",
+      "team_name": "Kent State",
+      "top10_probability": 3.461626501671355e-17,
+      "top25_probability": 1.5401563471515087e-12,
+      "top5_probability": 1.2500101091802914e-19
+    },
+    {
+      "conference": "Sun Belt",
+      "display_rank": 133,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 129.02390646738644,
+      "interval_50": [
+        126,
+        134
+      ],
+      "interval_80": [
+        121.0,
+        136.0
+      ],
+      "interval_95": [
+        114,
+        137
+      ],
+      "interval_widths": {
+        "50": 9,
+        "80": 16,
+        "95": 24
+      },
+      "median_rank": 130.0,
+      "mode_rank": 133,
+      "previous_official_rank": 133,
+      "rank_1_probability": 4.59609009187383e-25,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-8",
+      "team_id": "2433",
+      "team_name": "UL Monroe",
+      "top10_probability": 1.973043609782084e-18,
+      "top25_probability": 1.2894730257706825e-13,
+      "top5_probability": 6.333763850594454e-21
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 134,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 129.13709088651552,
+      "interval_50": [
+        126,
+        133
+      ],
+      "interval_80": [
+        121.0,
+        135.0
+      ],
+      "interval_95": [
+        115,
+        137
+      ],
+      "interval_widths": {
+        "50": 8,
+        "80": 15,
+        "95": 23
+      },
+      "median_rank": 130.0,
+      "mode_rank": 133,
+      "previous_official_rank": 132,
+      "rank_1_probability": 2.653420493970723e-24,
+      "rank_change": -2,
+      "rank_change_accessible": "Down 2 since Week 11",
+      "rank_change_display": "\u21932",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "0-10",
+      "team_id": "2459",
+      "team_name": "Northern Illinois",
+      "top10_probability": 5.2269155096169e-18,
+      "top25_probability": 2.7780705267534996e-13,
+      "top5_probability": 2.0201775906488844e-20
+    },
+    {
+      "conference": "Conference USA",
+      "display_rank": 135,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 129.9816981347484,
+      "interval_50": [
+        127,
+        134
+      ],
+      "interval_80": [
+        122.0,
+        136.0
+      ],
+      "interval_95": [
+        115,
+        138
+      ],
+      "interval_widths": {
+        "50": 8,
+        "80": 15,
+        "95": 24
+      },
+      "median_rank": 131.0,
+      "mode_rank": 134,
+      "previous_official_rank": 135,
+      "rank_1_probability": 9.567256274450565e-24,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-9",
+      "team_id": "2534",
+      "team_name": "Sam Houston",
+      "top10_probability": 3.18853492296002e-17,
+      "top25_probability": 8.341100283531363e-13,
+      "top5_probability": 1.1538657683340903e-19
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 136,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 130.07320870200593,
+      "interval_50": [
+        127,
+        134
+      ],
+      "interval_80": [
+        123.0,
+        136.0
+      ],
+      "interval_95": [
+        117,
+        137
+      ],
+      "interval_widths": {
+        "50": 8,
+        "80": 14,
+        "95": 21
+      },
+      "median_rank": 131.0,
+      "mode_rank": 133,
+      "previous_official_rank": 136,
+      "rank_1_probability": 4.715807830058926e-24,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-9",
+      "team_id": "2006",
+      "team_name": "Akron",
+      "top10_probability": 5.2917476814389234e-18,
+      "top25_probability": 1.275930928971585e-13,
+      "top5_probability": 2.6943898231289788e-20
+    },
+    {
+      "conference": "Mountain West",
+      "display_rank": 137,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 131.15684510240172,
+      "interval_50": [
+        129,
+        135
+      ],
+      "interval_80": [
+        125.0,
+        136.0
+      ],
+      "interval_95": [
+        119,
+        137
+      ],
+      "interval_widths": {
+        "50": 7,
+        "80": 12,
+        "95": 19
+      },
+      "median_rank": 132.0,
+      "mode_rank": 135,
+      "previous_official_rank": 137,
+      "rank_1_probability": 2.2039483733262796e-27,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "1-9",
+      "team_id": "2638",
+      "team_name": "UTEP",
+      "top10_probability": 2.903328150502774e-20,
+      "top25_probability": 6.402072261213333e-15,
+      "top5_probability": 4.5649623498718867e-23
+    },
+    {
+      "conference": "Mid-American",
+      "display_rank": 138,
+      "eligible_evidence_count": 0,
+      "eligible_games": 0,
+      "expected_rank": 133.0271836856193,
+      "interval_50": [
+        131,
+        136
+      ],
+      "interval_80": [
+        128.0,
+        137.0
+      ],
+      "interval_95": [
+        124,
+        138
+      ],
+      "interval_widths": {
+        "50": 6,
+        "80": 10,
+        "95": 15
+      },
+      "median_rank": 134.0,
+      "mode_rank": 136,
+      "previous_official_rank": 138,
+      "rank_1_probability": 4.699404265654864e-25,
+      "rank_change": 0,
+      "rank_change_accessible": "Unchanged since Week 11",
+      "rank_change_display": "\u2014",
+      "rank_change_status": "ranked",
+      "rated": true,
+      "record": "2-9",
+      "team_id": "16",
+      "team_name": "Sacramento State",
+      "top10_probability": 1.278040269098212e-19,
+      "top25_probability": 1.9449140316039597e-15,
+      "top5_probability": 9.80458213678353e-22
+    }
+  ],
+  "rated_count": 138,
+  "requested_cutoff": "2026-11-15T15:31:21.991377+00:00",
+  "schema_version": "1.0",
+  "season": 2026,
+  "season_trajectory_path": "data/team-trajectories/2026-weekly-2026-11-15T15-31-21.991377Z-context-v1.4.json",
+  "snapshot_id": "2026-weekly-2026-11-15T15-31-21.991377Z-context-v1.4",
+  "snapshot_type": "weekly",
+  "source_retrieved_at": "2026-11-15T15:31:21.991377+00:00",
+  "team_seasons_path": "data/team-seasons/2026-weekly-2026-11-15T15-31-21.991377Z-context-v1.4.json",
+  "unrated_count": 0
+}
