@@ -1,0 +1,157 @@
+{
+  "bootstrap": {
+    "game_level": "two-way pigeonhole, endpoint team IDs and game ID; average team endpoint multiplicity keeps one game contribution",
+    "interval": "95% percentile",
+    "repetitions": 1000,
+    "seed": 256,
+    "team_level": "two-way pigeonhole, focal team ID and game ID"
+  },
+  "counts": {
+    "coverage_parity_checks": 41796,
+    "forecast_rows": 13932,
+    "forecast_rows_by_stage_population_family": {
+      "preseason/fbs_fbs/Context": 2998,
+      "preseason/fbs_fbs/History": 2998,
+      "preseason/fbs_fcs/Context": 485,
+      "preseason/fbs_fcs/History": 485,
+      "rolling/fbs_fbs/Context": 2998,
+      "rolling/fbs_fbs/History": 2998,
+      "rolling/fbs_fcs/Context": 485,
+      "rolling/fbs_fcs/History": 485
+    },
+    "issue201_aggregate_parity": {
+      "cross_season_aggregate_checks": 64,
+      "phase_summary_checks": 672,
+      "season_summary_checks": 256
+    },
+    "pairing": {
+      "matched_fbs_fbs_forecasts": 2998,
+      "paired_team_orientations": 5996,
+      "unmatched_game_forecasts": 0
+    },
+    "prior_history_checks": 12962,
+    "rolling_forecasts_joined": 6966,
+    "surprise_eligible_team_rows_by_family": {
+      "Context": 4762,
+      "History": 4762
+    },
+    "target_game_excluded_from_prior_histories": true,
+    "team_oriented_rows": 12962,
+    "team_rows_by_population_family": {
+      "fbs_fbs/Context": 5996,
+      "fbs_fbs/History": 5996,
+      "fbs_fcs/Context": 485,
+      "fbs_fcs/History": 485
+    },
+    "unique_team_forecasts": 12962
+  },
+  "decision": {
+    "adequately_sized_local_intervals_within_10pp": false,
+    "global_band_pass_both_families": true,
+    "global_practical_band_pp": [
+      -5.0,
+      5.0
+    ],
+    "global_signal_families": [],
+    "label": "Inconclusive evidence",
+    "local_signal_groups": [],
+    "local_signals_replicated_across_families": [],
+    "recommendation": "C"
+  },
+  "experiment": "issue-256-conditional-in-season-predictive-calibration",
+  "forecast_lineage": "issue 201 existing-policy predictions; distinct from issue 253 rank-PMF configurations",
+  "input_hashes": {
+    "issue201/forecast_scores.csv": {
+      "bytes": 21710645,
+      "sha256": "fbc5c51f0747d4d11c3d31d8eb032f32ad65c8abe41f0307b295415a264351bb"
+    },
+    "issue201/forecast_summary.csv": {
+      "bytes": 62725,
+      "sha256": "c288b5ad6f024b3fba221536e2ed311639dd57da08478a4a758670eed1580ffd"
+    },
+    "issue201/manifest.json": {
+      "bytes": 22278,
+      "sha256": "c6103fafc8fdf0e6abc074214013bcc07f3db5afa6cdf22b03de851f2fb5653d"
+    },
+    "issue201/replay_evidence.jsonl.gz": {
+      "bytes": 4981202,
+      "sha256": "2bc922ba47ded55b20672b42e21924cf915c5a7599966b7b923489485171f89d"
+    },
+    "issue247/manifest.json": {
+      "bytes": 5039,
+      "sha256": "a477da07b9e731d51eedf6b613b521909ba973de2a223acce56226319551d651"
+    },
+    "issue247/team_game_errors.csv": {
+      "bytes": 5930864,
+      "sha256": "7955e6f47a32639284a973883a566a36f5c521143ed17df0cdde3e459176ba43"
+    },
+    "issue247/team_game_observations.csv": {
+      "bytes": 7411934,
+      "sha256": "11a19f69a062b084fe079b9ab02f1915dda632dfe1153dc350770b12aeede906"
+    }
+  },
+  "manifest_self_hash": "omitted to avoid a self-referential digest",
+  "model_arms": [
+    "History_existing",
+    "Context_existing"
+  ],
+  "outputs": {
+    "calibration_summary.csv": {
+      "bytes": 82854,
+      "sha256": "87c59ec186e2f2b71b68e5097261ae2148fd768cc4a3f5b185fc16f90aa14efd"
+    },
+    "conditional_models.csv": {
+      "bytes": 10073,
+      "sha256": "d7125446cfe14886ddb2417febcf1c67c631706b7d474c7a1daf072dd584b646"
+    },
+    "decision.json": {
+      "bytes": 329,
+      "sha256": "7470ccc19e3b984920ab42016ac7673a0ab09648281f21c9bd612c4acc7e3b2f"
+    },
+    "forecast_observations.csv.gz": {
+      "bytes": 2758931,
+      "sha256": "b308e8034409c268ce6f7d0140e78180e35c1cf9e11bccb95b4ba738b25f6795"
+    },
+    "paired_comparison.csv": {
+      "bytes": 19097,
+      "sha256": "d790080ff3412498befb5d39aa4df77f60a44e17017318eb73142c62dde16c3b"
+    },
+    "protocol.md": {
+      "bytes": 6351,
+      "sha256": "125ec0c99dd63547b63a842112458ef27fea65575e989d927cbfc91b2125c6a3"
+    },
+    "report.md": {
+      "bytes": 12105,
+      "sha256": "fe187d9f86798a78cd7e38c69c29840006ac9bb3e5f2d9127776ba1b033fae4d"
+    },
+    "team_calibration_observations.csv.gz": {
+      "bytes": 2399228,
+      "sha256": "d296180f633761ff450b6f0138e8e7968cc618c4957de6cecc8e9c7680016d70"
+    }
+  },
+  "primary_population": "rolling FBS\u2013FBS regular-season games, counted once per game and arm",
+  "protocol_sha256": "125ec0c99dd63547b63a842112458ef27fea65575e989d927cbfc91b2125c6a3",
+  "schema_version": 1,
+  "seasons": [
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "secondary_population": "rolling FBS\u2013FCS forecasts, one FBS team perspective per game",
+  "status": "complete",
+  "strength_quartile_reference": {
+    "Context": {
+      "q25": 0.3213786697429513,
+      "q50": 0.4930470072249254,
+      "q75": 0.676476896473102,
+      "team_seasons": 534
+    },
+    "History": {
+      "q25": 0.34355376647103436,
+      "q50": 0.49878560856500725,
+      "q75": 0.6426043748854895,
+      "team_seasons": 534
+    }
+  }
+}
